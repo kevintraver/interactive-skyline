@@ -15,7 +15,7 @@ if (!cities[cityId]) cityId = Object.keys(cities)[0];
 try { localStorage.setItem(CITY_STORE, cityId); } catch { /* no storage */ }
 const city = cities[cityId];
 const DATA = `/data/${cityId}`;
-document.title = `${city.name} skyline`;
+document.title = `Interactive Skyline · ${city.name}`;
 
 // World units are meters. x = east, y = up, z = south, origin at the city's reference point.
 const BASE = city.base; // elevation subtracted from everything to keep numbers small
@@ -878,7 +878,6 @@ document.getElementById('about').textContent =
   + `${counts['osm-height'] || 0} tagged, ${((counts['osm-levels'] || 0) + (counts.guess || 0)).toLocaleString()} estimated. Terrain: USGS 3DEP, imagery USGS NAIP. True scale, 50 mm lens.`;
 
 // city switcher: each city is its own page load, so its terrain and buildings start clean
-document.querySelector('h1').textContent = `${city.name} skyline`;
 const cityBar = document.getElementById('cities');
 for (const [id, c] of Object.entries(cities)) {
   const a = Object.assign(document.createElement('a'), { textContent: c.name, href: `?city=${id}` });

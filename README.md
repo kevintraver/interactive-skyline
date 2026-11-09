@@ -1,4 +1,6 @@
-# Skyline
+# Interactive Skyline
+
+**[interactive-skyline.vercel.app](https://interactive-skyline.vercel.app)**
 
 A true-scale 3D model of the Salt Lake City and Las Vegas skylines, built with three.js. Hide or move the tall buildings to see what each skyline would look like without them, or with them somewhere else.
 
@@ -78,6 +80,16 @@ Known limits:
 - Buildings finished after the LiDAR survey have estimated heights unless OpenStreetMap tags one. They are marked "est." in the list.
 - Hand corrections to wrong or missing OpenStreetMap tags are listed, with reasons, in `data/overrides.json`.
 - 3D buildings cover only the core of each city. Beyond that the ground is imagery.
+
+## License
+
+The code is released under the [MIT License](LICENSE).
+
+The data and images are not covered by it and keep their own terms:
+
+- `public/data/*/buildings.json` is derived from OpenStreetMap and is available under the [Open Database License](https://opendatacommons.org/licenses/odbl/).
+- Terrain and ground imagery in `public/data` come from USGS sources in the public domain.
+- `docs/photo-match.png` includes a CC BY-SA 4.0 photo, credited below.
 
 ## Credits
 
