@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Skyline</title>
+    <link rel="stylesheet" href="/src/style.css" />
+  </head>
+  <body>
+    <canvas id="scene" aria-label="3D model of the city"></canvas>
+
+    <aside id="panel">
+      <nav id="cities" aria-label="City"></nav>
+      <header>
+        <div class="title">
+          <h1>Skyline</h1>
+          <button id="settings-toggle" aria-expanded="false" aria-controls="settings">Settings</button>
+        </div>
+        <p class="lede" id="lede"></p>
+      </header>
+
+      <div id="browse">
+        <div class="views" role="group" aria-label="Viewpoint"></div>
+
+        <div class="bar">
+          <span id="count"></span>
+          <span class="actions">
+            <button id="hide-all">Hide all</button>
+            <button id="show-all">Show all</button>
+            <button id="reset-all" title="Show every hidden building and move every moved one back">Reset all</button>
+          </span>
+        </div>
+
+        <input id="search" type="search" placeholder="Search buildings" aria-label="Search buildings" autocomplete="off" spellcheck="false" />
+        <ol id="list"></ol>
+        <p id="empty" hidden></p>
+
+        <footer id="about"></footer>
+      </div>
+
+      <form id="settings" onsubmit="return false">
+        <fieldset>
+          <legend>Removable buildings</legend>
+          <label class="field">
+            <span class="row"><span>Minimum height</span><output id="cutoff-out"></output></span>
+            <input type="range" name="cutoff" min="15" max="90" step="1" />
+          </label>
+          <label class="check"><input type="checkbox" name="highlight" /><span>Color them blue<small>Off: they look like every other building until you point at one.</small></span></label>
+        </fieldset>
+
+        <fieldset>
+          <legend>Clicking a building</legend>
+          <label class="check"><input type="radio" name="click" value="select" /><span>Selects it<small>Shows its details with a Hide button.</small></span></label>
+          <label class="check"><input type="radio" name="click" value="hide" /><span>Hides it straight away<small>Faster. Undo with the toast or Cmd+Z.</small></span></label>
+        </fieldset>
+
+        <fieldset>
+          <legend>Hidden and moved buildings</legend>
+          <label class="check"><input type="checkbox" name="markers" /><span>Mark where a building really stands<small>A footprint on the ground once it is hidden or moved. Click it to put the building back.</small></span></label>
+        </fieldset>
+
+        <fieldset>
+          <legend>Display</legend>
+          <div class="seg" role="group" aria-label="Units">
+            <label><input type="radio" name="units" value="ft" /><span>Feet</span></label>
+            <label><input type="radio" name="units" value="m" /><span>Meters</span></label>
+          </div>
+          <label class="check"><input type="checkbox" name="imagery" /><span>Aerial photo on the ground<small>Off: a plain model, without the towers' shadows baked into the photo.</small></span></label>
+        </fieldset>
+
+        <button type="button" id="settings-reset">Reset to defaults</button>
+      </form>
+    </aside>
+
+    <div id="tip" hidden></div>
+    <div id="menu" role="menu" hidden></div>
+
+    <div id="dock">
+      <div id="card" hidden>
+        <div class="who"><b></b><span class="meta"></span></div>
+        <button data-act="back" hidden>Reset position</button>
+        <button data-act="center">Center</button>
+        <button class="primary" data-act="hide">Hide</button>
+        <button data-act="taller"></button>
+        <button class="x" aria-label="Clear selection">&times;</button>
+      </div>
+      <div id="toast" role="status" hidden><span></span><button>Undo</button></div>
+    </div>
+    <div id="loading">Loading terrain and buildings…</div>
+
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>

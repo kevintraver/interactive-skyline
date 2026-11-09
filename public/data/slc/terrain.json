@@ -1,0 +1,28 @@
+{
+ "origin": {
+  "lat": 40.7704,
+  "lon": -111.8919
+ },
+ "projection": "+proj=tmerc +lat_0=40.7704 +lon_0=-111.8919 +k=1 +x_0=0 +y_0=0 +ellps=WGS84 +units=m",
+ "source": "AWS Terrain Tiles (Terrarium), USGS 3DEP in the US",
+ "grids": {
+  "far": {
+   "file": "terrain-far.bin",
+   "nx": 1001,
+   "ny": 901,
+   "x0": -30000,
+   "y0": -42000,
+   "step": 60,
+   "scale": 0.1
+  },
+  "near": {
+   "file": "terrain-near.bin",
+   "nx": 661,
+   "ny": 881,
+   "x0": -3200,
+   "y0": -4600,
+   "step": 10,
+   "scale": 0.1
+  }
+ }
+}

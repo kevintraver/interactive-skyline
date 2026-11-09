@@ -1,0 +1,2388 @@
+{
+ "counts": {
+  "osm-height": 173,
+  "lidar": 17503,
+  "osm-levels": 38,
+  "guess": 147
+ },
+ "total": 17861,
+ "tall": 189,
+ "tall_list": [
+  {
+   "id": "w135457469",
+   "name": "Stratosphere Tower",
+   "h": 350.0,
+   "src": "osm-height",
+   "levels": null
+  },
+  {
+   "id": "w134068318",
+   "name": "Fontainebleau Las Vegas",
+   "h": 224.0,
+   "src": "osm-height",
+   "levels": 63.0
+  },
+  {
+   "id": "w972129019",
+   "name": "Resorts World Las Vegas",
+   "h": 205.4,
+   "src": "osm-height",
+   "levels": null
+  },
+  {
+   "id": "w30424125",
+   "name": "Palazzo Tower",
+   "h": 196.0,
+   "src": "osm-height",
+   "levels": 53.0
+  },
+  {
+   "id": "w111380666",
+   "name": "Trump International Hotel Las Vegas",
+   "h": 195.0,
+   "src": "osm-height",
+   "levels": 64.0
+  },
+  {
+   "id": "w27910891",
+   "name": "Encore Las Vegas",
+   "h": 192.0,
+   "src": "osm-height",
+   "levels": 52.0
+  },
+  {
+   "id": "w205501268",
+   "name": "Wynn Las Vegas",
+   "h": 187.0,
+   "src": "osm-height",
+   "levels": null
+  },
+  {
+   "id": "w27897905",
+   "name": "The Cosmopolitan Chelsea Tower",
+   "h": 184.0,
+   "src": "osm-height",
+   "levels": 53.0
+  },
+  {
+   "id": "w134795273",
+   "name": "The Cosmopolitan of Las Vegas",
+   "h": 184.0,
+   "src": "osm-height",
+   "levels": 51.0
+  },
+  {
+   "id": "w472669744",
+   "name": "The Cosmopolitan Boulevard Tower",
+   "h": 184.0,
+   "src": "osm-height",
+   "levels": null
+  },
+  {
+   "id": "w134930092",
+   "name": "Aria Resort & Casino",
+   "h": 183.0,
+   "src": "osm-height",
+   "levels": 60.0
+  },
+  {
+   "id": "r5342155",
+   "name": "Elara, a Hilton Grand Vacations Club",
+   "h": 183.0,
+   "src": "osm-height",
+   "levels": 46.0
+  },
+  {
+   "id": "w133757429",
+   "name": "Virgin Hotels Las Vegas, Curio Collection by Hilton",
+   "h": 182.0,
+   "src": "osm-height",
+   "levels": null
+  },
+  {
+   "id": "r20214578",
+   "name": "Vdara Hotel & Spa",
+   "h": 174.0,
+   "src": "osm-height",
+   "levels": null
+  },
+  {
+   "id": "w27831699",
+   "name": "Eiffel Tower",
+   "h": 165.0,
+   "src": "osm-height",
+   "levels": 54.0
+  },
+  {
+   "id": "w134930090",
+   "name": "Aria Resort & Casino",
+   "h": 163.0,
+   "src": "osm-height",
+   "levels": 55.0
+  },
+  {
+   "id": "w115661793",
+   "name": "New York New York Hotel and Casino",
+   "h": 161.0,
+   "src": "osm-height",
+   "levels": 2.0
+  },
+  {
+   "id": "w495695272",
+   "name": "The Martin",
+   "h": 157.0,
+   "src": "osm-height",
+   "levels": null
+  },
+  {
+   "id": "r7655652",
+   "name": "Palms Place",
+   "h": 157.0,
+   "src": "osm-height",
+   "levels": 48.0
+  },
+  {
+   "id": "w25723909",
+   "name": "Bellagio Las Vegas",
+   "h": 155.0,
+   "src": "osm-height",
+   "levels": 34.0
+  },
+  {
+   "id": "w316174410",
+   "name": "Circa Resort & Casino",
+   "h": 152.4,
+   "src": "osm-height",
+   "levels": 35.0
+  },
+  {
+   "id": "w543641002",
+   "name": "Sky Tower Las Vegas Condominiums",
+   "h": 152.0,
+   "src": "osm-height",
+   "levels": 45.0
+  },
+  {
+   "id": "w118347176",
+   "name": "W Las Vegas",
+   "h": 148.0,
+   "src": "osm-height",
+   "levels": 45.0
+  },
+  {
+   "id": "w27858550",
+   "name": "Mandalay Bay Resort & Casino",
+   "h": 146.0,
+   "src": "osm-height",
+   "levels": 44.0
+  },
+  {
+   "id": "w30618090",
+   "name": "Venetian Tower",
+   "h": 145.0,
+   "src": "osm-height",
+   "levels": 37.0
+  },
+  {
+   "id": "w95223224",
+   "name": "The Signature at MGM Grand Tower I",
+   "h": 145.0,
+   "src": "osm-height",
+   "levels": 38.0
+  },
+  {
+   "id": "w95223231",
+   "name": "The Signature at MGM Grand Tower III",
+   "h": 145.0,
+   "src": "osm-height",
+   "levels": 38.0
+  },
+  {
+   "id": "w95223232",
+   "name": "The Signature at MGM Grand Tower II",
+   "h": 145.0,
+   "src": "osm-height",
+   "levels": 38.0
+  },
+  {
+   "id": "w134677416",
+   "name": "Turnberry Place",
+   "h": 145.0,
+   "src": "osm-height",
+   "levels": 38.0
+  },
+  {
+   "id": "w134677417",
+   "name": "Spartacus Law Firm",
+   "h": 145.0,
+   "src": "osm-height",
+   "levels": 38.0
+  },
+  {
+   "id": "w134677425",
+   "name": "Turnberry Place",
+   "h": 145.0,
+   "src": "osm-height",
+   "levels": 38.0
+  },
+  {
+   "id": "w134677429",
+   "name": "Turnberry Place",
+   "h": 145.0,
+   "src": "osm-height",
+   "levels": 38.0
+  },
+  {
+   "id": "w1481167211",
+   "name": null,
+   "h": 142.4,
+   "src": "lidar",
+   "levels": null
+  },
+  {
+   "id": "w134935559",
+   "name": "Allure Las Vegas Tower I",
+   "h": 142.0,
+   "src": "osm-height",
+   "levels": 41.0
+  },
+  {
+   "id": "w134938479",
+   "name": "VooDoo Rooftop",
+   "h": 140.0,
+   "src": "osm-height",
+   "levels": 42.0
+  },
+  {
+   "id": "r7655651",
+   "name": "Palms",
+   "h": 140.0,
+   "src": "osm-height",
+   "levels": 25.0
+  },
+  {
+   "id": "w134679980",
+   "name": "East Tower",
+   "h": 138.0,
+   "src": "osm-height",
+   "levels": 45.0
+  },
+  {
+   "id": "w134918082",
+   "name": "West Tower",
+   "h": 138.0,
+   "src": "osm-height",
+   "levels": 45.0
+  },
+  {
+   "id": "w134944648",
+   "name": "Palace Tower",
+   "h": 133.0,
+   "src": "osm-height",
+   "levels": 30.0
+  },
+  {
+   "id": "w52134834",
+   "name": "Veer Towers East",
+   "h": 132.0,
+   "src": "osm-height",
+   "levels": 37.0
+  },
+  {
+   "id": "w52134835",
+   "name": "Veer Towers West",
+   "h": 132.0,
+   "src": "osm-height",
+   "levels": 37.0
+  },
+  {
+   "id": "w134938477",
+   "name": "Voodoo steakhouse",
+   "h": 130.0,
+   "src": "osm-height",
+   "levels": 40.0
+  },
+  {
+   "id": "w27998223",
+   "name": "Rio Masquerade Tower",
+   "h": 129.0,
+   "src": "osm-height",
+   "levels": 41.0
+  },
+  {
+   "id": "w495545510",
+   "name": "Panorama Tower II",
+   "h": 123.1,
+   "src": "lidar",
+   "levels": null
+  },
+  {
+   "id": "r6138877",
+   "name": "Hilton Grand Vacations on the Boulevard",
+   "h": 123.0,
+   "src": "osm-height",
+   "levels": 39.0
+  },
+  {
+   "id": "w132157010",
+   "name": "The D Las Vegas",
+   "h": 122.0,
+   "src": "osm-height",
+   "levels": null
+  },
+  {
+   "id": "w134921373",
+   "name": "Planet Hollywood Resort and Casino",
+   "h": 122.0,
+   "src": "osm-height",
+   "levels": 39.0
+  },
+  {
+   "id": "r7770314",
+   "name": "The Venetian Las Vegas",
+   "h": 120.5,
+   "src": "lidar",
+   "levels": null
+  },
+  {
+   "id": "w495545498",
+   "name": "Panorama Tower I parking garage",
+   "h": 120.3,
+   "src": "osm-height",
+   "levels": null
+  },
+  {
+   "id": "w25723910",
+   "name": "Bellagio Spa Tower",
+   "h": 120.0,
+   "src": "osm-height",
+   "levels": 30.0
+  },
+  {
+   "id": "w134938481",
+   "name": "Rio All Suite Hotel and Casino",
+   "h": 120.0,
+   "src": "osm-height",
+   "levels": 38.0
+  },
+  {
+   "id": "w134691921",
+   "name": "Westgate Las Vegas Resort & Casino",
+   "h": 114.0,
+   "src": "osm-height",
+   "levels": null
+  },
+  {
+   "id": "w276427203",
+   "name": "Marriott's Grand Chateau",
+   "h": 113.7,
+   "src": "osm-height",
+   "levels": 38.0
+  },
+  {
+   "id": "w27831697",
+   "name": "Le Boulevard At Paris",
+   "h": 112.0,
+   "src": "osm-height",
+   "levels": 35.0
+  },
+  {
+   "id": "w33959894",
+   "name": "Treasure Island Hotel and Casino",
+   "h": 112.0,
+   "src": "osm-height",
+   "levels": null
+  },
+  {
+   "id": "w976405284",
+   "name": "Sphere",
+   "h": 112.0,
+   "src": "osm-height",
+   "levels": null
+  },
+  {
+   "id": "w27858544",
+   "name": "Luxor Las Vegas",
+   "h": 111.0,
+   "src": "osm-height",
+   "levels": null
+  },
+  {
+   "id": "w1176928048",
+   "name": "Augustus Tower",
+   "h": 111.0,
+   "src": "osm-height",
+   "levels": 26.0
+  },
+  {
+   "id": "w33974140",
+   "name": "Paris Las Vegas",
+   "h": 110.9,
+   "src": "lidar",
+   "levels": 33.0
+  },
+  {
+   "id": "w27831695",
+   "name": "Park MGM",
+   "h": 110.0,
+   "src": "osm-height",
+   "levels": 32.0
+  },
+  {
+   "id": "w111367828",
+   "name": "Harrah's Las Vegas",
+   "h": 109.0,
+   "src": "osm-height",
+   "levels": 35.0
+  },
+  {
+   "id": "w340018195",
+   "name": "FAA Airport Traffic Control Tower",
+   "h": 109.0,
+   "src": "osm-height",
+   "levels": 28.0
+  },
+  {
+   "id": "w126267789",
+   "name": "Octavius Tower",
+   "h": 107.0,
+   "src": "osm-height",
+   "levels": 23.0
+  },
+  {
+   "id": "w33957359",
+   "name": "Hard Rock Las Vegas",
+   "h": 102.0,
+   "src": "osm-height",
+   "levels": 1.0
+  },
+  {
+   "id": "w226572663",
+   "name": "Newport Lofts",
+   "h": 102.0,
+   "src": "osm-height",
+   "levels": null
+  },
+  {
+   "id": "w135332959",
+   "name": "Circus Circus Las Vegas",
+   "h": 100.9,
+   "src": "lidar",
+   "levels": null
+  },
+  {
+   "id": "w134930088",
+   "name": "Aria Resort & Casino",
+   "h": 100.0,
+   "src": "osm-height",
+   "levels": 35.0
+  },
+  {
+   "id": "w111322067",
+   "name": "Venezia Tower",
+   "h": 99.0,
+   "src": "osm-height",
+   "levels": 24.0
+  },
+  {
+   "id": "w656398429",
+   "name": "Regency Towers",
+   "h": 97.0,
+   "src": "osm-height",
+   "levels": 28.0
+  },
+  {
+   "id": "w43875964",
+   "name": "The Campanile",
+   "h": 96.0,
+   "src": "osm-height",
+   "levels": null
+  },
+  {
+   "id": "w116770006",
+   "name": "Hotel MGM Grand Las Vegas",
+   "h": 96.0,
+   "src": "osm-levels",
+   "levels": 2.0
+  },
+  {
+   "id": "w128622185",
+   "name": "Harrah's Las Vegas",
+   "h": 93.2,
+   "src": "lidar",
+   "levels": null
+  },
+  {
+   "id": "w226508857",
+   "name": "Regional Justice Center",
+   "h": 90.3,
+   "src": "lidar",
+   "levels": 3.0
+  },
+  {
+   "id": "w130585543",
+   "name": "World Market Center",
+   "h": 86.9,
+   "src": "lidar",
+   "levels": 16.0
+  },
+  {
+   "id": "w115766969",
+   "name": null,
+   "h": 86.4,
+   "src": "osm-levels",
+   "levels": 27.0
+  },
+  {
+   "id": "w115766957",
+   "name": null,
+   "h": 83.0,
+   "src": "osm-height",
+   "levels": 28.0
+  },
+  {
+   "id": "w115766962",
+   "name": null,
+   "h": 83.0,
+   "src": "osm-height",
+   "levels": 28.0
+  },
+  {
+   "id": "w204144588",
+   "name": "The Ogden",
+   "h": 82.2,
+   "src": "lidar",
+   "levels": 21.0
+  },
+  {
+   "id": "w33967431",
+   "name": "Plaza Hotel & Casino",
+   "h": 81.7,
+   "src": "lidar",
+   "levels": null
+  },
+  {
+   "id": "w156624462",
+   "name": "Wells Fargo Tower",
+   "h": 81.5,
+   "src": "lidar",
+   "levels": 18.0
+  },
+  {
+   "id": "w543422869",
+   "name": null,
+   "h": 81.0,
+   "src": "lidar",
+   "levels": null
+  },
+  {
+   "id": "w27897921",
+   "name": null,
+   "h": 80.0,
+   "src": "osm-height",
+   "levels": 25.0
+  },
+  {
+   "id": "w116867081",
+   "name": "Horseshoe Las Vegas Hotel & Casino - A Caesars Rewards Destination",
+   "h": 80.0,
+   "src": "osm-height",
+   "levels": 26.0
+  },
+  {
+   "id": "w134921371",
+   "name": null,
+   "h": 80.0,
+   "src": "osm-height",
+   "levels": 25.0
+  },
+  {
+   "id": "w134921379",
+   "name": null,
+   "h": 80.0,
+   "src": "osm-height",
+   "levels": 25.0
+  },
+  {
+   "id": "w136520122",
+   "name": null,
+   "h": 80.0,
+   "src": "osm-height",
+   "levels": null
+  },
+  {
+   "id": "r8086330",
+   "name": "Excalibur Hotel & Casino",
+   "h": 78.8,
+   "src": "lidar",
+   "levels": null
+  },
+  {
+   "id": "w276426484",
+   "name": "Sahara Hotel Alexandria Tower",
+   "h": 77.8,
+   "src": "lidar",
+   "levels": 24.0
+  },
+  {
+   "id": "w544016673",
+   "name": null,
+   "h": 76.8,
+   "src": "lidar",
+   "levels": null
+  },
+  {
+   "id": "w568622622",
+   "name": "Wyndham Desert Blue",
+   "h": 76.6,
+   "src": "lidar",
+   "levels": null
+  },
+  {
+   "id": "w397861269",
+   "name": null,
+   "h": 76.0,
+   "src": "lidar",
+   "levels": 16.0
+  },
+  {
+   "id": "w313762434",
+   "name": "Springhill Suites by Marriott Las Vegas Convention Center",
+   "h": 75.5,
+   "src": "lidar",
+   "levels": null
+  },
+  {
+   "id": "w182464631",
+   "name": null,
+   "h": 74.9,
+   "src": "lidar",
+   "levels": 20.0
+  },
+  {
+   "id": "w207630739",
+   "name": null,
+   "h": 74.1,
+   "src": "lidar",
+   "levels": 19.0
+  },
+  {
+   "id": "w116876230",
+   "name": "Rio All Suite Hotel and Casino",
+   "h": 74.0,
+   "src": "osm-height",
+   "levels": null
+  },
+  {
+   "id": "w180483375",
+   "name": "Bank of America Plaza",
+   "h": 73.4,
+   "src": "lidar",
+   "levels": null
+  },
+  {
+   "id": "w182464616",
+   "name": null,
+   "h": 73.3,
+   "src": "lidar",
+   "levels": 20.0
+  },
+  {
+   "id": "w543645430",
+   "name": null,
+   "h": 72.5,
+   "src": "lidar",
+   "levels": 21.0
+  },
+  {
+   "id": "w128632721",
+   "name": null,
+   "h": 72.0,
+   "src": "osm-height",
+   "levels": 23.0
+  },
+  {
+   "id": "w134949102",
+   "name": "Forum Tower",
+   "h": 71.0,
+   "src": "osm-height",
+   "levels": 22.0
+  },
+  {
+   "id": "w331347690",
+   "name": "Metropolis",
+   "h": 69.7,
+   "src": "lidar",
+   "levels": null
+  },
+  {
+   "id": "w691478555",
+   "name": "Allegiant Stadium",
+   "h": 69.0,
+   "src": "osm-height",
+   "levels": null
+  },
+  {
+   "id": "w543641711",
+   "name": null,
+   "h": 68.6,
+   "src": "lidar",
+   "levels": 24.0
+  },
+  {
+   "id": "w206151446",
+   "name": "Golden Nugget Las Vegas",
+   "h": 67.8,
+   "src": "lidar",
+   "levels": null
+  },
+  {
+   "id": "w364846591",
+   "name": null,
+   "h": 67.7,
+   "src": "lidar",
+   "levels": 18.0
+  },
+  {
+   "id": "w543641007",
+   "name": null,
+   "h": 67.1,
+   "src": "lidar",
+   "levels": 11.0
+  },
+  {
+   "id": "w27897911",
+   "name": "Hilton Vacation Club Polo Towers Las Vegas",
+   "h": 67.0,
+   "src": "lidar",
+   "levels": 18.0
+  },
+  {
+   "id": "w206291994",
+   "name": "Four Queens",
+   "h": 66.2,
+   "src": "lidar",
+   "levels": null
+  },
+  {
+   "id": "w135298867",
+   "name": "Platinum Hotel and Spa",
+   "h": 66.1,
+   "src": "lidar",
+   "levels": null
+  },
+  {
+   "id": "w134068317",
+   "name": "Fontainebleau Resort & Casino",
+   "h": 65.8,
+   "src": "lidar",
+   "levels": null
+  },
+  {
+   "id": "w1418135381",
+   "name": null,
+   "h": 65.7,
+   "src": "lidar",
+   "levels": null
+  },
+  {
+   "id": "w134930089",
+   "name": null,
+   "h": 65.0,
+   "src": "osm-height",
+   "levels": 25.0
+  },
+  {
+   "id": "w134930091",
+   "name": null,
+   "h": 65.0,
+   "src": "osm-height",
+   "levels": 25.0
+  },
+  {
+   "id": "w364846552",
+   "name": null,
+   "h": 64.7,
+   "src": "lidar",
+   "levels": null
+  },
+  {
+   "id": "w399368723",
+   "name": null,
+   "h": 62.0,
+   "src": "osm-height",
+   "levels": null
+  },
+  {
+   "id": "w180766593",
+   "name": null,
+   "h": 60.2,
+   "src": "lidar",
+   "levels": null
+  },
+  {
+   "id": "w115773426",
+   "name": "The LINQ Hotel & Casino - A Caesars Rewards Destination",
+   "h": 59.7,
+   "src": "lidar",
+   "levels": 20.0
+  },
+  {
+   "id": "w204346639",
+   "name": "El Cortez Hotel & Casino",
+   "h": 58.6,
+   "src": "lidar",
+   "levels": null
+  },
+  {
+   "id": "w130585555",
+   "name": null,
+   "h": 57.5,
+   "src": "lidar",
+   "levels": 10.0
+  },
+  {
+   "id": "w130585560",
+   "name": "Foley Federal Building",
+   "h": 56.8,
+   "src": "lidar",
+   "levels": null
+  },
+  {
+   "id": "r6138876",
+   "name": "Hilton Grand Vacations Suites - Las Vegas (Convention Center)",
+   "h": 55.1,
+   "src": "lidar",
+   "levels": null
+  },
+  {
+   "id": "w111367849",
+   "name": "Employee Parking Lot",
+   "h": 54.5,
+   "src": "lidar",
+   "levels": null
+  },
+  {
+   "id": "r6138879",
+   "name": "Wyndham Grand Desert",
+   "h": 54.2,
+   "src": "lidar",
+   "levels": null
+  },
+  {
+   "id": "w115768623",
+   "name": "Hilton Grand Vacations at the Flamingo",
+   "h": 53.8,
+   "src": "lidar",
+   "levels": 16.0
+  },
+  {
+   "id": "w118361200",
+   "name": "Oyo Casino Hotel",
+   "h": 53.8,
+   "src": "lidar",
+   "levels": 1.0
+  },
+  {
+   "id": "w802738240",
+   "name": null,
+   "h": 53.5,
+   "src": "lidar",
+   "levels": null
+  },
+  {
+   "id": "w313762432",
+   "name": "Las Vegas Marriott",
+   "h": 53.2,
+   "src": "lidar",
+   "levels": null
+  },
+  {
+   "id": "w374989480",
+   "name": null,
+   "h": 52.8,
+   "src": "lidar",
+   "levels": null
+  },
+  {
+   "id": "w1226448921",
+   "name": null,
+   "h": 52.8,
+   "src": "lidar",
+   "levels": 14.0
+  },
+  {
+   "id": "w205741853",
+   "name": "3883 Howard Hughes Parkway",
+   "h": 52.7,
+   "src": "lidar",
+   "levels": null
+  },
+  {
+   "id": "w206128520",
+   "name": "Downtown Grand",
+   "h": 52.3,
+   "src": "lidar",
+   "levels": null
+  },
+  {
+   "id": "w134949098",
+   "name": "Julius Tower",
+   "h": 52.0,
+   "src": "osm-height",
+   "levels": 16.0
+  },
+  {
+   "id": "w135020970",
+   "name": "The Westin Las Vegas Hotel",
+   "h": 51.7,
+   "src": "lidar",
+   "levels": null
+  },
+  {
+   "id": "w106228873",
+   "name": "Main Street Station",
+   "h": 51.6,
+   "src": "lidar",
+   "levels": 2.0
+  },
+  {
+   "id": "w134696134",
+   "name": "455 Karen Avenue",
+   "h": 51.6,
+   "src": "lidar",
+   "levels": null
+  },
+  {
+   "id": "w134696138",
+   "name": "455 Karen Avenue",
+   "h": 51.4,
+   "src": "lidar",
+   "levels": null
+  },
+  {
+   "id": "w699874292",
+   "name": "Fremont Hotel & Casino Las Vegas",
+   "h": 50.3,
+   "src": "osm-height",
+   "levels": 15.0
+  },
+  {
+   "id": "r19484714",
+   "name": "3400 Paradise Road",
+   "h": 49.3,
+   "src": "lidar",
+   "levels": null
+  },
+  {
+   "id": "w61239326",
+   "name": "Vanderpump",
+   "h": 49.2,
+   "src": "lidar",
+   "levels": null
+  },
+  {
+   "id": "w699020452",
+   "name": null,
+   "h": 48.3,
+   "src": "lidar",
+   "levels": null
+  },
+  {
+   "id": "w1212809711",
+   "name": null,
+   "h": 48.1,
+   "src": "lidar",
+   "levels": null
+  },
+  {
+   "id": "w180482467",
+   "name": "302 East Carson Avenue",
+   "h": 47.8,
+   "src": "lidar",
+   "levels": 3.0
+  },
+  {
+   "id": "w135448016",
+   "name": "The Adventuredome",
+   "h": 47.7,
+   "src": "lidar",
+   "levels": null
+  },
+  {
+   "id": "w612123443",
+   "name": "Federal Courthouse",
+   "h": 47.4,
+   "src": "lidar",
+   "levels": null
+  },
+  {
+   "id": "w544016661",
+   "name": "California Hotel and Casino",
+   "h": 47.0,
+   "src": "osm-height",
+   "levels": null
+  },
+  {
+   "id": "w699020453",
+   "name": null,
+   "h": 46.5,
+   "src": "lidar",
+   "levels": null
+  },
+  {
+   "id": "w111367834",
+   "name": "\"O\" Theatre",
+   "h": 46.0,
+   "src": "lidar",
+   "levels": 5.0
+  },
+  {
+   "id": "w364846544",
+   "name": "Paris Balloon",
+   "h": 46.0,
+   "src": "osm-height",
+   "levels": null
+  },
+  {
+   "id": "w402843032",
+   "name": "Mark One",
+   "h": 45.1,
+   "src": "lidar",
+   "levels": 15.0
+  },
+  {
+   "id": "w134949101",
+   "name": "Julius Tower Extension",
+   "h": 45.0,
+   "src": "osm-height",
+   "levels": 14.0
+  },
+  {
+   "id": "w130585557",
+   "name": null,
+   "h": 44.8,
+   "src": "osm-levels",
+   "levels": 14.0
+  },
+  {
+   "id": "w111367819",
+   "name": "Venetian Expo",
+   "h": 44.7,
+   "src": "lidar",
+   "levels": null
+  },
+  {
+   "id": "w1423712126",
+   "name": null,
+   "h": 44.6,
+   "src": "lidar",
+   "levels": null
+  },
+  {
+   "id": "r19558920",
+   "name": "Zappos Headquarters",
+   "h": 44.6,
+   "src": "lidar",
+   "levels": null
+  },
+  {
+   "id": "w948545269",
+   "name": null,
+   "h": 44.2,
+   "src": "lidar",
+   "levels": null
+  },
+  {
+   "id": "w364489406",
+   "name": "T-Mobile Arena",
+   "h": 44.0,
+   "src": "lidar",
+   "levels": null
+  },
+  {
+   "id": "w92281772",
+   "name": null,
+   "h": 43.8,
+   "src": "lidar",
+   "levels": 12.0
+  },
+  {
+   "id": "w205741852",
+   "name": "3960 Howard Hughes Parkway",
+   "h": 43.5,
+   "src": "lidar",
+   "levels": null
+  },
+  {
+   "id": "w226572662",
+   "name": "Clark Street Building",
+   "h": 43.5,
+   "src": "lidar",
+   "levels": null
+  },
+  {
+   "id": "w111348710",
+   "name": null,
+   "h": 43.1,
+   "src": "lidar",
+   "levels": null
+  },
+  {
+   "id": "w180584255",
+   "name": "Fashion Show Mall",
+   "h": 42.9,
+   "src": "lidar",
+   "levels": 3.0
+  },
+  {
+   "id": "w616651647",
+   "name": "Las Vegas City Hall",
+   "h": 42.1,
+   "src": "lidar",
+   "levels": null
+  },
+  {
+   "id": "w396439303",
+   "name": null,
+   "h": 42.0,
+   "src": "lidar",
+   "levels": 15.0
+  },
+  {
+   "id": "w543638171",
+   "name": null,
+   "h": 40.9,
+   "src": "lidar",
+   "levels": null
+  },
+  {
+   "id": "w182464629",
+   "name": null,
+   "h": 40.7,
+   "src": "lidar",
+   "levels": null
+  },
+  {
+   "id": "w1421481100",
+   "name": "Arte Museum Las Vegas",
+   "h": 40.6,
+   "src": "lidar",
+   "levels": null
+  },
+  {
+   "id": "w556572611",
+   "name": "City of Las Vegas - DSC",
+   "h": 40.3,
+   "src": "lidar",
+   "levels": null
+  },
+  {
+   "id": "w134949402",
+   "name": "Nobu Hotel at Caesars Palace",
+   "h": 40.0,
+   "src": "osm-height",
+   "levels": 12.0
+  },
+  {
+   "id": "w180584269",
+   "name": "The Palazzo",
+   "h": 39.9,
+   "src": "lidar",
+   "levels": null
+  },
+  {
+   "id": "w207212836",
+   "name": "Bridger Building",
+   "h": 39.8,
+   "src": "lidar",
+   "levels": 4.0
+  },
+  {
+   "id": "w52194829",
+   "name": "Waldorf Astoria Las Vegas",
+   "h": 39.7,
+   "src": "lidar",
+   "levels": null
+  },
+  {
+   "id": "w699020449",
+   "name": null,
+   "h": 39.2,
+   "src": "lidar",
+   "levels": 13.0
+  },
+  {
+   "id": "w463856739",
+   "name": null,
+   "h": 38.3,
+   "src": "lidar",
+   "levels": null
+  },
+  {
+   "id": "w543638199",
+   "name": null,
+   "h": 37.8,
+   "src": "lidar",
+   "levels": 7.0
+  },
+  {
+   "id": "w27897904",
+   "name": null,
+   "h": 37.7,
+   "src": "lidar",
+   "levels": 12.0
+  },
+  {
+   "id": "w331347692",
+   "name": "850 East Desert Inn Road",
+   "h": 37.3,
+   "src": "lidar",
+   "levels": 11.0
+  },
+  {
+   "id": "w1093169256",
+   "name": "Slotzilla launch tower",
+   "h": 37.3,
+   "src": "lidar",
+   "levels": null
+  },
+  {
+   "id": "w114866100",
+   "name": null,
+   "h": 37.2,
+   "src": "lidar",
+   "levels": 12.0
+  },
+  {
+   "id": "w205497576",
+   "name": "Residence Inn Las Vegas Hughes Center",
+   "h": 37.2,
+   "src": "lidar",
+   "levels": 11.0
+  },
+  {
+   "id": "w699020450",
+   "name": null,
+   "h": 37.2,
+   "src": "lidar",
+   "levels": 11.0
+  },
+  {
+   "id": "w33974142",
+   "name": "Paris Self Parking",
+   "h": 37.1,
+   "src": "lidar",
+   "levels": 9.0
+  },
+  {
+   "id": "w331337786",
+   "name": null,
+   "h": 37.1,
+   "src": "lidar",
+   "levels": 11.0
+  },
+  {
+   "id": "w135294818",
+   "name": "Smith Center for the Performing Arts",
+   "h": 36.8,
+   "src": "lidar",
+   "levels": null
+  },
+  {
+   "id": "w27525258",
+   "name": "Flora Dungan Humanities Building",
+   "h": 36.3,
+   "src": "lidar",
+   "levels": 7.0
+  },
+  {
+   "id": "w972129022",
+   "name": "Resorts World Theatre",
+   "h": 36.3,
+   "src": "lidar",
+   "levels": null
+  },
+  {
+   "id": "w116660358",
+   "name": "Mandalay Bay",
+   "h": 35.8,
+   "src": "lidar",
+   "levels": null
+  },
+  {
+   "id": "w52186615",
+   "name": "Aria and Mandarin Self Parking",
+   "h": 35.4,
+   "src": "lidar",
+   "levels": null
+  },
+  {
+   "id": "w52175579",
+   "name": "Aria and Vdara Self Parking",
+   "h": 35.1,
+   "src": "lidar",
+   "levels": 9.0
+  },
+  {
+   "id": "r19293385",
+   "name": "Clark County Government Center",
+   "h": 35.0,
+   "src": "osm-height",
+   "levels": null
+  }
+ ],
+ "osm_vs_lidar": [
+  {
+   "id": "w18544876",
+   "name": "A Gates",
+   "osm": 10.0,
+   "lidar_p90": 12.2,
+   "lidar_p50": 10.5
+  },
+  {
+   "id": "w25718288",
+   "name": "Bellagio Self Parking Garage",
+   "osm": 10.0,
+   "lidar_p90": 15.0,
+   "lidar_p50": 13.4
+  },
+  {
+   "id": "w25723909",
+   "name": "Bellagio Las Vegas",
+   "osm": 120.0,
+   "lidar_p90": 131.8,
+   "lidar_p50": 127.2
+  },
+  {
+   "id": "w25723910",
+   "name": "Bellagio Spa Tower",
+   "osm": 100.0,
+   "lidar_p90": 117.5,
+   "lidar_p50": 112.1
+  },
+  {
+   "id": "w27831695",
+   "name": "Park MGM",
+   "osm": 110.0,
+   "lidar_p90": 101.1,
+   "lidar_p50": 96.8
+  },
+  {
+   "id": "w27831697",
+   "name": "Le Boulevard At Paris",
+   "osm": 112.0,
+   "lidar_p90": 114.1,
+   "lidar_p50": 112.7
+  },
+  {
+   "id": "w27831699",
+   "name": "Eiffel Tower",
+   "osm": 165.0,
+   "lidar_p90": 72.4,
+   "lidar_p50": 38.0
+  },
+  {
+   "id": "w27858544",
+   "name": "Luxor Las Vegas",
+   "osm": 111.0,
+   "lidar_p90": 74.1,
+   "lidar_p50": 37.1
+  },
+  {
+   "id": "w27858550",
+   "name": "Mandalay Bay Resort & Casino",
+   "osm": 146.0,
+   "lidar_p90": 146.1,
+   "lidar_p50": 141.2
+  },
+  {
+   "id": "w27897905",
+   "name": "The Cosmopolitan Chelsea Tower",
+   "osm": 184.0,
+   "lidar_p90": 141.1,
+   "lidar_p50": 29.9
+  },
+  {
+   "id": "w27897921",
+   "name": null,
+   "osm": 80.0,
+   "lidar_p90": 84.3,
+   "lidar_p50": 81.1
+  },
+  {
+   "id": "w27910891",
+   "name": "Encore Las Vegas",
+   "osm": 192.0,
+   "lidar_p90": 57.2,
+   "lidar_p50": 22.7
+  },
+  {
+   "id": "w27998223",
+   "name": "Rio Masquerade Tower",
+   "osm": 129.0,
+   "lidar_p90": 134.1,
+   "lidar_p50": 122.9
+  },
+  {
+   "id": "w30424125",
+   "name": "Palazzo Tower",
+   "osm": 196.0,
+   "lidar_p90": 152.3,
+   "lidar_p50": 91.6
+  },
+  {
+   "id": "w30618090",
+   "name": "Venetian Tower",
+   "osm": 145.0,
+   "lidar_p90": 126.1,
+   "lidar_p50": 124.6
+  },
+  {
+   "id": "w33992535",
+   "name": "Treasure Island Self Parking",
+   "osm": 12.0,
+   "lidar_p90": 14.5,
+   "lidar_p50": 14.3
+  },
+  {
+   "id": "w43875964",
+   "name": "The Campanile",
+   "osm": 96.0,
+   "lidar_p90": 81.8,
+   "lidar_p50": 61.8
+  },
+  {
+   "id": "w52134608",
+   "name": "The Shops at Crystals",
+   "osm": 30.0,
+   "lidar_p90": 32.6,
+   "lidar_p50": 23.5
+  },
+  {
+   "id": "w52134834",
+   "name": "Veer Towers East",
+   "osm": 132.0,
+   "lidar_p90": 138.8,
+   "lidar_p50": 131.7
+  },
+  {
+   "id": "w52134835",
+   "name": "Veer Towers West",
+   "osm": 132.0,
+   "lidar_p90": 138.9,
+   "lidar_p50": 130.0
+  },
+  {
+   "id": "w52175576",
+   "name": "Aria Resort & Casino",
+   "osm": 20.0,
+   "lidar_p90": 73.9,
+   "lidar_p50": 28.4
+  },
+  {
+   "id": "w73540518",
+   "name": "MGM Grand Self Parking",
+   "osm": 15.0,
+   "lidar_p90": 25.3,
+   "lidar_p50": 23.8
+  },
+  {
+   "id": "w95223224",
+   "name": "The Signature at MGM Grand Tower I",
+   "osm": 145.0,
+   "lidar_p90": 131.0,
+   "lidar_p50": 126.0
+  },
+  {
+   "id": "w95223231",
+   "name": "The Signature at MGM Grand Tower III",
+   "osm": 145.0,
+   "lidar_p90": 129.1,
+   "lidar_p50": 124.2
+  },
+  {
+   "id": "w95223232",
+   "name": "The Signature at MGM Grand Tower II",
+   "osm": 145.0,
+   "lidar_p90": 126.9,
+   "lidar_p50": 121.7
+  },
+  {
+   "id": "w111322067",
+   "name": "Venezia Tower",
+   "osm": 99.0,
+   "lidar_p90": 87.9,
+   "lidar_p50": 85.8
+  },
+  {
+   "id": "w111339081",
+   "name": "Wynn Employee Parking",
+   "osm": 25.0,
+   "lidar_p90": 22.3,
+   "lidar_p50": 21.1
+  },
+  {
+   "id": "w111367828",
+   "name": "Harrah's Las Vegas",
+   "osm": 109.0,
+   "lidar_p90": 100.4,
+   "lidar_p50": 93.8
+  },
+  {
+   "id": "w111867821",
+   "name": "3753 Howard Hughes Parkway",
+   "osm": 10.0,
+   "lidar_p90": 17.0,
+   "lidar_p50": 13.6
+  },
+  {
+   "id": "w115670777",
+   "name": "Miracle Mile Shops and Planet Hollywood Self Parking",
+   "osm": 30.0,
+   "lidar_p90": 32.5,
+   "lidar_p50": 32.3
+  },
+  {
+   "id": "w115766957",
+   "name": null,
+   "osm": 83.0,
+   "lidar_p90": 85.4,
+   "lidar_p50": 79.6
+  },
+  {
+   "id": "w115766962",
+   "name": null,
+   "osm": 83.0,
+   "lidar_p90": 86.1,
+   "lidar_p50": 81.7
+  },
+  {
+   "id": "w118347176",
+   "name": "W Las Vegas",
+   "osm": 148.0,
+   "lidar_p90": 152.1,
+   "lidar_p50": 148.5
+  },
+  {
+   "id": "w118369027",
+   "name": null,
+   "osm": 9.0,
+   "lidar_p90": 12.5,
+   "lidar_p50": 11.8
+  },
+  {
+   "id": "w118369028",
+   "name": null,
+   "osm": 9.0,
+   "lidar_p90": 13.2,
+   "lidar_p50": 10.9
+  },
+  {
+   "id": "w118369029",
+   "name": null,
+   "osm": 9.0,
+   "lidar_p90": 12.2,
+   "lidar_p50": 10.9
+  },
+  {
+   "id": "w126267789",
+   "name": "Octavius Tower",
+   "osm": 107.0,
+   "lidar_p90": 94.2,
+   "lidar_p50": 91.9
+  },
+  {
+   "id": "w128573458",
+   "name": "Vegas Indoor Skydiving",
+   "osm": 12.0,
+   "lidar_p90": 16.5,
+   "lidar_p50": 14.2
+  },
+  {
+   "id": "w128573460",
+   "name": null,
+   "osm": 8.0,
+   "lidar_p90": 9.2,
+   "lidar_p50": 8.8
+  },
+  {
+   "id": "w128632721",
+   "name": null,
+   "osm": 72.0,
+   "lidar_p90": 67.6,
+   "lidar_p50": 61.0
+  },
+  {
+   "id": "w132225807",
+   "name": "Fremont Street Experience Parking",
+   "osm": 12.0,
+   "lidar_p90": 16.5,
+   "lidar_p50": 15.4
+  },
+  {
+   "id": "w133755258",
+   "name": null,
+   "osm": 9.0,
+   "lidar_p90": 23.8,
+   "lidar_p50": 21.8
+  },
+  {
+   "id": "w133879585",
+   "name": "Park MGM Self Parking",
+   "osm": 30.0,
+   "lidar_p90": 34.9,
+   "lidar_p50": 33.7
+  },
+  {
+   "id": "w134068318",
+   "name": "Fontainebleau Las Vegas",
+   "osm": 224.0,
+   "lidar_p90": 109.4,
+   "lidar_p50": 23.2
+  },
+  {
+   "id": "w134677416",
+   "name": "Turnberry Place",
+   "osm": 145.0,
+   "lidar_p90": 129.7,
+   "lidar_p50": 126.5
+  },
+  {
+   "id": "w134677417",
+   "name": "Spartacus Law Firm",
+   "osm": 145.0,
+   "lidar_p90": 129.9,
+   "lidar_p50": 126.5
+  },
+  {
+   "id": "w134677425",
+   "name": "Turnberry Place",
+   "osm": 145.0,
+   "lidar_p90": 130.5,
+   "lidar_p50": 127.4
+  },
+  {
+   "id": "w134677429",
+   "name": "Turnberry Place",
+   "osm": 145.0,
+   "lidar_p90": 131.5,
+   "lidar_p50": 128.3
+  },
+  {
+   "id": "w134679980",
+   "name": "East Tower",
+   "osm": 138.0,
+   "lidar_p90": 142.6,
+   "lidar_p50": 139.9
+  },
+  {
+   "id": "w134795273",
+   "name": "The Cosmopolitan of Las Vegas",
+   "osm": 184.0,
+   "lidar_p90": 150.9,
+   "lidar_p50": 32.4
+  },
+  {
+   "id": "w134918082",
+   "name": "West Tower",
+   "osm": 138.0,
+   "lidar_p90": 140.8,
+   "lidar_p50": 138.1
+  },
+  {
+   "id": "w134921373",
+   "name": "Planet Hollywood Resort and Casino",
+   "osm": 122.0,
+   "lidar_p90": 124.7,
+   "lidar_p50": 119.5
+  },
+  {
+   "id": "w134930088",
+   "name": "Aria Resort & Casino",
+   "osm": 100.0,
+   "lidar_p90": 105.0,
+   "lidar_p50": 103.3
+  },
+  {
+   "id": "w134930089",
+   "name": null,
+   "osm": 65.0,
+   "lidar_p90": 144.6,
+   "lidar_p50": 80.2
+  },
+  {
+   "id": "w134930090",
+   "name": "Aria Resort & Casino",
+   "osm": 163.0,
+   "lidar_p90": 149.1,
+   "lidar_p50": 145.7
+  },
+  {
+   "id": "w134930091",
+   "name": null,
+   "osm": 65.0,
+   "lidar_p90": 80.6,
+   "lidar_p50": 80.0
+  },
+  {
+   "id": "w134930092",
+   "name": "Aria Resort & Casino",
+   "osm": 183.0,
+   "lidar_p90": 161.0,
+   "lidar_p50": 80.0
+  },
+  {
+   "id": "w134935559",
+   "name": "Allure Las Vegas Tower I",
+   "osm": 142.0,
+   "lidar_p90": 136.7,
+   "lidar_p50": 130.4
+  },
+  {
+   "id": "w134938477",
+   "name": "Voodoo steakhouse",
+   "osm": 130.0,
+   "lidar_p90": 133.9,
+   "lidar_p50": 127.2
+  },
+  {
+   "id": "w134938479",
+   "name": "VooDoo Rooftop",
+   "osm": 140.0,
+   "lidar_p90": 131.5,
+   "lidar_p50": 129.7
+  },
+  {
+   "id": "w134938481",
+   "name": "Rio All Suite Hotel and Casino",
+   "osm": 120.0,
+   "lidar_p90": 134.2,
+   "lidar_p50": 125.6
+  },
+  {
+   "id": "w134944648",
+   "name": "Palace Tower",
+   "osm": 133.0,
+   "lidar_p90": 128.5,
+   "lidar_p50": 123.8
+  },
+  {
+   "id": "w135332960",
+   "name": null,
+   "osm": 15.0,
+   "lidar_p90": 15.3,
+   "lidar_p50": 14.0
+  },
+  {
+   "id": "w135457469",
+   "name": "Stratosphere Tower",
+   "osm": 350.0,
+   "lidar_p90": 88.7,
+   "lidar_p50": 24.7
+  },
+  {
+   "id": "w136520122",
+   "name": null,
+   "osm": 20.0,
+   "lidar_p90": 74.8,
+   "lidar_p50": 17.7
+  },
+  {
+   "id": "w142900604",
+   "name": "Terminal 3 Parking",
+   "osm": 24.0,
+   "lidar_p90": 28.8,
+   "lidar_p50": 28.7
+  },
+  {
+   "id": "w172577644",
+   "name": null,
+   "osm": 15.0,
+   "lidar_p90": 14.4,
+   "lidar_p50": 13.4
+  },
+  {
+   "id": "w172577647",
+   "name": null,
+   "osm": 7.0,
+   "lidar_p90": 8.1,
+   "lidar_p50": 7.7
+  },
+  {
+   "id": "w172577648",
+   "name": null,
+   "osm": 15.0,
+   "lidar_p90": 14.9,
+   "lidar_p50": 1.0
+  },
+  {
+   "id": "w172577654",
+   "name": "NetJets",
+   "osm": 15.0,
+   "lidar_p90": 15.0,
+   "lidar_p50": 13.9
+  },
+  {
+   "id": "w172577663",
+   "name": null,
+   "osm": 6.0,
+   "lidar_p90": 6.6,
+   "lidar_p50": 6.4
+  },
+  {
+   "id": "w172577666",
+   "name": "5 Star Helicopter Tours",
+   "osm": 13.0,
+   "lidar_p90": 12.9,
+   "lidar_p50": 11.6
+  },
+  {
+   "id": "w172589685",
+   "name": "Fresh Wata",
+   "osm": 9.0,
+   "lidar_p90": 10.4,
+   "lidar_p50": 9.5
+  },
+  {
+   "id": "w172589697",
+   "name": "FWR Rental Haus",
+   "osm": 9.0,
+   "lidar_p90": 9.4,
+   "lidar_p50": 9.1
+  },
+  {
+   "id": "w180250497",
+   "name": null,
+   "osm": 12.0,
+   "lidar_p90": 16.7,
+   "lidar_p50": 13.5
+  },
+  {
+   "id": "w182464632",
+   "name": "3763 Howard Hughes Parkway",
+   "osm": 10.0,
+   "lidar_p90": 17.3,
+   "lidar_p50": 13.6
+  },
+  {
+   "id": "w205499656",
+   "name": null,
+   "osm": 30.0,
+   "lidar_p90": 31.5,
+   "lidar_p50": 30.5
+  },
+  {
+   "id": "w205501268",
+   "name": "Wynn Las Vegas",
+   "osm": 187.0,
+   "lidar_p90": 108.7,
+   "lidar_p50": 15.4
+  },
+  {
+   "id": "w206128510",
+   "name": null,
+   "osm": 18.0,
+   "lidar_p90": 23.8,
+   "lidar_p50": 22.4
+  },
+  {
+   "id": "w207212838",
+   "name": null,
+   "osm": 21.0,
+   "lidar_p90": 25.6,
+   "lidar_p50": 24.4
+  },
+  {
+   "id": "w226508858",
+   "name": null,
+   "osm": 27.0,
+   "lidar_p90": 41.0,
+   "lidar_p50": 36.4
+  },
+  {
+   "id": "w226508863",
+   "name": null,
+   "osm": 16.0,
+   "lidar_p90": 33.7,
+   "lidar_p50": 30.3
+  },
+  {
+   "id": "w226508865",
+   "name": null,
+   "osm": 18.0,
+   "lidar_p90": 40.9,
+   "lidar_p50": 37.5
+  },
+  {
+   "id": "w226508896",
+   "name": "Clark County Detention Center Employee Parking",
+   "osm": 16.0,
+   "lidar_p90": 25.5,
+   "lidar_p50": 23.7
+  },
+  {
+   "id": "w226572663",
+   "name": "Newport Lofts",
+   "osm": 102.0,
+   "lidar_p90": 99.4,
+   "lidar_p50": 97.3
+  },
+  {
+   "id": "w276427203",
+   "name": "Marriott's Grand Chateau",
+   "osm": 128.0,
+   "lidar_p90": 111.7,
+   "lidar_p50": 20.7
+  },
+  {
+   "id": "w296687564",
+   "name": null,
+   "osm": 12.0,
+   "lidar_p90": 13.8,
+   "lidar_p50": 12.4
+  },
+  {
+   "id": "w305176695",
+   "name": null,
+   "osm": 11.0,
+   "lidar_p90": 12.7,
+   "lidar_p50": 11.4
+  },
+  {
+   "id": "w316174410",
+   "name": "Circa Resort & Casino",
+   "osm": 152.4,
+   "lidar_p90": 132.8,
+   "lidar_p50": 27.9
+  },
+  {
+   "id": "w331347672",
+   "name": "895 Sierra Vista Drive",
+   "osm": 3.0,
+   "lidar_p90": 10.3,
+   "lidar_p50": 9.7
+  },
+  {
+   "id": "w331347681",
+   "name": "895 Sierra Vista Drive",
+   "osm": 3.0,
+   "lidar_p90": 10.8,
+   "lidar_p50": 9.6
+  },
+  {
+   "id": "w334447932",
+   "name": "Janet Terminal",
+   "osm": 8.0,
+   "lidar_p90": 9.3,
+   "lidar_p50": 7.0
+  },
+  {
+   "id": "w340018195",
+   "name": "FAA Airport Traffic Control Tower",
+   "osm": 109.0,
+   "lidar_p90": 110.0,
+   "lidar_p50": 108.6
+  },
+  {
+   "id": "w340018197",
+   "name": null,
+   "osm": 9.0,
+   "lidar_p90": 9.2,
+   "lidar_p50": 9.0
+  },
+  {
+   "id": "w364846544",
+   "name": "Paris Balloon",
+   "osm": 46.0,
+   "lidar_p90": 53.8,
+   "lidar_p50": 51.1
+  },
+  {
+   "id": "w472669744",
+   "name": "The Cosmopolitan Boulevard Tower",
+   "osm": 184.0,
+   "lidar_p90": 50.8,
+   "lidar_p50": 43.2
+  },
+  {
+   "id": "w494974482",
+   "name": "Homewood Suites by Hilton Las Vegas City Center",
+   "osm": 13.3,
+   "lidar_p90": 22.0,
+   "lidar_p50": 19.7
+  },
+  {
+   "id": "w494974483",
+   "name": "Hilton Garden Inn",
+   "osm": 13.3,
+   "lidar_p90": 23.0,
+   "lidar_p50": 19.7
+  },
+  {
+   "id": "w495532040",
+   "name": null,
+   "osm": 4.0,
+   "lidar_p90": 22.5,
+   "lidar_p50": 7.0
+  },
+  {
+   "id": "w495545498",
+   "name": "Panorama Tower I parking garage",
+   "osm": 25.8,
+   "lidar_p90": 119.2,
+   "lidar_p50": 15.9
+  },
+  {
+   "id": "w531156752",
+   "name": "Sands Aviation",
+   "osm": 17.0,
+   "lidar_p90": 21.5,
+   "lidar_p50": 17.9
+  },
+  {
+   "id": "w543641002",
+   "name": "Sky Tower Las Vegas Condominiums",
+   "osm": 152.0,
+   "lidar_p90": 152.3,
+   "lidar_p50": 147.3
+  },
+  {
+   "id": "w544016653",
+   "name": "Binion's Gambling Hall and Hotel Self Parking",
+   "osm": 18.0,
+   "lidar_p90": 20.1,
+   "lidar_p50": 18.4
+  },
+  {
+   "id": "w544016661",
+   "name": "California Hotel and Casino",
+   "osm": 6.0,
+   "lidar_p90": 43.9,
+   "lidar_p50": 16.4
+  },
+  {
+   "id": "w656398429",
+   "name": "Regency Towers",
+   "osm": 97.0,
+   "lidar_p90": 80.1,
+   "lidar_p50": 5.1
+  },
+  {
+   "id": "w688540494",
+   "name": null,
+   "osm": 3.0,
+   "lidar_p90": 2.8,
+   "lidar_p50": 2.8
+  },
+  {
+   "id": "w691478555",
+   "name": "Allegiant Stadium",
+   "osm": 69.0,
+   "lidar_p90": 62.2,
+   "lidar_p50": 57.2
+  },
+  {
+   "id": "w699874292",
+   "name": "Fremont Hotel & Casino Las Vegas",
+   "osm": 54.0,
+   "lidar_p90": 42.7,
+   "lidar_p50": 9.4
+  },
+  {
+   "id": "w705944242",
+   "name": null,
+   "osm": 7.0,
+   "lidar_p90": 6.1,
+   "lidar_p50": 5.7
+  },
+  {
+   "id": "w705944243",
+   "name": null,
+   "osm": 7.0,
+   "lidar_p90": 6.3,
+   "lidar_p50": 5.6
+  },
+  {
+   "id": "w839503453",
+   "name": "Ole Red",
+   "osm": 9.0,
+   "lidar_p90": 45.7,
+   "lidar_p50": 6.4
+  },
+  {
+   "id": "w976405284",
+   "name": "Sphere",
+   "osm": 112.0,
+   "lidar_p90": 108.4,
+   "lidar_p50": 78.1
+  },
+  {
+   "id": "w1018431837",
+   "name": null,
+   "osm": 6.0,
+   "lidar_p90": 8.8,
+   "lidar_p50": 6.0
+  },
+  {
+   "id": "w1176928048",
+   "name": "Augustus Tower",
+   "osm": 111.0,
+   "lidar_p90": 108.1,
+   "lidar_p50": 103.1
+  },
+  {
+   "id": "w1198427833",
+   "name": "Grand Prix Plaza",
+   "osm": 19.5,
+   "lidar_p90": 4.4,
+   "lidar_p50": 1.8
+  },
+  {
+   "id": "w1216230717",
+   "name": null,
+   "osm": 4.0,
+   "lidar_p90": 12.8,
+   "lidar_p50": 9.9
+  },
+  {
+   "id": "w1235861280",
+   "name": null,
+   "osm": 6.0,
+   "lidar_p90": 8.9,
+   "lidar_p50": 6.3
+  },
+  {
+   "id": "w1235861281",
+   "name": "Information Bail Bonds",
+   "osm": 6.0,
+   "lidar_p90": 6.1,
+   "lidar_p50": 5.0
+  },
+  {
+   "id": "w1235861282",
+   "name": null,
+   "osm": 6.0,
+   "lidar_p90": 6.3,
+   "lidar_p50": 5.5
+  },
+  {
+   "id": "w1238384484",
+   "name": "T-Mobile Arena Parking",
+   "osm": 25.0,
+   "lidar_p90": 26.8,
+   "lidar_p50": 26.4
+  },
+  {
+   "id": "w1264218056",
+   "name": null,
+   "osm": 12.0,
+   "lidar_p90": 11.5,
+   "lidar_p50": 11.0
+  },
+  {
+   "id": "w1410029920",
+   "name": null,
+   "osm": 5.0,
+   "lidar_p90": 6.0,
+   "lidar_p50": 6.0
+  },
+  {
+   "id": "w1410029921",
+   "name": null,
+   "osm": 5.0,
+   "lidar_p90": 6.4,
+   "lidar_p50": 6.3
+  },
+  {
+   "id": "w1442767526",
+   "name": null,
+   "osm": 9.0,
+   "lidar_p90": 17.7,
+   "lidar_p50": 10.6
+  },
+  {
+   "id": "w1442814229",
+   "name": null,
+   "osm": 15.0,
+   "lidar_p90": 15.6,
+   "lidar_p50": 15.4
+  },
+  {
+   "id": "w1470126528",
+   "name": null,
+   "osm": 9.0,
+   "lidar_p90": 19.2,
+   "lidar_p50": 10.3
+  },
+  {
+   "id": "r1606512",
+   "name": "Miracle Mile Shops",
+   "osm": 20.0,
+   "lidar_p90": 47.2,
+   "lidar_p50": 23.5
+  },
+  {
+   "id": "r5342155",
+   "name": "Elara, a Hilton Grand Vacations Club",
+   "osm": 183.0,
+   "lidar_p90": 23.4,
+   "lidar_p50": 17.1
+  },
+  {
+   "id": "r6138877",
+   "name": "Hilton Grand Vacations on the Boulevard",
+   "osm": 123.0,
+   "lidar_p90": 16.2,
+   "lidar_p50": 13.0
+  },
+  {
+   "id": "r6138877",
+   "name": "Hilton Grand Vacations on the Boulevard",
+   "osm": 123.0,
+   "lidar_p90": 84.9,
+   "lidar_p50": 75.8
+  },
+  {
+   "id": "r6138877",
+   "name": "Hilton Grand Vacations on the Boulevard",
+   "osm": 123.0,
+   "lidar_p90": 120.8,
+   "lidar_p50": 114.7
+  },
+  {
+   "id": "r7655652",
+   "name": "Palms Place",
+   "osm": 157.0,
+   "lidar_p90": 151.5,
+   "lidar_p50": 23.8
+  },
+  {
+   "id": "r11991889",
+   "name": null,
+   "osm": 9.0,
+   "lidar_p90": 12.5,
+   "lidar_p50": 11.8
+  },
+  {
+   "id": "r18772105",
+   "name": "Neonopolis",
+   "osm": 12.0,
+   "lidar_p90": 26.1,
+   "lidar_p50": 24.6
+  },
+  {
+   "id": "w495545524",
+   "name": null,
+   "osm": 6.0,
+   "lidar_p90": 115.1,
+   "lidar_p50": 6.6
+  },
+  {
+   "id": "w1410027349",
+   "name": null,
+   "osm": 5.0,
+   "lidar_p90": 4.4,
+   "lidar_p50": 3.3
+  }
+ ],
+ "overrides": {
+  "w1448339452": {
+   "set": {
+    "building:levels": "5"
+   },
+   "reason": "Tradition Pointe is tagged building:levels=52, which would make a low-rise apartment block the tallest building in Utah. 5 is an estimate, not a measurement."
+  },
+  "w1511684988": {
+   "set": {
+    "building:levels": "7"
+   },
+   "reason": "Journeyman has one part tagged building:levels=33; no 33-storey tower exists at 630 S 400 W. Set to match the adjoining part (7)."
+  },
+  "w422072924": {
+   "set": {
+    "height": "100.6"
+   },
+   "reason": "Grand America Hotel's roof part is tagged height=90. The 2013 LiDAR peaks at 103.5 m over it and CTBUH lists 100.6 m, so the tag stops short of the roof. Set to 100.6."
+  },
+  "w27831699": {
+   "set": {
+    "roof:shape": "pyramidal",
+    "roof:height": "165"
+   },
+   "reason": "The Las Vegas Eiffel Tower replica is tagged as a 165 m building with no roof shape, which would draw a solid 165 m box. Drawn as a pyramid on its footprint instead: a closer stand-in for a tapering lattice tower."
+  },
+  "w134068318": {
+   "set": {
+    "name": "Fontainebleau Las Vegas"
+   },
+   "reason": "The tower has no name tag in OSM. Named after the named OSM area that encloses it."
+  },
+  "w134930092": {
+   "set": {
+    "name": "Aria Resort & Casino"
+   },
+   "reason": "The tower has no name tag in OSM. Named after the named OSM area that encloses it."
+  },
+  "w134930090": {
+   "set": {
+    "name": "Aria Resort & Casino"
+   },
+   "reason": "The tower has no name tag in OSM. Named after the named OSM area that encloses it."
+  },
+  "w134930088": {
+   "set": {
+    "name": "Aria Resort & Casino"
+   },
+   "reason": "The tower has no name tag in OSM. Named after the named OSM area that encloses it."
+  },
+  "w495695272": {
+   "set": {
+    "name": "The Martin"
+   },
+   "reason": "The tower has no name tag in OSM. Named after the named OSM area that encloses it."
+  },
+  "w134677416": {
+   "set": {
+    "name": "Turnberry Place"
+   },
+   "reason": "The tower has no name tag in OSM. Named after the named OSM area that encloses it."
+  },
+  "w134677425": {
+   "set": {
+    "name": "Turnberry Place"
+   },
+   "reason": "The tower has no name tag in OSM. Named after the named OSM area that encloses it."
+  },
+  "w134677429": {
+   "set": {
+    "name": "Turnberry Place"
+   },
+   "reason": "The tower has no name tag in OSM. Named after the named OSM area that encloses it."
+  },
+  "w495545510": {
+   "set": {
+    "name": "Panorama Tower II"
+   },
+   "reason": "The tower has no name tag in OSM. Named after the named OSM area that encloses it."
+  },
+  "w134938481": {
+   "set": {
+    "name": "Rio All Suite Hotel and Casino"
+   },
+   "reason": "The tower has no name tag in OSM. Named after the named OSM area that encloses it."
+  },
+  "w111367828": {
+   "set": {
+    "name": "Harrah's Las Vegas"
+   },
+   "reason": "The tower has no name tag in OSM. Named after the named OSM area that encloses it."
+  },
+  "w130585543": {
+   "set": {
+    "name": "World Market Center"
+   },
+   "reason": "The tower has no name tag in OSM. Named after the named OSM area that encloses it."
+  }
+ }
+}

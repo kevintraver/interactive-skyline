@@ -1,0 +1,169 @@
+{
+  "slc": {
+    "name": "Salt Lake City",
+    "origin": {
+      "lat": 40.7704,
+      "lon": -111.8919
+    },
+    "originNote": "Temple Square",
+    "bbox": [
+      40.738,
+      -111.918,
+      40.784,
+      -111.862
+    ],
+    "base": 1300,
+    "lidar": {
+      "dataset": "USGS_LPC_UT_Wasatch_L4_2013_LAS_2016",
+      "year": 2013,
+      "maxDepth": 8,
+      "cell": 1.0
+    },
+    "terrain": {
+      "far": {
+        "zoom": 11,
+        "x0": -30000,
+        "y0": -42000,
+        "x1": 30000,
+        "y1": 12000,
+        "step": 60,
+        "mpp": 15
+      },
+      "near": {
+        "zoom": 14,
+        "x0": -3200,
+        "y0": -4600,
+        "x1": 3400,
+        "y1": 4200,
+        "step": 10,
+        "mpp": 2
+      }
+    },
+    "shadow": {
+      "x": 0,
+      "y": -700,
+      "half": 3600
+    },
+    "views": [
+      {
+        "id": "ensign",
+        "label": "Ensign Peak",
+        "eye": {
+          "x": 113,
+          "y": 2670,
+          "summit": 120,
+          "agl": 1.7
+        },
+        "target": {
+          "x": -80,
+          "y": -850,
+          "agl": 110
+        }
+      },
+      {
+        "id": "aerial",
+        "label": "Aerial",
+        "eye": {
+          "x": 2600,
+          "y": -2700,
+          "elev": 2800
+        },
+        "target": {
+          "x": -80,
+          "y": -850,
+          "agl": 30
+        }
+      }
+    ]
+  },
+  "lv": {
+    "name": "Las Vegas",
+    "origin": {
+      "lat": 36.1147,
+      "lon": -115.1728
+    },
+    "originNote": "Las Vegas Boulevard at Flamingo Road",
+    "bbox": [
+      36.085,
+      -115.2,
+      36.178,
+      -115.135
+    ],
+    "base": 620,
+    "lidar": {
+      "dataset": "NV_ClarkCo_2_B22",
+      "year": 2022,
+      "maxDepth": 10,
+      "cell": 1.5
+    },
+    "terrain": {
+      "far": {
+        "zoom": 11,
+        "x0": -48000,
+        "y0": -34000,
+        "x1": 30000,
+        "y1": 38000,
+        "step": 80,
+        "mpp": 20
+      },
+      "near": {
+        "zoom": 14,
+        "x0": -3600,
+        "y0": -4400,
+        "x1": 4600,
+        "y1": 8200,
+        "step": 12,
+        "mpp": 2.5
+      }
+    },
+    "shadow": {
+      "x": 500,
+      "y": 1900,
+      "half": 6500
+    },
+    "views": [
+      {
+        "id": "east",
+        "label": "From the east",
+        "eye": {
+          "x": 10700,
+          "y": 555,
+          "agl": 350
+        },
+        "target": {
+          "x": 0,
+          "y": 555,
+          "agl": 250
+        }
+      },
+      {
+        "id": "strat",
+        "label": "Strat deck",
+        "eye": {
+          "x": 1560,
+          "y": 3585,
+          "agl": 262
+        },
+        "target": {
+          "x": -350,
+          "y": 0,
+          "agl": 60
+        }
+      },
+      {
+        "id": "aerial",
+        "label": "Aerial",
+        "eye": {
+          "x": 4600,
+          "y": -3600,
+          "elev": 2300
+        },
+        "target": {
+          "x": 0,
+          "y": 900,
+          "agl": 40
+        }
+      }
+    ]
+  }
+}

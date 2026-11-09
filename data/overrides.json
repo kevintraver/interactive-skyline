@@ -1,0 +1,100 @@
+{
+  "_comment": "Hand corrections to raw OSM tags that are clearly wrong. Each one is applied before heights are computed and listed in data/height_report.json.",
+  "w1448339452": {
+    "set": {
+      "building:levels": "5"
+    },
+    "reason": "Tradition Pointe is tagged building:levels=52, which would make a low-rise apartment block the tallest building in Utah. 5 is an estimate, not a measurement."
+  },
+  "w1511684988": {
+    "set": {
+      "building:levels": "7"
+    },
+    "reason": "Journeyman has one part tagged building:levels=33; no 33-storey tower exists at 630 S 400 W. Set to match the adjoining part (7)."
+  },
+  "w422072924": {
+    "set": {
+      "height": "100.6"
+    },
+    "reason": "Grand America Hotel's roof part is tagged height=90. The 2013 LiDAR peaks at 103.5 m over it and CTBUH lists 100.6 m, so the tag stops short of the roof. Set to 100.6."
+  },
+  "w27831699": {
+    "set": {
+      "roof:shape": "pyramidal",
+      "roof:height": "165"
+    },
+    "reason": "The Las Vegas Eiffel Tower replica is tagged as a 165 m building with no roof shape, which would draw a solid 165 m box. Drawn as a pyramid on its footprint instead: a closer stand-in for a tapering lattice tower."
+  },
+  "w134068318": {
+    "set": {
+      "name": "Fontainebleau Las Vegas"
+    },
+    "reason": "The tower has no name tag in OSM. Named after the named OSM area that encloses it."
+  },
+  "w134930092": {
+    "set": {
+      "name": "Aria Resort & Casino"
+    },
+    "reason": "The tower has no name tag in OSM. Named after the named OSM area that encloses it."
+  },
+  "w134930090": {
+    "set": {
+      "name": "Aria Resort & Casino"
+    },
+    "reason": "The tower has no name tag in OSM. Named after the named OSM area that encloses it."
+  },
+  "w134930088": {
+    "set": {
+      "name": "Aria Resort & Casino"
+    },
+    "reason": "The tower has no name tag in OSM. Named after the named OSM area that encloses it."
+  },
+  "w495695272": {
+    "set": {
+      "name": "The Martin"
+    },
+    "reason": "The tower has no name tag in OSM. Named after the named OSM area that encloses it."
+  },
+  "w134677416": {
+    "set": {
+      "name": "Turnberry Place"
+    },
+    "reason": "The tower has no name tag in OSM. Named after the named OSM area that encloses it."
+  },
+  "w134677425": {
+    "set": {
+      "name": "Turnberry Place"
+    },
+    "reason": "The tower has no name tag in OSM. Named after the named OSM area that encloses it."
+  },
+  "w134677429": {
+    "set": {
+      "name": "Turnberry Place"
+    },
+    "reason": "The tower has no name tag in OSM. Named after the named OSM area that encloses it."
+  },
+  "w495545510": {
+    "set": {
+      "name": "Panorama Tower II"
+    },
+    "reason": "The tower has no name tag in OSM. Named after the named OSM area that encloses it."
+  },
+  "w134938481": {
+    "set": {
+      "name": "Rio All Suite Hotel and Casino"
+    },
+    "reason": "The tower has no name tag in OSM. Named after the named OSM area that encloses it."
+  },
+  "w111367828": {
+    "set": {
+      "name": "Harrah's Las Vegas"
+    },
+    "reason": "The tower has no name tag in OSM. Named after the named OSM area that encloses it."
+  },
+  "w130585543": {
+    "set": {
+      "name": "World Market Center"
+    },
+    "reason": "The tower has no name tag in OSM. Named after the named OSM area that encloses it."
+  }
+}

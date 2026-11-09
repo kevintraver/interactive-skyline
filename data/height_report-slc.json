@@ -1,0 +1,881 @@
+{
+ "counts": {
+  "lidar": 18139,
+  "osm-height": 49,
+  "osm-levels": 137,
+  "guess": 519
+ },
+ "total": 18844,
+ "tall": 76,
+ "tall_list": [
+  {
+   "id": "w995054717",
+   "name": "Astra Tower",
+   "h": 137.5,
+   "src": "osm-height",
+   "levels": 41.0
+  },
+  {
+   "id": "w238255654",
+   "name": "Wells Fargo Center",
+   "h": 128.7,
+   "src": "osm-height",
+   "levels": 24.0
+  },
+  {
+   "id": "w32333201",
+   "name": "Church Office Building",
+   "h": 128.0,
+   "src": "osm-height",
+   "levels": 30.0
+  },
+  {
+   "id": "w172543251",
+   "name": "95 State at City Creek",
+   "h": 119.8,
+   "src": "osm-height",
+   "levels": 25.0
+  },
+  {
+   "id": "w445788207",
+   "name": "111 Main",
+   "h": 118.0,
+   "src": "osm-height",
+   "levels": 23.0
+  },
+  {
+   "id": "w537029448",
+   "name": "99 West",
+   "h": 114.3,
+   "src": "osm-height",
+   "levels": 30.0
+  },
+  {
+   "id": "w1281061869",
+   "name": "Key Bank Tower",
+   "h": 107.0,
+   "src": "osm-height",
+   "levels": 26.0
+  },
+  {
+   "id": "w33193517",
+   "name": "One Utah Center",
+   "h": 106.7,
+   "src": "osm-height",
+   "levels": 24.0
+  },
+  {
+   "id": "w33192009",
+   "name": "Beneficial Tower",
+   "h": 102.1,
+   "src": "osm-height",
+   "levels": 18.0
+  },
+  {
+   "id": "w1275295291",
+   "name": "The Worthington",
+   "h": 102.0,
+   "src": "osm-height",
+   "levels": 31.0
+  },
+  {
+   "id": "r6144703",
+   "name": "Grand America Hotel",
+   "h": 100.6,
+   "src": "osm-height",
+   "levels": null
+  },
+  {
+   "id": "w1150797303",
+   "name": "Hyatt Regency Salt Lake City",
+   "h": 99.7,
+   "src": "osm-height",
+   "levels": 30.0
+  },
+  {
+   "id": "w537033364",
+   "name": "American Towers",
+   "h": 98.8,
+   "src": "osm-height",
+   "levels": 1.0
+  },
+  {
+   "id": "w1281061870",
+   "name": "World Trade Center",
+   "h": 98.0,
+   "src": "osm-height",
+   "levels": 22.0
+  },
+  {
+   "id": "w223915616",
+   "name": "222 Main",
+   "h": 96.3,
+   "src": "osm-height",
+   "levels": 22.0
+  },
+  {
+   "id": "w32920861",
+   "name": "Utah State Capitol Building",
+   "h": 87.0,
+   "src": "osm-height",
+   "levels": 5.0
+  },
+  {
+   "id": "w595951732",
+   "name": "136 South Temple Street",
+   "h": 83.5,
+   "src": "osm-height",
+   "levels": 24.0
+  },
+  {
+   "id": "w33192016",
+   "name": "Zions Bank Building",
+   "h": 81.4,
+   "src": "osm-height",
+   "levels": 18.0
+  },
+  {
+   "id": "w157327544",
+   "name": "The Regent",
+   "h": 80.8,
+   "src": "osm-height",
+   "levels": 20.0
+  },
+  {
+   "id": "w33155164",
+   "name": "Salt Lake City and County Building",
+   "h": 68.9,
+   "src": "lidar",
+   "levels": null
+  },
+  {
+   "id": "w223918433",
+   "name": "Walker Center",
+   "h": 67.1,
+   "src": "osm-height",
+   "levels": 16.0
+  },
+  {
+   "id": "w172543265",
+   "name": "Kimpton Hotel Monaco Salt Lake City",
+   "h": 65.2,
+   "src": "osm-height",
+   "levels": 14.0
+  },
+  {
+   "id": "w33193213",
+   "name": "170 South Main",
+   "h": 65.0,
+   "src": "osm-height",
+   "levels": 15.0
+  },
+  {
+   "id": "w835836211",
+   "name": "Liberty Sky",
+   "h": 64.0,
+   "src": "osm-levels",
+   "levels": 20.0
+  },
+  {
+   "id": "r15568838",
+   "name": "Salt Lake Temple",
+   "h": 64.0,
+   "src": "osm-height",
+   "levels": null
+  },
+  {
+   "id": "w172543270",
+   "name": "310 South Main Street",
+   "h": 61.5,
+   "src": "lidar",
+   "levels": 14.0
+  },
+  {
+   "id": "w595951903",
+   "name": "Bell Plaza",
+   "h": 61.5,
+   "src": "osm-height",
+   "levels": 15.0
+  },
+  {
+   "id": "w226319125",
+   "name": "Orrin G. Hatch United States Courthouse",
+   "h": 61.0,
+   "src": "osm-height",
+   "levels": null
+  },
+  {
+   "id": "w172543258",
+   "name": "Washington Federal Bank Building",
+   "h": 58.8,
+   "src": "lidar",
+   "levels": 13.0
+  },
+  {
+   "id": "w595951078",
+   "name": "Broadway Centre",
+   "h": 57.6,
+   "src": "osm-height",
+   "levels": 14.0
+  },
+  {
+   "id": "w595951359",
+   "name": "257 East 200 South",
+   "h": 57.3,
+   "src": "lidar",
+   "levels": 13.0
+  },
+  {
+   "id": "w595951880",
+   "name": "Dan Jones Building",
+   "h": 57.0,
+   "src": "lidar",
+   "levels": 15.0
+  },
+  {
+   "id": "w33192533",
+   "name": "Hilton Salt Lake City Center",
+   "h": 56.6,
+   "src": "lidar",
+   "levels": 17.0
+  },
+  {
+   "id": "w35920390",
+   "name": "Little America Hotel Salt Lake City",
+   "h": 55.9,
+   "src": "lidar",
+   "levels": null
+  },
+  {
+   "id": "w32333198",
+   "name": "Joseph Smith Memorial Building",
+   "h": 55.5,
+   "src": "osm-height",
+   "levels": 2.0
+  },
+  {
+   "id": "w33195045",
+   "name": "Radisson",
+   "h": 54.7,
+   "src": "lidar",
+   "levels": 15.0
+  },
+  {
+   "id": "w226288671",
+   "name": null,
+   "h": 54.7,
+   "src": "lidar",
+   "levels": null
+  },
+  {
+   "id": "w1434521688",
+   "name": "Zion Summit Condominium",
+   "h": 53.0,
+   "src": "osm-height",
+   "levels": 13.0
+  },
+  {
+   "id": "w33192119",
+   "name": "Deseret Building",
+   "h": 52.2,
+   "src": "lidar",
+   "levels": 14.0
+  },
+  {
+   "id": "w595951347",
+   "name": "Maverik Base Camp",
+   "h": 51.4,
+   "src": "lidar",
+   "levels": 13.0
+  },
+  {
+   "id": "w224521586",
+   "name": "Newhouse Building",
+   "h": 50.8,
+   "src": "lidar",
+   "levels": 12.0
+  },
+  {
+   "id": "w143796147",
+   "name": "Kearns Building",
+   "h": 50.5,
+   "src": "lidar",
+   "levels": 10.0
+  },
+  {
+   "id": "w224521587",
+   "name": "Boston Building",
+   "h": 50.0,
+   "src": "lidar",
+   "levels": 12.0
+  },
+  {
+   "id": "w595952093",
+   "name": "215 South State Street",
+   "h": 50.0,
+   "src": "osm-height",
+   "levels": 13.0
+  },
+  {
+   "id": "w227678198",
+   "name": "40 South 900 East",
+   "h": 49.4,
+   "src": "lidar",
+   "levels": 14.0
+  },
+  {
+   "id": "w35967063",
+   "name": "Broadway Media Building",
+   "h": 48.8,
+   "src": "lidar",
+   "levels": null
+  },
+  {
+   "id": "w565196374",
+   "name": "Bonneville Towers",
+   "h": 48.4,
+   "src": "lidar",
+   "levels": 14.0
+  },
+  {
+   "id": "w223923170",
+   "name": "Salt Lake City Marriott City Center",
+   "h": 48.1,
+   "src": "lidar",
+   "levels": 10.0
+  },
+  {
+   "id": "w31553521",
+   "name": "Salt Lake Marriott Downtown at City Creek",
+   "h": 46.5,
+   "src": "lidar",
+   "levels": 14.0
+  },
+  {
+   "id": "w238249914",
+   "name": null,
+   "h": 45.1,
+   "src": "lidar",
+   "levels": null
+  },
+  {
+   "id": "w224554407",
+   "name": "143 South Main Street",
+   "h": 44.6,
+   "src": "lidar",
+   "levels": 12.0
+  },
+  {
+   "id": "w595951312",
+   "name": "Wallace F. Bennett Federal Building",
+   "h": 44.0,
+   "src": "lidar",
+   "levels": 8.0
+  },
+  {
+   "id": "w227736000",
+   "name": null,
+   "h": 43.8,
+   "src": "lidar",
+   "levels": 8.0
+  },
+  {
+   "id": "w595951117",
+   "name": "560 East South Temple",
+   "h": 43.8,
+   "src": "lidar",
+   "levels": null
+  },
+  {
+   "id": "w224519048",
+   "name": "45 West South Temple",
+   "h": 43.0,
+   "src": "lidar",
+   "levels": 10.0
+  },
+  {
+   "id": "w224519047",
+   "name": "55 West South Temple",
+   "h": 42.4,
+   "src": "lidar",
+   "levels": 10.0
+  },
+  {
+   "id": "w23335190",
+   "name": "Delta Center",
+   "h": 42.1,
+   "src": "lidar",
+   "levels": null
+  },
+  {
+   "id": "w224509151",
+   "name": "Priority Dispatch",
+   "h": 41.9,
+   "src": "lidar",
+   "levels": 9.0
+  },
+  {
+   "id": "w396972970",
+   "name": null,
+   "h": 41.8,
+   "src": "lidar",
+   "levels": 2.0
+  },
+  {
+   "id": "w1025251117",
+   "name": null,
+   "h": 41.8,
+   "src": "lidar",
+   "levels": 8.0
+  },
+  {
+   "id": "w35961941",
+   "name": "Lattice Apartments",
+   "h": 41.5,
+   "src": "lidar",
+   "levels": 9.0
+  },
+  {
+   "id": "w172543253",
+   "name": "Clift Building",
+   "h": 41.5,
+   "src": "lidar",
+   "levels": 8.0
+  },
+  {
+   "id": "w595951268",
+   "name": "102 Tower",
+   "h": 41.5,
+   "src": "lidar",
+   "levels": 8.0
+  },
+  {
+   "id": "w595951861",
+   "name": "City Centre 1",
+   "h": 40.9,
+   "src": "lidar",
+   "levels": 17.0
+  },
+  {
+   "id": "w224014497",
+   "name": "Holiday Inn Express Salt Lake City Downtown",
+   "h": 40.4,
+   "src": "lidar",
+   "levels": 12.0
+  },
+  {
+   "id": "w595952025",
+   "name": "Boyer 101",
+   "h": 39.4,
+   "src": "lidar",
+   "levels": 8.0
+  },
+  {
+   "id": "w127834901",
+   "name": "The Grove",
+   "h": 39.0,
+   "src": "lidar",
+   "levels": 9.0
+  },
+  {
+   "id": "w1147771471",
+   "name": null,
+   "h": 38.4,
+   "src": "osm-levels",
+   "levels": 12.0
+  },
+  {
+   "id": "w1188140573",
+   "name": "The Charles",
+   "h": 38.4,
+   "src": "osm-levels",
+   "levels": null
+  },
+  {
+   "id": "w33647823",
+   "name": "LDS Hospital",
+   "h": 38.1,
+   "src": "lidar",
+   "levels": null
+  },
+  {
+   "id": "w595951190",
+   "name": "50 South 200 East",
+   "h": 37.6,
+   "src": "lidar",
+   "levels": 8.0
+  },
+  {
+   "id": "w33192128",
+   "name": "Deseret Book",
+   "h": 37.0,
+   "src": "lidar",
+   "levels": 8.0
+  },
+  {
+   "id": "w230130107",
+   "name": "Aztec Condominium",
+   "h": 37.0,
+   "src": "lidar",
+   "levels": null
+  },
+  {
+   "id": "w227696400",
+   "name": "Canyon Road Towers Condominiums",
+   "h": 36.7,
+   "src": "lidar",
+   "levels": 12.0
+  },
+  {
+   "id": "w1318908404",
+   "name": "McIntyre Building",
+   "h": 36.7,
+   "src": "lidar",
+   "levels": 8.0
+  },
+  {
+   "id": "w33155179",
+   "name": "Scott M. Matheson Courthouse",
+   "h": 36.2,
+   "src": "lidar",
+   "levels": 6.0
+  }
+ ],
+ "osm_vs_lidar": [
+  {
+   "id": "w32333201",
+   "name": "Church Office Building",
+   "osm": 128.0,
+   "lidar_p90": 123.1,
+   "lidar_p50": 19.0
+  },
+  {
+   "id": "w32802926",
+   "name": null,
+   "osm": 10.0,
+   "lidar_p90": 12.3,
+   "lidar_p50": 12.1
+  },
+  {
+   "id": "w32920861",
+   "name": "Utah State Capitol Building",
+   "osm": 87.0,
+   "lidar_p90": 34.3,
+   "lidar_p50": 24.7
+  },
+  {
+   "id": "w33148441",
+   "name": "Rio Grande Depot",
+   "osm": 18.0,
+   "lidar_p90": 23.8,
+   "lidar_p50": 15.8
+  },
+  {
+   "id": "w33149360",
+   "name": "Salt Palace Convention Center",
+   "osm": 10.0,
+   "lidar_p90": 25.4,
+   "lidar_p50": 20.0
+  },
+  {
+   "id": "w33162308",
+   "name": "Salt Lake Tabernacle",
+   "osm": 24.5,
+   "lidar_p90": 23.8,
+   "lidar_p50": 21.2
+  },
+  {
+   "id": "w33192009",
+   "name": "Beneficial Tower",
+   "osm": 102.1,
+   "lidar_p90": 92.4,
+   "lidar_p50": 88.2
+  },
+  {
+   "id": "w33192016",
+   "name": "Zions Bank Building",
+   "osm": 81.4,
+   "lidar_p90": 82.3,
+   "lidar_p50": 77.9
+  },
+  {
+   "id": "w33193213",
+   "name": "170 South Main",
+   "osm": 65.0,
+   "lidar_p90": 65.2,
+   "lidar_p50": 62.5
+  },
+  {
+   "id": "w33193517",
+   "name": "One Utah Center",
+   "osm": 106.7,
+   "lidar_p90": 101.1,
+   "lidar_p50": 90.6
+  },
+  {
+   "id": "w33195555",
+   "name": "Ensign College",
+   "osm": 30.0,
+   "lidar_p90": 45.2,
+   "lidar_p50": 40.3
+  },
+  {
+   "id": "w33195561",
+   "name": "BYU Salt Lake Center",
+   "osm": 15.0,
+   "lidar_p90": 30.2,
+   "lidar_p50": 26.2
+  },
+  {
+   "id": "w33195626",
+   "name": "KSL Broadcasting House",
+   "osm": 24.0,
+   "lidar_p90": 37.7,
+   "lidar_p50": 22.6
+  },
+  {
+   "id": "w35967258",
+   "name": "265 East 100 South",
+   "osm": 15.0,
+   "lidar_p90": 14.3,
+   "lidar_p50": 13.6
+  },
+  {
+   "id": "w144309558",
+   "name": null,
+   "osm": 10.0,
+   "lidar_p90": 11.4,
+   "lidar_p50": 10.4
+  },
+  {
+   "id": "w157327544",
+   "name": "The Regent",
+   "osm": 80.8,
+   "lidar_p90": 79.2,
+   "lidar_p50": 24.2
+  },
+  {
+   "id": "w172543251",
+   "name": "95 State at City Creek",
+   "osm": 119.8,
+   "lidar_p90": 4.6,
+   "lidar_p50": 2.6
+  },
+  {
+   "id": "w172543265",
+   "name": "Kimpton Hotel Monaco Salt Lake City",
+   "osm": 65.2,
+   "lidar_p90": 63.9,
+   "lidar_p50": 59.3
+  },
+  {
+   "id": "w208627813",
+   "name": "Continental Cleaners",
+   "osm": 4.0,
+   "lidar_p90": 5.8,
+   "lidar_p50": 5.1
+  },
+  {
+   "id": "w223915616",
+   "name": "222 Main",
+   "osm": 96.3,
+   "lidar_p90": 95.0,
+   "lidar_p50": 89.8
+  },
+  {
+   "id": "w223918433",
+   "name": "Walker Center",
+   "osm": 67.1,
+   "lidar_p90": 66.0,
+   "lidar_p50": 22.4
+  },
+  {
+   "id": "w224505513",
+   "name": "Metro Condominiums",
+   "osm": 28.8,
+   "lidar_p90": 25.7,
+   "lidar_p50": 24.8
+  },
+  {
+   "id": "w226319125",
+   "name": "Orrin G. Hatch United States Courthouse",
+   "osm": 61.0,
+   "lidar_p90": 62.1,
+   "lidar_p50": 61.6
+  },
+  {
+   "id": "w238249447",
+   "name": null,
+   "osm": 3.0,
+   "lidar_p90": 6.2,
+   "lidar_p50": 5.2
+  },
+  {
+   "id": "w238249448",
+   "name": null,
+   "osm": 9.1,
+   "lidar_p90": 10.6,
+   "lidar_p50": 10.4
+  },
+  {
+   "id": "w238255654",
+   "name": "Wells Fargo Center",
+   "osm": 128.7,
+   "lidar_p90": 118.8,
+   "lidar_p50": 117.4
+  },
+  {
+   "id": "w287189153",
+   "name": "Fidelity Investments",
+   "osm": 6.0,
+   "lidar_p90": 7.2,
+   "lidar_p50": 5.7
+  },
+  {
+   "id": "w445788207",
+   "name": "111 Main",
+   "osm": 118.0,
+   "lidar_p90": 26.3,
+   "lidar_p50": 2.7
+  },
+  {
+   "id": "w466188203",
+   "name": "The Cathedral of the Madeleine",
+   "osm": 24.0,
+   "lidar_p90": 37.6,
+   "lidar_p50": 27.1
+  },
+  {
+   "id": "w537029448",
+   "name": "99 West",
+   "osm": 114.3,
+   "lidar_p90": 115.2,
+   "lidar_p50": 108.8
+  },
+  {
+   "id": "w566877637",
+   "name": "Garden Towers",
+   "osm": 32.6,
+   "lidar_p90": 30.7,
+   "lidar_p50": 25.8
+  },
+  {
+   "id": "w595951078",
+   "name": "Broadway Centre",
+   "osm": 57.6,
+   "lidar_p90": 58.5,
+   "lidar_p50": 8.7
+  },
+  {
+   "id": "w595951409",
+   "name": "Henries Dry Cleaners",
+   "osm": 4.0,
+   "lidar_p90": 4.5,
+   "lidar_p50": 4.2
+  },
+  {
+   "id": "w595951732",
+   "name": "136 South Temple Street",
+   "osm": 83.5,
+   "lidar_p90": 90.2,
+   "lidar_p50": 83.3
+  },
+  {
+   "id": "w595951867",
+   "name": "Hildegarde\u2019s Food Pantry",
+   "osm": 4.0,
+   "lidar_p90": 4.0,
+   "lidar_p50": 3.9
+  },
+  {
+   "id": "w595952093",
+   "name": "215 South State Street",
+   "osm": 50.0,
+   "lidar_p90": 58.0,
+   "lidar_p50": 38.0
+  },
+  {
+   "id": "w995054717",
+   "name": "Astra Tower",
+   "osm": 137.5,
+   "lidar_p90": 6.1,
+   "lidar_p50": 1.5
+  },
+  {
+   "id": "w1150797303",
+   "name": "Hyatt Regency Salt Lake City",
+   "osm": 99.7,
+   "lidar_p90": 13.7,
+   "lidar_p50": 2.2
+  },
+  {
+   "id": "w1275295291",
+   "name": "The Worthington",
+   "osm": 102.0,
+   "lidar_p90": 9.0,
+   "lidar_p50": 2.4
+  },
+  {
+   "id": "w1281061869",
+   "name": "Key Bank Tower",
+   "osm": 107.0,
+   "lidar_p90": 109.3,
+   "lidar_p50": 107.9
+  },
+  {
+   "id": "w1281061870",
+   "name": "World Trade Center",
+   "osm": 98.0,
+   "lidar_p90": 93.4,
+   "lidar_p50": 82.1
+  },
+  {
+   "id": "w1434218628",
+   "name": null,
+   "osm": 4.0,
+   "lidar_p90": 5.2,
+   "lidar_p50": 4.8
+  },
+  {
+   "id": "w1434521688",
+   "name": "Zion Summit Condominium",
+   "osm": 53.0,
+   "lidar_p90": 54.1,
+   "lidar_p50": 51.4
+  },
+  {
+   "id": "r15568838",
+   "name": "Salt Lake Temple",
+   "osm": 32.0,
+   "lidar_p90": 44.8,
+   "lidar_p50": 30.3
+  }
+ ],
+ "overrides": {
+  "w1448339452": {
+   "set": {
+    "building:levels": "5"
+   },
+   "reason": "Tradition Pointe is tagged building:levels=52, which would make a low-rise apartment block the tallest building in Utah. 5 is an estimate, not a measurement."
+  },
+  "w1511684988": {
+   "set": {
+    "building:levels": "7"
+   },
+   "reason": "Journeyman has one part tagged building:levels=33; no 33-storey tower exists at 630 S 400 W. Set to match the adjoining part (7)."
+  },
+  "w422072924": {
+   "set": {
+    "height": "100.6"
+   },
+   "reason": "Grand America Hotel's roof part is tagged height=90. The 2013 LiDAR peaks at 103.5 m over it and CTBUH lists 100.6 m, so the tag stops short of the roof. Set to 100.6."
+  },
+  "w27831699": {
+   "set": {
+    "roof:shape": "pyramidal",
+    "roof:height": "165"
+   },
+   "reason": "The Las Vegas Eiffel Tower replica is tagged as a 165 m building with no roof shape, which would draw a solid 165 m box. Drawn as a pyramid on its footprint instead: a closer stand-in for a tapering lattice tower."
+  }
+ }
+}
