@@ -14,6 +14,7 @@ A true-scale 3D model of the Salt Lake City and Las Vegas skylines, built with t
 - **Move a building.** Drag a selected building along the ground. Its real footprint stays marked so you can see where it came from.
 - **Undo and reset.** Cmd+Z undoes the last change. "Reset position" puts one building back, and "Reset all" restores everything.
 - **Find a building.** Search the list and click a row to center the view on it.
+- **Move around like a map.** Drag to slide the view, hold Cmd or Ctrl and drag to rotate and tilt, scroll to zoom.
 - **Switch city and viewpoint.** Each city has an eye-level view and an aerial one.
 - **Change the rules.** Settings control the height cutoff for removable buildings, what a click does, units, and whether the aerial photo is shown.
 
@@ -78,7 +79,7 @@ Las Vegas was checked against Wikipedia's list of its tallest buildings, matched
 Known limits:
 
 - Buildings are extruded footprints. Pyramids and domes are drawn where OpenStreetMap tags them (Luxor, the Sphere, the Utah Capitol); everything else has a flat roof.
-- The Strat is drawn by hand, because only its outline is mapped: the pod, crown and mast are sized from the LiDAR, the legs are estimated. The Las Vegas Eiffel Tower is drawn as a pyramid.
+- The Strat is drawn by hand, because only its outline is mapped: the pod, crown and mast are sized from the LiDAR, the legs are estimated. The Las Vegas Eiffel Tower is drawn by hand too: its height and the position of its four feet are real, its platforms follow the proportions of the original.
 - Buildings finished after the LiDAR survey have estimated heights unless OpenStreetMap tags one. They are marked "est." in the list.
 - Hand corrections to wrong or missing OpenStreetMap data are listed, with reasons, in `data/overrides.json`.
 - 3D buildings cover only the core of each city. Beyond that the ground is imagery.

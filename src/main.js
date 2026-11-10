@@ -60,6 +60,10 @@ const controls = new OrbitControls(camera, canvas);
 controls.enableDamping = true;
 controls.dampingFactor = 0.12;
 controls.zoomToCursor = true;
+// Map-style: drag slides the ground, Cmd/Ctrl/Shift-drag (or right-drag) turns and tilts the view.
+controls.mouseButtons = { LEFT: THREE.MOUSE.PAN, MIDDLE: THREE.MOUSE.DOLLY, RIGHT: THREE.MOUSE.ROTATE };
+controls.touches = { ONE: THREE.TOUCH.PAN, TWO: THREE.TOUCH.DOLLY_ROTATE };
+controls.screenSpacePanning = false;
 controls.maxPolarAngle = Math.PI * 0.52;
 controls.minDistance = 150;
 controls.maxDistance = 30000;
@@ -743,7 +747,7 @@ canvas.addEventListener('contextmenu', (ev) => ev.preventDefault());
 canvas.addEventListener('pointerdown', (ev) => {
   down = { x: ev.clientX, y: ev.clientY, ctrl: ev.ctrlKey };
   dragging = false;
-  if (ev.button !== 0 || ev.ctrlKey || !selected) return;
+  if (ev.button !== 0 || ev.ctrlKey || ev.metaKey || ev.shiftKey || !selected) return;
   const hit = pick(ev);
   if (!hit || hit.entry !== selected || hit.onMarker) return;
   // slide the building on a level plane through the point where it was grabbed
