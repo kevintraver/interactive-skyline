@@ -169,7 +169,7 @@ function extrude(vol, out, tint) {
     out.pos.push(x, y, -mapY); out.nor.push(nx, ny, nz);
     out.col.push(tint[0] * shade, tint[1] * shade, tint[2] * shade);
   };
-  for (const r of [outer, ...holes]) {
+  for (const r of vol.u ? [] : [outer, ...holes]) {
     for (let i = 0; i < r.length; i++) {
       const p = r[i], q = r[(i + 1) % r.length];
       const dx = q.x - p.x, dy = q.y - p.y, l = Math.hypot(dx, dy) || 1;
@@ -177,6 +177,28 @@ function extrude(vol, out, tint) {
       push(p.x, bot, p.y, nx, 0, nz, 1); push(q.x, bot, q.y, nx, 0, nz, 1); push(q.x, top, q.y, nx, 0, nz, 1);
       push(p.x, bot, p.y, nx, 0, nz, 1); push(q.x, top, q.y, nx, 0, nz, 1); push(p.x, top, p.y, nx, 0, nz, 1);
     }
+  }
+  if (vol.u) {
+    // Hand-modelled piece: the walls run from the footprint to a second outline at the top,
+    // so it can lean or taper.
+    const up = ring(vol.u);
+    if (THREE.ShapeUtils.isClockWise(up)) up.reverse();
+    const A = new THREE.Vector3(), B = new THREE.Vector3(), C = new THREE.Vector3(), n = new THREE.Vector3();
+    const tri = (a, ya, b, yb, c, yc) => {
+      A.set(a.x, ya, -a.y); B.set(b.x, yb, -b.y); C.set(c.x, yc, -c.y);
+      n.subVectors(B, A).cross(C.sub(A));
+      if (n.lengthSq() < 1e-6) return;
+      n.normalize();
+      push(a.x, ya, a.y, n.x, n.y, n.z, 1); push(b.x, yb, b.y, n.x, n.y, n.z, 1); push(c.x, yc, c.y, n.x, n.y, n.z, 1);
+    };
+    for (let i = 0; i < outer.length; i++) {
+      const j = (i + 1) % outer.length;
+      tri(outer[i], bot, outer[j], bot, up[j], roofTop);
+      tri(outer[i], bot, up[j], roofTop, up[i], roofTop);
+    }
+    for (const t of THREE.ShapeUtils.triangulateShape(up, [])) for (const i of t) push(up[i].x, roofTop, up[i].y, 0, 1, 0, 0.86);
+    for (const t of THREE.ShapeUtils.triangulateShape(outer, [])) for (const i of [t[2], t[1], t[0]]) push(outer[i].x, bot, outer[i].y, 0, -1, 0, 0.8);
+    return;
   }
   if (vol.r) {
     // Pyramid or dome: shrink the footprint toward its center in steps as it rises.
@@ -259,7 +281,9 @@ const outlineMat = new THREE.LineBasicMaterial({ color: 0xffffff, transparent: t
 /** Flat footprint on the ground where a tower really stands, shown once it is hidden or moved away. */
 function groundMarker(b) {
   const y = b.ground - BASE + 1.2, fill = [], line = [];
-  for (const v of b.v) {
+  // only what touches the ground: a pod or an upper setback is not part of the footprint
+  const grounded = b.v.filter((v) => v.b <= b.ground + 1);
+  for (const v of grounded.length ? grounded : b.v) {
     const outer = ring(v.o), holes = v.h.map(ring), all = [outer, ...holes].flat();
     for (const tri of THREE.ShapeUtils.triangulateShape(outer, holes)) for (const i of tri) fill.push(all[i].x, y, -all[i].y);
     for (const r of [outer, ...holes]) {

@@ -46,7 +46,9 @@ Each building's height comes from the most trustworthy source available, in this
 3. Floor count times 3.2 m, when LiDAR is missing or predates the building.
 4. A flat 4 m guess when nothing is known.
 
-Most buildings use LiDAR: 18,139 of 18,844 in Salt Lake City and 17,503 of 17,861 in Las Vegas.
+Most buildings use LiDAR: 18,136 of 18,844 in Salt Lake City and 17,506 of 17,861 in Las Vegas.
+
+Two things keep the LiDAR honest around towers. The Las Vegas survey files every return above roughly 150 m as noise, which cuts the top off the tallest towers, so the build takes those returns back where they are dense enough to be a roof. And a low building that touches a tower is measured without the tower's footprint, so a podium does not inherit the height of the tower standing on it.
 
 The pipeline is four Python scripts, run with [uv](https://docs.astral.sh/uv/). Each takes a city id from `public/data/cities.json`:
 
@@ -71,14 +73,14 @@ Checked for Salt Lake City:
 
 ![Photo and model compared](docs/photo-match.png)
 
-Las Vegas has not had the same checks.
+Las Vegas was checked against Wikipedia's list of its tallest buildings, matched by location. All 44 buildings on the list are within 6% of the published height except Marriott's Grand Chateau (114 m against 128 m) and Panorama Tower I (120 m against 128 m), where the model follows the LiDAR. With the noise returns restored, the LiDAR independently agrees with the tagged heights of the tallest towers (Fontainebleau, the Palazzo, Encore, the Cosmopolitan, Aria) to within about 3%. Las Vegas has not had a photo check.
 
 Known limits:
 
 - Buildings are extruded footprints. Pyramids and domes are drawn where OpenStreetMap tags them (Luxor, the Sphere, the Utah Capitol); everything else has a flat roof.
-- The Strat is a solid cylinder to its full height, because only its outline is mapped. The Las Vegas Eiffel Tower is drawn as a pyramid.
+- The Strat is drawn by hand, because only its outline is mapped: the pod, crown and mast are sized from the LiDAR, the legs are estimated. The Las Vegas Eiffel Tower is drawn as a pyramid.
 - Buildings finished after the LiDAR survey have estimated heights unless OpenStreetMap tags one. They are marked "est." in the list.
-- Hand corrections to wrong or missing OpenStreetMap tags are listed, with reasons, in `data/overrides.json`.
+- Hand corrections to wrong or missing OpenStreetMap data are listed, with reasons, in `data/overrides.json`.
 - 3D buildings cover only the core of each city. Beyond that the ground is imagery.
 
 ## License

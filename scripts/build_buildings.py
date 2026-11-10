@@ -61,6 +61,23 @@ L = np.load(RAW / "lidar_grid.npz")
 ZMAX, ZGND = L["zmax"], L["zgnd"]
 LX0, LY0, LCELL = float(L["x0"]), float(L["y0"]), float(L["cell"])
 LNY, LNX = ZMAX.shape
+LCELL_M = CFG["lidar"]["cell"]  # grid cell in true metres
+
+# Some surveys file every return far above the ground as "high noise", which cuts the top off
+# the tallest towers (Las Vegas 2022 stops near 150 m). A real roof is a dense patch of such
+# returns; birds and haze are scattered. Take them back where at least 40% of the surrounding
+# 5x5 cells have one.
+if "zhigh" in L.files:
+    _hi = L["zhigh"]
+    _above = np.isfinite(_hi) & (_hi > np.where(np.isfinite(ZMAX), ZMAX, -np.inf) + 3)
+    _n = np.zeros(ZMAX.shape, dtype=np.int16)
+    _pad = np.pad(_above, 2).astype(np.int16)
+    for _dy in range(5):
+        for _dx in range(5):
+            _n += _pad[_dy:_dy + LNY, _dx:_dx + LNX]
+    _keep = _above & (_n >= 10)
+    ZMAX = np.where(_keep, _hi, ZMAX)
+    print(f"high returns restored to the surface: {int(_keep.sum()):,} cells of {int(_above.sum()):,}")
 
 # The point cloud and the terrain tiles sit on different vertical datums. Measure the
 # offset on bare ground and shift LiDAR ground onto the terrain's datum.
@@ -74,8 +91,10 @@ DATUM = float(np.median(_d))
 print(f"terrain minus LiDAR ground: median {DATUM:.2f} m, 5-95% {np.percentile(_d, 5):.2f}..{np.percentile(_d, 95):.2f}")
 
 
-def lidar_sample(poly):
-    """Return (roof_p50, roof_p90, ground, n_cells) for a local-metre polygon, or None."""
+def lidar_sample(poly, skip=()):
+    """Return (roof_p50, roof_p90, ground, roof_p99) for a local-metre polygon, or None.
+
+    Cells under the `skip` polygons are left out of the roof."""
     def ring_px(ring):
         xs, ys = local_to_merc.transform(*np.asarray(ring.coords).T)
         return (np.asarray(xs) - LX0) / LCELL, (np.asarray(ys) - LY0) / LCELL
@@ -93,7 +112,15 @@ def lidar_sample(poly):
     for hole in poly.interiors:
         hx, hy = ring_px(hole)
         d.polygon(list(zip(hx - c0, hy - r0)), fill=0)
+    for other in skip:
+        ox, oy = ring_px(other.exterior)
+        d.polygon(list(zip(ox - c0, oy - r0)), fill=0)
     mask = np.asarray(img, dtype=bool)
+    if skip and mask.sum() < 0.5 * poly.area / LCELL_M ** 2:
+        # too little left to measure: it sits on or inside its neighbors. Use the whole
+        # footprint, but its median, so a tower over one corner does not set the height.
+        s = lidar_sample(poly)
+        return s and (s[0], s[0], s[2], s[3])
     zm = ZMAX[r0:r1 + 1, c0:c1 + 1]
     zg = ZGND[r0:r1 + 1, c0:c1 + 1]
     roof = zm[mask & np.isfinite(zm)]
@@ -207,9 +234,26 @@ stats = Counter()
 compare = []  # osm height vs lidar, for buildings that have both
 
 
-def volume_height(tags, poly, allow_guess=True):
-    """(height above ground, source, lidar sample)"""
+def neighbors_on(poly, me):
+    """Other buildings on or against this footprint, grown by a few metres, if it needs them.
+
+    A tower is often its own building drawn inside the outline of its podium, or right beside
+    a low annex that its roof overhangs. Measured over its whole outline, the low building
+    would read the tower's roof. Only footprints with a big step in them are treated this way."""
     s = lidar_sample(poly)
+    if not s or s[3] - s[0] < 30:
+        return []
+    out = []
+    for j in tree.query(poly.buffer(6), predicate="intersects"):
+        if owner[j] != me:
+            g = geoms[j].buffer(6)
+            out += [q for q in (g.geoms if hasattr(g, "geoms") else [g]) if isinstance(q, Polygon)]
+    return out
+
+
+def volume_height(tags, poly, allow_guess=True, skip=()):
+    """(height above ground, source, lidar sample)"""
+    s = lidar_sample(poly, skip)
     lid = None
     if s:
         p50, p90, gnd, _ = s
@@ -221,7 +265,7 @@ def volume_height(tags, poly, allow_guess=True):
         return h, "osm-height", s
     if lv and lv > 0:
         est = lv * LEVEL_M + (num(tags.get("roof:levels")) or 0) * LEVEL_M
-        if lid is None or lid < 0.6 * 3.0 * lv or lid > 1.8 * est + 4:
+        if lid is None or (lid < 0.6 * 3.0 * lv and not skip) or lid > 1.8 * est + 4:
             return est, "osm-levels", s  # LiDAR missing, or it saw something else (pre-dates building, trees)
         return lid, "lidar", s
     if lid is not None and lid >= 2.5:
@@ -241,6 +285,23 @@ def roof_of(tags, poly, wall_h):
     return None
 
 
+def modelled(pieces, center):
+    """Volumes for a building drawn by hand in overrides.json instead of from its footprint.
+
+    Each piece runs from one regular polygon to another: `from` and `to` are
+    [east, north, radius] in metres from the footprint's center, `b` and `t` heights above
+    the ground. A piece whose two ends differ leans or tapers between them."""
+    vols = []
+    for p in pieces:
+        n, rot = p.get("sides", 20), math.radians(p.get("turn", 0))
+        def ngon(e, nth, r):
+            return [(center.x + e + r * math.cos(rot + 2 * math.pi * i / n),
+                     center.y + nth + r * math.sin(rot + 2 * math.pi * i / n)) for i in range(n)]
+        lo, up = ngon(*p["from"]), ngon(*p.get("to", p["from"]))
+        vols.append((Polygon(lo), p["b"], p["t"], None if lo == up else up))
+    return vols, ["osm-height"] * len(vols), [None] * len(vols)
+
+
 def rings(poly):
     def flat(r):
         c = list(r.coords)[:-1]
@@ -257,7 +318,7 @@ def name_of(t):
 
 
 buildings = []
-for b in outlines:
+for me, b in enumerate(outlines):
     t = b["tags"]
     whole = unary_union(b["polys"])
     bx, by = np.asarray(whole.envelope.exterior.coords).T
@@ -290,7 +351,7 @@ for b in outlines:
                 vols.append((poly, 0, h)); srcs.append("lidar" if s else "guess"); roofs.append(None)
     else:
         for poly in b["polys"]:
-            h, src, s = volume_height(t, poly)
+            h, src, s = volume_height(t, poly, skip=neighbors_on(poly, me))
             vols.append((poly, 0, h)); srcs.append(src); roofs.append(roof_of(t, poly, h))
             if src == "osm-height" and s and poly.area > 150:
                 compare.append({"id": b["id"], "name": name_of(t), "osm": round(h, 1),
@@ -302,6 +363,9 @@ for b in outlines:
         vols = [(poly, 0, tagged) for poly in b["polys"]]
         srcs = ["osm-height"] * len(vols)
         roofs = [roof_of(t, poly, tagged) for poly in b["polys"]]
+    model = overrides.get(b["id"], {}).get("model")
+    if model:
+        vols, srcs, roofs = modelled(model, whole.centroid)
     if not vols:
         continue
     hi = max(range(len(vols)), key=lambda i: vols[i][2])
@@ -321,8 +385,10 @@ for b in outlines:
         "id": b["id"], "name": name_of(t), "h": round(top, 1), "src": src,
         "levels": num(t.get("building:levels")), "ground": round(ground, 1),
         "c": [round(c.x, 1), round(c.y, 1)], "tall": top >= TALL_M,
-        "v": [{**rings(p), **({"r": roof} if roof else {}), "b": round(foot if mh == 0 else ground + mh, 1), "t": round(ground + h, 1)}
-              for (p, mh, h), roof in zip(vols, roofs)],
+        "v": [{**rings(p), **({"r": roof} if roof else {}),
+               **({"u": [round(c, 2) for xy in rest[0] for c in xy]} if rest and rest[0] else {}),
+               "b": round(foot if mh == 0 else ground + mh, 1), "t": round(ground + h, 1)}
+              for (p, mh, h, *rest), roof in zip(vols, roofs)],
     })
 
 buildings.sort(key=lambda b: -b["h"])

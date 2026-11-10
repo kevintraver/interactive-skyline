@@ -1,9 +1,9 @@
 {
  "counts": {
-  "lidar": 18139,
+  "lidar": 18136,
   "osm-height": 49,
-  "osm-levels": 137,
-  "guess": 519
+  "osm-levels": 136,
+  "guess": 523
  },
  "total": 18844,
  "tall": 76,
@@ -221,14 +221,14 @@
   {
    "id": "w595951359",
    "name": "257 East 200 South",
-   "h": 57.3,
+   "h": 57.4,
    "src": "lidar",
    "levels": 13.0
   },
   {
    "id": "w595951880",
    "name": "Dan Jones Building",
-   "h": 57.0,
+   "h": 57.1,
    "src": "lidar",
    "levels": 15.0
   },
@@ -277,7 +277,7 @@
   {
    "id": "w33192119",
    "name": "Deseret Building",
-   "h": 52.2,
+   "h": 52.1,
    "src": "lidar",
    "levels": 14.0
   },
@@ -361,7 +361,7 @@
   {
    "id": "w224554407",
    "name": "143 South Main Street",
-   "h": 44.6,
+   "h": 44.9,
    "src": "lidar",
    "levels": 12.0
   },
@@ -373,18 +373,18 @@
    "levels": 8.0
   },
   {
+   "id": "w595951117",
+   "name": "560 East South Temple",
+   "h": 43.9,
+   "src": "lidar",
+   "levels": null
+  },
+  {
    "id": "w227736000",
    "name": null,
    "h": 43.8,
    "src": "lidar",
    "levels": 8.0
-  },
-  {
-   "id": "w595951117",
-   "name": "560 East South Temple",
-   "h": 43.8,
-   "src": "lidar",
-   "levels": null
   },
   {
    "id": "w224519048",
@@ -408,6 +408,13 @@
    "levels": null
   },
   {
+   "id": "w172543253",
+   "name": "Clift Building",
+   "h": 41.9,
+   "src": "lidar",
+   "levels": 8.0
+  },
+  {
    "id": "w224509151",
    "name": "Priority Dispatch",
    "h": 41.9,
@@ -429,6 +436,13 @@
    "levels": 8.0
   },
   {
+   "id": "w595951268",
+   "name": "102 Tower",
+   "h": 41.6,
+   "src": "lidar",
+   "levels": 8.0
+  },
+  {
    "id": "w35961941",
    "name": "Lattice Apartments",
    "h": 41.5,
@@ -436,23 +450,9 @@
    "levels": 9.0
   },
   {
-   "id": "w172543253",
-   "name": "Clift Building",
-   "h": 41.5,
-   "src": "lidar",
-   "levels": 8.0
-  },
-  {
-   "id": "w595951268",
-   "name": "102 Tower",
-   "h": 41.5,
-   "src": "lidar",
-   "levels": 8.0
-  },
-  {
    "id": "w595951861",
    "name": "City Centre 1",
-   "h": 40.9,
+   "h": 41.0,
    "src": "lidar",
    "levels": 17.0
   },
@@ -501,35 +501,35 @@
   {
    "id": "w595951190",
    "name": "50 South 200 East",
-   "h": 37.6,
-   "src": "lidar",
-   "levels": 8.0
-  },
-  {
-   "id": "w33192128",
-   "name": "Deseret Book",
-   "h": 37.0,
+   "h": 37.5,
    "src": "lidar",
    "levels": 8.0
   },
   {
    "id": "w230130107",
    "name": "Aztec Condominium",
-   "h": 37.0,
+   "h": 37.1,
    "src": "lidar",
    "levels": null
   },
   {
+   "id": "w33192128",
+   "name": "Deseret Book",
+   "h": 36.9,
+   "src": "lidar",
+   "levels": 8.0
+  },
+  {
    "id": "w227696400",
    "name": "Canyon Road Towers Condominiums",
-   "h": 36.7,
+   "h": 36.9,
    "src": "lidar",
    "levels": 12.0
   },
   {
    "id": "w1318908404",
    "name": "McIntyre Building",
-   "h": 36.7,
+   "h": 36.8,
    "src": "lidar",
    "levels": 8.0
   },
@@ -546,7 +546,7 @@
    "id": "w32333201",
    "name": "Church Office Building",
    "osm": 128.0,
-   "lidar_p90": 123.1,
+   "lidar_p90": 123.2,
    "lidar_p50": 19.0
   },
   {
@@ -596,7 +596,7 @@
    "name": "Zions Bank Building",
    "osm": 81.4,
    "lidar_p90": 82.3,
-   "lidar_p50": 77.9
+   "lidar_p50": 78.4
   },
   {
    "id": "w33193213",
@@ -610,7 +610,7 @@
    "name": "One Utah Center",
    "osm": 106.7,
    "lidar_p90": 101.1,
-   "lidar_p50": 90.6
+   "lidar_p50": 90.4
   },
   {
    "id": "w33195555",
@@ -637,7 +637,7 @@
    "id": "w35967258",
    "name": "265 East 100 South",
    "osm": 15.0,
-   "lidar_p90": 14.3,
+   "lidar_p90": 14.2,
    "lidar_p50": 13.6
   },
   {
@@ -658,7 +658,7 @@
    "id": "w172543251",
    "name": "95 State at City Creek",
    "osm": 119.8,
-   "lidar_p90": 4.6,
+   "lidar_p90": 4.7,
    "lidar_p50": 2.6
   },
   {
@@ -672,7 +672,7 @@
    "id": "w208627813",
    "name": "Continental Cleaners",
    "osm": 4.0,
-   "lidar_p90": 5.8,
+   "lidar_p90": 5.9,
    "lidar_p50": 5.1
   },
   {
@@ -714,7 +714,7 @@
    "id": "w238249448",
    "name": null,
    "osm": 9.1,
-   "lidar_p90": 10.6,
+   "lidar_p90": 10.7,
    "lidar_p50": 10.4
   },
   {
@@ -736,13 +736,13 @@
    "name": "111 Main",
    "osm": 118.0,
    "lidar_p90": 26.3,
-   "lidar_p50": 2.7
+   "lidar_p50": 2.6
   },
   {
    "id": "w466188203",
    "name": "The Cathedral of the Madeleine",
    "osm": 24.0,
-   "lidar_p90": 37.6,
+   "lidar_p90": 37.7,
    "lidar_p50": 27.1
   },
   {
@@ -750,13 +750,13 @@
    "name": "99 West",
    "osm": 114.3,
    "lidar_p90": 115.2,
-   "lidar_p50": 108.8
+   "lidar_p50": 108.7
   },
   {
    "id": "w566877637",
    "name": "Garden Towers",
    "osm": 32.6,
-   "lidar_p90": 30.7,
+   "lidar_p90": 30.6,
    "lidar_p50": 25.8
   },
   {
@@ -791,14 +791,14 @@
    "id": "w595952093",
    "name": "215 South State Street",
    "osm": 50.0,
-   "lidar_p90": 58.0,
-   "lidar_p50": 38.0
+   "lidar_p90": 58.2,
+   "lidar_p50": 37.8
   },
   {
    "id": "w995054717",
    "name": "Astra Tower",
    "osm": 137.5,
-   "lidar_p90": 6.1,
+   "lidar_p90": 5.8,
    "lidar_p50": 1.5
   },
   {
@@ -812,7 +812,7 @@
    "id": "w1275295291",
    "name": "The Worthington",
    "osm": 102.0,
-   "lidar_p90": 9.0,
+   "lidar_p90": 8.9,
    "lidar_p50": 2.4
   },
   {
@@ -826,7 +826,7 @@
    "id": "w1281061870",
    "name": "World Trade Center",
    "osm": 98.0,
-   "lidar_p90": 93.4,
+   "lidar_p90": 93.5,
    "lidar_p50": 82.1
   },
   {
@@ -847,7 +847,7 @@
    "id": "r15568838",
    "name": "Salt Lake Temple",
    "osm": 32.0,
-   "lidar_p90": 44.8,
+   "lidar_p90": 44.9,
    "lidar_p50": 30.3
   }
  ],
@@ -876,6 +876,85 @@
     "roof:height": "165"
    },
    "reason": "The Las Vegas Eiffel Tower replica is tagged as a 165 m building with no roof shape, which would draw a solid 165 m box. Drawn as a pyramid on its footprint instead: a closer stand-in for a tapering lattice tower."
+  },
+  "w134068318": {
+   "set": {
+    "name": "Fontainebleau Las Vegas"
+   },
+   "reason": "The tower has no name tag in OSM. Named after the named OSM area that encloses it."
+  },
+  "w134930092": {
+   "set": {
+    "name": "Aria Resort & Casino"
+   },
+   "reason": "The tower has no name tag in OSM. Named after the named OSM area that encloses it."
+  },
+  "w134930090": {
+   "set": {
+    "name": "Aria Resort & Casino"
+   },
+   "reason": "The tower has no name tag in OSM. Named after the named OSM area that encloses it."
+  },
+  "w134930088": {
+   "set": {
+    "name": "Aria Resort & Casino"
+   },
+   "reason": "The tower has no name tag in OSM. Named after the named OSM area that encloses it."
+  },
+  "w495695272": {
+   "set": {
+    "name": "The Martin"
+   },
+   "reason": "The tower has no name tag in OSM. Named after the named OSM area that encloses it."
+  },
+  "w134677416": {
+   "set": {
+    "name": "Turnberry Place"
+   },
+   "reason": "The tower has no name tag in OSM. Named after the named OSM area that encloses it."
+  },
+  "w134677425": {
+   "set": {
+    "name": "Turnberry Place"
+   },
+   "reason": "The tower has no name tag in OSM. Named after the named OSM area that encloses it."
+  },
+  "w134677429": {
+   "set": {
+    "name": "Turnberry Place"
+   },
+   "reason": "The tower has no name tag in OSM. Named after the named OSM area that encloses it."
+  },
+  "w495545510": {
+   "set": {
+    "name": "Panorama Tower II"
+   },
+   "reason": "The tower has no name tag in OSM. Named after the named OSM area that encloses it."
+  },
+  "w134938481": {
+   "set": {
+    "name": "Rio All Suite Hotel and Casino"
+   },
+   "reason": "The tower has no name tag in OSM. Named after the named OSM area that encloses it."
+  },
+  "w111367828": {
+   "set": {
+    "name": "Harrah's Las Vegas"
+   },
+   "reason": "The tower has no name tag in OSM. Named after the named OSM area that encloses it."
+  },
+  "w130585543": {
+   "set": {
+    "name": "World Market Center"
+   },
+   "reason": "The tower has no name tag in OSM. Named after the named OSM area that encloses it."
+  },
+  "w133757428": {
+   "set": {
+    "height": "37.5",
+    "building:levels": "11"
+   },
+   "reason": "This part of Virgin Hotels Las Vegas is tagged height=182 m and building:levels=50, which made a mid-rise hotel the 13th tallest building in the city. The 2022 LiDAR peaks at 37.5 m over it, and the resort's tallest tower reads about 58 m. Set to the LiDAR height; 11 floors is the original hotel tower."
   }
  }
 }

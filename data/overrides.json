@@ -1,5 +1,5 @@
 {
-  "_comment": "Hand corrections to raw OSM tags that are clearly wrong. Each one is applied before heights are computed and listed in data/height_report.json.",
+  "_comment": "Hand corrections to raw OSM data that is clearly wrong or missing. `set` replaces tags before heights are computed; `model` replaces a building's volumes with hand-drawn ones. Each is listed in data/height_report-<city>.json.",
   "w1448339452": {
     "set": {
       "building:levels": "5"
@@ -96,5 +96,181 @@
       "name": "World Market Center"
     },
     "reason": "The tower has no name tag in OSM. Named after the named OSM area that encloses it."
+  },
+  "w133757428": {
+    "set": {
+      "height": "37.5",
+      "building:levels": "11"
+    },
+    "reason": "This part of Virgin Hotels Las Vegas is tagged height=182 m and building:levels=50, which made a mid-rise hotel the 13th tallest building in the city. The 2022 LiDAR peaks at 37.5 m over it, and the resort's tallest tower reads about 58 m. Set to the LiDAR height; 11 floors is the original hotel tower."
+  },
+  "w699020452": {
+    "set": {
+      "height": "31"
+    },
+    "reason": "Low building beside the Cosmopolitan's Chelsea Tower. The tower's roof overhangs about 15% of this footprint as mapped, so LiDAR read it as 178 m. Set to the footprint's median LiDAR height."
+  },
+  "w134677417": {
+    "set": {
+      "name": "Turnberry Place"
+    },
+    "reason": "One of the four Turnberry Place towers; OpenStreetMap carries the name of a law office inside it (Spartacus Law Firm)."
+  },
+  "w111380664": {
+    "set": {
+      "height": "190"
+    },
+    "reason": "Trump International Hotel tower is tagged height=195. The published height is 190 m (622 ft) and the 2022 LiDAR roof reads 191 m."
+  },
+  "w316174410": {
+    "set": {
+      "height": "146"
+    },
+    "reason": "Circa is tagged height=152.4. The published height is 146 m (480 ft); the 2022 LiDAR peaks lower still, at 136 m, so the published figure may include signage."
+  },
+  "w134938479": {
+    "set": {
+      "height": "131"
+    },
+    "reason": "This part of the Rio's Masquerade Tower is tagged height=140 m. The tower is published at 129 m and the 2022 LiDAR reads 131 m over this part."
+  },
+  "w495545498": {
+    "set": {
+      "name": "Panorama Tower I"
+    },
+    "reason": "The outline holding Panorama Tower I is named for its parking garage in OpenStreetMap."
+  },
+  "w135457469": {
+    "model": [
+      {
+        "b": 0,
+        "t": 232,
+        "from": [
+          3.2,
+          0.8,
+          6.5
+        ],
+        "sides": 12
+      },
+      {
+        "b": 0,
+        "t": 236,
+        "from": [
+          8.6,
+          21.1,
+          6.5
+        ],
+        "to": [
+          5.4,
+          9.0,
+          3.5
+        ],
+        "sides": 6,
+        "turn": 75
+      },
+      {
+        "b": 0,
+        "t": 236,
+        "from": [
+          -17.1,
+          -4.6,
+          6.5
+        ],
+        "to": [
+          -5.0,
+          -1.4,
+          3.5
+        ],
+        "sides": 6,
+        "turn": 195
+      },
+      {
+        "b": 0,
+        "t": 236,
+        "from": [
+          18.0,
+          -14.0,
+          6.5
+        ],
+        "to": [
+          9.2,
+          -5.2,
+          3.5
+        ],
+        "sides": 6,
+        "turn": 315
+      },
+      {
+        "b": 230,
+        "t": 256,
+        "from": [
+          3.2,
+          0.8,
+          10
+        ],
+        "to": [
+          3.2,
+          0.8,
+          31
+        ],
+        "sides": 24
+      },
+      {
+        "b": 256,
+        "t": 267,
+        "from": [
+          3.2,
+          0.8,
+          31
+        ],
+        "to": [
+          3.2,
+          0.8,
+          32
+        ],
+        "sides": 24
+      },
+      {
+        "b": 267,
+        "t": 276,
+        "from": [
+          3.2,
+          0.8,
+          32
+        ],
+        "to": [
+          3.2,
+          0.8,
+          15
+        ],
+        "sides": 24
+      },
+      {
+        "b": 276,
+        "t": 283,
+        "from": [
+          3.2,
+          0.8,
+          9
+        ],
+        "sides": 16
+      },
+      {
+        "b": 283,
+        "t": 350,
+        "from": [
+          3.2,
+          0.8,
+          2.6
+        ],
+        "to": [
+          3.2,
+          0.8,
+          0.6
+        ],
+        "sides": 8
+      }
+    ],
+    "reason": "Only the Strat's circular outline is mapped, which drew a 350 m solid cylinder. Drawn by hand instead: a core and three legs up to the pod, the pod, its crown and the mast. The pod's radius (about 31 m at 263 to 268 m), the crown (282 m), the mast tip (350 m) and the direction of the legs are measured from the 2022 LiDAR; the legs' width and the underside of the pod are estimated."
   }
 }

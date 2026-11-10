@@ -6,7 +6,8 @@
 rasterise it to surface and ground grids.
 
 Usage: fetch_lidar.py <city>
-Output: data/raw/<city>/lidar_grid.npz  (zmax = highest return, zgnd = lowest ground return)
+Output: data/raw/<city>/lidar_grid.npz  (zmax = highest return, zgnd = lowest ground return,
+        zhigh = highest return the survey filed as "high noise")
 """
 import io
 import json
@@ -124,6 +125,11 @@ def main():
     print(f"{len(keys)} nodes to read, grid {NX}x{NY}", flush=True)
     zmax = np.full((NY, NX), -np.inf, dtype=np.float32)
     zgnd = np.full((NY, NX), np.inf, dtype=np.float32)
+    # Surveys file returns far above the ground as "high noise" (class 18), and that sweeps up
+    # the tops of the tallest towers along with birds and haze. Keep them in their own grid so
+    # the build can use them where they are dense enough to be a roof.
+    zhigh = np.full((NY, NX), -np.inf, dtype=np.float32)
+    ceiling = CFG["base"] + 600
     classes = {}
     total = 0
     with ThreadPoolExecutor(12) as ex:
@@ -135,6 +141,8 @@ def main():
             iy = ((y - Y0) / CELL).astype(np.int32)
             ok = (c != 7) & (c != 18)  # drop noise
             np.maximum.at(zmax, (iy[ok], ix[ok]), z[ok])
+            hi = (c == 18) & (z < ceiling)
+            np.maximum.at(zhigh, (iy[hi], ix[hi]), z[hi])
             g = c == 2
             np.minimum.at(zgnd, (iy[g], ix[g]), z[g])
             if i % 50 == 0:
@@ -145,7 +153,7 @@ def main():
     print("cells with ground:   %.1f%%" % (100 * np.isfinite(zgnd).mean()))
     np.savez_compressed(
         RAW / "lidar_grid.npz",
-        zmax=zmax, zgnd=zgnd, x0=X0, y0=Y0, cell=CELL, dataset=DATASET,
+        zmax=zmax, zgnd=zgnd, zhigh=zhigh, x0=X0, y0=Y0, cell=CELL, dataset=DATASET,
     )
 
 

@@ -1,17 +1,17 @@
 {
  "counts": {
   "osm-height": 173,
-  "lidar": 17503,
-  "osm-levels": 38,
+  "lidar": 17506,
+  "osm-levels": 35,
   "guess": 147
  },
  "total": 17861,
- "tall": 189,
+ "tall": 182,
  "tall_list": [
   {
    "id": "w135457469",
    "name": "Stratosphere Tower",
-   "h": 350.0,
+   "h": 350,
    "src": "osm-height",
    "levels": null
   },
@@ -37,18 +37,18 @@
    "levels": 53.0
   },
   {
-   "id": "w111380666",
-   "name": "Trump International Hotel Las Vegas",
-   "h": 195.0,
-   "src": "osm-height",
-   "levels": 64.0
-  },
-  {
    "id": "w27910891",
    "name": "Encore Las Vegas",
    "h": 192.0,
    "src": "osm-height",
    "levels": 52.0
+  },
+  {
+   "id": "w111380666",
+   "name": "Trump International Hotel Las Vegas",
+   "h": 190.0,
+   "src": "osm-height",
+   "levels": 64.0
   },
   {
    "id": "w205501268",
@@ -93,13 +93,6 @@
    "levels": 46.0
   },
   {
-   "id": "w133757429",
-   "name": "Virgin Hotels Las Vegas, Curio Collection by Hilton",
-   "h": 182.0,
-   "src": "osm-height",
-   "levels": null
-  },
-  {
    "id": "r20214578",
    "name": "Vdara Hotel & Spa",
    "h": 174.0,
@@ -112,6 +105,13 @@
    "h": 165.0,
    "src": "osm-height",
    "levels": 54.0
+  },
+  {
+   "id": "w52194829",
+   "name": "Waldorf Astoria Las Vegas",
+   "h": 164.4,
+   "src": "lidar",
+   "levels": null
   },
   {
    "id": "w134930090",
@@ -149,13 +149,6 @@
    "levels": 34.0
   },
   {
-   "id": "w316174410",
-   "name": "Circa Resort & Casino",
-   "h": 152.4,
-   "src": "osm-height",
-   "levels": 35.0
-  },
-  {
    "id": "w543641002",
    "name": "Sky Tower Las Vegas Condominiums",
    "h": 152.0,
@@ -175,6 +168,13 @@
    "h": 146.0,
    "src": "osm-height",
    "levels": 44.0
+  },
+  {
+   "id": "w316174410",
+   "name": "Circa Resort & Casino",
+   "h": 146.0,
+   "src": "osm-height",
+   "levels": 35.0
   },
   {
    "id": "w30618090",
@@ -213,7 +213,7 @@
   },
   {
    "id": "w134677417",
-   "name": "Spartacus Law Firm",
+   "name": "Turnberry Place",
    "h": 145.0,
    "src": "osm-height",
    "levels": 38.0
@@ -233,25 +233,11 @@
    "levels": 38.0
   },
   {
-   "id": "w1481167211",
-   "name": null,
-   "h": 142.4,
-   "src": "lidar",
-   "levels": null
-  },
-  {
    "id": "w134935559",
    "name": "Allure Las Vegas Tower I",
    "h": 142.0,
    "src": "osm-height",
    "levels": 41.0
-  },
-  {
-   "id": "w134938479",
-   "name": "VooDoo Rooftop",
-   "h": 140.0,
-   "src": "osm-height",
-   "levels": 42.0
   },
   {
    "id": "r7655651",
@@ -296,6 +282,13 @@
    "levels": 37.0
   },
   {
+   "id": "w134938479",
+   "name": "VooDoo Rooftop",
+   "h": 131.0,
+   "src": "osm-height",
+   "levels": 42.0
+  },
+  {
    "id": "w134938477",
    "name": "Voodoo steakhouse",
    "h": 130.0,
@@ -338,15 +331,8 @@
    "levels": 39.0
   },
   {
-   "id": "r7770314",
-   "name": "The Venetian Las Vegas",
-   "h": 120.5,
-   "src": "lidar",
-   "levels": null
-  },
-  {
    "id": "w495545498",
-   "name": "Panorama Tower I parking garage",
+   "name": "Panorama Tower I",
    "h": 120.3,
    "src": "osm-height",
    "levels": null
@@ -413,13 +399,6 @@
    "h": 111.0,
    "src": "osm-height",
    "levels": 26.0
-  },
-  {
-   "id": "w33974140",
-   "name": "Paris Las Vegas",
-   "h": 110.9,
-   "src": "lidar",
-   "levels": 33.0
   },
   {
    "id": "w27831695",
@@ -506,13 +485,6 @@
    "levels": 2.0
   },
   {
-   "id": "w128622185",
-   "name": "Harrah's Las Vegas",
-   "h": 93.2,
-   "src": "lidar",
-   "levels": null
-  },
-  {
    "id": "w226508857",
    "name": "Regional Justice Center",
    "h": 90.3,
@@ -567,13 +539,6 @@
    "h": 81.5,
    "src": "lidar",
    "levels": 18.0
-  },
-  {
-   "id": "w543422869",
-   "name": null,
-   "h": 81.0,
-   "src": "lidar",
-   "levels": null
   },
   {
    "id": "w27897921",
@@ -725,7 +690,7 @@
   {
    "id": "w543641711",
    "name": null,
-   "h": 68.6,
+   "h": 68.7,
    "src": "lidar",
    "levels": 24.0
   },
@@ -742,13 +707,6 @@
    "h": 67.7,
    "src": "lidar",
    "levels": 18.0
-  },
-  {
-   "id": "w543641007",
-   "name": null,
-   "h": 67.1,
-   "src": "lidar",
-   "levels": 11.0
   },
   {
    "id": "w27897911",
@@ -768,20 +726,6 @@
    "id": "w135298867",
    "name": "Platinum Hotel and Spa",
    "h": 66.1,
-   "src": "lidar",
-   "levels": null
-  },
-  {
-   "id": "w134068317",
-   "name": "Fontainebleau Resort & Casino",
-   "h": 65.8,
-   "src": "lidar",
-   "levels": null
-  },
-  {
-   "id": "w1418135381",
-   "name": null,
-   "h": 65.7,
    "src": "lidar",
    "levels": null
   },
@@ -814,6 +758,13 @@
    "levels": null
   },
   {
+   "id": "w374989480",
+   "name": null,
+   "h": 61.3,
+   "src": "lidar",
+   "levels": null
+  },
+  {
    "id": "w180766593",
    "name": null,
    "h": 60.2,
@@ -830,7 +781,7 @@
   {
    "id": "w204346639",
    "name": "El Cortez Hotel & Casino",
-   "h": 58.6,
+   "h": 59.0,
    "src": "lidar",
    "levels": null
   },
@@ -845,6 +796,13 @@
    "id": "w130585560",
    "name": "Foley Federal Building",
    "h": 56.8,
+   "src": "lidar",
+   "levels": null
+  },
+  {
+   "id": "w133757429",
+   "name": "Virgin Hotels Las Vegas, Curio Collection by Hilton",
+   "h": 55.9,
    "src": "lidar",
    "levels": null
   },
@@ -894,13 +852,6 @@
    "id": "w313762432",
    "name": "Las Vegas Marriott",
    "h": 53.2,
-   "src": "lidar",
-   "levels": null
-  },
-  {
-   "id": "w374989480",
-   "name": null,
-   "h": 52.8,
    "src": "lidar",
    "levels": null
   },
@@ -982,16 +933,9 @@
    "levels": null
   },
   {
-   "id": "w699020452",
-   "name": null,
-   "h": 48.3,
-   "src": "lidar",
-   "levels": null
-  },
-  {
-   "id": "w1212809711",
-   "name": null,
-   "h": 48.1,
+   "id": "r7770314",
+   "name": "The Venetian Las Vegas",
+   "h": 48.0,
    "src": "lidar",
    "levels": null
   },
@@ -1136,6 +1080,13 @@
    "levels": 3.0
   },
   {
+   "id": "w134068317",
+   "name": "Fontainebleau Resort & Casino",
+   "h": 42.8,
+   "src": "lidar",
+   "levels": null
+  },
+  {
    "id": "w616651647",
    "name": "Las Vegas City Hall",
    "h": 42.1,
@@ -1150,6 +1101,13 @@
    "levels": 15.0
   },
   {
+   "id": "w1421481100",
+   "name": "Arte Museum Las Vegas",
+   "h": 41.1,
+   "src": "lidar",
+   "levels": null
+  },
+  {
    "id": "w543638171",
    "name": null,
    "h": 40.9,
@@ -1160,13 +1118,6 @@
    "id": "w182464629",
    "name": null,
    "h": 40.7,
-   "src": "lidar",
-   "levels": null
-  },
-  {
-   "id": "w1421481100",
-   "name": "Arte Museum Las Vegas",
-   "h": 40.6,
    "src": "lidar",
    "levels": null
   },
@@ -1185,25 +1136,11 @@
    "levels": 12.0
   },
   {
-   "id": "w180584269",
-   "name": "The Palazzo",
-   "h": 39.9,
-   "src": "lidar",
-   "levels": null
-  },
-  {
    "id": "w207212836",
    "name": "Bridger Building",
    "h": 39.8,
    "src": "lidar",
    "levels": 4.0
-  },
-  {
-   "id": "w52194829",
-   "name": "Waldorf Astoria Las Vegas",
-   "h": 39.7,
-   "src": "lidar",
-   "levels": null
   },
   {
    "id": "w699020449",
@@ -1241,6 +1178,13 @@
    "levels": 11.0
   },
   {
+   "id": "w699020450",
+   "name": null,
+   "h": 37.3,
+   "src": "lidar",
+   "levels": 11.0
+  },
+  {
    "id": "w1093169256",
    "name": "Slotzilla launch tower",
    "h": 37.3,
@@ -1257,13 +1201,6 @@
   {
    "id": "w205497576",
    "name": "Residence Inn Las Vegas Hughes Center",
-   "h": 37.2,
-   "src": "lidar",
-   "levels": 11.0
-  },
-  {
-   "id": "w699020450",
-   "name": null,
    "h": 37.2,
    "src": "lidar",
    "levels": 11.0
@@ -1290,6 +1227,13 @@
    "levels": null
   },
   {
+   "id": "w1212809711",
+   "name": null,
+   "h": 36.6,
+   "src": "lidar",
+   "levels": null
+  },
+  {
    "id": "w27525258",
    "name": "Flora Dungan Humanities Building",
    "h": 36.3,
@@ -1304,18 +1248,25 @@
    "levels": null
   },
   {
-   "id": "w116660358",
-   "name": "Mandalay Bay",
-   "h": 35.8,
+   "id": "w52186615",
+   "name": "Aria and Mandarin Self Parking",
+   "h": 35.6,
    "src": "lidar",
    "levels": null
   },
   {
-   "id": "w52186615",
-   "name": "Aria and Mandarin Self Parking",
-   "h": 35.4,
+   "id": "w180584269",
+   "name": "The Palazzo",
+   "h": 35.5,
    "src": "lidar",
    "levels": null
+  },
+  {
+   "id": "w543641007",
+   "name": null,
+   "h": 35.2,
+   "src": "osm-levels",
+   "levels": 11.0
   },
   {
    "id": "w52175579",
@@ -1365,8 +1316,8 @@
    "id": "w27831695",
    "name": "Park MGM",
    "osm": 110.0,
-   "lidar_p90": 101.1,
-   "lidar_p50": 96.8
+   "lidar_p90": 102.1,
+   "lidar_p50": 96.9
   },
   {
    "id": "w27831697",
@@ -1379,15 +1330,15 @@
    "id": "w27831699",
    "name": "Eiffel Tower",
    "osm": 165.0,
-   "lidar_p90": 72.4,
+   "lidar_p90": 38.0,
    "lidar_p50": 38.0
   },
   {
    "id": "w27858544",
    "name": "Luxor Las Vegas",
    "osm": 111.0,
-   "lidar_p90": 74.1,
-   "lidar_p50": 37.1
+   "lidar_p90": 76.0,
+   "lidar_p50": 42.5
   },
   {
    "id": "w27858550",
@@ -1400,8 +1351,8 @@
    "id": "w27897905",
    "name": "The Cosmopolitan Chelsea Tower",
    "osm": 184.0,
-   "lidar_p90": 141.1,
-   "lidar_p50": 29.9
+   "lidar_p90": 181.7,
+   "lidar_p50": 176.2
   },
   {
    "id": "w27897921",
@@ -1414,8 +1365,8 @@
    "id": "w27910891",
    "name": "Encore Las Vegas",
    "osm": 192.0,
-   "lidar_p90": 57.2,
-   "lidar_p50": 22.7
+   "lidar_p90": 195.4,
+   "lidar_p50": 185.3
   },
   {
    "id": "w27998223",
@@ -1428,8 +1379,8 @@
    "id": "w30424125",
    "name": "Palazzo Tower",
    "osm": 196.0,
-   "lidar_p90": 152.3,
-   "lidar_p50": 91.6
+   "lidar_p90": 196.3,
+   "lidar_p50": 192.0
   },
   {
    "id": "w30618090",
@@ -1456,8 +1407,8 @@
    "id": "w52134608",
    "name": "The Shops at Crystals",
    "osm": 30.0,
-   "lidar_p90": 32.6,
-   "lidar_p50": 23.5
+   "lidar_p90": 30.2,
+   "lidar_p50": 23.4
   },
   {
    "id": "w52134834",
@@ -1477,8 +1428,8 @@
    "id": "w52175576",
    "name": "Aria Resort & Casino",
    "osm": 20.0,
-   "lidar_p90": 73.9,
-   "lidar_p50": 28.4
+   "lidar_p90": 38.8,
+   "lidar_p50": 26.7
   },
   {
    "id": "w73540518",
@@ -1638,19 +1589,19 @@
    "id": "w134068318",
    "name": "Fontainebleau Las Vegas",
    "osm": 224.0,
-   "lidar_p90": 109.4,
-   "lidar_p50": 23.2
+   "lidar_p90": 223.0,
+   "lidar_p50": 216.6
   },
   {
    "id": "w134677416",
    "name": "Turnberry Place",
    "osm": 145.0,
-   "lidar_p90": 129.7,
-   "lidar_p50": 126.5
+   "lidar_p90": 130.0,
+   "lidar_p50": 127.0
   },
   {
    "id": "w134677417",
-   "name": "Spartacus Law Firm",
+   "name": "Turnberry Place",
    "osm": 145.0,
    "lidar_p90": 129.9,
    "lidar_p50": 126.5
@@ -1659,8 +1610,8 @@
    "id": "w134677425",
    "name": "Turnberry Place",
    "osm": 145.0,
-   "lidar_p90": 130.5,
-   "lidar_p50": 127.4
+   "lidar_p90": 130.6,
+   "lidar_p50": 127.5
   },
   {
    "id": "w134677429",
@@ -1680,8 +1631,8 @@
    "id": "w134795273",
    "name": "The Cosmopolitan of Las Vegas",
    "osm": 184.0,
-   "lidar_p90": 150.9,
-   "lidar_p50": 32.4
+   "lidar_p90": 175.6,
+   "lidar_p50": 175.6
   },
   {
    "id": "w134918082",
@@ -1701,14 +1652,14 @@
    "id": "w134930088",
    "name": "Aria Resort & Casino",
    "osm": 100.0,
-   "lidar_p90": 105.0,
+   "lidar_p90": 103.3,
    "lidar_p50": 103.3
   },
   {
    "id": "w134930089",
    "name": null,
    "osm": 65.0,
-   "lidar_p90": 144.6,
+   "lidar_p90": 80.2,
    "lidar_p50": 80.2
   },
   {
@@ -1722,15 +1673,15 @@
    "id": "w134930091",
    "name": null,
    "osm": 65.0,
-   "lidar_p90": 80.6,
+   "lidar_p90": 80.0,
    "lidar_p50": 80.0
   },
   {
    "id": "w134930092",
    "name": "Aria Resort & Casino",
    "osm": 183.0,
-   "lidar_p90": 161.0,
-   "lidar_p50": 80.0
+   "lidar_p90": 179.6,
+   "lidar_p50": 177.4
   },
   {
    "id": "w134935559",
@@ -1749,7 +1700,7 @@
   {
    "id": "w134938479",
    "name": "VooDoo Rooftop",
-   "osm": 140.0,
+   "osm": 131.0,
    "lidar_p90": 131.5,
    "lidar_p50": 129.7
   },
@@ -1778,8 +1729,8 @@
    "id": "w135457469",
    "name": "Stratosphere Tower",
    "osm": 350.0,
-   "lidar_p90": 88.7,
-   "lidar_p50": 24.7
+   "lidar_p90": 281.0,
+   "lidar_p50": 267.2
   },
   {
    "id": "w136520122",
@@ -1876,8 +1827,8 @@
    "id": "w205501268",
    "name": "Wynn Las Vegas",
    "osm": 187.0,
-   "lidar_p90": 108.7,
-   "lidar_p50": 15.4
+   "lidar_p90": 176.5,
+   "lidar_p50": 166.3
   },
   {
    "id": "w206128510",
@@ -1952,7 +1903,7 @@
   {
    "id": "w316174410",
    "name": "Circa Resort & Casino",
-   "osm": 152.4,
+   "osm": 146.0,
    "lidar_p90": 132.8,
    "lidar_p50": 27.9
   },
@@ -2002,8 +1953,8 @@
    "id": "w472669744",
    "name": "The Cosmopolitan Boulevard Tower",
    "osm": 184.0,
-   "lidar_p90": 50.8,
-   "lidar_p50": 43.2
+   "lidar_p90": 43.9,
+   "lidar_p50": 43.9
   },
   {
    "id": "w494974482",
@@ -2028,7 +1979,7 @@
   },
   {
    "id": "w495545498",
-   "name": "Panorama Tower I parking garage",
+   "name": "Panorama Tower I",
    "osm": 25.8,
    "lidar_p90": 119.2,
    "lidar_p50": 15.9
@@ -2079,8 +2030,15 @@
    "id": "w691478555",
    "name": "Allegiant Stadium",
    "osm": 69.0,
-   "lidar_p90": 62.2,
+   "lidar_p90": 62.5,
    "lidar_p50": 57.2
+  },
+  {
+   "id": "w699020452",
+   "name": null,
+   "osm": 31.0,
+   "lidar_p90": 31.1,
+   "lidar_p50": 31.1
   },
   {
    "id": "w699874292",
@@ -2107,14 +2065,14 @@
    "id": "w839503453",
    "name": "Ole Red",
    "osm": 9.0,
-   "lidar_p90": 45.7,
-   "lidar_p50": 6.4
+   "lidar_p90": 46.5,
+   "lidar_p50": 6.7
   },
   {
    "id": "w976405284",
    "name": "Sphere",
    "osm": 112.0,
-   "lidar_p90": 108.4,
+   "lidar_p90": 108.9,
    "lidar_p50": 78.1
   },
   {
@@ -2219,15 +2177,15 @@
    "id": "r1606512",
    "name": "Miracle Mile Shops",
    "osm": 20.0,
-   "lidar_p90": 47.2,
-   "lidar_p50": 23.5
+   "lidar_p90": 33.9,
+   "lidar_p50": 23.3
   },
   {
    "id": "r5342155",
    "name": "Elara, a Hilton Grand Vacations Club",
    "osm": 183.0,
-   "lidar_p90": 23.4,
-   "lidar_p50": 17.1
+   "lidar_p90": 162.6,
+   "lidar_p50": 21.1
   },
   {
    "id": "r6138877",
@@ -2254,8 +2212,8 @@
    "id": "r7655652",
    "name": "Palms Place",
    "osm": 157.0,
-   "lidar_p90": 151.5,
-   "lidar_p50": 23.8
+   "lidar_p90": 145.5,
+   "lidar_p50": 145.5
   },
   {
    "id": "r11991889",
@@ -2275,7 +2233,7 @@
    "id": "w495545524",
    "name": null,
    "osm": 6.0,
-   "lidar_p90": 115.1,
+   "lidar_p90": 6.6,
    "lidar_p50": 6.6
   },
   {
@@ -2383,6 +2341,182 @@
     "name": "World Market Center"
    },
    "reason": "The tower has no name tag in OSM. Named after the named OSM area that encloses it."
+  },
+  "w133757428": {
+   "set": {
+    "height": "37.5",
+    "building:levels": "11"
+   },
+   "reason": "This part of Virgin Hotels Las Vegas is tagged height=182 m and building:levels=50, which made a mid-rise hotel the 13th tallest building in the city. The 2022 LiDAR peaks at 37.5 m over it, and the resort's tallest tower reads about 58 m. Set to the LiDAR height; 11 floors is the original hotel tower."
+  },
+  "w699020452": {
+   "set": {
+    "height": "31"
+   },
+   "reason": "Low building beside the Cosmopolitan's Chelsea Tower. The tower's roof overhangs about 15% of this footprint as mapped, so LiDAR read it as 178 m. Set to the footprint's median LiDAR height."
+  },
+  "w134677417": {
+   "set": {
+    "name": "Turnberry Place"
+   },
+   "reason": "One of the four Turnberry Place towers; OpenStreetMap carries the name of a law office inside it (Spartacus Law Firm)."
+  },
+  "w111380664": {
+   "set": {
+    "height": "190"
+   },
+   "reason": "Trump International Hotel tower is tagged height=195. The published height is 190 m (622 ft) and the 2022 LiDAR roof reads 191 m."
+  },
+  "w316174410": {
+   "set": {
+    "height": "146"
+   },
+   "reason": "Circa is tagged height=152.4. The published height is 146 m (480 ft); the 2022 LiDAR peaks lower still, at 136 m, so the published figure may include signage."
+  },
+  "w134938479": {
+   "set": {
+    "height": "131"
+   },
+   "reason": "This part of the Rio's Masquerade Tower is tagged height=140 m. The tower is published at 129 m and the 2022 LiDAR reads 131 m over this part."
+  },
+  "w495545498": {
+   "set": {
+    "name": "Panorama Tower I"
+   },
+   "reason": "The outline holding Panorama Tower I is named for its parking garage in OpenStreetMap."
+  },
+  "w135457469": {
+   "model": [
+    {
+     "b": 0,
+     "t": 232,
+     "from": [
+      3.2,
+      0.8,
+      6.5
+     ],
+     "sides": 12
+    },
+    {
+     "b": 0,
+     "t": 236,
+     "from": [
+      8.6,
+      21.1,
+      6.5
+     ],
+     "to": [
+      5.4,
+      9.0,
+      3.5
+     ],
+     "sides": 6,
+     "turn": 75
+    },
+    {
+     "b": 0,
+     "t": 236,
+     "from": [
+      -17.1,
+      -4.6,
+      6.5
+     ],
+     "to": [
+      -5.0,
+      -1.4,
+      3.5
+     ],
+     "sides": 6,
+     "turn": 195
+    },
+    {
+     "b": 0,
+     "t": 236,
+     "from": [
+      18.0,
+      -14.0,
+      6.5
+     ],
+     "to": [
+      9.2,
+      -5.2,
+      3.5
+     ],
+     "sides": 6,
+     "turn": 315
+    },
+    {
+     "b": 230,
+     "t": 256,
+     "from": [
+      3.2,
+      0.8,
+      10
+     ],
+     "to": [
+      3.2,
+      0.8,
+      31
+     ],
+     "sides": 24
+    },
+    {
+     "b": 256,
+     "t": 267,
+     "from": [
+      3.2,
+      0.8,
+      31
+     ],
+     "to": [
+      3.2,
+      0.8,
+      32
+     ],
+     "sides": 24
+    },
+    {
+     "b": 267,
+     "t": 276,
+     "from": [
+      3.2,
+      0.8,
+      32
+     ],
+     "to": [
+      3.2,
+      0.8,
+      15
+     ],
+     "sides": 24
+    },
+    {
+     "b": 276,
+     "t": 283,
+     "from": [
+      3.2,
+      0.8,
+      9
+     ],
+     "sides": 16
+    },
+    {
+     "b": 283,
+     "t": 350,
+     "from": [
+      3.2,
+      0.8,
+      2.6
+     ],
+     "to": [
+      3.2,
+      0.8,
+      0.6
+     ],
+     "sides": 8
+    }
+   ],
+   "reason": "Only the Strat's circular outline is mapped, which drew a 350 m solid cylinder. Drawn by hand instead: a core and three legs up to the pod, the pod, its crown and the mast. The pod's radius (about 31 m at 263 to 268 m), the crown (282 m), the mast tip (350 m) and the direction of the legs are measured from the 2022 LiDAR; the legs' width and the underside of the pod are estimated."
   }
  }
 }
