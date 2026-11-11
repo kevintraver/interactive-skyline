@@ -26,7 +26,7 @@ from pyproj import Transformer
 ROOT = Path(__file__).resolve().parent.parent
 TILES = ROOT / "data" / "raw" / "terrarium"
 CITY = sys.argv[1]
-CFG = json.loads((ROOT / "public" / "data" / "cities.json").read_text())[CITY]
+CFG = json.loads((ROOT / "data" / "cities.json").read_text())[CITY]
 OUT = ROOT / "public" / "data" / CITY
 TILES.mkdir(parents=True, exist_ok=True)
 OUT.mkdir(parents=True, exist_ok=True)

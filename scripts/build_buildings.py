@@ -29,7 +29,7 @@ from shapely.ops import unary_union
 
 ROOT = Path(__file__).resolve().parent.parent
 CITY = sys.argv[1]
-CFG = json.loads((ROOT / "public" / "data" / "cities.json").read_text())[CITY]
+CFG = json.loads((ROOT / "data" / "cities.json").read_text())[CITY]
 RAW = ROOT / "data" / "raw" / CITY
 OUT = ROOT / "public" / "data" / CITY
 

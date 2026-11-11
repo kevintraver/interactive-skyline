@@ -87,16 +87,13 @@ export async function loadCustomModels(cityId) {
   return models;
 }
 
-/** Append a model to the output arrays, with its origin at `east`, `north` (map meters) and height `y`. */
-export function placeModel(model, east, north, y, out) {
+/** A model's vertex arrays with its origin at `east`, `north` (map meters) and height `y`. */
+export function placeModel(model, east, north, y) {
   const x0 = east + model.offset[0], z0 = -(north + model.offset[1]);
-  for (let i = 0; i < model.pos.length; i += 3) out.pos.push(model.pos[i] + x0, model.pos[i + 1] + y, model.pos[i + 2] + z0);
-  for (const v of model.nor) out.nor.push(v);
-  for (const v of model.col) out.col.push(v);
-  out.glow = out.glow || [];
-  for (const v of model.glow) out.glow.push(v);
-  out.win = out.win || [];
-  for (const v of model.win) out.win.push(v);
-  out.led = out.led || [];
-  for (const v of model.led) out.led.push(v);
+  const pos = new Float32Array(model.pos);
+  for (let i = 0; i < pos.length; i += 3) { pos[i] += x0; pos[i + 1] += y; pos[i + 2] += z0; }
+  return {
+    n: pos.length / 3, pos, nor: new Float32Array(model.nor), col: new Float32Array(model.col),
+    glow: new Float32Array(model.glow), win: new Float32Array(model.win), led: new Float32Array(model.led),
+  };
 }

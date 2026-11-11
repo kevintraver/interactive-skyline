@@ -51,7 +51,7 @@ Most buildings use LiDAR: 18,136 of 18,844 in Salt Lake City and 17,506 of 17,86
 
 Two things keep the LiDAR honest around towers. The Las Vegas survey files every return above roughly 150 m as noise, which cuts the top off the tallest towers, so the build takes those returns back where they are dense enough to be a roof. And a low building that touches a tower is measured without the tower's footprint, so a podium does not inherit the height of the tower standing on it.
 
-The pipeline is four Python scripts, run with [uv](https://docs.astral.sh/uv/). Each takes a city id from `public/data/cities.json`:
+The pipeline is four Python scripts, run with [uv](https://docs.astral.sh/uv/). Each takes a city id from `data/cities.json`:
 
 ```sh
 uv run scripts/fetch_lidar.py lv       # download and rasterize the point cloud (slow, about 1 GB)
@@ -62,7 +62,7 @@ uv run scripts/build_buildings.py lv   # footprints + heights -> public/data/lv/
 
 `pnpm data` runs all four for both cities. The raw OpenStreetMap extract for each city is expected at `data/raw/<city>/osm-buildings.json`; the scripts do not download it.
 
-To add a city, add an entry to `public/data/cities.json` (origin, bounding box, LiDAR dataset, terrain extents and viewpoints) and run the pipeline for it.
+To add a city, add an entry to `data/cities.json` (origin, bounding box, LiDAR dataset, terrain extents and viewpoints) and run the pipeline for it.
 
 ## How accurate it is
 
