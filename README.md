@@ -12,11 +12,11 @@ A true-scale 3D model of the Salt Lake City and Las Vegas skylines, built with t
 
 - **Hide a building.** Click a blue building to select it, then press Hide. Right-click gives the same option, plus "Hide this and everything taller".
 - **Move a building.** Drag a selected building along the ground. Its real footprint stays marked so you can see where it came from.
-- **Undo and reset.** Cmd+Z undoes the last change. "Reset position" puts one building back, and "Reset all" restores everything.
-- **Find a building.** Search the list and click a row to center the view on it.
-- **Move around like a map.** Drag to slide the view, hold Cmd or Ctrl and drag to rotate and tilt, scroll to zoom.
+- **Undo and reset.** Cmd+Z undoes the last change. "Put back" returns one building to its real spot, and "Reset" restores everything.
+- **Find a building.** Click the search box to list the tall buildings, tallest first. Click a row to fly to it.
+- **Move around like a map.** Drag to slide the view, right-drag (or hold Cmd or Ctrl and drag) to rotate and tilt, scroll to zoom. The buttons in the corner zoom and face north.
 - **Switch city and viewpoint.** Each city has an eye-level view and an aerial one.
-- **Change the rules.** Settings control the height cutoff for removable buildings, what a click does, units, and whether the aerial photo is shown.
+- **Change the picture.** The moon button switches to night. Map options set the aerial photo, the blue color, how tall a building must be to count, and the units.
 
 ![The Sphere moved across the Strip](docs/moved.png)
 

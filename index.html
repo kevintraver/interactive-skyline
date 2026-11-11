@@ -7,88 +7,100 @@
     <link rel="stylesheet" href="/src/style.css" />
   </head>
   <body>
+    <svg hidden>
+      <defs>
+        <g id="i-search"><circle cx="8.5" cy="8.5" r="5.5" /><path d="M12.6 12.6 17 17" /></g>
+        <g id="i-x"><path d="M5 5l10 10M15 5 5 15" /></g>
+        <g id="i-plus"><path d="M10 4v12M4 10h12" /></g>
+        <g id="i-minus"><path d="M4 10h12" /></g>
+        <g id="i-chevron"><path d="m6 8 4 4 4-4" /></g>
+        <g id="i-moon"><path d="M16.5 11.6A7 7 0 1 1 8.4 3.5a5.6 5.6 0 0 0 8.1 8.1z" /></g>
+        <g id="i-sun"><circle cx="10" cy="10" r="3.2" /><path d="M10 2.5v2M10 15.5v2M2.5 10h2M15.5 10h2M4.7 4.7l1.4 1.4M13.9 13.9l1.4 1.4M4.7 15.3l1.4-1.4M13.9 6.1l1.4-1.4" /></g>
+        <g id="i-layers"><path d="m10 3 7 4-7 4-7-4 7-4z" /><path d="m3 11 7 4 7-4" /></g>
+        <g id="i-eye"><path d="M2 10s3-5.5 8-5.5S18 10 18 10s-3 5.5-8 5.5S2 10 2 10z" /><circle cx="10" cy="10" r="2.3" /></g>
+        <g id="i-eye-off"><path d="M2 10s3-5.5 8-5.5S18 10 18 10s-3 5.5-8 5.5S2 10 2 10z" /><path d="M4 16 16 4" /></g>
+      </defs>
+    </svg>
+
     <canvas id="scene" aria-label="3D model of the city"></canvas>
+    <h1 class="sr">Interactive Skyline</h1>
 
-    <aside id="panel">
-      <nav id="cities" aria-label="City"></nav>
-      <header>
-        <div class="title">
-          <h1>Interactive Skyline</h1>
-          <button id="settings-toggle" aria-expanded="false" aria-controls="settings">Settings</button>
-        </div>
-        <p class="lede" id="lede"></p>
-        <p class="lede hint">Drag to move around. Hold <kbd>⌘</kbd> or <kbd>Ctrl</kbd> and drag to rotate and tilt. Scroll to zoom.</p>
-      </header>
-
-      <div id="browse">
-        <div class="views" role="group" aria-label="Viewpoint"></div>
-
-        <div class="bar">
-          <span id="count"></span>
-          <span class="actions">
-            <button id="hide-all">Hide all</button>
-            <button id="show-all">Show all</button>
-            <button id="reset-all" title="Show every hidden building and move every moved one back">Reset all</button>
-          </span>
-        </div>
-
-        <input id="search" type="search" placeholder="Search buildings" aria-label="Search buildings" autocomplete="off" spellcheck="false" />
-        <ol id="list"></ol>
-        <p id="empty" hidden></p>
-
-        <footer id="about"></footer>
+    <div id="top">
+      <div id="bar">
+        <button id="city" aria-haspopup="menu" aria-expanded="false" aria-controls="city-menu" title="Change city">
+          <span></span><svg class="icon" viewBox="0 0 20 20" aria-hidden="true"><use href="#i-chevron" /></svg>
+        </button>
+        <label class="find">
+          <svg class="icon" viewBox="0 0 20 20" aria-hidden="true"><use href="#i-search" /></svg>
+          <input id="search" type="search" placeholder="Search buildings" aria-label="Search buildings" aria-controls="results" autocomplete="off" spellcheck="false" />
+        </label>
       </div>
+    </div>
+    <div class="views" role="group" aria-label="Viewpoints"></div>
+    <div id="city-menu" class="pop" role="menu" hidden></div>
 
-      <form id="settings" onsubmit="return false">
-        <fieldset>
-          <legend>Removable buildings</legend>
-          <label class="field">
-            <span class="row"><span>Minimum height</span><output id="cutoff-out"></output></span>
-            <input type="range" name="cutoff" min="15" max="90" step="1" />
-          </label>
-          <label class="check"><input type="checkbox" name="highlight" /><span>Color them blue<small>Off: they look like every other building until you point at one.</small></span></label>
-        </fieldset>
+    <section id="results" aria-label="Buildings" hidden>
+      <div class="head">
+        <span id="count"></span>
+        <button id="toggle-all"></button>
+      </div>
+      <ol id="list"></ol>
+      <p id="empty" hidden></p>
+    </section>
 
-        <fieldset>
-          <legend>Clicking a building</legend>
-          <label class="check"><input type="radio" name="click" value="select" /><span>Selects it<small>Shows its details with a Hide button.</small></span></label>
-          <label class="check"><input type="radio" name="click" value="hide" /><span>Hides it straight away<small>Faster. Undo with the toast or Cmd+Z.</small></span></label>
-        </fieldset>
+    <section id="card" aria-label="Selected building" hidden>
+      <button class="x" aria-label="Close"><svg class="icon" viewBox="0 0 20 20" aria-hidden="true"><use href="#i-x" /></svg></button>
+      <h2></h2>
+      <p class="meta"></p>
+      <p class="src"></p>
+      <div class="acts">
+        <button class="primary" data-act="hide">Hide</button>
+        <button data-act="center">Zoom to</button>
+        <button data-act="back" hidden>Put back</button>
+      </div>
+      <p class="how">Drag the building to move it.</p>
+    </section>
 
-        <fieldset>
-          <legend>Hidden and moved buildings</legend>
-          <label class="check"><input type="checkbox" name="markers" /><span>Mark where a building really stands<small>A footprint on the ground once it is hidden or moved. Click it to put the building back.</small></span></label>
-        </fieldset>
+    <div id="tools">
+      <button id="night" aria-pressed="false"><svg class="icon" viewBox="0 0 20 20" aria-hidden="true"><use href="#i-moon" /></svg></button>
+      <button id="options-toggle" aria-expanded="false" aria-controls="settings" aria-label="Map options" title="Map options"><svg class="icon" viewBox="0 0 20 20" aria-hidden="true"><use href="#i-layers" /></svg></button>
+      <button id="compass" aria-label="Face north" title="Face north">
+        <svg viewBox="0 0 20 20" aria-hidden="true"><path class="n" d="M10 2.5 13 10H7z" /><path class="s" d="M10 17.5 13 10H7z" /></svg>
+      </button>
+      <div class="zoom">
+        <button id="zoom-in" aria-label="Zoom in" title="Zoom in"><svg class="icon" viewBox="0 0 20 20" aria-hidden="true"><use href="#i-plus" /></svg></button>
+        <button id="zoom-out" aria-label="Zoom out" title="Zoom out"><svg class="icon" viewBox="0 0 20 20" aria-hidden="true"><use href="#i-minus" /></svg></button>
+      </div>
+    </div>
 
-        <fieldset>
-          <legend>Display</legend>
-          <div class="seg" role="group" aria-label="Units">
-            <label><input type="radio" name="units" value="ft" /><span>Feet</span></label>
-            <label><input type="radio" name="units" value="m" /><span>Meters</span></label>
-          </div>
-          <label class="check"><input type="checkbox" name="imagery" /><span>Aerial photo on the ground<small>Off: a plain model, without the towers' shadows baked into the photo.</small></span></label>
-          <label class="check"><input type="checkbox" name="night" /><span>Night<small>City lights instead of sunlight.</small></span></label>
-        </fieldset>
-
-        <button type="button" id="settings-reset">Reset to defaults</button>
-      </form>
-    </aside>
+    <form id="settings" class="pop" aria-label="Map options" onsubmit="return false" hidden>
+      <label class="check"><input type="checkbox" name="imagery" /><span>Aerial photo</span></label>
+      <label class="check"><input type="checkbox" name="highlight" /><span>Tall buildings in blue</span></label>
+      <label class="field">
+        <span class="row"><span>Tall means over</span><output id="cutoff-out"></output></span>
+        <input type="range" name="cutoff" min="15" max="90" step="1" />
+      </label>
+      <div class="seg" role="group" aria-label="Units">
+        <label><input type="radio" name="units" value="ft" /><span>Feet</span></label>
+        <label><input type="radio" name="units" value="m" /><span>Meters</span></label>
+      </div>
+      <button type="button" id="settings-reset">Reset options</button>
+      <p id="about"></p>
+    </form>
 
     <div id="tip" hidden></div>
     <div id="menu" role="menu" hidden></div>
 
     <div id="dock">
-      <div id="card" hidden>
-        <div class="who"><b></b><span class="meta"></span></div>
-        <button data-act="back" hidden>Reset position</button>
-        <button data-act="center">Center</button>
-        <button class="primary" data-act="hide">Hide</button>
-        <button data-act="taller"></button>
-        <button class="x" aria-label="Clear selection">&times;</button>
+      <div id="hint" hidden>
+        <p><b></b><span>Drag to move the map. Scroll to zoom. Right-drag to rotate.</span></p>
+        <button class="x" aria-label="Dismiss"><svg class="icon" viewBox="0 0 20 20" aria-hidden="true"><use href="#i-x" /></svg></button>
       </div>
       <div id="toast" role="status" hidden><span></span><button>Undo</button></div>
+      <div id="changes" hidden><span></span><button id="reset-all">Reset</button></div>
     </div>
-    <div id="loading">Loading terrain and buildings…</div>
+    <div id="credit">Interactive Skyline</div>
+    <div id="loading">Loading the city…</div>
 
     <script type="module" src="/src/main.js"></script>
   </body>
