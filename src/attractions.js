@@ -155,20 +155,6 @@ function setAngle(wheel, angle) {
   for (const c of wheel.cabins) c.quaternion.copy(back).multiply(c.userData.rest);
 }
 
-/** A checkbox in Settings after Night (and the fountain one), kept like the app's own settings. */
-function addCheckbox(settings, key, title, note) {
-  const form = document.getElementById('settings');
-  if (!form || form.elements[key]) return;
-  const label = document.createElement('label');
-  label.className = 'check';
-  label.innerHTML = `<input type="checkbox" name="${key}" /><span></span>`;
-  label.querySelector('span').append(title, Object.assign(document.createElement('small'), { textContent: note }));
-  label.querySelector('input').checked = settings[key];
-  const after = ['fountain', 'night'].map((k) => form.elements[k]).find((el) => el && el.closest);
-  if (after) after.closest('label').after(label);
-  else (form.querySelector('fieldset:last-of-type') || form).append(label);
-}
-
 const shown = (o) => { for (let x = o; x; x = x.parent) if (!x.visible) return false; return true; };
 const countVerts = (o) => {
   let n = 0;
@@ -247,11 +233,6 @@ export function initAttractions({ cityId, scene, camera, renderer, settings, inv
         }
       }),
     ]);
-    if (fountains.length) addCheckbox(settings, 'fountain', 'Fountain show', `${fountains.map((f) => f.name).join(', ')}, on a loop.`);
-    if (wheels.length) {
-      const minutes = (s) => (s >= 90 ? `${+(s / 60).toFixed(1)} minutes` : `${Math.round(s)} seconds`);
-      addCheckbox(settings, 'wheel', 'Wheel turns', wheels.map((w) => `${w.root.name}: one turn every ${minutes(w.period)}`).join('; ') + '.');
-    }
     turnWheels();
     state.night = state.fountain = null; // the objects just added have not been set yet
     applyVisibility();

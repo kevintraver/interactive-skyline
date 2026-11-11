@@ -42,14 +42,14 @@ const LENS_HFOV = 39.6; // horizontal field of view of a 50 mm lens on full fram
 const M_TO_FT = 3.28084;
 
 const SOURCE = {
-  'osm-height': 'height tagged in OpenStreetMap',
+  'osm-height': 'tagged in OpenStreetMap',
   lidar: `measured from ${city.lidar.year} USGS LiDAR`,
   'osm-levels': 'estimated from floor count',
-  guess: 'height unknown, assumed',
+  guess: 'unknown, assumed',
 };
 
 // User-adjustable behaviour, kept between visits. `cutoff` is in meters.
-const DEFAULTS = { cutoff: 35, highlight: true, click: 'select', markers: true, units: 'ft', imagery: true, night: false, fountain: true, wheel: true };
+const DEFAULTS = { cutoff: 35, highlight: true, units: 'ft', imagery: true, night: false, fountain: true, wheel: true };
 const STORE = 'slc-skyline-settings';
 function loadSettings() {
   try {
@@ -83,7 +83,7 @@ const controls = new OrbitControls(camera, canvas);
 controls.enableDamping = true;
 controls.dampingFactor = 0.12;
 controls.zoomToCursor = true;
-// Map-style: drag slides the ground, Cmd/Ctrl/Shift-drag (or right-drag) turns and tilts the view.
+// Map-style: drag slides the ground, right-drag (or Cmd/Ctrl/Shift-drag) turns and tilts the view.
 controls.mouseButtons = { LEFT: THREE.MOUSE.PAN, MIDDLE: THREE.MOUSE.DOLLY, RIGHT: THREE.MOUSE.ROTATE };
 controls.touches = { ONE: THREE.TOUCH.PAN, TWO: THREE.TOUCH.DOLLY_ROTATE };
 controls.screenSpacePanning = false;
@@ -483,8 +483,6 @@ function resize() {
   // hold the horizontal field of view of a 50 mm lens, whatever the window shape
   const v = 2 * Math.atan(Math.tan(THREE.MathUtils.degToRad(LENS_HFOV) / 2) / camera.aspect);
   camera.fov = Math.min(THREE.MathUtils.radToDeg(v), 60);
-  // on a wide window, shift the picture right so its center is the middle of the area the panel leaves free
-  if (w > 720) camera.setViewOffset(w, h, -158, 0, w, h); else camera.clearViewOffset();
   camera.updateProjectionMatrix();
   invalidate();
 }
@@ -493,9 +491,10 @@ addEventListener('resize', resize);
 // ------------------------------------------------------------------ hide / show
 const list = document.getElementById('list');
 const count = document.getElementById('count');
-const showAll = document.getElementById('show-all');
-const hideAll = document.getElementById('hide-all');
-const resetAll = document.getElementById('reset-all');
+const toggleAll = document.getElementById('toggle-all');
+const changes = document.getElementById('changes');
+const results = document.getElementById('results');
+const hint = document.getElementById('hint');
 const search = document.getElementById('search');
 const empty = document.getElementById('empty');
 const card = document.getElementById('card');
@@ -520,18 +519,16 @@ function paint(e) {
   m.emissiveIntensity = settings.highlight && e !== selected ? (settings.night ? NIGHT : DAY).tint : 0;
   e.mesh.children[0].visible = settings.highlight;
   e.mesh.position.copy(e.offset);
-  e.marker.visible = settings.markers && (isHidden(e) || isMoved(e));
+  e.marker.visible = isHidden(e) || isMoved(e);
   e.marker.material.opacity = e === hovered ? 0.75 : 0.42;
 }
 
 function refresh() {
   const hidden = tall.filter(isHidden).length, moved = tall.filter(isMoved).length;
-  count.textContent = hidden || moved
-    ? [hidden && `${hidden} hidden`, moved && `${moved} moved`].filter(Boolean).join(' · ') + ` of ${tall.length}`
-    : `${tall.length} over ${fmt(settings.cutoff)}`;
-  showAll.disabled = hidden === 0;
-  hideAll.disabled = hidden === tall.length;
-  resetAll.disabled = hidden === 0 && moved === 0;
+  count.textContent = `${plural(tall.length)} over ${fmt(settings.cutoff)}`;
+  toggleAll.textContent = hidden ? 'Show all' : 'Hide all';
+  changes.hidden = !hidden && !moved;
+  changes.querySelector('span').textContent = [hidden && `${hidden} hidden`, moved && `${moved} moved`].filter(Boolean).join(' · ');
   renderer.shadowMap.needsUpdate = true;
   invalidate();
 }
@@ -551,23 +548,24 @@ function select(entry) {
   selected = entry && !isHidden(entry) ? entry : null;
   if (prev) { paint(prev); prev.row.classList.remove('selected'); }
   card.hidden = !selected;
+  document.body.classList.toggle('selecting', !!selected);
   if (selected) {
     paint(selected);
     selected.row.classList.add('selected');
     selected.row.scrollIntoView({ block: 'nearest' });
     hideToast();
+    dismissHint();
     updateCard();
   }
   invalidate();
 }
 function updateCard() {
   if (!selected) return;
-  const b = selected.data, taller = visibleTaller(selected).length;
-  card.querySelector('b').textContent = label(b);
-  card.querySelector('.meta').textContent = `${details(b)} · ${isMoved(selected) ? 'moved from its real spot' : 'drag it to move it'}`;
-  const more = card.querySelector('[data-act="taller"]');
-  more.hidden = taller === 0;
-  more.textContent = `Hide this and ${taller} taller`;
+  const b = selected.data, rank = tall.indexOf(selected) + 1;
+  card.querySelector('h2').textContent = label(b);
+  card.querySelector('.meta').textContent = `${details(b)} · ${rank === 1 ? `tallest in ${city.name}` : `no. ${rank} by height`}`;
+  card.querySelector('.src').textContent = `Height ${SOURCE[b.src]}`;
+  card.querySelector('.how').textContent = isMoved(selected) ? 'Moved from where it really stands.' : 'Drag the building to move it.';
   card.querySelector('[data-act="back"]').hidden = !isMoved(selected);
 }
 
@@ -575,9 +573,9 @@ function syncRow(e) {
   const hidden = isHidden(e);
   e.row.classList.toggle('off', hidden);
   const act = e.row.querySelector('.act');
-  act.textContent = hidden ? 'Show' : 'Hide';
+  act.querySelector('use').setAttribute('href', hidden ? '#i-eye-off' : '#i-eye');
+  act.title = hidden ? 'Show' : 'Hide';
   act.setAttribute('aria-label', `${hidden ? 'Show' : 'Hide'} ${label(e.data)}`);
-  e.row.classList.toggle('moved', isMoved(e));
   e.row.querySelector('.back').hidden = !isMoved(e);
 }
 
@@ -594,7 +592,7 @@ function apply(entries, hidden, record = true) {
   if (hidden && changed.includes(selected)) select(null);
   if (record) {
     const what = changed.length === 1 ? label(changed[0].data) : plural(changed.length);
-    remember(`${hidden ? 'Hidden' : 'Restored'}: ${what}`, `${hidden ? 'Restored' : 'Hidden again'}: ${what}`, () => apply(changed, !hidden, false));
+    remember(`${hidden ? 'Hidden' : 'Shown'}: ${what}`, `${hidden ? 'Shown' : 'Hidden'} again: ${what}`, () => apply(changed, !hidden, false));
   }
   refresh();
 }
@@ -616,7 +614,7 @@ function moveBack(entries) {
   const was = moved.map((e) => e.offset.clone());
   moved.forEach((e) => place(e, 0, 0));
   const what = moved.length === 1 ? label(moved[0].data) : plural(moved.length);
-  remember(`Position reset: ${what}`, `Moved again: ${what}`, () => moved.forEach((e, i) => place(e, was[i].x, was[i].z)));
+  remember(`Put back: ${what}`, `Moved again: ${what}`, () => moved.forEach((e, i) => place(e, was[i].x, was[i].z)));
   updateCard();
   refresh();
 }
@@ -627,7 +625,7 @@ function resetEverything() {
   const was = moved.map((e) => e.offset.clone());
   apply(hidden, false, false);
   moved.forEach((e) => place(e, 0, 0));
-  remember('Reset every building', 'Put your changes back', () => {
+  remember('Every building is back', 'Your changes are back', () => {
     apply(hidden, true, false);
     moved.forEach((e, i) => place(e, was[i].x, was[i].z));
   });
@@ -660,38 +658,49 @@ function hideToast() { toast.hidden = true; clearTimeout(toastTimer); }
 toast.querySelector('button').addEventListener('click', undo);
 
 card.querySelector('[data-act="hide"]').addEventListener('click', () => selected && apply([selected], true));
-card.querySelector('[data-act="taller"]').addEventListener('click', () => selected && apply([selected, ...visibleTaller(selected)], true));
 card.querySelector('[data-act="center"]').addEventListener('click', () => selected && focusOn(selected));
 card.querySelector('[data-act="back"]').addEventListener('click', () => selected && moveBack([selected]));
 card.querySelector('.x').addEventListener('click', () => select(null));
-showAll.addEventListener('click', () => apply(tall, false));
-hideAll.addEventListener('click', () => apply(tall, true));
-resetAll.addEventListener('click', resetEverything);
+toggleAll.addEventListener('click', () => apply(tall, !tall.some(isHidden)));
+document.getElementById('reset-all').addEventListener('click', resetEverything);
 
 // ------------------------------------------------------------------ jump to a building
-let flight = null;
+let flight = null; // a camera move in progress: { t0, dur, at(k) } with k easing from 0 to 1
+function fly(dur, at) { flight = { t0: performance.now(), dur, at }; }
 /** Glide the camera so one building sits in the middle of the view, keeping the current viewing direction. */
 function focusOn(entry) {
   const b = entry.data;
-  const target = new THREE.Vector3(b.c[0], b.ground - BASE + b.h * 0.5, -b.c[1]).add(entry.offset);
+  const q0 = controls.target.clone(), q1 = new THREE.Vector3(b.c[0], b.ground - BASE + b.h * 0.5, -b.c[1]).add(entry.offset);
   const dir = camera.position.clone().sub(controls.target).normalize();
   if (dir.y < 0.28) { dir.y = 0.28; dir.normalize(); } // from a little above, so neighbours don't block it
   const dist = THREE.MathUtils.clamp(b.h * 7 + 550, 800, 1700); // far enough to see it among its neighbours
-  flight = {
-    t0: performance.now(), dur: 750,
-    p0: camera.position.clone(), q0: controls.target.clone(),
-    p1: target.clone().addScaledVector(dir, dist), q1: target,
-  };
+  const p0 = camera.position.clone(), p1 = q1.clone().addScaledVector(dir, dist);
+  fly(750, (k) => { camera.position.lerpVectors(p0, p1, k); controls.target.lerpVectors(q0, q1, k); });
+}
+/** Swing the camera around its target: `turn` multiplies the compass angle, `zoom` the distance. */
+function orbitTo({ turn = 1, zoom = 1 }) {
+  const from = new THREE.Spherical().setFromVector3(camera.position.clone().sub(controls.target)), to = from.clone();
+  to.theta *= turn;
+  to.radius = THREE.MathUtils.clamp(from.radius * zoom, controls.minDistance, controls.maxDistance);
+  const at = new THREE.Spherical();
+  fly(350, (k) => {
+    at.set(lerp(from.radius, to.radius, k), from.phi, lerp(from.theta, to.theta, k));
+    camera.position.setFromSpherical(at).add(controls.target);
+  });
 }
 controls.addEventListener('start', () => { flight = null; });
 function stepFlight(now) {
   if (!flight) return;
-  const t = Math.min((now - flight.t0) / flight.dur, 1), k = t * t * (3 - 2 * t);
-  camera.position.lerpVectors(flight.p0, flight.p1, k);
-  controls.target.lerpVectors(flight.q0, flight.q1, k);
+  const t = Math.min((now - flight.t0) / flight.dur, 1);
+  flight.at(t * t * (3 - 2 * t));
   if (t === 1) flight = null;
   invalidate();
 }
+document.getElementById('zoom-in').addEventListener('click', () => orbitTo({ zoom: 0.6 }));
+document.getElementById('zoom-out').addEventListener('click', () => orbitTo({ zoom: 1 / 0.6 }));
+const compass = document.getElementById('compass');
+compass.addEventListener('click', () => orbitTo({ turn: 0 }));
+controls.addEventListener('change', () => { compass.firstElementChild.style.rotate = `${controls.getAzimuthalAngle()}rad`; });
 
 // ------------------------------------------------------------------ list + search
 function buildList() {
@@ -700,11 +709,11 @@ function buildList() {
     const b = entry.data;
     const li = document.createElement('li');
     const est = b.src === 'osm-levels' || b.src === 'guess';
-    li.innerHTML = `<button class="go"><span class="rank">${i + 1}</span><span class="name"></span><span class="ht">${fmt(b.h)}${est ? '<span class="est">est.</span>' : ''}</span></button><button class="back" title="Reset to its original position" hidden>Reset</button><button class="act"></button>`;
+    li.innerHTML = `<button class="go"><span class="rank">${i + 1}</span><span class="name"></span><span class="ht">${est ? '~' : ''}${fmt(b.h)}</span></button><button class="back" hidden>Put back</button><button class="act"><svg class="icon" viewBox="0 0 20 20" aria-hidden="true"><use /></svg></button>`;
     li.querySelector('.name').textContent = label(b);
     const go = li.querySelector('.go');
-    go.title = `${label(b)}: ${details(b)}, ${SOURCE[b.src]}. Click to center the view on it.`;
-    go.addEventListener('click', () => { focusOn(entry); select(entry); });
+    go.title = `${label(b)}: ${details(b)}. Height ${SOURCE[b.src]}.`;
+    go.addEventListener('click', () => goTo(entry));
     li.querySelector('.act').addEventListener('click', () => apply([entry], !isHidden(entry)));
     li.querySelector('.back').addEventListener('click', () => moveBack([entry]));
     li.addEventListener('pointerenter', () => setHover(entry));
@@ -723,12 +732,29 @@ function filterList() {
   const shown = new Set(matches());
   for (const e of tall) e.row.hidden = !shown.has(e);
   empty.hidden = shown.size > 0;
-  empty.textContent = `No building over ${fmt(settings.cutoff)} matches "${search.value.trim()}".`;
+  empty.textContent = `No building over ${fmt(settings.cutoff)} is called "${search.value.trim()}".`;
 }
-search.addEventListener('input', filterList);
+/** The list is open while the search box is in use, and gives way to the map once a building is chosen. */
+function browse(open) {
+  results.hidden = !open;
+  document.body.classList.toggle('browsing', open);
+}
+function goTo(entry) {
+  browse(false);
+  search.value = '';
+  filterList();
+  search.blur();
+  focusOn(entry);
+  select(entry);
+}
+search.addEventListener('focus', () => browse(true));
+search.addEventListener('input', () => { browse(true); filterList(); });
 search.addEventListener('keydown', (ev) => {
-  if (ev.key === 'Enter') { const first = matches()[0]; if (first) { focusOn(first); select(first); } }
-  if (ev.key === 'Escape' && search.value) { search.value = ''; filterList(); ev.stopPropagation(); }
+  if (ev.key === 'Enter') { const first = matches()[0]; if (first) goTo(first); }
+  if (ev.key === 'Escape') {
+    ev.stopPropagation();
+    if (search.value) { search.value = ''; filterList(); } else { browse(false); search.blur(); }
+  }
 });
 
 // ------------------------------------------------------------------ context menu
@@ -736,17 +762,17 @@ function openMenu(entry, x, y) {
   const b = entry.data, hidden = isHidden(entry);
   const items = [];
   if (hidden) {
-    items.push(['Restore this building', () => apply([entry], false)]);
+    items.push(['Show', () => apply([entry], false)]);
     const n = tall.filter(isHidden).length;
-    if (n > 1) items.push([`Restore all ${n} hidden`, () => apply(tall, false)]);
+    if (n > 1) items.push([`Show all ${n} hidden`, () => apply(tall, false)]);
   } else {
-    items.push(['Hide this building', () => apply([entry], true)]);
+    items.push(['Hide', () => apply([entry], true)]);
     const taller = visibleTaller(entry);
     if (taller.length) items.push([`Hide this and ${taller.length} taller`, () => apply([entry, ...taller], true)]);
-    if (entry !== selected) items.push(['Move this building', () => { select(entry); showToast('Drag the orange building to move it.', false); }]);
+    if (entry !== selected) items.push(['Move', () => { select(entry); showToast('Drag the orange building to move it.', false); }]);
   }
-  if (isMoved(entry)) items.push(['Reset position', () => moveBack([entry])]);
-  items.push(['Center view on this', () => { focusOn(entry); select(entry); }]);
+  if (isMoved(entry)) items.push(['Put back', () => moveBack([entry])]);
+  items.push(['Zoom to', () => { focusOn(entry); select(entry); }]);
   menu.replaceChildren();
   const head = document.createElement('div');
   head.className = 'head';
@@ -769,12 +795,24 @@ function openMenu(entry, x, y) {
   menu.querySelector('button').focus();
 }
 function closeMenu() { menu.hidden = true; }
-addEventListener('pointerdown', (ev) => { if (!menu.hidden && !menu.contains(ev.target)) closeMenu(); }, true);
+// Anything that pops open closes on a press outside it: the menu, the list, the city list and the options.
+const POPS = [
+  { open: () => !menu.hidden, inside: () => [menu], close: closeMenu },
+  { open: () => !results.hidden, inside: () => [results, document.getElementById('bar')], close: () => browse(false) },
+  { open: () => !cityMenu.hidden, inside: () => [cityMenu, cityBtn], close: () => openCities(false) },
+  { open: () => !form.hidden, inside: () => [form, optionsBtn], close: () => openOptions(false) },
+];
+addEventListener('pointerdown', (ev) => {
+  for (const pop of POPS) if (pop.open() && !pop.inside().some((el) => el.contains(ev.target))) pop.close();
+}, true);
 controls.addEventListener('start', closeMenu);
 
 addEventListener('keydown', (ev) => {
   const typing = ev.target instanceof HTMLInputElement;
-  if (ev.key === 'Escape') { if (!menu.hidden) closeMenu(); else select(null); }
+  if (ev.key === 'Escape') {
+    const pop = POPS.find((p) => p.open());
+    if (pop) pop.close(); else select(null);
+  } else if (ev.key === '/' && !typing) { ev.preventDefault(); search.focus(); }
   else if ((ev.metaKey || ev.ctrlKey) && !ev.shiftKey && ev.key.toLowerCase() === 'z' && !typing) { ev.preventDefault(); undo(); }
   else if ((ev.key === 'Delete' || ev.key === 'Backspace') && selected && menu.hidden && !typing) { ev.preventDefault(); apply([selected], true); }
 });
@@ -851,10 +889,9 @@ canvas.addEventListener('pointermove', (ev) => {
     tip.innerHTML = '<b></b><i></i><span></span>';
     tip.querySelector('b').textContent = label(b);
     tip.querySelector('i').textContent = details(b);
-    tip.querySelector('span').textContent = isHidden(entry) ? 'Hidden. Click to restore.'
-      : hit.onMarker ? 'Where it really stands. Click to reset its position.'
-        : grabbable ? 'Drag to move it'
-          : `Click to ${settings.click === 'hide' ? 'hide' : 'select'} · right-click for options`;
+    tip.querySelector('span').textContent = isHidden(entry) ? 'Hidden. Click to show it.'
+      : hit.onMarker ? 'Where it really stands. Click to put it back.'
+        : grabbable ? 'Drag to move it' : '';
     tip.style.left = `${Math.min(ev.clientX + 16, innerWidth - 280)}px`;
     tip.style.top = `${ev.clientY + 18}px`;
   }
@@ -868,7 +905,7 @@ canvas.addEventListener('pointerup', (ev) => {
     controls.enabled = true;
     canvas.classList.remove('grabbing');
     if (entry.offset.distanceTo(from) > 0.5) {
-      remember(`Moved: ${label(entry.data)}`, `Position reset: ${label(entry.data)}`, () => place(entry, from.x, from.z));
+      remember(`Moved: ${label(entry.data)}`, `Put back: ${label(entry.data)}`, () => place(entry, from.x, from.z));
       updateCard();
       refresh();
     }
@@ -886,22 +923,20 @@ canvas.addEventListener('pointerup', (ev) => {
   if (!entry) select(null);
   else if (isHidden(entry)) apply([entry], false);
   else if (hit.onMarker) moveBack([entry]);
-  else if (settings.click === 'hide') apply([entry], true);
   else select(entry);
 });
 canvas.addEventListener('pointerleave', () => { setHover(null); tip.hidden = true; });
 
 // ------------------------------------------------------------------ settings
-const panel = document.getElementById('panel');
 const form = document.getElementById('settings');
-const toggle = document.getElementById('settings-toggle');
-const lede = document.getElementById('lede');
+const optionsBtn = document.getElementById('options-toggle');
+const nightBtn = document.getElementById('night');
 const cutoffOut = document.getElementById('cutoff-out');
 
 /** Rebuild the towers and the list after the cutoff changes. Hidden towers that are still removable stay hidden. */
 function rebuild() {
   hovered = selected = null;
-  card.hidden = true;
+  select(null);
   canvas.classList.remove('grab');
   history.length = 0;
   hideToast();
@@ -949,11 +984,13 @@ function applySettings(changed = null) {
   }
   if (changed === null || changed === 'night' || changed === 'imagery') applyNight();
   tall.forEach(paint);
-  lede.replaceChildren();
-  if (settings.highlight) lede.append(Object.assign(document.createElement('span'), { className: 'swatch' }));
-  lede.append(`${settings.highlight ? 'Blue buildings' : `Buildings over ${fmt(settings.cutoff)}`} can be hidden or moved. `
-    + (settings.click === 'hide' ? 'Click one to hide it; right-click for more, including moving it.'
-      : 'Click one to select it, then drag it to move it. Right-click for options.'));
+  hint.querySelector('b').textContent = `Click a ${settings.highlight ? 'blue' : 'tall'} building to hide or move it.`;
+  // the interface goes dark with the sky
+  document.documentElement.dataset.theme = settings.night ? 'dark' : 'light';
+  nightBtn.setAttribute('aria-pressed', String(settings.night));
+  nightBtn.title = settings.night ? 'Switch to day' : 'Switch to night';
+  nightBtn.setAttribute('aria-label', nightBtn.title);
+  nightBtn.querySelector('use').setAttribute('href', settings.night ? '#i-sun' : '#i-moon');
   for (const el of form.elements) {
     if (!el.name) continue;
     if (el.type === 'checkbox') el.checked = settings[el.name];
@@ -981,25 +1018,44 @@ document.getElementById('settings-reset').addEventListener('click', () => {
   saveSettings();
   applySettings();
 });
-toggle.addEventListener('click', () => {
-  const open = panel.classList.toggle('settings-open');
-  toggle.textContent = open ? 'Done' : 'Settings';
-  toggle.setAttribute('aria-expanded', String(open));
-});
+nightBtn.addEventListener('click', () => setSetting('night', !settings.night));
+function openOptions(open) {
+  form.hidden = !open;
+  optionsBtn.setAttribute('aria-expanded', String(open));
+}
+optionsBtn.addEventListener('click', () => openOptions(form.hidden));
+
+// the hint stays until the visitor has selected a building once, on any visit
+const HINTED = 'slc-skyline-hinted';
+function dismissHint() {
+  if (hint.hidden) return;
+  hint.hidden = true;
+  try { localStorage.setItem(HINTED, '1'); } catch { /* private window: the hint returns next visit */ }
+}
+hint.querySelector('.x').addEventListener('click', dismissHint);
+try { hint.hidden = !!localStorage.getItem(HINTED); } catch { hint.hidden = false; }
 
 // ------------------------------------------------------------------ go
 const counts = model.buildings.reduce((a, b) => ((a[b.src] = (a[b.src] || 0) + 1), a), {});
 document.getElementById('about').textContent =
   `${model.buildings.length.toLocaleString()} footprints from OpenStreetMap. Heights: ${(counts.lidar || 0).toLocaleString()} measured from USGS 3DEP LiDAR (${city.lidar.year}), `
-  + `${counts['osm-height'] || 0} tagged, ${((counts['osm-levels'] || 0) + (counts.guess || 0)).toLocaleString()} estimated. Terrain: USGS 3DEP, imagery USGS NAIP. True scale, 50 mm lens.`;
+  + `${counts['osm-height'] || 0} tagged, ${((counts['osm-levels'] || 0) + (counts.guess || 0)).toLocaleString()} estimated (marked ~). Terrain: USGS 3DEP, imagery USGS NAIP. True scale, 50 mm lens.`;
 
 // city switcher: each city is its own page load, so its terrain and buildings start clean
-const cityBar = document.getElementById('cities');
+const cityBtn = document.getElementById('city'), cityMenu = document.getElementById('city-menu');
+cityBtn.querySelector('span').textContent = city.name;
 for (const [id, c] of Object.entries(cities)) {
   const a = Object.assign(document.createElement('a'), { textContent: c.name, href: `?city=${id}` });
-  if (id === cityId) { a.className = 'active'; a.setAttribute('aria-current', 'page'); }
-  cityBar.append(a);
+  a.setAttribute('role', 'menuitem');
+  if (id === cityId) a.setAttribute('aria-current', 'page');
+  cityMenu.append(a);
 }
+function openCities(open) {
+  cityMenu.hidden = !open;
+  cityBtn.setAttribute('aria-expanded', String(open));
+}
+cityBtn.addEventListener('click', () => openCities(cityMenu.hidden));
+search.placeholder = `Search ${city.name} buildings`;
 
 resize();
 setView(city.views[0].id);
