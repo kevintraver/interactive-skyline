@@ -50,8 +50,7 @@
         "label": "Ensign Peak",
         "eye": {
           "x": 113,
-          "y": 2670,
-          "summit": 120,
+          "y": 2610,
           "agl": 1.7
         },
         "target": {
