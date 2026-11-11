@@ -23,7 +23,7 @@ from pyproj import Transformer
 
 ROOT = Path(__file__).resolve().parent.parent
 CITY = sys.argv[1]
-CFG = json.loads((ROOT / "public" / "data" / "cities.json").read_text())[CITY]
+CFG = json.loads((ROOT / "data" / "cities.json").read_text())[CITY]
 OUT = ROOT / "public" / "data" / CITY
 CACHE = ROOT / "data" / "raw" / "naip"
 CACHE.mkdir(parents=True, exist_ok=True)

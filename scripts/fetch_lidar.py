@@ -22,7 +22,7 @@ import requests
 
 ROOT = Path(__file__).resolve().parent.parent
 CITY = sys.argv[1]
-CFG = json.loads((ROOT / "public" / "data" / "cities.json").read_text())[CITY]
+CFG = json.loads((ROOT / "data" / "cities.json").read_text())[CITY]
 RAW = ROOT / "data" / "raw" / CITY
 CACHE = RAW / "ept"
 CACHE.mkdir(parents=True, exist_ok=True)

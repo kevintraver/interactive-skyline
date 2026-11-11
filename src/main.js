@@ -1,6 +1,8 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { computeBoundsTree, disposeBoundsTree, acceleratedRaycast } from 'three-mesh-bvh';
+import { GenerateMeshBVHWorker } from 'three-mesh-bvh/worker';
+import cities from '../data/cities.json';
 
 THREE.BufferGeometry.prototype.computeBoundsTree = computeBoundsTree;
 THREE.BufferGeometry.prototype.disposeBoundsTree = disposeBoundsTree;
@@ -8,7 +10,6 @@ THREE.Mesh.prototype.raycast = acceleratedRaycast;
 
 // Which city to show: ?city=<id> in the address, else the one used last time.
 const CITY_STORE = 'skyline-city';
-const cities = await fetch('/data/cities.json').then((r) => r.json());
 let cityId = new URLSearchParams(location.search).get('city');
 if (!cities[cityId]) { try { cityId = localStorage.getItem(CITY_STORE); } catch { /* no storage */ } }
 if (!cities[cityId]) cityId = Object.keys(cities)[0];
@@ -16,6 +17,19 @@ try { localStorage.setItem(CITY_STORE, cityId); } catch { /* no storage */ }
 const city = cities[cityId];
 const DATA = `/data/${cityId}`;
 document.title = `Interactive Skyline · ${city.name}`;
+
+// Every download starts here, so the files arrive while the renderer below is being set up.
+const download = (file, kind) => fetch(`${DATA}/${file}`).then((r) => r[kind]());
+const pending = {
+  model: download('buildings.json', 'json'),
+  terrain: download('terrain.json', 'json').then(async (meta) => {
+    const [far, near] = await Promise.all(['far', 'near'].map((k) => download(meta.grids[k].file, 'arrayBuffer')));
+    return { meta, far, near };
+  }),
+  // decoded off the main thread; flipped here because WebGL ignores its own flip setting for bitmaps
+  maps: ['far', 'near'].map((k) => download(`ground-${k}.jpg`, 'blob')
+    .then((blob) => createImageBitmap(blob, { imageOrientation: 'flipY', premultiplyAlpha: 'none', colorSpaceConversion: 'none' }))),
+};
 
 // World units are meters. x = east, y = up, z = south, origin at the city's reference point.
 const BASE = city.base; // elevation subtracted from everything to keep numbers small
@@ -107,7 +121,7 @@ function heightField(buf, g) {
   const raw = new Uint16Array(buf);
   const at = (i, j) => raw[j * g.nx + i] * g.scale;
   return {
-    ...g, at,
+    ...g, raw, at,
     sample(x, y) {
       const fx = THREE.MathUtils.clamp((x - g.x0) / g.step, 0, g.nx - 1.001);
       const fy = THREE.MathUtils.clamp((y - g.y0) / g.step, 0, g.ny - 1.001);
@@ -122,34 +136,45 @@ function heightField(buf, g) {
 }
 
 function terrainMesh(hf, hole, map) {
-  const { nx, ny, step, x0, y0, at } = hf;
+  const { nx, ny, step, x0, y0, scale, raw } = hf;
   const pos = new Float32Array(nx * ny * 3), nor = new Float32Array(nx * ny * 3), uv = new Float32Array(nx * ny * 2);
+  // the fine grid's footprint, as index ranges on this grid
+  const inside = (v, lo, hi, inset) => v > lo + inset && v < hi - inset;
+  const hx = hole && [hole.x0, hole.x0 + (hole.nx - 1) * hole.step], hy = hole && [hole.y0, hole.y0 + (hole.ny - 1) * hole.step];
+  const inX = new Uint8Array(nx), inY = new Uint8Array(ny), cutX = new Uint8Array(nx), cutY = new Uint8Array(ny);
+  if (hole) {
+    for (let i = 0; i < nx; i++) { const x = x0 + i * step; inX[i] = inside(x, ...hx, 0); cutX[i] = inside(x, ...hx, step) && inside(x + step, ...hx, step); }
+    for (let j = 0; j < ny; j++) { const y = y0 + j * step; inY[j] = inside(y, ...hy, 0); cutY[j] = inside(y, ...hy, step) && inside(y + step, ...hy, step); }
+  }
+  const half = 1 / (2 * step);
   for (let j = 0; j < ny; j++) {
+    const row = j * nx, up = Math.min(j + 1, ny - 1) * nx, dn = Math.max(j - 1, 0) * nx, y = y0 + j * step, v = j / (ny - 1);
     for (let i = 0; i < nx; i++) {
-      const k = (j * nx + i) * 3, x = x0 + i * step, y = y0 + j * step, h = at(i, j);
+      const k = (row + i) * 3, x = x0 + i * step;
       // inside the fine grid's footprint the coarse grid sits just underneath it
-      const sink = hole && hole.contains(x, y) ? 8 : 0;
-      pos[k] = x; pos[k + 1] = h - BASE - curveDrop(x, y) - sink; pos[k + 2] = -y;
-      const dx = (at(Math.min(i + 1, nx - 1), j) - at(Math.max(i - 1, 0), j)) / (2 * step);
-      const dy = (at(i, Math.min(j + 1, ny - 1)) - at(i, Math.max(j - 1, 0))) / (2 * step);
+      const sink = inX[i] && inY[j] ? 8 : 0;
+      pos[k] = x; pos[k + 1] = raw[row + i] * scale - BASE - curveDrop(x, y) - sink; pos[k + 2] = -y;
+      const dx = (raw[row + Math.min(i + 1, nx - 1)] * scale - raw[row + Math.max(i - 1, 0)] * scale) * half;
+      const dy = (raw[up + i] * scale - raw[dn + i] * scale) * half;
       const l = Math.hypot(dx, 1, dy);
       nor[k] = -dx / l; nor[k + 1] = 1 / l; nor[k + 2] = dy / l;
-      uv[(j * nx + i) * 2] = i / (nx - 1); uv[(j * nx + i) * 2 + 1] = j / (ny - 1);
+      uv[(row + i) * 2] = i / (nx - 1); uv[(row + i) * 2 + 1] = v;
     }
   }
-  const idx = [];
+  const idx = new Uint32Array((nx - 1) * (ny - 1) * 6);
+  let n = 0;
   for (let j = 0; j < ny - 1; j++) {
     for (let i = 0; i < nx - 1; i++) {
-      if (hole && hole.contains(x0 + i * step, y0 + j * step, step) && hole.contains(x0 + (i + 1) * step, y0 + (j + 1) * step, step)) continue;
+      if (cutX[i] && cutY[j]) continue;
       const a = j * nx + i, b = a + 1, d = a + nx, e = d + 1;
-      idx.push(a, b, d, b, e, d);
+      idx[n++] = a; idx[n++] = b; idx[n++] = d; idx[n++] = b; idx[n++] = e; idx[n++] = d;
     }
   }
   const geo = new THREE.BufferGeometry();
   geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
   geo.setAttribute('normal', new THREE.BufferAttribute(nor, 3));
   geo.setAttribute('uv', new THREE.BufferAttribute(uv, 2));
-  geo.setIndex(new THREE.BufferAttribute(new Uint32Array(idx), 1));
+  geo.setIndex(new THREE.BufferAttribute(idx.slice(0, n), 1));
   const mesh = new THREE.Mesh(geo, new THREE.MeshLambertMaterial({ map }));
   mesh.receiveShadow = !hole;
   return mesh;
@@ -170,8 +195,11 @@ function extrude(vol, out, tint) {
   const bot = vol.b - BASE, roofTop = vol.t - BASE;
   const top = vol.r ? roofTop - vol.r[1] : roofTop; // where the walls stop
   const push = (x, y, mapY, nx, ny, nz, shade) => {
-    out.pos.push(x, y, -mapY); out.nor.push(nx, ny, nz);
-    out.col.push(tint[0] * shade, tint[1] * shade, tint[2] * shade);
+    if (out.n === out.cap) grow(out);
+    const k = out.n++ * 3, { pos, nor, col } = out;
+    pos[k] = x; pos[k + 1] = y; pos[k + 2] = -mapY;
+    nor[k] = nx; nor[k + 1] = ny; nor[k + 2] = nz;
+    col[k] = tint[0] * shade; col[k + 1] = tint[1] * shade; col[k + 2] = tint[2] * shade;
   };
   for (const r of vol.u ? [] : [outer, ...holes]) {
     for (let i = 0; i < r.length; i++) {
@@ -238,13 +266,22 @@ function extrude(vol, out, tint) {
 
 function toGeometry(out) {
   const geo = new THREE.BufferGeometry();
-  geo.setAttribute('position', new THREE.Float32BufferAttribute(out.pos, 3));
-  geo.setAttribute('normal', new THREE.Float32BufferAttribute(out.nor, 3));
-  geo.setAttribute('color', new THREE.Float32BufferAttribute(out.col, 3));
+  for (const [name, key] of [['position', 'pos'], ['normal', 'nor'], ['color', 'col']]) {
+    geo.setAttribute(name, new THREE.BufferAttribute(out[key].slice(0, out.n * 3), 3));
+  }
   return geo;
 }
 
-const fresh = () => ({ pos: [], nor: [], col: [] });
+/** Vertex arrays that double in size as they fill. `n` vertices are in use out of `cap`. */
+const fresh = (cap = 256) => ({ n: 0, cap, pos: new Float32Array(cap * 3), nor: new Float32Array(cap * 3), col: new Float32Array(cap * 3) });
+function grow(out) {
+  out.cap *= 2;
+  for (const key of ['pos', 'nor', 'col']) {
+    const bigger = new Float32Array(out.cap * 3);
+    bigger.set(out[key]);
+    out[key] = bigger;
+  }
+}
 const inFeet = (m) => `${Math.round(m * M_TO_FT).toLocaleString()} ft`;
 const inMeters = (m) => `${Math.round(m * 10) / 10} m`;
 const fmt = (m) => (settings.units === 'm' ? inMeters(m) : inFeet(m));
@@ -252,21 +289,18 @@ const fmtOther = (m) => (settings.units === 'm' ? inFeet(m) : inMeters(m));
 const label = (b) => b.name || 'Unnamed building';
 
 // ------------------------------------------------------------------ load
-const [terrainMeta, model] = await Promise.all([
-  fetch(`${DATA}/terrain.json`).then((r) => r.json()),
-  fetch(`${DATA}/buildings.json`).then((r) => r.json()),
-]);
-const [farBuf, nearBuf] = await Promise.all(
-  ['far', 'near'].map((k) => fetch(`${DATA}/${terrainMeta.grids[k].file}`).then((r) => r.arrayBuffer())),
-);
+const model = await pending.model;
+const { meta: terrainMeta, far: farBuf, near: nearBuf } = await pending.terrain;
 const near = heightField(nearBuf, terrainMeta.grids.near);
 const far = heightField(farBuf, terrainMeta.grids.far);
-const loadTexture = (url) => new THREE.TextureLoader().loadAsync(url).then((t) => {
+const [farMap, nearMap] = (await Promise.all(pending.maps)).map((bitmap) => {
+  const t = new THREE.Texture(bitmap);
+  t.flipY = false;
   t.colorSpace = THREE.SRGBColorSpace;
   t.anisotropy = renderer.capabilities.getMaxAnisotropy();
+  t.needsUpdate = true;
   return t;
 });
-const [farMap, nearMap] = await Promise.all([loadTexture(`${DATA}/ground-far.jpg`), loadTexture(`${DATA}/ground-near.jpg`)]);
 const terrain = [{ mesh: terrainMesh(far, near, farMap), map: farMap }, { mesh: terrainMesh(near, null, nearMap), map: nearMap }];
 scene.add(terrain[0].mesh, terrain[1].mesh);
 
@@ -326,7 +360,7 @@ function buildCity() {
   if (low) { scene.remove(low); disposeGeometry(low); }
   tall.length = 0;
 
-  const lowOut = fresh();
+  const lowOut = fresh(1 << 20);
   for (const b of model.buildings) {
     if (b.h >= settings.cutoff) {
       const out = fresh();
@@ -352,10 +386,27 @@ function buildCity() {
     }
   }
   const lowGeo = toGeometry(lowOut);
-  lowGeo.computeBoundsTree();
   low = new THREE.Mesh(lowGeo, lowMat);
   low.castShadow = low.receiveShadow = true;
   scene.add(low);
+  indexLow(low);
+}
+
+const bvhWorker = new GenerateMeshBVHWorker();
+let indexing = Promise.resolve();
+/**
+ * Build the merged mesh's ray-test index in a worker. The worker takes ownership of the positions
+ * it is given, so it gets a copy and the mesh stays drawable. Until it finishes, low buildings
+ * do not block clicks.
+ */
+function indexLow(mesh) {
+  indexing = indexing.then(async () => {
+    if (mesh !== low) return;
+    const copy = new THREE.BufferGeometry();
+    copy.setAttribute('position', mesh.geometry.getAttribute('position').clone());
+    const tree = await bvhWorker.generate(copy);
+    if (mesh === low) mesh.geometry.boundsTree = tree;
+  });
 }
 
 // ------------------------------------------------------------------ viewpoints
@@ -733,7 +784,7 @@ function pick(ev) {
   const hit = ray.intersectObjects(targets, false)[0];
   if (!hit) return null;
   // a low building in front blocks the click, as it blocks the view
-  const blocker = ray.intersectObject(low, false)[0];
+  const blocker = low.geometry.boundsTree && ray.intersectObject(low, false)[0];
   if (blocker && blocker.distance < hit.distance) return null;
   const entry = hit.object.userData.entry;
   return { entry, onMarker: hit.object === entry.marker, point: hit.point };
@@ -917,6 +968,7 @@ resize();
 setView(city.views[0].id);
 applySettings();
 document.getElementById('loading').classList.add('done');
+performance.mark('skyline-ready');
 
 renderer.setAnimationLoop((now) => {
   stepFlight(now);
@@ -924,6 +976,7 @@ renderer.setAnimationLoop((now) => {
   if (!dirty) return;
   dirty = false;
   renderer.render(scene, camera);
+  if (!performance.getEntriesByName('skyline-frame').length) performance.mark('skyline-frame');
 });
 
 // hooks for automated checks
