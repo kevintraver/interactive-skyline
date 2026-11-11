@@ -50,7 +50,7 @@ button { font: inherit; color: inherit; background: none; border: 0; padding: 0;
 #scene.grabbing { cursor: grabbing; }
 
 /* every floating surface shares one skin */
-#bar, .views, #results, #card, .pop, #tools > button, .zoom, #hint, #changes, #menu {
+#bar, .views button, #results, #card, .pop, #tools > button, .zoom, #hint, #changes, #menu {
   background: var(--surface);
   border: 1px solid var(--line);
   border-radius: 12px;
@@ -70,11 +70,6 @@ button { font: inherit; color: inherit; background: none; border: 0; padding: 0;
 #search { flex: 1; min-width: 0; height: 100%; padding: 0; font: inherit; color: var(--ink); background: none; border: 0; outline: none; }
 #search::placeholder { color: var(--muted); opacity: 1; }
 #bar:focus-within { outline: 2px solid var(--blue); outline-offset: 1px; }
-
-.views { display: flex; align-items: center; gap: 2px; height: 46px; padding: 0 5px 0 12px; overflow-x: auto; scrollbar-width: none; color: var(--muted); }
-.views button { padding: 7px 11px; border-radius: 8px; white-space: nowrap; color: var(--ink); }
-.views button:hover { background: var(--fill); }
-.views button.active { background: var(--ink); color: var(--surface); }
 
 .pop { position: fixed; z-index: 6; }
 #city-menu { top: calc(var(--gap) + 52px); left: var(--gap); min-width: 190px; padding: 5px; }
@@ -125,6 +120,13 @@ button { font: inherit; color: inherit; background: none; border: 0; padding: 0;
 .x .icon { width: 18px; height: 18px; }
 #card .x { position: absolute; top: 10px; right: 10px; }
 
+/* ---- viewpoints: a picture of each, in the corner */
+.views { position: fixed; z-index: 3; left: var(--gap); bottom: 28px; display: flex; gap: 8px; }
+.views button { display: block; width: 96px; padding: 3px 3px 5px; font-size: 12px; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.views canvas { display: block; width: 100%; height: auto; margin-bottom: 4px; border-radius: 8px; }
+.views button:hover { background-color: color-mix(in srgb, var(--surface), var(--ink) 9%); }
+.views button.active { outline: 2px solid var(--blue); outline-offset: 1px; font-weight: 650; }
+
 /* ---- map controls */
 #tools { position: fixed; z-index: 3; right: var(--gap); bottom: 28px; display: flex; flex-direction: column; gap: 8px; }
 #tools button { display: grid; place-items: center; width: 40px; height: 40px; }
@@ -173,7 +175,7 @@ button { font: inherit; color: inherit; background: none; border: 0; padding: 0;
 #menu button:hover, #menu button:focus-visible { background: var(--fill-strong); outline: none; }
 
 /* ---- bottom middle: first-visit hint, undo, and what has been changed */
-#dock { position: fixed; z-index: 4; left: 50%; bottom: 28px; transform: translateX(-50%); display: flex; flex-direction: column; align-items: center; gap: 8px; width: max-content; max-width: calc(100vw - 140px); pointer-events: none; }
+#dock { position: fixed; z-index: 4; left: 50%; bottom: 28px; transform: translateX(-50%); display: flex; flex-direction: column; align-items: center; gap: 8px; width: max-content; max-width: calc(100vw - 2 * (3 * 104px + var(--gap) + 16px)); pointer-events: none; }
 #dock > * { pointer-events: auto; }
 #hint { display: flex; align-items: center; gap: 10px; padding: 10px 8px 10px 16px; }
 #hint p { margin: 0; }
@@ -195,13 +197,14 @@ button { font: inherit; color: inherit; background: none; border: 0; padding: 0;
 @media (max-width: 720px) {
   :root { --gap: 8px; --bar: calc(100vw - 16px); }
   #top { flex-direction: column; }
-  .views { max-width: 100%; height: 40px; }
+  .views button { width: 86px; font-size: 11.5px; }
+  .selecting .views { display: none; }
   #results { top: calc(var(--gap) + 54px); max-height: 50vh; }
   #card { top: auto; bottom: 8px; }
   .selecting #credit { display: none; }
   .selecting #tools, .selecting #dock { bottom: 190px; }
   #settings { right: var(--gap); bottom: 240px; }
-  #dock { max-width: calc(100vw - 16px); }
+  #dock { left: var(--gap); transform: none; align-items: flex-start; max-width: calc(100vw - 72px); bottom: 120px; }
 }
 
 @media (prefers-reduced-motion: reduce) {

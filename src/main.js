@@ -441,6 +441,8 @@ function summit(p, radius = 120) {
 // Each city lists its viewpoints in local meters: an eye (above ground, or at a fixed elevation,
 // optionally snapped to the nearest summit) and the point it looks at.
 const VIEWS = {};
+const THUMB = { w: 176, h: 116 };
+let tilesStale = true;
 const viewBar = document.querySelector('.views');
 for (const v of city.views) {
   const e = v.eye.summit ? summit(v.eye, v.eye.summit) : v.eye;
@@ -449,9 +451,26 @@ for (const v of city.views) {
     pos: new THREE.Vector3(e.x, eyeY, -e.y),
     target: new THREE.Vector3(v.target.x, groundY(v.target.x, v.target.y) + v.target.agl, -v.target.y),
   };
-  const btn = Object.assign(document.createElement('button'), { textContent: v.label });
+  const btn = document.createElement('button');
   btn.dataset.view = v.id;
+  btn.title = `View: ${v.label}`;
+  VIEWS[v.id].thumb = Object.assign(document.createElement('canvas'), { width: THUMB.w, height: THUMB.h });
+  btn.append(VIEWS[v.id].thumb, Object.assign(document.createElement('span'), { textContent: v.label }));
   viewBar.append(btn);
+}
+/** Draw each viewpoint's tile from the live scene, so the tiles follow night, the photo and hidden buildings. */
+function snapViews() {
+  const pos = camera.position.clone();
+  for (const v of Object.values(VIEWS)) {
+    camera.position.copy(v.pos);
+    camera.lookAt(v.target);
+    renderer.render(scene, camera);
+    // crop the middle of the frame to the tile's shape
+    const w = Math.min(canvas.width, canvas.height * THUMB.w / THUMB.h), h = w * THUMB.h / THUMB.w;
+    v.thumb.getContext('2d').drawImage(canvas, (canvas.width - w) / 2, (canvas.height - h) / 2, w, h, 0, 0, THUMB.w, THUMB.h);
+  }
+  camera.position.copy(pos);
+  camera.lookAt(controls.target);
 }
 let activeView = null;
 function setView(name) {
@@ -530,6 +549,7 @@ function refresh() {
   changes.hidden = !hidden && !moved;
   changes.querySelector('span').textContent = [hidden && `${hidden} hidden`, moved && `${moved} moved`].filter(Boolean).join(' · ');
   renderer.shadowMap.needsUpdate = true;
+  tilesStale = true;
   invalidate();
 }
 
@@ -1068,6 +1088,8 @@ renderer.setAnimationLoop((now) => {
   controls.update();
   if (!dirty) return;
   dirty = false;
+  // while the camera is still, so the extra frames cost nothing during a drag
+  if (tilesStale && !flight && !move) { tilesStale = false; snapViews(); }
   renderer.render(scene, camera);
   if (!performance.getEntriesByName('skyline-frame').length) performance.mark('skyline-frame');
 });
