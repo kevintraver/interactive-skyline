@@ -2,6 +2,9 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { computeBoundsTree, disposeBoundsTree, acceleratedRaycast } from 'three-mesh-bvh';
 import { GenerateMeshBVHWorker } from 'three-mesh-bvh/worker';
+import { loadCustomModels, placeModel } from './customModels.js';
+import { night, lightAtNight } from './night.js';
+import { initAttractions } from './attractions.js';
 import cities from '../data/cities.json';
 
 THREE.BufferGeometry.prototype.computeBoundsTree = computeBoundsTree;
@@ -29,6 +32,7 @@ const pending = {
   // decoded off the main thread; flipped here because WebGL ignores its own flip setting for bitmaps
   maps: ['far', 'near'].map((k) => download(`ground-${k}.jpg`, 'blob')
     .then((blob) => createImageBitmap(blob, { imageOrientation: 'flipY', premultiplyAlpha: 'none', colorSpaceConversion: 'none' }))),
+  custom: loadCustomModels(cityId),
 };
 
 // World units are meters. x = east, y = up, z = south, origin at the city's reference point.
@@ -45,7 +49,7 @@ const SOURCE = {
 };
 
 // User-adjustable behaviour, kept between visits. `cutoff` is in meters.
-const DEFAULTS = { cutoff: 35, highlight: true, click: 'select', markers: true, units: 'ft', imagery: true };
+const DEFAULTS = { cutoff: 35, highlight: true, click: 'select', markers: true, units: 'ft', imagery: true, night: false, fountain: true, wheel: true };
 const STORE = 'slc-skyline-settings';
 function loadSettings() {
   try {
@@ -65,7 +69,12 @@ renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFShadowMap;
 renderer.shadowMap.autoUpdate = false;
 
-const HAZE = new THREE.Color(0xd3dee8);
+// Sky, haze and light, by day and by night. `street` is how strongly the ground glows from street lighting
+// (near grid, far grid); the moon stands in for the sun so shadows stay where they are.
+const DAY = { haze: 0xd3dee8, zenith: 0x4f86c9, skyLight: 0xdbe8ff, groundLight: 0x8d8371, hemi: 0.8, sun: 0xfff0dc, sunPower: 2.7, tint: 0.45, street: [0, 0] };
+const NIGHT = { haze: 0x3b3850, zenith: 0x05070f, skyLight: 0x33426e, groundLight: 0x4a3a2a, hemi: 0.38, sun: 0x93a8d9, sunPower: 0.2, tint: 0.16, street: [0.07, 0.26] };
+const STREET_GLOW = 0xffa858;
+const HAZE = new THREE.Color(DAY.haze), ZENITH = new THREE.Color(DAY.zenith);
 const scene = new THREE.Scene();
 scene.fog = new THREE.FogExp2(HAZE, 0.000014);
 
@@ -91,15 +100,16 @@ scene.add(new THREE.Mesh(
   new THREE.SphereGeometry(120000, 32, 16),
   new THREE.ShaderMaterial({
     side: THREE.BackSide, depthWrite: false, fog: false,
-    uniforms: { horizon: { value: HAZE }, zenith: { value: new THREE.Color(0x4f86c9) } },
+    uniforms: { horizon: { value: HAZE }, zenith: { value: ZENITH } },
     vertexShader: 'varying vec3 d; void main(){ d = normalize(position); gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }',
     fragmentShader: `uniform vec3 horizon; uniform vec3 zenith; varying vec3 d;
       void main(){ float t = pow(clamp(d.y, 0.0, 1.0), 0.45); gl_FragColor = vec4(mix(horizon, zenith, t), 1.0); }`,
   }),
 ));
 
-scene.add(new THREE.HemisphereLight(0xdbe8ff, 0x8d8371, 0.8));
-const sun = new THREE.DirectionalLight(0xfff0dc, 2.7);
+const hemi = new THREE.HemisphereLight(DAY.skyLight, DAY.groundLight, DAY.hemi);
+scene.add(hemi);
+const sun = new THREE.DirectionalLight(DAY.sun, DAY.sunPower);
 // afternoon sun in the west-southwest, 32 degrees up
 const az = THREE.MathUtils.degToRad(245), el = THREE.MathUtils.degToRad(32);
 // the shadow map covers a square around the towers, sized per city
@@ -269,6 +279,10 @@ function toGeometry(out) {
   for (const [name, key] of [['position', 'pos'], ['normal', 'nor'], ['color', 'col']]) {
     geo.setAttribute(name, new THREE.BufferAttribute(out[key].slice(0, out.n * 3), 3));
   }
+  // night light baked into a hand-made model; extruded buildings have none and read as zero
+  if (out.glow) geo.setAttribute('glow', new THREE.BufferAttribute(out.glow, 3));
+  if (out.win) geo.setAttribute('windows', new THREE.BufferAttribute(out.win, 1));
+  if (out.led) geo.setAttribute('led', new THREE.BufferAttribute(out.led, 1));
   return geo;
 }
 
@@ -291,6 +305,7 @@ const label = (b) => b.name || 'Unnamed building';
 // ------------------------------------------------------------------ load
 const model = await pending.model;
 const { meta: terrainMeta, far: farBuf, near: nearBuf } = await pending.terrain;
+const customModels = await pending.custom;
 const near = heightField(nearBuf, terrainMeta.grids.near);
 const far = heightField(farBuf, terrainMeta.grids.far);
 const [farMap, nearMap] = (await Promise.all(pending.maps)).map((bitmap) => {
@@ -304,7 +319,7 @@ const [farMap, nearMap] = (await Promise.all(pending.maps)).map((bitmap) => {
 const terrain = [{ mesh: terrainMesh(far, near, farMap), map: farMap }, { mesh: terrainMesh(near, null, nearMap), map: nearMap }];
 scene.add(terrain[0].mesh, terrain[1].mesh);
 
-const lowMat = new THREE.MeshLambertMaterial({ vertexColors: true });
+const lowMat = lightAtNight(new THREE.MeshLambertMaterial({ vertexColors: true }));
 const tall = []; // removable buildings, tallest first: { data, mesh, marker, row, offset }
 let low = null; // every other building, merged into one mesh
 const tallGroup = new THREE.Group();
@@ -362,13 +377,14 @@ function buildCity() {
 
   const lowOut = fresh(1 << 20);
   for (const b of model.buildings) {
-    if (b.h >= settings.cutoff) {
-      const out = fresh();
-      for (const v of b.v) extrude(v, out, [1, 1, 1]);
+    if (b.h >= settings.cutoff || customModels.has(b.id)) {
+      const custom = customModels.get(b.id);
+      const out = custom ? placeModel(custom, b.c[0], b.c[1], b.ground - BASE) : fresh();
+      if (!custom) for (const v of b.v) extrude(v, out, [1, 1, 1]);
       const geo = toGeometry(out);
       geo.computeBoundsTree();
       // a little self-light keeps the shaded faces blue instead of near-black
-      const mesh = new THREE.Mesh(geo, new THREE.MeshLambertMaterial({ vertexColors: true, emissive: 0x2a5f96 }));
+      const mesh = new THREE.Mesh(geo, lightAtNight(new THREE.MeshLambertMaterial({ vertexColors: true, emissive: 0x2a5f96 }), { windows: !custom }));
       mesh.castShadow = mesh.receiveShadow = true;
       mesh.visible = !wasHidden.has(b.id);
       mesh.add(new THREE.LineSegments(new THREE.EdgesGeometry(geo, 30), edgeMat));
@@ -501,7 +517,7 @@ const plural = (n) => `${n} building${n === 1 ? '' : 's'}`;
 function paint(e) {
   const m = e.mesh.material;
   m.color.copy(e === selected ? SELECT : e === hovered ? (settings.highlight ? HOVER : WHITE) : settings.highlight ? REMOVABLE : GRAY);
-  m.emissiveIntensity = settings.highlight && e !== selected ? 0.45 : 0;
+  m.emissiveIntensity = settings.highlight && e !== selected ? (settings.night ? NIGHT : DAY).tint : 0;
   e.mesh.children[0].visible = settings.highlight;
   e.mesh.position.copy(e.offset);
   e.marker.visible = settings.markers && (isHidden(e) || isMoved(e));
@@ -900,17 +916,38 @@ function describeCutoff(m) {
   cutoffOut.textContent = `${fmt(m)} · ${plural(n)}`;
 }
 
+/** Switch sky, haze, light and street glow between day and night. Buildings follow the shared `night` uniform. */
+function applyNight() {
+  const look = settings.night ? NIGHT : DAY;
+  night.value = settings.night ? 1 : 0;
+  HAZE.set(look.haze);
+  scene.fog.color.copy(HAZE); // the fog keeps its own copy of the haze color
+  ZENITH.set(look.zenith);
+  hemi.color.set(look.skyLight);
+  hemi.groundColor.set(look.groundLight);
+  hemi.intensity = look.hemi;
+  sun.color.set(look.sun);
+  sun.intensity = look.sunPower;
+  terrain.forEach((t, i) => {
+    t.mesh.material.emissive.set(STREET_GLOW);
+    // without the photo there is no street pattern to light, so keep the plain ground dim
+    t.mesh.material.emissiveIntensity = look.street[i] * (settings.imagery ? 1 : 0.3);
+  });
+  invalidate();
+}
+
 /** Push the settings into the scene and the panel. `changed` is the key that just changed, or null for all. */
 function applySettings(changed = null) {
   if (changed === null || changed === 'cutoff') rebuild();
   if (changed === 'units') { buildList(); if (selected) select(selected); }
   if (changed === null || changed === 'imagery') {
     for (const t of terrain) {
-      t.mesh.material.map = settings.imagery ? t.map : null;
+      t.mesh.material.map = t.mesh.material.emissiveMap = settings.imagery ? t.map : null;
       t.mesh.material.color.set(settings.imagery ? 0xffffff : 0xbdb9ad);
       t.mesh.material.needsUpdate = true;
     }
   }
+  if (changed === null || changed === 'night' || changed === 'imagery') applyNight();
   tall.forEach(paint);
   lede.replaceChildren();
   if (settings.highlight) lede.append(Object.assign(document.createElement('span'), { className: 'swatch' }));
@@ -998,3 +1035,6 @@ window.__skyline = {
   place, movedIds: () => tall.filter(isMoved).map((t) => t.data.id),
   hiddenIds: () => tall.filter((t) => !t.mesh.visible).map((t) => t.data.id),
 };
+
+// extras, the fountain show and animated LED surfaces (skyline-integration v5, src/attractions.js)
+initAttractions({ cityId, scene, camera, renderer, settings, invalidate, groundY, tall });

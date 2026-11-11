@@ -1,0 +1,1094 @@
+{
+  "lv": {
+    "w135457469": {
+      "url": "/models/strat.glb",
+      "offset": [
+        3.2,
+        0.8
+      ],
+      "name": "Stratosphere Tower"
+    },
+    "w27831699": {
+      "url": "/models/eiffel_lv.glb",
+      "offset": [
+        0.0,
+        0.0
+      ],
+      "name": "Eiffel Tower"
+    },
+    "w134068318": {
+      "url": "/models/fontainebleau.glb",
+      "offset": [
+        0.0,
+        0.0
+      ],
+      "name": "Fontainebleau Las Vegas"
+    },
+    "w972129019": {
+      "url": "/models/resorts_world.glb",
+      "offset": [
+        0.0,
+        0.0
+      ],
+      "name": "Resorts World Las Vegas"
+    },
+    "w30424125": {
+      "url": "/models/palazzo.glb",
+      "offset": [
+        0.0,
+        0.0
+      ],
+      "name": "Palazzo Tower"
+    },
+    "w27910891": {
+      "url": "/models/encore.glb",
+      "offset": [
+        0.0,
+        0.0
+      ],
+      "name": "Encore Las Vegas"
+    },
+    "w111380666": {
+      "url": "/models/trump.glb",
+      "offset": [
+        0.0,
+        0.0
+      ],
+      "name": "Trump International Hotel Las Vegas"
+    },
+    "w205501268": {
+      "url": "/models/wynn.glb",
+      "offset": [
+        0.0,
+        0.0
+      ],
+      "name": "Wynn Las Vegas"
+    },
+    "w27897905": {
+      "url": "/models/cosmo_chelsea.glb",
+      "offset": [
+        0.0,
+        0.0
+      ],
+      "name": "The Cosmopolitan Chelsea Tower"
+    },
+    "w134795273": {
+      "url": "/models/cosmo_main.glb",
+      "offset": [
+        0.0,
+        0.0
+      ],
+      "name": "The Cosmopolitan of Las Vegas"
+    },
+    "w472669744": {
+      "url": "/models/cosmo_boulevard.glb",
+      "offset": [
+        0.0,
+        0.0
+      ],
+      "name": "The Cosmopolitan Boulevard Tower"
+    },
+    "r5342155": {
+      "url": "/models/elara.glb",
+      "offset": [
+        0.0,
+        0.0
+      ],
+      "name": "Elara, a Hilton Grand Vacations Club"
+    },
+    "r20214578": {
+      "url": "/models/vdara.glb",
+      "offset": [
+        0.0,
+        0.0
+      ],
+      "name": "Vdara Hotel & Spa"
+    },
+    "w52194829": {
+      "url": "/models/waldorf.glb",
+      "offset": [
+        0.0,
+        0.0
+      ],
+      "name": "Waldorf Astoria Las Vegas"
+    },
+    "w134930092": {
+      "url": "/models/aria_east.glb",
+      "offset": [
+        0.0,
+        0.0
+      ],
+      "name": "Aria Resort & Casino"
+    },
+    "w134930090": {
+      "url": "/models/aria_west.glb",
+      "offset": [
+        0.0,
+        0.0
+      ],
+      "name": "Aria Resort & Casino"
+    },
+    "r7655652": {
+      "url": "/models/palms_place.glb",
+      "offset": [
+        0.0,
+        0.0
+      ],
+      "name": "Palms Place"
+    },
+    "w115661793": {
+      "url": "/models/nyny.glb",
+      "offset": [
+        0.0,
+        0.0
+      ],
+      "name": "New York New York Hotel and Casino"
+    },
+    "w495695272": {
+      "url": "/models/the_martin.glb",
+      "offset": [
+        0.0,
+        0.0
+      ],
+      "name": "The Martin"
+    },
+    "w25723909": {
+      "url": "/models/bellagio.glb",
+      "offset": [
+        0.0,
+        0.0
+      ],
+      "name": "Bellagio Las Vegas"
+    },
+    "w118347176": {
+      "url": "/models/w_las_vegas.glb",
+      "offset": [
+        0.0,
+        0.0
+      ],
+      "name": "W Las Vegas"
+    },
+    "w543641002": {
+      "url": "/models/sky_tower.glb",
+      "offset": [
+        0.0,
+        0.0
+      ],
+      "name": "Sky Tower Las Vegas Condominiums"
+    },
+    "w27858550": {
+      "url": "/models/mandalay_bay.glb",
+      "offset": [
+        0.0,
+        0.0
+      ],
+      "name": "Mandalay Bay Resort & Casino"
+    },
+    "w316174410": {
+      "url": "/models/circa.glb",
+      "offset": [
+        0.0,
+        0.0
+      ],
+      "name": "Circa Resort & Casino"
+    },
+    "w30618090": {
+      "url": "/models/venetian_tower.glb",
+      "offset": [
+        0.0,
+        0.0
+      ],
+      "name": "Venetian Tower"
+    },
+    "w43875964": {
+      "url": "/models/venetian_campanile.glb",
+      "offset": [
+        0.0,
+        0.0
+      ],
+      "name": "The Campanile"
+    },
+    "w976405284": {
+      "url": "/models/sphere.glb",
+      "offset": [
+        0.0,
+        0.0
+      ],
+      "name": "Sphere"
+    },
+    "r8086330": {
+      "url": "/models/excalibur.glb",
+      "offset": [
+        0.0,
+        0.0
+      ],
+      "name": "Excalibur Hotel & Casino"
+    },
+    "w27858544": {
+      "url": "/models/luxor.glb",
+      "offset": [
+        0.0,
+        0.0
+      ],
+      "name": "Luxor Las Vegas"
+    },
+    "w134944648": {
+      "url": "/models/caesars_palace_tower.glb",
+      "offset": [
+        0.0,
+        0.0
+      ],
+      "name": "Palace Tower"
+    },
+    "w1176928048": {
+      "url": "/models/caesars_augustus.glb",
+      "offset": [
+        0.0,
+        0.0
+      ],
+      "name": "Augustus Tower"
+    },
+    "w126267789": {
+      "url": "/models/caesars_octavius.glb",
+      "offset": [
+        0.0,
+        0.0
+      ],
+      "name": "Octavius Tower"
+    },
+    "w95223224": {
+      "url": "/models/the_signature_at_mgm_g_w95223224.glb",
+      "offset": [
+        0.0,
+        0.0
+      ],
+      "name": "The Signature at MGM Grand Tower I"
+    },
+    "w134677416": {
+      "url": "/models/turnberry_place_w134677416.glb",
+      "offset": [
+        0.0,
+        0.0
+      ],
+      "name": "Turnberry Place"
+    },
+    "w134677417": {
+      "url": "/models/turnberry_place_w134677417.glb",
+      "offset": [
+        0.0,
+        0.0
+      ],
+      "name": "Turnberry Place"
+    },
+    "w95223232": {
+      "url": "/models/the_signature_at_mgm_g_w95223232.glb",
+      "offset": [
+        0.0,
+        0.0
+      ],
+      "name": "The Signature at MGM Grand Tower II"
+    },
+    "w134677425": {
+      "url": "/models/turnberry_place_w134677425.glb",
+      "offset": [
+        0.0,
+        0.0
+      ],
+      "name": "Turnberry Place"
+    },
+    "w134677429": {
+      "url": "/models/turnberry_place_w134677429.glb",
+      "offset": [
+        0.0,
+        0.0
+      ],
+      "name": "Turnberry Place"
+    },
+    "w95223231": {
+      "url": "/models/the_signature_at_mgm_g_w95223231.glb",
+      "offset": [
+        0.0,
+        0.0
+      ],
+      "name": "The Signature at MGM Grand Tower III"
+    },
+    "r7655651": {
+      "url": "/models/palms_r7655651.glb",
+      "offset": [
+        0.0,
+        0.0
+      ],
+      "name": "Palms"
+    },
+    "w134935559": {
+      "url": "/models/allure_las_vegas_tower_w134935559.glb",
+      "offset": [
+        0.0,
+        0.0
+      ],
+      "name": "Allure Las Vegas Tower I"
+    },
+    "w134918082": {
+      "url": "/models/west_tower_w134918082.glb",
+      "offset": [
+        0.0,
+        0.0
+      ],
+      "name": "West Tower"
+    },
+    "w52134835": {
+      "url": "/models/veer_towers_west_w52134835.glb",
+      "offset": [
+        0.0,
+        0.0
+      ],
+      "name": "Veer Towers West"
+    },
+    "w134679980": {
+      "url": "/models/east_tower_w134679980.glb",
+      "offset": [
+        0.0,
+        0.0
+      ],
+      "name": "East Tower"
+    },
+    "w52134834": {
+      "url": "/models/veer_towers_east_w52134834.glb",
+      "offset": [
+        0.0,
+        0.0
+      ],
+      "name": "Veer Towers East"
+    },
+    "w134938477": {
+      "url": "/models/voodoo_steakhouse_w134938477.glb",
+      "offset": [
+        0.0,
+        0.0
+      ],
+      "name": "Voodoo steakhouse"
+    },
+    "w134938479": {
+      "url": "/models/voodoo_rooftop_w134938479.glb",
+      "offset": [
+        0.0,
+        0.0
+      ],
+      "name": "VooDoo Rooftop"
+    },
+    "r6138877": {
+      "url": "/models/hilton_grand_vacations_r6138877.glb",
+      "offset": [
+        0.0,
+        0.0
+      ],
+      "name": "Hilton Grand Vacations on the Boulevard"
+    },
+    "w495545510": {
+      "url": "/models/panorama_tower_ii_w495545510.glb",
+      "offset": [
+        0.0,
+        0.0
+      ],
+      "name": "Panorama Tower II"
+    },
+    "w134921373": {
+      "url": "/models/planet_hollywood_resor_w134921373.glb",
+      "offset": [
+        0.0,
+        0.0
+      ],
+      "name": "Planet Hollywood Resort and Casino"
+    },
+    "w27998223": {
+      "url": "/models/rio_masquerade_tower_w27998223.glb",
+      "offset": [
+        0.0,
+        0.0
+      ],
+      "name": "Rio Masquerade Tower"
+    },
+    "w132157010": {
+      "url": "/models/the_d_las_vegas_w132157010.glb",
+      "offset": [
+        0.0,
+        0.0
+      ],
+      "name": "The D Las Vegas"
+    },
+    "w25723910": {
+      "url": "/models/bellagio_spa_tower_w25723910.glb",
+      "offset": [
+        0.0,
+        0.0
+      ],
+      "name": "Bellagio Spa Tower"
+    },
+    "w495545498": {
+      "url": "/models/panorama_tower_i_w495545498.glb",
+      "offset": [
+        0.0,
+        0.0
+      ],
+      "name": "Panorama Tower I"
+    },
+    "w134938481": {
+      "url": "/models/rio_all_suite_hotel_an_w134938481.glb",
+      "offset": [
+        0.0,
+        0.0
+      ],
+      "name": "Rio All Suite Hotel and Casino"
+    },
+    "w134691921": {
+      "url": "/models/westgate_las_vegas_res_w134691921.glb",
+      "offset": [
+        0.0,
+        0.0
+      ],
+      "name": "Westgate Las Vegas Resort & Casino"
+    },
+    "w276427203": {
+      "url": "/models/marriott_s_grand_chate_w276427203.glb",
+      "offset": [
+        0.0,
+        0.0
+      ],
+      "name": "Marriott's Grand Chateau"
+    },
+    "w27831695": {
+      "url": "/models/park_mgm_w27831695.glb",
+      "offset": [
+        0.0,
+        0.0
+      ],
+      "name": "Park MGM"
+    },
+    "w27831697": {
+      "url": "/models/le_boulevard_at_paris_w27831697.glb",
+      "offset": [
+        0.0,
+        0.0
+      ],
+      "name": "Le Boulevard At Paris"
+    },
+    "w33959894": {
+      "url": "/models/treasure_island_hotel__w33959894.glb",
+      "offset": [
+        0.0,
+        0.0
+      ],
+      "name": "Treasure Island Hotel and Casino"
+    },
+    "w111367828": {
+      "url": "/models/harrah_s_las_vegas_w111367828.glb",
+      "offset": [
+        0.0,
+        0.0
+      ],
+      "name": "Harrah's Las Vegas"
+    },
+    "w340018195": {
+      "url": "/models/faa_airport_traffic_co_w340018195.glb",
+      "offset": [
+        0.0,
+        0.0
+      ],
+      "name": "FAA Airport Traffic Control Tower"
+    },
+    "w33957359": {
+      "url": "/models/hard_rock_las_vegas_w33957359.glb",
+      "offset": [
+        0.0,
+        0.0
+      ],
+      "name": "Hard Rock Las Vegas"
+    },
+    "w134930088": {
+      "url": "/models/aria_resort_casino_w134930088.glb",
+      "offset": [
+        0.0,
+        0.0
+      ],
+      "name": "Aria Resort & Casino"
+    },
+    "w135332959": {
+      "url": "/models/circus_circus_las_vega_w135332959.glb",
+      "offset": [
+        0.0,
+        0.0
+      ],
+      "name": "Circus Circus Las Vegas"
+    },
+    "w226572663": {
+      "url": "/models/newport_lofts_w226572663.glb",
+      "offset": [
+        0.0,
+        0.0
+      ],
+      "name": "Newport Lofts"
+    },
+    "w111322067": {
+      "url": "/models/venezia_tower_w111322067.glb",
+      "offset": [
+        0.0,
+        0.0
+      ],
+      "name": "Venezia Tower"
+    },
+    "w115766969": {
+      "url": "/models/bldg_w115766969.glb",
+      "offset": [
+        0.0,
+        0.0
+      ],
+      "name": "w115766969"
+    },
+    "w226508857": {
+      "url": "/models/regional_justice_cente_w226508857.glb",
+      "offset": [
+        0.0,
+        0.0
+      ],
+      "name": "Regional Justice Center"
+    },
+    "w116770006": {
+      "url": "/models/hotel_mgm_grand_las_ve_w116770006.glb",
+      "offset": [
+        0.0,
+        0.0
+      ],
+      "name": "Hotel MGM Grand Las Vegas"
+    },
+    "w656398429": {
+      "url": "/models/regency_towers_w656398429.glb",
+      "offset": [
+        0.0,
+        0.0
+      ],
+      "name": "Regency Towers"
+    },
+    "w130585543": {
+      "url": "/models/world_market_center_w130585543.glb",
+      "offset": [
+        0.0,
+        0.0
+      ],
+      "name": "World Market Center"
+    },
+    "w115766957": {
+      "url": "/models/bldg_w115766957.glb",
+      "offset": [
+        0.0,
+        0.0
+      ],
+      "name": "w115766957"
+    },
+    "w115766962": {
+      "url": "/models/bldg_w115766962.glb",
+      "offset": [
+        0.0,
+        0.0
+      ],
+      "name": "w115766962"
+    },
+    "w204144588": {
+      "url": "/models/the_ogden_w204144588.glb",
+      "offset": [
+        0.0,
+        0.0
+      ],
+      "name": "The Ogden"
+    },
+    "w27897921": {
+      "url": "/models/bldg_w27897921.glb",
+      "offset": [
+        0.0,
+        0.0
+      ],
+      "name": "w27897921"
+    },
+    "w116867081": {
+      "url": "/models/horseshoe_las_vegas_ho_w116867081.glb",
+      "offset": [
+        0.0,
+        0.0
+      ],
+      "name": "Horseshoe Las Vegas Hotel & Casino - A Caesars Rewards Destination"
+    },
+    "w156624462": {
+      "url": "/models/wells_fargo_tower_w156624462.glb",
+      "offset": [
+        0.0,
+        0.0
+      ],
+      "name": "Wells Fargo Tower"
+    },
+    "w33967431": {
+      "url": "/models/plaza_hotel_casino_w33967431.glb",
+      "offset": [
+        0.0,
+        0.0
+      ],
+      "name": "Plaza Hotel & Casino"
+    },
+    "w134921371": {
+      "url": "/models/bldg_w134921371.glb",
+      "offset": [
+        0.0,
+        0.0
+      ],
+      "name": "w134921371"
+    },
+    "w134921379": {
+      "url": "/models/bldg_w134921379.glb",
+      "offset": [
+        0.0,
+        0.0
+      ],
+      "name": "w134921379"
+    },
+    "w136520122": {
+      "url": "/models/bldg_w136520122.glb",
+      "offset": [
+        0.0,
+        0.0
+      ],
+      "name": "w136520122"
+    },
+    "w544016673": {
+      "url": "/models/bldg_w544016673.glb",
+      "offset": [
+        0.0,
+        0.0
+      ],
+      "name": "w544016673"
+    },
+    "w568622622": {
+      "url": "/models/wyndham_desert_blue_w568622622.glb",
+      "offset": [
+        0.0,
+        0.0
+      ],
+      "name": "Wyndham Desert Blue"
+    },
+    "w276426484": {
+      "url": "/models/sahara_hotel_alexandri_w276426484.glb",
+      "offset": [
+        0.0,
+        0.0
+      ],
+      "name": "Sahara Hotel Alexandria Tower"
+    },
+    "w397861269": {
+      "url": "/models/bldg_w397861269.glb",
+      "offset": [
+        0.0,
+        0.0
+      ],
+      "name": "w397861269"
+    },
+    "w182464631": {
+      "url": "/models/bldg_w182464631.glb",
+      "offset": [
+        0.0,
+        0.0
+      ],
+      "name": "w182464631"
+    },
+    "w207630739": {
+      "url": "/models/bldg_w207630739.glb",
+      "offset": [
+        0.0,
+        0.0
+      ],
+      "name": "w207630739"
+    },
+    "w313762434": {
+      "url": "/models/springhill_suites_by_m_w313762434.glb",
+      "offset": [
+        0.0,
+        0.0
+      ],
+      "name": "Springhill Suites by Marriott Las Vegas Convention Center"
+    },
+    "w180483375": {
+      "url": "/models/bank_of_america_plaza_w180483375.glb",
+      "offset": [
+        0.0,
+        0.0
+      ],
+      "name": "Bank of America Plaza"
+    },
+    "w116876230": {
+      "url": "/models/rio_all_suite_hotel_an_w116876230.glb",
+      "offset": [
+        0.0,
+        0.0
+      ],
+      "name": "Rio All Suite Hotel and Casino"
+    },
+    "w182464616": {
+      "url": "/models/bldg_w182464616.glb",
+      "offset": [
+        0.0,
+        0.0
+      ],
+      "name": "w182464616"
+    },
+    "w128632721": {
+      "url": "/models/bldg_w128632721.glb",
+      "offset": [
+        0.0,
+        0.0
+      ],
+      "name": "w128632721"
+    },
+    "w543645430": {
+      "url": "/models/bldg_w543645430.glb",
+      "offset": [
+        0.0,
+        0.0
+      ],
+      "name": "w543645430"
+    },
+    "w134949102": {
+      "url": "/models/forum_tower_w134949102.glb",
+      "offset": [
+        0.0,
+        0.0
+      ],
+      "name": "Forum Tower"
+    },
+    "w543641711": {
+      "url": "/models/bldg_w543641711.glb",
+      "offset": [
+        0.0,
+        0.0
+      ],
+      "name": "w543641711"
+    },
+    "w134930089": {
+      "url": "/models/bldg_w134930089.glb",
+      "offset": [
+        0.0,
+        0.0
+      ],
+      "name": "w134930089"
+    },
+    "w27897911": {
+      "url": "/models/hilton_vacation_club_p_w27897911.glb",
+      "offset": [
+        0.0,
+        0.0
+      ],
+      "name": "Hilton Vacation Club Polo Towers Las Vegas"
+    },
+    "w135298867": {
+      "url": "/models/platinum_hotel_and_spa_w135298867.glb",
+      "offset": [
+        0.0,
+        0.0
+      ],
+      "name": "Platinum Hotel and Spa"
+    },
+    "w206291994": {
+      "url": "/models/four_queens_w206291994.glb",
+      "offset": [
+        0.0,
+        0.0
+      ],
+      "name": "Four Queens"
+    },
+    "w206151446": {
+      "url": "/models/golden_nugget_las_vega_w206151446.glb",
+      "offset": [
+        0.0,
+        0.0
+      ],
+      "name": "Golden Nugget Las Vegas"
+    },
+    "w399368723": {
+      "url": "/models/luxor_obelisk.glb",
+      "offset": [
+        -224.1,
+        -1.5
+      ],
+      "name": "w399368723"
+    },
+    "w118344867": {
+      "url": "/models/luxor_sphinx.glb",
+      "offset": [
+        -136.3,
+        -0.3
+      ],
+      "name": "w118344867"
+    },
+    "r6138879": {
+      "url": "/models/wyndham_grand_desert_r6138879.glb",
+      "offset": [
+        0.0,
+        0.0
+      ],
+      "name": "Wyndham Grand Desert"
+    },
+    "w134930091": {
+      "url": "/models/bldg_w134930091.glb",
+      "offset": [
+        0.0,
+        0.0
+      ],
+      "name": "w134930091"
+    },
+    "r6138876": {
+      "url": "/models/hilton_grand_vacations_r6138876.glb",
+      "offset": [
+        0.0,
+        0.0
+      ],
+      "name": "Hilton Grand Vacations Suites - Las Vegas (Convention Center)"
+    },
+    "w133757429": {
+      "url": "/models/virgin_hotels_las_vega_w133757429.glb",
+      "offset": [
+        0.0,
+        0.0
+      ],
+      "name": "Virgin Hotels Las Vegas, Curio Collection by Hilton"
+    },
+    "w115773426": {
+      "url": "/models/the_linq_hotel_casino__w115773426.glb",
+      "offset": [
+        0.0,
+        0.0
+      ],
+      "name": "The LINQ Hotel & Casino - A Caesars Rewards Destination"
+    },
+    "w204346639": {
+      "url": "/models/el_cortez_hotel_casino_w204346639.glb",
+      "offset": [
+        0.0,
+        0.0
+      ],
+      "name": "El Cortez Hotel & Casino"
+    },
+    "w313762432": {
+      "url": "/models/las_vegas_marriott_w313762432.glb",
+      "offset": [
+        0.0,
+        0.0
+      ],
+      "name": "Las Vegas Marriott"
+    },
+    "w115768623": {
+      "url": "/models/hilton_grand_vacations_w115768623.glb",
+      "offset": [
+        0.0,
+        0.0
+      ],
+      "name": "Hilton Grand Vacations at the Flamingo"
+    },
+    "w118361200": {
+      "url": "/models/oyo_casino_hotel_w118361200.glb",
+      "offset": [
+        0.0,
+        0.0
+      ],
+      "name": "Oyo Casino Hotel"
+    },
+    "w206128520": {
+      "url": "/models/downtown_grand_w206128520.glb",
+      "offset": [
+        0.0,
+        0.0
+      ],
+      "name": "Downtown Grand"
+    },
+    "w134949098": {
+      "url": "/models/julius_tower_w134949098.glb",
+      "offset": [
+        0.0,
+        0.0
+      ],
+      "name": "Julius Tower"
+    },
+    "w135020970": {
+      "url": "/models/the_westin_las_vegas_h_w135020970.glb",
+      "offset": [
+        0.0,
+        0.0
+      ],
+      "name": "The Westin Las Vegas Hotel"
+    },
+    "w134696134": {
+      "url": "/models/455_karen_avenue_w134696134.glb",
+      "offset": [
+        0.0,
+        0.0
+      ],
+      "name": "455 Karen Avenue"
+    },
+    "w134696138": {
+      "url": "/models/455_karen_avenue_w134696138.glb",
+      "offset": [
+        0.0,
+        0.0
+      ],
+      "name": "455 Karen Avenue"
+    },
+    "w106228873": {
+      "url": "/models/main_street_station_w106228873.glb",
+      "offset": [
+        0.0,
+        0.0
+      ],
+      "name": "Main Street Station"
+    },
+    "w699874292": {
+      "url": "/models/fremont_hotel_casino_l_w699874292.glb",
+      "offset": [
+        0.0,
+        0.0
+      ],
+      "name": "Fremont Hotel & Casino Las Vegas"
+    },
+    "w61239326": {
+      "url": "/models/vanderpump_w61239326.glb",
+      "offset": [
+        0.0,
+        0.0
+      ],
+      "name": "Vanderpump"
+    },
+    "w544016661": {
+      "url": "/models/california_hotel_and_c_w544016661.glb",
+      "offset": [
+        0.0,
+        0.0
+      ],
+      "name": "California Hotel and Casino"
+    },
+    "w134949101": {
+      "url": "/models/julius_tower_extension_w134949101.glb",
+      "offset": [
+        0.0,
+        0.0
+      ],
+      "name": "Julius Tower Extension"
+    },
+    "w134068317": {
+      "url": "/models/fontainebleau_resort_c_w134068317.glb",
+      "offset": [
+        0.0,
+        0.0
+      ],
+      "name": "Fontainebleau Resort & Casino"
+    },
+    "r19484714": {
+      "url": "/models/3400_paradise_road_r19484714.glb",
+      "offset": [
+        0.0,
+        0.0
+      ],
+      "name": "3400 Paradise Road"
+    },
+    "w134949402": {
+      "url": "/models/nobu_hotel_at_caesars_w134949402.glb",
+      "offset": [
+        0.0,
+        0.0
+      ],
+      "name": "Nobu Hotel at Caesars Palace"
+    },
+    "w27897904": {
+      "url": "/models/hotel_building_w278979_w27897904.glb",
+      "offset": [
+        0.0,
+        0.0
+      ],
+      "name": "w27897904"
+    },
+    "w463856739": {
+      "url": "/models/hotel_building_w463856_w463856739.glb",
+      "offset": [
+        0.0,
+        0.0
+      ],
+      "name": "w463856739"
+    },
+    "w699020450": {
+      "url": "/models/hotel_building_w699020_w699020450.glb",
+      "offset": [
+        0.0,
+        0.0
+      ],
+      "name": "w699020450"
+    },
+    "w331337786": {
+      "url": "/models/hotel_building_w331337_w331337786.glb",
+      "offset": [
+        0.0,
+        0.0
+      ],
+      "name": "w331337786"
+    },
+    "w205497576": {
+      "url": "/models/residence_inn_las_vega_w205497576.glb",
+      "offset": [
+        0.0,
+        0.0
+      ],
+      "name": "Residence Inn Las Vegas Hughes Center"
+    },
+    "w180584269": {
+      "url": "/models/the_palazzo_w180584269.glb",
+      "offset": [
+        0.0,
+        0.0
+      ],
+      "name": "The Palazzo"
+    }
+  },
+  "fountains": {
+    "lv": [
+      {
+        "name": "Fountains of Bellagio",
+        "url": "/models/attractions/bellagio.json"
+      }
+    ]
+  },
+  "extras": {
+    "lv": [
+      {
+        "name": "Fremont Street canopy",
+        "url": "/models/fremont_canopy.glb",
+        "east": 2587.3,
+        "north": 6214.8,
+        "rotation_deg": -28.14,
+        "visible": "always"
+      },
+      {
+        "name": "Luxor Sky Beam",
+        "url": "/models/luxor_beam.glb",
+        "east": -270.6,
+        "north": -2133.7,
+        "rotation_deg": 0.0,
+        "visible": "night",
+        "blend": "additive"
+      },
+      {
+        "name": "High Roller",
+        "url": "/models/high_roller.glb",
+        "east": 417.5,
+        "north": 331.1,
+        "rotation_deg": 90.0,
+        "visible": "always",
+        "spin": {
+          "node": "Rotor",
+          "period_s": 180.0,
+          "direction": 1
+        }
+      }
+    ]
+  }
+}
