@@ -473,22 +473,31 @@ function snapViews() {
   camera.lookAt(controls.target);
 }
 let activeView = null;
+let lastChosenView = city.views[0].id;
 function setView(name) {
-  activeView = name;
+  stopCamera();
+  lastChosenView = name;
   camera.position.copy(VIEWS[name].pos);
   controls.target.copy(VIEWS[name].target);
-  // updating once with damping off discards any leftover spin from the last drag
-  controls.enableDamping = false;
   controls.update();
-  controls.enableDamping = true;
-  for (const btn of document.querySelectorAll('.views button')) btn.classList.toggle('active', btn.dataset.view === name);
+  activeView = name;
+  for (const btn of viewBar.querySelectorAll('button')) {
+    btn.classList.toggle('active', btn.dataset.view === name);
+    btn.setAttribute('aria-pressed', String(btn.dataset.view === name));
+  }
+  const label = city.views.find((view) => view.id === name).label;
+  const home = document.getElementById('camera-home');
+  home.title = `Back to ${label}`;
+  home.setAttribute('aria-label', home.title);
+  document.getElementById('camera-status').textContent = `${label} viewpoint.`;
+  syncNavigation();
   invalidate();
 }
 for (const btn of document.querySelectorAll('.views button')) btn.addEventListener('click', () => setView(btn.dataset.view));
 controls.addEventListener('change', () => {
-  if (activeView && camera.position.distanceTo(VIEWS[activeView].pos) > 1) {
+  if (activeView && (camera.position.distanceTo(VIEWS[activeView].pos) > 1 || controls.target.distanceTo(VIEWS[activeView].target) > 1)) {
     activeView = null;
-    document.querySelectorAll('.views button').forEach((b) => b.classList.remove('active'));
+    viewBar.querySelectorAll('button').forEach((b) => { b.classList.remove('active'); b.setAttribute('aria-pressed', 'false'); });
   }
   // keep the camera out of the ground
   const floor = groundY(camera.position.x, -camera.position.z) + 1.7;
@@ -511,19 +520,23 @@ addEventListener('resize', resize);
 const list = document.getElementById('list');
 const count = document.getElementById('count');
 const toggleAll = document.getElementById('toggle-all');
-const changes = document.getElementById('changes');
 const results = document.getElementById('results');
 const hint = document.getElementById('hint');
 const search = document.getElementById('search');
 const empty = document.getElementById('empty');
-const card = document.getElementById('card');
-const menu = document.getElementById('menu');
-const toast = document.getElementById('toast');
+const editor = document.getElementById('editor');
+const editMenu = document.getElementById('edit-menu');
+const editMore = document.getElementById('edit-more');
+const editDetails = document.getElementById('edit-details');
+const editStatus = document.getElementById('edit-status');
+const dragCue = document.getElementById('drag-cue');
+const startOverButton = document.getElementById('start-over');
+new ResizeObserver(() => document.documentElement.style.setProperty('--editor-height', `${editor.hidden ? 0 : editor.getBoundingClientRect().height}px`)).observe(editor);
 const tip = document.getElementById('tip');
 
 const HOVER = new THREE.Color(0xa9d6ff), SELECT = new THREE.Color(0xf0623c), WHITE = new THREE.Color(0xffffff);
 let hovered = null, selected = null;
-const history = []; // undo stack: { done, undone, revert() }
+const history = [];
 
 const isHidden = (e) => !e.mesh.visible;
 const isMoved = (e) => e.offset.lengthSq() > 0.01;
@@ -542,12 +555,52 @@ function paint(e) {
   e.marker.material.opacity = e === hovered ? 0.75 : 0.42;
 }
 
+function changedBuildings() { return tall.filter((entry) => isHidden(entry) || isMoved(entry)); }
+function editingState() {
+  if (move && dragging) return 'dragging';
+  if (selected) return 'selected';
+  return changedBuildings().length || history.length ? 'changed' : 'idle';
+}
+function updateEditor() {
+  const state = editingState(), changed = changedBuildings();
+  editor.hidden = state === 'idle' || state === 'dragging';
+  editor.dataset.state = state;
+  document.body.classList.toggle('editing', !editor.hidden);
+  document.body.classList.toggle('selecting', state === 'selected');
+  document.body.classList.toggle('building-drag', state === 'dragging');
+  dragCue.hidden = state !== 'dragging';
+  if (state === 'dragging') dragCue.textContent = `Moving ${label(move.entry.data)} · Esc to cancel`;
+  if (state !== 'selected') editDetails.hidden = true;
+  editor.querySelector('h2').textContent = selected ? label(selected.data) : changed.length ? `${plural(changed.length)} changed` : 'No building changes';
+  editor.querySelector('.edit-meta').textContent = selected ? `${fmt(selected.data.h)} · Drag building to move` : 'Undo your last change.';
+  editor.querySelector('[data-act="hide"]').hidden = !selected;
+  document.getElementById('edit-close').hidden = !selected;
+  const undoButton = document.getElementById('edit-undo');
+  undoButton.hidden = !history.length;
+  undoButton.title = history.length ? `Undo ${history.at(-1).done}` : 'Undo';
+  editMenu.querySelector('[data-act="center"]').hidden = !selected;
+  const taller = selected ? visibleTaller(selected) : [];
+  const hideTaller = editMenu.querySelector('[data-act="taller"]');
+  hideTaller.hidden = !selected || !taller.length;
+  hideTaller.textContent = `Hide this and ${taller.length} taller`;
+  const detailsButton = editMenu.querySelector('[data-act="details"]');
+  detailsButton.hidden = !selected;
+  detailsButton.textContent = editDetails.hidden ? 'Building details' : 'Hide details';
+  detailsButton.setAttribute('aria-expanded', String(!editDetails.hidden));
+  startOverButton.hidden = !changed.length;
+  editMore.hidden = !selected;
+  if (selected) {
+    const b = selected.data, rank = tall.indexOf(selected) + 1;
+    editDetails.querySelector('.meta').textContent = `${details(b)} · ${rank === 1 ? `tallest in ${city.name}` : `no. ${rank} by height`}${isMoved(selected) ? ' · moved' : ''}`;
+    editDetails.querySelector('.src').textContent = `Height ${SOURCE[b.src]}`;
+  }
+  if (editor.hidden || editMore.hidden) closeEditMenu();
+}
 function refresh() {
-  const hidden = tall.filter(isHidden).length, moved = tall.filter(isMoved).length;
   count.textContent = `${plural(tall.length)} over ${fmt(settings.cutoff)}`;
-  toggleAll.textContent = hidden ? 'Show all' : 'Hide all';
-  changes.hidden = !hidden && !moved;
-  changes.querySelector('span').textContent = [hidden && `${hidden} hidden`, moved && `${moved} moved`].filter(Boolean).join(' · ');
+  toggleAll.textContent = 'Hide all';
+  toggleAll.disabled = tall.every(isHidden);
+  updateEditor();
   renderer.shadowMap.needsUpdate = true;
   tilesStale = true;
   invalidate();
@@ -564,29 +617,19 @@ function setHover(entry) {
 }
 
 function select(entry) {
+  closeEditMenu();
+  editDetails.hidden = true;
   const prev = selected;
   selected = entry && !isHidden(entry) ? entry : null;
   if (prev) { paint(prev); prev.row.classList.remove('selected'); }
-  card.hidden = !selected;
-  document.body.classList.toggle('selecting', !!selected);
   if (selected) {
     paint(selected);
     selected.row.classList.add('selected');
     selected.row.scrollIntoView({ block: 'nearest' });
-    hideToast();
     dismissHint();
-    updateCard();
   }
+  updateEditor();
   invalidate();
-}
-function updateCard() {
-  if (!selected) return;
-  const b = selected.data, rank = tall.indexOf(selected) + 1;
-  card.querySelector('h2').textContent = label(b);
-  card.querySelector('.meta').textContent = `${details(b)} · ${rank === 1 ? `tallest in ${city.name}` : `no. ${rank} by height`}`;
-  card.querySelector('.src').textContent = `Height ${SOURCE[b.src]}`;
-  card.querySelector('.how').textContent = isMoved(selected) ? 'Moved from where it really stands.' : 'Drag the building to move it.';
-  card.querySelector('[data-act="back"]').hidden = !isMoved(selected);
 }
 
 function syncRow(e) {
@@ -596,7 +639,6 @@ function syncRow(e) {
   act.querySelector('use').setAttribute('href', hidden ? '#i-eye-off' : '#i-eye');
   act.title = hidden ? 'Show' : 'Hide';
   act.setAttribute('aria-label', `${hidden ? 'Show' : 'Hide'} ${label(e.data)}`);
-  e.row.querySelector('.back').hidden = !isMoved(e);
 }
 
 /** Hide or restore a set of buildings as one undoable step. */
@@ -627,100 +669,194 @@ function place(e, x, z) {
   syncRow(e);
   return true;
 }
-/** Send buildings back to where they really stand, as one undoable step. */
-function moveBack(entries) {
-  const moved = entries.filter(isMoved);
-  if (!moved.length) return;
-  const was = moved.map((e) => e.offset.clone());
+function startOver() {
+  cancelBuildingDrag();
+  const moved = tall.filter(isMoved);
+  history.length = 0;
+  apply(tall.filter(isHidden), false, false);
   moved.forEach((e) => place(e, 0, 0));
-  const what = moved.length === 1 ? label(moved[0].data) : plural(moved.length);
-  remember(`Put back: ${what}`, `Moved again: ${what}`, () => moved.forEach((e, i) => place(e, was[i].x, was[i].z)));
-  updateCard();
+  select(null);
+  closeEditMenu();
+  browse(false);
   refresh();
-}
-/** Everything back as it really is: nothing hidden, nothing moved. */
-function resetEverything() {
-  const hidden = tall.filter(isHidden), moved = tall.filter(isMoved);
-  if (!hidden.length && !moved.length) return;
-  const was = moved.map((e) => e.offset.clone());
-  apply(hidden, false, false);
-  moved.forEach((e) => place(e, 0, 0));
-  remember('Every building is back', 'Your changes are back', () => {
-    apply(hidden, true, false);
-    moved.forEach((e, i) => place(e, was[i].x, was[i].z));
-  });
-  updateCard();
-  refresh();
+  editStatus.textContent = 'All buildings restored.';
+  canvas.focus({ preventScroll: true });
 }
 
 function remember(done, undone, revert) {
-  history.push({ undone, revert });
-  showToast(done, true);
+  history.push({ done, undone, revert });
+  editStatus.textContent = done;
+  updateEditor();
 }
 function undo() {
+  if (move) return;
+  const fromEditor = editor.contains(document.activeElement) || editMenu.contains(document.activeElement);
   const last = history.pop();
   if (!last) return;
   last.revert();
-  updateCard();
   refresh();
-  showToast(`Undone. ${last.undone}`, false);
+  editStatus.textContent = `Undone. ${last.undone}`;
+  if (fromEditor) focusEditing();
 }
-
-let toastTimer = 0;
-function showToast(text, undoable) {
-  toast.querySelector('span').textContent = text;
-  toast.querySelector('button').hidden = !undoable;
-  toast.hidden = false;
-  clearTimeout(toastTimer);
-  toastTimer = setTimeout(hideToast, 7000);
+function focusEditing() {
+  const undoButton = document.getElementById('edit-undo');
+  const target = !editor.hidden && !undoButton.hidden ? undoButton : canvas;
+  target.focus({ preventScroll: true });
 }
-function hideToast() { toast.hidden = true; clearTimeout(toastTimer); }
-toast.querySelector('button').addEventListener('click', undo);
-
-card.querySelector('[data-act="hide"]').addEventListener('click', () => selected && apply([selected], true));
-card.querySelector('[data-act="center"]').addEventListener('click', () => selected && focusOn(selected));
-card.querySelector('[data-act="back"]').addEventListener('click', () => selected && moveBack([selected]));
-card.querySelector('.x').addEventListener('click', () => select(null));
-toggleAll.addEventListener('click', () => apply(tall, !tall.some(isHidden)));
-document.getElementById('reset-all').addEventListener('click', resetEverything);
+function closeEditMenu(returnFocus = false) {
+  editMenu.hidden = true;
+  editMore.setAttribute('aria-expanded', 'false');
+  if (returnFocus && !editMore.hidden && !editor.hidden) editMore.focus();
+}
+function openEditMenu() {
+  updateEditor();
+  if (!editMenu.hidden) { closeEditMenu(true); return; }
+  editMenu.hidden = false;
+  editMore.setAttribute('aria-expanded', 'true');
+  const anchor = editMore.getBoundingClientRect();
+  const availableBelow = innerHeight - anchor.bottom - 12;
+  const above = availableBelow < Math.min(editMenu.scrollHeight, 240) && anchor.top > availableBelow;
+  editMenu.style.maxHeight = `${Math.max(80, above ? anchor.top - 12 : availableBelow)}px`;
+  editMenu.style.left = `${Math.min(Math.max(12, anchor.right - editMenu.offsetWidth), innerWidth - editMenu.offsetWidth - 12)}px`;
+  editMenu.style.top = `${above ? Math.max(12, anchor.top - editMenu.offsetHeight - 6) : anchor.bottom + 6}px`;
+  editMenu.querySelector('button:not([hidden])').focus();
+}
+editor.querySelector('[data-act="hide"]').addEventListener('click', () => {
+  if (selected) apply([selected], true);
+  focusEditing();
+});
+document.getElementById('edit-undo').addEventListener('click', undo);
+document.getElementById('edit-close').addEventListener('click', () => { select(null); focusEditing(); });
+editMore.addEventListener('click', openEditMenu);
+startOverButton.addEventListener('click', startOver);
+addEventListener('resize', () => closeEditMenu());
+editMenu.addEventListener('click', (ev) => {
+  const button = ev.target.closest('button');
+  if (!button) return;
+  closeEditMenu();
+  if (button.dataset.act === 'center' && selected) focusOn(selected);
+  else if (button.dataset.act === 'taller' && selected) apply([selected, ...visibleTaller(selected)], true);
+  else if (button.dataset.act === 'details' && selected) editDetails.hidden = !editDetails.hidden;
+  updateEditor();
+  if (!editMore.hidden && !editor.hidden) editMore.focus();
+  else focusEditing();
+});
+editMenu.addEventListener('keydown', (ev) => {
+  const items = [...editMenu.querySelectorAll('button:not([hidden])')];
+  const index = items.indexOf(document.activeElement);
+  let next;
+  if (ev.key === 'ArrowDown') next = (index + 1) % items.length;
+  else if (ev.key === 'ArrowUp') next = (index - 1 + items.length) % items.length;
+  else if (ev.key === 'Home') next = 0;
+  else if (ev.key === 'End') next = items.length - 1;
+  else if (ev.key === 'Tab') closeEditMenu();
+  if (next !== undefined) { ev.preventDefault(); items[next].focus(); }
+});
+toggleAll.addEventListener('click', () => apply(tall, true));
 
 // ------------------------------------------------------------------ jump to a building
-let flight = null; // a camera move in progress: { t0, dur, at(k) } with k easing from 0 to 1
-function fly(dur, at) { flight = { t0: performance.now(), dur, at }; }
-/** Glide the camera so one building sits in the middle of the view, keeping the current viewing direction. */
+let flight = null;
+const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
+function stopCamera() {
+  flight = null;
+  controls.enableDamping = false;
+  controls.update();
+  controls.enableDamping = true;
+}
+function fly(dur, at) {
+  if (reducedMotion.matches) {
+    at(1);
+    controls.update();
+    announceCamera();
+    invalidate();
+  } else flight = { t0: performance.now(), dur, at };
+}
 function focusOn(entry) {
+  stopCamera();
   const b = entry.data;
   const q0 = controls.target.clone(), q1 = new THREE.Vector3(b.c[0], b.ground - BASE + b.h * 0.5, -b.c[1]).add(entry.offset);
   const dir = camera.position.clone().sub(controls.target).normalize();
-  if (dir.y < 0.28) { dir.y = 0.28; dir.normalize(); } // from a little above, so neighbours don't block it
-  const dist = THREE.MathUtils.clamp(b.h * 7 + 550, 800, 1700); // far enough to see it among its neighbours
+  if (dir.y < 0.28) { dir.y = 0.28; dir.normalize(); }
+  const dist = THREE.MathUtils.clamp(b.h * 7 + 550, 800, 1700);
   const p0 = camera.position.clone(), p1 = q1.clone().addScaledVector(dir, dist);
   fly(750, (k) => { camera.position.lerpVectors(p0, p1, k); controls.target.lerpVectors(q0, q1, k); });
 }
-/** Swing the camera around its target: `turn` multiplies the compass angle, `zoom` the distance. */
-function orbitTo({ turn = 1, zoom = 1 }) {
+function orbitTo({ yaw = 0, tilt = 0, zoom = 1, north = false, panX = 0, panY = 0 }) {
+  stopCamera();
   const from = new THREE.Spherical().setFromVector3(camera.position.clone().sub(controls.target)), to = from.clone();
-  to.theta *= turn;
+  to.theta = north ? from.theta - THREE.MathUtils.euclideanModulo(from.theta + Math.PI, Math.PI * 2) + Math.PI : from.theta + yaw;
+  to.phi = THREE.MathUtils.clamp(from.phi + tilt, Math.max(0.05, controls.minPolarAngle), controls.maxPolarAngle);
   to.radius = THREE.MathUtils.clamp(from.radius * zoom, controls.minDistance, controls.maxDistance);
+  const q0 = controls.target.clone();
+  const q1 = q0.clone().add(new THREE.Vector3(
+    Math.cos(from.theta) * panX - Math.sin(from.theta) * panY,
+    0,
+    -Math.sin(from.theta) * panX - Math.cos(from.theta) * panY,
+  ).multiplyScalar(from.radius * 0.08));
   const at = new THREE.Spherical();
-  fly(350, (k) => {
-    at.set(lerp(from.radius, to.radius, k), from.phi, lerp(from.theta, to.theta, k));
+  fly(240, (k) => {
+    at.set(lerp(from.radius, to.radius, k), lerp(from.phi, to.phi, k), lerp(from.theta, to.theta, k));
+    controls.target.lerpVectors(q0, q1, k);
     camera.position.setFromSpherical(at).add(controls.target);
   });
 }
 controls.addEventListener('start', () => { flight = null; });
+function announceCamera() {
+  const direction = controls.target.clone().sub(camera.position);
+  const heading = THREE.MathUtils.euclideanModulo(THREE.MathUtils.radToDeg(Math.atan2(direction.x, -direction.z)), 360);
+  document.getElementById('camera-status').textContent = `View heading ${Math.round(heading)} degrees.`;
+}
 function stepFlight(now) {
   if (!flight) return;
   const t = Math.min((now - flight.t0) / flight.dur, 1);
   flight.at(t * t * (3 - 2 * t));
-  if (t === 1) flight = null;
+  if (t === 1) {
+    flight = null;
+    announceCamera();
+  }
   invalidate();
 }
-document.getElementById('zoom-in').addEventListener('click', () => orbitTo({ zoom: 0.6 }));
-document.getElementById('zoom-out').addEventListener('click', () => orbitTo({ zoom: 1 / 0.6 }));
+const NAVIGATION = {
+  'pan-forward': () => orbitTo({ panY: 1 }),
+  'pan-back': () => orbitTo({ panY: -1 }),
+  'pan-left': () => orbitTo({ panX: -1 }),
+  'pan-right': () => orbitTo({ panX: 1 }),
+  'turn-left': () => orbitTo({ yaw: Math.PI / 12 }),
+  'turn-right': () => orbitTo({ yaw: -Math.PI / 12 }),
+  'tilt-up': () => orbitTo({ tilt: 0.1 }),
+  'tilt-down': () => orbitTo({ tilt: -0.1 }),
+  'zoom-in': () => orbitTo({ zoom: 0.8 }),
+  'zoom-out': () => orbitTo({ zoom: 1.25 }),
+  north: () => orbitTo({ north: true }),
+  home: () => setView(lastChosenView),
+};
+const navButtons = [...document.querySelectorAll('[data-nav]')];
+for (const button of navButtons) button.addEventListener('click', () => NAVIGATION[button.dataset.nav]());
 const compass = document.getElementById('compass');
-compass.addEventListener('click', () => orbitTo({ turn: 0 }));
-controls.addEventListener('change', () => { compass.firstElementChild.style.rotate = `${controls.getAzimuthalAngle()}rad`; });
+function syncNavigation() {
+  const radius = camera.position.distanceTo(controls.target), phi = controls.getPolarAngle();
+  const disabled = {
+    'zoom-in': radius <= controls.minDistance + 0.1,
+    'zoom-out': radius >= controls.maxDistance - 0.1,
+    'tilt-up': phi >= controls.maxPolarAngle - 0.001,
+    'tilt-down': phi <= Math.max(0.05, controls.minPolarAngle) + 0.001,
+  };
+  for (const button of navButtons) button.disabled = !!disabled[button.dataset.nav];
+  compass.firstElementChild.style.rotate = `${controls.getAzimuthalAngle()}rad`;
+}
+controls.addEventListener('change', syncNavigation);
+const navigation = document.getElementById('navigation');
+const navigationToggle = document.getElementById('navigation-toggle');
+const phoneLayout = matchMedia('(max-width: 720px)');
+function openNavigation(open) {
+  document.body.classList.toggle('nav-open', open);
+  navigationToggle.setAttribute('aria-expanded', String(open));
+  navigationToggle.setAttribute('aria-label', `${open ? 'Close' : 'Open'} camera controls`);
+  document.getElementById('camera-controls').inert = phoneLayout.matches && !open;
+}
+navigationToggle.addEventListener('click', () => openNavigation(navigationToggle.getAttribute('aria-expanded') !== 'true'));
+phoneLayout.addEventListener('change', () => openNavigation(false));
+openNavigation(false);
 
 // ------------------------------------------------------------------ list + search
 function buildList() {
@@ -729,13 +865,12 @@ function buildList() {
     const b = entry.data;
     const li = document.createElement('li');
     const est = b.src === 'osm-levels' || b.src === 'guess';
-    li.innerHTML = `<button class="go"><span class="rank">${i + 1}</span><span class="name"></span><span class="ht">${est ? '~' : ''}${fmt(b.h)}</span></button><button class="back" hidden>Put back</button><button class="act"><svg class="icon" viewBox="0 0 20 20" aria-hidden="true"><use /></svg></button>`;
+    li.innerHTML = `<button class="go"><span class="rank">${i + 1}</span><span class="name"></span><span class="ht">${est ? '~' : ''}${fmt(b.h)}</span></button><button class="act"><svg class="icon" viewBox="0 0 20 20" aria-hidden="true"><use /></svg></button>`;
     li.querySelector('.name').textContent = label(b);
     const go = li.querySelector('.go');
     go.title = `${label(b)}: ${details(b)}. Height ${SOURCE[b.src]}.`;
     go.addEventListener('click', () => goTo(entry));
     li.querySelector('.act').addEventListener('click', () => apply([entry], !isHidden(entry)));
-    li.querySelector('.back').addEventListener('click', () => moveBack([entry]));
     li.addEventListener('pointerenter', () => setHover(entry));
     li.addEventListener('pointerleave', () => setHover(null));
     entry.row = li;
@@ -777,64 +912,45 @@ search.addEventListener('keydown', (ev) => {
   }
 });
 
-// ------------------------------------------------------------------ context menu
-function openMenu(entry, x, y) {
-  const b = entry.data, hidden = isHidden(entry);
-  const items = [];
-  if (hidden) {
-    items.push(['Show', () => apply([entry], false)]);
-    const n = tall.filter(isHidden).length;
-    if (n > 1) items.push([`Show all ${n} hidden`, () => apply(tall, false)]);
-  } else {
-    items.push(['Hide', () => apply([entry], true)]);
-    const taller = visibleTaller(entry);
-    if (taller.length) items.push([`Hide this and ${taller.length} taller`, () => apply([entry, ...taller], true)]);
-    if (entry !== selected) items.push(['Move', () => { select(entry); showToast('Drag the orange building to move it.', false); }]);
-  }
-  if (isMoved(entry)) items.push(['Put back', () => moveBack([entry])]);
-  items.push(['Zoom to', () => { focusOn(entry); select(entry); }]);
-  menu.replaceChildren();
-  const head = document.createElement('div');
-  head.className = 'head';
-  head.innerHTML = '<b></b><span></span>';
-  head.querySelector('b').textContent = label(b);
-  head.querySelector('span').textContent = hidden ? `${details(b)} · hidden` : details(b);
-  menu.append(head);
-  for (const [text, run] of items) {
-    const btn = document.createElement('button');
-    btn.setAttribute('role', 'menuitem');
-    btn.textContent = text;
-    btn.addEventListener('click', () => { closeMenu(); run(); });
-    menu.append(btn);
-  }
-  menu.hidden = false;
-  tip.hidden = true;
-  const r = menu.getBoundingClientRect();
-  menu.style.left = `${Math.min(x, innerWidth - r.width - 8)}px`;
-  menu.style.top = `${Math.min(y, innerHeight - r.height - 8)}px`;
-  menu.querySelector('button').focus();
-}
-function closeMenu() { menu.hidden = true; }
-// Anything that pops open closes on a press outside it: the menu, the list, the city list and the options.
 const POPS = [
-  { open: () => !menu.hidden, inside: () => [menu], close: closeMenu },
+  { open: () => !editMenu.hidden, inside: () => [editor, editMenu], close: () => closeEditMenu(true) },
   { open: () => !results.hidden, inside: () => [results, document.getElementById('bar')], close: () => browse(false) },
   { open: () => !cityMenu.hidden, inside: () => [cityMenu, cityBtn], close: () => openCities(false) },
-  { open: () => !form.hidden, inside: () => [form, optionsBtn], close: () => openOptions(false) },
+  { open: () => !form.hidden, inside: () => [form, optionsBtn, document.getElementById('data-info')], close: () => openOptions(false) },
+  { open: () => phoneLayout.matches && navigationToggle.getAttribute('aria-expanded') === 'true', inside: () => [navigation], close: () => openNavigation(false) },
 ];
 addEventListener('pointerdown', (ev) => {
   for (const pop of POPS) if (pop.open() && !pop.inside().some((el) => el.contains(ev.target))) pop.close();
 }, true);
-controls.addEventListener('start', closeMenu);
+controls.addEventListener('start', () => closeEditMenu());
 
 addEventListener('keydown', (ev) => {
-  const typing = ev.target instanceof HTMLInputElement;
+  const typing = ev.target instanceof Element && !!ev.target.closest('input, textarea, select, [contenteditable]:not([contenteditable="false"])');
+  if (move) {
+    if (ev.key === 'Escape') { ev.preventDefault(); cancelBuildingDrag(); }
+    return;
+  }
   if (ev.key === 'Escape') {
     const pop = POPS.find((p) => p.open());
-    if (pop) pop.close(); else select(null);
-  } else if (ev.key === '/' && !typing) { ev.preventDefault(); search.focus(); }
+    if (pop) {
+      const inNavigation = navigation.contains(document.activeElement);
+      pop.close();
+      if (inNavigation) navigationToggle.focus();
+    } else {
+      const fromEditor = editor.contains(document.activeElement);
+      select(null);
+      if (fromEditor) focusEditing();
+    }
+  } else if (ev.key === '/' && !typing && !ev.metaKey && !ev.ctrlKey && !ev.altKey) { ev.preventDefault(); search.focus(); }
   else if ((ev.metaKey || ev.ctrlKey) && !ev.shiftKey && ev.key.toLowerCase() === 'z' && !typing) { ev.preventDefault(); undo(); }
-  else if ((ev.key === 'Delete' || ev.key === 'Backspace') && selected && menu.hidden && !typing) { ev.preventDefault(); apply([selected], true); }
+  else if ((ev.key === 'Delete' || ev.key === 'Backspace') && selected && editMenu.hidden && !typing) { ev.preventDefault(); apply([selected], true); }
+  else if (!typing && !ev.metaKey && !ev.ctrlKey && !ev.altKey && (ev.target === document.body || ev.target === canvas)) {
+    const keys = ev.shiftKey && ev.key.startsWith('Arrow')
+      ? { ArrowLeft: 'turn-left', ArrowRight: 'turn-right', ArrowUp: 'tilt-up', ArrowDown: 'tilt-down' }
+      : { ArrowLeft: 'pan-left', ArrowRight: 'pan-right', ArrowUp: 'pan-forward', ArrowDown: 'pan-back', '+': 'zoom-in', '=': 'zoom-in', '-': 'zoom-out', n: 'north', h: 'home' };
+    const action = keys[ev.key];
+    if (action) { ev.preventDefault(); NAVIGATION[action](); }
+  }
 });
 
 // ------------------------------------------------------------------ picking
@@ -866,28 +982,56 @@ function pick(ev) {
 
 const dragPlane = new THREE.Plane(), dragPoint = new THREE.Vector3();
 let down = null, dragging = false;
-let move = null; // a building being dragged: { entry, start, grab }
-canvas.addEventListener('contextmenu', (ev) => ev.preventDefault());
-// Capture phase, so this runs before the camera controls and can claim the drag for a building.
-canvas.addEventListener('pointerdown', (ev) => {
-  down = { x: ev.clientX, y: ev.clientY, ctrl: ev.ctrlKey };
+let move = null;
+const activePointers = new Set();
+function finishBuildingDrag(cancelled) {
+  if (!move) return;
+  const session = move;
+  const changed = session.entry.offset.distanceTo(session.start) > 0.5;
+  move = null;
+  down = null;
   dragging = false;
-  if (ev.button !== 0 || ev.ctrlKey || ev.metaKey || ev.shiftKey || !selected) return;
+  controls.enabled = true;
+  canvas.classList.remove('grabbing', 'grab');
+  if (cancelled || !changed) place(session.entry, session.start.x, session.start.z);
+  if (canvas.hasPointerCapture(session.pointerId)) canvas.releasePointerCapture(session.pointerId);
+  if (!cancelled && changed) {
+    remember(`Moved ${label(session.entry.data)}`, `Returned ${label(session.entry.data)} to its previous position.`, () => place(session.entry, session.start.x, session.start.z));
+  } else if (cancelled) editStatus.textContent = 'Move cancelled.';
+  refresh();
+}
+function cancelBuildingDrag() { finishBuildingDrag(true); }
+canvas.addEventListener('contextmenu', (ev) => ev.preventDefault());
+canvas.addEventListener('pointerdown', (ev) => {
+  activePointers.add(ev.pointerId);
+  if (activePointers.size > 1) {
+    cancelBuildingDrag();
+    down = null;
+    dragging = false;
+    return;
+  }
+  down = { pointerId: ev.pointerId, x: ev.clientX, y: ev.clientY, modified: ev.ctrlKey || ev.metaKey || ev.shiftKey };
+  dragging = false;
+  if (ev.button !== 0 || down.modified || !selected) return;
+  stopCamera();
   const hit = pick(ev);
   if (!hit || hit.entry !== selected || hit.onMarker) return;
-  // slide the building on a level plane through the point where it was grabbed
   dragPlane.set(new THREE.Vector3(0, 1, 0), -hit.point.y);
-  move = { entry: selected, start: selected.offset.clone(), grab: hit.point.clone() };
+  move = { entry: selected, pointerId: ev.pointerId, start: selected.offset.clone(), grab: hit.point.clone() };
   controls.enabled = false;
   canvas.setPointerCapture(ev.pointerId);
-  canvas.classList.add('grabbing');
 }, true);
 canvas.addEventListener('pointermove', (ev) => {
-  if (down && Math.hypot(ev.clientX - down.x, ev.clientY - down.y) > 5) dragging = true;
+  if (down && down.pointerId === ev.pointerId && Math.hypot(ev.clientX - down.x, ev.clientY - down.y) > 5) dragging = true;
   if (move) {
-    if (!dragging) return;
-    tip.hidden = true;
-    hideToast();
+    if (move.pointerId !== ev.pointerId || !dragging) return;
+    if (!document.body.classList.contains('building-drag')) {
+      closeEditMenu();
+      browse(false);
+      tip.hidden = true;
+      canvas.classList.add('grabbing');
+      updateEditor();
+    }
     const r = canvas.getBoundingClientRect();
     ndc.set(((ev.clientX - r.left) / r.width) * 2 - 1, -((ev.clientY - r.top) / r.height) * 2 + 1);
     ray.setFromCamera(ndc, camera);
@@ -898,7 +1042,7 @@ canvas.addEventListener('pointermove', (ev) => {
     }
     return;
   }
-  if ((down && dragging) || !menu.hidden) { setHover(null); tip.hidden = true; canvas.classList.remove('grab'); return; }
+  if ((down && dragging) || !editMenu.hidden) { setHover(null); tip.hidden = true; canvas.classList.remove('grab'); return; }
   const hit = pick(ev), entry = hit && hit.entry;
   setHover(entry);
   const grabbable = !!hit && entry === selected && !hit.onMarker;
@@ -910,40 +1054,44 @@ canvas.addEventListener('pointermove', (ev) => {
     tip.querySelector('b').textContent = label(b);
     tip.querySelector('i').textContent = details(b);
     tip.querySelector('span').textContent = isHidden(entry) ? 'Hidden. Click to show it.'
-      : hit.onMarker ? 'Where it really stands. Click to put it back.'
+      : hit.onMarker ? 'Original location. Click to select the building.'
         : grabbable ? 'Drag to move it' : '';
-    tip.style.left = `${Math.min(ev.clientX + 16, innerWidth - 280)}px`;
-    tip.style.top = `${ev.clientY + 18}px`;
+    tip.style.left = `${Math.max(8, Math.min(ev.clientX + 16, innerWidth - 280))}px`;
+    tip.style.top = `${Math.min(ev.clientY + 18, innerHeight - tip.offsetHeight - 8)}px`;
   }
 });
 canvas.addEventListener('pointerup', (ev) => {
-  const start = down, wasDrag = dragging;
-  down = null; dragging = false;
+  activePointers.delete(ev.pointerId);
   if (move) {
-    const { entry, start: from } = move;
-    move = null;
-    controls.enabled = true;
-    canvas.classList.remove('grabbing');
-    if (entry.offset.distanceTo(from) > 0.5) {
-      remember(`Moved: ${label(entry.data)}`, `Put back: ${label(entry.data)}`, () => place(entry, from.x, from.z));
-      updateCard();
-      refresh();
-    }
+    if (move.pointerId === ev.pointerId) finishBuildingDrag(false);
     return;
   }
-  if (wasDrag || !start) return;
+  if (!down || down.pointerId !== ev.pointerId) return;
+  const start = down, wasDrag = dragging;
+  down = null;
+  dragging = false;
+  if (wasDrag || start.modified || ev.button !== 0) return;
   const hit = pick(ev), entry = hit && hit.entry;
-  // right-click, two-finger click, or ctrl-click: the menu
-  if (ev.button === 2 || (ev.button === 0 && start.ctrl)) {
-    if (entry) openMenu(entry, ev.clientX, ev.clientY);
-    return;
-  }
-  if (ev.button !== 0) return;
   tip.hidden = true;
   if (!entry) select(null);
   else if (isHidden(entry)) apply([entry], false);
-  else if (hit.onMarker) moveBack([entry]);
   else select(entry);
+});
+canvas.addEventListener('pointercancel', (ev) => {
+  activePointers.delete(ev.pointerId);
+  if (move && move.pointerId === ev.pointerId) cancelBuildingDrag();
+  if (down && down.pointerId === ev.pointerId) { down = null; dragging = false; }
+});
+canvas.addEventListener('lostpointercapture', (ev) => {
+  activePointers.delete(ev.pointerId);
+  if (move && move.pointerId === ev.pointerId) cancelBuildingDrag();
+});
+for (const type of ['pointerup', 'pointercancel']) addEventListener(type, (ev) => activePointers.delete(ev.pointerId), true);
+addEventListener('blur', () => {
+  activePointers.clear();
+  cancelBuildingDrag();
+  down = null;
+  dragging = false;
 });
 canvas.addEventListener('pointerleave', () => { setHover(null); tip.hidden = true; });
 
@@ -959,7 +1107,6 @@ function rebuild() {
   select(null);
   canvas.classList.remove('grab');
   history.length = 0;
-  hideToast();
   buildCity();
   buildList();
   tall.forEach(paint);
@@ -1004,7 +1151,10 @@ function applySettings(changed = null) {
   }
   if (changed === null || changed === 'night' || changed === 'imagery') applyNight();
   tall.forEach(paint);
-  hint.querySelector('b').textContent = `Click a ${settings.highlight ? 'blue' : 'tall'} building to hide or move it.`;
+  hint.querySelector('b').textContent = `${matchMedia('(pointer: coarse)').matches ? 'Tap' : 'Click'} a ${settings.highlight ? 'blue' : 'tall'} building to hide or move it.`;
+  hint.querySelector('span').textContent = matchMedia('(pointer: coarse)').matches
+    ? 'Drag to pan. Use two fingers to zoom and turn, or open Navigate.'
+    : 'Drag to pan. Scroll to zoom. Use the controls to turn and tilt.';
   // the interface goes dark with the sky
   document.documentElement.dataset.theme = settings.night ? 'dark' : 'light';
   nightBtn.setAttribute('aria-pressed', String(settings.night));
@@ -1044,6 +1194,7 @@ function openOptions(open) {
   optionsBtn.setAttribute('aria-expanded', String(open));
 }
 optionsBtn.addEventListener('click', () => openOptions(form.hidden));
+document.getElementById('data-info').addEventListener('click', () => { openOptions(form.hidden); if (!form.hidden) form.querySelector('input').focus(); });
 
 // the hint stays until the visitor has selected a building once, on any visit
 const HINTED = 'slc-skyline-hinted';
@@ -1075,7 +1226,7 @@ function openCities(open) {
   cityBtn.setAttribute('aria-expanded', String(open));
 }
 cityBtn.addEventListener('click', () => openCities(cityMenu.hidden));
-search.placeholder = `Search ${city.name} buildings`;
+search.placeholder = 'Search buildings';
 
 resize();
 setView(city.views[0].id);
@@ -1101,6 +1252,7 @@ window.__skyline = {
   setView,
   select: (id) => select(tall.find((e) => e.data.id === id) || null),
   selectedId: () => selected && selected.data.id,
+  editingState,
   /** Screen position of a building: near its top while standing, its ground marker once hidden. */
   screen(id) {
     const t = tall.find((e) => e.data.id === id);

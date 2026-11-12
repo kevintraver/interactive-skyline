@@ -13,6 +13,10 @@
         <g id="i-x"><path d="M5 5l10 10M15 5 5 15" /></g>
         <g id="i-plus"><path d="M10 4v12M4 10h12" /></g>
         <g id="i-minus"><path d="M4 10h12" /></g>
+        <g id="i-arrow"><path d="m6 12 4-4 4 4" /></g>
+        <g id="i-home"><path d="m3 9 7-6 7 6M5 8v9h10V8M8 17v-6h4v6" /></g>
+        <g id="i-turn"><path d="M4 8a6 6 0 1 1 0 7M4 3v5h5" /></g>
+        <g id="i-move"><path d="M10 2v16M2 10h16M7 5l3-3 3 3M7 15l3 3 3-3M5 7l-3 3 3 3M15 7l3 3-3 3" /></g>
         <g id="i-chevron"><path d="m6 8 4 4 4-4" /></g>
         <g id="i-moon"><path d="M16.5 11.6A7 7 0 1 1 8.4 3.5a5.6 5.6 0 0 0 8.1 8.1z" /></g>
         <g id="i-sun"><circle cx="10" cy="10" r="3.2" /><path d="M10 2.5v2M10 15.5v2M2.5 10h2M15.5 10h2M4.7 4.7l1.4 1.4M13.9 13.9l1.4 1.4M4.7 15.3l1.4-1.4M13.9 6.1l1.4-1.4" /></g>
@@ -22,7 +26,7 @@
       </defs>
     </svg>
 
-    <canvas id="scene" aria-label="3D model of the city"></canvas>
+    <canvas id="scene" tabindex="0" aria-label="3D model of the city"></canvas>
     <h1 class="sr">Interactive Skyline</h1>
 
     <div id="top">
@@ -34,9 +38,19 @@
           <svg class="icon" viewBox="0 0 20 20" aria-hidden="true"><use href="#i-search" /></svg>
           <input id="search" type="search" placeholder="Search buildings" aria-label="Search buildings" aria-controls="results" autocomplete="off" spellcheck="false" />
         </label>
+        <div class="bar-actions">
+          <button id="night" aria-pressed="false" aria-label="Switch to night" title="Switch to night"><svg class="icon" viewBox="0 0 20 20" aria-hidden="true"><use href="#i-moon" /></svg></button>
+          <button id="options-toggle" aria-expanded="false" aria-controls="settings" aria-label="Map options" title="Map options"><svg class="icon" viewBox="0 0 20 20" aria-hidden="true"><use href="#i-layers" /></svg></button>
+        </div>
+      </div>
+      <button id="start-over" title="Show all buildings and put moved buildings back" hidden>Start over</button>
+      <div id="dock">
+        <div id="hint" hidden>
+          <p><b></b><span></span></p>
+          <button class="x" aria-label="Dismiss hint"><svg class="icon" viewBox="0 0 20 20" aria-hidden="true"><use href="#i-x" /></svg></button>
+        </div>
       </div>
     </div>
-    <div class="views" role="group" aria-label="Viewpoints"></div>
     <div id="city-menu" class="pop" role="menu" hidden></div>
 
     <section id="results" aria-label="Buildings" hidden>
@@ -48,28 +62,54 @@
       <p id="empty" hidden></p>
     </section>
 
-    <section id="card" aria-label="Selected building" hidden>
-      <button class="x" aria-label="Close"><svg class="icon" viewBox="0 0 20 20" aria-hidden="true"><use href="#i-x" /></svg></button>
-      <h2></h2>
-      <p class="meta"></p>
-      <p class="src"></p>
-      <div class="acts">
+    <section id="editor" aria-label="Building actions" hidden>
+      <div class="edit-title"><h2></h2><button id="edit-close" class="x" aria-label="Close building selection"><svg class="icon" viewBox="0 0 20 20" aria-hidden="true"><use href="#i-x" /></svg></button></div>
+      <p class="edit-meta"></p>
+      <div class="edit-actions">
         <button class="primary" data-act="hide">Hide</button>
-        <button data-act="center">Zoom to</button>
-        <button data-act="back" hidden>Put back</button>
+        <button id="edit-undo">Undo</button>
+        <button id="edit-more" aria-label="More building actions" aria-haspopup="menu" aria-expanded="false" aria-controls="edit-menu">More<svg class="icon" viewBox="0 0 20 20" aria-hidden="true"><use href="#i-chevron" /></svg></button>
       </div>
-      <p class="how">Drag the building to move it.</p>
+      <div id="edit-details" hidden><p class="meta"></p><p class="src"></p></div>
     </section>
+    <div id="edit-menu" class="pop" role="menu" aria-label="More building actions" hidden>
+      <button role="menuitem" data-act="center">Zoom to building</button>
+      <button role="menuitem" data-act="taller">Hide this and taller</button>
+      <button role="menuitem" data-act="details" aria-controls="edit-details" aria-expanded="false">Building details</button>
+    </div>
+    <p id="edit-status" class="sr" role="status" aria-live="polite"></p>
+    <div id="drag-cue" hidden></div>
 
-    <div id="tools">
-      <button id="night" aria-pressed="false"><svg class="icon" viewBox="0 0 20 20" aria-hidden="true"><use href="#i-moon" /></svg></button>
-      <button id="options-toggle" aria-expanded="false" aria-controls="settings" aria-label="Map options" title="Map options"><svg class="icon" viewBox="0 0 20 20" aria-hidden="true"><use href="#i-layers" /></svg></button>
-      <button id="compass" aria-label="Face north" title="Face north">
-        <svg viewBox="0 0 20 20" aria-hidden="true"><path class="n" d="M10 2.5 13 10H7z" /><path class="s" d="M10 17.5 13 10H7z" /></svg>
-      </button>
-      <div class="zoom">
-        <button id="zoom-in" aria-label="Zoom in" title="Zoom in"><svg class="icon" viewBox="0 0 20 20" aria-hidden="true"><use href="#i-plus" /></svg></button>
-        <button id="zoom-out" aria-label="Zoom out" title="Zoom out"><svg class="icon" viewBox="0 0 20 20" aria-hidden="true"><use href="#i-minus" /></svg></button>
+    <div id="navigation" role="group" aria-label="Map navigation">
+      <div class="views" role="group" aria-label="Viewpoints"></div>
+      <div id="tools">
+        <button id="navigation-toggle" aria-expanded="false" aria-controls="camera-controls" aria-label="Open camera controls" title="Camera controls"><svg class="icon" viewBox="0 0 20 20" aria-hidden="true"><use href="#i-move" /></svg><span>Navigate</span><svg class="icon" viewBox="0 0 20 20" aria-hidden="true"><use href="#i-chevron" /></svg></button>
+        <div id="camera-controls" role="group" aria-label="Camera controls">
+          <p class="nav-heading">Move the view</p>
+          <div class="nav-main">
+            <div class="pan" role="group" aria-label="Pan">
+              <button data-nav="pan-forward" class="pan-forward" aria-label="Pan forward" title="Pan forward"><svg class="icon" viewBox="0 0 20 20" aria-hidden="true"><use href="#i-arrow" /></svg></button>
+              <button data-nav="pan-left" class="pan-left" aria-label="Pan left" title="Pan left"><svg class="icon" viewBox="0 0 20 20" aria-hidden="true"><use href="#i-arrow" /></svg></button>
+              <button data-nav="home" id="camera-home" class="pan-home" aria-label="Back to viewpoint" title="Back to viewpoint"><svg class="icon" viewBox="0 0 20 20" aria-hidden="true"><use href="#i-home" /></svg></button>
+              <button data-nav="pan-right" class="pan-right" aria-label="Pan right" title="Pan right"><svg class="icon" viewBox="0 0 20 20" aria-hidden="true"><use href="#i-arrow" /></svg></button>
+              <button data-nav="pan-back" class="pan-back" aria-label="Pan backward" title="Pan backward"><svg class="icon" viewBox="0 0 20 20" aria-hidden="true"><use href="#i-arrow" /></svg></button>
+            </div>
+            <div class="zoom" role="group" aria-label="Zoom">
+              <button data-nav="zoom-in" id="zoom-in" aria-label="Zoom in" title="Zoom in"><svg class="icon" viewBox="0 0 20 20" aria-hidden="true"><use href="#i-plus" /></svg></button>
+              <button data-nav="zoom-out" id="zoom-out" aria-label="Zoom out" title="Zoom out"><svg class="icon" viewBox="0 0 20 20" aria-hidden="true"><use href="#i-minus" /></svg></button>
+            </div>
+          </div>
+          <div class="turn" role="group" aria-label="Turn">
+            <button data-nav="turn-left" aria-label="Turn left" title="Turn left"><svg class="icon" viewBox="0 0 20 20" aria-hidden="true"><use href="#i-turn" /></svg></button>
+            <button data-nav="north" id="compass" aria-label="Face north" title="Face north"><svg viewBox="0 0 20 20" aria-hidden="true"><path class="n" d="M10 2.5 13 10H7z" /><path class="s" d="M10 17.5 13 10H7z" /></svg><span>N</span></button>
+            <button data-nav="turn-right" aria-label="Turn right" title="Turn right"><svg class="icon flip" viewBox="0 0 20 20" aria-hidden="true"><use href="#i-turn" /></svg></button>
+          </div>
+          <div class="tilt" role="group" aria-label="Tilt">
+            <button data-nav="tilt-up" aria-label="Tilt up" title="Tilt up"><svg class="icon" viewBox="0 0 20 20" aria-hidden="true"><use href="#i-arrow" /></svg></button>
+            <span>Tilt</span>
+            <button data-nav="tilt-down" aria-label="Tilt down" title="Tilt down"><svg class="icon" viewBox="0 0 20 20" aria-hidden="true"><use href="#i-arrow" /></svg></button>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -84,22 +124,14 @@
         <label><input type="radio" name="units" value="ft" /><span>Feet</span></label>
         <label><input type="radio" name="units" value="m" /><span>Meters</span></label>
       </div>
-      <button type="button" id="settings-reset">Reset options</button>
+      <button type="button" id="settings-reset">Default options</button>
       <p id="about"></p>
     </form>
 
     <div id="tip" hidden></div>
-    <div id="menu" role="menu" hidden></div>
 
-    <div id="dock">
-      <div id="hint" hidden>
-        <p><b></b><span>Drag to move the map. Scroll to zoom. Right-drag to rotate.</span></p>
-        <button class="x" aria-label="Dismiss"><svg class="icon" viewBox="0 0 20 20" aria-hidden="true"><use href="#i-x" /></svg></button>
-      </div>
-      <div id="toast" role="status" hidden><span></span><button>Undo</button></div>
-      <div id="changes" hidden><span></span><button id="reset-all">Reset</button></div>
-    </div>
-    <div id="credit">Interactive Skyline</div>
+    <div id="credit"><a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> · USGS <button id="data-info" aria-label="Data and accuracy">Data &amp; accuracy</button></div>
+    <p id="camera-status" class="sr" role="status" aria-live="polite"></p>
     <div id="loading">Loading the city…</div>
 
     <script type="module" src="/src/main.js"></script>
