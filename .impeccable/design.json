@@ -1,0 +1,240 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-11-12T06:06:34.102869Z",
+  "title": "Design System: Interactive Skyline",
+  "extensions": {
+    "colorMeta": {
+      "blue": {
+        "role": "primary",
+        "displayName": "Selection blue"
+      },
+      "accent": {
+        "role": "secondary",
+        "displayName": "Building action orange"
+      },
+      "surface": {
+        "role": "neutral",
+        "displayName": "Cool white panel"
+      },
+      "ink": {
+        "role": "neutral",
+        "displayName": "Slate ink"
+      },
+      "night-blue": {
+        "role": "primary",
+        "displayName": "Night selection blue"
+      },
+      "night-accent": {
+        "role": "secondary",
+        "displayName": "Night building action orange"
+      },
+      "night-surface": {
+        "role": "neutral",
+        "displayName": "Night slate panel"
+      },
+      "canvas-background": {
+        "role": "neutral",
+        "displayName": "Canvas and loading background"
+      },
+      "loading-ink": {
+        "role": "neutral",
+        "displayName": "Loading text"
+      },
+      "attribution-backdrop": {
+        "role": "neutral",
+        "displayName": "Attribution backdrop"
+      }
+    },
+    "typographyMeta": {
+      "title": {
+        "displayName": "Building title",
+        "purpose": "Selected building name."
+      },
+      "body": {
+        "displayName": "Interface body",
+        "purpose": "Ordinary text and controls."
+      },
+      "label": {
+        "displayName": "Navigation heading",
+        "purpose": "Compact camera heading."
+      },
+      "menu": {
+        "displayName": "Menu text",
+        "purpose": "More menu items. Initial hint headings use this size at weight 600."
+      },
+      "caption": {
+        "displayName": "Attribution and compass",
+        "purpose": "Attribution text and compass label. Compass uses weight 650."
+      },
+      "loading": {
+        "displayName": "Loading status",
+        "purpose": "City loading message."
+      }
+    },
+    "shadows": [
+      {
+        "name": "panel-day",
+        "value": "0 2px 6px rgba(20, 30, 45, 0.14), 0 10px 30px rgba(20, 30, 45, 0.16)",
+        "purpose": "Day --shadow on solid panels."
+      },
+      {
+        "name": "panel-night",
+        "value": "0 2px 6px rgba(0, 0, 0, 0.4), 0 10px 30px rgba(0, 0, 0, 0.45)",
+        "purpose": "Night --shadow on solid panels."
+      },
+      {
+        "name": "selected-unit",
+        "value": "0 1px 3px rgba(0, 0, 0, 0.14)",
+        "purpose": "Checked units segment."
+      },
+      {
+        "name": "hover-label",
+        "value": "0 6px 20px rgba(0, 0, 0, 0.25)",
+        "purpose": "Building hover label."
+      }
+    ],
+    "motion": [
+      {
+        "name": "camera-command",
+        "value": "240ms",
+        "purpose": "Pan, zoom, turn, north, and tilt flights."
+      },
+      {
+        "name": "building-focus",
+        "value": "750ms",
+        "purpose": "Zoom to a building."
+      },
+      {
+        "name": "flight-easing",
+        "value": "t * t * (3 - 2 * t)",
+        "purpose": "Smoothstep interpolation in stepFlight. Reduced motion skips flights."
+      },
+      {
+        "name": "loading-fade",
+        "value": "opacity 0.4s",
+        "purpose": "Loading dismissal. Reduced motion removes the transition."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "phone-max",
+        "value": "720px"
+      },
+      {
+        "name": "narrow-phone-max",
+        "value": "360px"
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Hide button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "The selected building action. Night uses the same variables with its dark foreground.",
+      "html": "<button class=\"ds-primary\">Hide</button>",
+      "css": ".ds-primary{font:inherit;font-weight:600;border:0;cursor:pointer;min-height:44px;padding:8px 14px;border-radius:8px;background:var(--accent);color:var(--on-accent)}.ds-primary:hover{background:var(--accent-strong)}.ds-primary:focus-visible{outline:2px solid var(--blue);outline-offset:2px}.ds-primary:disabled{opacity:.35;cursor:default}"
+    },
+    {
+      "name": "Secondary action",
+      "kind": "button",
+      "refersTo": "button-secondary",
+      "description": "The quiet filled action used for Undo and More in the compact editor.",
+      "html": "<button class=\"ds-secondary\">Undo</button>",
+      "css": ".ds-secondary{font:inherit;font-weight:600;border:0;cursor:pointer;min-height:44px;padding:8px 14px;border-radius:8px;background:var(--fill);color:var(--ink)}.ds-secondary:hover{background:var(--fill-strong)}.ds-secondary:focus-visible{outline:2px solid var(--blue);outline-offset:2px}.ds-secondary:disabled{opacity:.35;cursor:default}"
+    },
+    {
+      "name": "Search field",
+      "kind": "input",
+      "description": "Search occupies the bar. The outline belongs to the enclosing bar when the field has focus.",
+      "html": "<div class=\"ds-bar\"><label class=\"ds-find\"><svg viewBox=\"0 0 20 20\" aria-hidden=\"true\"><circle cx=\"8.5\" cy=\"8.5\" r=\"5.5\"/><path d=\"M12.6 12.6 17 17\"/></svg><input type=\"search\" aria-label=\"Search buildings\" placeholder=\"Search buildings\" autocomplete=\"off\" spellcheck=\"false\"/></label></div>",
+      "css": ".ds-bar{padding:4px;background:var(--surface);border-radius:12px;box-shadow:var(--shadow);color:var(--ink);font:14px/1.4 ui-sans-serif,system-ui,-apple-system,\"Segoe UI\",sans-serif}.ds-bar:focus-within{outline:2px solid var(--blue);outline-offset:1px}.ds-find{display:flex;align-items:center;gap:8px;height:44px;padding:0 12px;border-left:1px solid var(--line);color:var(--muted);cursor:text}.ds-find svg{width:20px;height:20px;flex:none;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}.ds-find input{flex:1;min-width:0;height:100%;padding:0;font:inherit;color:var(--ink);background:none;border:0;outline:none;caret-color:var(--blue)}.ds-find input::placeholder{color:var(--muted);opacity:1}"
+    },
+    {
+      "name": "Selected building editor",
+      "kind": "card",
+      "refersTo": "building-editor",
+      "description": "The selected state of the single editor. Undo remains available whenever history exists. More contains secondary building actions and inline details, with no reset actions.",
+      "html": "<section class=\"ds-editor\" aria-label=\"Building actions\"><div class=\"ds-edit-title\"><h2>Astra Tower</h2><button class=\"ds-edit-close\" aria-label=\"Close building selection\"><svg viewBox=\"0 0 20 20\" aria-hidden=\"true\"><path d=\"M5 5l10 10M15 5 5 15\"/></svg></button></div><p class=\"ds-edit-meta\">451 ft \u00b7 Drag building to move</p><div class=\"ds-edit-actions\"><button class=\"ds-primary\">Hide</button><button>Undo</button><button class=\"ds-edit-more\" aria-label=\"More building actions\" aria-haspopup=\"menu\" aria-expanded=\"false\">More<svg viewBox=\"0 0 20 20\" aria-hidden=\"true\"><path d=\"m6 8 4 4 4-4\"/></svg></button></div></section>",
+      "css": ".ds-editor{padding:10px 12px 12px;border-radius:12px;background:var(--surface);color:var(--ink);box-shadow:var(--shadow);font:14px/1.4 ui-sans-serif,system-ui,-apple-system,\"Segoe UI\",sans-serif}.ds-edit-title{display:flex;align-items:center;gap:12px}.ds-editor h2{flex:1;min-width:0;margin:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:16px;font-weight:650}.ds-editor p{margin:0}.ds-editor .ds-edit-meta{margin-top:2px;color:var(--muted);font-size:12.5px;font-variant-numeric:tabular-nums}.ds-edit-actions{display:flex;align-items:center;gap:8px;margin-top:10px}.ds-edit-actions>button{display:flex;align-items:center;justify-content:center;gap:5px;min-height:44px;padding:8px 14px;border-radius:8px;background:var(--fill);font:inherit;font-weight:600;color:inherit;border:0;cursor:pointer}.ds-edit-actions>button:hover{background:var(--fill-strong)}.ds-edit-actions .ds-primary{background:var(--accent);color:var(--on-accent)}.ds-edit-actions .ds-primary:hover{background:var(--accent-strong)}.ds-edit-more{margin-left:auto}.ds-edit-more svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}.ds-edit-close{display:grid;place-items:center;width:44px;height:44px;flex:none;border-radius:8px;color:var(--muted);margin:-8px -8px -4px 0;padding:0;border:0;background:none;cursor:pointer}.ds-edit-close:hover{background:var(--fill);color:var(--ink)}.ds-edit-close svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round}.ds-editor button:focus-visible{outline:2px solid var(--blue);outline-offset:2px}.ds-editor button:disabled{opacity:.35;cursor:default}"
+    },
+    {
+      "name": "Changed skyline editor",
+      "kind": "card",
+      "refersTo": "building-editor",
+      "description": "The same editor after deselection, with a changed-building count and persistent Undo. Start over is separate in the global controls.",
+      "html": "<section class=\"ds-editor\" aria-label=\"Building actions\"><div class=\"ds-edit-title\"><h2>2 buildings changed</h2></div><p class=\"ds-edit-meta\">Undo your last change.</p><div class=\"ds-edit-actions\"><button>Undo</button></div></section>",
+      "css": ".ds-editor{padding:10px 12px 12px;border-radius:12px;background:var(--surface);color:var(--ink);box-shadow:var(--shadow);font:14px/1.4 ui-sans-serif,system-ui,-apple-system,\"Segoe UI\",sans-serif}.ds-edit-title{display:flex;align-items:center;gap:12px}.ds-editor h2{flex:1;min-width:0;margin:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:16px;font-weight:650}.ds-editor p{margin:0}.ds-editor .ds-edit-meta{margin-top:2px;color:var(--muted);font-size:12.5px;font-variant-numeric:tabular-nums}.ds-edit-actions{display:flex;align-items:center;gap:8px;margin-top:10px}.ds-edit-actions>button{display:flex;align-items:center;justify-content:center;gap:5px;min-height:44px;padding:8px 14px;border-radius:8px;background:var(--fill);font:inherit;font-weight:600;color:inherit;border:0;cursor:pointer}.ds-edit-actions>button:hover{background:var(--fill-strong)}.ds-edit-actions .ds-primary{background:var(--accent);color:var(--on-accent)}.ds-edit-actions .ds-primary:hover{background:var(--accent-strong)}.ds-edit-more{margin-left:auto}.ds-edit-more svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}.ds-edit-close{display:grid;place-items:center;width:44px;height:44px;flex:none;border-radius:8px;color:var(--muted);margin:-8px -8px -4px 0;padding:0;border:0;background:none;cursor:pointer}.ds-edit-close:hover{background:var(--fill);color:var(--ink)}.ds-edit-close svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round}.ds-editor button:focus-visible{outline:2px solid var(--blue);outline-offset:2px}.ds-editor button:disabled{opacity:.35;cursor:default}"
+    },
+    {
+      "name": "More building actions",
+      "kind": "custom",
+      "description": "A viewport-fitted menu for selected-building zoom, hide-taller, and inline details. It contains no reset actions.",
+      "html": "<div class=\"ds-edit-menu\" role=\"menu\" aria-label=\"More building actions\"><button role=\"menuitem\">Zoom to building</button><button role=\"menuitem\">Hide this and 3 taller</button><button role=\"menuitem\" aria-expanded=\"false\">Building details</button></div>",
+      "css": ".ds-edit-menu{width:240px;padding:5px;overflow-y:auto;border-radius:12px;background:var(--surface);color:var(--ink);box-shadow:var(--shadow);font:14px/1.4 ui-sans-serif,system-ui,-apple-system,\"Segoe UI\",sans-serif}.ds-edit-menu button{display:block;width:100%;padding:10px;min-height:44px;border:0;border-radius:7px;text-align:left;font:inherit;font-size:13px;background:none;color:inherit;cursor:pointer}.ds-edit-menu button:hover,.ds-edit-menu button:focus-visible{background:var(--fill-strong)}.ds-edit-menu button:focus-visible{outline:2px solid var(--blue);outline-offset:2px}.ds-edit-menu "
+    },
+    {
+      "name": "Building drag cue",
+      "kind": "custom",
+      "description": "The only visible interface overlay during a building drag. Application positioning centers it 24px above the viewport bottom.",
+      "html": "<div class=\"ds-drag-cue\">Moving Astra Tower \u00b7 Esc to cancel</div>",
+      "css": ".ds-drag-cue{display:inline-block;max-width:calc(100vw - 32px);padding:8px 12px;border-radius:8px;background:var(--surface);color:var(--ink);font:12px/1.4 ui-sans-serif,system-ui,-apple-system,\"Segoe UI\",sans-serif;box-shadow:var(--shadow);pointer-events:none}"
+    },
+    {
+      "name": "Pan around home",
+      "kind": "nav",
+      "refersTo": "camera-controls",
+      "description": "The pan pad within the camera panel. Home returns to the last chosen viewpoint without changing building edits.",
+      "html": "<div class=\"ds-nav\" role=\"group\" aria-label=\"Pan\"><button class=\"ds-forward\" aria-label=\"Pan forward\"><svg viewBox=\"0 0 20 20\" aria-hidden=\"true\"><path d=\"m6 12 4-4 4 4\"/></svg></button><button class=\"ds-left\" aria-label=\"Pan left\"><svg viewBox=\"0 0 20 20\" aria-hidden=\"true\"><path d=\"m6 12 4-4 4 4\"/></svg></button><button class=\"ds-home\" aria-label=\"Back to viewpoint\"><svg viewBox=\"0 0 20 20\" aria-hidden=\"true\"><path d=\"m3 9 7-6 7 6M5 8v9h10V8M8 17v-6h4v6\"/></svg></button><button class=\"ds-right\" aria-label=\"Pan right\"><svg viewBox=\"0 0 20 20\" aria-hidden=\"true\"><path d=\"m6 12 4-4 4 4\"/></svg></button><button class=\"ds-back\" aria-label=\"Pan backward\"><svg viewBox=\"0 0 20 20\" aria-hidden=\"true\"><path d=\"m6 12 4-4 4 4\"/></svg></button></div>",
+      "css": ".ds-nav{display:grid;grid-template:repeat(3,44px)/repeat(3,44px);width:132px;border-radius:50%;background:var(--fill);color:var(--ink)}.ds-nav button{display:grid;place-items:center;width:44px;height:44px;padding:0;border:0;border-radius:8px;background:none;color:inherit;cursor:pointer}.ds-nav button:not(:disabled):hover{background:var(--fill-strong)}.ds-nav button:not(:disabled):active{background:var(--blue-wash)}.ds-nav button:focus-visible{outline:2px solid var(--blue);outline-offset:2px}.ds-nav button:disabled{opacity:.35;cursor:default}.ds-nav svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}.ds-forward{grid-area:1/2}.ds-left{grid-area:2/1}.ds-home{grid-area:2/2;color:var(--blue)!important}.ds-right{grid-area:2/3}.ds-back{grid-area:3/2}.ds-left svg{rotate:-90deg}.ds-right svg{rotate:90deg}.ds-back svg{rotate:180deg}"
+    },
+    {
+      "name": "Units segment",
+      "kind": "custom",
+      "description": "Native radio choices presented as a quiet segmented control.",
+      "html": "<div class=\"ds-units\" role=\"group\" aria-label=\"Units\"><label><input type=\"radio\" name=\"ds-units\" value=\"ft\" checked/><span>Feet</span></label><label><input type=\"radio\" name=\"ds-units\" value=\"m\"/><span>Meters</span></label></div>",
+      "css": ".ds-units{display:flex;gap:3px;padding:3px;background:var(--fill);border-radius:9px;font:14px/1.4 ui-sans-serif,system-ui,-apple-system,\"Segoe UI\",sans-serif}.ds-units label{flex:1;cursor:pointer}.ds-units input{position:absolute;opacity:0;pointer-events:none}.ds-units span{display:block;padding:5px 8px;border-radius:7px;text-align:center;color:var(--muted)}.ds-units input:checked+span{background:var(--surface);color:var(--ink);box-shadow:0 1px 3px rgba(0,0,0,.14)}.ds-units input:focus-visible+span{outline:2px solid var(--blue)}"
+    }
+  ],
+  "narrative": {
+    "northStar": "Open view",
+    "overview": "Open view is the user-selected direction. Cool white or dark slate panels sit over a full-screen city model. Compact controls leave the skyline visible, and building actions appear after selection.",
+    "keyCharacteristics": [
+      "System UI type and quiet separators.",
+      "Solid panels with consistent corners and shared shadows.",
+      "Grouped camera controls with adjacent live viewpoint thumbnails.",
+      "One compact editor for selection and changes, with only a small cue visible during a building drag."
+    ],
+    "rules": [
+      {
+        "name": "The Theme Pair Rule",
+        "body": "Day and night share the same roles and geometry. Night also replaces the foreground on the orange action through `--on-accent`.",
+        "section": "colors"
+      },
+      {
+        "name": "The Single Editor Rule",
+        "body": "Selection and building changes share one compact panel. A selection shows the building name, height, drag hint, Hide, and More. Undo stays available whenever history exists, without a timed toast. After deselection, the same panel shows the changed-building count. Without a selection or remaining building changes, available history keeps \"No building changes\" and Undo visible. With no selection, changes, or history, the editor is absent.",
+        "section": "components"
+      },
+      {
+        "name": "The Clear Drag Rule",
+        "body": "Once the pointer travels beyond the drag threshold (5px) on a selected building, the panel and map controls disappear. The cue names the building and offers Escape to cancel. A completed move returns to the selected editor with Undo. Escape, pointer cancellation, lost capture, or window blur restore the starting position without adding a history step. A drag belongs to its initiating pointer. Editing and camera shortcuts are suppressed during the drag.",
+        "section": "components"
+      }
+    ],
+    "dos": [
+      "Do bind controls to the shared day and night variables.",
+      "Do retain keyboard focus, visible action labels, and named camera groups.",
+      "Do measure the editor before placing phone navigation above it.",
+      "Do keep Undo in the editor whenever history is available.",
+      "Do clear map chrome while a selected building is being dragged."
+    ],
+    "donts": [
+      "Don't use camera home to restore building edits.",
+      "Don't turn the contextual controls into a permanent sidebar or bottom tray.",
+      "Don't split selection, change status, and Undo across separate panels.",
+      "Don't put global building-reset actions inside a selected-building menu.",
+      "Don't treat the frontmatter palette as the renderer's terrain, sky, or building palette."
+    ]
+  }
+}

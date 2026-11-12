@@ -16,11 +16,13 @@ A true-scale 3D model of the Salt Lake City and Las Vegas skylines, built with t
 
 ## What you can do
 
-- **Hide a building.** Click a blue building to select it, then press Hide. Right-click gives the same option, plus "Hide this and everything taller".
+- **Hide a building.** Click a blue building, then press **Hide** in the compact editor. **More** also lets you hide it together with taller buildings.
 - **Move a building.** Drag a selected building along the ground. Its real footprint stays marked so you can see where it came from.
-- **Undo and reset.** Cmd+Z undoes the last change. "Put back" returns one building to its real spot, and "Reset" restores everything.
+- **Undo or start over.** **Undo** and Cmd+Z undo individual changes. The separate **Start over** control shows all buildings, returns moved buildings to their original spots, and clears the editing session. It leaves the camera and map settings unchanged.
+- **Drag without clutter.** Panels disappear while you move a building. Release to keep the move, or press Escape to cancel it. An interrupted drag also returns the building to its starting position.
 - **Find a building.** Click the search box to list the tall buildings, tallest first. Click a row to fly to it.
-- **Move around like a map.** Drag to slide the view, right-drag (or hold Cmd or Ctrl and drag) to rotate and tilt, scroll to zoom. The buttons in the corner zoom and face north.
+- **Move around like a map.** Drag to pan, right-drag (or hold Cmd or Ctrl and drag) to rotate and tilt, and scroll to zoom. The camera panel has pan, zoom, turn, tilt, and north buttons. Its home button returns to the last chosen viewpoint without changing buildings. On phones, open **Navigate** for the camera controls.
+- **Use the keyboard.** Arrow keys pan. Shift+arrows turn and tilt. `+` and `-` zoom, `N` faces north, and `H` returns to the chosen viewpoint. Camera shortcuts work on the map, without changing text input or form controls.
 - **Switch city and viewpoint.** Each city has an eye-level view and an aerial one.
 - **Change the picture.** The moon button switches to night: windows light up and the hand-modelled landmarks of both cities glow with their own lighting. Map options set the aerial photo, the blue color, how tall a building must be to count, and the units.
 - **Watch the Strip.** In Las Vegas the Bellagio fountains run their show and the High Roller turns.
@@ -35,6 +37,28 @@ pnpm dev
 ```
 
 The built data in `public/data` is checked in, so the app runs without the data pipeline.
+
+## Check camera navigation
+
+With the development server running and [agent-browser](https://github.com/vercel-labs/agent-browser) installed, run the browser acceptance checks against either city:
+
+```sh
+skyline_session="$(agent-browser session id --scope worktree --prefix skyline-check)"
+agent-browser --session "$skyline_session" open 'http://localhost:5173/?city=slc'
+agent-browser --session "$skyline_session" wait --fn '!!window.__skyline'
+agent-browser --session "$skyline_session" eval --stdin < scripts/verify-navigation.js
+agent-browser --session "$skyline_session" close
+```
+
+The script checks navigation directions, camera limits, home preserving building edits, hide and undo, interrupted flights, keyboard input guards, and day/night. It changes the scene in its isolated browser session. Use `?city=lv` for Las Vegas. To also check reduced motion, run `agent-browser --session "$skyline_session" set media light reduced-motion` before the evaluation.
+
+Run the real pointer checks for building editing with the same server:
+
+```sh
+node scripts/verify-editing.mjs http://localhost:5173
+```
+
+These checks drag Astra Tower, cancel interrupted moves, verify persistent Undo and restoration, and check that expanded phone navigation clears the editor. They use a separate browser session and save captures under `.impeccable/review`.
 
 ## How the model is built
 
