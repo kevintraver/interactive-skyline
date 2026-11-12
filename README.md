@@ -8,6 +8,8 @@ A true-scale 3D model of the Salt Lake City and Las Vegas skylines, built with t
 
 ![Las Vegas from the east](docs/las-vegas.png)
 
+![The Las Vegas Strip at night, from Mandalay Bay and the Luxor beam up to the Strat](docs/las-vegas-night.gif)
+
 ## What you can do
 
 - **Hide a building.** Click a blue building to select it, then press Hide. Right-click gives the same option, plus "Hide this and everything taller".
@@ -16,7 +18,8 @@ A true-scale 3D model of the Salt Lake City and Las Vegas skylines, built with t
 - **Find a building.** Click the search box to list the tall buildings, tallest first. Click a row to fly to it.
 - **Move around like a map.** Drag to slide the view, right-drag (or hold Cmd or Ctrl and drag) to rotate and tilt, scroll to zoom. The buttons in the corner zoom and face north.
 - **Switch city and viewpoint.** Each city has an eye-level view and an aerial one.
-- **Change the picture.** The moon button switches to night. Map options set the aerial photo, the blue color, how tall a building must be to count, and the units.
+- **Change the picture.** The moon button switches to night: windows light up and the hand-modelled Las Vegas landmarks glow with their own lighting. Map options set the aerial photo, the blue color, how tall a building must be to count, and the units.
+- **Watch the Strip.** In Las Vegas the Bellagio fountains run their show and the High Roller turns.
 
 ![The Sphere moved across the Strip](docs/moved.png)
 
@@ -64,6 +67,47 @@ uv run scripts/build_buildings.py lv   # footprints + heights -> public/data/lv/
 
 To add a city, add an entry to `data/cities.json` (origin, bounding box, LiDAR dataset, terrain extents and viewpoints) and run the pipeline for it.
 
+## Hand-modelled landmarks
+
+In Las Vegas, 131 buildings are low-poly models made by hand instead of extruded footprints: the hotels and casinos of the Strip and downtown, the Strat, the Eiffel Tower, the Sphere, and the Luxor pyramid with its sphinx and obelisk. Three structures that are not buildings in the map data are modelled too: the Fremont Street canopy, the High Roller (its rim turns and its cabins stay level) and the Luxor Sky Beam at night. Every building model stands on its real OpenStreetMap footprint at its measured height, and every model carries its own night lighting.
+
+The models are GLB files in `public/models/`, listed in `public/models/models.json`. Each one is made by a Python script run in Blender, and the scripts are in `landmarks/lv/<model>/` with what they were made from:
+
+| File | What it is |
+| --- | --- |
+| `build_<model>.py` | The build script. Every dimension is in it, with its source. |
+| `footprint.json` | The OpenStreetMap outline, in meters around the building. |
+| `<model>.report.json` | Mesh checks from the last build: triangles, closed solids, materials. |
+| `research/`, `refs/` | Dimensions and notes, and where the reference photos came from. The photos themselves are not in the repo. |
+
+Footprints and heights are measured. Most facades are estimated from a few public photos. Logos, signs and brand names are left off on purpose.
+
+To rebuild a model and put it in the app (with [Blender](https://www.blender.org/) installed; these were made with Blender 5.2):
+
+```sh
+python .claude/skills/blender-landmark-model/scripts/run_blender.py landmarks/lv/wynn/build_wynn.py -- --out landmarks/lv/wynn
+python .claude/skills/blender-landmark-model/scripts/skyline_tool.py install --repo . --city lv --id w205501268 --glb landmarks/lv/wynn/wynn.glb --offset 0,0
+```
+
+The build writes the `.blend`, the GLB and the report next to the script. Of these, only the report is committed. The Strat's script is the worked example inside the skill, in `.claude/skills/blender-landmark-model/assets/examples/strat/`.
+
+## Claude Code skills
+
+The models were made with two [Claude Code](https://claude.com/claude-code) skills. They are in `.claude/skills/` and are available whenever Claude Code runs in this repo.
+
+- **blender-landmark-model** builds a new model. It looks up the building's footprint and height, gathers reference photos (Wikimedia Commons, plus Pixabay when `PIXABAY_API_KEY` is set) and published dimensions, then writes the build script and runs it in Blender. It checks the mesh, installs the GLB, and screenshots the building in the app by day and night. Ask for something like "model the Wynn for the skyline".
+- **blender-landmark-refine** is a second pass on existing models. It compares renders with the photos and fixes proportions, rooflines and facade detail, then reinstalls the model only if it still passes the same checks.
+
+Both run Blender headless, in its own process, so they never touch a Blender window you have open. The scripts need Python 3.10+, Blender, and Chrome or Edge for the screenshots in the app.
+
+The skill's `flyover.py` recorded the night GIF above, rendering frame by frame in headless Chrome and encoding with ffmpeg:
+
+```sh
+python .claude/skills/blender-landmark-model/scripts/flyover.py --repo . --out docs/las-vegas-night.gif --night \
+  --key "1700,-2300,700:-250,-1700,90" --key "2500,1200,700:1100,3000,120" \
+  --seconds 8 --fps 8 --width 640 --colors 128
+```
+
 ## How accurate it is
 
 Checked for Salt Lake City:
@@ -78,8 +122,8 @@ Las Vegas was checked against Wikipedia's list of its tallest buildings, matched
 
 Known limits:
 
-- Buildings are extruded footprints. Pyramids and domes are drawn where OpenStreetMap tags them (Luxor, the Sphere, the Utah Capitol); everything else has a flat roof.
-- The Strat is drawn by hand, because only its outline is mapped: the pod, crown and mast are sized from the LiDAR, the legs are estimated. The Las Vegas Eiffel Tower is drawn by hand too: its height and the position of its four feet are real, its platforms follow the proportions of the original.
+- Apart from the hand-modelled Las Vegas landmarks, buildings are extruded footprints. Pyramids and domes are drawn where OpenStreetMap tags them (the Utah Capitol's dome); everything else has a flat roof.
+- The hand-made models have measured footprints and heights, but most of their facades are estimated from a few photos. The Strat's pod, crown and mast are sized from the LiDAR and its legs are estimated. The Las Vegas Eiffel Tower's height and the position of its four feet are real, and its platforms follow the proportions of the original.
 - Buildings finished after the LiDAR survey have estimated heights unless OpenStreetMap tags one. They are marked "est." in the list.
 - Hand corrections to wrong or missing OpenStreetMap data are listed, with reasons, in `data/overrides.json`.
 - 3D buildings cover only the core of each city. Beyond that the ground is imagery.
@@ -93,9 +137,11 @@ The data and images are not covered by it and keep their own terms:
 - `public/data/*/buildings.json` is derived from OpenStreetMap and is available under the [Open Database License](https://opendatacommons.org/licenses/odbl/).
 - Terrain and ground imagery in `public/data` come from USGS sources in the public domain.
 - `docs/photo-match.png` includes a CC BY-SA 4.0 photo, credited below.
+- The footprints in `landmarks/**/footprint.json` are OpenStreetMap data under the Open Database License, and the models in `public/models/` are built on them.
 
 ## Credits
 
 - Building data © [OpenStreetMap](https://www.openstreetmap.org/copyright) contributors, available under the Open Database License.
 - LiDAR, elevation and NAIP imagery from the U.S. Geological Survey, public domain.
 - Comparison photo: "Salt Lake City skyline (2020) from Ensign Peak" by Iansmh98, [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/), via Wikimedia Commons.
+- The models in 41 of the `landmarks/` folders were drawn from public reference photos, which are not included. Their sources are in each model's `landmarks/lv/<model>/refs/` folder: `sources.json` gives author and license, and `commons_candidates.json` gives the Wikimedia Commons pages of the thumbnails a model was compared with. The other models were built from the map data and published figures alone.
