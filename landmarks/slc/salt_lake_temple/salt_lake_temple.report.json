@@ -1,19 +1,19 @@
 {
   "object": "Salt_Lake_Temple",
-  "verts": 652,
-  "faces": 471,
-  "tris": 1056,
+  "verts": 2058,
+  "faces": 1638,
+  "tris": 3004,
   "bbox_min": [
-    -28.501,
-    -18.46,
+    -29.013,
+    -19.323,
     -2.0
   ],
   "bbox_max": [
-    28.562,
-    17.91,
+    28.792,
+    18.772,
     64.0
   ],
-  "islands": 62,
+  "islands": 278,
   "open_islands": 0,
   "inside_out_islands": 0,
   "nonmanifold_edges": 0,
@@ -21,14 +21,16 @@
   "loose_verts": 0,
   "nonplanar_ngons": 0,
   "materials": {
-    "Stone": 106,
-    "Spire": 300,
-    "Roof": 23,
-    "Gold": 42
+    "Stone": 533,
+    "Tier": 600,
+    "Spire": 60,
+    "Roof": 7,
+    "Gold": 90,
+    "Window": 348
   },
   "glow": {
-    "max": 0.9,
-    "dark_faces": 23
+    "max": 0.95,
+    "dark_faces": 7
   },
   "windowed_faces": 0,
   "errors": [],

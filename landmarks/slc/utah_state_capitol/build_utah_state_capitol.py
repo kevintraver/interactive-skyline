@@ -1,9 +1,11 @@
 """Low-poly model of the Utah State Capitol (Salt Lake City), built with landmark_kit.
 
-Sources: height 87 m = project data (osm-height); plan and volume tops = mapped footprint (footprint.json);
-dome drum/dome/lantern split (drum to ~58 m, dome to 77 m, lantern to 87 m) estimated from refs photos
-(Utah_State_Capitol_Building_in_2022.jpg elevation, dome-at-night photo). Colonnade spacing, column size,
-cornice are estimated. No signage or flags modeled.
+Sources: height 87 m = project data (osm-height); plan = mapped footprint (footprint.json);
+levels measured on refs/Utah_State_Capitol_Building_in_2022.jpg (facade plane 13.7 px/m, dome axis 9.6 px/m):
+base 0-5.5 m, columns 5.5-18 m, entablature to 21 m, balustrade 24 m, pediment apex 26.5 m; drum plinth 36-41.5 m,
+drum colonnade 41.5-52.5 m (cornice 33 m across), attic drum 55-64 m (28 m across), copper dome 64-78.3 m
+(24 m across), lantern to 87 m. Column spacing (about 4.2-4.5 m) counted on the same photo.
+No signage or flags modeled.
 """
 import math, os, sys
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -16,81 +18,140 @@ BURY = -2.0
 HEIGHT = 87.0
 
 COLORS = {
-    "Granite": "EAE6DA",   # pale granite, from daylight photos
-    "Base": "B8B3A6",
-    "Column": "F4F1E8",
-    "Arcade": "8A7656",    # recessed bay behind columns
-    "Copper": "7F8F84",    # green-grey dome
-    "Gold": "B89A4E",
+    "Granite": "E6E2D6",   # pale granite, from daylight photos
+    "Base": "CDC8BB",      # rusticated ground floor
+    "Column": "F3F0E7",
+    "Wall": "A3A39D",      # recessed wall behind the colonnade (in shade, rows of windows)
+    "Copper": "6F7B74",    # weathered grey-green dome
+    "Gold": "EFEBDD",      # lantern stone, lit from inside at night
     "Roof": "8E8B84",
 }
 ROUGHNESS = {"Copper": 0.5}
-WINDOWS = {}
-WARM = (1.0, 0.78, 0.45)
+WINDOWS = {"Wall": 0.6}
+WARM = (1.0, 0.80, 0.48)      # facade floodlights
+WHITE = (1.0, 0.90, 0.70)     # drum, the brightest part
+DRUM_Z = 35.0
+CX, CY = 0.0, -1.4            # dome axis
+
+Z_BASE, Z_COL, Z_ENT, Z_BAL = 5.5, 18.0, 21.0, 24.0
+COL_R = 0.7
 
 
 def glow(material, point, center):
-    z = point[2]
-    if material == "Arcade":
-        return kit.scaled(WARM, 0.75)
+    high = point[2] > DRUM_Z
+    if material == "Wall":
+        return kit.scaled(WHITE, 0.95) if high else kit.scaled(WARM, 0.55)
     if material == "Column":
-        return kit.scaled(WARM, 0.30 if z < 30 else 0.45)
+        return kit.scaled(WHITE, 0.6) if high else kit.scaled(WARM, 0.32)
     if material == "Granite":
-        return kit.scaled(WARM, 0.12 + (0.25 if z > 38 else 0.0))
+        return kit.scaled(WHITE, 0.7) if high else kit.scaled(WARM, 0.16)
     if material == "Base":
-        return kit.scaled(WARM, 0.15)
+        return kit.scaled(WARM, 0.10)
     if material == "Copper":
-        return kit.scaled(WARM, 0.18 + 0.2 * (z - 58) / 20)
+        return kit.scaled(WHITE, 0.05)
     if material == "Gold":
-        return kit.scaled(WARM, 0.9)
+        return kit.scaled(WHITE, 1.0)
     return (0.0, 0.0, 0.0)
+
+
+def gable(b, center, half_w, depth, z0, z_apex, material, roof, turn_deg=0.0):
+    """A triangular roof prism: gable face `half_w` either side of `center`, running `depth` back from it."""
+    a = math.radians(turn_deg)
+    ca, sa = math.cos(a), math.sin(a)
+
+    def vert(u, v, z):
+        return b.bm.verts.new((center[0] + u * ca - v * sa, center[1] + u * sa + v * ca, z))
+    a0, b0, c0 = vert(-half_w, 0, z0), vert(half_w, 0, z0), vert(0, 0, z_apex)
+    a1, b1, c1 = vert(-half_w, depth, z0), vert(half_w, depth, z0), vert(0, depth, z_apex)
+    b.face((a0, b0, c0), material)
+    b.face((b1, a1, c1), material)
+    b.face((a0, a1, b1, b0), material)
+    b.face((a0, c0, c1, a1), roof)
+    b.face((b0, b1, c1, c0), roof)
+
+
+def column_row(b, start, end, count, z0=Z_BASE, z1=Z_COL, radius=COL_R):
+    for k in range(count):
+        t = k / (count - 1)
+        b.prism(radius, z0, z1, 6, "Column",
+                center=(start[0] + (end[0] - start[0]) * t, start[1] + (end[1] - start[1]) * t))
+
+
+def build_block(b, vols):
+    main = vols[1]["outline"]
+    b.extrude(main, BURY, Z_BASE, "Base", top="Granite")
+    b.extrude(kit.offset_polygon(main, -2.6), Z_BASE, Z_COL, "Wall")           # recessed wall, 2.6 m behind columns
+    b.extrude(main, Z_COL, Z_ENT, "Granite")                                   # entablature
+    b.extrude(kit.offset_polygon(main, 0.7), Z_ENT - 0.9, Z_ENT, "Column")     # cornice
+    b.extrude(kit.offset_polygon(main, -0.6), Z_ENT, Z_BAL, "Granite", top="Roof")  # balustrade / attic
+    # low roof volumes behind the balustrade (chambers, north wing) and the central block under the drum
+    for i in (4, 5, 8):
+        b.extrude(vols[i]["outline"], Z_BAL - 1.0, 26.0, "Granite", top="Roof")
+    b.extrude(vols[3]["outline"], Z_BAL - 1.0, 31.0, "Granite", top="Roof")
+    for sx in (-1, 1):
+        for y in (-24.9, 21.5):                                                # corner piers closing each colonnade
+            b.block((sx * 58.2, y), 1.6, 1.6, Z_BASE, Z_COL, "Granite")
+        column_row(b, (sx * 20.6, -25.6), (sx * 54.2, -25.6), 9)               # long south colonnade, 4.2 m apart
+        column_row(b, (sx * 22.4, 22.2), (sx * 54.2, 22.2), 8)                 # north
+        b.block((sx * 17.7, 29.4), 1.1, 6.3, Z_BASE, Z_COL, "Granite")         # piers closing the north center
+    column_row(b, (-15.6, 34.9), (15.6, 34.9), 8)                              # north center
+
+
+def build_porticos(b):
+    # south portico: 34 m wide, 8 columns, pediment to 26.5 m with its roof running back to the central block
+    b.block((0.0, -28.85), 17.0, 2.45, BURY, Z_BASE, "Base", top="Granite")
+    column_row(b, (-15.75, -30.4), (15.75, -30.4), 8)
+    b.block((0.0, -28.85), 17.0, 2.45, Z_COL, Z_ENT, "Granite")
+    b.block((0.0, -28.85), 17.6, 3.05, Z_ENT - 0.9, Z_ENT, "Column")
+    gable(b, (0.0, -31.9), 17.6, 14.0, Z_ENT, 26.5, "Column", "Roof")
+    for k, top in enumerate((4.0, 2.2)):                                       # grand stair, two broad flights
+        b.block((0.0, -32.8 - 3.0 * k), 10.0, 1.5, BURY, top, "Base")
+    # east and west end porticos: 32 m wide, 8 columns, balustrade carried round (no pediment in the photos)
+    for sx in (1, -1):
+        x = sx * 61.1
+        b.block((x, -1.5), 1.35, 16.0, BURY, Z_BASE, "Base", top="Granite")
+        column_row(b, (sx * 61.6, -16.2), (sx * 61.6, 13.2), 8)
+        b.block((x, -1.5), 1.35, 16.0, Z_COL, Z_ENT, "Granite")
+        b.block((x, -1.5), 1.95, 16.6, Z_ENT - 0.9, Z_ENT, "Column")
+        b.block((x, -1.5), 1.35, 15.4, Z_ENT, Z_BAL, "Granite", top="Roof")
+
+
+def ring(b, r0, z0, z1, material, r1=None, seg=24):
+    b.prism(r0, z0, z1, seg, material, radius_top=r1, center=(CX, CY))
+
+
+def build_dome(b, vols):
+    b.extrude(vols[0]["outline"], 30.0, 36.5, "Granite", top="Roof")   # square base of the drum
+    ring(b, 17.0, 36.0, 40.0, "Granite", r1=16.2)                      # stepped round plinth
+    ring(b, 15.8, 40.0, 41.5, "Granite")
+    ring(b, 12.2, 41.5, 52.5, "Wall")                                  # drum wall behind the colonnade
+    for k in range(24):                                                # 24 columns, 11 m tall
+        a = 2 * math.pi * (k + 0.5) / 24
+        b.prism(0.62, 41.5, 52.5, 6, "Column", center=(CX + 14.7 * math.cos(a), CY + 14.7 * math.sin(a)))
+    ring(b, 15.7, 52.5, 54.2, "Granite")                               # entablature
+    ring(b, 16.5, 54.2, 55.0, "Column")                                # cornice, 33 m across
+    ring(b, 14.9, 55.0, 56.6, "Column")                                # balustrade
+    ring(b, 13.8, 55.0, 63.0, "Granite")                               # attic drum, 28 m across
+    ring(b, 14.3, 63.0, 64.0, "Column")                                # attic cornice
+    # copper dome: 24 m across, a little taller than a hemisphere
+    prof = [(12.2 * math.cos(math.radians(t)), 64.0 + 14.9 * math.sin(math.radians(t)))
+            for t in (0, 14, 28, 42, 56, 68)]
+    prof.append((3.5, 78.3))
+    b.loft([kit.circle(r, z, 24, 0.0, (CX, CY)) for r, z in prof], ["Copper"] * (len(prof) - 1))
+    # lantern: balustraded platform, lit open drum, small copper cap, light at the top
+    ring(b, 3.7, 78.3, 79.3, "Column", seg=12)
+    ring(b, 2.5, 79.3, 83.3, "Gold", seg=12)
+    ring(b, 3.1, 83.3, 83.9, "Column", seg=12)
+    ring(b, 2.7, 83.9, 85.9, "Copper", r1=0.9, seg=12)
+    ring(b, 0.55, 85.9, HEIGHT, "Gold", r1=0.0, seg=8)
 
 
 def build_body(b):
     fp = kit.load_footprint(os.path.join(HERE, "footprint.json"))
     vols = fp["volumes"]
-    # wings and pavilions: volumes 1,3..8,11..13 (all low, 25-35 m)
-    for i in (1, 3, 4, 5, 6, 7, 8, 11, 12, 13):
-        v = vols[i]
-        b.extrude(v["outline"], BURY, v["top"], "Granite", top="Roof")
-    # plinth band around the main wing
-    b.extrude(vols[1]["outline"], BURY, 4.0, "Base", top="Granite")
-    # cornice cap on main wing
-    b.extrude(kit.scale_polygon(vols[1]["outline"], 1.01), 25.0, 26.2, "Column", top="Roof")
-    # colonnades: south and north faces of the long wing, east/west wing fronts
-    def colonnade(x0, x1, y, outward, z0, z1, step, w=1.5):
-        n = max(2, int(round((x1 - x0) / step)))
-        b.block(((x0 + x1) / 2, y), (x1 - x0) / 2, 0.4, z0, z1, "Arcade")  # recessed warm bay
-        for k in range(n + 1):
-            x = x0 + (x1 - x0) * k / n
-            b.block((x, y + outward * 1.2), w / 2, w / 2, z0, z1, "Column")
-    colonnade(-58.0, 58.0, -26.5, -1, 4.0, 24.0, 4.0)
-    colonnade(-17.0, 17.0, -31.3, -1, 4.0, 30.0, 3.4, 1.0)
-    colonnade(-17.0, 17.0, 14.8, 1, 35.0 - 12.0, 34.0, 4.0)
-    colonnade(-38.0, -18.0, -18.6, -1, 4.0, 32.0, 4.0)
-    colonnade(18.0, 38.0, -18.85, -1, 4.0, 32.0, 4.0)
-    # central pediment block on the south portico
-    b.block((0.0, -31.4), 17.0, 0.8, 30.0, 33.5, "Column", top="Roof")
-    # rotunda, drum, dome, lantern (polygons are round: use circular rings)
-    b.prism(15.0, BURY, 42.0, 20, "Granite", center=(-0.0, -1.4))
-    b.prism(15.6, 42.0, 43.5, 20, "Column", center=(0.0, -1.4))
-    b.prism(12.3, 43.5, 58.0, 20, "Granite", center=(0.0, -1.4))
-    for k in range(16):
-        a = 2 * math.pi * k / 16
-        b.block((0.0 + 13.2 * math.cos(a), -1.4 + 13.2 * math.sin(a)), 0.55, 0.55, 44.0, 57.0, "Column",
-                turn_deg=math.degrees(a))
-    b.prism(13.8, 57.0, 58.6, 20, "Column", center=(0.0, -1.4))
-    # dome and lantern about the dome axis
-    cx, cy = 0.0, -1.4
-    prof = [(12.8, 58.6, "Copper"), (12.6, 62.0, "Copper"), (11.2, 67.0, "Copper"), (8.6, 72.0, "Copper"),
-            (4.6, 76.0, "Copper"), (3.6, 77.0, "Copper"), (3.6, 77.0, "Gold")]
-    pts = [(r, z, m) for r, z, m in prof[:-1]] + [(3.6, 77.0, "Copper")]
-    b.revolve([(12.8, 58.6, "Copper"), (12.6, 62.0, "Copper"), (11.2, 67.0, "Copper"),
-               (8.6, 72.0, "Copper"), (4.6, 76.0, "Copper"), (3.4, 77.0, "Copper")], 20)
-    b.prism(3.0, 77.0, 81.0, 12, "Column", center=(cx, cy))
-    b.prism(3.4, 81.0, 81.8, 12, "Column", center=(cx, cy))
-    b.prism(2.2, 81.8, 83.5, 12, "Gold", radius_top=1.2, center=(cx, cy))
-    b.prism(0.8, 83.5, HEIGHT, 8, "Gold", radius_top=0.0, center=(cx, cy))
+    build_block(b, vols)
+    build_porticos(b)
+    build_dome(b, vols)
 
 
 def build():
