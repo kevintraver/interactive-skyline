@@ -1,0 +1,39 @@
+{
+  "object": "EastTower",
+  "verts": 206,
+  "faces": 151,
+  "tris": 320,
+  "bbox_min": [
+    -53.72,
+    -28.28,
+    -2.0
+  ],
+  "bbox_max": [
+    57.58,
+    30.38,
+    184.0
+  ],
+  "islands": 23,
+  "open_islands": 0,
+  "inside_out_islands": 0,
+  "nonmanifold_edges": 0,
+  "degenerate_faces": 0,
+  "loose_verts": 0,
+  "nonplanar_ngons": 2,
+  "materials": {
+    "Glass": 10,
+    "Band": 120,
+    "Podium": 14,
+    "PodiumRoof": 1,
+    "CrownPanel": 6
+  },
+  "glow": {
+    "max": 0.3,
+    "dark_faces": 1
+  },
+  "windowed_faces": 10,
+  "errors": [],
+  "warnings": [
+    "2 n-gons are not flat; split them so every viewer triangulates them alike"
+  ]
+}

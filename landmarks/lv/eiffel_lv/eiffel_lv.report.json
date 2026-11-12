@@ -1,0 +1,40 @@
+{
+  "object": "EiffelReplica",
+  "verts": 5053,
+  "faces": 3795,
+  "tris": 7634,
+  "bbox_min": [
+    -37.391,
+    -37.391,
+    -2.341
+  ],
+  "bbox_max": [
+    37.391,
+    37.391,
+    164.6
+  ],
+  "islands": 618,
+  "open_islands": 0,
+  "inside_out_islands": 0,
+  "nonmanifold_edges": 0,
+  "degenerate_faces": 0,
+  "loose_verts": 0,
+  "nonplanar_ngons": 0,
+  "materials": {
+    "Iron": 3649,
+    "Trim": 39,
+    "Glass": 6,
+    "Roof": 5,
+    "Fascia": 5,
+    "Core": 12,
+    "Screen": 35,
+    "Lantern": 44
+  },
+  "glow": {
+    "max": 1.5,
+    "dark_faces": 0
+  },
+  "windowed_faces": 6,
+  "errors": [],
+  "warnings": []
+}

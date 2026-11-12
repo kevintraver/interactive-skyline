@@ -1,0 +1,68 @@
+{
+ "id": "w656398429",
+ "name": "Regency Towers",
+ "height": 97.0,
+ "height_source": "osm-height",
+ "frame": "meters east and north of the footprint center c; heights in meters above ground; a model built in this frame installs with --offset 0,0",
+ "facts": {
+  "east_extent": [
+   -44.7,
+   41.3
+  ],
+  "north_extent": [
+   -58.9,
+   49.3
+  ],
+  "longest_edge_m": 55.4,
+  "longest_edge_bearing": 13.6
+ },
+ "volumes": [
+  {
+   "bottom": -2.0,
+   "top": 97.0,
+   "outline": [
+    [
+     -44.7,
+     40.07
+    ],
+    [
+     -6.56,
+     48.32
+    ],
+    [
+     9.86,
+     46.65
+    ],
+    [
+     32.07,
+     49.3
+    ],
+    [
+     41.26,
+     8.43
+    ],
+    [
+     28.23,
+     -45.41
+    ],
+    [
+     9.16,
+     -52.4
+    ],
+    [
+     -22.46,
+     -58.89
+    ],
+    [
+     -34.31,
+     -7.94
+    ],
+    [
+     -39.38,
+     16.58
+    ]
+   ],
+   "holes": []
+  }
+ ]
+}

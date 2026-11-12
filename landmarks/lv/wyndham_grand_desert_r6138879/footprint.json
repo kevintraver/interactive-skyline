@@ -1,0 +1,119 @@
+{
+ "id": "r6138879",
+ "name": "Wyndham Grand Desert",
+ "height": 54.2,
+ "height_source": "lidar",
+ "frame": "meters east and north of the footprint center c; heights in meters above ground; a model built in this frame installs with --offset 0,0",
+ "facts": {
+  "east_extent": [
+   -59.1,
+   58.4
+  ],
+  "north_extent": [
+   -60.8,
+   68.1
+  ],
+  "longest_edge_m": 96.3,
+  "longest_edge_bearing": 89.9
+ },
+ "volumes": [
+  {
+   "bottom": -2.8,
+   "top": 54.2,
+   "outline": [
+    [
+     41.29,
+     67.98
+    ],
+    [
+     -26.12,
+     68.06
+    ],
+    [
+     -55.6,
+     39.2
+    ],
+    [
+     -56.55,
+     -29.09
+    ],
+    [
+     -38.43,
+     -29.09
+    ],
+    [
+     -37.84,
+     30.7
+    ],
+    [
+     -18.5,
+     48.78
+    ],
+    [
+     32.86,
+     48.98
+    ],
+    [
+     41.39,
+     49.09
+    ]
+   ],
+   "holes": []
+  },
+  {
+   "bottom": -2.8,
+   "top": 43.2,
+   "outline": [
+    [
+     -59.02,
+     -34.83
+    ],
+    [
+     -59.13,
+     -53.59
+    ],
+    [
+     37.16,
+     -53.37
+    ],
+    [
+     44.66,
+     -60.58
+    ],
+    [
+     58.34,
+     -60.77
+    ],
+    [
+     58.41,
+     -46.86
+    ],
+    [
+     51.01,
+     -39.52
+    ],
+    [
+     51.16,
+     39.57
+    ],
+    [
+     32.8,
+     39.57
+    ],
+    [
+     32.51,
+     -14.48
+    ],
+    [
+     14.81,
+     -30.16
+    ],
+    [
+     9.77,
+     -34.63
+    ]
+   ],
+   "holes": []
+  }
+ ]
+}

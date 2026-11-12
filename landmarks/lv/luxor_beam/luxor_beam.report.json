@@ -1,0 +1,37 @@
+{
+  "object": "Luxor_Beam",
+  "verts": 192,
+  "faces": 174,
+  "tris": 372,
+  "bbox_min": [
+    -8.0,
+    -8.0,
+    108.6
+  ],
+  "bbox_max": [
+    8.0,
+    8.0,
+    1500.0
+  ],
+  "islands": 3,
+  "open_islands": 0,
+  "inside_out_islands": 0,
+  "nonmanifold_edges": 0,
+  "degenerate_faces": 0,
+  "loose_verts": 0,
+  "nonplanar_ngons": 0,
+  "materials": {
+    "Beam": 58,
+    "BeamHalo": 58,
+    "BeamOuter": 58
+  },
+  "glow": {
+    "max": 1.0,
+    "dark_faces": 0
+  },
+  "windowed_faces": 0,
+  "errors": [],
+  "warnings": [
+    "lowest point is 108.60 m above the origin: the model will float"
+  ]
+}

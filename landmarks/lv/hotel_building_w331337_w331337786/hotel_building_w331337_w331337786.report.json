@@ -1,0 +1,37 @@
+{
+  "object": "Hotel_Block",
+  "verts": 421,
+  "faces": 356,
+  "tris": 738,
+  "bbox_min": [
+    -33.078,
+    -22.107,
+    -2.0
+  ],
+  "bbox_max": [
+    33.257,
+    22.116,
+    37.1
+  ],
+  "islands": 26,
+  "open_islands": 0,
+  "inside_out_islands": 0,
+  "nonmanifold_edges": 0,
+  "degenerate_faces": 0,
+  "loose_verts": 0,
+  "nonplanar_ngons": 0,
+  "materials": {
+    "Wall": 229,
+    "Base": 18,
+    "Glass": 85,
+    "Crown": 23,
+    "Roof": 1
+  },
+  "glow": {
+    "max": 0.27,
+    "dark_faces": 1
+  },
+  "windowed_faces": 85,
+  "errors": [],
+  "warnings": []
+}

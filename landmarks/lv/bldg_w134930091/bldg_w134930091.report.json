@@ -1,0 +1,38 @@
+{
+  "object": "Wing_w134930091",
+  "verts": 878,
+  "faces": 849,
+  "tris": 1748,
+  "bbox_min": [
+    -58.793,
+    -17.6,
+    -2.0
+  ],
+  "bbox_max": [
+    52.158,
+    29.078,
+    65.0
+  ],
+  "islands": 2,
+  "open_islands": 0,
+  "inside_out_islands": 0,
+  "nonmanifold_edges": 0,
+  "degenerate_faces": 0,
+  "loose_verts": 0,
+  "nonplanar_ngons": 0,
+  "materials": {
+    "Glass": 174,
+    "Band": 551,
+    "Crown": 29,
+    "Base": 30,
+    "Roof": 60,
+    "Mech": 5
+  },
+  "glow": {
+    "max": 0.5,
+    "dark_faces": 65
+  },
+  "windowed_faces": 174,
+  "errors": [],
+  "warnings": []
+}

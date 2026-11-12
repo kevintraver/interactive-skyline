@@ -1,0 +1,38 @@
+{
+  "object": "Podium_w180584269",
+  "verts": 784,
+  "faces": 630,
+  "tris": 1396,
+  "bbox_min": [
+    -128.138,
+    -99.503,
+    -2.6
+  ],
+  "bbox_max": [
+    145.17,
+    115.159,
+    35.5
+  ],
+  "islands": 43,
+  "open_islands": 0,
+  "inside_out_islands": 0,
+  "nonmanifold_edges": 0,
+  "degenerate_faces": 0,
+  "loose_verts": 0,
+  "nonplanar_ngons": 0,
+  "materials": {
+    "Wall": 305,
+    "Glass": 38,
+    "Band": 229,
+    "Roof": 4,
+    "Upper": 39,
+    "Plant": 15
+  },
+  "glow": {
+    "max": 0.4,
+    "dark_faces": 4
+  },
+  "windowed_faces": 38,
+  "errors": [],
+  "warnings": []
+}

@@ -1,0 +1,48 @@
+{
+  "object": "Luxor_All",
+  "verts": 1592,
+  "faces": 1436,
+  "tris": 2592,
+  "bbox_min": [
+    -95.534,
+    -94.304,
+    -2.341
+  ],
+  "bbox_max": [
+    229.2,
+    94.364,
+    111.0
+  ],
+  "islands": 148,
+  "open_islands": 0,
+  "inside_out_islands": 0,
+  "nonmanifold_edges": 0,
+  "degenerate_faces": 0,
+  "loose_verts": 0,
+  "nonplanar_ngons": 0,
+  "materials": {
+    "Glass": 6,
+    "FloorLine": 60,
+    "Ridge": 24,
+    "RidgeLight": 624,
+    "Cap": 6,
+    "CapSlot": 12,
+    "Lamp": 6,
+    "Plinth": 6,
+    "Stone": 488,
+    "StoneDark": 12,
+    "Face": 46,
+    "HeadGold": 55,
+    "HeadBlue": 67,
+    "Eye": 12,
+    "Door": 6,
+    "Tip": 6
+  },
+  "glow": {
+    "max": 1.0,
+    "dark_faces": 12
+  },
+  "windowed_faces": 6,
+  "errors": [],
+  "warnings": []
+}

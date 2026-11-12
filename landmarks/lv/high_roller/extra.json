@@ -1,0 +1,16 @@
+{
+  "name": "High Roller",
+  "glb": "high_roller.glb",
+  "lat": 36.117684,
+  "lon": -115.168163,
+  "east": 417.5,
+  "north": 331.1,
+  "rotation_deg": 90,
+  "visible": "always",
+  "notes": "Origin is under the hub on the ground. The GLB is NOT pre-rotated: the wheel plane runs along Blender +X, the axle along Blender +Y (glTF -Z); rotation 90 puts the plane north-south with the brace leg pointing east. Nodes per SPIN_CONTRACT.md: Support (static: legs, brace, spindle, axle supports, station), Rotor (origin at hub center, glTF translation [0, 88.35, 0]; rim, cables, hub drum and flanges, mounts) and Cabin_00..Cabin_27 (children of Rotor, origin at the cabin center = pivot, 76.016 m from the hub; Cabin_00 on top). Height 167.6 m, 28 cabins, 112 cables, 18,924 triangles. Rim lights use material LedRim (base glow 0.8); no logos. check_glb.py ignores node translations, so its height reads 91 m; the world top is 167.6 m.",
+  "spin": {
+    "node": "Rotor",
+    "period_s": 180,
+    "direction": 1
+  }
+}

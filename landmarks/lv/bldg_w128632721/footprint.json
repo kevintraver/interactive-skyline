@@ -1,0 +1,52 @@
+{
+ "id": "w128632721",
+ "name": null,
+ "height": 72.0,
+ "height_source": "osm-height",
+ "frame": "meters east and north of the footprint center c; heights in meters above ground; a model built in this frame installs with --offset 0,0",
+ "facts": {
+  "east_extent": [
+   -10.3,
+   9.8
+  ],
+  "north_extent": [
+   -34.2,
+   31.8
+  ],
+  "longest_edge_m": 65.7,
+  "longest_edge_bearing": 0.9
+ },
+ "volumes": [
+  {
+   "bottom": -2.0,
+   "top": 72.0,
+   "outline": [
+    [
+     -10.29,
+     -22.54
+    ],
+    [
+     -9.42,
+     31.82
+    ],
+    [
+     9.84,
+     31.51
+    ],
+    [
+     8.77,
+     -34.2
+    ],
+    [
+     -5.69,
+     -33.97
+    ],
+    [
+     -5.5,
+     -22.61
+    ]
+   ],
+   "holes": []
+  }
+ ]
+}

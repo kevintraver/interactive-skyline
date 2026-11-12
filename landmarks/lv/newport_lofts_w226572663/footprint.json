@@ -1,0 +1,44 @@
+{
+ "id": "w226572663",
+ "name": "Newport Lofts",
+ "height": 102.0,
+ "height_source": "osm-height",
+ "frame": "meters east and north of the footprint center c; heights in meters above ground; a model built in this frame installs with --offset 0,0",
+ "facts": {
+  "east_extent": [
+   -30.9,
+   30.9
+  ],
+  "north_extent": [
+   -30.9,
+   30.8
+  ],
+  "longest_edge_m": 45.9,
+  "longest_edge_bearing": 27.9
+ },
+ "volumes": [
+  {
+   "bottom": -2.0,
+   "top": 102.0,
+   "outline": [
+    [
+     -9.42,
+     30.79
+    ],
+    [
+     30.85,
+     9.66
+    ],
+    [
+     9.41,
+     -30.86
+    ],
+    [
+     -30.87,
+     -9.74
+    ]
+   ],
+   "holes": []
+  }
+ ]
+}

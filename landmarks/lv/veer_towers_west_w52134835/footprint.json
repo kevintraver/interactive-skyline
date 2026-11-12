@@ -1,0 +1,44 @@
+{
+ "id": "w52134835",
+ "name": "Veer Towers West",
+ "height": 132.0,
+ "height_source": "osm-height",
+ "frame": "meters east and north of the footprint center c; heights in meters above ground; a model built in this frame installs with --offset 0,0",
+ "facts": {
+  "east_extent": [
+   -15.3,
+   15.2
+  ],
+  "north_extent": [
+   -25.8,
+   26.0
+  ],
+  "longest_edge_m": 40.5,
+  "longest_edge_bearing": 0.9
+ },
+ "volumes": [
+  {
+   "bottom": -5.7,
+   "top": 132.0,
+   "outline": [
+    [
+     -14.69,
+     25.96
+    ],
+    [
+     14.98,
+     14.52
+    ],
+    [
+     15.17,
+     -25.78
+    ],
+    [
+     -15.34,
+     -14.56
+    ]
+   ],
+   "holes": []
+  }
+ ]
+}

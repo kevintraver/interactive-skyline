@@ -1,0 +1,76 @@
+{
+ "id": "w27858544",
+ "name": "Luxor Las Vegas",
+ "height": 111.0,
+ "height_source": "osm-height",
+ "frame": "meters east and north of the footprint center c; heights in meters above ground; a model built in this frame installs with --offset 0,0",
+ "facts": {
+  "east_extent": [
+   -92.4,
+   92.6
+  ],
+  "north_extent": [
+   -91.3,
+   91.3
+  ],
+  "longest_edge_m": 181.5,
+  "longest_edge_bearing": 179.6
+ },
+ "volumes": [
+  {
+   "bottom": -4.1,
+   "top": 111.0,
+   "outline": [
+    [
+     91.44,
+     91.32
+    ],
+    [
+     92.55,
+     -90.14
+    ],
+    [
+     1.59,
+     -90.62
+    ],
+    [
+     -13.51,
+     -91.06
+    ],
+    [
+     -90.42,
+     -91.25
+    ],
+    [
+     -91.35,
+     -91.26
+    ],
+    [
+     -91.92,
+     -1.06
+    ],
+    [
+     -92.45,
+     90.22
+    ],
+    [
+     -59.45,
+     90.4
+    ],
+    [
+     -1.46,
+     90.79
+    ],
+    [
+     57.87,
+     91.19
+    ]
+   ],
+   "holes": [],
+   "roof": [
+    "p",
+    111.0
+   ]
+  }
+ ]
+}

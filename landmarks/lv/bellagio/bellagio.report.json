@@ -1,0 +1,40 @@
+{
+  "object": "ResortTower",
+  "verts": 1986,
+  "faces": 1259,
+  "tris": 3488,
+  "bbox_min": [
+    -106.363,
+    -119.27,
+    -2.0
+  ],
+  "bbox_max": [
+    57.932,
+    119.098,
+    155.0
+  ],
+  "islands": 121,
+  "open_islands": 0,
+  "inside_out_islands": 0,
+  "nonmanifold_edges": 0,
+  "degenerate_faces": 0,
+  "loose_verts": 0,
+  "nonplanar_ngons": 0,
+  "materials": {
+    "Facade": 118,
+    "Attic": 101,
+    "Band": 727,
+    "Arcade": 52,
+    "Base": 32,
+    "Drum": 124,
+    "Roof": 31,
+    "Dome": 74
+  },
+  "glow": {
+    "max": 1.0,
+    "dark_faces": 31
+  },
+  "windowed_faces": 271,
+  "errors": [],
+  "warnings": []
+}

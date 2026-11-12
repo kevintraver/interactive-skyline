@@ -1,0 +1,56 @@
+{
+ "id": "w134795273",
+ "name": "The Cosmopolitan of Las Vegas",
+ "height": 184.0,
+ "height_source": "osm-height",
+ "frame": "meters east and north of the footprint center c; heights in meters above ground; a model built in this frame installs with --offset 0,0",
+ "facts": {
+  "east_extent": [
+   -27.7,
+   29.7
+  ],
+  "north_extent": [
+   -23.5,
+   23.0
+  ],
+  "longest_edge_m": 52.3,
+  "longest_edge_bearing": 91.2
+ },
+ "volumes": [
+  {
+   "bottom": -2.0,
+   "top": 184.0,
+   "outline": [
+    [
+     -26.78,
+     23.01
+    ],
+    [
+     -22.98,
+     22.94
+    ],
+    [
+     16.14,
+     22.13
+    ],
+    [
+     25.5,
+     21.93
+    ],
+    [
+     29.65,
+     16.96
+    ],
+    [
+     24.54,
+     -23.51
+    ],
+    [
+     -27.74,
+     -22.42
+    ]
+   ],
+   "holes": []
+  }
+ ]
+}

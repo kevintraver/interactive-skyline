@@ -1,0 +1,92 @@
+{
+ "id": "w27831697",
+ "name": "Le Boulevard At Paris",
+ "height": 112.0,
+ "height_source": "osm-height",
+ "frame": "meters east and north of the footprint center c; heights in meters above ground; a model built in this frame installs with --offset 0,0",
+ "facts": {
+  "east_extent": [
+   -63.6,
+   61.5
+  ],
+  "north_extent": [
+   -62.2,
+   63.1
+  ],
+  "longest_edge_m": 63.2,
+  "longest_edge_bearing": 44.8
+ },
+ "volumes": [
+  {
+   "bottom": -2.0,
+   "top": 112.0,
+   "outline": [
+    [
+     -63.57,
+     48.41
+    ],
+    [
+     -50.34,
+     61.38
+    ],
+    [
+     -7.53,
+     18.09
+    ],
+    [
+     2.31,
+     18.25
+    ],
+    [
+     46.82,
+     63.11
+    ],
+    [
+     61.54,
+     48.64
+    ],
+    [
+     18.26,
+     5.02
+    ],
+    [
+     18.49,
+     -4.1
+    ],
+    [
+     61.42,
+     -47.89
+    ],
+    [
+     46.7,
+     -62.2
+    ],
+    [
+     3.95,
+     -18.57
+    ],
+    [
+     -5.97,
+     -18.57
+    ],
+    [
+     -48.94,
+     -61.0
+    ],
+    [
+     -62.83,
+     -47.05
+    ],
+    [
+     -19.91,
+     -4.68
+    ],
+    [
+     -19.97,
+     4.32
+    ]
+   ],
+   "holes": []
+  }
+ ]
+}

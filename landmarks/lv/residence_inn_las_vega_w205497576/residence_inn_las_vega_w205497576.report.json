@@ -1,0 +1,37 @@
+{
+  "object": "HotelHughesCenter",
+  "verts": 756,
+  "faces": 502,
+  "tris": 1264,
+  "bbox_min": [
+    -39.209,
+    -31.556,
+    -2.0
+  ],
+  "bbox_max": [
+    33.13,
+    40.076,
+    37.2
+  ],
+  "islands": 62,
+  "open_islands": 0,
+  "inside_out_islands": 0,
+  "nonmanifold_edges": 0,
+  "degenerate_faces": 0,
+  "loose_verts": 0,
+  "nonplanar_ngons": 0,
+  "materials": {
+    "Wall": 330,
+    "Base": 16,
+    "Glass": 140,
+    "Trim": 15,
+    "Roof": 1
+  },
+  "glow": {
+    "max": 0.22,
+    "dark_faces": 1
+  },
+  "windowed_faces": 140,
+  "errors": [],
+  "warnings": []
+}

@@ -1,0 +1,37 @@
+{
+  "object": "EastTower",
+  "verts": 476,
+  "faces": 312,
+  "tris": 804,
+  "bbox_min": [
+    -16.24,
+    -80.42,
+    -2.0
+  ],
+  "bbox_max": [
+    19.63,
+    76.33,
+    183.0
+  ],
+  "islands": 37,
+  "open_islands": 0,
+  "inside_out_islands": 0,
+  "nonmanifold_edges": 0,
+  "degenerate_faces": 0,
+  "loose_verts": 0,
+  "nonplanar_ngons": 0,
+  "materials": {
+    "Glass": 102,
+    "Crown": 90,
+    "Base": 102,
+    "Roof": 12,
+    "Fin": 6
+  },
+  "glow": {
+    "max": 1.0,
+    "dark_faces": 12
+  },
+  "windowed_faces": 102,
+  "errors": [],
+  "warnings": []
+}

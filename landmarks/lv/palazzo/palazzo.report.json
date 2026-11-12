@@ -1,0 +1,36 @@
+{
+  "object": "Palazzo",
+  "verts": 1254,
+  "faces": 867,
+  "tris": 2028,
+  "bbox_min": [
+    -75.881,
+    -70.418,
+    -2.0
+  ],
+  "bbox_max": [
+    66.815,
+    92.306,
+    196.0
+  ],
+  "islands": 120,
+  "open_islands": 0,
+  "inside_out_islands": 0,
+  "nonmanifold_edges": 0,
+  "degenerate_faces": 0,
+  "loose_verts": 0,
+  "nonplanar_ngons": 0,
+  "materials": {
+    "Stone": 91,
+    "Band": 114,
+    "Glass": 660,
+    "Roof": 2
+  },
+  "glow": {
+    "max": 0.95,
+    "dark_faces": 2
+  },
+  "windowed_faces": 751,
+  "errors": [],
+  "warnings": []
+}

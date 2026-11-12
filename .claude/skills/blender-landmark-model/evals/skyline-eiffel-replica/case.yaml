@@ -1,0 +1,8 @@
+schema_version: "1.1"
+name: skyline-eiffel-replica
+expected_outcome: |
+  A closed, low-poly, true-scale (about 165 m) model of the Paris Las Vegas Eiffel Tower replica is built in a
+  fresh headless Blender process from sourced dimensions and reference photos, exported as a GLB with a _GLOW
+  night attribute and no COLOR_0, installed into the interactive-skyline repo for building w27831699, and
+  verified in the app by day and night (the app draws the model, not the footprint). No logos or brand signs
+  (such as the casino's lettering or its balloon sign) are modeled.

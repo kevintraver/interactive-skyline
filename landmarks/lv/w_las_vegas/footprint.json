@@ -1,0 +1,88 @@
+{
+ "id": "w118347176",
+ "name": "W Las Vegas",
+ "height": 148.0,
+ "height_source": "osm-height",
+ "frame": "meters east and north of the footprint center c; heights in meters above ground; a model built in this frame installs with --offset 0,0",
+ "facts": {
+  "east_extent": [
+   -28.0,
+   56.9
+  ],
+  "north_extent": [
+   -28.1,
+   52.7
+  ],
+  "longest_edge_m": 76.9,
+  "longest_edge_bearing": 0.1
+ },
+ "volumes": [
+  {
+   "bottom": -2.0,
+   "top": 148.0,
+   "outline": [
+    [
+     -10.04,
+     52.68
+    ],
+    [
+     -24.9,
+     52.68
+    ],
+    [
+     -27.92,
+     50.27
+    ],
+    [
+     -28.03,
+     -26.67
+    ],
+    [
+     13.57,
+     -26.74
+    ],
+    [
+     52.28,
+     -28.1
+    ],
+    [
+     54.7,
+     -25.94
+    ],
+    [
+     54.82,
+     -22.46
+    ],
+    [
+     56.76,
+     -21.01
+    ],
+    [
+     56.87,
+     -15.6
+    ],
+    [
+     55.06,
+     -13.44
+    ],
+    [
+     54.82,
+     -10.78
+    ],
+    [
+     52.77,
+     -8.5
+    ],
+    [
+     -6.24,
+     -8.07
+    ],
+    [
+     -7.63,
+     50.15
+    ]
+   ],
+   "holes": []
+  }
+ ]
+}

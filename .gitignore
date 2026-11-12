@@ -4,3 +4,16 @@ data/raw
 .DS_Store
 .vercel
 .env*
+
+# landmark builds: the scripts and notes in landmarks/ are kept, not what a build or a check writes
+__pycache__/
+*.blend
+*.blend1
+landmarks/**/*.glb
+landmarks/**/renders/
+landmarks/**/app-check*/
+landmarks/**/compare-*/
+landmarks/**/backups/
+landmarks/**/refs/*.jpg
+landmarks/**/refs/*.jpeg
+landmarks/**/refs/*.png

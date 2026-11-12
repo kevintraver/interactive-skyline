@@ -1,0 +1,39 @@
+{
+  "object": "Tower_w111322067",
+  "verts": 461,
+  "faces": 434,
+  "tris": 906,
+  "bbox_min": [
+    -68.14,
+    -38.823,
+    -2.0
+  ],
+  "bbox_max": [
+    68.496,
+    60.383,
+    99.0
+  ],
+  "islands": 4,
+  "open_islands": 0,
+  "inside_out_islands": 0,
+  "nonmanifold_edges": 0,
+  "degenerate_faces": 0,
+  "loose_verts": 0,
+  "nonplanar_ngons": 0,
+  "materials": {
+    "Wall": 61,
+    "Garage": 116,
+    "Slot": 92,
+    "Glass": 46,
+    "Cornice": 69,
+    "Parapet": 24,
+    "Roof": 26
+  },
+  "glow": {
+    "max": 0.4,
+    "dark_faces": 26
+  },
+  "windowed_faces": 46,
+  "errors": [],
+  "warnings": []
+}

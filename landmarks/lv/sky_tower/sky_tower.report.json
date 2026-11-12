@@ -1,0 +1,38 @@
+{
+  "object": "SkyTower",
+  "verts": 884,
+  "faces": 636,
+  "tris": 1380,
+  "bbox_min": [
+    -41.605,
+    -36.779,
+    -2.0
+  ],
+  "bbox_max": [
+    37.533,
+    35.323,
+    152.0
+  ],
+  "islands": 97,
+  "open_islands": 0,
+  "inside_out_islands": 0,
+  "nonmanifold_edges": 0,
+  "degenerate_faces": 0,
+  "loose_verts": 0,
+  "nonplanar_ngons": 0,
+  "materials": {
+    "Glass": 20,
+    "Band": 534,
+    "Pier": 48,
+    "Crown": 16,
+    "Podium": 12,
+    "Roof": 6
+  },
+  "glow": {
+    "max": 0.45,
+    "dark_faces": 6
+  },
+  "windowed_faces": 20,
+  "errors": [],
+  "warnings": []
+}

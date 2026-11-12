@@ -1,0 +1,88 @@
+{
+ "id": "w134949102",
+ "name": "Forum Tower",
+ "height": 71.0,
+ "height_source": "osm-height",
+ "frame": "meters east and north of the footprint center c; heights in meters above ground; a model built in this frame installs with --offset 0,0",
+ "facts": {
+  "east_extent": [
+   -36.0,
+   40.4
+  ],
+  "north_extent": [
+   -25.0,
+   35.7
+  ],
+  "longest_edge_m": 35.1,
+  "longest_edge_bearing": 91.3
+ },
+ "volumes": [
+  {
+   "bottom": -2.5,
+   "top": 71.0,
+   "outline": [
+    [
+     -14.75,
+     35.66
+    ],
+    [
+     -35.96,
+     24.78
+    ],
+    [
+     -24.32,
+     2.69
+    ],
+    [
+     -30.92,
+     -7.89
+    ],
+    [
+     -24.89,
+     -12.01
+    ],
+    [
+     -23.2,
+     -9.49
+    ],
+    [
+     -17.75,
+     -12.83
+    ],
+    [
+     2.07,
+     -24.99
+    ],
+    [
+     4.68,
+     -20.59
+    ],
+    [
+     39.74,
+     -21.39
+    ],
+    [
+     40.37,
+     2.18
+    ],
+    [
+     7.87,
+     2.94
+    ],
+    [
+     7.34,
+     6.25
+    ],
+    [
+     3.76,
+     8.2
+    ],
+    [
+     0.41,
+     7.22
+    ]
+   ],
+   "holes": []
+  }
+ ]
+}

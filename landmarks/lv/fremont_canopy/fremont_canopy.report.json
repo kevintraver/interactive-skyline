@@ -1,0 +1,35 @@
+{
+  "object": "LedCanopyVault",
+  "verts": 2318,
+  "faces": 2054,
+  "tris": 4236,
+  "bbox_min": [
+    -211.6,
+    -13.098,
+    -2.0
+  ],
+  "bbox_max": [
+    211.6,
+    13.098,
+    27.0
+  ],
+  "islands": 100,
+  "open_islands": 0,
+  "inside_out_islands": 0,
+  "nonmanifold_edges": 0,
+  "degenerate_faces": 0,
+  "loose_verts": 0,
+  "nonplanar_ngons": 0,
+  "materials": {
+    "LedCanopy": 624,
+    "Steel": 886,
+    "Column": 544
+  },
+  "glow": {
+    "max": 0.52,
+    "dark_faces": 0
+  },
+  "windowed_faces": 0,
+  "errors": [],
+  "warnings": []
+}

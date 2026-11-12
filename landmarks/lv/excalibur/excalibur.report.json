@@ -1,0 +1,44 @@
+{
+  "object": "CastleHotel",
+  "verts": 4639,
+  "faces": 3228,
+  "tris": 7694,
+  "bbox_min": [
+    -127.886,
+    -127.759,
+    -2.0
+  ],
+  "bbox_max": [
+    118.297,
+    120.462,
+    78.8
+  ],
+  "islands": 396,
+  "open_islands": 0,
+  "inside_out_islands": 0,
+  "nonmanifold_edges": 0,
+  "degenerate_faces": 0,
+  "loose_verts": 0,
+  "nonplanar_ngons": 0,
+  "materials": {
+    "Facade": 68,
+    "Keep": 36,
+    "Base": 70,
+    "Stone": 1177,
+    "Podium": 119,
+    "Roof": 15,
+    "ConeRed": 341,
+    "ConeBlue": 44,
+    "ConeGold": 44,
+    "RoofBlue": 36,
+    "Awning": 336,
+    "Collar": 942
+  },
+  "glow": {
+    "max": 0.8,
+    "dark_faces": 0
+  },
+  "windowed_faces": 138,
+  "errors": [],
+  "warnings": []
+}

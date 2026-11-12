@@ -1,0 +1,98 @@
+{
+ "id": "w25723910",
+ "name": "Bellagio Spa Tower",
+ "height": 120.0,
+ "height_source": "osm-height",
+ "frame": "meters east and north of the footprint center c; heights in meters above ground; a model built in this frame installs with --offset 0,0",
+ "facts": {
+  "east_extent": [
+   -13.3,
+   13.3
+  ],
+  "north_extent": [
+   -60.7,
+   60.4
+  ],
+  "longest_edge_m": 74.9,
+  "longest_edge_bearing": 0.2
+ },
+ "volumes": [
+  {
+   "bottom": -2.0,
+   "top": 120.0,
+   "outline": [
+    [
+     13.13,
+     38.71
+    ],
+    [
+     -13.07,
+     38.78
+    ],
+    [
+     -13.28,
+     -36.09
+    ],
+    [
+     12.94,
+     -36.16
+    ]
+   ],
+   "holes": []
+  },
+  {
+   "bottom": -2.0,
+   "top": 100.6,
+   "outline": [
+    [
+     13.27,
+     60.21
+    ],
+    [
+     13.13,
+     38.91
+    ],
+    [
+     13.13,
+     38.91
+    ],
+    [
+     -13.07,
+     38.98
+    ],
+    [
+     -12.9,
+     60.41
+    ]
+   ],
+   "holes": []
+  },
+  {
+   "bottom": -2.0,
+   "top": 104.1,
+   "outline": [
+    [
+     12.81,
+     -60.72
+    ],
+    [
+     3.47,
+     -60.28
+    ],
+    [
+     -13.23,
+     -60.31
+    ],
+    [
+     -13.19,
+     -36.29
+    ],
+    [
+     12.94,
+     -36.36
+    ]
+   ],
+   "holes": []
+  }
+ ]
+}

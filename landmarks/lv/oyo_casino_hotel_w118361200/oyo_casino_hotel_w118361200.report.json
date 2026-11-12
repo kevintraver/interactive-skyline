@@ -1,0 +1,38 @@
+{
+  "object": "Tower_w118361200",
+  "verts": 605,
+  "faces": 533,
+  "tris": 1162,
+  "bbox_min": [
+    -40.15,
+    -82.62,
+    -2.0
+  ],
+  "bbox_max": [
+    45.97,
+    69.74,
+    53.8
+  ],
+  "islands": 12,
+  "open_islands": 0,
+  "inside_out_islands": 0,
+  "nonmanifold_edges": 0,
+  "degenerate_faces": 0,
+  "loose_verts": 0,
+  "nonplanar_ngons": 0,
+  "materials": {
+    "Wall": 212,
+    "Glass": 145,
+    "Accent": 39,
+    "Garage": 20,
+    "Casino": 41,
+    "Roof": 76
+  },
+  "glow": {
+    "max": 0.5,
+    "dark_faces": 76
+  },
+  "windowed_faces": 145,
+  "errors": [],
+  "warnings": []
+}

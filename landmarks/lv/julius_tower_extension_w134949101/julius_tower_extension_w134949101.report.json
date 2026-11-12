@@ -1,0 +1,36 @@
+{
+  "object": "Julius_Tower_Extension",
+  "verts": 588,
+  "faces": 496,
+  "tris": 1052,
+  "bbox_min": [
+    -16.732,
+    -42.435,
+    -2.0
+  ],
+  "bbox_max": [
+    24.106,
+    41.704,
+    45.0
+  ],
+  "islands": 31,
+  "open_islands": 0,
+  "inside_out_islands": 0,
+  "nonmanifold_edges": 0,
+  "degenerate_faces": 0,
+  "loose_verts": 0,
+  "nonplanar_ngons": 0,
+  "materials": {
+    "Wall": 324,
+    "Glass": 140,
+    "Crown": 30,
+    "Roof": 2
+  },
+  "glow": {
+    "max": 0.31,
+    "dark_faces": 2
+  },
+  "windowed_faces": 140,
+  "errors": [],
+  "warnings": []
+}

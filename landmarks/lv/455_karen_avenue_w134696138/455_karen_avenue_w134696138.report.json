@@ -1,0 +1,36 @@
+{
+  "object": "Karen_Avenue_Tower",
+  "verts": 340,
+  "faces": 308,
+  "tris": 664,
+  "bbox_min": [
+    -5.213,
+    -5.345,
+    -2.0
+  ],
+  "bbox_max": [
+    5.254,
+    5.218,
+    51.4
+  ],
+  "islands": 4,
+  "open_islands": 0,
+  "inside_out_islands": 0,
+  "nonmanifold_edges": 0,
+  "degenerate_faces": 0,
+  "loose_verts": 0,
+  "nonplanar_ngons": 0,
+  "materials": {
+    "Wall": 22,
+    "Band": 154,
+    "Glass": 130,
+    "Roof": 2
+  },
+  "glow": {
+    "max": 0.22,
+    "dark_faces": 2
+  },
+  "windowed_faces": 130,
+  "errors": [],
+  "warnings": []
+}

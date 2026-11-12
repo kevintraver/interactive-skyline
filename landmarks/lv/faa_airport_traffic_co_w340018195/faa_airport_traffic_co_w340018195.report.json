@@ -1,0 +1,39 @@
+{
+  "object": "ControlTower",
+  "verts": 440,
+  "faces": 408,
+  "tris": 864,
+  "bbox_min": [
+    -7.9,
+    -7.9,
+    -2.0
+  ],
+  "bbox_max": [
+    7.9,
+    7.9,
+    109.0
+  ],
+  "islands": 4,
+  "open_islands": 0,
+  "inside_out_islands": 0,
+  "nonmanifold_edges": 0,
+  "degenerate_faces": 0,
+  "loose_verts": 0,
+  "nonplanar_ngons": 0,
+  "materials": {
+    "Shaft": 141,
+    "Trim": 120,
+    "Glass": 60,
+    "CabGlass": 20,
+    "Roof": 51,
+    "Mast": 8,
+    "Beacon": 8
+  },
+  "glow": {
+    "max": 1.0,
+    "dark_faces": 59
+  },
+  "windowed_faces": 60,
+  "errors": [],
+  "warnings": []
+}

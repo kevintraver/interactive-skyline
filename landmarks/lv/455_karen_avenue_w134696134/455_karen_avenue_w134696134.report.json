@@ -1,0 +1,37 @@
+{
+  "object": "Tower455",
+  "verts": 200,
+  "faces": 120,
+  "tris": 360,
+  "bbox_min": [
+    -4.87,
+    -4.94,
+    -2.0
+  ],
+  "bbox_max": [
+    4.87,
+    4.88,
+    51.6
+  ],
+  "islands": 10,
+  "open_islands": 0,
+  "inside_out_islands": 0,
+  "nonmanifold_edges": 0,
+  "degenerate_faces": 0,
+  "loose_verts": 0,
+  "nonplanar_ngons": 0,
+  "materials": {
+    "Wall": 23,
+    "Glass": 12,
+    "Band": 72,
+    "Roof": 1,
+    "Core": 12
+  },
+  "glow": {
+    "max": 0.22,
+    "dark_faces": 13
+  },
+  "windowed_faces": 12,
+  "errors": [],
+  "warnings": []
+}

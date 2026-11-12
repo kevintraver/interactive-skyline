@@ -1,0 +1,11 @@
+{
+  "name": "Fremont Street canopy",
+  "glb": "fremont_canopy.glb",
+  "lat": 36.1707084,
+  "lon": -115.144063,
+  "east": 2587.3,
+  "north": 6214.8,
+  "rotation_deg": -28.14,
+  "visible": "always",
+  "notes": "GLB long axis is local +X (422 m), +Y across the street, origin at the canopy center on the ground (base sunk 2 m). The model is NOT pre-rotated: turn it rotation_deg counter-clockwise from east (negative = clockwise; street runs east-south-east, compass bearing 118.15) so local +X points from Main Street toward Fourth Street. Symmetric, so rotation_deg + 180 is equivalent. Material LedCanopy (underside and outer skin of the vault) is the surface to animate; Steel = ribs, edge beams, end caps; Column = columns and struts. Centerline from OpenStreetMap covered pedestrian ways 1427207960, 1427207961, 14322022; width from roof way 1428180251. Peak 27 m."
+}

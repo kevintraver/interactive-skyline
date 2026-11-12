@@ -1,0 +1,38 @@
+{
+  "object": "ResortTower",
+  "verts": 608,
+  "faces": 402,
+  "tris": 1020,
+  "bbox_min": [
+    -94.07,
+    -58.393,
+    -2.0
+  ],
+  "bbox_max": [
+    94.03,
+    105.783,
+    146.05
+  ],
+  "islands": 49,
+  "open_islands": 0,
+  "inside_out_islands": 0,
+  "nonmanifold_edges": 0,
+  "degenerate_faces": 0,
+  "loose_verts": 0,
+  "nonplanar_ngons": 0,
+  "materials": {
+    "GoldGlass": 33,
+    "Rib": 216,
+    "CrownBand": 32,
+    "EndWall": 54,
+    "BaseBand": 33,
+    "Roof": 34
+  },
+  "glow": {
+    "max": 0.9,
+    "dark_faces": 34
+  },
+  "windowed_faces": 33,
+  "errors": [],
+  "warnings": []
+}

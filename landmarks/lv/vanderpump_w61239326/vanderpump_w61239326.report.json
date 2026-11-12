@@ -1,0 +1,39 @@
+{
+  "object": "Hotel_w61239326",
+  "verts": 798,
+  "faces": 537,
+  "tris": 1320,
+  "bbox_min": [
+    -82.16,
+    -24.45,
+    -2.0
+  ],
+  "bbox_max": [
+    94.15,
+    32.73,
+    49.2
+  ],
+  "islands": 69,
+  "open_islands": 0,
+  "inside_out_islands": 0,
+  "nonmanifold_edges": 0,
+  "degenerate_faces": 0,
+  "loose_verts": 0,
+  "nonplanar_ngons": 0,
+  "materials": {
+    "Wall": 363,
+    "Base": 83,
+    "Glass": 5,
+    "Garage": 60,
+    "Roof": 7,
+    "Shade": 14,
+    "Crown": 5
+  },
+  "glow": {
+    "max": 0.9,
+    "dark_faces": 21
+  },
+  "windowed_faces": 5,
+  "errors": [],
+  "warnings": []
+}

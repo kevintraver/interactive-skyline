@@ -1,0 +1,56 @@
+{
+  "object": "ReplicaSkylineResort",
+  "verts": 1804,
+  "faces": 1281,
+  "tris": 3160,
+  "bbox_min": [
+    -117.49,
+    -120.55,
+    -2.0
+  ],
+  "bbox_max": [
+    90.89,
+    105.666,
+    161.0
+  ],
+  "islands": 112,
+  "open_islands": 0,
+  "inside_out_islands": 0,
+  "nonmanifold_edges": 0,
+  "degenerate_faces": 0,
+  "loose_verts": 0,
+  "nonplanar_ngons": 0,
+  "materials": {
+    "FacadeStone": 5,
+    "StoneTop": 15,
+    "Pier": 176,
+    "Lantern": 37,
+    "FacadeWhite": 5,
+    "WhiteTop": 20,
+    "PierGrey": 84,
+    "CrownMetal": 97,
+    "CrownMetalDark": 66,
+    "FacadeSalmon": 18,
+    "FacadeTan": 10,
+    "FacadePeach": 12,
+    "FacadeCream": 7,
+    "FacadeBlue": 114,
+    "FacadeMagenta": 5,
+    "FacadeTeal": 7,
+    "FacadeNavy": 9,
+    "FacadeBronze": 7,
+    "Band": 179,
+    "Cap": 64,
+    "Podium": 198,
+    "PodiumBase": 99,
+    "PodiumRoof": 3,
+    "Roof": 44
+  },
+  "glow": {
+    "max": 0.75,
+    "dark_faces": 0
+  },
+  "windowed_faces": 199,
+  "errors": [],
+  "warnings": []
+}

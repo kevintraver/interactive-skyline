@@ -1,0 +1,39 @@
+{
+  "object": "Tower",
+  "verts": 552,
+  "faces": 405,
+  "tris": 1032,
+  "bbox_min": [
+    -58.31,
+    -54.95,
+    -2.0
+  ],
+  "bbox_max": [
+    59.13,
+    64.86,
+    90.3
+  ],
+  "islands": 18,
+  "open_islands": 0,
+  "inside_out_islands": 0,
+  "nonmanifold_edges": 0,
+  "degenerate_faces": 0,
+  "loose_verts": 0,
+  "nonplanar_ngons": 0,
+  "materials": {
+    "Stone": 156,
+    "Glass": 97,
+    "Band": 97,
+    "Core": 5,
+    "Lobby": 39,
+    "Roof": 4,
+    "Canopy": 7
+  },
+  "glow": {
+    "max": 0.35,
+    "dark_faces": 101
+  },
+  "windowed_faces": 97,
+  "errors": [],
+  "warnings": []
+}

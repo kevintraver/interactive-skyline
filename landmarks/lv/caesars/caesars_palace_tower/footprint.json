@@ -1,0 +1,48 @@
+{
+ "id": "w134944648",
+ "name": "Palace Tower",
+ "height": 133.0,
+ "height_source": "osm-height",
+ "frame": "meters east and north of the footprint center c; heights in meters above ground; a model built in this frame installs with --offset 0,0",
+ "facts": {
+  "east_extent": [
+   -82.2,
+   82.2
+  ],
+  "north_extent": [
+   -18.0,
+   18.1
+  ],
+  "longest_edge_m": 163.4,
+  "longest_edge_bearing": 92.3
+ },
+ "volumes": [
+  {
+   "bottom": -2.0,
+   "top": 133.0,
+   "outline": [
+    [
+     -80.98,
+     18.09
+    ],
+    [
+     -82.16,
+     -11.48
+    ],
+    [
+     10.76,
+     -15.19
+    ],
+    [
+     81.07,
+     -18.0
+    ],
+    [
+     82.24,
+     11.57
+    ]
+   ],
+   "holes": []
+  }
+ ]
+}

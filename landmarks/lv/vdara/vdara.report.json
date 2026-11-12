@@ -1,0 +1,37 @@
+{
+  "object": "HotelTower",
+  "verts": 1322,
+  "faces": 747,
+  "tris": 2472,
+  "bbox_min": [
+    -71.68,
+    -48.36,
+    -2.0
+  ],
+  "bbox_max": [
+    63.11,
+    23.78,
+    174.0
+  ],
+  "islands": 43,
+  "open_islands": 0,
+  "inside_out_islands": 0,
+  "nonmanifold_edges": 0,
+  "degenerate_faces": 0,
+  "loose_verts": 0,
+  "nonplanar_ngons": 0,
+  "materials": {
+    "FacadeGlass": 362,
+    "SpandrelBand": 311,
+    "Crown": 48,
+    "Podium": 22,
+    "Roof": 4
+  },
+  "glow": {
+    "max": 0.55,
+    "dark_faces": 4
+  },
+  "windowed_faces": 362,
+  "errors": [],
+  "warnings": []
+}
