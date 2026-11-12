@@ -1,0 +1,40 @@
+{
+  "object": "Holiday_Inn_Express_Downtown",
+  "verts": 1152,
+  "faces": 624,
+  "tris": 2208,
+  "bbox_min": [
+    -33.98,
+    -19.97,
+    -2.0
+  ],
+  "bbox_max": [
+    31.06,
+    22.45,
+    40.4
+  ],
+  "islands": 24,
+  "open_islands": 0,
+  "inside_out_islands": 0,
+  "nonmanifold_edges": 0,
+  "degenerate_faces": 0,
+  "loose_verts": 0,
+  "nonplanar_ngons": 0,
+  "materials": {
+    "Wall": 311,
+    "Base": 26,
+    "Glass": 286,
+    "Roof": 1
+  },
+  "glow": {
+    "max": 0.24,
+    "dark_faces": 1
+  },
+  "windowed_faces": 286,
+  "errors": [],
+  "warnings": [],
+  "files": {
+    "blend": "holiday_inn_express_downtown.blend",
+    "glb": "holiday_inn_express_downtown.glb"
+  }
+}

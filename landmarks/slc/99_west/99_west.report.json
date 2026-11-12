@@ -1,0 +1,39 @@
+{
+  "object": "99_West",
+  "verts": 948,
+  "faces": 510,
+  "tris": 1824,
+  "bbox_min": [
+    -15.37,
+    -18.78,
+    -2.0
+  ],
+  "bbox_max": [
+    15.68,
+    20.54,
+    114.3
+  ],
+  "islands": 18,
+  "open_islands": 0,
+  "inside_out_islands": 0,
+  "nonmanifold_edges": 0,
+  "degenerate_faces": 0,
+  "loose_verts": 0,
+  "nonplanar_ngons": 0,
+  "materials": {
+    "Wall": 334,
+    "Glass": 170,
+    "Roof": 6
+  },
+  "glow": {
+    "max": 0.43,
+    "dark_faces": 6
+  },
+  "windowed_faces": 170,
+  "errors": [],
+  "warnings": [],
+  "files": {
+    "blend": "99_west.blend",
+    "glb": "99_west.glb"
+  }
+}

@@ -1,0 +1,41 @@
+{
+  "object": "Little_America_Hotel_Slc",
+  "verts": 1356,
+  "faces": 710,
+  "tris": 2648,
+  "bbox_min": [
+    -50.65,
+    -69.15,
+    -2.0
+  ],
+  "bbox_max": [
+    43.32,
+    50.83,
+    55.9
+  ],
+  "islands": 16,
+  "open_islands": 0,
+  "inside_out_islands": 0,
+  "nonmanifold_edges": 0,
+  "degenerate_faces": 0,
+  "loose_verts": 0,
+  "nonplanar_ngons": 0,
+  "materials": {
+    "Brick": 46,
+    "Glass": 598,
+    "Roof": 2,
+    "Podium": 19,
+    "Crown": 45
+  },
+  "glow": {
+    "max": 0.35,
+    "dark_faces": 2
+  },
+  "windowed_faces": 598,
+  "errors": [],
+  "warnings": [],
+  "files": {
+    "blend": "little_america_hotel_slc.blend",
+    "glb": "little_america_hotel_slc.glb"
+  }
+}

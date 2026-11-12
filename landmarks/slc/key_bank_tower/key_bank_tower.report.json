@@ -1,0 +1,41 @@
+{
+  "object": "Key_Bank_Tower",
+  "verts": 552,
+  "faces": 326,
+  "tris": 1004,
+  "bbox_min": [
+    -33.89,
+    -16.89,
+    -2.0
+  ],
+  "bbox_max": [
+    33.63,
+    18.46,
+    107.0
+  ],
+  "islands": 25,
+  "open_islands": 0,
+  "inside_out_islands": 0,
+  "nonmanifold_edges": 0,
+  "degenerate_faces": 0,
+  "loose_verts": 0,
+  "nonplanar_ngons": 0,
+  "materials": {
+    "Stone": 13,
+    "Glass": 13,
+    "Band": 286,
+    "Crown": 12,
+    "Roof": 2
+  },
+  "glow": {
+    "max": 0.37,
+    "dark_faces": 288
+  },
+  "windowed_faces": 13,
+  "errors": [],
+  "warnings": [],
+  "files": {
+    "blend": "key_bank_tower.blend",
+    "glb": "key_bank_tower.glb"
+  }
+}

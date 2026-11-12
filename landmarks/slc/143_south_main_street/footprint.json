@@ -1,0 +1,44 @@
+{
+ "id": "w224554407",
+ "name": "143 South Main Street",
+ "height": 44.9,
+ "height_source": "lidar",
+ "frame": "meters east and north of the footprint center c; heights in meters above ground; a model built in this frame installs with --offset 0,0",
+ "facts": {
+  "east_extent": [
+   -23.3,
+   23.4
+  ],
+  "north_extent": [
+   -11.2,
+   11.1
+  ],
+  "longest_edge_m": 46.5,
+  "longest_edge_bearing": 90.0
+ },
+ "volumes": [
+  {
+   "bottom": -2.0,
+   "top": 44.9,
+   "outline": [
+    [
+     -23.11,
+     11.07
+    ],
+    [
+     -23.29,
+     -11.24
+    ],
+    [
+     23.02,
+     -10.99
+    ],
+    [
+     23.37,
+     11.09
+    ]
+   ],
+   "holes": []
+  }
+ ]
+}

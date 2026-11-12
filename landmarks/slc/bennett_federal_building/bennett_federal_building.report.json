@@ -1,0 +1,40 @@
+{
+  "object": "Bennett_Federal_Building",
+  "verts": 616,
+  "faces": 422,
+  "tris": 1004,
+  "bbox_min": [
+    -51.301,
+    -21.671,
+    -2.0
+  ],
+  "bbox_max": [
+    50.121,
+    24.764,
+    44.0
+  ],
+  "islands": 57,
+  "open_islands": 0,
+  "inside_out_islands": 0,
+  "nonmanifold_edges": 0,
+  "degenerate_faces": 0,
+  "loose_verts": 0,
+  "nonplanar_ngons": 0,
+  "materials": {
+    "Wall": 14,
+    "Band": 393,
+    "Glass": 13,
+    "Roof": 2
+  },
+  "glow": {
+    "max": 0.65,
+    "dark_faces": 395
+  },
+  "windowed_faces": 13,
+  "errors": [],
+  "warnings": [],
+  "files": {
+    "blend": "bennett_federal_building.blend",
+    "glb": "bennett_federal_building.glb"
+  }
+}

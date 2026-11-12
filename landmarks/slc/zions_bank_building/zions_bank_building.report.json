@@ -1,0 +1,39 @@
+{
+  "object": "Zions_Bank_Building",
+  "verts": 296,
+  "faces": 222,
+  "tris": 444,
+  "bbox_min": [
+    -33.206,
+    -13.805,
+    -2.0
+  ],
+  "bbox_max": [
+    33.277,
+    13.864,
+    81.4
+  ],
+  "islands": 37,
+  "open_islands": 0,
+  "inside_out_islands": 0,
+  "nonmanifold_edges": 0,
+  "degenerate_faces": 0,
+  "loose_verts": 0,
+  "nonplanar_ngons": 0,
+  "materials": {
+    "Precast": 214,
+    "Glass": 6,
+    "Roof": 2
+  },
+  "glow": {
+    "max": 0.38,
+    "dark_faces": 2
+  },
+  "windowed_faces": 6,
+  "errors": [],
+  "warnings": [],
+  "files": {
+    "blend": "zions_bank_building.blend",
+    "glb": "zions_bank_building.glb"
+  }
+}

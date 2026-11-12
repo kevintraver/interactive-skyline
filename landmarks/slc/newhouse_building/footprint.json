@@ -1,0 +1,56 @@
+{
+ "id": "w224521586",
+ "name": "Newhouse Building",
+ "height": 50.8,
+ "height_source": "lidar",
+ "frame": "meters east and north of the footprint center c; heights in meters above ground; a model built in this frame installs with --offset 0,0",
+ "facts": {
+  "east_extent": [
+   -24.7,
+   24.2
+  ],
+  "north_extent": [
+   -13.2,
+   13.2
+  ],
+  "longest_edge_m": 48.5,
+  "longest_edge_bearing": 89.8
+ },
+ "volumes": [
+  {
+   "bottom": -2.0,
+   "top": 50.7,
+   "outline": [
+    [
+     24.16,
+     13.25
+    ],
+    [
+     24.09,
+     -13.02
+    ],
+    [
+     -24.44,
+     -13.17
+    ],
+    [
+     -24.65,
+     7.05
+    ],
+    [
+     -23.53,
+     9.5
+    ],
+    [
+     -21.6,
+     11.83
+    ],
+    [
+     -19.55,
+     13.15
+    ]
+   ],
+   "holes": []
+  }
+ ]
+}

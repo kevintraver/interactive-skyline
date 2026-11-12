@@ -1,0 +1,41 @@
+{
+  "object": "Deseret_Book",
+  "verts": 256,
+  "faces": 192,
+  "tris": 384,
+  "bbox_min": [
+    -10.08,
+    -22.11,
+    -2.0
+  ],
+  "bbox_max": [
+    10.14,
+    22.9,
+    36.9
+  ],
+  "islands": 32,
+  "open_islands": 0,
+  "inside_out_islands": 0,
+  "nonmanifold_edges": 0,
+  "degenerate_faces": 0,
+  "loose_verts": 0,
+  "nonplanar_ngons": 0,
+  "materials": {
+    "Brick": 5,
+    "Pier": 36,
+    "Glass": 6,
+    "Roof": 7,
+    "Win": 138
+  },
+  "glow": {
+    "max": 0.1,
+    "dark_faces": 43
+  },
+  "windowed_faces": 144,
+  "errors": [],
+  "warnings": [],
+  "files": {
+    "blend": "deseret_book.blend",
+    "glb": "deseret_book.glb"
+  }
+}

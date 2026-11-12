@@ -1,0 +1,106 @@
+{
+ "id": "w995054717",
+ "name": "Astra Tower",
+ "height": 137.5,
+ "height_source": "osm-height",
+ "frame": "meters east and north of the footprint center c; heights in meters above ground; a model built in this frame installs with --offset 0,0",
+ "facts": {
+  "east_extent": [
+   -24.9,
+   25.0
+  ],
+  "north_extent": [
+   -27.5,
+   27.6
+  ],
+  "longest_edge_m": 55.1,
+  "longest_edge_bearing": 179.9
+ },
+ "volumes": [
+  {
+   "bottom": 28.0,
+   "top": 70.0,
+   "outline": [
+    [
+     -24.87,
+     -27.54
+    ],
+    [
+     -24.89,
+     -5.04
+    ],
+    [
+     5.0,
+     -5.13
+    ],
+    [
+     4.99,
+     -27.52
+    ]
+   ],
+   "holes": []
+  },
+  {
+   "bottom": 28.0,
+   "top": 137.5,
+   "outline": [
+    [
+     5.0,
+     -5.13
+    ],
+    [
+     4.92,
+     27.57
+    ],
+    [
+     24.93,
+     27.6
+    ],
+    [
+     24.98,
+     -27.49
+    ],
+    [
+     4.99,
+     -27.52
+    ]
+   ],
+   "holes": []
+  },
+  {
+   "bottom": -2.0,
+   "top": 28.0,
+   "outline": [
+    [
+     24.98,
+     -27.49
+    ],
+    [
+     -24.87,
+     -27.54
+    ],
+    [
+     -24.89,
+     -5.04
+    ],
+    [
+     -24.92,
+     27.55
+    ],
+    [
+     -19.6,
+     27.55
+    ],
+    [
+     4.92,
+     27.57
+    ],
+    [
+     24.93,
+     27.6
+    ]
+   ],
+   "holes": []
+  }
+ ]
+}

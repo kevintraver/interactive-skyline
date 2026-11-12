@@ -1,0 +1,44 @@
+{
+ "id": "w595951117",
+ "name": "560 East South Temple",
+ "height": 43.9,
+ "height_source": "lidar",
+ "frame": "meters east and north of the footprint center c; heights in meters above ground; a model built in this frame installs with --offset 0,0",
+ "facts": {
+  "east_extent": [
+   -35.1,
+   35.1
+  ],
+  "north_extent": [
+   -19.0,
+   19.0
+  ],
+  "longest_edge_m": 69.9,
+  "longest_edge_bearing": 89.5
+ },
+ "volumes": [
+  {
+   "bottom": -2.0,
+   "top": 43.8,
+   "outline": [
+    [
+     34.78,
+     18.98
+    ],
+    [
+     35.13,
+     -18.33
+    ],
+    [
+     -34.74,
+     -18.98
+    ],
+    [
+     -35.09,
+     18.34
+    ]
+   ],
+   "holes": []
+  }
+ ]
+}

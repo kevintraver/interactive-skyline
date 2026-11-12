@@ -1,0 +1,39 @@
+{
+  "object": "Boyer_101",
+  "verts": 128,
+  "faces": 78,
+  "tris": 228,
+  "bbox_min": [
+    -22.102,
+    -49.252,
+    -2.0
+  ],
+  "bbox_max": [
+    31.281,
+    24.984,
+    39.4
+  ],
+  "islands": 7,
+  "open_islands": 0,
+  "inside_out_islands": 0,
+  "nonmanifold_edges": 0,
+  "degenerate_faces": 0,
+  "loose_verts": 0,
+  "nonplanar_ngons": 0,
+  "materials": {
+    "Wall": 60,
+    "Glass": 11,
+    "Roof": 7
+  },
+  "glow": {
+    "max": 0.4,
+    "dark_faces": 7
+  },
+  "windowed_faces": 11,
+  "errors": [],
+  "warnings": [],
+  "files": {
+    "blend": "boyer_101.blend",
+    "glb": "boyer_101.glb"
+  }
+}

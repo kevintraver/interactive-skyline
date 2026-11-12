@@ -5,7 +5,7 @@ import * as nightModule from './night.js'; // (a namespace import: an older nigh
 const night = nightModule.night || { value: 0 };
 const clock = nightModule.clock || { value: 0 };
 
-// A fountain show on a lake, from a data file the skill writes (public/models/attractions/*.json): the lake
+// A fountain show on a lake, from a data file the skill writes (public/models/<city>/attractions/*.json): the lake
 // outline and every nozzle in meters east and north of the city origin, each as
 //   [east, north, type, figure, u, tangent_e, tangent_n, normal_e, normal_n, seed]
 // type 0 oarsman, 1 mini-shooter, 2 super-shooter, 3 extreme-shooter; figure 0 is the front line, 1.. rings;

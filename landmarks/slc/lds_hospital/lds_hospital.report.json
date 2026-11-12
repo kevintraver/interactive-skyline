@@ -1,0 +1,40 @@
+{
+  "object": "Lds_Hospital",
+  "verts": 124,
+  "faces": 70,
+  "tris": 232,
+  "bbox_min": [
+    -42.19,
+    -95.36,
+    -2.0
+  ],
+  "bbox_max": [
+    47.01,
+    92.89,
+    38.1
+  ],
+  "islands": 4,
+  "open_islands": 0,
+  "inside_out_islands": 0,
+  "nonmanifold_edges": 0,
+  "degenerate_faces": 0,
+  "loose_verts": 0,
+  "nonplanar_ngons": 0,
+  "materials": {
+    "Brick": 51,
+    "Precast": 10,
+    "Roof": 3,
+    "Band": 6
+  },
+  "glow": {
+    "max": 0.12,
+    "dark_faces": 3
+  },
+  "windowed_faces": 61,
+  "errors": [],
+  "warnings": [],
+  "files": {
+    "blend": "lds_hospital.blend",
+    "glb": "lds_hospital.glb"
+  }
+}

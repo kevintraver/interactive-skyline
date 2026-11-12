@@ -1,0 +1,44 @@
+{
+ "id": "w230130107",
+ "name": "Aztec Condominium",
+ "height": 37.1,
+ "height_source": "lidar",
+ "frame": "meters east and north of the footprint center c; heights in meters above ground; a model built in this frame installs with --offset 0,0",
+ "facts": {
+  "east_extent": [
+   -13.6,
+   13.7
+  ],
+  "north_extent": [
+   -24.1,
+   24.1
+  ],
+  "longest_edge_m": 48.0,
+  "longest_edge_bearing": 179.5
+ },
+ "volumes": [
+  {
+   "bottom": -2.0,
+   "top": 37.0,
+   "outline": [
+    [
+     -13.64,
+     23.94
+    ],
+    [
+     -13.26,
+     -24.08
+    ],
+    [
+     13.74,
+     -23.87
+    ],
+    [
+     13.36,
+     24.14
+    ]
+   ],
+   "holes": []
+  }
+ ]
+}

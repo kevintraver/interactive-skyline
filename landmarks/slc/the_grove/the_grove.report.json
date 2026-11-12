@@ -1,0 +1,41 @@
+{
+  "object": "The_Grove",
+  "verts": 84,
+  "faces": 56,
+  "tris": 140,
+  "bbox_min": [
+    -20.23,
+    -12.86,
+    -2.0
+  ],
+  "bbox_max": [
+    20.5,
+    12.64,
+    39.0
+  ],
+  "islands": 7,
+  "open_islands": 0,
+  "inside_out_islands": 0,
+  "nonmanifold_edges": 0,
+  "degenerate_faces": 0,
+  "loose_verts": 0,
+  "nonplanar_ngons": 0,
+  "materials": {
+    "Wall": 7,
+    "Brick": 7,
+    "Band": 34,
+    "Glass": 7,
+    "Roof": 1
+  },
+  "glow": {
+    "max": 0.301,
+    "dark_faces": 35
+  },
+  "windowed_faces": 7,
+  "errors": [],
+  "warnings": [],
+  "files": {
+    "blend": "the_grove.blend",
+    "glb": "the_grove.glb"
+  }
+}

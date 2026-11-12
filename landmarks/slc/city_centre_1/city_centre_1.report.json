@@ -1,0 +1,40 @@
+{
+  "object": "City_Centre_1",
+  "verts": 64,
+  "faces": 40,
+  "tris": 112,
+  "bbox_min": [
+    -38.29,
+    -28.31,
+    -2.0
+  ],
+  "bbox_max": [
+    53.94,
+    56.75,
+    41.0
+  ],
+  "islands": 4,
+  "open_islands": 0,
+  "inside_out_islands": 0,
+  "nonmanifold_edges": 0,
+  "degenerate_faces": 0,
+  "loose_verts": 0,
+  "nonplanar_ngons": 0,
+  "materials": {
+    "Brick": 21,
+    "Band": 5,
+    "Glass": 10,
+    "Roof": 4
+  },
+  "glow": {
+    "max": 0.28,
+    "dark_faces": 4
+  },
+  "windowed_faces": 10,
+  "errors": [],
+  "warnings": [],
+  "files": {
+    "blend": "city_centre_1.blend",
+    "glb": "city_centre_1.glb"
+  }
+}

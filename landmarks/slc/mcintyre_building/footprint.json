@@ -1,0 +1,60 @@
+{
+ "id": "w1318908404",
+ "name": "McIntyre Building",
+ "height": 36.8,
+ "height_source": "lidar",
+ "frame": "meters east and north of the footprint center c; heights in meters above ground; a model built in this frame installs with --offset 0,0",
+ "facts": {
+  "east_extent": [
+   -21.1,
+   21.0
+  ],
+  "north_extent": [
+   -8.2,
+   8.2
+  ],
+  "longest_edge_m": 42.0,
+  "longest_edge_bearing": 89.8
+ },
+ "volumes": [
+  {
+   "bottom": -2.0,
+   "top": 36.8,
+   "outline": [
+    [
+     -21.0,
+     -8.16
+    ],
+    [
+     -21.01,
+     -6.3
+    ],
+    [
+     -21.05,
+     7.97
+    ],
+    [
+     -10.0,
+     7.99
+    ],
+    [
+     9.51,
+     8.05
+    ],
+    [
+     19.7,
+     8.18
+    ],
+    [
+     20.98,
+     8.08
+    ],
+    [
+     21.03,
+     -8.02
+    ]
+   ],
+   "holes": []
+  }
+ ]
+}

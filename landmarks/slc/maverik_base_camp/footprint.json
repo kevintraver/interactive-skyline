@@ -1,0 +1,64 @@
+{
+ "id": "w595951347",
+ "name": "Maverik Base Camp",
+ "height": 51.4,
+ "height_source": "lidar",
+ "frame": "meters east and north of the footprint center c; heights in meters above ground; a model built in this frame installs with --offset 0,0",
+ "facts": {
+  "east_extent": [
+   -15.5,
+   15.4
+  ],
+  "north_extent": [
+   -18.6,
+   18.7
+  ],
+  "longest_edge_m": 29.3,
+  "longest_edge_bearing": 0.3
+ },
+ "volumes": [
+  {
+   "bottom": -2.2,
+   "top": 51.4,
+   "outline": [
+    [
+     -15.48,
+     -14.77
+    ],
+    [
+     -15.32,
+     14.52
+    ],
+    [
+     -11.49,
+     18.68
+    ],
+    [
+     -2.96,
+     18.65
+    ],
+    [
+     11.31,
+     18.63
+    ],
+    [
+     15.42,
+     14.33
+    ],
+    [
+     15.24,
+     -14.95
+    ],
+    [
+     11.24,
+     -18.62
+    ],
+    [
+     -11.56,
+     -18.58
+    ]
+   ],
+   "holes": []
+  }
+ ]
+}

@@ -1,0 +1,41 @@
+{
+  "object": "One_Utah_Center",
+  "verts": 540,
+  "faces": 344,
+  "tris": 932,
+  "bbox_min": [
+    -25.94,
+    -33.87,
+    -2.0
+  ],
+  "bbox_max": [
+    26.22,
+    36.07,
+    106.7
+  ],
+  "islands": 37,
+  "open_islands": 0,
+  "inside_out_islands": 0,
+  "nonmanifold_edges": 0,
+  "degenerate_faces": 0,
+  "loose_verts": 0,
+  "nonplanar_ngons": 0,
+  "materials": {
+    "Granite": 66,
+    "Glass": 35,
+    "Podium": 127,
+    "Crown": 21,
+    "Cap": 95
+  },
+  "glow": {
+    "max": 0.25,
+    "dark_faces": 0
+  },
+  "windowed_faces": 101,
+  "errors": [],
+  "warnings": [],
+  "files": {
+    "blend": "one_utah_center.blend",
+    "glb": "one_utah_center.glb"
+  }
+}

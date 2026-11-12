@@ -5,7 +5,7 @@ import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 
 // Buildings drawn from a glTF model instead of their extruded volumes. public/models/models.json lists them
 // by city and building id:
-//   { "lv": { "w135457469": { "url": "/models/strat.glb", "offset": [3.2, 0.8], "name": "Stratosphere Tower" } } }
+//   { "lv": { "w135457469": { "url": "/models/lv/strat.glb", "offset": [3.2, 0.8], "name": "Stratosphere Tower" } } }
 // A model is in meters with its origin on the ground at the building's center: +x east, +y up, -z north.
 // `offset` moves that origin from the footprint's center, in meters east and north.
 // A building with a model is always drawn from it, also under the height cutoff (it then joins the blue,

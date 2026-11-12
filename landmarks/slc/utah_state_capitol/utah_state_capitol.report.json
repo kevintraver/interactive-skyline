@@ -1,0 +1,43 @@
+{
+  "object": "Utah_State_Capitol",
+  "verts": 2191,
+  "faces": 1426,
+  "tris": 3846,
+  "bbox_min": [
+    -63.05,
+    -37.3,
+    -2.0
+  ],
+  "bbox_max": [
+    63.05,
+    36.54,
+    87.0
+  ],
+  "islands": 134,
+  "open_islands": 0,
+  "inside_out_islands": 0,
+  "nonmanifold_edges": 0,
+  "degenerate_faces": 0,
+  "loose_verts": 0,
+  "nonplanar_ngons": 0,
+  "materials": {
+    "Granite": 274,
+    "Base": 46,
+    "Column": 867,
+    "Wall": 46,
+    "Copper": 160,
+    "Gold": 23,
+    "Roof": 10
+  },
+  "glow": {
+    "max": 1.0,
+    "dark_faces": 10
+  },
+  "windowed_faces": 46,
+  "errors": [],
+  "warnings": [],
+  "files": {
+    "blend": "utah_state_capitol.blend",
+    "glb": "utah_state_capitol.glb"
+  }
+}

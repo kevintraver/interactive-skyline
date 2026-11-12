@@ -1,0 +1,41 @@
+{
+  "object": "Hyatt_Regency_Slc",
+  "verts": 904,
+  "faces": 496,
+  "tris": 1720,
+  "bbox_min": [
+    -34.38,
+    -54.482,
+    -2.0
+  ],
+  "bbox_max": [
+    31.6,
+    41.455,
+    99.7
+  ],
+  "islands": 22,
+  "open_islands": 0,
+  "inside_out_islands": 0,
+  "nonmanifold_edges": 0,
+  "degenerate_faces": 0,
+  "loose_verts": 0,
+  "nonplanar_ngons": 0,
+  "materials": {
+    "Glass": 46,
+    "Podium": 75,
+    "Precast": 6,
+    "Band": 322,
+    "Roof": 47
+  },
+  "glow": {
+    "max": 0.225,
+    "dark_faces": 47
+  },
+  "windowed_faces": 46,
+  "errors": [],
+  "warnings": [],
+  "files": {
+    "blend": "hyatt_regency_slc.blend",
+    "glb": "hyatt_regency_slc.glb"
+  }
+}

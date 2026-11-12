@@ -17,7 +17,8 @@ find     lists matching buildings with what is needed to place a model: id, heig
 locate   converts latitude/longitude to the app's local meters (east, north of the city origin).
 install  adds the model loader, night mode, extras, fountain shows and LED surfaces to the repo if they are
          missing or older (assets/skyline; upgrades v3/v4 integrations to v5), copies the GLB to
-         public/models/, and lists it in public/models/models.json: a building model under its id, or with
+         public/models/<city>/ (moving models listed in the old flat layout into their city's folder), and
+         lists it in public/models/models.json: a building model under its id, or with
          --extra a structure that is not a building in the app's data (a canopy, a wheel, a light beam),
          placed on the terrain at --east/--north (m from the city origin), turned --rotation degrees
          counter-clockwise from east, shown always or only at night; --spin-period turns its Rotor node (a
@@ -26,9 +27,11 @@ upgrade  does install's integration part alone (pristine repo, or v3/v4/v5 -> v6
 check    serves the repo itself (no Node, no Vite, nothing written into the repo) on a local port, opens it
          in headless Edge or Chrome with a throwaway profile, frames the building (or with --extra the extra
          or fountain of that name), and saves screenshots by day and by night plus a report of what the app
-         built and any console errors. three.js comes from the repo's node_modules when present, otherwise
-         from the jsDelivr CDN at the repo's version. Fountain shows and LED skins are held at --show-time
-         seconds into their loop, so shots are repeatable.
+         built and any console errors (a probe that times out on a busy machine is retried once; at most
+         SKYLINE_CHECK_BROWSERS browsers run at once machine-wide, default a third of the CPUs). three.js
+         comes from the repo's node_modules when present (for a clone without one: its origin checkout's, or
+         SKYLINE_NODE_MODULES), otherwise from the jsDelivr CDN. Fountain shows and LED skins are held at
+         --show-time seconds into their loop, so shots are repeatable.
 
 Shot spec for --shot: LABEL:MODE:BEARING:ELEVATION:DIST:TARGET[:HIGHLIGHT]
   MODE day|night; BEARING compass direction from the building to the camera (0 = north), or "auto" to let
@@ -41,6 +44,7 @@ Shot spec for --shot: LABEL:MODE:BEARING:ELEVATION:DIST:TARGET[:HIGHLIGHT]
 from __future__ import annotations
 
 import argparse
+import contextlib
 import functools
 import html
 import http.server
@@ -53,6 +57,7 @@ import subprocess
 import sys
 import tempfile
 import threading
+import time
 import urllib.parse
 from concurrent.futures import ThreadPoolExecutor
 
@@ -320,7 +325,7 @@ def ensure_fountains(repo: str, city: str | None) -> list[str]:
     shows = manifest.get("fountains", {})
     if not isinstance(shows, dict):
         raise SystemExit(f"{manifest_path}: \"fountains\" should be an object keyed by city")
-    folder = os.path.join(repo, "public", "models", "attractions")
+    folder = os.path.join(repo, "public", "models", city, "attractions")
     os.makedirs(folder, exist_ok=True)
 
     def data_version(path: str) -> int:
@@ -333,9 +338,9 @@ def ensure_fountains(repo: str, city: str | None) -> list[str]:
         # a newer bundled version replaces the repo's copy; an edited copy keeps its place if you bump "version"
         if not os.path.exists(target) or data_version(target) < data_version(source):
             shutil.copyfile(source, target)
-            done.append(f"copied the {show['name']} data to public/models/attractions/{show['file']}")
+            done.append(f"copied the {show['name']} data to public/models/{city}/attractions/{show['file']}")
     if city not in shows:
-        shows[city] = [{"name": s["name"], "url": f"/models/attractions/{s['file']}"} for s in bundled]
+        shows[city] = [{"name": s["name"], "url": f"/models/{city}/attractions/{s['file']}"} for s in bundled]
         manifest["fountains"] = shows
         write_manifest(manifest_path, manifest)
         done.append(f"listed {', '.join(s['name'] for s in bundled)} under \"fountains\" in models.json")
@@ -394,6 +399,7 @@ def ensure_integration(repo: str, force: bool, city: str | None = None) -> list[
             shutil.copyfile(os.path.join(ASSETS, name), target)
             done.append(f"updated src/{name} to {INTEGRATION_VERSION}")
     done += ensure_custom_models(repo, force)
+    done += move_models_into_city_folders(repo)  # before the fountains, which now live in the city folder
     done += ensure_fountains(repo, city)
     return done
 
@@ -428,13 +434,63 @@ def ensure_custom_models(repo: str, force: bool) -> list[str]:
             f"moved {sum(len(m) for m in entries.values())} existing entries into public/models/models.json"]
 
 
-def copy_glb(repo: str, glb: str) -> str:
-    models_dir = os.path.join(repo, "public", "models")
+def copy_glb(repo: str, glb: str, city: str) -> str:
+    """Copy a GLB into the city's own folder, public/models/<city>/, and return its URL in the app."""
+    models_dir = os.path.join(repo, "public", "models", city)
     os.makedirs(models_dir, exist_ok=True)
     target = os.path.join(models_dir, os.path.basename(glb))
     if os.path.abspath(glb) != os.path.abspath(target):
         shutil.copyfile(glb, target)
-    return f"/models/{os.path.basename(glb)}"
+    return f"/models/{city}/{os.path.basename(glb)}"
+
+
+def city_folder_url(url: str, city: str) -> str | None:
+    """The per-city URL for a file still listed in the old flat layout (/models/x.glb, /models/attractions/x.json),
+    or None when the URL is already per-city or not a models URL."""
+    parts = url.split("/")
+    if parts[:2] != ["", "models"] or len(parts) < 3:
+        return None
+    rest = parts[2:]
+    if len(rest) == 1 or (len(rest) == 2 and rest[0] == "attractions"):
+        return "/".join(["", "models", city, *rest])
+    return None
+
+
+def move_models_into_city_folders(repo: str) -> list[str]:
+    """Move model files listed in the old flat layout into public/models/<city>/ and update their URLs in
+    models.json. Leaves per-city entries alone, so it is safe to run on every install."""
+    manifest_path = os.path.join(repo, "public", "models", "models.json")
+    if not os.path.exists(manifest_path):
+        return []
+    manifest = load_json(manifest_path)
+    public = os.path.join(repo, "public")
+    entries: list[tuple[str, dict]] = []
+    for key, value in manifest.items():
+        if key in ("extras", "fountains") and isinstance(value, dict):
+            entries += [(city, e) for city, items in value.items() if isinstance(items, list) for e in items]
+        elif isinstance(value, dict):
+            entries += [(key, e) for e in value.values() if isinstance(e, dict)]
+    moved = 0
+    for city, entry in entries:
+        url = entry.get("url", "")
+        new_url = city_folder_url(url, city) if isinstance(url, str) else None
+        if not new_url:
+            continue
+        old_path = os.path.join(public, *url.strip("/").split("/"))
+        new_path = os.path.join(public, *new_url.strip("/").split("/"))
+        if os.path.exists(old_path) and not os.path.exists(new_path):
+            os.makedirs(os.path.dirname(new_path), exist_ok=True)
+            shutil.move(old_path, new_path)
+        if os.path.exists(new_path):
+            entry["url"] = new_url
+            moved += 1
+    if not moved:
+        return []
+    write_manifest(manifest_path, manifest)
+    old_attractions = os.path.join(public, "models", "attractions")
+    if os.path.isdir(old_attractions) and not os.listdir(old_attractions):
+        os.rmdir(old_attractions)
+    return [f"moved {moved} model files into per-city folders (public/models/<city>/) and updated models.json"]
 
 
 def finish_install(repo: str, done: list[str]) -> None:
@@ -453,8 +509,8 @@ def install(repo: str, city: str, bid: str, glb: str, offset: list[float], name:
     if building is None:
         raise SystemExit(f"{bid} is not a building in {city}; use `find` to look it up")
     done = ensure_integration(repo, force, city)
-    url = copy_glb(repo, glb)
-    done.append(f"copied {os.path.basename(glb)} to public/models/")
+    url = copy_glb(repo, glb, city)
+    done.append(f"copied {os.path.basename(glb)} to public/models/{city}/")
     manifest_path = os.path.join(repo, "public", "models", "models.json")
     manifest = load_json(manifest_path) if os.path.exists(manifest_path) else {}
     entry = {"url": url, "offset": offset, "name": name or building.get("name") or bid}
@@ -512,8 +568,8 @@ def install_extra(repo: str, city: str, name: str, glb: str, east: float, north:
             spin_notes.append(f"{spin['node']} turns once every {spin['period_s']:g} s with {len(cabins)} level cabins")
     near = load_json(os.path.join(repo, "public", "data", "cities.json")).get(city, {}).get("terrain", {}).get("near")
     done = ensure_integration(repo, force, city)
-    url = copy_glb(repo, glb)
-    done.append(f"copied {os.path.basename(glb)} to public/models/")
+    url = copy_glb(repo, glb, city)
+    done.append(f"copied {os.path.basename(glb)} to public/models/{city}/")
     manifest_path = os.path.join(repo, "public", "models", "models.json")
     manifest = load_json(manifest_path) if os.path.exists(manifest_path) else {}
     extras = manifest.setdefault("extras", {})
@@ -644,9 +700,10 @@ out.textContent = JSON.stringify(report);
 def three_versions(repo: str) -> dict[str, str]:
     pkg = load_json(os.path.join(repo, "package.json")).get("dependencies", {})
     versions = {}
+    root = modules_root(repo)
     for name in ("three", "three-mesh-bvh"):
-        installed = os.path.join(repo, "node_modules", name, "package.json")
-        if os.path.exists(installed):
+        installed = os.path.join(root, name, "package.json") if root else ""
+        if root and os.path.exists(installed):
             versions[name] = load_json(installed)["version"]
         elif name in pkg:
             versions[name] = re.sub(r"^[^\d]*", "", pkg[name])
@@ -657,8 +714,28 @@ BARE_IMPORT = re.compile(r"""(\bfrom\s*|\bimport\s*\(?\s*)(['"])(three-mesh-bvh(
 JSON_IMPORT = re.compile(r"""(\bfrom\s*)(['"])(\.{0,2}/[^'"]+\.json)\2""")
 
 
+@functools.lru_cache(maxsize=None)
+def modules_root(repo: str) -> str | None:
+    """The node_modules folder the check serves three.js from: the repo's own; else, for a throwaway clone (a
+    batch build's), the one in the checkout it was cloned from; else SKYLINE_NODE_MODULES. None means the CDN."""
+    candidates = [os.path.join(repo, "node_modules")]
+    try:
+        origin = subprocess.run(["git", "-C", repo, "remote", "get-url", "origin"], capture_output=True,
+                                text=True, timeout=10).stdout.strip()
+    except (OSError, subprocess.SubprocessError):
+        origin = ""
+    if origin and os.path.isdir(origin):
+        candidates.append(os.path.join(origin, "node_modules"))
+    if os.environ.get("SKYLINE_NODE_MODULES"):
+        candidates.append(os.environ["SKYLINE_NODE_MODULES"])
+    for folder in candidates:
+        if all(os.path.exists(os.path.join(folder, n, "package.json")) for n in ("three", "three-mesh-bvh")):
+            return os.path.normpath(os.path.abspath(folder))
+    return None
+
+
 def has_local_modules(repo: str) -> bool:
-    return all(os.path.exists(os.path.join(repo, "node_modules", n, "package.json")) for n in ("three", "three-mesh-bvh"))
+    return modules_root(repo) is not None
 
 
 def local_module(name: str) -> str:
@@ -687,7 +764,8 @@ def import_map(repo: str) -> str:
         imports = {name: local_module(name) for name in ("three", "three-mesh-bvh", "three-mesh-bvh/worker")}
         imports["three/addons/"] = "/node_modules/three/examples/jsm/"
     else:
-        # from a CDN the BVH worker cannot start (a worker must come from the page's origin): run `pnpm install`
+        # from a CDN the BVH worker cannot start (a worker must come from the page's origin): run `pnpm install`,
+        # or set SKYLINE_NODE_MODULES to another checkout's node_modules
         v = three_versions(repo)
         cdn = "https://cdn.jsdelivr.net/npm"
         imports = {"three": f"{cdn}/three@{v['three']}/build/three.module.js",
@@ -747,7 +825,11 @@ class RepoHandler(http.server.SimpleHTTPRequestHandler):
 
     def translate_path(self, path: str) -> str:
         rel = urllib.parse.unquote(urllib.parse.urlparse(path).path).lstrip("/")
-        base = self.repo if rel.startswith(("src/", "node_modules/")) else os.path.join(self.repo, "public")
+        if rel.startswith("node_modules/"):  # possibly another checkout's (see modules_root)
+            base = modules_root(self.repo) or os.path.join(self.repo, "node_modules")
+            rel = rel[len("node_modules/"):]
+        else:
+            base = self.repo if rel.startswith("src/") else os.path.join(self.repo, "public")
         full = os.path.normpath(os.path.join(base, rel))
         if not full.startswith(os.path.normpath(base)):
             return os.path.join(base, "__forbidden__")
@@ -779,11 +861,48 @@ def find_browser(explicit: str | None) -> str:
     raise SystemExit("no Edge or Chrome found; pass --browser PATH")
 
 
-def run_browser(browser: str, profile: str, url: str, size: str, extra: list[str]) -> tuple[str, list[str]]:
+BROWSER_SLOTS = max(1, int(os.environ.get("SKYLINE_CHECK_BROWSERS") or max(2, (os.cpu_count() or 4) // 3)))
+SLOT_DIR = os.path.join(tempfile.gettempdir(), "skyline-check-slots")
+STALE_SLOT_S = 600  # longer than any one browser run (see run_browser's timeout)
+
+
+@contextlib.contextmanager
+def browser_slot():
+    """Hold one of BROWSER_SLOTS machine-wide slots (lock files shared by every check process) while a headless
+    browser runs. Several checks at once, as in a batch of builds, would otherwise start dozens of software-
+    rendering browsers that starve each other until the app misses its virtual-time budget."""
+    os.makedirs(SLOT_DIR, exist_ok=True)
+    while True:
+        for i in range(BROWSER_SLOTS):
+            path = os.path.join(SLOT_DIR, f"slot-{i}.lock")
+            try:
+                os.close(os.open(path, os.O_CREAT | os.O_EXCL | os.O_WRONLY))
+            except (FileExistsError, PermissionError):
+                with contextlib.suppress(OSError):
+                    if time.time() - os.path.getmtime(path) > STALE_SLOT_S:
+                        os.remove(path)  # left behind by a check that was killed
+                continue
+            try:
+                yield
+            finally:
+                with contextlib.suppress(OSError):
+                    os.remove(path)
+            return
+        time.sleep(0.5)
+
+
+def run_browser(browser: str, profile: str, url: str, size: str, extra: list[str],
+                budget_ms: int = 45000) -> tuple[str, list[str]]:
     cmd = [browser, "--headless=new", "--no-first-run", "--no-default-browser-check", "--disable-extensions",
            f"--user-data-dir={profile}", f"--window-size={size}", "--hide-scrollbars", "--enable-unsafe-swiftshader",
-           "--ignore-gpu-blocklist", "--enable-logging=stderr", "--v=0", "--virtual-time-budget=45000", *extra, url]
-    proc = subprocess.run(cmd, capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=240)
+           "--ignore-gpu-blocklist", "--enable-logging=stderr", "--v=0", f"--virtual-time-budget={budget_ms}",
+           *extra, url]
+    try:
+        with browser_slot():
+            proc = subprocess.run(cmd, capture_output=True, text=True, encoding="utf-8", errors="replace",
+                                  timeout=max(240, budget_ms // 250))
+    except subprocess.TimeoutExpired:  # a stuck browser counts as a failed shot, so the retry below can redo it
+        return "", []
     console = [line.split("CONSOLE", 1)[1].strip(":]() 0123456789") for line in proc.stderr.splitlines()
                if "CONSOLE" in line and not any(n in line for n in CONSOLE_NOISE)]
     return proc.stdout, console
@@ -854,19 +973,23 @@ def check(repo: str, city: str, bid: str | None, out: str, shots: list[str], bro
                   "autopitch": int(not shots)}
         return f"http://127.0.0.1:{port}/__check.html?{urllib.parse.urlencode(params)}"
 
-    def take(job: tuple[int, dict | None]) -> tuple[str, list[str]]:
+    def take(job: tuple[int, dict | None], budget_ms: int = 45000) -> tuple[str, list[str]]:
         # every browser gets its own throwaway profile, so they can all run at once
         k, shot = job
-        profile = os.path.join(scratch, f"profile-{k}")
+        profile = os.path.join(scratch, f"profile-{k}-{budget_ms}")
         if shot is None:  # the DOM dump that carries the probe's report
-            return run_browser(exe, profile, url_for(specs[0]), size, ["--dump-dom"])
+            return run_browser(exe, profile, url_for(specs[0]), size, ["--dump-dom"], budget_ms)
         png = os.path.abspath(os.path.join(out, f"{shot['label']}.png"))
-        return run_browser(exe, profile, url_for(shot), size, [f"--screenshot={png}"])
+        return run_browser(exe, profile, url_for(shot), size, [f"--screenshot={png}"], budget_ms)
 
     try:
         jobs = [(0, None)] + [(k + 1, shot) for k, shot in enumerate(specs)]
         with ThreadPoolExecutor(max_workers=min(6, len(jobs))) as pool:
             results = list(pool.map(take, jobs))
+        if '<pre id="probe"' not in results[0][0]:
+            # A busy machine (several checks at once, software rendering) can use up the virtual-time budget
+            # before the app finishes loading. Retry the probe once, alone, with twice the budget.
+            results[0] = take(jobs[0], 90000)
         dom, console = results[0]
         match = re.search(r'<pre id="probe"[^>]*>(.*?)</pre>', dom, re.S)
         try:

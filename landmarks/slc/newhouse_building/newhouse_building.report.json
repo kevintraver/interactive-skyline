@@ -1,0 +1,41 @@
+{
+  "object": "Newhouse_Building",
+  "verts": 84,
+  "faces": 54,
+  "tris": 144,
+  "bbox_min": [
+    -25.452,
+    -13.972,
+    -2.0
+  ],
+  "bbox_max": [
+    24.962,
+    14.052,
+    50.7
+  ],
+  "islands": 6,
+  "open_islands": 0,
+  "inside_out_islands": 0,
+  "nonmanifold_edges": 0,
+  "degenerate_faces": 0,
+  "loose_verts": 0,
+  "nonplanar_ngons": 0,
+  "materials": {
+    "Base": 8,
+    "Shaft": 9,
+    "Band": 20,
+    "Cornice": 16,
+    "Roof": 1
+  },
+  "glow": {
+    "max": 0.47,
+    "dark_faces": 1
+  },
+  "windowed_faces": 9,
+  "errors": [],
+  "warnings": [],
+  "files": {
+    "blend": "newhouse_building.blend",
+    "glb": "newhouse_building.glb"
+  }
+}

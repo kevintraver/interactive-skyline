@@ -1,0 +1,43 @@
+{
+  "object": "Lattice_Apartments",
+  "verts": 490,
+  "faces": 259,
+  "tris": 952,
+  "bbox_min": [
+    -24.194,
+    -51.967,
+    -2.0
+  ],
+  "bbox_max": [
+    25.579,
+    42.812,
+    41.5
+  ],
+  "islands": 7,
+  "open_islands": 0,
+  "inside_out_islands": 0,
+  "nonmanifold_edges": 0,
+  "degenerate_faces": 0,
+  "loose_verts": 0,
+  "nonplanar_ngons": 0,
+  "materials": {
+    "Wall": 0,
+    "Base": 36,
+    "Band": 150,
+    "Glass": 36,
+    "Roof": 37
+  },
+  "glow": {
+    "max": 0.03,
+    "dark_faces": 223
+  },
+  "windowed_faces": 36,
+  "errors": [],
+  "warnings": [
+    "unused materials: Wall"
+  ],
+  "files": {
+    "blend": "lattice_apartments.blend",
+    "glb": "lattice_apartments.glb"
+  }
+}

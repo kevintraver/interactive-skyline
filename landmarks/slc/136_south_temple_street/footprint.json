@@ -1,0 +1,113 @@
+{
+ "id": "w595951732",
+ "name": "136 South Temple Street",
+ "height": 83.5,
+ "height_source": "osm-height",
+ "frame": "meters east and north of the footprint center c; heights in meters above ground; a model built in this frame installs with --offset 0,0",
+ "facts": {
+  "east_extent": [
+   -23.6,
+   23.5
+  ],
+  "north_extent": [
+   -24.0,
+   23.9
+  ],
+  "longest_edge_m": 47.0,
+  "longest_edge_bearing": 90.0
+ },
+ "volumes": [
+  {
+   "bottom": -2.0,
+   "top": 79.0,
+   "outline": [
+    [
+     -23.5,
+     11.26
+    ],
+    [
+     23.46,
+     11.16
+    ],
+    [
+     23.46,
+     -15.77
+    ],
+    [
+     -23.43,
+     -15.59
+    ]
+   ],
+   "holes": []
+  },
+  {
+   "bottom": -2.0,
+   "top": 12.0,
+   "outline": [
+    [
+     -23.41,
+     -23.99
+    ],
+    [
+     -23.43,
+     -15.59
+    ],
+    [
+     23.46,
+     -15.77
+    ],
+    [
+     23.46,
+     -24.0
+    ]
+   ],
+   "holes": []
+  },
+  {
+   "bottom": -2.0,
+   "top": 12.0,
+   "outline": [
+    [
+     -23.5,
+     11.26
+    ],
+    [
+     -23.56,
+     23.94
+    ],
+    [
+     23.46,
+     23.94
+    ],
+    [
+     23.46,
+     11.16
+    ]
+   ],
+   "holes": []
+  },
+  {
+   "bottom": -2.0,
+   "top": 83.5,
+   "outline": [
+    [
+     -9.94,
+     6.05
+    ],
+    [
+     10.07,
+     6.05
+    ],
+    [
+     10.24,
+     -8.98
+    ],
+    [
+     -9.94,
+     -9.07
+    ]
+   ],
+   "holes": []
+  }
+ ]
+}

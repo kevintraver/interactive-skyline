@@ -1,0 +1,64 @@
+{
+ "id": "w33192533",
+ "name": "Hilton Salt Lake City Center",
+ "height": 56.6,
+ "height_source": "lidar",
+ "frame": "meters east and north of the footprint center c; heights in meters above ground; a model built in this frame installs with --offset 0,0",
+ "facts": {
+  "east_extent": [
+   -23.5,
+   34.7
+  ],
+  "north_extent": [
+   -25.1,
+   27.9
+  ],
+  "longest_edge_m": 52.9,
+  "longest_edge_bearing": 179.6
+ },
+ "volumes": [
+  {
+   "bottom": -2.0,
+   "top": 56.6,
+   "outline": [
+    [
+     -23.46,
+     27.74
+    ],
+    [
+     -20.74,
+     27.75
+    ],
+    [
+     -0.95,
+     27.9
+    ],
+    [
+     -0.81,
+     9.5
+    ],
+    [
+     34.55,
+     9.75
+    ],
+    [
+     34.72,
+     -14.07
+    ],
+    [
+     -1.98,
+     -14.34
+    ],
+    [
+     -1.9,
+     -24.96
+    ],
+    [
+     -23.09,
+     -25.11
+    ]
+   ],
+   "holes": []
+  }
+ ]
+}

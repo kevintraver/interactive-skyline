@@ -1,0 +1,72 @@
+{
+ "id": "w224521587",
+ "name": "Boston Building",
+ "height": 50.0,
+ "height_source": "lidar",
+ "frame": "meters east and north of the footprint center c; heights in meters above ground; a model built in this frame installs with --offset 0,0",
+ "facts": {
+  "east_extent": [
+   -23.5,
+   23.0
+  ],
+  "north_extent": [
+   -11.0,
+   10.8
+  ],
+  "longest_edge_m": 43.4,
+  "longest_edge_bearing": 90.1
+ },
+ "volumes": [
+  {
+   "bottom": -2.0,
+   "top": 50.0,
+   "outline": [
+    [
+     22.95,
+     10.76
+    ],
+    [
+     22.79,
+     -10.8
+    ],
+    [
+     -15.64,
+     -11.01
+    ],
+    [
+     -17.66,
+     -10.68
+    ],
+    [
+     -19.67,
+     -9.85
+    ],
+    [
+     -21.46,
+     -8.16
+    ],
+    [
+     -22.89,
+     -6.3
+    ],
+    [
+     -23.3,
+     -4.42
+    ],
+    [
+     -23.53,
+     -1.8
+    ],
+    [
+     -23.18,
+     10.8
+    ],
+    [
+     20.2,
+     10.73
+    ]
+   ],
+   "holes": []
+  }
+ ]
+}

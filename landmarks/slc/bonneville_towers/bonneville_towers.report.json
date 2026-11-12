@@ -1,0 +1,41 @@
+{
+  "object": "Bonneville_Towers",
+  "verts": 392,
+  "faces": 230,
+  "tris": 716,
+  "bbox_min": [
+    -18.204,
+    -43.671,
+    -2.0
+  ],
+  "bbox_max": [
+    18.032,
+    38.971,
+    48.3
+  ],
+  "islands": 17,
+  "open_islands": 0,
+  "inside_out_islands": 0,
+  "nonmanifold_edges": 0,
+  "degenerate_faces": 0,
+  "loose_verts": 0,
+  "nonplanar_ngons": 0,
+  "materials": {
+    "Wall": 13,
+    "Base": 13,
+    "Band": 20,
+    "Glass": 182,
+    "Roof": 2
+  },
+  "glow": {
+    "max": 0.58,
+    "dark_faces": 22
+  },
+  "windowed_faces": 182,
+  "errors": [],
+  "warnings": [],
+  "files": {
+    "blend": "bonneville_towers.blend",
+    "glb": "bonneville_towers.glb"
+  }
+}

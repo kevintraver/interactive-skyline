@@ -1,0 +1,41 @@
+{
+  "object": "40_South_900_East",
+  "verts": 104,
+  "faces": 66,
+  "tris": 180,
+  "bbox_min": [
+    -21.421,
+    -12.301,
+    -2.0
+  ],
+  "bbox_max": [
+    18.871,
+    12.491,
+    49.4
+  ],
+  "islands": 7,
+  "open_islands": 0,
+  "inside_out_islands": 0,
+  "nonmanifold_edges": 0,
+  "degenerate_faces": 0,
+  "loose_verts": 0,
+  "nonplanar_ngons": 0,
+  "materials": {
+    "Base": 9,
+    "Glass": 10,
+    "Band": 40,
+    "Roof": 2,
+    "Mech": 5
+  },
+  "glow": {
+    "max": 0.18,
+    "dark_faces": 7
+  },
+  "windowed_faces": 10,
+  "errors": [],
+  "warnings": [],
+  "files": {
+    "blend": "40_south_900_east.blend",
+    "glb": "40_south_900_east.glb"
+  }
+}

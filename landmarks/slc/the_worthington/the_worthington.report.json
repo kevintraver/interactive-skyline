@@ -1,0 +1,41 @@
+{
+  "object": "The_Worthington",
+  "verts": 124,
+  "faces": 80,
+  "tris": 212,
+  "bbox_min": [
+    -25.88,
+    -36.06,
+    -2.0
+  ],
+  "bbox_max": [
+    25.44,
+    36.1,
+    102.0
+  ],
+  "islands": 9,
+  "open_islands": 0,
+  "inside_out_islands": 0,
+  "nonmanifold_edges": 0,
+  "degenerate_faces": 0,
+  "loose_verts": 0,
+  "nonplanar_ngons": 0,
+  "materials": {
+    "Wall": 20,
+    "Podium": 29,
+    "Glass": 7,
+    "Band": 21,
+    "Roof": 3
+  },
+  "glow": {
+    "max": 0.5,
+    "dark_faces": 3
+  },
+  "windowed_faces": 7,
+  "errors": [],
+  "warnings": [],
+  "files": {
+    "blend": "the_worthington.blend",
+    "glb": "the_worthington.glb"
+  }
+}

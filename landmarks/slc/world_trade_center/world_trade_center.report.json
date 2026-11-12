@@ -1,0 +1,39 @@
+{
+  "object": "World_Trade_Center",
+  "verts": 768,
+  "faces": 542,
+  "tris": 1220,
+  "bbox_min": [
+    -34.385,
+    -26.577,
+    -2.0
+  ],
+  "bbox_max": [
+    42.8,
+    24.85,
+    98.0
+  ],
+  "islands": 79,
+  "open_islands": 0,
+  "inside_out_islands": 0,
+  "nonmanifold_edges": 0,
+  "degenerate_faces": 0,
+  "loose_verts": 0,
+  "nonplanar_ngons": 0,
+  "materials": {
+    "Granite": 490,
+    "Glass": 40,
+    "Roof": 12
+  },
+  "glow": {
+    "max": 0.31,
+    "dark_faces": 12
+  },
+  "windowed_faces": 40,
+  "errors": [],
+  "warnings": [],
+  "files": {
+    "blend": "world_trade_center.blend",
+    "glb": "world_trade_center.glb"
+  }
+}

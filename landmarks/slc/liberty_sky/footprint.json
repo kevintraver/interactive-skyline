@@ -1,0 +1,100 @@
+{
+ "id": "w835836211",
+ "name": "Liberty Sky",
+ "height": 64.0,
+ "height_source": "osm-levels",
+ "frame": "meters east and north of the footprint center c; heights in meters above ground; a model built in this frame installs with --offset 0,0",
+ "facts": {
+  "east_extent": [
+   -31.0,
+   30.3
+  ],
+  "north_extent": [
+   -12.5,
+   14.5
+  ],
+  "longest_edge_m": 37.8,
+  "longest_edge_bearing": 90.3
+ },
+ "volumes": [
+  {
+   "bottom": -2.0,
+   "top": 64.0,
+   "outline": [
+    [
+     -30.86,
+     8.47
+    ],
+    [
+     -30.96,
+     -10.37
+    ],
+    [
+     -18.5,
+     -10.44
+    ],
+    [
+     -18.5,
+     -12.26
+    ],
+    [
+     19.33,
+     -12.46
+    ],
+    [
+     19.34,
+     -10.79
+    ],
+    [
+     30.31,
+     -10.75
+    ],
+    [
+     30.27,
+     8.24
+    ],
+    [
+     18.95,
+     8.3
+    ],
+    [
+     18.97,
+     12.0
+    ],
+    [
+     11.61,
+     12.04
+    ],
+    [
+     11.62,
+     14.37
+    ],
+    [
+     7.8,
+     14.39
+    ],
+    [
+     -7.7,
+     14.48
+    ],
+    [
+     -11.69,
+     14.51
+    ],
+    [
+     -11.71,
+     11.77
+    ],
+    [
+     -15.96,
+     11.8
+    ],
+    [
+     -15.98,
+     8.39
+    ]
+   ],
+   "holes": []
+  }
+ ]
+}

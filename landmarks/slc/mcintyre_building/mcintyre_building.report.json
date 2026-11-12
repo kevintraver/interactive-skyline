@@ -1,0 +1,42 @@
+{
+  "object": "Mcintyre_Building",
+  "verts": 1752,
+  "faces": 1308,
+  "tris": 2640,
+  "bbox_min": [
+    -21.752,
+    -8.862,
+    -2.0
+  ],
+  "bbox_max": [
+    21.732,
+    8.88,
+    36.8
+  ],
+  "islands": 216,
+  "open_islands": 0,
+  "inside_out_islands": 0,
+  "nonmanifold_edges": 0,
+  "degenerate_faces": 0,
+  "loose_verts": 0,
+  "nonplanar_ngons": 0,
+  "materials": {
+    "Wall": 10,
+    "Base": 10,
+    "Pier": 180,
+    "Cornice": 15,
+    "Glass": 1092,
+    "Roof": 1
+  },
+  "glow": {
+    "max": 0.25,
+    "dark_faces": 1
+  },
+  "windowed_faces": 1092,
+  "errors": [],
+  "warnings": [],
+  "files": {
+    "blend": "mcintyre_building.blend",
+    "glb": "mcintyre_building.glb"
+  }
+}

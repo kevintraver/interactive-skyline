@@ -1,0 +1,40 @@
+{
+  "object": "AmericanTowers",
+  "verts": 454,
+  "faces": 253,
+  "tris": 856,
+  "bbox_min": [
+    -28.25,
+    -45.13,
+    -2.0
+  ],
+  "bbox_max": [
+    22.2,
+    48.89,
+    98.8
+  ],
+  "islands": 13,
+  "open_islands": 0,
+  "inside_out_islands": 0,
+  "nonmanifold_edges": 0,
+  "degenerate_faces": 0,
+  "loose_verts": 0,
+  "nonplanar_ngons": 0,
+  "materials": {
+    "Glass": 73,
+    "Precast": 145,
+    "Roof": 3,
+    "Crown": 32
+  },
+  "glow": {
+    "max": 0.45,
+    "dark_faces": 3
+  },
+  "windowed_faces": 73,
+  "errors": [],
+  "warnings": [],
+  "files": {
+    "blend": "american_towers.blend",
+    "glb": "american_towers.glb"
+  }
+}

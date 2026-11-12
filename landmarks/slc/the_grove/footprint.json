@@ -1,0 +1,52 @@
+{
+ "id": "w127834901",
+ "name": "The Grove",
+ "height": 39.0,
+ "height_source": "lidar",
+ "frame": "meters east and north of the footprint center c; heights in meters above ground; a model built in this frame installs with --offset 0,0",
+ "facts": {
+  "east_extent": [
+   -20.2,
+   20.5
+  ],
+  "north_extent": [
+   -12.9,
+   12.6
+  ],
+  "longest_edge_m": 40.7,
+  "longest_edge_bearing": 90.0
+ },
+ "volumes": [
+  {
+   "bottom": -2.0,
+   "top": 39.0,
+   "outline": [
+    [
+     -20.21,
+     12.64
+    ],
+    [
+     -20.23,
+     -12.83
+    ],
+    [
+     11.87,
+     -12.86
+    ],
+    [
+     12.51,
+     -11.82
+    ],
+    [
+     20.48,
+     -11.83
+    ],
+    [
+     20.5,
+     12.61
+    ]
+   ],
+   "holes": []
+  }
+ ]
+}

@@ -1,0 +1,60 @@
+{
+ "id": "w595951359",
+ "name": "257 East 200 South",
+ "height": 57.4,
+ "height_source": "lidar",
+ "frame": "meters east and north of the footprint center c; heights in meters above ground; a model built in this frame installs with --offset 0,0",
+ "facts": {
+  "east_extent": [
+   -18.2,
+   20.9
+  ],
+  "north_extent": [
+   -35.9,
+   34.6
+  ],
+  "longest_edge_m": 60.9,
+  "longest_edge_bearing": 179.8
+ },
+ "volumes": [
+  {
+   "bottom": -2.0,
+   "top": 57.4,
+   "outline": [
+    [
+     -18.02,
+     -26.36
+    ],
+    [
+     -18.2,
+     34.58
+    ],
+    [
+     3.28,
+     34.64
+    ],
+    [
+     20.62,
+     17.07
+    ],
+    [
+     20.87,
+     -18.38
+    ],
+    [
+     3.68,
+     -35.88
+    ],
+    [
+     -12.02,
+     -35.92
+    ],
+    [
+     -12.05,
+     -26.34
+    ]
+   ],
+   "holes": []
+  }
+ ]
+}

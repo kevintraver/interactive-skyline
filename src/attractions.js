@@ -11,10 +11,10 @@ const clock = nightModule.clock || { value: 0 };
 const flatten = customModels.flatten;
 
 // Things that are not buildings in the app's data, listed in public/models/models.json next to the cities:
-//   "extras":    { "lv": [{ "name": "High Roller", "url": "/models/high_roller.glb", "east": 417.5, "north": 331.1,
+//   "extras":    { "lv": [{ "name": "High Roller", "url": "/models/lv/high_roller.glb", "east": 417.5, "north": 331.1,
 //                           "rotation_deg": 90, "visible": "always" | "night", "blend": "opaque" | "additive",
 //                           "spin": { "node": "Rotor", "period_s": 180, "direction": 1 } }] }
-//   "fountains": { "lv": [{ "name": "Fountains of Bellagio", "url": "/models/attractions/bellagio.json" }] }
+//   "fountains": { "lv": [{ "name": "Fountains of Bellagio", "url": "/models/lv/attractions/bellagio.json" }] }
 // An extra stands on the terrain at `east`, `north` (meters from the city origin), turned `rotation_deg`
 // counter-clockwise from east. It is static and not removable, lit at night like the models (its `_GLOW`
 // colors; lit windows only where `_WINDOWS` says), and with `visible: "night"` shown only at night.

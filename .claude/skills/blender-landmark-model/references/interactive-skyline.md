@@ -50,11 +50,14 @@ Bellagio show data (below). A v3/v4 repo is upgraded in place: the missing `main
 import, `led` attribute in `toGeometry`, `fountain: true, wheel: true` in DEFAULTS, the hook call at the end, and
 since v6 `|| customModels.has(b.id)` in buildCity's height test) and older files replaced; pristine, v3, v4 and v5
 repos all end with the same `main.js`. `upgrade --repo R --city lv` does just that, without touching a model. It copies the GLB to
-`public/models/` and lists it in `public/models/models.json`:
+`public/models/<city>/` (one folder per city) and lists it in `public/models/models.json`:
 
 ```json
-{ "lv": { "w135457469": { "url": "/models/strat.glb", "offset": [3.2, 0.8], "name": "Stratosphere Tower" } } }
+{ "lv": { "w135457469": { "url": "/models/lv/strat.glb", "offset": [3.2, 0.8], "name": "Stratosphere Tower" } } }
 ```
+
+A repo whose models still sit flat in `public/models/` (`/models/strat.glb`, `/models/attractions/...`) has them
+moved into their city's folder, with their URLs updated in `models.json`, on its next `install` or `upgrade`.
 
 A repo with the older hard-coded `customModels.js` (a `const MODELS = {...}` object) is upgraded: the file is
 replaced by the manifest version, its entries move into `models.json`, and a backup goes to the system temp
@@ -112,7 +115,7 @@ Structures that are not buildings in the app's data (the Fremont Street canopy, 
 beam) go under a top-level `extras` key of `models.json`, by city:
 
 ```json
-"extras": { "lv": [{ "name": "High Roller", "url": "/models/high_roller.glb", "east": 455.0, "north": -60.0,
+"extras": { "lv": [{ "name": "High Roller", "url": "/models/lv/high_roller.glb", "east": 455.0, "north": -60.0,
                      "rotation_deg": 0, "visible": "always" }] }
 ```
 
@@ -142,7 +145,7 @@ in check's default shots, so they show between buildings.
 ## Fountain show
 
 For `lv`, install adds the Fountains of Bellagio on Lake Bellagio (in front of w25723909) as
-`public/models/attractions/bellagio.json`, listed under `"fountains": {"lv": [...]}` (an empty list there turns it
+`public/models/<city>/attractions/bellagio.json`, listed under `"fountains": {"lv": [...]}` (an empty list there turns it
 off for good). The data is offline: the lake outline (OSM way 22971030) and 1,214 nozzles laid on the layout
 mapped in OSM relation 19511963 (a 251 m curved front line, two concentric rings of 28 and 19 m, two small rings
 of 9 m), in the published types and heights: 208 oarsmen (23.5 m), 798 mini-shooters (30.5 m), 192

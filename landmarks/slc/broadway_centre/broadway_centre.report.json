@@ -1,0 +1,39 @@
+{
+  "object": "Broadway_Centre",
+  "verts": 316,
+  "faces": 188,
+  "tris": 572,
+  "bbox_min": [
+    -39.24,
+    -32.32,
+    -2.0
+  ],
+  "bbox_max": [
+    38.53,
+    25.14,
+    57.6
+  ],
+  "islands": 15,
+  "open_islands": 0,
+  "inside_out_islands": 0,
+  "nonmanifold_edges": 0,
+  "degenerate_faces": 0,
+  "loose_verts": 0,
+  "nonplanar_ngons": 0,
+  "materials": {
+    "Glass": 80,
+    "Stone": 100,
+    "Cap": 8
+  },
+  "glow": {
+    "max": 0.57,
+    "dark_faces": 0
+  },
+  "windowed_faces": 80,
+  "errors": [],
+  "warnings": [],
+  "files": {
+    "blend": "broadway_centre.blend",
+    "glb": "broadway_centre.glb"
+  }
+}

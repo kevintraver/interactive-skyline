@@ -1,0 +1,41 @@
+{
+  "object": "136_South_Temple_Street",
+  "verts": 152,
+  "faces": 114,
+  "tris": 228,
+  "bbox_min": [
+    -23.56,
+    -24.0,
+    -2.0
+  ],
+  "bbox_max": [
+    23.46,
+    23.94,
+    83.5
+  ],
+  "islands": 19,
+  "open_islands": 0,
+  "inside_out_islands": 0,
+  "nonmanifold_edges": 0,
+  "degenerate_faces": 0,
+  "loose_verts": 0,
+  "nonplanar_ngons": 0,
+  "materials": {
+    "Wall": 5,
+    "Base": 15,
+    "Glass": 78,
+    "Green": 6,
+    "Roof": 10
+  },
+  "glow": {
+    "max": 0.38,
+    "dark_faces": 10
+  },
+  "windowed_faces": 78,
+  "errors": [],
+  "warnings": [],
+  "files": {
+    "blend": "136_south_temple_street.blend",
+    "glb": "136_south_temple_street.glb"
+  }
+}

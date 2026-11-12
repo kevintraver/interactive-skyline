@@ -1,0 +1,41 @@
+{
+  "object": "Kearns_Building",
+  "verts": 382,
+  "faces": 279,
+  "tris": 588,
+  "bbox_min": [
+    -25.145,
+    -17.205,
+    -2.0
+  ],
+  "bbox_max": [
+    25.085,
+    17.156,
+    50.5
+  ],
+  "islands": 44,
+  "open_islands": 0,
+  "inside_out_islands": 0,
+  "nonmanifold_edges": 0,
+  "degenerate_faces": 0,
+  "loose_verts": 0,
+  "nonplanar_ngons": 0,
+  "materials": {
+    "Brick": 16,
+    "Cream": 17,
+    "Base": 6,
+    "Glass": 228,
+    "Roof": 12
+  },
+  "glow": {
+    "max": 0.34,
+    "dark_faces": 12
+  },
+  "windowed_faces": 228,
+  "errors": [],
+  "warnings": [],
+  "files": {
+    "blend": "kearns_building.blend",
+    "glb": "kearns_building.glb"
+  }
+}

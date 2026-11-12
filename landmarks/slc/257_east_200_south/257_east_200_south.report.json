@@ -1,0 +1,40 @@
+{
+  "object": "257_East_200_South",
+  "verts": 56,
+  "faces": 36,
+  "tris": 96,
+  "bbox_min": [
+    -18.284,
+    -36.064,
+    -2.0
+  ],
+  "bbox_max": [
+    20.982,
+    34.849,
+    57.4
+  ],
+  "islands": 4,
+  "open_islands": 0,
+  "inside_out_islands": 0,
+  "nonmanifold_edges": 0,
+  "degenerate_faces": 0,
+  "loose_verts": 0,
+  "nonplanar_ngons": 0,
+  "materials": {
+    "Wall": 9,
+    "Glass": 9,
+    "Roof": 8,
+    "Base": 10
+  },
+  "glow": {
+    "max": 0.242,
+    "dark_faces": 18
+  },
+  "windowed_faces": 9,
+  "errors": [],
+  "warnings": [],
+  "files": {
+    "blend": "257_east_200_south.blend",
+    "glb": "257_east_200_south.glb"
+  }
+}

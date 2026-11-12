@@ -1,0 +1,122 @@
+{
+ "id": "w595951903",
+ "name": "Bell Plaza",
+ "height": 61.5,
+ "height_source": "osm-height",
+ "frame": "meters east and north of the footprint center c; heights in meters above ground; a model built in this frame installs with --offset 0,0",
+ "facts": {
+  "east_extent": [
+   -31.2,
+   32.2
+  ],
+  "north_extent": [
+   -23.2,
+   25.9
+  ],
+  "longest_edge_m": 30.6,
+  "longest_edge_bearing": 89.7
+ },
+ "volumes": [
+  {
+   "bottom": -2.0,
+   "top": 61.5,
+   "outline": [
+    [
+     29.94,
+     1.04
+    ],
+    [
+     22.48,
+     -4.23
+    ],
+    [
+     2.76,
+     -18.16
+    ],
+    [
+     -0.4,
+     -20.39
+    ],
+    [
+     -30.96,
+     -20.56
+    ],
+    [
+     -31.07,
+     -0.78
+    ],
+    [
+     -12.62,
+     13.01
+    ],
+    [
+     0.01,
+     22.45
+    ],
+    [
+     29.59,
+     22.92
+    ]
+   ],
+   "holes": []
+  },
+  {
+   "bottom": -2.0,
+   "top": 5.3,
+   "outline": [
+    [
+     -31.07,
+     -0.78
+    ],
+    [
+     -31.17,
+     18.76
+    ],
+    [
+     -31.22,
+     25.89
+    ],
+    [
+     -22.87,
+     25.94
+    ],
+    [
+     -12.62,
+     13.01
+    ]
+   ],
+   "holes": []
+  },
+  {
+   "bottom": -2.0,
+   "top": 13.8,
+   "outline": [
+    [
+     32.24,
+     -6.76
+    ],
+    [
+     24.17,
+     -6.74
+    ],
+    [
+     22.48,
+     -4.23
+    ],
+    [
+     2.76,
+     -18.16
+    ],
+    [
+     6.4,
+     -23.22
+    ],
+    [
+     32.05,
+     -23.21
+    ]
+   ],
+   "holes": []
+  }
+ ]
+}

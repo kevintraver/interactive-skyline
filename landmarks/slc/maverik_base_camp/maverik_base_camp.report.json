@@ -1,0 +1,41 @@
+{
+  "object": "Maverik_Base_Camp",
+  "verts": 288,
+  "faces": 176,
+  "tris": 512,
+  "bbox_min": [
+    -15.48,
+    -18.62,
+    -2.0
+  ],
+  "bbox_max": [
+    15.42,
+    18.68,
+    51.4
+  ],
+  "islands": 16,
+  "open_islands": 0,
+  "inside_out_islands": 0,
+  "nonmanifold_edges": 0,
+  "degenerate_faces": 0,
+  "loose_verts": 0,
+  "nonplanar_ngons": 0,
+  "materials": {
+    "Wall": 144,
+    "Glass": 10,
+    "Base": 11,
+    "Crown": 10,
+    "Roof": 1
+  },
+  "glow": {
+    "max": 0.58,
+    "dark_faces": 12
+  },
+  "windowed_faces": 10,
+  "errors": [],
+  "warnings": [],
+  "files": {
+    "blend": "maverik_base_camp.blend",
+    "glb": "maverik_base_camp.glb"
+  }
+}
