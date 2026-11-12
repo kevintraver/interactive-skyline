@@ -1,0 +1,84 @@
+{
+ "id": "w126267789",
+ "name": "Octavius Tower",
+ "height": 107.0,
+ "height_source": "osm-height",
+ "frame": "meters east and north of the footprint center c; heights in meters above ground; a model built in this frame installs with --offset 0,0",
+ "facts": {
+  "east_extent": [
+   -58.2,
+   58.2
+  ],
+  "north_extent": [
+   -18.5,
+   18.8
+  ],
+  "longest_edge_m": 39.2,
+  "longest_edge_bearing": 91.9
+ },
+ "volumes": [
+  {
+   "bottom": -2.0,
+   "top": 107.0,
+   "outline": [
+    [
+     -57.29,
+     17.42
+    ],
+    [
+     -57.87,
+     -5.57
+    ],
+    [
+     -58.17,
+     -13.78
+    ],
+    [
+     -19.05,
+     -14.97
+    ],
+    [
+     -19.13,
+     -17.81
+    ],
+    [
+     17.89,
+     -18.51
+    ],
+    [
+     17.86,
+     -16.65
+    ],
+    [
+     56.75,
+     -17.56
+    ],
+    [
+     57.23,
+     -7.44
+    ],
+    [
+     58.23,
+     13.82
+    ],
+    [
+     19.03,
+     15.13
+    ],
+    [
+     19.02,
+     17.63
+    ],
+    [
+     -18.06,
+     18.81
+    ],
+    [
+     -18.21,
+     16.23
+    ]
+   ],
+   "holes": []
+  }
+ ]
+}

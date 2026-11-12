@@ -1,0 +1,12 @@
+{
+  "name": "Luxor Sky Beam",
+  "glb": "luxor_beam.glb",
+  "lat": 36.09547,
+  "lon": -115.175806,
+  "east": -270.6,
+  "north": -2133.7,
+  "rotation_deg": 0,
+  "visible": "night",
+  "blend": "additive",
+  "notes": "Vertical shaft of light from the pyramid apex (building w27858544, footprint center c = [-270.6, -2133.7]; lat/lon derived from c and the city origin). GLB origin is on the ground under the apex. Three nested 8-sided shafts, all additive: 'Beam' core, 1.6 m across at 108.6 m (just inside the apex housing of the luxor model) widening to 2.6 m at 1500 m, _GLOW 1.0 fading to 0.22; 'BeamHalo' sleeve from 110.4 m, 3.8 to 7.2 m across, _GLOW 0.30 to 0.05; 'BeamOuter' sleeve from 112 m, 7.2 to 16 m across, _GLOW 0.11 to 0.015. Pale blue-white. Place at the pyramid's ground elevation (656.4 m). Draw additive, no depth write, night only."
+}

@@ -1,0 +1,37 @@
+{
+  "object": "CondoTower",
+  "verts": 232,
+  "faces": 174,
+  "tris": 348,
+  "bbox_min": [
+    -32.032,
+    -32.032,
+    -2.0
+  ],
+  "bbox_max": [
+    32.032,
+    32.032,
+    145.0
+  ],
+  "islands": 29,
+  "open_islands": 0,
+  "inside_out_islands": 0,
+  "nonmanifold_edges": 0,
+  "degenerate_faces": 0,
+  "loose_verts": 0,
+  "nonplanar_ngons": 0,
+  "materials": {
+    "Wall": 117,
+    "Glass": 15,
+    "Base": 6,
+    "Crown": 20,
+    "Roof": 16
+  },
+  "glow": {
+    "max": 0.55,
+    "dark_faces": 16
+  },
+  "windowed_faces": 15,
+  "errors": [],
+  "warnings": []
+}

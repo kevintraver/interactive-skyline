@@ -1,0 +1,38 @@
+{
+  "object": "Resort_w27831695",
+  "verts": 1060,
+  "faces": 897,
+  "tris": 1836,
+  "bbox_min": [
+    -97.795,
+    -85.041,
+    -2.0
+  ],
+  "bbox_max": [
+    58.813,
+    85.532,
+    110.0
+  ],
+  "islands": 71,
+  "open_islands": 0,
+  "inside_out_islands": 0,
+  "nonmanifold_edges": 0,
+  "degenerate_faces": 0,
+  "loose_verts": 0,
+  "nonplanar_ngons": 0,
+  "materials": {
+    "Wall": 396,
+    "Glass": 75,
+    "Band": 300,
+    "Crown": 45,
+    "Base": 26,
+    "Roof": 55
+  },
+  "glow": {
+    "max": 0.6,
+    "dark_faces": 55
+  },
+  "windowed_faces": 75,
+  "errors": [],
+  "warnings": []
+}

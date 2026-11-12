@@ -1,0 +1,37 @@
+{
+  "object": "Bldg_w128632721",
+  "verts": 120,
+  "faces": 82,
+  "tris": 196,
+  "bbox_min": [
+    -11.306,
+    -35.216,
+    -2.0
+  ],
+  "bbox_max": [
+    10.856,
+    32.836,
+    72.0
+  ],
+  "islands": 11,
+  "open_islands": 0,
+  "inside_out_islands": 0,
+  "nonmanifold_edges": 0,
+  "degenerate_faces": 0,
+  "loose_verts": 0,
+  "nonplanar_ngons": 0,
+  "materials": {
+    "Wall": 24,
+    "Glass": 8,
+    "Band": 40,
+    "Cap": 7,
+    "Roof": 3
+  },
+  "glow": {
+    "max": 0.6,
+    "dark_faces": 3
+  },
+  "windowed_faces": 8,
+  "errors": [],
+  "warnings": []
+}

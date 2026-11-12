@@ -1,0 +1,68 @@
+{
+ "id": "w134696134",
+ "name": "455 Karen Avenue",
+ "height": 51.6,
+ "height_source": "lidar",
+ "frame": "meters east and north of the footprint center c; heights in meters above ground; a model built in this frame installs with --offset 0,0",
+ "facts": {
+  "east_extent": [
+   -4.9,
+   4.9
+  ],
+  "north_extent": [
+   -4.9,
+   4.9
+  ],
+  "longest_edge_m": 4.5,
+  "longest_edge_bearing": 88.0
+ },
+ "volumes": [
+  {
+   "bottom": -2.5,
+   "top": 51.6,
+   "outline": [
+    [
+     2.1,
+     4.88
+    ],
+    [
+     -2.39,
+     4.72
+    ],
+    [
+     -4.87,
+     2.17
+    ],
+    [
+     -4.85,
+     1.26
+    ],
+    [
+     -4.76,
+     -2.29
+    ],
+    [
+     -2.02,
+     -4.94
+    ],
+    [
+     2.41,
+     -4.79
+    ],
+    [
+     4.87,
+     -2.08
+    ],
+    [
+     4.78,
+     1.63
+    ],
+    [
+     4.76,
+     2.42
+    ]
+   ],
+   "holes": []
+  }
+ ]
+}

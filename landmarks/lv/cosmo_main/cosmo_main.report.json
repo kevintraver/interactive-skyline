@@ -1,0 +1,38 @@
+{
+  "object": "ResortTowerEast",
+  "verts": 658,
+  "faces": 423,
+  "tris": 1128,
+  "bbox_min": [
+    -28.286,
+    -24.09,
+    -2.0
+  ],
+  "bbox_max": [
+    30.137,
+    23.267,
+    184.0
+  ],
+  "islands": 47,
+  "open_islands": 0,
+  "inside_out_islands": 0,
+  "nonmanifold_edges": 0,
+  "degenerate_faces": 0,
+  "loose_verts": 0,
+  "nonplanar_ngons": 0,
+  "materials": {
+    "Glass": 8,
+    "Band": 333,
+    "BandAccent": 63,
+    "Base": 9,
+    "CrownPanel": 9,
+    "Roof": 1
+  },
+  "glow": {
+    "max": 0.9,
+    "dark_faces": 1
+  },
+  "windowed_faces": 8,
+  "errors": [],
+  "warnings": []
+}

@@ -1,0 +1,60 @@
+{
+ "id": "w130585543",
+ "name": "World Market Center",
+ "height": 86.9,
+ "height_source": "lidar",
+ "frame": "meters east and north of the footprint center c; heights in meters above ground; a model built in this frame installs with --offset 0,0",
+ "facts": {
+  "east_extent": [
+   -79.4,
+   89.4
+  ],
+  "north_extent": [
+   -77.1,
+   77.6
+  ],
+  "longest_edge_m": 97.7,
+  "longest_edge_bearing": 51.2
+ },
+ "volumes": [
+  {
+   "bottom": -2.1,
+   "top": 86.8,
+   "outline": [
+    [
+     -79.4,
+     -38.17
+    ],
+    [
+     -36.73,
+     -59.8
+    ],
+    [
+     -2.66,
+     -77.07
+    ],
+    [
+     13.27,
+     -48.24
+    ],
+    [
+     89.4,
+     13.05
+    ],
+    [
+     46.37,
+     45.6
+    ],
+    [
+     6.97,
+     77.65
+    ],
+    [
+     -34.04,
+     44.01
+    ]
+   ],
+   "holes": []
+  }
+ ]
+}

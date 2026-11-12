@@ -1,0 +1,44 @@
+{
+ "id": "w276426484",
+ "name": "Sahara Hotel Alexandria Tower",
+ "height": 77.8,
+ "height_source": "lidar",
+ "frame": "meters east and north of the footprint center c; heights in meters above ground; a model built in this frame installs with --offset 0,0",
+ "facts": {
+  "east_extent": [
+   -10.9,
+   11.0
+  ],
+  "north_extent": [
+   -27.3,
+   27.4
+  ],
+  "longest_edge_m": 53.8,
+  "longest_edge_bearing": 3.0
+ },
+ "volumes": [
+  {
+   "bottom": -2.0,
+   "top": 77.8,
+   "outline": [
+    [
+     -8.11,
+     27.39
+    ],
+    [
+     10.97,
+     26.39
+    ],
+    [
+     8.14,
+     -27.33
+    ],
+    [
+     -10.93,
+     -26.33
+    ]
+   ],
+   "holes": []
+  }
+ ]
+}

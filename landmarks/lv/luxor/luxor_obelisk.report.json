@@ -1,0 +1,35 @@
+{
+  "object": "Luxor_Obelisk",
+  "verts": 32,
+  "faces": 24,
+  "tris": 48,
+  "bbox_min": [
+    218.8,
+    -3.7,
+    -2.0
+  ],
+  "bbox_max": [
+    229.2,
+    6.7,
+    43.0
+  ],
+  "islands": 4,
+  "open_islands": 0,
+  "inside_out_islands": 0,
+  "nonmanifold_edges": 0,
+  "degenerate_faces": 0,
+  "loose_verts": 0,
+  "nonplanar_ngons": 0,
+  "materials": {
+    "Stone": 12,
+    "StoneDark": 6,
+    "Tip": 6
+  },
+  "glow": {
+    "max": 0.75,
+    "dark_faces": 0
+  },
+  "windowed_faces": 0,
+  "errors": [],
+  "warnings": []
+}

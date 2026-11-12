@@ -1,0 +1,72 @@
+{
+ "id": "w134938479",
+ "name": "VooDoo Rooftop",
+ "height": 131.0,
+ "height_source": "osm-height",
+ "frame": "meters east and north of the footprint center c; heights in meters above ground; a model built in this frame installs with --offset 0,0",
+ "facts": {
+  "east_extent": [
+   -11.9,
+   12.0
+  ],
+  "north_extent": [
+   -11.1,
+   11.2
+  ],
+  "longest_edge_m": 17.1,
+  "longest_edge_bearing": 8.8
+ },
+ "volumes": [
+  {
+   "bottom": -7.5,
+   "top": 131.0,
+   "outline": [
+    [
+     -9.32,
+     10.36
+    ],
+    [
+     -8.18,
+     11.24
+    ],
+    [
+     0.13,
+     10.87
+    ],
+    [
+     8.42,
+     10.97
+    ],
+    [
+     9.63,
+     10.17
+    ],
+    [
+     11.98,
+     -6.17
+    ],
+    [
+     10.91,
+     -8.56
+    ],
+    [
+     3.04,
+     -10.92
+    ],
+    [
+     -2.76,
+     -11.13
+    ],
+    [
+     -10.28,
+     -9.0
+    ],
+    [
+     -11.93,
+     -6.59
+    ]
+   ],
+   "holes": []
+  }
+ ]
+}

@@ -1,0 +1,36 @@
+{
+  "object": "East_Tower",
+  "verts": 1028,
+  "faces": 901,
+  "tris": 1964,
+  "bbox_min": [
+    -32.41,
+    -27.412,
+    -2.0
+  ],
+  "bbox_max": [
+    32.581,
+    28.6,
+    138.0
+  ],
+  "islands": 23,
+  "open_islands": 0,
+  "inside_out_islands": 0,
+  "nonmanifold_edges": 0,
+  "degenerate_faces": 0,
+  "loose_verts": 0,
+  "nonplanar_ngons": 0,
+  "materials": {
+    "Wall": 494,
+    "Glass": 341,
+    "Crown": 64,
+    "Roof": 2
+  },
+  "glow": {
+    "max": 0.31,
+    "dark_faces": 2
+  },
+  "windowed_faces": 341,
+  "errors": [],
+  "warnings": []
+}

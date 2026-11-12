@@ -1,0 +1,52 @@
+{
+ "id": "w207630739",
+ "name": null,
+ "height": 74.1,
+ "height_source": "lidar",
+ "frame": "meters east and north of the footprint center c; heights in meters above ground; a model built in this frame installs with --offset 0,0",
+ "facts": {
+  "east_extent": [
+   -20.4,
+   20.3
+  ],
+  "north_extent": [
+   -25.0,
+   25.1
+  ],
+  "longest_edge_m": 45.1,
+  "longest_edge_bearing": 27.8
+ },
+ "volumes": [
+  {
+   "bottom": -2.0,
+   "top": 74.1,
+   "outline": [
+    [
+     -20.39,
+     -14.75
+    ],
+    [
+     -0.72,
+     -25.04
+    ],
+    [
+     17.12,
+     8.79
+    ],
+    [
+     19.32,
+     12.89
+    ],
+    [
+     20.31,
+     14.8
+    ],
+    [
+     0.65,
+     25.09
+    ]
+   ],
+   "holes": []
+  }
+ ]
+}

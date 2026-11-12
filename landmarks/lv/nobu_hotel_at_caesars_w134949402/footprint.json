@@ -1,0 +1,44 @@
+{
+ "id": "w134949402",
+ "name": "Nobu Hotel at Caesars Palace",
+ "height": 40.0,
+ "height_source": "osm-height",
+ "frame": "meters east and north of the footprint center c; heights in meters above ground; a model built in this frame installs with --offset 0,0",
+ "facts": {
+  "east_extent": [
+   -31.4,
+   31.3
+  ],
+  "north_extent": [
+   -14.6,
+   14.6
+  ],
+  "longest_edge_m": 61.9,
+  "longest_edge_bearing": 91.5
+ },
+ "volumes": [
+  {
+   "bottom": -2.3,
+   "top": 40.0,
+   "outline": [
+    [
+     -30.59,
+     14.62
+    ],
+    [
+     -31.38,
+     -13.04
+    ],
+    [
+     30.55,
+     -14.61
+    ],
+    [
+     31.27,
+     13.04
+    ]
+   ],
+   "holes": []
+  }
+ ]
+}

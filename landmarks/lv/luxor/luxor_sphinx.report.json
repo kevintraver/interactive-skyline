@@ -1,0 +1,39 @@
+{
+  "object": "Luxor_Sphinx",
+  "verts": 568,
+  "faces": 668,
+  "tris": 1056,
+  "bbox_min": [
+    99.5,
+    -15.4,
+    -2.0
+  ],
+  "bbox_max": [
+    178.0,
+    15.4,
+    33.5
+  ],
+  "islands": 20,
+  "open_islands": 0,
+  "inside_out_islands": 0,
+  "nonmanifold_edges": 0,
+  "degenerate_faces": 0,
+  "loose_verts": 0,
+  "nonplanar_ngons": 0,
+  "materials": {
+    "Stone": 476,
+    "StoneDark": 6,
+    "Face": 46,
+    "HeadGold": 55,
+    "HeadBlue": 67,
+    "Eye": 12,
+    "Door": 6
+  },
+  "glow": {
+    "max": 0.85,
+    "dark_faces": 0
+  },
+  "windowed_faces": 0,
+  "errors": [],
+  "warnings": []
+}

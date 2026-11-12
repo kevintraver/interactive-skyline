@@ -1,0 +1,96 @@
+{
+ "id": "w316174410",
+ "name": "Circa Resort & Casino",
+ "height": 146.0,
+ "height_source": "osm-height",
+ "frame": "meters east and north of the footprint center c; heights in meters above ground; a model built in this frame installs with --offset 0,0",
+ "facts": {
+  "east_extent": [
+   -66.3,
+   69.3
+  ],
+  "north_extent": [
+   -74.4,
+   74.6
+  ],
+  "longest_edge_m": 91.3,
+  "longest_edge_bearing": 27.7
+ },
+ "volumes": [
+  {
+   "bottom": -2.0,
+   "top": 146.0,
+   "outline": [
+    [
+     -65.95,
+     -25.11
+    ],
+    [
+     -66.2,
+     -27.42
+    ],
+    [
+     -66.26,
+     -29.43
+    ],
+    [
+     -65.38,
+     -31.78
+    ],
+    [
+     -63.92,
+     -33.56
+    ],
+    [
+     -62.35,
+     -35.04
+    ],
+    [
+     -60.16,
+     -36.3
+    ],
+    [
+     -27.17,
+     -53.32
+    ],
+    [
+     13.72,
+     -74.42
+    ],
+    [
+     15.31,
+     -71.42
+    ],
+    [
+     26.83,
+     -49.52
+    ],
+    [
+     69.33,
+     31.27
+    ],
+    [
+     38.91,
+     47.01
+    ],
+    [
+     1.74,
+     66.49
+    ],
+    [
+     -13.8,
+     74.6
+    ],
+    [
+     -21.18,
+     60.56
+    ],
+    [
+     -32.41,
+     39.2
+    ]
+   ],
+   "holes": []
+  }
+ ]
+}

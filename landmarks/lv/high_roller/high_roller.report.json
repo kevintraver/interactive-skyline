@@ -1,0 +1,47 @@
+{
+  "object": "HighRoller (Support, Rotor, Cabin_00..Cabin_27)",
+  "objects": 30,
+  "verts": 10478,
+  "faces": 8738,
+  "tris": 18924,
+  "islands": 565,
+  "open_islands": 0,
+  "inside_out_islands": 0,
+  "nonmanifold_edges": 0,
+  "degenerate_faces": 0,
+  "loose_verts": 0,
+  "nonplanar_ngons": 0,
+  "windowed_faces": 6,
+  "bbox_min": [
+    -79.283,
+    -72.924,
+    -2.597
+  ],
+  "bbox_max": [
+    79.283,
+    16.5,
+    167.6
+  ],
+  "tris_by_object": {
+    "Support": 828,
+    "Rotor": 8240,
+    "each cabin": 352
+  },
+  "materials": {
+    "Steel": 2766,
+    "LedRim": 896,
+    "Cable": 560,
+    "CabinGlass": 672,
+    "CabinShell": 3416,
+    "CabinFloor": 392,
+    "Station": 26,
+    "StationGlass": 6,
+    "Roof": 4
+  },
+  "glow": {
+    "max": 0.8,
+    "dark_faces": 0
+  },
+  "errors": [],
+  "warnings": []
+}

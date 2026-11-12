@@ -1,0 +1,56 @@
+{
+ "id": "w204144588",
+ "name": "The Ogden",
+ "height": 82.2,
+ "height_source": "lidar",
+ "frame": "meters east and north of the footprint center c; heights in meters above ground; a model built in this frame installs with --offset 0,0",
+ "facts": {
+  "east_extent": [
+   -50.2,
+   50.1
+  ],
+  "north_extent": [
+   -39.6,
+   39.7
+  ],
+  "longest_edge_m": 91.0,
+  "longest_edge_bearing": 117.6
+ },
+ "volumes": [
+  {
+   "bottom": -2.0,
+   "top": 82.3,
+   "outline": [
+    [
+     -50.16,
+     2.55
+    ],
+    [
+     15.98,
+     -32.02
+    ],
+    [
+     30.51,
+     -39.62
+    ],
+    [
+     33.72,
+     -33.52
+    ],
+    [
+     40.18,
+     -21.29
+    ],
+    [
+     50.08,
+     -2.51
+    ],
+    [
+     -30.6,
+     39.66
+    ]
+   ],
+   "holes": []
+  }
+ ]
+}

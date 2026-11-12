@@ -1,0 +1,40 @@
+{
+  "object": "Sphere",
+  "verts": 2448,
+  "faces": 3272,
+  "tris": 4856,
+  "bbox_min": [
+    -95.3,
+    -87.3,
+    -2.0
+  ],
+  "bbox_max": [
+    94.3,
+    87.3,
+    112.0
+  ],
+  "islands": 10,
+  "open_islands": 0,
+  "inside_out_islands": 0,
+  "nonmanifold_edges": 0,
+  "degenerate_faces": 0,
+  "loose_verts": 0,
+  "nonplanar_ngons": 0,
+  "materials": {
+    "LedSkin": 313,
+    "LedSkinB": 312,
+    "Steel": 2208,
+    "Base": 240,
+    "Lobby": 48,
+    "Plinth": 109,
+    "Entry": 20,
+    "Canopy": 22
+  },
+  "glow": {
+    "max": 0.5,
+    "dark_faces": 0
+  },
+  "windowed_faces": 48,
+  "errors": [],
+  "warnings": []
+}

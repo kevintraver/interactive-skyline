@@ -1,0 +1,80 @@
+{
+ "id": "w30618090",
+ "name": "Venetian Tower",
+ "height": 145.0,
+ "height_source": "osm-height",
+ "frame": "meters east and north of the footprint center c; heights in meters above ground; a model built in this frame installs with --offset 0,0",
+ "facts": {
+  "east_extent": [
+   -106.3,
+   77.1
+  ],
+  "north_extent": [
+   -74.2,
+   72.7
+  ],
+  "longest_edge_m": 97.0,
+  "longest_edge_bearing": 91.3
+ },
+ "volumes": [
+  {
+   "bottom": -2.0,
+   "top": 145.0,
+   "outline": [
+    [
+     -105.51,
+     17.68
+    ],
+    [
+     -10.09,
+     15.97
+    ],
+    [
+     -0.72,
+     19.56
+    ],
+    [
+     55.59,
+     72.68
+    ],
+    [
+     77.13,
+     50.86
+    ],
+    [
+     29.36,
+     5.17
+    ],
+    [
+     29.04,
+     -5.49
+    ],
+    [
+     74.86,
+     -52.37
+    ],
+    [
+     52.63,
+     -74.19
+    ],
+    [
+     21.77,
+     -42.48
+    ],
+    [
+     -0.59,
+     -20.51
+    ],
+    [
+     -9.35,
+     -16.76
+    ],
+    [
+     -106.34,
+     -14.53
+    ]
+   ],
+   "holes": []
+  }
+ ]
+}

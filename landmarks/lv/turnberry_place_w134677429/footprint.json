@@ -1,0 +1,48 @@
+{
+ "id": "w134677429",
+ "name": "Turnberry Place",
+ "height": 145.0,
+ "height_source": "osm-height",
+ "frame": "meters east and north of the footprint center c; heights in meters above ground; a model built in this frame installs with --offset 0,0",
+ "facts": {
+  "east_extent": [
+   -32.1,
+   32.1
+  ],
+  "north_extent": [
+   -32.0,
+   32.0
+  ],
+  "longest_edge_m": 65.6,
+  "longest_edge_bearing": 134.9
+ },
+ "volumes": [
+  {
+   "bottom": -2.3,
+   "top": 145.0,
+   "outline": [
+    [
+     -14.35,
+     31.98
+    ],
+    [
+     -32.08,
+     14.38
+    ],
+    [
+     14.36,
+     -31.97
+    ],
+    [
+     32.08,
+     -14.37
+    ],
+    [
+     9.22,
+     8.45
+    ]
+   ],
+   "holes": []
+  }
+ ]
+}

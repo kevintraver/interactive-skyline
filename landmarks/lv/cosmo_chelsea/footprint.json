@@ -1,0 +1,72 @@
+{
+ "id": "w27897905",
+ "name": "The Cosmopolitan Chelsea Tower",
+ "height": 184.0,
+ "height_source": "osm-height",
+ "frame": "meters east and north of the footprint center c; heights in meters above ground; a model built in this frame installs with --offset 0,0",
+ "facts": {
+  "east_extent": [
+   -83.8,
+   79.6
+  ],
+  "north_extent": [
+   -24.3,
+   25.2
+  ],
+  "longest_edge_m": 63.5,
+  "longest_edge_bearing": 112.1
+ },
+ "volumes": [
+  {
+   "bottom": -2.1,
+   "top": 184.0,
+   "outline": [
+    [
+     -83.75,
+     24.41
+    ],
+    [
+     -82.98,
+     -0.17
+    ],
+    [
+     -77.0,
+     0.09
+    ],
+    [
+     -41.45,
+     -0.1
+    ],
+    [
+     17.4,
+     -24.02
+    ],
+    [
+     79.57,
+     -24.3
+    ],
+    [
+     79.38,
+     4.05
+    ],
+    [
+     23.19,
+     4.3
+    ],
+    [
+     -31.35,
+     25.1
+    ],
+    [
+     -60.77,
+     25.17
+    ],
+    [
+     -75.68,
+     25.2
+    ]
+   ],
+   "holes": []
+  }
+ ]
+}

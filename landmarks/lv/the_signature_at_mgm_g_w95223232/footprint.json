@@ -1,0 +1,96 @@
+{
+ "id": "w95223232",
+ "name": "The Signature at MGM Grand Tower II",
+ "height": 145.0,
+ "height_source": "osm-height",
+ "frame": "meters east and north of the footprint center c; heights in meters above ground; a model built in this frame installs with --offset 0,0",
+ "facts": {
+  "east_extent": [
+   -29.6,
+   29.8
+  ],
+  "north_extent": [
+   -29.8,
+   29.8
+  ],
+  "longest_edge_m": 31.6,
+  "longest_edge_bearing": 45.1
+ },
+ "volumes": [
+  {
+   "bottom": -5.2,
+   "top": 145.0,
+   "outline": [
+    [
+     -29.61,
+     -12.25
+    ],
+    [
+     -24.5,
+     -17.23
+    ],
+    [
+     -22.4,
+     -19.27
+    ],
+    [
+     -20.89,
+     -20.75
+    ],
+    [
+     -11.6,
+     -29.8
+    ],
+    [
+     -9.36,
+     -27.52
+    ],
+    [
+     6.92,
+     -10.99
+    ],
+    [
+     12.52,
+     -5.26
+    ],
+    [
+     17.03,
+     -0.63
+    ],
+    [
+     27.5,
+     9.97
+    ],
+    [
+     29.76,
+     12.26
+    ],
+    [
+     11.75,
+     29.82
+    ],
+    [
+     11.1,
+     29.15
+    ],
+    [
+     9.78,
+     27.81
+    ],
+    [
+     8.08,
+     26.09
+    ],
+    [
+     4.48,
+     22.43
+    ],
+    [
+     -17.92,
+     0.13
+    ]
+   ],
+   "holes": []
+  }
+ ]
+}

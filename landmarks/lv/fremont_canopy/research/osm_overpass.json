@@ -1,0 +1,1783 @@
+{
+  "version": 0.6,
+  "generator": "Overpass API 0.7.62.11 87bfad18",
+  "osm3s": {
+    "timestamp_osm_base": "2026-11-10T05:15:38Z",
+    "copyright": "The data included in this document is from www.openstreetmap.org. The data is made available under ODbL."
+  },
+  "elements": [
+
+{
+  "type": "way",
+  "id": 14309711,
+  "bounds": {
+    "minlat": 36.1692162,
+    "minlon": -115.1407357,
+    "maxlat": 36.1692667,
+    "maxlon": -115.1406182
+  },
+  "geometry": [
+    { "lat": 36.1692667, "lon": -115.1407357 },
+    { "lat": 36.1692385, "lon": -115.1406702 },
+    { "lat": 36.1692162, "lon": -115.1406182 }
+  ],
+  "tags": {
+    "highway": "primary",
+    "lanes": "2",
+    "name": "Fremont Street",
+    "old_ref": "SR 582;US 93;US 95;US 466",
+    "placement:backward": "middle_of:1",
+    "smoothness": "excellent",
+    "source": "Yahoo image;TIGER",
+    "surface": "asphalt",
+    "turn:lanes:backward": "left"
+  }
+},
+{
+  "type": "way",
+  "id": 14322022,
+  "bounds": {
+    "minlat": 36.1698114,
+    "minlon": -115.1439696,
+    "maxlat": 36.1706679,
+    "maxlon": -115.1419927
+  },
+  "geometry": [
+    { "lat": 36.1706679, "lon": -115.1439696 },
+    { "lat": 36.1702655, "lon": -115.1430409 },
+    { "lat": 36.1702189, "lon": -115.1429333 },
+    { "lat": 36.1701808, "lon": -115.1428452 },
+    { "lat": 36.1701646, "lon": -115.1428080 },
+    { "lat": 36.1698114, "lon": -115.1419927 }
+  ],
+  "tags": {
+    "covered": "yes",
+    "highway": "pedestrian",
+    "lit": "yes",
+    "name": "Fremont Street",
+    "name:de": "Fremont Straße",
+    "name:en": "Fremont Street",
+    "name:es": "Calle Fremont",
+    "name:ja": "フレモント・ストリート",
+    "name:ko": "프리몬트 가",
+    "name:nl": "Fremontstraat",
+    "name:pt": "Rua Fremont",
+    "name:ru": "Фримонт-стрит",
+    "name:sr": "Улица Фримонт",
+    "name:zh-Hant": "費利蒙街",
+    "old_ref": "SR 5",
+    "oneway": "no",
+    "ref": "FSE",
+    "surface": "concrete"
+  }
+},
+{
+  "type": "way",
+  "id": 132225807,
+  "bounds": {
+    "minlat": 36.1682426,
+    "minlon": -115.1423534,
+    "maxlat": 36.1695742,
+    "maxlon": -115.1408976
+  },
+  "geometry": [
+    { "lat": 36.1682426, "lon": -115.1415337 },
+    { "lat": 36.1692000, "lon": -115.1408976 },
+    { "lat": 36.1693812, "lon": -115.1413140 },
+    { "lat": 36.1693915, "lon": -115.1413382 },
+    { "lat": 36.1695742, "lon": -115.1417631 },
+    { "lat": 36.1689966, "lon": -115.1421381 },
+    { "lat": 36.1686631, "lon": -115.1423534 },
+    { "lat": 36.1686371, "lon": -115.1422970 },
+    { "lat": 36.1685912, "lon": -115.1423262 },
+    { "lat": 36.1684475, "lon": -115.1420005 },
+    { "lat": 36.1684040, "lon": -115.1419064 },
+    { "lat": 36.1682426, "lon": -115.1415337 }
+  ],
+  "tags": {
+    "amenity": "parking",
+    "building": "garage",
+    "fee": "yes",
+    "height": "12",
+    "layer": "2",
+    "name": "Fremont Street Experience Parking",
+    "parking": "garage",
+    "supervised": "yes",
+    "surface": "asphalt"
+  }
+},
+{
+  "type": "way",
+  "id": 204345600,
+  "bounds": {
+    "minlat": 36.1691928,
+    "minlon": -115.1403262,
+    "maxlat": 36.1696560,
+    "maxlon": -115.1392501
+  },
+  "geometry": [
+    { "lat": 36.1691928, "lon": -115.1392501 },
+    { "lat": 36.1692389, "lon": -115.1393570 },
+    { "lat": 36.1696418, "lon": -115.1402933 },
+    { "lat": 36.1696560, "lon": -115.1403262 }
+  ],
+  "tags": {
+    "highway": "service",
+    "name": "Fremont Street Alley",
+    "oneway": "yes",
+    "service": "alley",
+    "source:name": "TRINA 2.0",
+    "surface": "asphalt"
+  }
+},
+{
+  "type": "way",
+  "id": 204346641,
+  "bounds": {
+    "minlat": 36.1691616,
+    "minlon": -115.1402522,
+    "maxlat": 36.1693656,
+    "maxlon": -115.1400623
+  },
+  "geometry": [
+    { "lat": 36.1693327, "lon": -115.1400623 },
+    { "lat": 36.1693656, "lon": -115.1401375 },
+    { "lat": 36.1691945, "lon": -115.1402522 },
+    { "lat": 36.1691616, "lon": -115.1401770 },
+    { "lat": 36.1693327, "lon": -115.1400623 }
+  ],
+  "tags": {
+    "amenity": "restaurant",
+    "building": "yes",
+    "name": "Park on Fremont",
+    "source": "Bing"
+  }
+},
+{
+  "type": "way",
+  "id": 206147646,
+  "bounds": {
+    "minlat": 36.1691822,
+    "minlon": -115.1463154,
+    "maxlat": 36.1717342,
+    "maxlon": -115.1406874
+  },
+  "geometry": [
+    { "lat": 36.1703626, "lon": -115.1429741 },
+    { "lat": 36.1707659, "lon": -115.1439052 },
+    { "lat": 36.1707958, "lon": -115.1439743 },
+    { "lat": 36.1708354, "lon": -115.1440657 },
+    { "lat": 36.1708567, "lon": -115.1441146 },
+    { "lat": 36.1710268, "lon": -115.1445072 },
+    { "lat": 36.1712534, "lon": -115.1450303 },
+    { "lat": 36.1712804, "lon": -115.1450126 },
+    { "lat": 36.1715591, "lon": -115.1448305 },
+    { "lat": 36.1715763, "lon": -115.1448689 },
+    { "lat": 36.1715841, "lon": -115.1448635 },
+    { "lat": 36.1715867, "lon": -115.1448757 },
+    { "lat": 36.1715732, "lon": -115.1448891 },
+    { "lat": 36.1715654, "lon": -115.1448992 },
+    { "lat": 36.1715601, "lon": -115.1449110 },
+    { "lat": 36.1715555, "lon": -115.1449337 },
+    { "lat": 36.1715530, "lon": -115.1449538 },
+    { "lat": 36.1715530, "lon": -115.1449616 },
+    { "lat": 36.1715530, "lon": -115.1449702 },
+    { "lat": 36.1715545, "lon": -115.1449853 },
+    { "lat": 36.1715586, "lon": -115.1450016 },
+    { "lat": 36.1715626, "lon": -115.1450155 },
+    { "lat": 36.1715713, "lon": -115.1450287 },
+    { "lat": 36.1715809, "lon": -115.1450406 },
+    { "lat": 36.1715946, "lon": -115.1450513 },
+    { "lat": 36.1716117, "lon": -115.1450573 },
+    { "lat": 36.1715650, "lon": -115.1450873 },
+    { "lat": 36.1715739, "lon": -115.1451098 },
+    { "lat": 36.1713766, "lon": -115.1452379 },
+    { "lat": 36.1713496, "lon": -115.1452556 },
+    { "lat": 36.1715398, "lon": -115.1457100 },
+    { "lat": 36.1716933, "lon": -115.1460767 },
+    { "lat": 36.1716887, "lon": -115.1460797 },
+    { "lat": 36.1716837, "lon": -115.1460830 },
+    { "lat": 36.1717252, "lon": -115.1461796 },
+    { "lat": 36.1717342, "lon": -115.1462006 },
+    { "lat": 36.1716570, "lon": -115.1462522 },
+    { "lat": 36.1715617, "lon": -115.1463154 },
+    { "lat": 36.1715544, "lon": -115.1463003 },
+    { "lat": 36.1713524, "lon": -115.1458388 },
+    { "lat": 36.1713407, "lon": -115.1458120 },
+    { "lat": 36.1711601, "lon": -115.1453949 },
+    { "lat": 36.1711093, "lon": -115.1452775 },
+    { "lat": 36.1710607, "lon": -115.1451651 },
+    { "lat": 36.1706853, "lon": -115.1442984 },
+    { "lat": 36.1706601, "lon": -115.1442402 },
+    { "lat": 36.1706391, "lon": -115.1441918 },
+    { "lat": 36.1705992, "lon": -115.1440995 },
+    { "lat": 36.1705702, "lon": -115.1440327 },
+    { "lat": 36.1705601, "lon": -115.1440093 },
+    { "lat": 36.1703652, "lon": -115.1435591 },
+    { "lat": 36.1701694, "lon": -115.1431068 },
+    { "lat": 36.1698884, "lon": -115.1432940 },
+    { "lat": 36.1698339, "lon": -115.1431683 },
+    { "lat": 36.1698038, "lon": -115.1430989 },
+    { "lat": 36.1697796, "lon": -115.1430430 },
+    { "lat": 36.1700594, "lon": -115.1428528 },
+    { "lat": 36.1699864, "lon": -115.1426849 },
+    { "lat": 36.1699223, "lon": -115.1425361 },
+    { "lat": 36.1698823, "lon": -115.1424436 },
+    { "lat": 36.1697144, "lon": -115.1420562 },
+    { "lat": 36.1696829, "lon": -115.1419834 },
+    { "lat": 36.1696776, "lon": -115.1419711 },
+    { "lat": 36.1696637, "lon": -115.1419420 },
+    { "lat": 36.1696338, "lon": -115.1418760 },
+    { "lat": 36.1696204, "lon": -115.1418486 },
+    { "lat": 36.1696073, "lon": -115.1418219 },
+    { "lat": 36.1695866, "lon": -115.1417753 },
+    { "lat": 36.1695742, "lon": -115.1417631 },
+    { "lat": 36.1693915, "lon": -115.1413382 },
+    { "lat": 36.1693812, "lon": -115.1413140 },
+    { "lat": 36.1692000, "lon": -115.1408976 },
+    { "lat": 36.1691822, "lon": -115.1408560 },
+    { "lat": 36.1692194, "lon": -115.1408317 },
+    { "lat": 36.1692875, "lon": -115.1407837 },
+    { "lat": 36.1693468, "lon": -115.1407418 },
+    { "lat": 36.1694277, "lon": -115.1406874 },
+    { "lat": 36.1694123, "lon": -115.1407121 },
+    { "lat": 36.1694012, "lon": -115.1407402 },
+    { "lat": 36.1693951, "lon": -115.1407689 },
+    { "lat": 36.1693936, "lon": -115.1407985 },
+    { "lat": 36.1693970, "lon": -115.1408292 },
+    { "lat": 36.1694053, "lon": -115.1408584 },
+    { "lat": 36.1694285, "lon": -115.1408999 },
+    { "lat": 36.1694621, "lon": -115.1409303 },
+    { "lat": 36.1695137, "lon": -115.1409594 },
+    { "lat": 36.1695624, "lon": -115.1410144 },
+    { "lat": 36.1695786, "lon": -115.1410760 },
+    { "lat": 36.1695840, "lon": -115.1411820 },
+    { "lat": 36.1695992, "lon": -115.1412826 },
+    { "lat": 36.1696447, "lon": -115.1414073 },
+    { "lat": 36.1696999, "lon": -115.1414771 },
+    { "lat": 36.1697497, "lon": -115.1415253 },
+    { "lat": 36.1697865, "lon": -115.1415454 },
+    { "lat": 36.1698341, "lon": -115.1415535 },
+    { "lat": 36.1698807, "lon": -115.1415576 },
+    { "lat": 36.1699207, "lon": -115.1415482 },
+    { "lat": 36.1699282, "lon": -115.1415571 },
+    { "lat": 36.1699347, "lon": -115.1415647 },
+    { "lat": 36.1699626, "lon": -115.1415974 },
+    { "lat": 36.1698118, "lon": -115.1416866 },
+    { "lat": 36.1698350, "lon": -115.1417463 },
+    { "lat": 36.1698594, "lon": -115.1418089 },
+    { "lat": 36.1698721, "lon": -115.1418419 },
+    { "lat": 36.1698778, "lon": -115.1418550 },
+    { "lat": 36.1699093, "lon": -115.1419276 },
+    { "lat": 36.1699470, "lon": -115.1420147 },
+    { "lat": 36.1700102, "lon": -115.1421607 },
+    { "lat": 36.1700749, "lon": -115.1423100 },
+    { "lat": 36.1701553, "lon": -115.1425012 },
+    { "lat": 36.1701753, "lon": -115.1425474 },
+    { "lat": 36.1702713, "lon": -115.1427627 },
+    { "lat": 36.1703030, "lon": -115.1427428 },
+    { "lat": 36.1705899, "lon": -115.1425452 },
+    { "lat": 36.1706029, "lon": -115.1425377 },
+    { "lat": 36.1706282, "lon": -115.1425230 },
+    { "lat": 36.1708763, "lon": -115.1423665 },
+    { "lat": 36.1708596, "lon": -115.1423143 },
+    { "lat": 36.1709021, "lon": -115.1422864 },
+    { "lat": 36.1709229, "lon": -115.1423349 },
+    { "lat": 36.1711490, "lon": -115.1421862 },
+    { "lat": 36.1711396, "lon": -115.1421643 },
+    { "lat": 36.1712449, "lon": -115.1420988 },
+    { "lat": 36.1712549, "lon": -115.1421220 },
+    { "lat": 36.1712938, "lon": -115.1422129 },
+    { "lat": 36.1713338, "lon": -115.1423062 },
+    { "lat": 36.1713553, "lon": -115.1423565 },
+    { "lat": 36.1713431, "lon": -115.1423643 },
+    { "lat": 36.1710839, "lon": -115.1425221 },
+    { "lat": 36.1709838, "lon": -115.1425977 },
+    { "lat": 36.1707612, "lon": -115.1427413 },
+    { "lat": 36.1703951, "lon": -115.1429551 },
+    { "lat": 36.1703626, "lon": -115.1429741 }
+  ],
+  "tags": {
+    "area": "yes",
+    "covered": "yes",
+    "foot": "designated",
+    "highway": "pedestrian",
+    "lit": "yes",
+    "motor_vehicle": "no",
+    "name": "Fremont Street Experience",
+    "surface": "concrete",
+    "tourism": "attraction",
+    "wikidata": "Q1368842",
+    "wikipedia": "en:Fremont Street Experience"
+  }
+},
+{
+  "type": "way",
+  "id": 206147649,
+  "bounds": {
+    "minlat": 36.1678737,
+    "minlon": -115.1396302,
+    "maxlat": 36.1680066,
+    "maxlon": -115.1394448
+  },
+  "geometry": [
+    { "lat": 36.1680066, "lon": -115.1395811 },
+    { "lat": 36.1679470, "lon": -115.1394448 },
+    { "lat": 36.1678737, "lon": -115.1394939 },
+    { "lat": 36.1679332, "lon": -115.1396302 },
+    { "lat": 36.1680066, "lon": -115.1395811 }
+  ],
+  "tags": {
+    "building": "roof",
+    "layer": "1",
+    "source": "Bing"
+  }
+},
+{
+  "type": "way",
+  "id": 207630736,
+  "bounds": {
+    "minlat": 36.1682032,
+    "minlon": -115.1484387,
+    "maxlat": 36.1683993,
+    "maxlon": -115.1482567
+  },
+  "geometry": [
+    { "lat": 36.1682354, "lon": -115.1484387 },
+    { "lat": 36.1682817, "lon": -115.1484090 },
+    { "lat": 36.1683433, "lon": -115.1483695 },
+    { "lat": 36.1683919, "lon": -115.1483384 },
+    { "lat": 36.1683993, "lon": -115.1483337 },
+    { "lat": 36.1683671, "lon": -115.1482567 },
+    { "lat": 36.1683600, "lon": -115.1482612 },
+    { "lat": 36.1683109, "lon": -115.1482926 },
+    { "lat": 36.1682499, "lon": -115.1483317 },
+    { "lat": 36.1682032, "lon": -115.1483616 },
+    { "lat": 36.1682354, "lon": -115.1484387 }
+  ],
+  "tags": {
+    "building": "roof",
+    "source": "Bing"
+  }
+},
+{
+  "type": "way",
+  "id": 397861233,
+  "bounds": {
+    "minlat": 36.1677132,
+    "minlon": -115.1383044,
+    "maxlat": 36.1678576,
+    "maxlon": -115.1381245
+  },
+  "geometry": [
+    { "lat": 36.1678018, "lon": -115.1383044 },
+    { "lat": 36.1678576, "lon": -115.1382105 },
+    { "lat": 36.1677698, "lon": -115.1381245 },
+    { "lat": 36.1677132, "lon": -115.1382204 },
+    { "lat": 36.1678018, "lon": -115.1383044 }
+  ],
+  "tags": {
+    "addr:city": "Las Vegas",
+    "addr:housenumber": "707",
+    "addr:postcode": "89101",
+    "addr:state": "NV",
+    "addr:street": "Fremont Street",
+    "building": "roof",
+    "check_date": "2024-05-28",
+    "layer": "1"
+  }
+},
+{
+  "type": "way",
+  "id": 523568456,
+  "bounds": {
+    "minlat": 36.1682556,
+    "minlon": -115.1399960,
+    "maxlat": 36.1689488,
+    "maxlon": -115.1383829
+  },
+  "geometry": [
+    { "lat": 36.1689488, "lon": -115.1399960 },
+    { "lat": 36.1687994, "lon": -115.1396483 },
+    { "lat": 36.1687920, "lon": -115.1396312 },
+    { "lat": 36.1687526, "lon": -115.1395395 },
+    { "lat": 36.1687180, "lon": -115.1394589 },
+    { "lat": 36.1687018, "lon": -115.1394213 },
+    { "lat": 36.1685079, "lon": -115.1389699 },
+    { "lat": 36.1683158, "lon": -115.1385229 },
+    { "lat": 36.1683000, "lon": -115.1384862 },
+    { "lat": 36.1682556, "lon": -115.1383829 }
+  ],
+  "tags": {
+    "highway": "primary",
+    "lanes": "3",
+    "lanes:backward": "1",
+    "lanes:forward": "2",
+    "name": "Fremont Street",
+    "old_ref": "SR 582;US 93;US 95;US 466",
+    "placement:forward": "middle_of:1",
+    "sidewalk:both": "separate",
+    "smoothness": "excellent",
+    "source": "Yahoo image;TIGER",
+    "surface": "asphalt",
+    "turn:lanes:forward": "left|"
+  }
+},
+{
+  "type": "way",
+  "id": 594470063,
+  "bounds": {
+    "minlat": 36.1683907,
+    "minlon": -115.1456180,
+    "maxlat": 36.1692649,
+    "maxlon": -115.1451269
+  },
+  "geometry": [
+    { "lat": 36.1692649, "lon": -115.1451269 },
+    { "lat": 36.1691305, "lon": -115.1451547 },
+    { "lat": 36.1689634, "lon": -115.1452401 },
+    { "lat": 36.1685001, "lon": -115.1455315 },
+    { "lat": 36.1684903, "lon": -115.1455377 },
+    { "lat": 36.1684801, "lon": -115.1455459 },
+    { "lat": 36.1683907, "lon": -115.1456180 }
+  ],
+  "tags": {
+    "bus": "designated",
+    "covered": "no",
+    "highway": "busway",
+    "lanes": "1",
+    "network": "RTC",
+    "network:wikidata": "Q7309181",
+    "oneway": "yes",
+    "operator": "Regional Transportation Commission of Southern Nevada",
+    "operator:wikidata": "Q7309181",
+    "ref": "RTC 401;RTC BHX;RTC CX;RTC Deuce;Red Line",
+    "route_ref": "BHX;DVX;Red Line",
+    "surface": "asphalt"
+  }
+},
+{
+  "type": "way",
+  "id": 601629490,
+  "bounds": {
+    "minlat": 36.1659178,
+    "minlon": -115.1372663,
+    "maxlat": 36.1677758,
+    "maxlon": -115.1329611
+  },
+  "geometry": [
+    { "lat": 36.1677758, "lon": -115.1372663 },
+    { "lat": 36.1677425, "lon": -115.1371887 },
+    { "lat": 36.1677234, "lon": -115.1371444 },
+    { "lat": 36.1675341, "lon": -115.1367039 },
+    { "lat": 36.1673509, "lon": -115.1362776 },
+    { "lat": 36.1672879, "lon": -115.1361310 },
+    { "lat": 36.1672367, "lon": -115.1360119 },
+    { "lat": 36.1672003, "lon": -115.1359272 },
+    { "lat": 36.1670387, "lon": -115.1355510 },
+    { "lat": 36.1668528, "lon": -115.1351184 },
+    { "lat": 36.1667976, "lon": -115.1349900 },
+    { "lat": 36.1667467, "lon": -115.1348715 },
+    { "lat": 36.1666590, "lon": -115.1346675 },
+    { "lat": 36.1665549, "lon": -115.1344253 },
+    { "lat": 36.1663484, "lon": -115.1339447 },
+    { "lat": 36.1662964, "lon": -115.1338237 },
+    { "lat": 36.1662422, "lon": -115.1336952 },
+    { "lat": 36.1661834, "lon": -115.1335559 },
+    { "lat": 36.1660290, "lon": -115.1332102 },
+    { "lat": 36.1659178, "lon": -115.1329611 }
+  ],
+  "tags": {
+    "highway": "primary",
+    "name": "Fremont Street",
+    "old_ref": "SR 582;US 93;US 95;US 466",
+    "oneway": "no",
+    "sidewalk:both": "separate",
+    "source": "Yahoo image;TIGER",
+    "surface": "asphalt"
+  }
+},
+{
+  "type": "way",
+  "id": 625523013,
+  "bounds": {
+    "minlat": 36.1716781,
+    "minlon": -115.1463523,
+    "maxlat": 36.1717003,
+    "maxlon": -115.1463011
+  },
+  "geometry": [
+    { "lat": 36.1717003, "lon": -115.1463523 },
+    { "lat": 36.1716781, "lon": -115.1463011 }
+  ],
+  "tags": {
+    "foot": "yes",
+    "highway": "pedestrian",
+    "lit": "yes",
+    "name": "Fremont Street",
+    "name:de": "Fremont Straße",
+    "name:en": "Fremont Street",
+    "name:es": "Calle Fremont",
+    "name:ja": "フレモント・ストリート",
+    "name:ko": "프리몬트 가",
+    "name:nl": "Fremontstraat",
+    "name:pt": "Rua Fremont",
+    "name:ru": "Фримонт-стрит",
+    "name:sr": "Улица Фримонт",
+    "name:zh-Hant": "費利蒙街",
+    "old_ref": "SR 5",
+    "oneway": "no",
+    "ref": "FSE",
+    "surface": "asphalt"
+  }
+},
+{
+  "type": "way",
+  "id": 650732231,
+  "bounds": {
+    "minlat": 36.1677758,
+    "minlon": -115.1383829,
+    "maxlat": 36.1682556,
+    "maxlon": -115.1372663
+  },
+  "geometry": [
+    { "lat": 36.1682556, "lon": -115.1383829 },
+    { "lat": 36.1682318, "lon": -115.1383274 },
+    { "lat": 36.1682134, "lon": -115.1382847 },
+    { "lat": 36.1680192, "lon": -115.1378327 },
+    { "lat": 36.1678268, "lon": -115.1373849 },
+    { "lat": 36.1678120, "lon": -115.1373507 },
+    { "lat": 36.1677758, "lon": -115.1372663 }
+  ],
+  "tags": {
+    "highway": "primary",
+    "maxspeed": "25 mph",
+    "name": "Fremont Street",
+    "old_ref": "SR 582;US 93;US 95;US 466",
+    "sidewalk:both": "separate",
+    "source": "Yahoo image;TIGER",
+    "source:old_ref": "Nevada's State Maintained Highways (January 2003)",
+    "surface": "asphalt"
+  }
+},
+{
+  "type": "way",
+  "id": 651364959,
+  "bounds": {
+    "minlat": 36.1660534,
+    "minlon": -115.1471508,
+    "maxlat": 36.1683907,
+    "maxlon": -115.1456180
+  },
+  "geometry": [
+    { "lat": 36.1683907, "lon": -115.1456180 },
+    { "lat": 36.1683014, "lon": -115.1456800 },
+    { "lat": 36.1681354, "lon": -115.1457953 },
+    { "lat": 36.1679384, "lon": -115.1459160 },
+    { "lat": 36.1677684, "lon": -115.1460180 },
+    { "lat": 36.1676612, "lon": -115.1460609 },
+    { "lat": 36.1672969, "lon": -115.1463063 },
+    { "lat": 36.1672693, "lon": -115.1463240 },
+    { "lat": 36.1672118, "lon": -115.1463610 },
+    { "lat": 36.1671494, "lon": -115.1464011 },
+    { "lat": 36.1671239, "lon": -115.1464174 },
+    { "lat": 36.1669315, "lon": -115.1465423 },
+    { "lat": 36.1665548, "lon": -115.1467972 },
+    { "lat": 36.1661509, "lon": -115.1470831 },
+    { "lat": 36.1661210, "lon": -115.1471042 },
+    { "lat": 36.1660534, "lon": -115.1471508 }
+  ],
+  "tags": {
+    "bus": "designated",
+    "covered": "no",
+    "highway": "busway",
+    "lanes": "2",
+    "network": "RTC",
+    "network:wikidata": "Q7309181",
+    "oneway": "no",
+    "operator": "Regional Transportation Commission of Southern Nevada",
+    "operator:wikidata": "Q7309181",
+    "placement:forward": "left_of:1",
+    "ref": "RTC 401;RTC BHX;RTC CX;RTC Deuce;Red Line",
+    "route_ref": "BHX;Deuce;DVX;Red Line",
+    "surface": "asphalt"
+  }
+},
+{
+  "type": "way",
+  "id": 699874292,
+  "bounds": {
+    "minlat": 36.1703626,
+    "minlon": -115.1438986,
+    "maxlat": 36.1717332,
+    "maxlon": -115.1423643
+  },
+  "geometry": [
+    { "lat": 36.1717332, "lon": -115.1432594 },
+    { "lat": 36.1715468, "lon": -115.1428382 },
+    { "lat": 36.1714039, "lon": -115.1429301 },
+    { "lat": 36.1713336, "lon": -115.1427805 },
+    { "lat": 36.1713904, "lon": -115.1427417 },
+    { "lat": 36.1713806, "lon": -115.1427189 },
+    { "lat": 36.1714673, "lon": -115.1426612 },
+    { "lat": 36.1713431, "lon": -115.1423643 },
+    { "lat": 36.1709838, "lon": -115.1425977 },
+    { "lat": 36.1707612, "lon": -115.1427413 },
+    { "lat": 36.1703951, "lon": -115.1429551 },
+    { "lat": 36.1703626, "lon": -115.1429741 },
+    { "lat": 36.1706854, "lon": -115.1437035 },
+    { "lat": 36.1707683, "lon": -115.1438986 },
+    { "lat": 36.1714188, "lon": -115.1434741 },
+    { "lat": 36.1717332, "lon": -115.1432594 }
+  ],
+  "tags": {
+    "addr:city": "Las Vegas",
+    "addr:housenumber": "200",
+    "addr:postcode": "89101",
+    "addr:state": "NV",
+    "addr:street": "Fremont Street Experience",
+    "amenity": "casino",
+    "building": "hotel",
+    "building:levels": "15",
+    "height": "54",
+    "loc_name": "Fremont Hotel and Casino",
+    "name": "Fremont Hotel & Casino Las Vegas",
+    "phone": "+1 702-385-3232",
+    "tourism": "hotel",
+    "wikidata": "Q1136841",
+    "wikipedia": "en:Fremont Hotel and Casino"
+  }
+},
+{
+  "type": "way",
+  "id": 948049534,
+  "bounds": {
+    "minlat": 36.1701217,
+    "minlon": -115.1463798,
+    "maxlat": 36.1703667,
+    "maxlon": -115.1458948
+  },
+  "geometry": [
+    { "lat": 36.1701217, "lon": -115.1458948 },
+    { "lat": 36.1701577, "lon": -115.1458976 },
+    { "lat": 36.1702160, "lon": -115.1459312 },
+    { "lat": 36.1703667, "lon": -115.1462972 },
+    { "lat": 36.1703572, "lon": -115.1463628 },
+    { "lat": 36.1703349, "lon": -115.1463798 }
+  ],
+  "tags": {
+    "covered": "yes",
+    "highway": "service",
+    "lanes": "1",
+    "lit": "yes",
+    "oneway": "yes",
+    "service": "driveway"
+  }
+},
+{
+  "type": "way",
+  "id": 954035981,
+  "bounds": {
+    "minlat": 36.1728582,
+    "minlon": -115.1393998,
+    "maxlat": 36.1729965,
+    "maxlon": -115.1390995
+  },
+  "geometry": [
+    { "lat": 36.1728582, "lon": -115.1390995 },
+    { "lat": 36.1729965, "lon": -115.1393998 }
+  ],
+  "tags": {
+    "access": "private",
+    "covered": "yes",
+    "highway": "service"
+  }
+},
+{
+  "type": "way",
+  "id": 960092101,
+  "bounds": {
+    "minlat": 36.1698354,
+    "minlon": -115.1448702,
+    "maxlat": 36.1700629,
+    "maxlon": -115.1446771
+  },
+  "geometry": [
+    { "lat": 36.1700437, "lon": -115.1446771 },
+    { "lat": 36.1700629, "lon": -115.1447223 },
+    { "lat": 36.1699033, "lon": -115.1448252 },
+    { "lat": 36.1698354, "lon": -115.1448702 }
+  ],
+  "tags": {
+    "covered": "yes",
+    "highway": "service",
+    "oneway": "yes",
+    "service": "driveway",
+    "surface": "asphalt"
+  }
+},
+{
+  "type": "way",
+  "id": 960092102,
+  "bounds": {
+    "minlat": 36.1698857,
+    "minlon": -115.1448252,
+    "maxlat": 36.1699033,
+    "maxlon": -115.1447805
+  },
+  "geometry": [
+    { "lat": 36.1699033, "lon": -115.1448252 },
+    { "lat": 36.1698857, "lon": -115.1447805 }
+  ],
+  "tags": {
+    "covered": "yes",
+    "highway": "service",
+    "oneway": "yes",
+    "service": "driveway",
+    "surface": "asphalt"
+  }
+},
+{
+  "type": "way",
+  "id": 960093222,
+  "bounds": {
+    "minlat": 36.1717186,
+    "minlon": -115.1466286,
+    "maxlat": 36.1718397,
+    "maxlon": -115.1465096
+  },
+  "geometry": [
+    { "lat": 36.1718397, "lon": -115.1465096 },
+    { "lat": 36.1718297, "lon": -115.1465701 },
+    { "lat": 36.1718080, "lon": -115.1466072 },
+    { "lat": 36.1717814, "lon": -115.1466278 },
+    { "lat": 36.1717186, "lon": -115.1466286 }
+  ],
+  "tags": {
+    "covered": "yes",
+    "highway": "footway",
+    "surface": "concrete",
+    "tunnel": "building_passage"
+  }
+},
+{
+  "type": "way",
+  "id": 1017458241,
+  "bounds": {
+    "minlat": 36.1718482,
+    "minlon": -115.1387206,
+    "maxlat": 36.1719716,
+    "maxlon": -115.1385742
+  },
+  "geometry": [
+    { "lat": 36.1718482, "lon": -115.1386311 },
+    { "lat": 36.1719320, "lon": -115.1385742 },
+    { "lat": 36.1719716, "lon": -115.1386638 },
+    { "lat": 36.1718878, "lon": -115.1387206 },
+    { "lat": 36.1718482, "lon": -115.1386311 }
+  ],
+  "tags": {
+    "building": "roof",
+    "source": "microsoft/BuildingFootprints"
+  }
+},
+{
+  "type": "way",
+  "id": 1042566136,
+  "bounds": {
+    "minlat": 36.1722985,
+    "minlon": -115.1467237,
+    "maxlat": 36.1728508,
+    "maxlon": -115.1460290
+  },
+  "geometry": [
+    { "lat": 36.1722985, "lon": -115.1463033 },
+    { "lat": 36.1723698, "lon": -115.1464786 },
+    { "lat": 36.1724375, "lon": -115.1466002 },
+    { "lat": 36.1725252, "lon": -115.1467058 },
+    { "lat": 36.1726095, "lon": -115.1467237 },
+    { "lat": 36.1726851, "lon": -115.1467042 },
+    { "lat": 36.1727832, "lon": -115.1466346 },
+    { "lat": 36.1728287, "lon": -115.1465754 },
+    { "lat": 36.1728483, "lon": -115.1464754 },
+    { "lat": 36.1728508, "lon": -115.1463685 },
+    { "lat": 36.1728216, "lon": -115.1462670 },
+    { "lat": 36.1727409, "lon": -115.1460290 }
+  ],
+  "tags": {
+    "covered": "yes",
+    "highway": "service",
+    "layer": "-1",
+    "oneway": "yes",
+    "tunnel": "yes"
+  }
+},
+{
+  "type": "way",
+  "id": 1156209410,
+  "bounds": {
+    "minlat": 36.1712305,
+    "minlon": -115.1479569,
+    "maxlat": 36.1712975,
+    "maxlon": -115.1479131
+  },
+  "geometry": [
+    { "lat": 36.1712305, "lon": -115.1479569 },
+    { "lat": 36.1712975, "lon": -115.1479131 }
+  ],
+  "tags": {
+    "covered": "yes",
+    "highway": "service"
+  }
+},
+{
+  "type": "way",
+  "id": 1183002056,
+  "bounds": {
+    "minlat": 36.1699900,
+    "minlon": -115.1430661,
+    "maxlat": 36.1702189,
+    "maxlon": -115.1429333
+  },
+  "geometry": [
+    { "lat": 36.1699900, "lon": -115.1430661 },
+    { "lat": 36.1701163, "lon": -115.1429834 },
+    { "lat": 36.1702189, "lon": -115.1429333 }
+  ],
+  "tags": {
+    "covered": "yes",
+    "highway": "pedestrian",
+    "name": "South 3rd Street"
+  }
+},
+{
+  "type": "way",
+  "id": 1204568204,
+  "bounds": {
+    "minlat": 36.1696182,
+    "minlon": -115.1497495,
+    "maxlat": 36.1702511,
+    "maxlon": -115.1493292
+  },
+  "geometry": [
+    { "lat": 36.1702511, "lon": -115.1493292 },
+    { "lat": 36.1696182, "lon": -115.1497495 }
+  ],
+  "tags": {
+    "covered": "yes",
+    "highway": "service"
+  }
+},
+{
+  "type": "way",
+  "id": 1210942101,
+  "bounds": {
+    "minlat": 36.1724913,
+    "minlon": -115.1454715,
+    "maxlat": 36.1726195,
+    "maxlon": -115.1453883
+  },
+  "geometry": [
+    { "lat": 36.1726195, "lon": -115.1453883 },
+    { "lat": 36.1724913, "lon": -115.1454715 }
+  ],
+  "tags": {
+    "covered": "yes",
+    "highway": "service"
+  }
+},
+{
+  "type": "way",
+  "id": 1210942103,
+  "bounds": {
+    "minlat": 36.1724022,
+    "minlon": -115.1454715,
+    "maxlat": 36.1724913,
+    "maxlon": -115.1449752
+  },
+  "geometry": [
+    { "lat": 36.1724913, "lon": -115.1454715 },
+    { "lat": 36.1724230, "lon": -115.1453035 },
+    { "lat": 36.1724022, "lon": -115.1451650 },
+    { "lat": 36.1724059, "lon": -115.1450675 },
+    { "lat": 36.1724438, "lon": -115.1449752 }
+  ],
+  "tags": {
+    "covered": "yes",
+    "highway": "service",
+    "oneway": "yes"
+  }
+},
+{
+  "type": "way",
+  "id": 1210942105,
+  "bounds": {
+    "minlat": 36.1724913,
+    "minlon": -115.1456431,
+    "maxlat": 36.1725661,
+    "maxlon": -115.1454715
+  },
+  "geometry": [
+    { "lat": 36.1725661, "lon": -115.1456431 },
+    { "lat": 36.1724913, "lon": -115.1454715 }
+  ],
+  "tags": {
+    "covered": "yes",
+    "highway": "service"
+  }
+},
+{
+  "type": "way",
+  "id": 1249454934,
+  "bounds": {
+    "minlat": 36.1707862,
+    "minlon": -115.1466465,
+    "maxlat": 36.1710464,
+    "maxlon": -115.1463505
+  },
+  "geometry": [
+    { "lat": 36.1707862, "lon": -115.1463505 },
+    { "lat": 36.1708707, "lon": -115.1463597 },
+    { "lat": 36.1709600, "lon": -115.1464393 },
+    { "lat": 36.1710464, "lon": -115.1466465 }
+  ],
+  "tags": {
+    "covered": "yes",
+    "highway": "service"
+  }
+},
+{
+  "type": "way",
+  "id": 1325631762,
+  "bounds": {
+    "minlat": 36.1683109,
+    "minlon": -115.1483695,
+    "maxlat": 36.1683433,
+    "maxlon": -115.1482926
+  },
+  "geometry": [
+    { "lat": 36.1683109, "lon": -115.1482926 },
+    { "lat": 36.1683433, "lon": -115.1483695 }
+  ],
+  "tags": {
+    "covered": "yes",
+    "highway": "service"
+  }
+},
+{
+  "type": "way",
+  "id": 1325631764,
+  "bounds": {
+    "minlat": 36.1682499,
+    "minlon": -115.1484090,
+    "maxlat": 36.1682817,
+    "maxlon": -115.1483317
+  },
+  "geometry": [
+    { "lat": 36.1682499, "lon": -115.1483317 },
+    { "lat": 36.1682817, "lon": -115.1484090 }
+  ],
+  "tags": {
+    "covered": "yes",
+    "highway": "service"
+  }
+},
+{
+  "type": "way",
+  "id": 1325631765,
+  "bounds": {
+    "minlat": 36.1683600,
+    "minlon": -115.1483384,
+    "maxlat": 36.1683919,
+    "maxlon": -115.1482612
+  },
+  "geometry": [
+    { "lat": 36.1683600, "lon": -115.1482612 },
+    { "lat": 36.1683919, "lon": -115.1483384 }
+  ],
+  "tags": {
+    "covered": "yes",
+    "highway": "service"
+  }
+},
+{
+  "type": "way",
+  "id": 1409643100,
+  "bounds": {
+    "minlat": 36.1717003,
+    "minlon": -115.1464105,
+    "maxlat": 36.1717256,
+    "maxlon": -115.1463523
+  },
+  "geometry": [
+    { "lat": 36.1717003, "lon": -115.1463523 },
+    { "lat": 36.1717256, "lon": -115.1464105 }
+  ],
+  "tags": {
+    "foot": "yes",
+    "highway": "pedestrian",
+    "lit": "yes",
+    "name": "Fremont Street",
+    "name:de": "Fremont Straße",
+    "name:en": "Fremont Street",
+    "name:es": "Calle Fremont",
+    "name:ja": "フレモント・ストリート",
+    "name:ko": "프리몬트 가",
+    "name:nl": "Fremontstraat",
+    "name:pt": "Rua Fremont",
+    "name:ru": "Фримонт-стрит",
+    "name:sr": "Улица Фримонт",
+    "name:zh-Hant": "費利蒙街",
+    "old_ref": "SR 5",
+    "oneway": "no",
+    "ref": "FSE",
+    "surface": "asphalt"
+  }
+},
+{
+  "type": "way",
+  "id": 1413999341,
+  "bounds": {
+    "minlat": 36.1719531,
+    "minlon": -115.1438130,
+    "maxlat": 36.1720864,
+    "maxlon": -115.1434923
+  },
+  "geometry": [
+    { "lat": 36.1720864, "lon": -115.1438130 },
+    { "lat": 36.1719531, "lon": -115.1434923 }
+  ],
+  "tags": {
+    "covered": "yes",
+    "cycleway:both": "lane",
+    "cycleway:both:buffer": "no",
+    "highway": "tertiary",
+    "lanes": "5",
+    "lanes:backward": "3",
+    "lanes:forward": "2",
+    "lit": "yes",
+    "maxheight": "15'",
+    "name": "East Ogden Avenue",
+    "placement:backward": "middle_of:1",
+    "sidewalk:both": "separate",
+    "smoothness": "excellent",
+    "surface": "asphalt",
+    "tiger:cfcc": "A41",
+    "tiger:county": "Clark, NV",
+    "tiger:name_base": "Ogden",
+    "tiger:name_direction_prefix": "E",
+    "tiger:name_type": "Ave",
+    "tiger:reviewed": "no",
+    "tunnel": "building_passage"
+  }
+},
+{
+  "type": "way",
+  "id": 1426918441,
+  "bounds": {
+    "minlat": 36.1690983,
+    "minlon": -115.1405352,
+    "maxlat": 36.1692249,
+    "maxlon": -115.1404538
+  },
+  "geometry": [
+    { "lat": 36.1692249, "lon": -115.1404538 },
+    { "lat": 36.1690983, "lon": -115.1405352 }
+  ],
+  "tags": {
+    "advertising": "sign",
+    "information": "board",
+    "layer": "1",
+    "man_made": "gantry",
+    "name": "Fremont East Gateway",
+    "subject": "Fremont East District",
+    "tourism": "attraction",
+    "wikidata": "Q61864085",
+    "wikimedia_commons": "Category:Fremont East Gateway"
+  }
+},
+{
+  "type": "way",
+  "id": 1426918443,
+  "bounds": {
+    "minlat": 36.1690867,
+    "minlon": -115.1406182,
+    "maxlat": 36.1692162,
+    "maxlon": -115.1403168
+  },
+  "geometry": [
+    { "lat": 36.1692162, "lon": -115.1406182 },
+    { "lat": 36.1691932, "lon": -115.1405648 },
+    { "lat": 36.1691810, "lon": -115.1405363 },
+    { "lat": 36.1690867, "lon": -115.1403168 }
+  ],
+  "tags": {
+    "highway": "primary",
+    "lanes": "3",
+    "lanes:backward": "1",
+    "lanes:both_ways": "1",
+    "lanes:forward": "1",
+    "name": "Fremont Street",
+    "old_ref": "SR 582;US 93;US 95;US 466",
+    "sidewalk:both": "separate",
+    "smoothness": "excellent",
+    "source": "Yahoo image;TIGER",
+    "surface": "asphalt"
+  }
+},
+{
+  "type": "way",
+  "id": 1426918444,
+  "bounds": {
+    "minlat": 36.1689488,
+    "minlon": -115.1403168,
+    "maxlat": 36.1690867,
+    "maxlon": -115.1399960
+  },
+  "geometry": [
+    { "lat": 36.1690867, "lon": -115.1403168 },
+    { "lat": 36.1689488, "lon": -115.1399960 }
+  ],
+  "tags": {
+    "highway": "primary",
+    "lanes": "3",
+    "lanes:backward": "2",
+    "lanes:forward": "1",
+    "name": "Fremont Street",
+    "old_ref": "SR 582;US 93;US 95;US 466",
+    "sidewalk:both": "separate",
+    "smoothness": "excellent",
+    "source": "Yahoo image;TIGER",
+    "surface": "asphalt"
+  }
+},
+{
+  "type": "way",
+  "id": 1427207958,
+  "bounds": {
+    "minlat": 36.1706601,
+    "minlon": -115.1442402,
+    "maxlat": 36.1715668,
+    "maxlon": -115.1436668
+  },
+  "geometry": [
+    { "lat": 36.1706601, "lon": -115.1442402 },
+    { "lat": 36.1707580, "lon": -115.1441776 },
+    { "lat": 36.1708567, "lon": -115.1441146 },
+    { "lat": 36.1711613, "lon": -115.1439228 },
+    { "lat": 36.1715668, "lon": -115.1436668 }
+  ],
+  "tags": {
+    "covered": "yes",
+    "footway": "sidewalk",
+    "highway": "footway",
+    "surface": "concrete"
+  }
+},
+{
+  "type": "way",
+  "id": 1427207960,
+  "bounds": {
+    "minlat": 36.1707580,
+    "minlon": -115.1461334,
+    "maxlat": 36.1716055,
+    "maxlon": -115.1441776
+  },
+  "geometry": [
+    { "lat": 36.1716055, "lon": -115.1461334 },
+    { "lat": 36.1714491, "lon": -115.1457723 },
+    { "lat": 36.1711979, "lon": -115.1451926 },
+    { "lat": 36.1707580, "lon": -115.1441776 }
+  ],
+  "tags": {
+    "covered": "yes",
+    "highway": "pedestrian",
+    "lit": "yes",
+    "name": "Fremont Street",
+    "name:de": "Fremont Straße",
+    "name:en": "Fremont Street",
+    "name:es": "Calle Fremont",
+    "name:ja": "フレモント・ストリート",
+    "name:ko": "프리몬트 가",
+    "name:nl": "Fremontstraat",
+    "name:pt": "Rua Fremont",
+    "name:ru": "Фримонт-стрит",
+    "name:sr": "Улица Фримонт",
+    "name:zh-Hant": "費利蒙街",
+    "old_ref": "SR 5",
+    "oneway": "no",
+    "ref": "FSE",
+    "surface": "concrete"
+  }
+},
+{
+  "type": "way",
+  "id": 1427207961,
+  "bounds": {
+    "minlat": 36.1706679,
+    "minlon": -115.1441776,
+    "maxlat": 36.1707580,
+    "maxlon": -115.1439696
+  },
+  "geometry": [
+    { "lat": 36.1707580, "lon": -115.1441776 },
+    { "lat": 36.1707369, "lon": -115.1441289 },
+    { "lat": 36.1706972, "lon": -115.1440371 },
+    { "lat": 36.1706679, "lon": -115.1439696 }
+  ],
+  "tags": {
+    "covered": "yes",
+    "highway": "pedestrian",
+    "lit": "yes",
+    "name": "Fremont Street",
+    "name:de": "Fremont Straße",
+    "name:en": "Fremont Street",
+    "name:es": "Calle Fremont",
+    "name:ja": "フレモント・ストリート",
+    "name:ko": "프리몬트 가",
+    "name:nl": "Fremontstraat",
+    "name:pt": "Rua Fremont",
+    "name:ru": "Фримонт-стрит",
+    "name:sr": "Улица Фримонт",
+    "name:zh-Hant": "費利蒙街",
+    "old_ref": "SR 5",
+    "oneway": "no",
+    "ref": "FSE",
+    "surface": "paving_stones"
+  }
+},
+{
+  "type": "way",
+  "id": 1428180251,
+  "bounds": {
+    "minlat": 36.1697144,
+    "minlon": -115.1462087,
+    "maxlat": 36.1716933,
+    "maxlon": -115.1419276
+  },
+  "geometry": [
+    { "lat": 36.1697144, "lon": -115.1420562 },
+    { "lat": 36.1698114, "lon": -115.1419927 },
+    { "lat": 36.1699093, "lon": -115.1419276 },
+    { "lat": 36.1699470, "lon": -115.1420147 },
+    { "lat": 36.1700102, "lon": -115.1421607 },
+    { "lat": 36.1700749, "lon": -115.1423100 },
+    { "lat": 36.1701553, "lon": -115.1425012 },
+    { "lat": 36.1701753, "lon": -115.1425474 },
+    { "lat": 36.1702713, "lon": -115.1427627 },
+    { "lat": 36.1703030, "lon": -115.1427428 },
+    { "lat": 36.1703097, "lon": -115.1427583 },
+    { "lat": 36.1703498, "lon": -115.1428507 },
+    { "lat": 36.1703951, "lon": -115.1429551 },
+    { "lat": 36.1703626, "lon": -115.1429741 },
+    { "lat": 36.1706854, "lon": -115.1437035 },
+    { "lat": 36.1707683, "lon": -115.1438986 },
+    { "lat": 36.1707659, "lon": -115.1439052 },
+    { "lat": 36.1707958, "lon": -115.1439743 },
+    { "lat": 36.1708354, "lon": -115.1440657 },
+    { "lat": 36.1708567, "lon": -115.1441146 },
+    { "lat": 36.1710268, "lon": -115.1445072 },
+    { "lat": 36.1712534, "lon": -115.1450303 },
+    { "lat": 36.1712804, "lon": -115.1450126 },
+    { "lat": 36.1713222, "lon": -115.1451124 },
+    { "lat": 36.1713766, "lon": -115.1452379 },
+    { "lat": 36.1713496, "lon": -115.1452556 },
+    { "lat": 36.1715398, "lon": -115.1457100 },
+    { "lat": 36.1716933, "lon": -115.1460767 },
+    { "lat": 36.1716887, "lon": -115.1460797 },
+    { "lat": 36.1716837, "lon": -115.1460830 },
+    { "lat": 36.1716055, "lon": -115.1461334 },
+    { "lat": 36.1714897, "lon": -115.1462087 },
+    { "lat": 36.1713420, "lon": -115.1458725 },
+    { "lat": 36.1711414, "lon": -115.1454072 },
+    { "lat": 36.1710963, "lon": -115.1453026 },
+    { "lat": 36.1707355, "lon": -115.1444657 },
+    { "lat": 36.1707169, "lon": -115.1444566 },
+    { "lat": 36.1706724, "lon": -115.1443452 },
+    { "lat": 36.1703365, "lon": -115.1435782 },
+    { "lat": 36.1700495, "lon": -115.1429335 },
+    { "lat": 36.1700843, "lon": -115.1429101 },
+    { "lat": 36.1700594, "lon": -115.1428528 },
+    { "lat": 36.1699855, "lon": -115.1426855 },
+    { "lat": 36.1699223, "lon": -115.1425361 },
+    { "lat": 36.1698823, "lon": -115.1424436 },
+    { "lat": 36.1697144, "lon": -115.1420562 }
+  ],
+  "tags": {
+    "building": "roof",
+    "layer": "2"
+  }
+},
+{
+  "type": "way",
+  "id": 1428180252,
+  "bounds": {
+    "minlat": 36.1692667,
+    "minlon": -115.1419927,
+    "maxlat": 36.1698114,
+    "maxlon": -115.1407357
+  },
+  "geometry": [
+    { "lat": 36.1698114, "lon": -115.1419927 },
+    { "lat": 36.1697797, "lon": -115.1419196 },
+    { "lat": 36.1697605, "lon": -115.1418754 },
+    { "lat": 36.1697330, "lon": -115.1418120 },
+    { "lat": 36.1697084, "lon": -115.1417552 },
+    { "lat": 36.1696894, "lon": -115.1417112 },
+    { "lat": 36.1692875, "lon": -115.1407837 },
+    { "lat": 36.1692846, "lon": -115.1407770 },
+    { "lat": 36.1692667, "lon": -115.1407357 }
+  ],
+  "tags": {
+    "highway": "pedestrian",
+    "lit": "yes",
+    "name": "Fremont Street",
+    "name:de": "Fremont Straße",
+    "name:en": "Fremont Street",
+    "name:es": "Calle Fremont",
+    "name:ja": "フレモント・ストリート",
+    "name:ko": "프리몬트 가",
+    "name:nl": "Fremontstraat",
+    "name:pt": "Rua Fremont",
+    "name:ru": "Фримонт-стрит",
+    "name:sr": "Улица Фримонт",
+    "name:zh-Hant": "費利蒙街",
+    "old_ref": "SR 5",
+    "oneway": "no",
+    "ref": "FSE",
+    "surface": "concrete"
+  }
+},
+{
+  "type": "way",
+  "id": 1428180253,
+  "bounds": {
+    "minlat": 36.1702189,
+    "minlon": -115.1429333,
+    "maxlat": 36.1703498,
+    "maxlon": -115.1428507
+  },
+  "geometry": [
+    { "lat": 36.1702189, "lon": -115.1429333 },
+    { "lat": 36.1703181, "lon": -115.1428712 },
+    { "lat": 36.1703498, "lon": -115.1428507 }
+  ],
+  "tags": {
+    "covered": "yes",
+    "highway": "pedestrian",
+    "name": "North 3rd Street"
+  }
+},
+{
+  "type": "way",
+  "id": 1428180255,
+  "bounds": {
+    "minlat": 36.1716055,
+    "minlon": -115.1463011,
+    "maxlat": 36.1716781,
+    "maxlon": -115.1461334
+  },
+  "geometry": [
+    { "lat": 36.1716781, "lon": -115.1463011 },
+    { "lat": 36.1716570, "lon": -115.1462522 },
+    { "lat": 36.1716487, "lon": -115.1462332 },
+    { "lat": 36.1716055, "lon": -115.1461334 }
+  ],
+  "tags": {
+    "highway": "pedestrian",
+    "lit": "yes",
+    "name": "Fremont Street",
+    "name:de": "Fremont Straße",
+    "name:en": "Fremont Street",
+    "name:es": "Calle Fremont",
+    "name:ja": "フレモント・ストリート",
+    "name:ko": "프리몬트 가",
+    "name:nl": "Fremontstraat",
+    "name:pt": "Rua Fremont",
+    "name:ru": "Фримонт-стрит",
+    "name:sr": "Улица Фримонт",
+    "name:zh-Hant": "費利蒙街",
+    "old_ref": "SR 5",
+    "oneway": "no",
+    "ref": "FSE",
+    "surface": "concrete"
+  }
+},
+{
+  "type": "way",
+  "id": 1442767527,
+  "bounds": {
+    "minlat": 36.1719324,
+    "minlon": -115.1434923,
+    "maxlat": 36.1719531,
+    "maxlon": -115.1434442
+  },
+  "geometry": [
+    { "lat": 36.1719531, "lon": -115.1434923 },
+    { "lat": 36.1719324, "lon": -115.1434442 }
+  ],
+  "tags": {
+    "covered": "yes",
+    "cycleway:both": "lane",
+    "cycleway:both:buffer": "no",
+    "highway": "tertiary",
+    "lanes": "5",
+    "lanes:backward": "3",
+    "lanes:forward": "2",
+    "lit": "yes",
+    "maxheight": "15'",
+    "name": "East Ogden Avenue",
+    "placement:backward": "middle_of:1",
+    "sidewalk:both": "separate",
+    "smoothness": "excellent",
+    "surface": "asphalt",
+    "tiger:cfcc": "A41",
+    "tiger:county": "Clark, NV",
+    "tiger:name_base": "Ogden",
+    "tiger:name_direction_prefix": "E",
+    "tiger:name_type": "Ave",
+    "tiger:reviewed": "no"
+  }
+},
+{
+  "type": "way",
+  "id": 1442767528,
+  "bounds": {
+    "minlat": 36.1720864,
+    "minlon": -115.1438633,
+    "maxlat": 36.1721090,
+    "maxlon": -115.1438130
+  },
+  "geometry": [
+    { "lat": 36.1721090, "lon": -115.1438633 },
+    { "lat": 36.1720864, "lon": -115.1438130 }
+  ],
+  "tags": {
+    "covered": "yes",
+    "cycleway:both": "lane",
+    "cycleway:both:buffer": "no",
+    "highway": "tertiary",
+    "lanes": "5",
+    "lanes:backward": "3",
+    "lanes:forward": "2",
+    "lit": "yes",
+    "maxheight": "15'",
+    "name": "East Ogden Avenue",
+    "placement:backward": "middle_of:1",
+    "sidewalk:both": "separate",
+    "smoothness": "excellent",
+    "surface": "asphalt",
+    "tiger:cfcc": "A41",
+    "tiger:county": "Clark, NV",
+    "tiger:name_base": "Ogden",
+    "tiger:name_direction_prefix": "E",
+    "tiger:name_type": "Ave",
+    "tiger:reviewed": "no"
+  }
+},
+{
+  "type": "way",
+  "id": 1442767529,
+  "bounds": {
+    "minlat": 36.1720142,
+    "minlon": -115.1437568,
+    "maxlat": 36.1721731,
+    "maxlon": -115.1433902
+  },
+  "geometry": [
+    { "lat": 36.1721731, "lon": -115.1437568 },
+    { "lat": 36.1720142, "lon": -115.1433902 }
+  ],
+  "tags": {
+    "covered": "yes",
+    "footway": "sidewalk",
+    "highway": "footway",
+    "surface": "concrete",
+    "tunnel": "building_passage"
+  }
+},
+{
+  "type": "way",
+  "id": 1553012328,
+  "bounds": {
+    "minlat": 36.1710048,
+    "minlon": -115.1460776,
+    "maxlat": 36.1715398,
+    "maxlon": -115.1457100
+  },
+  "geometry": [
+    { "lat": 36.1710048, "lon": -115.1460776 },
+    { "lat": 36.1713524, "lon": -115.1458388 },
+    { "lat": 36.1714491, "lon": -115.1457723 },
+    { "lat": 36.1715398, "lon": -115.1457100 }
+  ],
+  "tags": {
+    "covered": "yes",
+    "highway": "footway",
+    "name": "Main Street Alley",
+    "name:signed": "no",
+    "source:name": "TRINA 2.0",
+    "surface": "concrete"
+  }
+},
+{
+  "type": "way",
+  "id": 1553012334,
+  "bounds": {
+    "minlat": 36.1674187,
+    "minlon": -115.1453550,
+    "maxlat": 36.1676357,
+    "maxlon": -115.1449330
+  },
+  "geometry": [
+    { "lat": 36.1674640, "lon": -115.1449330 },
+    { "lat": 36.1676294, "lon": -115.1453188 },
+    { "lat": 36.1676357, "lon": -115.1453334 },
+    { "lat": 36.1676030, "lon": -115.1453550 },
+    { "lat": 36.1675955, "lon": -115.1453373 },
+    { "lat": 36.1675829, "lon": -115.1453456 },
+    { "lat": 36.1674217, "lon": -115.1449699 },
+    { "lat": 36.1674187, "lon": -115.1449629 },
+    { "lat": 36.1674640, "lon": -115.1449330 }
+  ],
+  "tags": {
+    "building": "roof",
+    "layer": "1"
+  }
+},
+{
+  "type": "way",
+  "id": 1553042963,
+  "bounds": {
+    "minlat": 36.1706049,
+    "minlon": -115.1474638,
+    "maxlat": 36.1706811,
+    "maxlon": -115.1472919
+  },
+  "geometry": [
+    { "lat": 36.1706049, "lon": -115.1472919 },
+    { "lat": 36.1706811, "lon": -115.1474638 }
+  ],
+  "tags": {
+    "covered": "yes",
+    "highway": "service",
+    "surface": "asphalt"
+  }
+},
+{
+  "type": "way",
+  "id": 1557215472,
+  "bounds": {
+    "minlat": 36.1701060,
+    "minlon": -115.1463798,
+    "maxlat": 36.1703349,
+    "maxlon": -115.1458604
+  },
+  "geometry": [
+    { "lat": 36.1701060, "lon": -115.1458604 },
+    { "lat": 36.1701577, "lon": -115.1458976 },
+    { "lat": 36.1702540, "lon": -115.1461183 },
+    { "lat": 36.1703264, "lon": -115.1462916 },
+    { "lat": 36.1703349, "lon": -115.1463798 }
+  ],
+  "tags": {
+    "covered": "yes",
+    "footway": "sidewalk",
+    "highway": "footway",
+    "surface": "concrete"
+  }
+},
+{
+  "type": "way",
+  "id": 1561244774,
+  "bounds": {
+    "minlat": 36.1655240,
+    "minlon": -115.1443750,
+    "maxlat": 36.1656520,
+    "maxlon": -115.1442619
+  },
+  "geometry": [
+    { "lat": 36.1656357, "lon": -115.1442619 },
+    { "lat": 36.1656520, "lon": -115.1443034 },
+    { "lat": 36.1655422, "lon": -115.1443750 },
+    { "lat": 36.1655240, "lon": -115.1443312 },
+    { "lat": 36.1656357, "lon": -115.1442619 }
+  ],
+  "tags": {
+    "building": "roof",
+    "layer": "1"
+  }
+},
+{
+  "type": "way",
+  "id": 1562083571,
+  "bounds": {
+    "minlat": 36.1706029,
+    "minlon": -115.1426575,
+    "maxlat": 36.1706536,
+    "maxlon": -115.1425377
+  },
+  "geometry": [
+    { "lat": 36.1706536, "lon": -115.1426575 },
+    { "lat": 36.1706105, "lon": -115.1425558 },
+    { "lat": 36.1706029, "lon": -115.1425377 }
+  ],
+  "tags": {
+    "highway": "footway",
+    "name": "Fremont Street Alley",
+    "source:name": "TRINA 2.0",
+    "surface": "paving_stones"
+  }
+},
+{
+  "type": "way",
+  "id": 1562083572,
+  "bounds": {
+    "minlat": 36.1701765,
+    "minlon": -115.1425377,
+    "maxlat": 36.1706029,
+    "maxlon": -115.1415294
+  },
+  "geometry": [
+    { "lat": 36.1706029, "lon": -115.1425377 },
+    { "lat": 36.1702205, "lon": -115.1416335 },
+    { "lat": 36.1701765, "lon": -115.1415294 }
+  ],
+  "tags": {
+    "highway": "service",
+    "name": "Fremont Street Alley",
+    "service": "alley",
+    "source:name": "TRINA 2.0",
+    "surface": "asphalt"
+  }
+},
+{
+  "type": "relation",
+  "id": 19061775,
+  "bounds": {
+    "minlat": 36.1455439,
+    "minlon": -115.1407357,
+    "maxlat": 36.1692667,
+    "maxlon": -115.1012713
+  },
+  "tags": {
+    "alt_name:ko": "프리몬트 스트리트",
+    "name": "Fremont Street",
+    "name:de": "Fremont Straße",
+    "name:en": "Fremont Street",
+    "name:es": "Calle Fremont",
+    "name:etymology:wikidata": "Q169011",
+    "name:etymology:wikipedia": "en:John C. Frémont",
+    "name:ja": "フレモント・ストリート",
+    "name:ko": "프리몬트 가",
+    "name:nl": "Fremontstraat",
+    "name:pt": "Rua Fremont",
+    "name:ru": "Фримонт-стрит",
+    "name:sr": "Улица Фримонт",
+    "name:zh-Hant": "費利蒙街",
+    "noref": "yes",
+    "route": "road",
+    "type": "route",
+    "wikidata": "Q1455230",
+    "wikipedia": "en:Fremont Street"
+  }
+},
+{
+  "type": "relation",
+  "id": 19289018,
+  "bounds": {
+    "minlat": 36.1691822,
+    "minlon": -115.1464105,
+    "maxlat": 36.1717342,
+    "maxlon": -115.1406874
+  },
+  "tags": {
+    "distance": "0.352 mi",
+    "foot": "designated",
+    "lit": "yes",
+    "name": "Fremont Street Experience",
+    "network": "lwn",
+    "old_ref": "NV 6",
+    "ref": "FSE",
+    "route": "foot",
+    "tourism": "attraction",
+    "type": "route",
+    "wikidata": "Q1368842",
+    "wikipedia": "en:Fremont Street Experience"
+  }
+},
+{
+  "type": "relation",
+  "id": 19615028,
+  "bounds": {
+    "minlat": 36.1666084,
+    "minlon": -115.1414414,
+    "maxlat": 36.1704055,
+    "maxlon": -115.1365070
+  },
+  "tags": {
+    "alt_name": "Fremont East District",
+    "border_type": "district",
+    "boundary": "place",
+    "historic": "district",
+    "name": "Fremont East Entertainment District",
+    "operator:website": "https://www.visitlasvegas.com/listing/fremont-east-entertainment-district/35621/",
+    "place": "district",
+    "short_name": "FEED",
+    "type": "boundary",
+    "website": "http://www.fremonteast.com",
+    "wikidata": "Q136323395"
+  }
+},
+{
+  "type": "relation",
+  "id": 19989370,
+  "bounds": {
+    "minlat": 36.1659838,
+    "minlon": -115.1367185,
+    "maxlat": 36.1671543,
+    "maxlon": -115.1356551
+  },
+  "tags": {
+    "addr:city": "Las Vegas",
+    "addr:housenumber": "901",
+    "addr:postcode": "89101",
+    "addr:state": "NV",
+    "addr:street": "Fremont Street",
+    "building": "apartments",
+    "building:levels": "5",
+    "description": "Apartment Complex",
+    "name": "Fremont9 Apartment Complex",
+    "source": "microsoft/BuildingFootprints",
+    "type": "multipolygon",
+    "website": "https://www.fremont9.com/?st-t=&vt-k=&vt-mt=&dialogtech=ppc#page1"
+  }
+},
+{
+  "type": "relation",
+  "id": 20121925,
+  "bounds": {
+    "minlat": 36.1695090,
+    "minlon": -115.1406438,
+    "maxlat": 36.1695438,
+    "maxlon": -115.1405677
+  },
+  "tags": {
+    "bus": "yes",
+    "name": "Southbound Las Vegas Boulevard at Fremont Street Experience",
+    "network": "RTC",
+    "network:wikidata": "Q7309181",
+    "network:wikipedia": "en:Regional Transportation Commission of Southern Nevada",
+    "operator": "Regional Transportation Commission of Southern Nevada",
+    "operator:wikidata": "Q7309181",
+    "public_transport": "stop_area",
+    "ref": "1358",
+    "route_ref": "The Deuce",
+    "shelter": "yes",
+    "tactile_paving": "no",
+    "type": "public_transport"
+  }
+}
+
+  ]
+}

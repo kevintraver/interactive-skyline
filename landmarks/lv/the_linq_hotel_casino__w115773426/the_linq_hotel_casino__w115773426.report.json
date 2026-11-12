@@ -1,0 +1,38 @@
+{
+  "object": "Hotel_w115773426",
+  "verts": 1348,
+  "faces": 1026,
+  "tris": 2052,
+  "bbox_min": [
+    -81.0,
+    -62.1,
+    -2.0
+  ],
+  "bbox_max": [
+    91.7,
+    48.0,
+    59.7
+  ],
+  "islands": 161,
+  "open_islands": 0,
+  "inside_out_islands": 0,
+  "nonmanifold_edges": 0,
+  "degenerate_faces": 0,
+  "loose_verts": 0,
+  "nonplanar_ngons": 0,
+  "materials": {
+    "Wall": 95,
+    "Glass": 20,
+    "Fin": 858,
+    "Pier": 25,
+    "Roof": 13,
+    "Podium": 15
+  },
+  "glow": {
+    "max": 0.241,
+    "dark_faces": 13
+  },
+  "windowed_faces": 20,
+  "errors": [],
+  "warnings": []
+}

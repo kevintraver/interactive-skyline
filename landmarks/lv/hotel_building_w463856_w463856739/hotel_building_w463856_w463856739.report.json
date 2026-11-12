@@ -1,0 +1,38 @@
+{
+  "object": "ResortWing",
+  "verts": 580,
+  "faces": 464,
+  "tris": 992,
+  "bbox_min": [
+    -54.446,
+    -19.56,
+    -2.0
+  ],
+  "bbox_max": [
+    56.744,
+    28.891,
+    38.3
+  ],
+  "islands": 42,
+  "open_islands": 0,
+  "inside_out_islands": 0,
+  "nonmanifold_edges": 0,
+  "degenerate_faces": 0,
+  "loose_verts": 0,
+  "nonplanar_ngons": 0,
+  "materials": {
+    "Base": 21,
+    "Glass": 80,
+    "Band": 101,
+    "Fin": 228,
+    "Roof": 22,
+    "Unit": 12
+  },
+  "glow": {
+    "max": 0.22,
+    "dark_faces": 34
+  },
+  "windowed_faces": 80,
+  "errors": [],
+  "warnings": []
+}

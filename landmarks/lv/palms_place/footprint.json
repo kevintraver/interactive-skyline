@@ -1,0 +1,91 @@
+{
+ "id": "r7655652",
+ "name": "Palms Place",
+ "height": 157.0,
+ "height_source": "osm-height",
+ "frame": "meters east and north of the footprint center c; heights in meters above ground; a model built in this frame installs with --offset 0,0",
+ "facts": {
+  "east_extent": [
+   -31.3,
+   29.1
+  ],
+  "north_extent": [
+   -38.1,
+   41.0
+  ],
+  "longest_edge_m": 66.9,
+  "longest_edge_bearing": 2.0
+ },
+ "volumes": [
+  {
+   "bottom": -2.0,
+   "top": 157.0,
+   "outline": [
+    [
+     -2.2,
+     40.77
+    ],
+    [
+     11.57,
+     40.4
+    ],
+    [
+     26.25,
+     40.97
+    ],
+    [
+     28.6,
+     19.47
+    ],
+    [
+     29.08,
+     -36.88
+    ],
+    [
+     15.93,
+     -37.27
+    ],
+    [
+     2.42,
+     -38.11
+    ],
+    [
+     -13.05,
+     -37.28
+    ],
+    [
+     -31.3,
+     -34.8
+    ],
+    [
+     -28.99,
+     32.1
+    ],
+    [
+     -16.03,
+     33.34
+    ]
+   ],
+   "holes": [
+    [
+     [
+      -0.92,
+      23.44
+     ],
+     [
+      -0.89,
+      26.89
+     ],
+     [
+      2.33,
+      26.86
+     ],
+     [
+      2.3,
+      23.41
+     ]
+    ]
+   ]
+  }
+ ]
+}

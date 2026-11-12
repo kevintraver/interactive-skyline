@@ -1,0 +1,37 @@
+{
+  "object": "HotelSlab",
+  "verts": 736,
+  "faces": 450,
+  "tris": 1308,
+  "bbox_min": [
+    -34.947,
+    -12.981,
+    -2.0
+  ],
+  "bbox_max": [
+    34.335,
+    13.449,
+    37.3
+  ],
+  "islands": 41,
+  "open_islands": 0,
+  "inside_out_islands": 0,
+  "nonmanifold_edges": 0,
+  "degenerate_faces": 0,
+  "loose_verts": 0,
+  "nonplanar_ngons": 0,
+  "materials": {
+    "Wall": 213,
+    "Spandrel": 207,
+    "Glass": 23,
+    "Roof": 2,
+    "Plant": 5
+  },
+  "glow": {
+    "max": 0.1,
+    "dark_faces": 7
+  },
+  "windowed_faces": 23,
+  "errors": [],
+  "warnings": []
+}

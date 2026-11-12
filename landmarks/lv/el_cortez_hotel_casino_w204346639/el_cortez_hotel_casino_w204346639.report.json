@@ -1,0 +1,39 @@
+{
+  "object": "Tower_w204346639",
+  "verts": 132,
+  "faces": 102,
+  "tris": 232,
+  "bbox_min": [
+    -49.98,
+    -63.861,
+    -2.0
+  ],
+  "bbox_max": [
+    48.892,
+    65.615,
+    59.0
+  ],
+  "islands": 8,
+  "open_islands": 0,
+  "inside_out_islands": 0,
+  "nonmanifold_edges": 0,
+  "degenerate_faces": 0,
+  "loose_verts": 0,
+  "nonplanar_ngons": 0,
+  "materials": {
+    "Wall": 27,
+    "Glass": 16,
+    "EndWall": 20,
+    "Brick": 10,
+    "Stucco": 12,
+    "Tile": 12,
+    "Roof": 5
+  },
+  "glow": {
+    "max": 0.444,
+    "dark_faces": 5
+  },
+  "windowed_faces": 16,
+  "errors": [],
+  "warnings": []
+}
