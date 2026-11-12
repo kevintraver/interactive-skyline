@@ -1,0 +1,41 @@
+{
+  "object": "Aztec_Condominium",
+  "verts": 120,
+  "faces": 90,
+  "tris": 180,
+  "bbox_min": [
+    -13.64,
+    -24.08,
+    -2.0
+  ],
+  "bbox_max": [
+    13.74,
+    24.14,
+    37.1
+  ],
+  "islands": 15,
+  "open_islands": 0,
+  "inside_out_islands": 0,
+  "nonmanifold_edges": 0,
+  "degenerate_faces": 0,
+  "loose_verts": 0,
+  "nonplanar_ngons": 0,
+  "materials": {
+    "Wall": 5,
+    "Band": 66,
+    "Glass": 6,
+    "Roof": 3,
+    "Core": 10
+  },
+  "glow": {
+    "max": 0.38,
+    "dark_faces": 3
+  },
+  "windowed_faces": 6,
+  "errors": [],
+  "warnings": [],
+  "files": {
+    "blend": "aztec_condominium.blend",
+    "glb": "aztec_condominium.glb"
+  }
+}

@@ -1,0 +1,76 @@
+{
+ "id": "w595951312",
+ "name": "Wallace F. Bennett Federal Building",
+ "height": 44.0,
+ "height_source": "lidar",
+ "frame": "meters east and north of the footprint center c; heights in meters above ground; a model built in this frame installs with --offset 0,0",
+ "facts": {
+  "east_extent": [
+   -50.9,
+   49.8
+  ],
+  "north_extent": [
+   -21.3,
+   24.4
+  ],
+  "longest_edge_m": 95.0,
+  "longest_edge_bearing": 89.9
+ },
+ "volumes": [
+  {
+   "bottom": -2.0,
+   "top": 44.0,
+   "outline": [
+    [
+     -45.1,
+     24.41
+    ],
+    [
+     -38.3,
+     24.33
+    ],
+    [
+     -38.28,
+     20.46
+    ],
+    [
+     49.67,
+     20.66
+    ],
+    [
+     49.77,
+     -21.12
+    ],
+    [
+     -45.22,
+     -21.32
+    ],
+    [
+     -45.22,
+     -18.53
+    ],
+    [
+     -47.71,
+     -18.54
+    ],
+    [
+     -47.74,
+     -3.16
+    ],
+    [
+     -50.88,
+     -2.96
+    ],
+    [
+     -50.95,
+     18.59
+    ],
+    [
+     -45.29,
+     18.92
+    ]
+   ],
+   "holes": []
+  }
+ ]
+}

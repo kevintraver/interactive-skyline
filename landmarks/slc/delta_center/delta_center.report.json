@@ -1,0 +1,40 @@
+{
+  "object": "Delta_Center",
+  "verts": 156,
+  "faces": 110,
+  "tris": 248,
+  "bbox_min": [
+    -84.258,
+    -83.2,
+    -2.0
+  ],
+  "bbox_max": [
+    86.61,
+    86.33,
+    42.1
+  ],
+  "islands": 16,
+  "open_islands": 0,
+  "inside_out_islands": 0,
+  "nonmanifold_edges": 0,
+  "degenerate_faces": 0,
+  "loose_verts": 0,
+  "nonplanar_ngons": 0,
+  "materials": {
+    "Panel": 35,
+    "Glass": 37,
+    "Roof": 18,
+    "Concrete": 20
+  },
+  "glow": {
+    "max": 0.08,
+    "dark_faces": 18
+  },
+  "windowed_faces": 37,
+  "errors": [],
+  "warnings": [],
+  "files": {
+    "blend": "delta_center.blend",
+    "glb": "delta_center.glb"
+  }
+}

@@ -1,0 +1,40 @@
+{
+  "object": "45_West_South_Temple",
+  "verts": 136,
+  "faces": 80,
+  "tris": 248,
+  "bbox_min": [
+    -14.25,
+    -24.0,
+    -2.0
+  ],
+  "bbox_max": [
+    23.5,
+    21.2,
+    43.0
+  ],
+  "islands": 6,
+  "open_islands": 0,
+  "inside_out_islands": 0,
+  "nonmanifold_edges": 0,
+  "degenerate_faces": 0,
+  "loose_verts": 0,
+  "nonplanar_ngons": 0,
+  "materials": {
+    "Wall": 27,
+    "Glass": 24,
+    "Roof": 2,
+    "Band": 27
+  },
+  "glow": {
+    "max": 0.15,
+    "dark_faces": 2
+  },
+  "windowed_faces": 24,
+  "errors": [],
+  "warnings": [],
+  "files": {
+    "blend": "45_west_south_temple.blend",
+    "glb": "45_west_south_temple.glb"
+  }
+}

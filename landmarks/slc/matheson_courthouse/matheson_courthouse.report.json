@@ -1,0 +1,40 @@
+{
+  "object": "Matheson_Courthouse",
+  "verts": 678,
+  "faces": 437,
+  "tris": 1160,
+  "bbox_min": [
+    -49.91,
+    -77.37,
+    -2.0
+  ],
+  "bbox_max": [
+    40.6,
+    77.26,
+    36.2
+  ],
+  "islands": 49,
+  "open_islands": 0,
+  "inside_out_islands": 0,
+  "nonmanifold_edges": 0,
+  "degenerate_faces": 0,
+  "loose_verts": 0,
+  "nonplanar_ngons": 0,
+  "materials": {
+    "Stone": 165,
+    "Glass": 120,
+    "Roof": 14,
+    "Column": 138
+  },
+  "glow": {
+    "max": 0.5,
+    "dark_faces": 14
+  },
+  "windowed_faces": 120,
+  "errors": [],
+  "warnings": [],
+  "files": {
+    "blend": "matheson_courthouse.blend",
+    "glb": "matheson_courthouse.glb"
+  }
+}

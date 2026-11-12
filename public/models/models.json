@@ -1491,6 +1491,214 @@
         0.0
       ],
       "name": "Broadway Media Building"
+    },
+    "w227736000": {
+      "url": "/models/slc/bldg_w227736000.glb",
+      "offset": [
+        0.0,
+        0.0
+      ],
+      "name": "w227736000"
+    },
+    "w595951312": {
+      "url": "/models/slc/bennett_federal_building.glb",
+      "offset": [
+        0.0,
+        0.0
+      ],
+      "name": "Wallace F. Bennett Federal Building"
+    },
+    "w224519047": {
+      "url": "/models/slc/55_west_south_temple.glb",
+      "offset": [
+        0.0,
+        0.0
+      ],
+      "name": "55 West South Temple"
+    },
+    "w595951117": {
+      "url": "/models/slc/560_east_south_temple.glb",
+      "offset": [
+        0.0,
+        0.0
+      ],
+      "name": "560 East South Temple"
+    },
+    "w224519048": {
+      "url": "/models/slc/45_west_south_temple.glb",
+      "offset": [
+        0.0,
+        0.0
+      ],
+      "name": "45 West South Temple"
+    },
+    "w23335190": {
+      "url": "/models/slc/delta_center.glb",
+      "offset": [
+        0.0,
+        0.0
+      ],
+      "name": "Delta Center"
+    },
+    "w172543253": {
+      "url": "/models/slc/clift_building.glb",
+      "offset": [
+        0.0,
+        0.0
+      ],
+      "name": "Clift Building"
+    },
+    "w224554407": {
+      "url": "/models/slc/143_south_main_street.glb",
+      "offset": [
+        0.0,
+        0.0
+      ],
+      "name": "143 South Main Street"
+    },
+    "w1025251117": {
+      "url": "/models/slc/bldg_w1025251117.glb",
+      "offset": [
+        0.0,
+        0.0
+      ],
+      "name": "w1025251117"
+    },
+    "w224509151": {
+      "url": "/models/slc/priority_dispatch.glb",
+      "offset": [
+        0.0,
+        0.0
+      ],
+      "name": "Priority Dispatch"
+    },
+    "w35961941": {
+      "url": "/models/slc/lattice_apartments.glb",
+      "offset": [
+        0.0,
+        0.0
+      ],
+      "name": "Lattice Apartments"
+    },
+    "w595951268": {
+      "url": "/models/slc/102_tower.glb",
+      "offset": [
+        0.0,
+        0.0
+      ],
+      "name": "102 Tower"
+    },
+    "w396972970": {
+      "url": "/models/slc/bldg_w396972970.glb",
+      "offset": [
+        0.0,
+        0.0
+      ],
+      "name": "w396972970"
+    },
+    "w595951861": {
+      "url": "/models/slc/city_centre_1.glb",
+      "offset": [
+        0.0,
+        0.0
+      ],
+      "name": "City Centre 1"
+    },
+    "w127834901": {
+      "url": "/models/slc/the_grove.glb",
+      "offset": [
+        0.0,
+        0.0
+      ],
+      "name": "The Grove"
+    },
+    "w224014497": {
+      "url": "/models/slc/holiday_inn_express_downtown.glb",
+      "offset": [
+        0.0,
+        0.0
+      ],
+      "name": "Holiday Inn Express Salt Lake City Downtown"
+    },
+    "w595952025": {
+      "url": "/models/slc/boyer_101.glb",
+      "offset": [
+        0.0,
+        0.0
+      ],
+      "name": "Boyer 101"
+    },
+    "w1147771471": {
+      "url": "/models/slc/bldg_w1147771471.glb",
+      "offset": [
+        0.0,
+        0.0
+      ],
+      "name": "w1147771471"
+    },
+    "w33647823": {
+      "url": "/models/slc/lds_hospital.glb",
+      "offset": [
+        0.0,
+        0.0
+      ],
+      "name": "LDS Hospital"
+    },
+    "w595951190": {
+      "url": "/models/slc/50_south_200_east.glb",
+      "offset": [
+        0.0,
+        0.0
+      ],
+      "name": "50 South 200 East"
+    },
+    "w1188140573": {
+      "url": "/models/slc/the_charles.glb",
+      "offset": [
+        0.0,
+        0.0
+      ],
+      "name": "The Charles"
+    },
+    "w230130107": {
+      "url": "/models/slc/aztec_condominium.glb",
+      "offset": [
+        0.0,
+        0.0
+      ],
+      "name": "Aztec Condominium"
+    },
+    "w33155179": {
+      "url": "/models/slc/matheson_courthouse.glb",
+      "offset": [
+        0.0,
+        0.0
+      ],
+      "name": "Scott M. Matheson Courthouse"
+    },
+    "w227696400": {
+      "url": "/models/slc/canyon_road_towers.glb",
+      "offset": [
+        0.0,
+        0.0
+      ],
+      "name": "Canyon Road Towers Condominiums"
+    },
+    "w33192128": {
+      "url": "/models/slc/deseret_book.glb",
+      "offset": [
+        0.0,
+        0.0
+      ],
+      "name": "Deseret Book"
+    },
+    "w1318908404": {
+      "url": "/models/slc/mcintyre_building.glb",
+      "offset": [
+        0.0,
+        0.0
+      ],
+      "name": "McIntyre Building"
     }
   }
 }

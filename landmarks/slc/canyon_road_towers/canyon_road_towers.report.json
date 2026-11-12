@@ -1,0 +1,40 @@
+{
+  "object": "Canyon_Road_Towers",
+  "verts": 336,
+  "faces": 196,
+  "tris": 616,
+  "bbox_min": [
+    -29.312,
+    -18.631,
+    -2.0
+  ],
+  "bbox_max": [
+    42.7,
+    29.751,
+    36.9
+  ],
+  "islands": 14,
+  "open_islands": 0,
+  "inside_out_islands": 0,
+  "nonmanifold_edges": 0,
+  "degenerate_faces": 0,
+  "loose_verts": 0,
+  "nonplanar_ngons": 0,
+  "materials": {
+    "Wall": 13,
+    "Glass": 154,
+    "Roof": 2,
+    "Base": 27
+  },
+  "glow": {
+    "max": 0.18,
+    "dark_faces": 2
+  },
+  "windowed_faces": 154,
+  "errors": [],
+  "warnings": [],
+  "files": {
+    "blend": "canyon_road_towers.blend",
+    "glb": "canyon_road_towers.glb"
+  }
+}

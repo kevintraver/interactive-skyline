@@ -1,0 +1,41 @@
+{
+  "object": "The_Charles",
+  "verts": 238,
+  "faces": 137,
+  "tris": 440,
+  "bbox_min": [
+    -37.18,
+    -31.88,
+    -2.0
+  ],
+  "bbox_max": [
+    31.64,
+    22.14,
+    38.4
+  ],
+  "islands": 9,
+  "open_islands": 0,
+  "inside_out_islands": 0,
+  "nonmanifold_edges": 0,
+  "degenerate_faces": 0,
+  "loose_verts": 0,
+  "nonplanar_ngons": 0,
+  "materials": {
+    "Brick": 34,
+    "Glass": 34,
+    "Trim": 38,
+    "Base": 21,
+    "Roof": 10
+  },
+  "glow": {
+    "max": 0.16,
+    "dark_faces": 10
+  },
+  "windowed_faces": 34,
+  "errors": [],
+  "warnings": [],
+  "files": {
+    "blend": "the_charles.blend",
+    "glb": "the_charles.glb"
+  }
+}

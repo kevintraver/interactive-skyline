@@ -1,0 +1,68 @@
+{
+ "id": "w595952025",
+ "name": "Boyer 101",
+ "height": 39.4,
+ "height_source": "lidar",
+ "frame": "meters east and north of the footprint center c; heights in meters above ground; a model built in this frame installs with --offset 0,0",
+ "facts": {
+  "east_extent": [
+   -22.0,
+   31.2
+  ],
+  "north_extent": [
+   -49.1,
+   24.8
+  ],
+  "longest_edge_m": 67.1,
+  "longest_edge_bearing": 0.7
+ },
+ "volumes": [
+  {
+   "bottom": -2.1,
+   "top": 39.4,
+   "outline": [
+    [
+     -13.14,
+     -49.09
+    ],
+    [
+     -22.01,
+     -48.99
+    ],
+    [
+     -21.14,
+     18.06
+    ],
+    [
+     -13.13,
+     24.85
+    ],
+    [
+     31.16,
+     24.44
+    ],
+    [
+     30.8,
+     -3.69
+    ],
+    [
+     12.84,
+     -3.86
+    ],
+    [
+     8.94,
+     -7.19
+    ],
+    [
+     8.77,
+     -20.19
+    ],
+    [
+     -12.77,
+     -19.91
+    ]
+   ],
+   "holes": []
+  }
+ ]
+}

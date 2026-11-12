@@ -1,0 +1,40 @@
+{
+  "object": "560_East_South_Temple",
+  "verts": 96,
+  "faces": 72,
+  "tris": 144,
+  "bbox_min": [
+    -35.09,
+    -18.98,
+    -2.0
+  ],
+  "bbox_max": [
+    35.13,
+    18.98,
+    43.8
+  ],
+  "islands": 12,
+  "open_islands": 0,
+  "inside_out_islands": 0,
+  "nonmanifold_edges": 0,
+  "degenerate_faces": 0,
+  "loose_verts": 0,
+  "nonplanar_ngons": 0,
+  "materials": {
+    "Precast": 54,
+    "Glass": 6,
+    "Roof": 7,
+    "Base": 5
+  },
+  "glow": {
+    "max": 0.25,
+    "dark_faces": 7
+  },
+  "windowed_faces": 6,
+  "errors": [],
+  "warnings": [],
+  "files": {
+    "blend": "560_east_south_temple.blend",
+    "glb": "560_east_south_temple.glb"
+  }
+}

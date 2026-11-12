@@ -1,0 +1,41 @@
+{
+  "object": "143_South_Main_Street",
+  "verts": 1632,
+  "faces": 1224,
+  "tris": 2448,
+  "bbox_min": [
+    -23.29,
+    -11.367,
+    -2.0
+  ],
+  "bbox_max": [
+    23.37,
+    11.229,
+    44.9
+  ],
+  "islands": 204,
+  "open_islands": 0,
+  "inside_out_islands": 0,
+  "nonmanifold_edges": 0,
+  "degenerate_faces": 0,
+  "loose_verts": 0,
+  "nonplanar_ngons": 0,
+  "materials": {
+    "Wall": 6,
+    "Base": 6,
+    "Cornice": 131,
+    "Glass": 1080,
+    "Roof": 1
+  },
+  "glow": {
+    "max": 0.25,
+    "dark_faces": 1
+  },
+  "windowed_faces": 1080,
+  "errors": [],
+  "warnings": [],
+  "files": {
+    "blend": "143_south_main_street.blend",
+    "glb": "143_south_main_street.glb"
+  }
+}

@@ -1,0 +1,40 @@
+{
+  "object": "Priority_Dispatch",
+  "verts": 104,
+  "faces": 78,
+  "tris": 156,
+  "bbox_min": [
+    -12.398,
+    -17.822,
+    -2.0
+  ],
+  "bbox_max": [
+    12.338,
+    17.842,
+    41.9
+  ],
+  "islands": 13,
+  "open_islands": 0,
+  "inside_out_islands": 0,
+  "nonmanifold_edges": 0,
+  "degenerate_faces": 0,
+  "loose_verts": 0,
+  "nonplanar_ngons": 0,
+  "materials": {
+    "Wall": 60,
+    "Glass": 6,
+    "Base": 5,
+    "Roof": 7
+  },
+  "glow": {
+    "max": 0.65,
+    "dark_faces": 7
+  },
+  "windowed_faces": 6,
+  "errors": [],
+  "warnings": [],
+  "files": {
+    "blend": "priority_dispatch.blend",
+    "glb": "priority_dispatch.glb"
+  }
+}

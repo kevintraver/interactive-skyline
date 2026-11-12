@@ -1,0 +1,44 @@
+{
+ "id": "w224509151",
+ "name": "Priority Dispatch",
+ "height": 41.9,
+ "height_source": "lidar",
+ "frame": "meters east and north of the footprint center c; heights in meters above ground; a model built in this frame installs with --offset 0,0",
+ "facts": {
+  "east_extent": [
+   -12.3,
+   12.2
+  ],
+  "north_extent": [
+   -17.7,
+   17.7
+  ],
+  "longest_edge_m": 35.4,
+  "longest_edge_bearing": 0.0
+ },
+ "volumes": [
+  {
+   "bottom": -2.0,
+   "top": 41.9,
+   "outline": [
+    [
+     -12.27,
+     17.7
+    ],
+    [
+     12.24,
+     17.68
+    ],
+    [
+     12.22,
+     -17.68
+    ],
+    [
+     -12.3,
+     -17.66
+    ]
+   ],
+   "holes": []
+  }
+ ]
+}
