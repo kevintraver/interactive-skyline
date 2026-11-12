@@ -1,0 +1,41 @@
+{
+  "object": "111_Main",
+  "verts": 152,
+  "faces": 114,
+  "tris": 228,
+  "bbox_min": [
+    -24.15,
+    -19.15,
+    -2.0
+  ],
+  "bbox_max": [
+    24.07,
+    19.38,
+    118.0
+  ],
+  "islands": 19,
+  "open_islands": 0,
+  "inside_out_islands": 0,
+  "nonmanifold_edges": 0,
+  "degenerate_faces": 0,
+  "loose_verts": 0,
+  "nonplanar_ngons": 0,
+  "materials": {
+    "Wall": 47,
+    "Glass": 48,
+    "Lobby": 6,
+    "Band": 11,
+    "Roof": 2
+  },
+  "glow": {
+    "max": 0.5,
+    "dark_faces": 2
+  },
+  "windowed_faces": 48,
+  "errors": [],
+  "warnings": [],
+  "files": {
+    "blend": "111_main.blend",
+    "glb": "111_main.glb"
+  }
+}

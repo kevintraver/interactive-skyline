@@ -1,0 +1,42 @@
+{
+  "object": "The_Regent",
+  "verts": 1014,
+  "faces": 565,
+  "tris": 1912,
+  "bbox_min": [
+    -27.398,
+    -25.589,
+    -2.0
+  ],
+  "bbox_max": [
+    30.796,
+    25.727,
+    80.8
+  ],
+  "islands": 29,
+  "open_islands": 0,
+  "inside_out_islands": 0,
+  "nonmanifold_edges": 0,
+  "degenerate_faces": 0,
+  "loose_verts": 0,
+  "nonplanar_ngons": 0,
+  "materials": {
+    "Glass": 39,
+    "Band": 349,
+    "Roof": 45,
+    "Podium": 50,
+    "PodiumGlass": 70,
+    "Brick": 12
+  },
+  "glow": {
+    "max": 0.25,
+    "dark_faces": 2
+  },
+  "windowed_faces": 39,
+  "errors": [],
+  "warnings": [],
+  "files": {
+    "blend": "the_regent.blend",
+    "glb": "the_regent.glb"
+  }
+}

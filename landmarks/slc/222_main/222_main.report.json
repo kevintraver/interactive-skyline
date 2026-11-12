@@ -1,0 +1,41 @@
+{
+  "object": "222_Main",
+  "verts": 132,
+  "faces": 80,
+  "tris": 236,
+  "bbox_min": [
+    -22.1,
+    -28.36,
+    -2.0
+  ],
+  "bbox_max": [
+    21.08,
+    29.39,
+    96.3
+  ],
+  "islands": 7,
+  "open_islands": 0,
+  "inside_out_islands": 0,
+  "nonmanifold_edges": 0,
+  "degenerate_faces": 0,
+  "loose_verts": 0,
+  "nonplanar_ngons": 0,
+  "materials": {
+    "Glass": 21,
+    "Wing": 11,
+    "Stone": 15,
+    "Roof": 1,
+    "Cap": 32
+  },
+  "glow": {
+    "max": 0.37,
+    "dark_faces": 0
+  },
+  "windowed_faces": 32,
+  "errors": [],
+  "warnings": [],
+  "files": {
+    "blend": "222_main.blend",
+    "glb": "222_main.glb"
+  }
+}

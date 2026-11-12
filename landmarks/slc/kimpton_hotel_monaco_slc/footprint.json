@@ -1,0 +1,64 @@
+{
+ "id": "w172543265",
+ "name": "Kimpton Hotel Monaco Salt Lake City",
+ "height": 65.2,
+ "height_source": "osm-height",
+ "frame": "meters east and north of the footprint center c; heights in meters above ground; a model built in this frame installs with --offset 0,0",
+ "facts": {
+  "east_extent": [
+   -28.1,
+   39.6
+  ],
+  "north_extent": [
+   -19.2,
+   11.2
+  ],
+  "longest_edge_m": 67.6,
+  "longest_edge_bearing": 90.2
+ },
+ "volumes": [
+  {
+   "bottom": -2.0,
+   "top": 65.2,
+   "outline": [
+    [
+     39.61,
+     10.98
+    ],
+    [
+     -27.94,
+     11.23
+    ],
+    [
+     -27.94,
+     -0.4
+    ],
+    [
+     -28.06,
+     -19.18
+    ],
+    [
+     -11.02,
+     -19.25
+    ],
+    [
+     -10.99,
+     -10.72
+    ],
+    [
+     3.92,
+     -10.78
+    ],
+    [
+     3.94,
+     -3.41
+    ],
+    [
+     39.56,
+     -3.55
+    ]
+   ],
+   "holes": []
+  }
+ ]
+}

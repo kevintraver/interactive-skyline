@@ -1,0 +1,40 @@
+{
+  "object": "Slc_Marriott_City_Center",
+  "verts": 530,
+  "faces": 357,
+  "tris": 876,
+  "bbox_min": [
+    -20.273,
+    -55.142,
+    -2.0
+  ],
+  "bbox_max": [
+    14.722,
+    61.932,
+    48.1
+  ],
+  "islands": 46,
+  "open_islands": 0,
+  "inside_out_islands": 0,
+  "nonmanifold_edges": 0,
+  "degenerate_faces": 0,
+  "loose_verts": 0,
+  "nonplanar_ngons": 0,
+  "materials": {
+    "Wall": 290,
+    "Base": 33,
+    "Glass": 33,
+    "Roof": 1
+  },
+  "glow": {
+    "max": 0.464,
+    "dark_faces": 1
+  },
+  "windowed_faces": 33,
+  "errors": [],
+  "warnings": [],
+  "files": {
+    "blend": "slc_marriott_city_center.blend",
+    "glb": "slc_marriott_city_center.glb"
+  }
+}

@@ -1,0 +1,84 @@
+{
+ "id": "w172543270",
+ "name": "310 South Main Street",
+ "height": 61.5,
+ "height_source": "lidar",
+ "frame": "meters east and north of the footprint center c; heights in meters above ground; a model built in this frame installs with --offset 0,0",
+ "facts": {
+  "east_extent": [
+   -20.4,
+   21.1
+  ],
+  "north_extent": [
+   -21.7,
+   22.8
+  ],
+  "longest_edge_m": 41.6,
+  "longest_edge_bearing": 0.1
+ },
+ "volumes": [
+  {
+   "bottom": -2.0,
+   "top": 61.5,
+   "outline": [
+    [
+     21.14,
+     -21.73
+    ],
+    [
+     -20.38,
+     -21.63
+    ],
+    [
+     -20.28,
+     19.93
+    ],
+    [
+     -16.29,
+     19.92
+    ],
+    [
+     -12.04,
+     19.95
+    ],
+    [
+     -12.06,
+     22.4
+    ],
+    [
+     1.91,
+     22.53
+    ],
+    [
+     14.08,
+     22.76
+    ],
+    [
+     14.14,
+     19.83
+    ],
+    [
+     20.83,
+     19.96
+    ],
+    [
+     21.15,
+     3.22
+    ],
+    [
+     16.89,
+     3.15
+    ],
+    [
+     17.06,
+     -5.48
+    ],
+    [
+     20.82,
+     -5.4
+    ]
+   ],
+   "holes": []
+  }
+ ]
+}

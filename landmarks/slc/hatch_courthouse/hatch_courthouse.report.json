@@ -1,0 +1,40 @@
+{
+  "object": "Hatch_Courthouse",
+  "verts": 64,
+  "faces": 48,
+  "tris": 96,
+  "bbox_min": [
+    -28.643,
+    -28.077,
+    -2.0
+  ],
+  "bbox_max": [
+    29.59,
+    27.746,
+    61.0
+  ],
+  "islands": 8,
+  "open_islands": 0,
+  "inside_out_islands": 0,
+  "nonmanifold_edges": 0,
+  "degenerate_faces": 0,
+  "loose_verts": 0,
+  "nonplanar_ngons": 0,
+  "materials": {
+    "Wall": 15,
+    "Glass": 5,
+    "Roof": 4,
+    "Slot": 24
+  },
+  "glow": {
+    "max": 0.65,
+    "dark_faces": 28
+  },
+  "windowed_faces": 5,
+  "errors": [],
+  "warnings": [],
+  "files": {
+    "blend": "hatch_courthouse.blend",
+    "glb": "hatch_courthouse.glb"
+  }
+}

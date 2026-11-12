@@ -1,0 +1,40 @@
+{
+  "object": "Grand_America_Hotel",
+  "verts": 990,
+  "faces": 529,
+  "tris": 1912,
+  "bbox_min": [
+    -102.13,
+    -98.17,
+    -2.0
+  ],
+  "bbox_max": [
+    93.7,
+    90.48,
+    100.6
+  ],
+  "islands": 17,
+  "open_islands": 0,
+  "inside_out_islands": 0,
+  "nonmanifold_edges": 0,
+  "degenerate_faces": 0,
+  "loose_verts": 0,
+  "nonplanar_ngons": 0,
+  "materials": {
+    "Precast": 331,
+    "Glass": 36,
+    "Slate": 23,
+    "Base": 139
+  },
+  "glow": {
+    "max": 0.35,
+    "dark_faces": 0
+  },
+  "windowed_faces": 36,
+  "errors": [],
+  "warnings": [],
+  "files": {
+    "blend": "grand_america_hotel.blend",
+    "glb": "grand_america_hotel.glb"
+  }
+}

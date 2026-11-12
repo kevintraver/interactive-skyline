@@ -102,7 +102,7 @@ how to read the check. Open `app-check/sheet.jpg` and confirm `model ... loaded 
 
 Working in the interactive-skyline repo itself, put the model folder at `landmarks/<city>/<stem>/`, beside the
 others: the build script, footprint, report, research notes and photo credits are committed, while photos,
-renders, checks, `.blend` and the GLB (installed into `public/models/`) are git-ignored. A folder without its
+renders, checks, `.blend` and the GLB (installed into `public/models/<city>/`) are git-ignored. A folder without its
 own `landmark_kit.py` builds with this skill's copy.
 
 For a demo, `skyline_tool.py`'s sibling `flyover.py` records a camera flight through the app as a GIF, frame by

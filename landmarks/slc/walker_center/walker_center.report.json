@@ -1,0 +1,41 @@
+{
+  "object": "Walker_Center",
+  "verts": 200,
+  "faces": 130,
+  "tris": 340,
+  "bbox_min": [
+    -22.85,
+    -13.11,
+    -2.0
+  ],
+  "bbox_max": [
+    22.86,
+    13.03,
+    67.1
+  ],
+  "islands": 15,
+  "open_islands": 0,
+  "inside_out_islands": 0,
+  "nonmanifold_edges": 0,
+  "degenerate_faces": 0,
+  "loose_verts": 0,
+  "nonplanar_ngons": 0,
+  "materials": {
+    "Brick": 30,
+    "Stone": 60,
+    "Cap": 5,
+    "Steel": 30,
+    "Roof": 5
+  },
+  "glow": {
+    "max": 0.45,
+    "dark_faces": 5
+  },
+  "windowed_faces": 30,
+  "errors": [],
+  "warnings": [],
+  "files": {
+    "blend": "walker_center.blend",
+    "glb": "walker_center.glb"
+  }
+}

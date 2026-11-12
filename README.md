@@ -18,7 +18,7 @@ A true-scale 3D model of the Salt Lake City and Las Vegas skylines, built with t
 - **Find a building.** Click the search box to list the tall buildings, tallest first. Click a row to fly to it.
 - **Move around like a map.** Drag to slide the view, right-drag (or hold Cmd or Ctrl and drag) to rotate and tilt, scroll to zoom. The buttons in the corner zoom and face north.
 - **Switch city and viewpoint.** Each city has an eye-level view and an aerial one.
-- **Change the picture.** The moon button switches to night: windows light up and the hand-modelled Las Vegas landmarks glow with their own lighting. Map options set the aerial photo, the blue color, how tall a building must be to count, and the units.
+- **Change the picture.** The moon button switches to night: windows light up and the hand-modelled landmarks of both cities glow with their own lighting. Map options set the aerial photo, the blue color, how tall a building must be to count, and the units.
 - **Watch the Strip.** In Las Vegas the Bellagio fountains run their show and the High Roller turns.
 
 ![The Sphere moved across the Strip](docs/moved.png)
@@ -69,9 +69,9 @@ To add a city, add an entry to `data/cities.json` (origin, bounding box, LiDAR d
 
 ## Hand-modelled landmarks
 
-In Las Vegas, 131 buildings are low-poly models made by hand instead of extruded footprints: the hotels and casinos of the Strip and downtown, the Strat, the Eiffel Tower, the Sphere, and the Luxor pyramid with its sphinx and obelisk. Three structures that are not buildings in the map data are modelled too: the Fremont Street canopy, the High Roller (its rim turns and its cabins stay level) and the Luxor Sky Beam at night. Every building model stands on its real OpenStreetMap footprint at its measured height, and every model carries its own night lighting.
+In Las Vegas, 131 buildings are low-poly models made by hand instead of extruded footprints: the hotels and casinos of the Strip and downtown, the Strat, the Eiffel Tower, the Sphere, and the Luxor pyramid with its sphinx and obelisk. Three structures that are not buildings in the map data are modelled too: the Fremont Street canopy, the High Roller (its rim turns and its cabins stay level) and the Luxor Sky Beam at night. In Salt Lake City, the 50 tallest buildings are modelled the same way, from Astra Tower and the Wells Fargo Center down to the mid-rise towers of the Central Business District. The list includes the Church Office Building, the Utah State Capitol with its dome, the Salt Lake Temple with its six spires, and the City and County Building with its clock tower. Every building model stands on its real OpenStreetMap footprint at its measured height, and every model carries its own night lighting.
 
-The models are GLB files in `public/models/`, listed in `public/models/models.json`. Each one is made by a Python script run in Blender, and the scripts are in `landmarks/lv/<model>/` with what they were made from:
+The models are GLB files with one folder per city, `public/models/lv/` and `public/models/slc/`, listed in `public/models/models.json`. Each one is made by a Python script run in Blender, and the scripts are in `landmarks/<city>/<model>/` with what they were made from:
 
 | File | What it is |
 | --- | --- |
@@ -80,7 +80,7 @@ The models are GLB files in `public/models/`, listed in `public/models/models.js
 | `<model>.report.json` | Mesh checks from the last build: triangles, closed solids, materials. |
 | `research/`, `refs/` | Dimensions and notes, and where the reference photos came from. The photos themselves are not in the repo. |
 
-Footprints and heights are measured. Most facades are estimated from a few public photos. Logos, signs and brand names are left off on purpose.
+Footprints and heights are measured. Most facades are estimated from a few public photos, and a few Salt Lake City buildings with no usable public photos have estimated colors and bands. Logos, signs and brand names are left off on purpose.
 
 To rebuild a model and put it in the app (with [Blender](https://www.blender.org/) installed; these were made with Blender 5.2):
 
@@ -122,7 +122,7 @@ Las Vegas was checked against Wikipedia's list of its tallest buildings, matched
 
 Known limits:
 
-- Apart from the hand-modelled Las Vegas landmarks, buildings are extruded footprints. Pyramids and domes are drawn where OpenStreetMap tags them (the Utah Capitol's dome); everything else has a flat roof.
+- Apart from the hand-modelled landmarks (131 in Las Vegas, the 50 tallest in Salt Lake City), buildings are extruded footprints. Pyramids and domes are drawn where OpenStreetMap tags them; everything else has a flat roof.
 - The hand-made models have measured footprints and heights, but most of their facades are estimated from a few photos. The Strat's pod, crown and mast are sized from the LiDAR and its legs are estimated. The Las Vegas Eiffel Tower's height and the position of its four feet are real, and its platforms follow the proportions of the original.
 - Buildings finished after the LiDAR survey have estimated heights unless OpenStreetMap tags one. They are marked "est." in the list.
 - Hand corrections to wrong or missing OpenStreetMap data are listed, with reasons, in `data/overrides.json`.

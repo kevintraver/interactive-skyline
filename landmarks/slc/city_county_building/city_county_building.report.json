@@ -1,0 +1,40 @@
+{
+  "object": "City_County_Building",
+  "verts": 581,
+  "faces": 383,
+  "tris": 1002,
+  "bbox_min": [
+    -22.23,
+    -41.9,
+    -2.0
+  ],
+  "bbox_max": [
+    22.53,
+    41.88,
+    68.9
+  ],
+  "islands": 40,
+  "open_islands": 0,
+  "inside_out_islands": 0,
+  "nonmanifold_edges": 0,
+  "degenerate_faces": 0,
+  "loose_verts": 0,
+  "nonplanar_ngons": 0,
+  "materials": {
+    "Stone": 243,
+    "Slate": 112,
+    "Trim": 22,
+    "Clock": 6
+  },
+  "glow": {
+    "max": 0.518,
+    "dark_faces": 0
+  },
+  "windowed_faces": 0,
+  "errors": [],
+  "warnings": [],
+  "files": {
+    "blend": "city_county_building.blend",
+    "glb": "city_county_building.glb"
+  }
+}

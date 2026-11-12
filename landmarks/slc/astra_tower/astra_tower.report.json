@@ -1,0 +1,41 @@
+{
+  "object": "Astra_Tower",
+  "verts": 720,
+  "faces": 538,
+  "tris": 1084,
+  "bbox_min": [
+    -25.218,
+    -28.199,
+    -2.0
+  ],
+  "bbox_max": [
+    25.674,
+    28.292,
+    137.5
+  ],
+  "islands": 89,
+  "open_islands": 0,
+  "inside_out_islands": 0,
+  "nonmanifold_edges": 0,
+  "degenerate_faces": 0,
+  "loose_verts": 0,
+  "nonplanar_ngons": 0,
+  "materials": {
+    "Precast": 150,
+    "Glass": 12,
+    "Copper": 7,
+    "Roof": 3,
+    "PodiumGlass": 366
+  },
+  "glow": {
+    "max": 0.311,
+    "dark_faces": 3
+  },
+  "windowed_faces": 12,
+  "errors": [],
+  "warnings": [],
+  "files": {
+    "blend": "astra_tower.blend",
+    "glb": "astra_tower.glb"
+  }
+}

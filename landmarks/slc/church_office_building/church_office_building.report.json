@@ -1,0 +1,40 @@
+{
+  "object": "Church_Office_Building",
+  "verts": 1052,
+  "faces": 780,
+  "tris": 1596,
+  "bbox_min": [
+    -72.466,
+    -35.235,
+    -2.0
+  ],
+  "bbox_max": [
+    72.431,
+    30.507,
+    128.0
+  ],
+  "islands": 127,
+  "open_islands": 0,
+  "inside_out_islands": 0,
+  "nonmanifold_edges": 0,
+  "degenerate_faces": 0,
+  "loose_verts": 0,
+  "nonplanar_ngons": 0,
+  "materials": {
+    "Precast": 744,
+    "Glass": 19,
+    "Dark": 13,
+    "Roof": 4
+  },
+  "glow": {
+    "max": 0.33,
+    "dark_faces": 4
+  },
+  "windowed_faces": 19,
+  "errors": [],
+  "warnings": [],
+  "files": {
+    "blend": "church_office_building.blend",
+    "glb": "church_office_building.glb"
+  }
+}

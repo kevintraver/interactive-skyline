@@ -1,0 +1,40 @@
+{
+  "object": "Salt_Lake_Temple",
+  "verts": 652,
+  "faces": 471,
+  "tris": 1056,
+  "bbox_min": [
+    -28.501,
+    -18.46,
+    -2.0
+  ],
+  "bbox_max": [
+    28.562,
+    17.91,
+    64.0
+  ],
+  "islands": 62,
+  "open_islands": 0,
+  "inside_out_islands": 0,
+  "nonmanifold_edges": 0,
+  "degenerate_faces": 0,
+  "loose_verts": 0,
+  "nonplanar_ngons": 0,
+  "materials": {
+    "Stone": 106,
+    "Spire": 300,
+    "Roof": 23,
+    "Gold": 42
+  },
+  "glow": {
+    "max": 0.9,
+    "dark_faces": 23
+  },
+  "windowed_faces": 0,
+  "errors": [],
+  "warnings": [],
+  "files": {
+    "blend": "salt_lake_temple.blend",
+    "glb": "salt_lake_temple.glb"
+  }
+}

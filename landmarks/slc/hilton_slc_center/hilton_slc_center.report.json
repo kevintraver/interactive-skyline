@@ -1,0 +1,40 @@
+{
+  "object": "Hilton_Slc_Center",
+  "verts": 576,
+  "faces": 402,
+  "tris": 924,
+  "bbox_min": [
+    -23.46,
+    -25.11,
+    -2.0
+  ],
+  "bbox_max": [
+    34.72,
+    27.9,
+    56.6
+  ],
+  "islands": 57,
+  "open_islands": 0,
+  "inside_out_islands": 0,
+  "nonmanifold_edges": 0,
+  "degenerate_faces": 0,
+  "loose_verts": 0,
+  "nonplanar_ngons": 0,
+  "materials": {
+    "Wall": 201,
+    "Glass": 184,
+    "Roof": 3,
+    "Base": 14
+  },
+  "glow": {
+    "max": 0.573,
+    "dark_faces": 0
+  },
+  "windowed_faces": 184,
+  "errors": [],
+  "warnings": [],
+  "files": {
+    "blend": "hilton_slc_center.blend",
+    "glb": "hilton_slc_center.glb"
+  }
+}

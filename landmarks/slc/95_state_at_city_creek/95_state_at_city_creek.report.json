@@ -1,0 +1,41 @@
+{
+  "object": "95_State_At_City_Creek",
+  "verts": 432,
+  "faces": 224,
+  "tris": 848,
+  "bbox_min": [
+    -17.1,
+    -39.89,
+    -2.0
+  ],
+  "bbox_max": [
+    17.135,
+    38.551,
+    119.8
+  ],
+  "islands": 4,
+  "open_islands": 0,
+  "inside_out_islands": 0,
+  "nonmanifold_edges": 0,
+  "degenerate_faces": 0,
+  "loose_verts": 0,
+  "nonplanar_ngons": 0,
+  "materials": {
+    "Wall": 34,
+    "Glass": 63,
+    "Lobby": 63,
+    "Crown": 62,
+    "Roof": 2
+  },
+  "glow": {
+    "max": 0.5,
+    "dark_faces": 2
+  },
+  "windowed_faces": 63,
+  "errors": [],
+  "warnings": [],
+  "files": {
+    "blend": "95_state_at_city_creek.blend",
+    "glb": "95_state_at_city_creek.glb"
+  }
+}

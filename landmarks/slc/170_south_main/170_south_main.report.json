@@ -1,0 +1,40 @@
+{
+  "object": "170_South_Main",
+  "verts": 316,
+  "faces": 174,
+  "tris": 600,
+  "bbox_min": [
+    -21.771,
+    -24.043,
+    -2.0
+  ],
+  "bbox_max": [
+    23.972,
+    21.952,
+    65.0
+  ],
+  "islands": 8,
+  "open_islands": 0,
+  "inside_out_islands": 0,
+  "nonmanifold_edges": 0,
+  "degenerate_faces": 0,
+  "loose_verts": 0,
+  "nonplanar_ngons": 0,
+  "materials": {
+    "Wall": 28,
+    "Glass": 24,
+    "Band": 119,
+    "Roof": 3
+  },
+  "glow": {
+    "max": 0.65,
+    "dark_faces": 3
+  },
+  "windowed_faces": 24,
+  "errors": [],
+  "warnings": [],
+  "files": {
+    "blend": "170_south_main.blend",
+    "glb": "170_south_main.glb"
+  }
+}

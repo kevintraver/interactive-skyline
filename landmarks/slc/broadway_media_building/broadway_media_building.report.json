@@ -1,0 +1,41 @@
+{
+  "object": "Broadway_Media_Building",
+  "verts": 224,
+  "faces": 162,
+  "tris": 348,
+  "bbox_min": [
+    -35.37,
+    -20.89,
+    -2.0
+  ],
+  "bbox_max": [
+    34.95,
+    25.6,
+    48.8
+  ],
+  "islands": 25,
+  "open_islands": 0,
+  "inside_out_islands": 0,
+  "nonmanifold_edges": 0,
+  "degenerate_faces": 0,
+  "loose_verts": 0,
+  "nonplanar_ngons": 0,
+  "materials": {
+    "Precast": 13,
+    "Podium": 9,
+    "Glass": 132,
+    "Roof": 3,
+    "Band": 5
+  },
+  "glow": {
+    "max": 0.144,
+    "dark_faces": 3
+  },
+  "windowed_faces": 132,
+  "errors": [],
+  "warnings": [],
+  "files": {
+    "blend": "broadway_media_building.blend",
+    "glb": "broadway_media_building.glb"
+  }
+}

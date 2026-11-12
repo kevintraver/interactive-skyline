@@ -1,0 +1,41 @@
+{
+  "object": "Liberty_Sky",
+  "verts": 828,
+  "faces": 460,
+  "tris": 1564,
+  "bbox_min": [
+    -30.96,
+    -12.46,
+    -2.0
+  ],
+  "bbox_max": [
+    30.31,
+    14.51,
+    64.0
+  ],
+  "islands": 23,
+  "open_islands": 0,
+  "inside_out_islands": 0,
+  "nonmanifold_edges": 0,
+  "degenerate_faces": 0,
+  "loose_verts": 0,
+  "nonplanar_ngons": 0,
+  "materials": {
+    "Concrete": 381,
+    "Glass": 19,
+    "Base": 19,
+    "Cap": 21,
+    "Accent": 20
+  },
+  "glow": {
+    "max": 0.6,
+    "dark_faces": 0
+  },
+  "windowed_faces": 19,
+  "errors": [],
+  "warnings": [],
+  "files": {
+    "blend": "liberty_sky.blend",
+    "glb": "liberty_sky.glb"
+  }
+}

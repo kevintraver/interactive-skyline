@@ -1,0 +1,44 @@
+{
+  "object": "Joseph_Smith_Memorial_Building",
+  "verts": 496,
+  "faces": 340,
+  "tris": 808,
+  "bbox_min": [
+    -32.209,
+    -41.378,
+    -2.0
+  ],
+  "bbox_max": [
+    32.228,
+    41.369,
+    55.5
+  ],
+  "islands": 46,
+  "open_islands": 0,
+  "inside_out_islands": 0,
+  "nonmanifold_edges": 0,
+  "degenerate_faces": 0,
+  "loose_verts": 0,
+  "nonplanar_ngons": 0,
+  "materials": {
+    "Facade": 27,
+    "Base": 26,
+    "Cornice": 278,
+    "Roof": 4,
+    "Cupola": 5,
+    "Dome": 0
+  },
+  "glow": {
+    "max": 0.7,
+    "dark_faces": 4
+  },
+  "windowed_faces": 27,
+  "errors": [],
+  "warnings": [
+    "unused materials: Dome"
+  ],
+  "files": {
+    "blend": "joseph_smith_memorial_building.blend",
+    "glb": "joseph_smith_memorial_building.glb"
+  }
+}

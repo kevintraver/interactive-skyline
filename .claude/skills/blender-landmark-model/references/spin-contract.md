@@ -20,7 +20,7 @@ Both sides follow this file exactly: the build script that makes the wheel and t
 ## In the app (models.json extra entry)
 
 ```json
-{"name": "High Roller", "url": "/models/high_roller.glb", "east": 417.5, "north": 331.1, "rotation_deg": 90,
+{"name": "High Roller", "url": "/models/lv/high_roller.glb", "east": 417.5, "north": 331.1, "rotation_deg": 90,
  "visible": "always", "spin": {"node": "Rotor", "period_s": 180, "direction": 1}}
 ```
 

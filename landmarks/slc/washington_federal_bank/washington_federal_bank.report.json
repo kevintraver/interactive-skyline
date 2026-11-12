@@ -1,0 +1,41 @@
+{
+  "object": "Washington_Federal_Bank",
+  "verts": 126,
+  "faces": 89,
+  "tris": 200,
+  "bbox_min": [
+    -18.44,
+    -27.83,
+    -2.0
+  ],
+  "bbox_max": [
+    23.5,
+    22.8,
+    58.8
+  ],
+  "islands": 13,
+  "open_islands": 0,
+  "inside_out_islands": 0,
+  "nonmanifold_edges": 0,
+  "degenerate_faces": 0,
+  "loose_verts": 0,
+  "nonplanar_ngons": 0,
+  "materials": {
+    "Glass": 5,
+    "Brick": 5,
+    "Precast": 59,
+    "Podium": 16,
+    "Roof": 4
+  },
+  "glow": {
+    "max": 0.266,
+    "dark_faces": 4
+  },
+  "windowed_faces": 5,
+  "errors": [],
+  "warnings": [],
+  "files": {
+    "blend": "washington_federal_bank.blend",
+    "glb": "washington_federal_bank.glb"
+  }
+}

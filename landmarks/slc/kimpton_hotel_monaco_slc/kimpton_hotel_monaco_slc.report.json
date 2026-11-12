@@ -1,0 +1,41 @@
+{
+  "object": "Kimpton_Hotel_Monaco_Slc",
+  "verts": 124,
+  "faces": 84,
+  "tris": 204,
+  "bbox_min": [
+    -28.863,
+    -20.053,
+    -2.0
+  ],
+  "bbox_max": [
+    40.011,
+    12.033,
+    65.2
+  ],
+  "islands": 11,
+  "open_islands": 0,
+  "inside_out_islands": 0,
+  "nonmanifold_edges": 0,
+  "degenerate_faces": 0,
+  "loose_verts": 0,
+  "nonplanar_ngons": 0,
+  "materials": {
+    "Stone": 60,
+    "BaseStone": 8,
+    "Brick": 5,
+    "Glass": 8,
+    "Roof": 3
+  },
+  "glow": {
+    "max": 0.4,
+    "dark_faces": 3
+  },
+  "windowed_faces": 8,
+  "errors": [],
+  "warnings": [],
+  "files": {
+    "blend": "kimpton_hotel_monaco_slc.blend",
+    "glb": "kimpton_hotel_monaco_slc.glb"
+  }
+}

@@ -1,7 +1,7 @@
 {
   "lv": {
     "w135457469": {
-      "url": "/models/strat.glb",
+      "url": "/models/lv/strat.glb",
       "offset": [
         3.2,
         0.8
@@ -9,7 +9,7 @@
       "name": "Stratosphere Tower"
     },
     "w27831699": {
-      "url": "/models/eiffel_lv.glb",
+      "url": "/models/lv/eiffel_lv.glb",
       "offset": [
         0.0,
         0.0
@@ -17,7 +17,7 @@
       "name": "Eiffel Tower"
     },
     "w134068318": {
-      "url": "/models/fontainebleau.glb",
+      "url": "/models/lv/fontainebleau.glb",
       "offset": [
         0.0,
         0.0
@@ -25,7 +25,7 @@
       "name": "Fontainebleau Las Vegas"
     },
     "w972129019": {
-      "url": "/models/resorts_world.glb",
+      "url": "/models/lv/resorts_world.glb",
       "offset": [
         0.0,
         0.0
@@ -33,7 +33,7 @@
       "name": "Resorts World Las Vegas"
     },
     "w30424125": {
-      "url": "/models/palazzo.glb",
+      "url": "/models/lv/palazzo.glb",
       "offset": [
         0.0,
         0.0
@@ -41,7 +41,7 @@
       "name": "Palazzo Tower"
     },
     "w27910891": {
-      "url": "/models/encore.glb",
+      "url": "/models/lv/encore.glb",
       "offset": [
         0.0,
         0.0
@@ -49,7 +49,7 @@
       "name": "Encore Las Vegas"
     },
     "w111380666": {
-      "url": "/models/trump.glb",
+      "url": "/models/lv/trump.glb",
       "offset": [
         0.0,
         0.0
@@ -57,7 +57,7 @@
       "name": "Trump International Hotel Las Vegas"
     },
     "w205501268": {
-      "url": "/models/wynn.glb",
+      "url": "/models/lv/wynn.glb",
       "offset": [
         0.0,
         0.0
@@ -65,7 +65,7 @@
       "name": "Wynn Las Vegas"
     },
     "w27897905": {
-      "url": "/models/cosmo_chelsea.glb",
+      "url": "/models/lv/cosmo_chelsea.glb",
       "offset": [
         0.0,
         0.0
@@ -73,7 +73,7 @@
       "name": "The Cosmopolitan Chelsea Tower"
     },
     "w134795273": {
-      "url": "/models/cosmo_main.glb",
+      "url": "/models/lv/cosmo_main.glb",
       "offset": [
         0.0,
         0.0
@@ -81,7 +81,7 @@
       "name": "The Cosmopolitan of Las Vegas"
     },
     "w472669744": {
-      "url": "/models/cosmo_boulevard.glb",
+      "url": "/models/lv/cosmo_boulevard.glb",
       "offset": [
         0.0,
         0.0
@@ -89,7 +89,7 @@
       "name": "The Cosmopolitan Boulevard Tower"
     },
     "r5342155": {
-      "url": "/models/elara.glb",
+      "url": "/models/lv/elara.glb",
       "offset": [
         0.0,
         0.0
@@ -97,7 +97,7 @@
       "name": "Elara, a Hilton Grand Vacations Club"
     },
     "r20214578": {
-      "url": "/models/vdara.glb",
+      "url": "/models/lv/vdara.glb",
       "offset": [
         0.0,
         0.0
@@ -105,7 +105,7 @@
       "name": "Vdara Hotel & Spa"
     },
     "w52194829": {
-      "url": "/models/waldorf.glb",
+      "url": "/models/lv/waldorf.glb",
       "offset": [
         0.0,
         0.0
@@ -113,7 +113,7 @@
       "name": "Waldorf Astoria Las Vegas"
     },
     "w134930092": {
-      "url": "/models/aria_east.glb",
+      "url": "/models/lv/aria_east.glb",
       "offset": [
         0.0,
         0.0
@@ -121,7 +121,7 @@
       "name": "Aria Resort & Casino"
     },
     "w134930090": {
-      "url": "/models/aria_west.glb",
+      "url": "/models/lv/aria_west.glb",
       "offset": [
         0.0,
         0.0
@@ -129,7 +129,7 @@
       "name": "Aria Resort & Casino"
     },
     "r7655652": {
-      "url": "/models/palms_place.glb",
+      "url": "/models/lv/palms_place.glb",
       "offset": [
         0.0,
         0.0
@@ -137,7 +137,7 @@
       "name": "Palms Place"
     },
     "w115661793": {
-      "url": "/models/nyny.glb",
+      "url": "/models/lv/nyny.glb",
       "offset": [
         0.0,
         0.0
@@ -145,7 +145,7 @@
       "name": "New York New York Hotel and Casino"
     },
     "w495695272": {
-      "url": "/models/the_martin.glb",
+      "url": "/models/lv/the_martin.glb",
       "offset": [
         0.0,
         0.0
@@ -153,7 +153,7 @@
       "name": "The Martin"
     },
     "w25723909": {
-      "url": "/models/bellagio.glb",
+      "url": "/models/lv/bellagio.glb",
       "offset": [
         0.0,
         0.0
@@ -161,7 +161,7 @@
       "name": "Bellagio Las Vegas"
     },
     "w118347176": {
-      "url": "/models/w_las_vegas.glb",
+      "url": "/models/lv/w_las_vegas.glb",
       "offset": [
         0.0,
         0.0
@@ -169,7 +169,7 @@
       "name": "W Las Vegas"
     },
     "w543641002": {
-      "url": "/models/sky_tower.glb",
+      "url": "/models/lv/sky_tower.glb",
       "offset": [
         0.0,
         0.0
@@ -177,7 +177,7 @@
       "name": "Sky Tower Las Vegas Condominiums"
     },
     "w27858550": {
-      "url": "/models/mandalay_bay.glb",
+      "url": "/models/lv/mandalay_bay.glb",
       "offset": [
         0.0,
         0.0
@@ -185,7 +185,7 @@
       "name": "Mandalay Bay Resort & Casino"
     },
     "w316174410": {
-      "url": "/models/circa.glb",
+      "url": "/models/lv/circa.glb",
       "offset": [
         0.0,
         0.0
@@ -193,7 +193,7 @@
       "name": "Circa Resort & Casino"
     },
     "w30618090": {
-      "url": "/models/venetian_tower.glb",
+      "url": "/models/lv/venetian_tower.glb",
       "offset": [
         0.0,
         0.0
@@ -201,7 +201,7 @@
       "name": "Venetian Tower"
     },
     "w43875964": {
-      "url": "/models/venetian_campanile.glb",
+      "url": "/models/lv/venetian_campanile.glb",
       "offset": [
         0.0,
         0.0
@@ -209,7 +209,7 @@
       "name": "The Campanile"
     },
     "w976405284": {
-      "url": "/models/sphere.glb",
+      "url": "/models/lv/sphere.glb",
       "offset": [
         0.0,
         0.0
@@ -217,7 +217,7 @@
       "name": "Sphere"
     },
     "r8086330": {
-      "url": "/models/excalibur.glb",
+      "url": "/models/lv/excalibur.glb",
       "offset": [
         0.0,
         0.0
@@ -225,7 +225,7 @@
       "name": "Excalibur Hotel & Casino"
     },
     "w27858544": {
-      "url": "/models/luxor.glb",
+      "url": "/models/lv/luxor.glb",
       "offset": [
         0.0,
         0.0
@@ -233,7 +233,7 @@
       "name": "Luxor Las Vegas"
     },
     "w134944648": {
-      "url": "/models/caesars_palace_tower.glb",
+      "url": "/models/lv/caesars_palace_tower.glb",
       "offset": [
         0.0,
         0.0
@@ -241,7 +241,7 @@
       "name": "Palace Tower"
     },
     "w1176928048": {
-      "url": "/models/caesars_augustus.glb",
+      "url": "/models/lv/caesars_augustus.glb",
       "offset": [
         0.0,
         0.0
@@ -249,7 +249,7 @@
       "name": "Augustus Tower"
     },
     "w126267789": {
-      "url": "/models/caesars_octavius.glb",
+      "url": "/models/lv/caesars_octavius.glb",
       "offset": [
         0.0,
         0.0
@@ -257,7 +257,7 @@
       "name": "Octavius Tower"
     },
     "w95223224": {
-      "url": "/models/the_signature_at_mgm_g_w95223224.glb",
+      "url": "/models/lv/the_signature_at_mgm_g_w95223224.glb",
       "offset": [
         0.0,
         0.0
@@ -265,7 +265,7 @@
       "name": "The Signature at MGM Grand Tower I"
     },
     "w134677416": {
-      "url": "/models/turnberry_place_w134677416.glb",
+      "url": "/models/lv/turnberry_place_w134677416.glb",
       "offset": [
         0.0,
         0.0
@@ -273,7 +273,7 @@
       "name": "Turnberry Place"
     },
     "w134677417": {
-      "url": "/models/turnberry_place_w134677417.glb",
+      "url": "/models/lv/turnberry_place_w134677417.glb",
       "offset": [
         0.0,
         0.0
@@ -281,7 +281,7 @@
       "name": "Turnberry Place"
     },
     "w95223232": {
-      "url": "/models/the_signature_at_mgm_g_w95223232.glb",
+      "url": "/models/lv/the_signature_at_mgm_g_w95223232.glb",
       "offset": [
         0.0,
         0.0
@@ -289,7 +289,7 @@
       "name": "The Signature at MGM Grand Tower II"
     },
     "w134677425": {
-      "url": "/models/turnberry_place_w134677425.glb",
+      "url": "/models/lv/turnberry_place_w134677425.glb",
       "offset": [
         0.0,
         0.0
@@ -297,7 +297,7 @@
       "name": "Turnberry Place"
     },
     "w134677429": {
-      "url": "/models/turnberry_place_w134677429.glb",
+      "url": "/models/lv/turnberry_place_w134677429.glb",
       "offset": [
         0.0,
         0.0
@@ -305,7 +305,7 @@
       "name": "Turnberry Place"
     },
     "w95223231": {
-      "url": "/models/the_signature_at_mgm_g_w95223231.glb",
+      "url": "/models/lv/the_signature_at_mgm_g_w95223231.glb",
       "offset": [
         0.0,
         0.0
@@ -313,7 +313,7 @@
       "name": "The Signature at MGM Grand Tower III"
     },
     "r7655651": {
-      "url": "/models/palms_r7655651.glb",
+      "url": "/models/lv/palms_r7655651.glb",
       "offset": [
         0.0,
         0.0
@@ -321,7 +321,7 @@
       "name": "Palms"
     },
     "w134935559": {
-      "url": "/models/allure_las_vegas_tower_w134935559.glb",
+      "url": "/models/lv/allure_las_vegas_tower_w134935559.glb",
       "offset": [
         0.0,
         0.0
@@ -329,7 +329,7 @@
       "name": "Allure Las Vegas Tower I"
     },
     "w134918082": {
-      "url": "/models/west_tower_w134918082.glb",
+      "url": "/models/lv/west_tower_w134918082.glb",
       "offset": [
         0.0,
         0.0
@@ -337,7 +337,7 @@
       "name": "West Tower"
     },
     "w52134835": {
-      "url": "/models/veer_towers_west_w52134835.glb",
+      "url": "/models/lv/veer_towers_west_w52134835.glb",
       "offset": [
         0.0,
         0.0
@@ -345,7 +345,7 @@
       "name": "Veer Towers West"
     },
     "w134679980": {
-      "url": "/models/east_tower_w134679980.glb",
+      "url": "/models/lv/east_tower_w134679980.glb",
       "offset": [
         0.0,
         0.0
@@ -353,7 +353,7 @@
       "name": "East Tower"
     },
     "w52134834": {
-      "url": "/models/veer_towers_east_w52134834.glb",
+      "url": "/models/lv/veer_towers_east_w52134834.glb",
       "offset": [
         0.0,
         0.0
@@ -361,7 +361,7 @@
       "name": "Veer Towers East"
     },
     "w134938477": {
-      "url": "/models/voodoo_steakhouse_w134938477.glb",
+      "url": "/models/lv/voodoo_steakhouse_w134938477.glb",
       "offset": [
         0.0,
         0.0
@@ -369,7 +369,7 @@
       "name": "Voodoo steakhouse"
     },
     "w134938479": {
-      "url": "/models/voodoo_rooftop_w134938479.glb",
+      "url": "/models/lv/voodoo_rooftop_w134938479.glb",
       "offset": [
         0.0,
         0.0
@@ -377,7 +377,7 @@
       "name": "VooDoo Rooftop"
     },
     "r6138877": {
-      "url": "/models/hilton_grand_vacations_r6138877.glb",
+      "url": "/models/lv/hilton_grand_vacations_r6138877.glb",
       "offset": [
         0.0,
         0.0
@@ -385,7 +385,7 @@
       "name": "Hilton Grand Vacations on the Boulevard"
     },
     "w495545510": {
-      "url": "/models/panorama_tower_ii_w495545510.glb",
+      "url": "/models/lv/panorama_tower_ii_w495545510.glb",
       "offset": [
         0.0,
         0.0
@@ -393,7 +393,7 @@
       "name": "Panorama Tower II"
     },
     "w134921373": {
-      "url": "/models/planet_hollywood_resor_w134921373.glb",
+      "url": "/models/lv/planet_hollywood_resor_w134921373.glb",
       "offset": [
         0.0,
         0.0
@@ -401,7 +401,7 @@
       "name": "Planet Hollywood Resort and Casino"
     },
     "w27998223": {
-      "url": "/models/rio_masquerade_tower_w27998223.glb",
+      "url": "/models/lv/rio_masquerade_tower_w27998223.glb",
       "offset": [
         0.0,
         0.0
@@ -409,7 +409,7 @@
       "name": "Rio Masquerade Tower"
     },
     "w132157010": {
-      "url": "/models/the_d_las_vegas_w132157010.glb",
+      "url": "/models/lv/the_d_las_vegas_w132157010.glb",
       "offset": [
         0.0,
         0.0
@@ -417,7 +417,7 @@
       "name": "The D Las Vegas"
     },
     "w25723910": {
-      "url": "/models/bellagio_spa_tower_w25723910.glb",
+      "url": "/models/lv/bellagio_spa_tower_w25723910.glb",
       "offset": [
         0.0,
         0.0
@@ -425,7 +425,7 @@
       "name": "Bellagio Spa Tower"
     },
     "w495545498": {
-      "url": "/models/panorama_tower_i_w495545498.glb",
+      "url": "/models/lv/panorama_tower_i_w495545498.glb",
       "offset": [
         0.0,
         0.0
@@ -433,7 +433,7 @@
       "name": "Panorama Tower I"
     },
     "w134938481": {
-      "url": "/models/rio_all_suite_hotel_an_w134938481.glb",
+      "url": "/models/lv/rio_all_suite_hotel_an_w134938481.glb",
       "offset": [
         0.0,
         0.0
@@ -441,7 +441,7 @@
       "name": "Rio All Suite Hotel and Casino"
     },
     "w134691921": {
-      "url": "/models/westgate_las_vegas_res_w134691921.glb",
+      "url": "/models/lv/westgate_las_vegas_res_w134691921.glb",
       "offset": [
         0.0,
         0.0
@@ -449,7 +449,7 @@
       "name": "Westgate Las Vegas Resort & Casino"
     },
     "w276427203": {
-      "url": "/models/marriott_s_grand_chate_w276427203.glb",
+      "url": "/models/lv/marriott_s_grand_chate_w276427203.glb",
       "offset": [
         0.0,
         0.0
@@ -457,7 +457,7 @@
       "name": "Marriott's Grand Chateau"
     },
     "w27831695": {
-      "url": "/models/park_mgm_w27831695.glb",
+      "url": "/models/lv/park_mgm_w27831695.glb",
       "offset": [
         0.0,
         0.0
@@ -465,7 +465,7 @@
       "name": "Park MGM"
     },
     "w27831697": {
-      "url": "/models/le_boulevard_at_paris_w27831697.glb",
+      "url": "/models/lv/le_boulevard_at_paris_w27831697.glb",
       "offset": [
         0.0,
         0.0
@@ -473,7 +473,7 @@
       "name": "Le Boulevard At Paris"
     },
     "w33959894": {
-      "url": "/models/treasure_island_hotel__w33959894.glb",
+      "url": "/models/lv/treasure_island_hotel__w33959894.glb",
       "offset": [
         0.0,
         0.0
@@ -481,7 +481,7 @@
       "name": "Treasure Island Hotel and Casino"
     },
     "w111367828": {
-      "url": "/models/harrah_s_las_vegas_w111367828.glb",
+      "url": "/models/lv/harrah_s_las_vegas_w111367828.glb",
       "offset": [
         0.0,
         0.0
@@ -489,7 +489,7 @@
       "name": "Harrah's Las Vegas"
     },
     "w340018195": {
-      "url": "/models/faa_airport_traffic_co_w340018195.glb",
+      "url": "/models/lv/faa_airport_traffic_co_w340018195.glb",
       "offset": [
         0.0,
         0.0
@@ -497,7 +497,7 @@
       "name": "FAA Airport Traffic Control Tower"
     },
     "w33957359": {
-      "url": "/models/hard_rock_las_vegas_w33957359.glb",
+      "url": "/models/lv/hard_rock_las_vegas_w33957359.glb",
       "offset": [
         0.0,
         0.0
@@ -505,7 +505,7 @@
       "name": "Hard Rock Las Vegas"
     },
     "w134930088": {
-      "url": "/models/aria_resort_casino_w134930088.glb",
+      "url": "/models/lv/aria_resort_casino_w134930088.glb",
       "offset": [
         0.0,
         0.0
@@ -513,7 +513,7 @@
       "name": "Aria Resort & Casino"
     },
     "w135332959": {
-      "url": "/models/circus_circus_las_vega_w135332959.glb",
+      "url": "/models/lv/circus_circus_las_vega_w135332959.glb",
       "offset": [
         0.0,
         0.0
@@ -521,7 +521,7 @@
       "name": "Circus Circus Las Vegas"
     },
     "w226572663": {
-      "url": "/models/newport_lofts_w226572663.glb",
+      "url": "/models/lv/newport_lofts_w226572663.glb",
       "offset": [
         0.0,
         0.0
@@ -529,7 +529,7 @@
       "name": "Newport Lofts"
     },
     "w111322067": {
-      "url": "/models/venezia_tower_w111322067.glb",
+      "url": "/models/lv/venezia_tower_w111322067.glb",
       "offset": [
         0.0,
         0.0
@@ -537,7 +537,7 @@
       "name": "Venezia Tower"
     },
     "w115766969": {
-      "url": "/models/bldg_w115766969.glb",
+      "url": "/models/lv/bldg_w115766969.glb",
       "offset": [
         0.0,
         0.0
@@ -545,7 +545,7 @@
       "name": "w115766969"
     },
     "w226508857": {
-      "url": "/models/regional_justice_cente_w226508857.glb",
+      "url": "/models/lv/regional_justice_cente_w226508857.glb",
       "offset": [
         0.0,
         0.0
@@ -553,7 +553,7 @@
       "name": "Regional Justice Center"
     },
     "w116770006": {
-      "url": "/models/hotel_mgm_grand_las_ve_w116770006.glb",
+      "url": "/models/lv/hotel_mgm_grand_las_ve_w116770006.glb",
       "offset": [
         0.0,
         0.0
@@ -561,7 +561,7 @@
       "name": "Hotel MGM Grand Las Vegas"
     },
     "w656398429": {
-      "url": "/models/regency_towers_w656398429.glb",
+      "url": "/models/lv/regency_towers_w656398429.glb",
       "offset": [
         0.0,
         0.0
@@ -569,7 +569,7 @@
       "name": "Regency Towers"
     },
     "w130585543": {
-      "url": "/models/world_market_center_w130585543.glb",
+      "url": "/models/lv/world_market_center_w130585543.glb",
       "offset": [
         0.0,
         0.0
@@ -577,7 +577,7 @@
       "name": "World Market Center"
     },
     "w115766957": {
-      "url": "/models/bldg_w115766957.glb",
+      "url": "/models/lv/bldg_w115766957.glb",
       "offset": [
         0.0,
         0.0
@@ -585,7 +585,7 @@
       "name": "w115766957"
     },
     "w115766962": {
-      "url": "/models/bldg_w115766962.glb",
+      "url": "/models/lv/bldg_w115766962.glb",
       "offset": [
         0.0,
         0.0
@@ -593,7 +593,7 @@
       "name": "w115766962"
     },
     "w204144588": {
-      "url": "/models/the_ogden_w204144588.glb",
+      "url": "/models/lv/the_ogden_w204144588.glb",
       "offset": [
         0.0,
         0.0
@@ -601,7 +601,7 @@
       "name": "The Ogden"
     },
     "w27897921": {
-      "url": "/models/bldg_w27897921.glb",
+      "url": "/models/lv/bldg_w27897921.glb",
       "offset": [
         0.0,
         0.0
@@ -609,7 +609,7 @@
       "name": "w27897921"
     },
     "w116867081": {
-      "url": "/models/horseshoe_las_vegas_ho_w116867081.glb",
+      "url": "/models/lv/horseshoe_las_vegas_ho_w116867081.glb",
       "offset": [
         0.0,
         0.0
@@ -617,7 +617,7 @@
       "name": "Horseshoe Las Vegas Hotel & Casino - A Caesars Rewards Destination"
     },
     "w156624462": {
-      "url": "/models/wells_fargo_tower_w156624462.glb",
+      "url": "/models/lv/wells_fargo_tower_w156624462.glb",
       "offset": [
         0.0,
         0.0
@@ -625,7 +625,7 @@
       "name": "Wells Fargo Tower"
     },
     "w33967431": {
-      "url": "/models/plaza_hotel_casino_w33967431.glb",
+      "url": "/models/lv/plaza_hotel_casino_w33967431.glb",
       "offset": [
         0.0,
         0.0
@@ -633,7 +633,7 @@
       "name": "Plaza Hotel & Casino"
     },
     "w134921371": {
-      "url": "/models/bldg_w134921371.glb",
+      "url": "/models/lv/bldg_w134921371.glb",
       "offset": [
         0.0,
         0.0
@@ -641,7 +641,7 @@
       "name": "w134921371"
     },
     "w134921379": {
-      "url": "/models/bldg_w134921379.glb",
+      "url": "/models/lv/bldg_w134921379.glb",
       "offset": [
         0.0,
         0.0
@@ -649,7 +649,7 @@
       "name": "w134921379"
     },
     "w136520122": {
-      "url": "/models/bldg_w136520122.glb",
+      "url": "/models/lv/bldg_w136520122.glb",
       "offset": [
         0.0,
         0.0
@@ -657,7 +657,7 @@
       "name": "w136520122"
     },
     "w544016673": {
-      "url": "/models/bldg_w544016673.glb",
+      "url": "/models/lv/bldg_w544016673.glb",
       "offset": [
         0.0,
         0.0
@@ -665,7 +665,7 @@
       "name": "w544016673"
     },
     "w568622622": {
-      "url": "/models/wyndham_desert_blue_w568622622.glb",
+      "url": "/models/lv/wyndham_desert_blue_w568622622.glb",
       "offset": [
         0.0,
         0.0
@@ -673,7 +673,7 @@
       "name": "Wyndham Desert Blue"
     },
     "w276426484": {
-      "url": "/models/sahara_hotel_alexandri_w276426484.glb",
+      "url": "/models/lv/sahara_hotel_alexandri_w276426484.glb",
       "offset": [
         0.0,
         0.0
@@ -681,7 +681,7 @@
       "name": "Sahara Hotel Alexandria Tower"
     },
     "w397861269": {
-      "url": "/models/bldg_w397861269.glb",
+      "url": "/models/lv/bldg_w397861269.glb",
       "offset": [
         0.0,
         0.0
@@ -689,7 +689,7 @@
       "name": "w397861269"
     },
     "w182464631": {
-      "url": "/models/bldg_w182464631.glb",
+      "url": "/models/lv/bldg_w182464631.glb",
       "offset": [
         0.0,
         0.0
@@ -697,7 +697,7 @@
       "name": "w182464631"
     },
     "w207630739": {
-      "url": "/models/bldg_w207630739.glb",
+      "url": "/models/lv/bldg_w207630739.glb",
       "offset": [
         0.0,
         0.0
@@ -705,7 +705,7 @@
       "name": "w207630739"
     },
     "w313762434": {
-      "url": "/models/springhill_suites_by_m_w313762434.glb",
+      "url": "/models/lv/springhill_suites_by_m_w313762434.glb",
       "offset": [
         0.0,
         0.0
@@ -713,7 +713,7 @@
       "name": "Springhill Suites by Marriott Las Vegas Convention Center"
     },
     "w180483375": {
-      "url": "/models/bank_of_america_plaza_w180483375.glb",
+      "url": "/models/lv/bank_of_america_plaza_w180483375.glb",
       "offset": [
         0.0,
         0.0
@@ -721,7 +721,7 @@
       "name": "Bank of America Plaza"
     },
     "w116876230": {
-      "url": "/models/rio_all_suite_hotel_an_w116876230.glb",
+      "url": "/models/lv/rio_all_suite_hotel_an_w116876230.glb",
       "offset": [
         0.0,
         0.0
@@ -729,7 +729,7 @@
       "name": "Rio All Suite Hotel and Casino"
     },
     "w182464616": {
-      "url": "/models/bldg_w182464616.glb",
+      "url": "/models/lv/bldg_w182464616.glb",
       "offset": [
         0.0,
         0.0
@@ -737,7 +737,7 @@
       "name": "w182464616"
     },
     "w128632721": {
-      "url": "/models/bldg_w128632721.glb",
+      "url": "/models/lv/bldg_w128632721.glb",
       "offset": [
         0.0,
         0.0
@@ -745,7 +745,7 @@
       "name": "w128632721"
     },
     "w543645430": {
-      "url": "/models/bldg_w543645430.glb",
+      "url": "/models/lv/bldg_w543645430.glb",
       "offset": [
         0.0,
         0.0
@@ -753,7 +753,7 @@
       "name": "w543645430"
     },
     "w134949102": {
-      "url": "/models/forum_tower_w134949102.glb",
+      "url": "/models/lv/forum_tower_w134949102.glb",
       "offset": [
         0.0,
         0.0
@@ -761,7 +761,7 @@
       "name": "Forum Tower"
     },
     "w543641711": {
-      "url": "/models/bldg_w543641711.glb",
+      "url": "/models/lv/bldg_w543641711.glb",
       "offset": [
         0.0,
         0.0
@@ -769,7 +769,7 @@
       "name": "w543641711"
     },
     "w134930089": {
-      "url": "/models/bldg_w134930089.glb",
+      "url": "/models/lv/bldg_w134930089.glb",
       "offset": [
         0.0,
         0.0
@@ -777,7 +777,7 @@
       "name": "w134930089"
     },
     "w27897911": {
-      "url": "/models/hilton_vacation_club_p_w27897911.glb",
+      "url": "/models/lv/hilton_vacation_club_p_w27897911.glb",
       "offset": [
         0.0,
         0.0
@@ -785,7 +785,7 @@
       "name": "Hilton Vacation Club Polo Towers Las Vegas"
     },
     "w135298867": {
-      "url": "/models/platinum_hotel_and_spa_w135298867.glb",
+      "url": "/models/lv/platinum_hotel_and_spa_w135298867.glb",
       "offset": [
         0.0,
         0.0
@@ -793,7 +793,7 @@
       "name": "Platinum Hotel and Spa"
     },
     "w206291994": {
-      "url": "/models/four_queens_w206291994.glb",
+      "url": "/models/lv/four_queens_w206291994.glb",
       "offset": [
         0.0,
         0.0
@@ -801,7 +801,7 @@
       "name": "Four Queens"
     },
     "w206151446": {
-      "url": "/models/golden_nugget_las_vega_w206151446.glb",
+      "url": "/models/lv/golden_nugget_las_vega_w206151446.glb",
       "offset": [
         0.0,
         0.0
@@ -809,7 +809,7 @@
       "name": "Golden Nugget Las Vegas"
     },
     "w399368723": {
-      "url": "/models/luxor_obelisk.glb",
+      "url": "/models/lv/luxor_obelisk.glb",
       "offset": [
         -224.1,
         -1.5
@@ -817,7 +817,7 @@
       "name": "w399368723"
     },
     "w118344867": {
-      "url": "/models/luxor_sphinx.glb",
+      "url": "/models/lv/luxor_sphinx.glb",
       "offset": [
         -136.3,
         -0.3
@@ -825,7 +825,7 @@
       "name": "w118344867"
     },
     "r6138879": {
-      "url": "/models/wyndham_grand_desert_r6138879.glb",
+      "url": "/models/lv/wyndham_grand_desert_r6138879.glb",
       "offset": [
         0.0,
         0.0
@@ -833,7 +833,7 @@
       "name": "Wyndham Grand Desert"
     },
     "w134930091": {
-      "url": "/models/bldg_w134930091.glb",
+      "url": "/models/lv/bldg_w134930091.glb",
       "offset": [
         0.0,
         0.0
@@ -841,7 +841,7 @@
       "name": "w134930091"
     },
     "r6138876": {
-      "url": "/models/hilton_grand_vacations_r6138876.glb",
+      "url": "/models/lv/hilton_grand_vacations_r6138876.glb",
       "offset": [
         0.0,
         0.0
@@ -849,7 +849,7 @@
       "name": "Hilton Grand Vacations Suites - Las Vegas (Convention Center)"
     },
     "w133757429": {
-      "url": "/models/virgin_hotels_las_vega_w133757429.glb",
+      "url": "/models/lv/virgin_hotels_las_vega_w133757429.glb",
       "offset": [
         0.0,
         0.0
@@ -857,7 +857,7 @@
       "name": "Virgin Hotels Las Vegas, Curio Collection by Hilton"
     },
     "w115773426": {
-      "url": "/models/the_linq_hotel_casino__w115773426.glb",
+      "url": "/models/lv/the_linq_hotel_casino__w115773426.glb",
       "offset": [
         0.0,
         0.0
@@ -865,7 +865,7 @@
       "name": "The LINQ Hotel & Casino - A Caesars Rewards Destination"
     },
     "w204346639": {
-      "url": "/models/el_cortez_hotel_casino_w204346639.glb",
+      "url": "/models/lv/el_cortez_hotel_casino_w204346639.glb",
       "offset": [
         0.0,
         0.0
@@ -873,7 +873,7 @@
       "name": "El Cortez Hotel & Casino"
     },
     "w313762432": {
-      "url": "/models/las_vegas_marriott_w313762432.glb",
+      "url": "/models/lv/las_vegas_marriott_w313762432.glb",
       "offset": [
         0.0,
         0.0
@@ -881,7 +881,7 @@
       "name": "Las Vegas Marriott"
     },
     "w115768623": {
-      "url": "/models/hilton_grand_vacations_w115768623.glb",
+      "url": "/models/lv/hilton_grand_vacations_w115768623.glb",
       "offset": [
         0.0,
         0.0
@@ -889,7 +889,7 @@
       "name": "Hilton Grand Vacations at the Flamingo"
     },
     "w118361200": {
-      "url": "/models/oyo_casino_hotel_w118361200.glb",
+      "url": "/models/lv/oyo_casino_hotel_w118361200.glb",
       "offset": [
         0.0,
         0.0
@@ -897,7 +897,7 @@
       "name": "Oyo Casino Hotel"
     },
     "w206128520": {
-      "url": "/models/downtown_grand_w206128520.glb",
+      "url": "/models/lv/downtown_grand_w206128520.glb",
       "offset": [
         0.0,
         0.0
@@ -905,7 +905,7 @@
       "name": "Downtown Grand"
     },
     "w134949098": {
-      "url": "/models/julius_tower_w134949098.glb",
+      "url": "/models/lv/julius_tower_w134949098.glb",
       "offset": [
         0.0,
         0.0
@@ -913,7 +913,7 @@
       "name": "Julius Tower"
     },
     "w135020970": {
-      "url": "/models/the_westin_las_vegas_h_w135020970.glb",
+      "url": "/models/lv/the_westin_las_vegas_h_w135020970.glb",
       "offset": [
         0.0,
         0.0
@@ -921,7 +921,7 @@
       "name": "The Westin Las Vegas Hotel"
     },
     "w134696134": {
-      "url": "/models/455_karen_avenue_w134696134.glb",
+      "url": "/models/lv/455_karen_avenue_w134696134.glb",
       "offset": [
         0.0,
         0.0
@@ -929,7 +929,7 @@
       "name": "455 Karen Avenue"
     },
     "w134696138": {
-      "url": "/models/455_karen_avenue_w134696138.glb",
+      "url": "/models/lv/455_karen_avenue_w134696138.glb",
       "offset": [
         0.0,
         0.0
@@ -937,7 +937,7 @@
       "name": "455 Karen Avenue"
     },
     "w106228873": {
-      "url": "/models/main_street_station_w106228873.glb",
+      "url": "/models/lv/main_street_station_w106228873.glb",
       "offset": [
         0.0,
         0.0
@@ -945,7 +945,7 @@
       "name": "Main Street Station"
     },
     "w699874292": {
-      "url": "/models/fremont_hotel_casino_l_w699874292.glb",
+      "url": "/models/lv/fremont_hotel_casino_l_w699874292.glb",
       "offset": [
         0.0,
         0.0
@@ -953,7 +953,7 @@
       "name": "Fremont Hotel & Casino Las Vegas"
     },
     "w61239326": {
-      "url": "/models/vanderpump_w61239326.glb",
+      "url": "/models/lv/vanderpump_w61239326.glb",
       "offset": [
         0.0,
         0.0
@@ -961,7 +961,7 @@
       "name": "Vanderpump"
     },
     "w544016661": {
-      "url": "/models/california_hotel_and_c_w544016661.glb",
+      "url": "/models/lv/california_hotel_and_c_w544016661.glb",
       "offset": [
         0.0,
         0.0
@@ -969,7 +969,7 @@
       "name": "California Hotel and Casino"
     },
     "w134949101": {
-      "url": "/models/julius_tower_extension_w134949101.glb",
+      "url": "/models/lv/julius_tower_extension_w134949101.glb",
       "offset": [
         0.0,
         0.0
@@ -977,7 +977,7 @@
       "name": "Julius Tower Extension"
     },
     "w134068317": {
-      "url": "/models/fontainebleau_resort_c_w134068317.glb",
+      "url": "/models/lv/fontainebleau_resort_c_w134068317.glb",
       "offset": [
         0.0,
         0.0
@@ -985,7 +985,7 @@
       "name": "Fontainebleau Resort & Casino"
     },
     "r19484714": {
-      "url": "/models/3400_paradise_road_r19484714.glb",
+      "url": "/models/lv/3400_paradise_road_r19484714.glb",
       "offset": [
         0.0,
         0.0
@@ -993,7 +993,7 @@
       "name": "3400 Paradise Road"
     },
     "w134949402": {
-      "url": "/models/nobu_hotel_at_caesars_w134949402.glb",
+      "url": "/models/lv/nobu_hotel_at_caesars_w134949402.glb",
       "offset": [
         0.0,
         0.0
@@ -1001,7 +1001,7 @@
       "name": "Nobu Hotel at Caesars Palace"
     },
     "w27897904": {
-      "url": "/models/hotel_building_w278979_w27897904.glb",
+      "url": "/models/lv/hotel_building_w278979_w27897904.glb",
       "offset": [
         0.0,
         0.0
@@ -1009,7 +1009,7 @@
       "name": "w27897904"
     },
     "w463856739": {
-      "url": "/models/hotel_building_w463856_w463856739.glb",
+      "url": "/models/lv/hotel_building_w463856_w463856739.glb",
       "offset": [
         0.0,
         0.0
@@ -1017,7 +1017,7 @@
       "name": "w463856739"
     },
     "w699020450": {
-      "url": "/models/hotel_building_w699020_w699020450.glb",
+      "url": "/models/lv/hotel_building_w699020_w699020450.glb",
       "offset": [
         0.0,
         0.0
@@ -1025,7 +1025,7 @@
       "name": "w699020450"
     },
     "w331337786": {
-      "url": "/models/hotel_building_w331337_w331337786.glb",
+      "url": "/models/lv/hotel_building_w331337_w331337786.glb",
       "offset": [
         0.0,
         0.0
@@ -1033,7 +1033,7 @@
       "name": "w331337786"
     },
     "w205497576": {
-      "url": "/models/residence_inn_las_vega_w205497576.glb",
+      "url": "/models/lv/residence_inn_las_vega_w205497576.glb",
       "offset": [
         0.0,
         0.0
@@ -1041,7 +1041,7 @@
       "name": "Residence Inn Las Vegas Hughes Center"
     },
     "w180584269": {
-      "url": "/models/the_palazzo_w180584269.glb",
+      "url": "/models/lv/the_palazzo_w180584269.glb",
       "offset": [
         0.0,
         0.0
@@ -1053,7 +1053,7 @@
     "lv": [
       {
         "name": "Fountains of Bellagio",
-        "url": "/models/attractions/bellagio.json"
+        "url": "/models/lv/attractions/bellagio.json"
       }
     ]
   },
@@ -1061,7 +1061,7 @@
     "lv": [
       {
         "name": "Fremont Street canopy",
-        "url": "/models/fremont_canopy.glb",
+        "url": "/models/lv/fremont_canopy.glb",
         "east": 2587.3,
         "north": 6214.8,
         "rotation_deg": -28.14,
@@ -1069,7 +1069,7 @@
       },
       {
         "name": "Luxor Sky Beam",
-        "url": "/models/luxor_beam.glb",
+        "url": "/models/lv/luxor_beam.glb",
         "east": -270.6,
         "north": -2133.7,
         "rotation_deg": 0.0,
@@ -1078,7 +1078,7 @@
       },
       {
         "name": "High Roller",
-        "url": "/models/high_roller.glb",
+        "url": "/models/lv/high_roller.glb",
         "east": 417.5,
         "north": 331.1,
         "rotation_deg": 90.0,
@@ -1090,5 +1090,407 @@
         }
       }
     ]
+  },
+  "slc": {
+    "w995054717": {
+      "url": "/models/slc/astra_tower.glb",
+      "offset": [
+        0.0,
+        0.0
+      ],
+      "name": "Astra Tower"
+    },
+    "w32333201": {
+      "url": "/models/slc/church_office_building.glb",
+      "offset": [
+        0.0,
+        0.0
+      ],
+      "name": "Church Office Building"
+    },
+    "w537029448": {
+      "url": "/models/slc/99_west.glb",
+      "offset": [
+        0.0,
+        0.0
+      ],
+      "name": "99 West"
+    },
+    "w1281061869": {
+      "url": "/models/slc/key_bank_tower.glb",
+      "offset": [
+        0.0,
+        0.0
+      ],
+      "name": "Key Bank Tower"
+    },
+    "w445788207": {
+      "url": "/models/slc/111_main.glb",
+      "offset": [
+        0.0,
+        0.0
+      ],
+      "name": "111 Main"
+    },
+    "w172543251": {
+      "url": "/models/slc/95_state_at_city_creek.glb",
+      "offset": [
+        0.0,
+        0.0
+      ],
+      "name": "95 State at City Creek"
+    },
+    "w33193517": {
+      "url": "/models/slc/one_utah_center.glb",
+      "offset": [
+        0.0,
+        0.0
+      ],
+      "name": "One Utah Center"
+    },
+    "w238255654": {
+      "url": "/models/slc/wells_fargo_center.glb",
+      "offset": [
+        0.0,
+        0.0
+      ],
+      "name": "Wells Fargo Center"
+    },
+    "w1275295291": {
+      "url": "/models/slc/the_worthington.glb",
+      "offset": [
+        0.0,
+        0.0
+      ],
+      "name": "The Worthington"
+    },
+    "w537033364": {
+      "url": "/models/slc/american_towers.glb",
+      "offset": [
+        0.0,
+        0.0
+      ],
+      "name": "American Towers"
+    },
+    "r6144703": {
+      "url": "/models/slc/grand_america_hotel.glb",
+      "offset": [
+        0.0,
+        0.0
+      ],
+      "name": "Grand America Hotel"
+    },
+    "w223915616": {
+      "url": "/models/slc/222_main.glb",
+      "offset": [
+        0.0,
+        0.0
+      ],
+      "name": "222 Main"
+    },
+    "w33192009": {
+      "url": "/models/slc/beneficial_tower.glb",
+      "offset": [
+        0.0,
+        0.0
+      ],
+      "name": "Beneficial Tower"
+    },
+    "w32920861": {
+      "url": "/models/slc/utah_state_capitol.glb",
+      "offset": [
+        0.0,
+        0.0
+      ],
+      "name": "Utah State Capitol Building"
+    },
+    "w1281061870": {
+      "url": "/models/slc/world_trade_center.glb",
+      "offset": [
+        0.0,
+        0.0
+      ],
+      "name": "World Trade Center"
+    },
+    "w1150797303": {
+      "url": "/models/slc/hyatt_regency_slc.glb",
+      "offset": [
+        0.0,
+        0.0
+      ],
+      "name": "Hyatt Regency Salt Lake City"
+    },
+    "w595951732": {
+      "url": "/models/slc/136_south_temple_street.glb",
+      "offset": [
+        0.0,
+        0.0
+      ],
+      "name": "136 South Temple Street"
+    },
+    "w33192016": {
+      "url": "/models/slc/zions_bank_building.glb",
+      "offset": [
+        0.0,
+        0.0
+      ],
+      "name": "Zions Bank Building"
+    },
+    "w172543265": {
+      "url": "/models/slc/kimpton_hotel_monaco_slc.glb",
+      "offset": [
+        0.0,
+        0.0
+      ],
+      "name": "Kimpton Hotel Monaco Salt Lake City"
+    },
+    "w223918433": {
+      "url": "/models/slc/walker_center.glb",
+      "offset": [
+        0.0,
+        0.0
+      ],
+      "name": "Walker Center"
+    },
+    "w157327544": {
+      "url": "/models/slc/the_regent.glb",
+      "offset": [
+        0.0,
+        0.0
+      ],
+      "name": "The Regent"
+    },
+    "w172543270": {
+      "url": "/models/slc/310_south_main_street.glb",
+      "offset": [
+        0.0,
+        0.0
+      ],
+      "name": "310 South Main Street"
+    },
+    "w33155164": {
+      "url": "/models/slc/city_county_building.glb",
+      "offset": [
+        0.0,
+        0.0
+      ],
+      "name": "Salt Lake City and County Building"
+    },
+    "w835836211": {
+      "url": "/models/slc/liberty_sky.glb",
+      "offset": [
+        0.0,
+        0.0
+      ],
+      "name": "Liberty Sky"
+    },
+    "r15568838": {
+      "url": "/models/slc/salt_lake_temple.glb",
+      "offset": [
+        0.0,
+        0.0
+      ],
+      "name": "Salt Lake Temple"
+    },
+    "w33193213": {
+      "url": "/models/slc/170_south_main.glb",
+      "offset": [
+        0.0,
+        0.0
+      ],
+      "name": "170 South Main"
+    },
+    "w595951903": {
+      "url": "/models/slc/bell_plaza.glb",
+      "offset": [
+        0.0,
+        0.0
+      ],
+      "name": "Bell Plaza"
+    },
+    "w226319125": {
+      "url": "/models/slc/hatch_courthouse.glb",
+      "offset": [
+        0.0,
+        0.0
+      ],
+      "name": "Orrin G. Hatch United States Courthouse"
+    },
+    "w172543258": {
+      "url": "/models/slc/washington_federal_bank.glb",
+      "offset": [
+        0.0,
+        0.0
+      ],
+      "name": "Washington Federal Bank Building"
+    },
+    "w595951078": {
+      "url": "/models/slc/broadway_centre.glb",
+      "offset": [
+        0.0,
+        0.0
+      ],
+      "name": "Broadway Centre"
+    },
+    "w595951359": {
+      "url": "/models/slc/257_east_200_south.glb",
+      "offset": [
+        0.0,
+        0.0
+      ],
+      "name": "257 East 200 South"
+    },
+    "w595951880": {
+      "url": "/models/slc/dan_jones_building.glb",
+      "offset": [
+        0.0,
+        0.0
+      ],
+      "name": "Dan Jones Building"
+    },
+    "w33192533": {
+      "url": "/models/slc/hilton_slc_center.glb",
+      "offset": [
+        0.0,
+        0.0
+      ],
+      "name": "Hilton Salt Lake City Center"
+    },
+    "w35920390": {
+      "url": "/models/slc/little_america_hotel_slc.glb",
+      "offset": [
+        0.0,
+        0.0
+      ],
+      "name": "Little America Hotel Salt Lake City"
+    },
+    "w32333198": {
+      "url": "/models/slc/joseph_smith_memorial_building.glb",
+      "offset": [
+        0.0,
+        0.0
+      ],
+      "name": "Joseph Smith Memorial Building"
+    },
+    "w33195045": {
+      "url": "/models/slc/radisson.glb",
+      "offset": [
+        0.0,
+        0.0
+      ],
+      "name": "Radisson"
+    },
+    "w595951347": {
+      "url": "/models/slc/maverik_base_camp.glb",
+      "offset": [
+        0.0,
+        0.0
+      ],
+      "name": "Maverik Base Camp"
+    },
+    "w1434521688": {
+      "url": "/models/slc/zion_summit_condominium.glb",
+      "offset": [
+        0.0,
+        0.0
+      ],
+      "name": "Zion Summit Condominium"
+    },
+    "w224521586": {
+      "url": "/models/slc/newhouse_building.glb",
+      "offset": [
+        0.0,
+        0.0
+      ],
+      "name": "Newhouse Building"
+    },
+    "w143796147": {
+      "url": "/models/slc/kearns_building.glb",
+      "offset": [
+        0.0,
+        0.0
+      ],
+      "name": "Kearns Building"
+    },
+    "w226288671": {
+      "url": "/models/slc/bldg_w226288671.glb",
+      "offset": [
+        0.0,
+        0.0
+      ],
+      "name": "w226288671"
+    },
+    "w33192119": {
+      "url": "/models/slc/deseret_building.glb",
+      "offset": [
+        0.0,
+        0.0
+      ],
+      "name": "Deseret Building"
+    },
+    "w224521587": {
+      "url": "/models/slc/boston_building.glb",
+      "offset": [
+        0.0,
+        0.0
+      ],
+      "name": "Boston Building"
+    },
+    "w595952093": {
+      "url": "/models/slc/215_south_state_street.glb",
+      "offset": [
+        0.0,
+        0.0
+      ],
+      "name": "215 South State Street"
+    },
+    "w227678198": {
+      "url": "/models/slc/40_south_900_east.glb",
+      "offset": [
+        0.0,
+        0.0
+      ],
+      "name": "40 South 900 East"
+    },
+    "w31553521": {
+      "url": "/models/slc/marriott_downtown_city_creek.glb",
+      "offset": [
+        0.0,
+        0.0
+      ],
+      "name": "Salt Lake Marriott Downtown at City Creek"
+    },
+    "w223923170": {
+      "url": "/models/slc/slc_marriott_city_center.glb",
+      "offset": [
+        0.0,
+        0.0
+      ],
+      "name": "Salt Lake City Marriott City Center"
+    },
+    "w565196374": {
+      "url": "/models/slc/bonneville_towers.glb",
+      "offset": [
+        0.0,
+        0.0
+      ],
+      "name": "Bonneville Towers"
+    },
+    "w238249914": {
+      "url": "/models/slc/bldg_w238249914.glb",
+      "offset": [
+        0.0,
+        0.0
+      ],
+      "name": "w238249914"
+    },
+    "w35967063": {
+      "url": "/models/slc/broadway_media_building.glb",
+      "offset": [
+        0.0,
+        0.0
+      ],
+      "name": "Broadway Media Building"
+    }
   }
 }

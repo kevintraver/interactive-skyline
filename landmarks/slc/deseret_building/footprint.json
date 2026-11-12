@@ -1,0 +1,52 @@
+{
+ "id": "w33192119",
+ "name": "Deseret Building",
+ "height": 52.1,
+ "height_source": "lidar",
+ "frame": "meters east and north of the footprint center c; heights in meters above ground; a model built in this frame installs with --offset 0,0",
+ "facts": {
+  "east_extent": [
+   -11.3,
+   14.8
+  ],
+  "north_extent": [
+   -8.8,
+   12.1
+  ],
+  "longest_edge_m": 26.1,
+  "longest_edge_bearing": 90.0
+ },
+ "volumes": [
+  {
+   "bottom": -2.0,
+   "top": 52.1,
+   "outline": [
+    [
+     -11.33,
+     12.1
+    ],
+    [
+     1.71,
+     12.1
+    ],
+    [
+     1.71,
+     3.44
+    ],
+    [
+     14.76,
+     3.44
+    ],
+    [
+     14.76,
+     -8.83
+    ],
+    [
+     -11.33,
+     -8.83
+    ]
+   ],
+   "holes": []
+  }
+ ]
+}

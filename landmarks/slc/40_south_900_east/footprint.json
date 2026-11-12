@@ -1,0 +1,60 @@
+{
+ "id": "w227678198",
+ "name": "40 South 900 East",
+ "height": 49.4,
+ "height_source": "lidar",
+ "frame": "meters east and north of the footprint center c; heights in meters above ground; a model built in this frame installs with --offset 0,0",
+ "facts": {
+  "east_extent": [
+   -21.1,
+   18.6
+  ],
+  "north_extent": [
+   -12.0,
+   12.2
+  ],
+  "longest_edge_m": 32.7,
+  "longest_edge_bearing": 89.8
+ },
+ "volumes": [
+  {
+   "bottom": -2.0,
+   "top": 49.4,
+   "outline": [
+    [
+     -21.08,
+     -8.19
+    ],
+    [
+     11.07,
+     -8.09
+    ],
+    [
+     11.09,
+     -12.0
+    ],
+    [
+     18.57,
+     -11.97
+    ],
+    [
+     18.49,
+     12.19
+    ],
+    [
+     11.53,
+     12.17
+    ],
+    [
+     11.53,
+     8.28
+    ],
+    [
+     -21.12,
+     8.18
+    ]
+   ],
+   "holes": []
+  }
+ ]
+}

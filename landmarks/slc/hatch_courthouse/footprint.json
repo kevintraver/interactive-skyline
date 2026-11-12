@@ -1,0 +1,44 @@
+{
+ "id": "w226319125",
+ "name": "Orrin G. Hatch United States Courthouse",
+ "height": 61.0,
+ "height_source": "osm-height",
+ "frame": "meters east and north of the footprint center c; heights in meters above ground; a model built in this frame installs with --offset 0,0",
+ "facts": {
+  "east_extent": [
+   -28.4,
+   28.8
+  ],
+  "north_extent": [
+   -27.8,
+   27.5
+  ],
+  "longest_edge_m": 57.2,
+  "longest_edge_bearing": 89.7
+ },
+ "volumes": [
+  {
+   "bottom": -4.6,
+   "top": 61.0,
+   "outline": [
+    [
+     -28.36,
+     27.18
+    ],
+    [
+     -27.97,
+     -27.4
+    ],
+    [
+     27.49,
+     -27.8
+    ],
+    [
+     28.79,
+     27.47
+    ]
+   ],
+   "holes": []
+  }
+ ]
+}

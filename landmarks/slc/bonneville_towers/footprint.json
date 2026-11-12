@@ -1,0 +1,76 @@
+{
+ "id": "w565196374",
+ "name": "Bonneville Towers",
+ "height": 48.4,
+ "height_source": "lidar",
+ "frame": "meters east and north of the footprint center c; heights in meters above ground; a model built in this frame installs with --offset 0,0",
+ "facts": {
+  "east_extent": [
+   -17.9,
+   17.7
+  ],
+  "north_extent": [
+   -43.4,
+   38.7
+  ],
+  "longest_edge_m": 75.1,
+  "longest_edge_bearing": 0.7
+ },
+ "volumes": [
+  {
+   "bottom": -2.0,
+   "top": 48.3,
+   "outline": [
+    [
+     -17.9,
+     -36.46
+    ],
+    [
+     -17.01,
+     38.67
+    ],
+    [
+     17.73,
+     38.59
+    ],
+    [
+     17.15,
+     -36.45
+    ],
+    [
+     5.39,
+     -36.45
+    ],
+    [
+     5.47,
+     -40.17
+    ],
+    [
+     2.15,
+     -40.18
+    ],
+    [
+     2.02,
+     -43.37
+    ],
+    [
+     -4.21,
+     -43.34
+    ],
+    [
+     -4.16,
+     -40.21
+    ],
+    [
+     -7.21,
+     -40.21
+    ],
+    [
+     -7.29,
+     -36.47
+    ]
+   ],
+   "holes": []
+  }
+ ]
+}

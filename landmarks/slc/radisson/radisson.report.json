@@ -1,0 +1,40 @@
+{
+  "object": "Radisson",
+  "verts": 462,
+  "faces": 261,
+  "tris": 864,
+  "bbox_min": [
+    -37.94,
+    -19.59,
+    -2.0
+  ],
+  "bbox_max": [
+    44.771,
+    21.73,
+    54.6
+  ],
+  "islands": 15,
+  "open_islands": 0,
+  "inside_out_islands": 0,
+  "nonmanifold_edges": 0,
+  "degenerate_faces": 0,
+  "loose_verts": 0,
+  "nonplanar_ngons": 0,
+  "materials": {
+    "Wall": 22,
+    "Podium": 20,
+    "Glass": 216,
+    "Roof": 3
+  },
+  "glow": {
+    "max": 0.65,
+    "dark_faces": 23
+  },
+  "windowed_faces": 216,
+  "errors": [],
+  "warnings": [],
+  "files": {
+    "blend": "radisson.blend",
+    "glb": "radisson.glb"
+  }
+}

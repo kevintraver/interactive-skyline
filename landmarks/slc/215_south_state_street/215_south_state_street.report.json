@@ -1,0 +1,40 @@
+{
+  "object": "215_South_State_Street",
+  "verts": 776,
+  "faces": 548,
+  "tris": 1232,
+  "bbox_min": [
+    -17.797,
+    -43.91,
+    -2.0
+  ],
+  "bbox_max": [
+    15.856,
+    42.939,
+    50.0
+  ],
+  "islands": 80,
+  "open_islands": 0,
+  "inside_out_islands": 0,
+  "nonmanifold_edges": 0,
+  "degenerate_faces": 0,
+  "loose_verts": 0,
+  "nonplanar_ngons": 0,
+  "materials": {
+    "Wall": 61,
+    "Glass": 347,
+    "Roof": 18,
+    "Band": 122
+  },
+  "glow": {
+    "max": 0.65,
+    "dark_faces": 0
+  },
+  "windowed_faces": 347,
+  "errors": [],
+  "warnings": [],
+  "files": {
+    "blend": "215_south_state_street.blend",
+    "glb": "215_south_state_street.glb"
+  }
+}

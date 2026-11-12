@@ -1,0 +1,44 @@
+{
+ "id": "w445788207",
+ "name": "111 Main",
+ "height": 118.0,
+ "height_source": "osm-height",
+ "frame": "meters east and north of the footprint center c; heights in meters above ground; a model built in this frame installs with --offset 0,0",
+ "facts": {
+  "east_extent": [
+   -24.1,
+   24.1
+  ],
+  "north_extent": [
+   -19.1,
+   19.4
+  ],
+  "longest_edge_m": 48.2,
+  "longest_edge_bearing": 90.2
+ },
+ "volumes": [
+  {
+   "bottom": -2.0,
+   "top": 118.0,
+   "outline": [
+    [
+     24.07,
+     19.01
+    ],
+    [
+     -24.02,
+     19.38
+    ],
+    [
+     -24.15,
+     -19.01
+    ],
+    [
+     24.06,
+     -19.15
+    ]
+   ],
+   "holes": []
+  }
+ ]
+}

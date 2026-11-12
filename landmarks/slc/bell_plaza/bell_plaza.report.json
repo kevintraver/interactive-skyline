@@ -1,0 +1,41 @@
+{
+  "object": "Bell_Plaza",
+  "verts": 94,
+  "faces": 59,
+  "tris": 164,
+  "bbox_min": [
+    -31.22,
+    -23.22,
+    -2.0
+  ],
+  "bbox_max": [
+    32.24,
+    25.94,
+    61.5
+  ],
+  "islands": 6,
+  "open_islands": 0,
+  "inside_out_islands": 0,
+  "nonmanifold_edges": 0,
+  "degenerate_faces": 0,
+  "loose_verts": 0,
+  "nonplanar_ngons": 0,
+  "materials": {
+    "Wall": 11,
+    "Podium": 13,
+    "Glass": 11,
+    "Roof": 14,
+    "Crown": 10
+  },
+  "glow": {
+    "max": 0.65,
+    "dark_faces": 14
+  },
+  "windowed_faces": 11,
+  "errors": [],
+  "warnings": [],
+  "files": {
+    "blend": "bell_plaza.blend",
+    "glb": "bell_plaza.glb"
+  }
+}

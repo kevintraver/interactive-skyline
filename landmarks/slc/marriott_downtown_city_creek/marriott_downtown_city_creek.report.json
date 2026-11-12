@@ -1,0 +1,41 @@
+{
+  "object": "Marriott_Downtown_City_Creek",
+  "verts": 180,
+  "faces": 130,
+  "tris": 280,
+  "bbox_min": [
+    -51.06,
+    -32.44,
+    -2.0
+  ],
+  "bbox_max": [
+    49.86,
+    31.82,
+    46.6
+  ],
+  "islands": 20,
+  "open_islands": 0,
+  "inside_out_islands": 0,
+  "nonmanifold_edges": 0,
+  "degenerate_faces": 0,
+  "loose_verts": 0,
+  "nonplanar_ngons": 0,
+  "materials": {
+    "Wall": 23,
+    "Slab": 84,
+    "Podium": 15,
+    "Glass": 6,
+    "Roof": 2
+  },
+  "glow": {
+    "max": 0.32,
+    "dark_faces": 2
+  },
+  "windowed_faces": 6,
+  "errors": [],
+  "warnings": [],
+  "files": {
+    "blend": "marriott_downtown_city_creek.blend",
+    "glb": "marriott_downtown_city_creek.glb"
+  }
+}

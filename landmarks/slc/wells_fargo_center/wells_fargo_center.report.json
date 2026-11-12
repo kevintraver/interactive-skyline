@@ -1,0 +1,42 @@
+{
+  "object": "Wells_Fargo_Center",
+  "verts": 878,
+  "faces": 760,
+  "tris": 1604,
+  "bbox_min": [
+    -20.3,
+    -49.12,
+    -2.0
+  ],
+  "bbox_max": [
+    24.68,
+    50.29,
+    128.7
+  ],
+  "islands": 38,
+  "open_islands": 0,
+  "inside_out_islands": 0,
+  "nonmanifold_edges": 0,
+  "degenerate_faces": 0,
+  "loose_verts": 0,
+  "nonplanar_ngons": 0,
+  "materials": {
+    "Stone": 517,
+    "Glass": 120,
+    "Podium": 90,
+    "CrownPanel": 11,
+    "Roof": 16,
+    "Mast": 6
+  },
+  "glow": {
+    "max": 0.3,
+    "dark_faces": 22
+  },
+  "windowed_faces": 120,
+  "errors": [],
+  "warnings": [],
+  "files": {
+    "blend": "wells_fargo_center.blend",
+    "glb": "wells_fargo_center.glb"
+  }
+}

@@ -1,0 +1,40 @@
+{
+  "object": "Zion_Summit_Condominium",
+  "verts": 432,
+  "faces": 286,
+  "tris": 724,
+  "bbox_min": [
+    -60.1,
+    -23.65,
+    -2.0
+  ],
+  "bbox_max": [
+    57.96,
+    36.39,
+    53.0
+  ],
+  "islands": 35,
+  "open_islands": 0,
+  "inside_out_islands": 0,
+  "nonmanifold_edges": 0,
+  "degenerate_faces": 0,
+  "loose_verts": 0,
+  "nonplanar_ngons": 0,
+  "materials": {
+    "Concrete": 252,
+    "Glass": 16,
+    "Roof": 5,
+    "Podium": 13
+  },
+  "glow": {
+    "max": 0.2,
+    "dark_faces": 18
+  },
+  "windowed_faces": 16,
+  "errors": [],
+  "warnings": [],
+  "files": {
+    "blend": "zion_summit_condominium.blend",
+    "glb": "zion_summit_condominium.glb"
+  }
+}
