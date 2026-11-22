@@ -16,6 +16,40 @@ These override anything below that conflicts with them.
 1. **Terrain data is skipped for now.** Do not build or host the USGS 3DEP / NAIP tile pyramid, and do not set up Cloudflare R2. Use the terrain already in `public/data/<city>/`. Outside its extents, use a coarse, lightweight fallback that fits in the repository. Keep the tile pyramid as deferred work behind the same terrain interface, so it can be added later without changing callers.
 2. **Treat the lamp inventories as public domain.** Clark County, City of Las Vegas, Boulder City and Henderson street-light layers can be used and shipped as derived lamp positions without asking the agencies, with a credit line kept in the About text. The rule-based fallback is only for areas with no inventory.
 
+## Decisions for the build (2026-11-21)
+
+The build started on branch `feat/vegas-drive` on 2026-11-21. These are the assumptions it was started with. They override anything below that conflicts with them, and they rank below the user's decisions above.
+
+**The plan is eleven days stale. Trust symbol names, not line numbers or paths.**
+
+- `src/main.js` is 1,118 lines and still one module.
+- The side panel is gone. The interface is map-style: `#top` (city button and search), `.views` chips, a `#tools` column (night, options, compass, zoom), a `#settings` popover, `#card`, and `#dock` (hint, toast, changes). Section 4.8's layout does not apply; Drive controls are designed in the current language (floating pills and popovers, the existing CSS variables).
+- `cities.json` is at `data/cities.json` and is imported by `main.js`. Landmark models are per city in `public/models/<city>/`.
+
+**Plan 01 owns the shared groundwork, in a separate branch that is being built at the same time.** Its Phase 0 adds the test toolchain, splits `main.js`, and adds `src/core/earth.js` and the `tz` city field. So on this branch:
+
+- `main.js` is **not** split. Section 5.3 and tasks D0.3, D0.5 and D0.6 are not done here. The drive is new modules under `src/drive/` and `src/world/`, joined to `main.js` by one small seam marked `// drive seam`: the active camera for render, picking and resize; continuous frames while driving; map controls suspended while driving; one context object passed to `initDrive`.
+- Test tooling uses plan 01's versions and names (`vitest@^5`, `@playwright/test@^1.65`, `pixelmatch@^8`; scripts `test`, `test:unit`, `test:e2e`, plus `test:data` for pytest) and sits in its own commit, so it can be dropped when this branch is rebased onto plan 01's Phase 0.
+- The city time zone field is `tz`, not `timezone` (assumption A10).
+- Source stays loadable without a bundler: no `?worker`, `?raw`, `?url` or `import.meta.env`. Workers are created with `new Worker(new URL('./x.worker.js', import.meta.url), { type: 'module' })`.
+- `src/world/frame.js` is this plan's frame module. When plan 01's `src/core/earth.js` lands, `frame.js` re-exports what the two share.
+
+**Scope of this branch.** Phase 1 for route `i15n`, with the Phase 0 pieces it needs, then the Phase 3 tasks that are not blocked. Phase 4 onward waits for plan 01's renderer.
+
+**Terrain, following user decision 1.**
+
+- No tile pyramid. D1.1 (pyramid math), D1.2, D1.3's streaming, D1.7 and all of Phase 2 except the interface are deferred.
+- `createTerrain()` keeps the public interface of sections 5.5 and 11.2 (`heightAt`, `groundY`, `inBuildArea`, `whenSettled`, with `setViews`, `prefetchAlong` and `update` accepted and ignored) over three fixed grids: the existing `near` and `far`, and a new coarse `wide` grid for the drive region (about x −56..48 km, y −64..48 km), built by the existing terrain and imagery scripts, about 3 MB or less, loaded only when Drive is entered.
+- The road is fitted to that coarse ground at run time. Road heights are sampled from the same grids by a Python twin and smoothed under the grade limits. The mesher adds an apron that blends from the pavement edge to the terrain, and the terrain mesh under the corridor is lowered so nothing shows through the road. D3.3's offline carve is not done.
+- The reveal is computed over this coarse elevation, so its acceptance widens to within 1.5 km of km 42.8.
+
+**What Phase 1 shows.**
+
+- The clean camera at 1.2 m with look and zoom. The cabin and the `C` toggle are Phase 4.
+- An internal simulation clock with a minimal transport in the route bar (`env.js` stand-ins, NOAA solar position).
+- The existing day and night looks. While driving, the look follows the sun's elevation at the clock's time; the visitor's own setting comes back on leaving Drive. A continuous dusk needs plan 01's sky.
+- No headlights, traffic, lamps, signs or screens. The road must stay readable in the night look without them.
+
 ---
 
 ## 1. Executive summary
