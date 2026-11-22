@@ -50,3 +50,10 @@ Two tiers.
   machine: other GPU or CPU load moves these numbers by more than the gates.
 
 `window.__skyline.perf` is the hook behind both: `renderFrames(n)`, `info()`, `frames()`, `gpu()`.
+
+## Data pipelines (plan 01, phase 4 data)
+
+`pnpm test:py` reads the committed outputs of `scripts/build_stars.py`, `build_sky_textures.py` and
+`build_lights.py` and checks them against their sidecars and known sky and street facts. `build_nightlights.py` is
+tested on small synthetic VNP46A4 tiles written by the test itself; `tests/unit/sky/nightlights.test.js` checks the
+real Las Vegas grid against its landmarks once `public/data/lv/nightlights.json` exists, and skips until then.
