@@ -85,7 +85,11 @@ test('frame loop tiers: clock paused renders nothing, the clock at 1x twice a se
     s.env.enterClock();
     s.clock.setLocal({ year: 2026, month: 6, day: 21, hour: 12, minute: 0 });
   });
-  await sleep(1500);
+  // let the frames that entering the clock state asked for (the scene, the view tiles 400 ms later) be drawn
+  await sleep(1000);
+  await page.evaluate(() => window.__skyline.loop.settle());
+  await sleep(600);
+  await page.evaluate(() => window.__skyline.loop.settle());
   // frames rendered, and animation-frame ticks, over `ms` (on a loaded machine a software frame can take longer
   // than the 500 ms between ambient frames; then every tick renders, and the count says nothing about the tier)
   const count = (ms) => page.evaluate((ms) => new Promise((done) => {

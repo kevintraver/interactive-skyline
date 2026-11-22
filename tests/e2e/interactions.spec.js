@@ -186,7 +186,10 @@ test.describe('the interface answers real input', () => {
     await page.keyboard.press('ArrowRight');
     const c1 = await clock();
     expect(c1.mode).toBe('clock');
-    expect(Math.abs(c1.t - t0 - 60000)).toBeLessThan(60000);
+    // the scrubber moves in whole minutes: the next minute after the one shown (shown rounded), so 0 to 2 minutes on
+    expect(c1.t - t0).toBeGreaterThan(0);
+    expect(c1.t - t0).toBeLessThanOrEqual(120000);
+    expect(c1.t % 60000).toBe(0);
     // and by pointer: a click near the left end is shortly after midnight
     const box = await page.locator('#sky-scrub').boundingBox();
     await page.mouse.click(box.x + 9, box.y + box.height / 2);

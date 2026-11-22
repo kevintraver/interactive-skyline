@@ -72,13 +72,17 @@ test.describe('transport and the test journey', () => {
       const j = s.timeline.active.journey;
       s.clock.play();
       const h = s.timeline.begin(j, { coupling: 'frozen-sky' });
-      const t0 = s.clock.timeMs, p0 = h.progressS, w0 = performance.now();
-      while (performance.now() - w0 < 2500) await raf();
-      return { dt: s.clock.timeMs - t0, dp: h.progressS - p0, playing: s.clock.playing };
+      // wait for rendered frames, not wall time: a software frame under load can take more than a second
+      await raf(); await raf();
+      const t0 = s.clock.timeMs, p0 = h.progressS, f0 = s.perf.frames(), w0 = performance.now();
+      while (s.perf.frames() - f0 < 6) await raf();
+      return { dt: s.clock.timeMs - t0, dp: h.progressS - p0, wall: (performance.now() - w0) / 1000, playing: s.clock.playing };
     });
     expect(r.dt).toBe(0);
     expect(r.playing).toBe(false);
-    expect(r.dp).toBeGreaterThan(0.5);
+    // progress runs on wall time: about the time those frames took (each frame's step is capped at a second)
+    expect(r.dp).toBeGreaterThan(Math.min(r.wall, 5) * 0.5);
+    expect(r.dp).toBeLessThanOrEqual(r.wall + 0.1);
   });
 
   test('play, speed and Now', async ({ page }) => {
