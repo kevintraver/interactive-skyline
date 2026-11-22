@@ -47,6 +47,7 @@ export default defineConfig({
       // this machine's GPU, headless (on macOS through Metal); timing only, one worker
       name: 'gpu',
       testMatch: /perf\.timing\.spec\.js/,
+      retries: 2, // a noisy measurement passes when taken again; a real slowdown does not (helpers/perf.js, GATES)
       use: { ...devices['Desktop Chrome'], viewport: { width: 1280, height: 800 }, deviceScaleFactor: 1,
         launchOptions: { args: GPU } },
     },
@@ -54,6 +55,7 @@ export default defineConfig({
       // the timing suite on SwiftShader: recorded, and gated only at 2x
       name: 'software-timing',
       testMatch: /perf\.timing\.spec\.js/,
+      retries: 2, // a noisy measurement passes when taken again; a real slowdown does not (helpers/perf.js, GATES)
       use: { ...devices['Desktop Chrome'], viewport: { width: 1280, height: 800 }, deviceScaleFactor: 1,
         launchOptions: { args: SOFTWARE } },
     },

@@ -42,8 +42,9 @@ Two tiers.
 - **Timing** (`tests/e2e/perf.timing.spec.js`), against a per-machine baseline whose id is the GPU's renderer
   string and the core count (nothing personal): frame time (median and 95th percentile of 120 frames, GPU time from
   timer queries where the browser has them), time to ready, and edit-to-frame latency for hide, undo, move and a
-  cutoff rebuild. Fails if a median is more than 15 % slower or a 95th percentile more than 25 % (single-sample
-  timings get one 60 Hz frame of slack, time to ready 100 ms); on a software rasterizer only at 2x. A machine with
+  cutoff rebuild. A scene fails if its median is more than 15 % slower or its 95th percentile more than 25 % on three
+  attempts in a row (single-sample timings get one 60 Hz frame of slack, time to ready 100 ms), and the run fails if
+  all scenes together are more than 10 % slower; on a software rasterizer only at 2x. A machine with
   no baseline records one and passes. `pnpm test:perf:update` rewrites this machine's baseline. Run it on a quiet
   machine: other GPU or CPU load moves these numbers by more than the gates.
 

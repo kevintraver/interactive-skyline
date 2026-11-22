@@ -1,8 +1,9 @@
 // T0.8, timing tier: frame time, time to ready and edit-to-frame latency, on this machine, against this
 // machine's committed baseline (tests/reference/perf/timing/<machine id>.json). Run with `pnpm test:perf` (real
-// GPU) or `pnpm test:perf:software` (SwiftShader). Fails if a frame-time median is more than 15 % slower or a
-// 95th percentile more than 25 %; on a software rasterizer only at 2x, to catch collapses without flaking.
-// SKYLINE_PERF_UPDATE=1 rewrites the baseline; a machine with none records one and passes.
+// GPU) or `pnpm test:perf:software` (SwiftShader). Fails if a scene's frame-time median is more than 15 % slower
+// or its 95th percentile more than 25 % on three attempts in a row, or if all scenes together are more than 10 %
+// slower (helpers/perf.js, GATES, says why both); on a software rasterizer only at 2x, to catch collapses
+// without flaking. SKYLINE_PERF_UPDATE=1 rewrites the baseline; a machine with none records one and passes.
 import os from 'node:os';
 import path from 'node:path';
 import fs from 'node:fs';
@@ -10,7 +11,7 @@ import { test, expect } from '@playwright/test';
 import { SCENES, CITIES, sceneName, boot, stage } from '../helpers/app.js';
 import { PERF_DIR, UPDATING, GATES, FRAME_SLACK_MS, readJson, writeJsonAt, machineId, quantile, median, round, EDIT_LATENCY } from '../helpers/perf.js';
 
-let file, baseline, software, recording;
+let file, baseline, software, recording, busy = '';
 
 // Cross-origin isolation (on the page only, by the test) raises performance.now() from 0.1 ms to 5 us resolution.
 test.beforeEach(async ({ page }) => {
@@ -28,6 +29,9 @@ test.beforeAll(async ({ browser }) => {
   const cores = await page.evaluate(() => navigator.hardwareConcurrency);
   await page.close();
   software = gpu.software;
+  // CPU-bound numbers (time to ready, a cutoff rebuild) stretch when other work has the cores; say so in a failure
+  const load = os.loadavg()[0];
+  busy = load > cores * 0.5 ? `; this machine is busy (load ${load.toFixed(1)} on ${cores} cores), so measure again when it is quiet` : '';
   file = path.join(PERF_DIR, 'timing', `${machineId(gpu, cores)}.json`);
   baseline = readJson(file, null);
   recording = UPDATING || !baseline;
@@ -39,11 +43,13 @@ test.beforeAll(async ({ browser }) => {
 });
 
 const gate = (kind) => (software ? GATES.software : GATES[kind]);
+/** This run's median-over-baseline ratio per scene; Playwright empties the output folder when a run starts. */
+const runFile = (testInfo) => path.join(testInfo.project.outputDir, 'perf-frame-ratios.json');
 function check(what, actual, base, kind, slack = 0) {
   if (recording) return;
   expect(base, `${what}: not in the baseline ${path.basename(file)}; rerun with SKYLINE_PERF_UPDATE=1`).toBeDefined();
   const limit = base * gate(kind) + slack;
-  expect(actual, `${what}: ${round(actual)} ms against ${round(base)} ms (limit ${round(limit)})`).toBeLessThanOrEqual(limit);
+  expect(actual, `${what}: ${round(actual)} ms against ${round(base)} ms (limit ${round(limit)})${busy}`).toBeLessThanOrEqual(limit);
 }
 
 for (const scene of SCENES) {
@@ -65,10 +71,24 @@ for (const scene of SCENES) {
     if (recording) return writeJsonAt(file, ['frame', sceneName(scene)], m);
     const base = baseline.frame?.[sceneName(scene)] || {};
     expect(m.method, 'measured the same way as the baseline').toBe(base.method);
+    // recorded before the gates, so a scene that fails still counts in the overall figure (a retry overwrites it)
+    if (base.median) writeJsonAt(runFile(test.info()), [sceneName(scene)], round(m.median / base.median, 4));
     check('median', m.median, base.median, 'median');
     check('p95', m.p95, base.p95, 'p95');
   });
 }
+
+// after every scene (one worker runs them in this order)
+test('frame time, all scenes together', async () => {
+  test.skip(recording, 'recording a baseline');
+  const ratios = readJson(runFile(test.info()), {});
+  const missing = SCENES.map(sceneName).filter((name) => !(name in ratios));
+  expect(missing, 'every scene was measured in this run (run the whole file, with one worker)').toEqual([]);
+  const values = Object.values(ratios);
+  const overall = Math.exp(values.reduce((sum, r) => sum + Math.log(r), 0) / values.length);
+  test.info().annotations.push({ type: 'overall', description: JSON.stringify({ overall: round(overall, 4), ratios }) });
+  expect(overall, `all scenes together: ${round(overall, 3)}x the baseline (limit ${gate('overall')}x)`).toBeLessThanOrEqual(gate('overall'));
+});
 
 for (const city of CITIES) {
   test(`time to ready and edit latency ${city}`, async ({ page }) => {

@@ -10,8 +10,14 @@ export const BUDGETS = path.join(PERF_DIR, 'budgets.json');
 export const UPDATING = !!process.env.SKYLINE_PERF_UPDATE;
 /** Sizes may grow this much over the committed budget before the suite fails. */
 export const SIZE_GROWTH = 1.03;
-/** Timing gates against this machine's baseline: median and 95th percentile; on a software rasterizer, both 2x. */
-export const GATES = { median: 1.15, p95: 1.25, software: 2 };
+/**
+ * Timing gates against this machine's baseline; on a software rasterizer every gate is 2x.
+ * One scene's median moved by up to 17 % between quiet runs on an M4 with no code change (measured 21 Nov 2026),
+ * which is wider than the per-scene gate. So a scene that misses `median` or `p95` is measured again (the timing
+ * projects retry twice: noise passes on a retry, a real slowdown fails all three), and `overall` gates all scenes
+ * together, the geometric mean of their medians over the baseline's, where that noise averages out.
+ */
+export const GATES = { median: 1.15, p95: 1.25, overall: 1.1, software: 2 };
 /** Single-sample timings (time to ready, an edit's frame) also get this much absolute slack: one 60 Hz frame. */
 export const FRAME_SLACK_MS = 17;
 
