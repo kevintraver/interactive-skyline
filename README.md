@@ -32,14 +32,7 @@ A true-scale 3D model of the Salt Lake City and Las Vegas skylines, built with t
 
 In Las Vegas, the Drive button beside the search box puts you in a car on a real freeway into the city, from the driver's seat, at true scale. The drive runs on rails: the car keeps its lane at the posted speed while you look around, scrub along the road, change the time of day and bring rain. Hidden and moved buildings stay hidden and moved, and you can still click a building to hide or move it on the way in.
 
-<!-- Screenshots for this section, to be captured (none are in the repository yet):
-     1. docs/drive-reveal.png: I-15 north from the cabin at dusk, just after the Strip comes into view (km 42.7).
-     2. docs/drive-night.png: the same road at night, street lamps, traffic lamps and the lit city ahead.
-     3. docs/drive-rain.png: heavy rain at night, wet road with reflected lamps and spray.
-     4. docs/drive-dam.png: US-93 by day leaving Hoover Dam, Black Canyon on the finer ground.
-     5. docs/drive-clean.png: the clean view (no car) on I-15 south by day, signs and billboards.
-     6. docs/drive-phone.png: Drive on a phone in portrait, route bar and cabin.
-     7. docs/drive-picker.png: the route picker open, three cards with their outline maps. -->
+![I-15 north at dusk from the driver's seat, the Strip's towers lit ahead and traffic all around](docs/drive-dusk.jpg)
 
 What you see:
 
@@ -51,6 +44,14 @@ What you see:
 - **The car.** The default view is from the driver's seat of a generic crossover, with speed and time on the cluster, a route display, three working mirrors and a windshield that hazes around a low sun and oncoming lamps. The car rides the road's texture and the bridge joints. The clean view drops the car and puts the eye 1.2 m above the road.
 - **Rain.** Light rain, rain and heavy rain darken and gloss the road, put streaks of reflected lamps on it, grey out the distance and throw spray behind vehicles.
 
+![The same road at night: street lamps, tail lamps and the lit city](docs/drive-night.jpg)
+
+![Heavy rain at night: drops on the glass, a wet road with reflected lamps](docs/drive-rain.jpg)
+
+![US-93 by day, climbing out of Black Canyon after the Hoover Dam bridge](docs/drive-dam.jpg)
+
+![The clean view on I-15 south, an overhead guide sign before the Spaghetti Bowl](docs/drive-clean.jpg)
+
 ### The three routes
 
 | Route | From | To | Length | The Strip comes into view |
@@ -60,6 +61,10 @@ What you see:
 | US-93 from Hoover Dam | Hoover Dam bypass bridge | Spaghetti Bowl | 59.5 km | at km 25.4 |
 
 Each route can start before the view opens (the default), from its start, or through the city. The default moment is today, timed so the car reaches the view in mid civil twilight.
+
+![The route picker open, three routes with their outline maps](docs/drive-picker.jpg)
+
+<img src="docs/drive-phone.jpg" width="300" alt="Drive on a phone in portrait">
 
 ### Controls
 
