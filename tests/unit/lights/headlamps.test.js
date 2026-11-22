@@ -6,9 +6,9 @@ import { decodeBeam, candelaAt, roadIlluminance, DEFAULT_LAMPS } from '../../../
 import { RETRO_TYPES, retroCoefficient, retroGeometry, retroFromHeadlamps } from '../../../src/drive/roadside/retro.js';
 import {
   toHalf, fromHalf, beamTexture, beamCandela, lampPositions, headlampIrradiance, retroTable, retroTableLookup,
-  retroAnglesMirror, retroReturn, RETRO_ROWS, MARKING_ROWS, signTexel, linearOf, chromaOf, luminanceOf,
+  retroAnglesMirror, retroReturn, RETRO_ROWS, MARKING_ROWS, signTexel, linearOf, chromaOf, luminanceOf, retroShoulder,
 } from '../../../src/drive/lights/headlampMirror.js';
-import { HEAD, diffuseBody, RETRO_HEAD, retroBody } from '../../../src/drive/lights/headlamps.glsl.js';
+import { HEAD, diffuseBody, RETRO_HEAD, retroBody, RETRO_SHOULDER } from '../../../src/drive/lights/headlamps.glsl.js';
 import { classifyMarkings, rampOf } from '../../../src/drive/lights/markingMask.js';
 import * as atlas from '../../../src/drive/roadnet/atlas.js';
 import { COLOURS } from '../../../src/drive/roadside/faces.js';
@@ -248,6 +248,65 @@ describe('the marking mask', () => {
   }
 });
 
+describe('the soft shoulder of the retro return (hlShoulder)', () => {
+  const { knee, ceiling } = RETRO_SHOULDER;
+  const ink = ['black', 'white', 'yellow', 'red', 'green'].map((c) => linearOf(COLOURS[c] || '#b5121b'));
+  const overhead = (z, tex, p = [0, 6.5, z]) => retroReturn({
+    tex, table, lamps, basis, eye: scene(EYE_CAR), point: scene(p), normal: sceneDir([0, 0, -1]), rows: [3, 0],
+  }).map((l) => l * AGEING);
+  /** The sign texels the shader draws: rows through the shoulder, then the legend and the field. */
+  const face = (L) => {
+    const s = retroShoulder(L);
+    return { legend: signTexel({ albedo: ink[1], bg: 4, lg: 1, ink, L: s }).luminance, field: signTexel({ albedo: ink[4], bg: 4, lg: 1, ink, L: s }).luminance };
+  };
+
+  it('is the identity below the knee, smooth at it, rising and bounded by the ceiling above it', () => {
+    for (const l of [[0, 0], [1, 10], [3, 29.9], [knee, 2]]) expect(retroShoulder(l)).toEqual(l);
+    let last = knee, slope = 1;
+    for (let m = knee + 0.01; m < 1e5; m *= 1.05) {
+      const [y] = retroShoulder([m, m / 10]);
+      expect(y).toBeGreaterThan(last); // monotonic
+      expect(y).toBeLessThan(ceiling);
+      const d = (retroShoulder([m + 1e-4, 0])[0] - y) / 1e-4;
+      expect(d).toBeLessThanOrEqual(slope + 1e-6); // the slope falls from 1 at the knee
+      slope = d;
+      last = y;
+    }
+    expect((retroShoulder([knee + 1e-4, 0])[0] - knee) / 1e-4).toBeCloseTo(1, 3); // C1 at the knee
+    expect(retroShoulder([1e9, 0])[0]).toBeCloseTo(ceiling, 3);
+  });
+
+  it('scales both rows by one factor: the hue and the legend\'s contrast with its field stay', () => {
+    for (const L of [[39, 390], [12, 120], [400, 40]]) {
+      const s = retroShoulder(L);
+      expect(s[0] / s[1]).toBeCloseTo(L[0] / L[1], 9);
+      expect(Math.max(...s)).toBeLessThan(ceiling);
+    }
+  });
+
+  it('leaves the low beam\'s signs as they were, 60 to 300 m', () => {
+    for (const z of [300, 200, 150, 100, 60]) {
+      for (const p of [[0, 6.5, z], [12, 3, z]]) {
+        const L = overhead(z, texLow, p);
+        expect(Math.max(...L)).toBeLessThan(knee);
+        expect(retroShoulder(L)).toEqual(L);
+      }
+    }
+  });
+
+  it('keeps a legend readable on its field under the high beam at 300, 150 and 60 m', () => {
+    for (const [z, p] of [[300, [0, 6.5, 300]], [150, [0, 6.5, 150]], [60, [12, 3, 60]]]) {
+      const raw = overhead(z, texHigh, p);
+      expect(raw[1]).toBeGreaterThan(80); // before: far past what the fixed exposure shows
+      const { legend, field } = face(raw);
+      expect(legend).toBeLessThan(ceiling);
+      expect(legend).toBeGreaterThan(knee); // still brighter than any low-beam legend: the high beam flares
+      expect(legend / field).toBeGreaterThan(7); // the sheeting's contrast, kept
+      expect(field).toBeLessThan(8); // a field the exposure still shows green (ACES whitens it above about 10)
+    }
+  });
+});
+
 describe('GLSL', () => {
   it('builds every variant', () => {
     expect(HEAD).toContain('hlCandela');
@@ -255,6 +314,12 @@ describe('GLSL', () => {
     const head = RETRO_HEAD(table);
     expect(head).toContain('hlRetroCoef');
     for (const n of table.betaNodes.slice(1, -1)) expect(head).toContain(`${n.toFixed(1)}`);
-    for (const kind of ['road', 'sign', 'delineator']) expect(retroBody(kind, { markingRows: MARKING_ROWS, ageing: { sheeting: 0.8, marking: 1 } })).toContain('slL +=');
+    expect(head).toContain('vec2 hlShoulder(');
+    expect(head).toContain(`${RETRO_SHOULDER.knee.toFixed(1)}`);
+    for (const kind of ['road', 'sign', 'delineator']) {
+      const body = retroBody(kind, { markingRows: MARKING_ROWS, ageing: { sheeting: 0.8, marking: 1 } });
+      expect(body).toContain('slL +=');
+      expect(body).toContain('hlShoulder(');
+    }
   });
 });

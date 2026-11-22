@@ -269,10 +269,14 @@ export function createJourney({ route, road, frame, departMs, startS, city }) {
     sAt,
     timeAt,
     speedAt: (s) => profile.speedOf(s),
-    /** Pose at a simulation time. Before departure or after arrival the car holds, speed 0. */
+    /**
+     * Pose at a simulation time. The route starts in a live lane, so at and before departure the car
+     * is already at the posted speed at s0 (no standing start: epoch-ms rounding puts the start chip
+     * a hair either side of departure). After arrival it holds at s1, speed 0.
+     */
     poseAt(simMs) {
       const tau = tauAt(simMs);
-      const moving = tau >= 0 && tau <= profile.total;
+      const moving = tau <= profile.total;
       const s = profile.sOf(tau);
       return pose(s, moving ? profile.speedOf(s) : 0, moving ? profile.accelOf(s) : 0);
     },

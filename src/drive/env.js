@@ -366,6 +366,7 @@ export function createEnv({ city, nowMs, playing, rate } = {}) {
   if (!city?.origin) throw new Error('env: city with an origin is required');
   const clock = createClock({ nowMs, playing, rate });
   const ephemeris = createEphemeris(city);
+  const weather = createWeather();
   return {
     city,
     clock,
@@ -373,9 +374,13 @@ export function createEnv({ city, nowMs, playing, rate } = {}) {
     quality: { preset: 'high', onChange: () => () => {} },
     lighting: {
       units: LIGHTING_UNITS,
-      /** Horizontal illuminance (lux) for a sun elevation in degrees; with no argument, the sun now. */
-      ambientLux: (sunElevationDeg) => ambientLux(sunElevationDeg ?? ephemeris.sun(clock.now()).elevation),
+      /**
+       * Horizontal illuminance (lux) for a sun elevation in degrees (with no argument, the sun now), under today's
+       * weather: the clear sky's (ambientLux) x the rain's sky dimming (weather skyDim, 1 dry), so the street lamps,
+       * the vehicles' lamps and the headlights, which switch on this, come on earlier under a dark rainy sky.
+       */
+      ambientLux: (sunElevationDeg) => ambientLux(sunElevationDeg ?? ephemeris.sun(clock.now()).elevation) * (weather.state().skyDim ?? 1),
     },
-    weather: createWeather(),
+    weather,
   };
 }

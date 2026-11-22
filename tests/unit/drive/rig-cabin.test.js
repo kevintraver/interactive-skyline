@@ -3,7 +3,8 @@
 // vertical acceleration stays under 0.5 m/s^2 RMS on smooth road at 70 mph, and the glances ease back.
 import { describe, it, expect } from 'vitest';
 import { PerspectiveCamera, Vector3 } from 'three';
-import { createRig, glanceEnvelope, GLANCES, GLANCE_TIMES, LENS_CABIN, LENS_DEFAULT, headMatrix, CABIN_DEFAULTS } from '../../../src/drive/vehicle/rig.js';
+import { createRig, glanceEnvelope, GLANCES, GLANCE_TIMES, LENS_CABIN, LENS_DEFAULT, headMatrix, CABIN_DEFAULTS, cabinFraming, CABIN_PORTRAIT, verticalFov } from '../../../src/drive/vehicle/rig.js';
+import { readFileSync } from 'node:fs';
 import { motionAt, bodyTexture, jointBump, jointsOf, roadProfile, sampleAt, wheelAngle, lagKernel, MOTION, NO_MOTION } from '../../../src/drive/vehicle/motion.js';
 import { createJourney } from '../../../src/drive/journey.js';
 import { fixture } from './helpers.js';
@@ -189,5 +190,83 @@ describe('glances', () => {
     now += 5000;
     expect(rig.glancing).toBe(null);
     expect(rig.effectiveLook).toEqual({ yaw: 10, pitch: 2 });
+  });
+});
+
+describe('rig, the cabin on a phone: the default lens and pitch by the window\'s shape', () => {
+  const CABIN = JSON.parse(readFileSync(new URL('../../../public/models/drive/cabin.json', import.meta.url), 'utf8'));
+  /** Screen fractions (x right, y down, 0..1) of cabin-coordinate points and of the horizon straight ahead. */
+  function frameOf(viewport) {
+    const { rig, clock } = cabinRig();
+    rig.setCabin(CABIN).setReduceMotion(true);
+    clock.t = 30000;
+    const pose = journey.poseAt(30000);
+    const cam = rig.apply(new PerspectiveCamera(), pose, viewport);
+    const at = (p) => { const v = new Vector3(...p).applyMatrix4(rig.last.body).project(cam); return [(v.x + 1) / 2, (1 - v.y) / 2]; };
+    // the horizon: a level direction ahead, far away
+    const fwd = pose.forward.clone(); fwd.y = 0; fwd.normalize();
+    const h = cam.position.clone().addScaledVector(fwd, 1e5).project(cam);
+    const c = CABIN.instruments.corners, w = CABIN.windshield.corners;
+    return {
+      rig, cam, horizon: (1 - h.y) / 2,
+      cluster: [c.topLeft, c.topRight, c.bottomLeft, c.bottomRight].map(at),
+      roof: Math.max(at(w.topLeft)[1], at(w.topRight)[1]), // the screen above the windshield's header is the roof lining
+    };
+  }
+
+  it('keeps landscape exactly as it was: 28 mm, level', () => {
+    for (const a of [16 / 9, 844 / 390, 4 / 3, 1]) expect(cabinFraming(a)).toEqual({ lens: LENS_CABIN, pitch: 0 });
+    for (const vp of [{ width: 1600, height: 900 }, { width: 844, height: 390 }]) {
+      const f = frameOf(vp);
+      expect(f.rig.lens).toBe(LENS_CABIN);
+      expect(f.cam.fov).toBeCloseTo(verticalFov(LENS_CABIN, vp.width / vp.height), 12);
+      expect(f.rig.state.pitch).toBe(0);
+    }
+  });
+
+  it('tall windows ease to a longer lens tipped down, continuously, with the phone\'s at CABIN_PORTRAIT', () => {
+    expect(cabinFraming(390 / 844)).toEqual({ lens: CABIN_PORTRAIT.lens, pitch: CABIN_PORTRAIT.pitch });
+    expect(cabinFraming(0.3)).toEqual(cabinFraming(CABIN_PORTRAIT.aspect));
+    let last = cabinFraming(1);
+    for (let a = 0.999; a >= 0.45; a -= 0.001) {
+      const f = cabinFraming(a);
+      expect(f.lens).toBeGreaterThanOrEqual(last.lens);
+      expect(f.pitch).toBeLessThanOrEqual(last.pitch);
+      expect(f.lens - last.lens).toBeLessThan(0.3);
+      last = f;
+    }
+  });
+
+  it('at 390 x 844 the horizon is in the middle third, the cluster above the route bar, little roof', () => {
+    const f = frameOf({ width: 390, height: 844 });
+    expect(f.rig.lens).toBe(CABIN_PORTRAIT.lens);
+    expect(f.rig.state.pitch).toBe(0); // the visitor's own look is still level: the tip is the framing's
+    expect(f.horizon).toBeGreaterThan(1 / 3);
+    expect(f.horizon).toBeLessThan(2 / 3);
+    for (const [x, y] of f.cluster) {
+      expect(y).toBeGreaterThan(f.horizon); // below the road ahead
+      expect(y).toBeLessThan(0.82); // the route bar covers the bottom 15%
+      expect(x).toBeGreaterThan(0);
+      expect(x).toBeLessThan(1);
+    }
+    expect(f.roof).toBeLessThan(0.12);
+  });
+
+  it('an address written by a landscape window (28 mm) leaves the phone its default; a zoom pins the lens', () => {
+    const { rig, clock } = cabinRig();
+    rig.look({ lens: 28 }); // before the first frame
+    clock.t = 30000;
+    rig.apply(new PerspectiveCamera(), journey.poseAt(30000), { width: 390, height: 844 });
+    expect(rig.lens).toBe(CABIN_PORTRAIT.lens);
+    rig.look({ lens: 28 }); // after it: the visitor's choice
+    expect(rig.lens).toBe(28);
+    rig.reset({ lens: true });
+    expect(rig.lens).toBe(CABIN_PORTRAIT.lens);
+    rig.zoomBy(1.5);
+    expect(rig.lens).toBeCloseTo(CABIN_PORTRAIT.lens * 1.5, 9);
+    rig.apply(new PerspectiveCamera(), journey.poseAt(30000), { width: 1600, height: 900 });
+    expect(rig.lens).toBeCloseTo(CABIN_PORTRAIT.lens * 1.5, 9); // a chosen lens stays when the window turns
+    rig.reset({ lens: true });
+    expect(rig.lens).toBe(LENS_CABIN);
   });
 });

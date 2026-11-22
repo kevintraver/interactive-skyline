@@ -15,14 +15,18 @@ drive draws as a pair of glowing lines (src/drive/traffic/valley.js).
      build_traffic.trina_stations), and FHWA TMAS 2025 continuous counts (the cache of
      build_traffic.py) for the hour-of-week shapes.
   3. Ways joined into chains of one road (same name or ref, class, one-way-ness), with the driven
-     routes' own carriageways cut out (public/data/<city>/roadnet*.json), split into pieces of at
+     routes' own carriageways cut out (public/data/<city>/roadnet*.json; they come back in step 5), split into pieces of at
      most PIECE_M, simplified (Douglas-Peucker, SIMPLIFY_M). Secondary roads are kept only where a
      count station sits on them.
   4. Each piece takes the AADT of the nearest TRINA station on the same road (by distance and
      road name, within STATION_REACH_M along the road's chain); roads without one take a class
      default (marked as assumed). Each piece takes the hour-of-week shape of the nearest
      continuous station of its kind (freeway or arterial) and heading (north/south or east/west).
-  5. Write public/data/<city>/traffic/valley.json + valley.bin (the format is the comment at the
+  5. The driven routes' own carriageways, both directions, from their RoadNets, with the volumes and
+     hour shapes of their traffic files (public/data/<city>/traffic/<route>.json), added as groups by
+     route id: the drive hides the group of the route being driven, which has its own vehicles, so the
+     other routes' freeways still carry light. A stretch two routes share is one group naming both.
+  6. Write public/data/<city>/traffic/valley.json + valley.bin (the format is the comment at the
      top of scripts/lib/valley_traffic.py) and data/derived/<city>/valley_traffic_report.json.
 
 A rerun with a warm cache makes no request.
@@ -110,6 +114,36 @@ def driven_lines(city):
     return lines
 
 
+def route_carriageways(city):
+    """Both carriageways of every driven route (the roads its traffic file names, from the route's RoadNet),
+    in their direction of travel, with the route's chainage of each point and the traffic file's segments."""
+    data = ROOT / "public" / "data" / city
+    out = []
+    for route in json.loads((data / "routes.json").read_text())["routes"]:
+        files = route.get("files", {})
+        net = files.get("roadnet", "roadnet.json")
+        tf = data / files.get("traffic", f"traffic/{route['id']}.json")
+        if not tf.exists():
+            continue
+        tr = json.loads(tf.read_text())
+        doc = json.loads((data / net).read_text())
+        roads = {r["id"]: r for r in decode_roadnet(doc, (data / (net[:-len(".json")] + ".bin")).read_bytes())}
+        main = roads[tr["directions"]["with"]["road"]]
+        main_xy = np.column_stack([main["x"], main["y"]])
+        main_s = np.arange(main["count"]) * main["spacing"]
+        for d in ("with", "against"):
+            spec = tr["directions"][d]
+            r = roads[spec["road"]]
+            xy = np.column_stack([r["x"], r["y"]])
+            if d == "with":
+                s = np.arange(r["count"]) * r["spacing"]
+            else:  # the other carriageway: the route's chainage of the nearest point of the route's road
+                s, _ = V.project_onto(main_xy, main_s, xy, 120.0)
+            out.append({"route": route["id"], "label": route.get("label") or route["id"], "dir": d,
+                        "xy": xy, "s": s, "segments": spec["segments"]})
+    return out
+
+
 def tmas_shapes(raw, frame, bounds):
     """Hour-of-week shapes of every TMAS continuous station inside bounds, both directions."""
     vol_txt, st_txt = BT.tmas_text(raw, BT.CITIES["lv"]["state"])
@@ -148,6 +182,7 @@ def main():
     ways = V.osm_ways(osm, frame)
     stations = V.trina_points(trina, frame, YEAR)
     result = V.build(ways, stations, shapes, driven, bounds)
+    result = V.with_routes(result, V.route_pieces(route_carriageways(city), T.season_weights(YEAR), len(shapes), bounds))
 
     out_dir = ROOT / "public" / "data" / city / "traffic"
     out_dir.mkdir(parents=True, exist_ok=True)

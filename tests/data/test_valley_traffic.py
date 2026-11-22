@@ -150,3 +150,65 @@ def test_encode_decode_round_trip():
         assert b["fwd"] == 20000 and b["bwd"] == 20000 and b["lanes"] == 3 and b["kmh"] == 72
         assert b["name"] == "West Flamingo Road"
         assert jdoc["stations"][b["station"]]["id"] == "A"
+
+
+def _segments(S0, S1, aadt, lanes=3, mps=29.0):
+    flow = np.tile(np.linspace(100, 3000, 168), (4, 1))
+    return [{"s0": S0, "s1": (S0 + S1) / 2, "lanes": lanes, "freeFlowMps": mps, "aadt": aadt, "flow": flow.tolist()},
+            {"s0": (S0 + S1) / 2, "s1": S1, "lanes": lanes, "freeFlowMps": mps, "aadt": aadt * 2, "flow": flow.tolist()}]
+
+
+def _line(pts, step=4.0):
+    xy = V.densify(np.array(pts, float), step)
+    return xy, np.concatenate([[0], np.cumsum(np.hypot(*np.diff(xy, axis=0).T))])
+
+
+def test_route_carriageways_are_groups_and_a_shared_stretch_is_drawn_once():
+    # route a: north along x = 0 from y = -6 km to 6 km, oncoming at x = 30 (southbound);
+    # route b: the same northbound carriageway from y = 0 to 3 km, then east; its oncoming the same way back
+    a_with, a_s = _line([[0, -6000], [0, 6000]])
+    a_ag = a_with[::-1] + [30.0, 0.0]
+    b_with, b_s = _line([[0, 0], [0, 3000], [4000, 3000]])
+    b_ag = b_with[::-1] + [30.0, 0.0]
+    b_ag[np.abs(b_ag[:, 1] - 3000) < 1e-6, 1] -= 30.0  # the eastward leg's oncoming carriageway, south of it
+    w = [0.25] * 4
+    cws = [
+        {"route": "a", "label": "A", "dir": "with", "xy": a_with, "s": a_s, "segments": _segments(0, 12000, 20000)},
+        {"route": "a", "label": "A", "dir": "against", "xy": a_ag, "s": a_s[::-1], "segments": _segments(0, 12000, 18000)},
+        {"route": "b", "label": "B", "dir": "with", "xy": b_with, "s": b_s, "segments": _segments(0, b_s[-1], 9000)},
+        {"route": "b", "label": "B", "dir": "against", "xy": b_ag, "s": b_s[::-1], "segments": _segments(0, b_s[-1], 9000)},
+    ]
+    out = V.route_pieces(cws, w, 8, BOUNDS)
+    assert len(out["shapes"]) == 4 and [s["id"] for s in out["shapes"]] == [8, 9, 10, 11]
+    for s in out["shapes"]:
+        assert s["values"].sum() / 7 == pytest.approx(1, abs=1e-9)
+    km = {}
+    for p in out["pieces"]:
+        km[p["group"]] = km.get(p["group"], 0) + p["length"]
+        assert p["oneway"] and p["bwd"] == 0 and p["fwd"] in (20000, 40000, 18000, 36000, 9000, 18000)
+    # the 3 km both routes drive, both ways, once, as one group; the rest by route
+    assert km["a+b"] == pytest.approx(6000, abs=250)
+    assert km["a"] == pytest.approx(24000 - 6000, abs=250)
+    assert km["b"] == pytest.approx(8000, abs=250)
+    # nothing of the shared stretch kept twice
+    assert sum(km.values()) == pytest.approx(24000 + 8000, abs=400)
+    # the volume follows the segment (it doubles half way along each direction)
+    north = [p for p in out["pieces"] if p["group"] == "a" and p["xy"][0, 0] < 10 and p["xy"][-1, 1] > p["xy"][0, 1]]
+    assert {p["fwd"] for p in north if p["xy"][-1, 1] <= 0} == {20000}
+    # encoded as contiguous groups after the valley's own pieces, and decoded with them
+    doc = osm_doc([(1, {"highway": "primary", "name": "West Flamingo Road"}, [(5.0, -2.0), (5.0, 2.0)])])
+    st = V.trina_points(trina_doc([("A", "Flamingo Rd", "x", 5.0, 0.2, 40000)]), FRAME, 2025)
+    res = V.with_routes(V.build(V.osm_ways(doc, FRAME), st, flat_shapes(), [], BOUNDS), out)
+    jdoc, blob = V.encode(res, {"city": "t", "year": 2025, "tz": "America/Los_Angeles"})
+    assert [g["id"] for g in jdoc["groups"]] == ["a", "a+b", "b"]
+    assert jdoc["groups"][1]["routes"] == ["a", "b"]
+    first = jdoc["groups"][0]["pieces"][0]
+    assert first == sum(1 for p in res["pieces"] if not p.get("group")) and first > 0
+    end = first
+    for g in jdoc["groups"]:
+        assert g["pieces"][0] == end
+        end += g["pieces"][1]
+    assert end == jdoc["pieces"]
+    back = V.decode(jdoc, blob)
+    assert [b["group"] for b in back] == [p.get("group") for p in res["pieces"]]
+    assert len(jdoc["shapes"]) == 12

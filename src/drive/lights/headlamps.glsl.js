@@ -10,6 +10,17 @@
 // Frames. World positions are scene metres. The beam map is indexed in the car frame of beam.js (x right, y up,
 // z forward): uHlCar holds the car's right, up and forward as columns, so `d * uHlCar` is the car-frame vector.
 
+/**
+ * The retroreflected return's soft shoulder, in displayed cd/m^2 (after ageing): below `knee` the return is as
+ * computed; above it the brighter of a body's two rows (a sign's legend, a marking's white) is compressed toward
+ * `ceiling`, and both rows are scaled by the same factor, so the hue and the legend's contrast with its field stay.
+ * Today's fixed exposure (env.js lighting.units.nit, ACES) shows a green field nearly white above about 10 cd/m^2:
+ * under the high beam a guide sign 150 m ahead returns about 390 cd/m^2 from its legend and 39 from its field, which
+ * would burn the whole face to white. The low beam's legends (under 30 cd/m^2 at 60 to 300 m) are below the knee.
+ * STAND-IN for plan 01's exposure, like the units. Mirrors: retroShoulder (hlShoulder).
+ */
+export const RETRO_SHOULDER = Object.freeze({ knee: 30, ceiling: 60 });
+
 /** Shared by both terms: the beam map and the lamps. Mirrors: beamCandela (hlCandela). */
 export const HEAD = /* glsl */ `
 uniform sampler2D uHlBeam;    // I / peak, h along u, v along v; rows from vMin up (beam.json's grid)
@@ -81,6 +92,13 @@ vec2 hlRetro( vec3 p, vec3 n, vec3 toEye, vec2 rows, float marking ) {
     l += e * vec2( hlRetroCoef( rows.x, alpha, beta ), hlRetroCoef( rows.y, alpha, beta ) );
   }
   return marking > 0.5 ? l : l / max( cosNu, 0.05 );
+}
+// the soft shoulder (RETRO_SHOULDER): both rows scaled by one factor, from the brighter
+vec2 hlShoulder( vec2 l ) {
+  float m = max( l.x, l.y );
+  if ( m <= ${RETRO_SHOULDER.knee.toFixed(1)} ) return l;
+  float x = m - ${RETRO_SHOULDER.knee.toFixed(1)};
+  return l * ( ( ${RETRO_SHOULDER.knee.toFixed(1)} + x / ( 1.0 + x / ${(RETRO_SHOULDER.ceiling - RETRO_SHOULDER.knee).toFixed(1)} ) ) / m );
 }`;
 
 /**
@@ -89,7 +107,7 @@ vec2 hlRetro( vec3 p, vec3 n, vec3 toEye, vec2 rows, float marking ) {
  *                reflectors by the vertex attribute `retro` (vHl_retro)
  *  'sign'        background `retro` and legend `retroLegend` sheeting, the legend's share from the texel's colour
  *  'delineator'  one sheeting for the whole material (uHlRow)
- * Mirrors: retroSurface.
+ * Each body passes its two rows through hlShoulder after ageing. Mirrors: retroSurface, retroShoulder.
  */
 export function retroBody(kind, { markingRows, ageing }) {
   const out = (expr) => `slL += ( ${expr} ) * uHlSpec.w;`;
@@ -99,12 +117,12 @@ export function retroBody(kind, { markingRows, ageing }) {
 {
   float code = floor( vHl_retro + 0.5 );
   if ( code > 0.5 ) {
-    vec2 l = hlRetro( slWorld, slNormal, slView, vec2( code - 1.0 ), 0.0 ) * ${ageing.sheeting.toFixed(3)};
+    vec2 l = hlShoulder( hlRetro( slWorld, slNormal, slView, vec2( code - 1.0 ), 0.0 ) * ${ageing.sheeting.toFixed(3)} );
     ${out('uHlChroma[ int( code ) ] * l.x')}
   } else {
     vec2 m = texture( uHlMark, vMapUv ).rg;
     if ( m.r + m.g > 0.002 ) {
-      vec2 l = hlRetro( slWorld, slNormal, slView, vec2( ${markingRows[0].toFixed(1)}, ${markingRows[1].toFixed(1)} ), 1.0 ) * ${ageing.marking.toFixed(3)};
+      vec2 l = hlShoulder( hlRetro( slWorld, slNormal, slView, vec2( ${markingRows[0].toFixed(1)}, ${markingRows[1].toFixed(1)} ), 1.0 ) * ${ageing.marking.toFixed(3)} );
       ${out('vec3( m.r * l.x ) + uHlChroma[ 2 ] * ( m.g * l.y )')}
     }
   }
@@ -123,7 +141,7 @@ export function retroBody(kind, { markingRows, ageing }) {
     float lumRef = dot( ref, vec3( 0.2126, 0.7152, 0.0722 ) );
     float ink = clamp( dot( slAlbedo, vec3( 0.2126, 0.7152, 0.0722 ) ) / max( lumRef, 1e-3 ), 0.0, 1.0 );
     vec2 l = hlRetro( slWorld, slNormal, slView, vec2( max( bg - 1.0, 0.0 ), max( lg - 1.0, 0.0 ) ), 0.0 ) * ${ageing.sheeting.toFixed(3)};
-    l *= vec2( step( 0.5, bg ), step( 0.5, lg ) );
+    l = hlShoulder( l * vec2( step( 0.5, bg ), step( 0.5, lg ) ) );
     ${out('mix( uHlChroma[ ib ] * l.x, uHlChroma[ il ] * l.y, w ) * ink')}
   }
 }`;
@@ -131,7 +149,7 @@ export function retroBody(kind, { markingRows, ageing }) {
   if (kind === 'delineator') {
     return /* glsl */ `
 {
-  vec2 l = hlRetro( slWorld, slNormal, slView, vec2( uHlRow ), 0.0 ) * ${ageing.sheeting.toFixed(3)};
+  vec2 l = hlShoulder( hlRetro( slWorld, slNormal, slView, vec2( uHlRow ), 0.0 ) * ${ageing.sheeting.toFixed(3)} );
   ${out('uHlChroma[ int( uHlRow ) + 1 ] * l.x')}
 }`;
   }

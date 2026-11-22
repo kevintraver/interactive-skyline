@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { twinFresnel, twinRule } from '../../../src/drive/lights/spriteMirror.js';
 import { createSpriteLayer, setTwins, TWIN_UNIFORMS } from '../../../src/drive/lights/sprites.js';
-import { spriteTwinVertex } from '../../../src/drive/lights/sprites.glsl.js';
+import { spriteTwinVertex, spriteTwinFragment } from '../../../src/drive/lights/sprites.glsl.js';
 import { meanCover, facetSlope, GLOSS } from '../../../src/drive/weather/wetMirror.js';
 import { LAMP_CD } from '../../../src/drive/traffic/lamps.js';
 
@@ -38,12 +38,33 @@ describe('reflected twins (D8.1)', () => {
     expect(s / mirror).toBeGreaterThan(0.5);
     expect(s / mirror).toBeLessThan(2);
     expect(s / mirror).toBeGreaterThan(0.6); // the film's gloss (0.7) of it, less the edge
-    // and it is a streak: much longer than wide, longer toward the viewer
-    expect(t.extent.down).toBeGreaterThan(4 * t.extent.across);
-    expect(t.sDn).toBeGreaterThan(t.sUp);
+    // and it is a streak: much longer than wide
+    expect(t.extent.up + t.extent.down).toBeGreaterThan(4 * t.extent.across);
+  });
+  it('a streak that starts at the foot of its lamp and runs toward the viewer, thin and long, its light kept', () => {
+    // pixels below the horizon of a road point at horizontal distance x, from the eye 1.2 m up
+    const below = (x) => Math.atan(1.2 / x) / pixelAngle;
+    for (const [lamp, cd] of [[tail, LAMP_CD.tail], [[3, 0.7, -25], LAMP_CD.head], [[-8, 12, -140], 20000], [[6, 10, -90], 15000]]) {
+      const t = twinRule({ lamp, eye, roadY: 0, intensityCd: cd, wet: meanCover(1) * GLOSS.twin, slope: facetSlope(1), pixelAngle, gain });
+      const D = Math.hypot(lamp[0], lamp[2]), R = Math.hypot(t.r[0], t.r[2]);
+      // its top is the road under the lamp (B) as seen from the eye, its peak the mirror point R below it
+      expect(Math.abs(below(R) - t.extent.up - below(D))).toBeLessThan(1);
+      expect(t.profile(0, t.extent.up + 0.01)).toBe(0);
+      expect(t.profile(0, 0.6 * t.extent.up)).toBeGreaterThan(0.5 * t.profile(0, 0)); // lit along the way up to B
+      expect(t.profile(0, -0.5)).toBeLessThan(t.profile(0, 0));
+      // toward the viewer, past R
+      expect(t.extent.down).toBeGreaterThan(t.extent.across);
+      // thin and long
+      expect(t.extent.up + t.extent.down).toBeGreaterThan(4 * t.extent.across);
+      // the summed light is the mirror's (E) to within the sampling
+      expect(summed(t, gain) / t.E).toBeGreaterThan(0.97);
+      expect(summed(t, gain) / t.E).toBeLessThan(1.03);
+    }
   });
   it('the shader skips everything at uTwinWet 0, and setTwins hides the twins', () => {
     expect(spriteTwinVertex).toContain('if (!(uTwinWet > 0.0)) return;');
+    expect(spriteTwinVertex).toContain('float twinErf(');
+    expect(spriteTwinFragment).toContain('vTwSig.y'); // the run up to the lamp's foot
     const layer = createSpriteLayer({ capacity: 8, reflect: true });
     const plain = createSpriteLayer({ capacity: 8 });
     expect(plain.twins).toBeNull();

@@ -5,6 +5,8 @@ functions, so tests run them on small fixtures without the network.
     stations = trina_points(trina_doc, frame, year)      # TRINA mainline stations, with their road keys
     shapes   = make_shapes(tmas_stations, means, w)      # hour-of-week shapes of continuous stations
     result   = build(ways, stations, shapes, driven, bounds)
+    routes   = route_pieces(carriageways, weights, len(shapes), bounds)   # the routes' own carriageways
+    result   = with_routes(result, routes)               # ... added as groups by route id
     doc, blob = encode(result, meta)                     # valley.json + valley.bin
 
 Format: public/data/<city>/traffic/valley.json + valley.bin (the reader is
@@ -22,6 +24,11 @@ valley.json = {
   "stations": [{ "id", "aadt", "location" }],      the TRINA stations pieces took their volume from
   "vertices": V, "pieces": P,
   "bin": { "coords": [offset, bytes], "pieces": [offset, bytes], "pieceBytes": 20 },
+  "groups": [{ "id": "i15n+i15s", "routes": ["i15n", "i15s"], "pieces": [first, count] }],   optional
+      the driven routes' own carriageways (every route's, both directions), each piece in exactly one group,
+      the groups' pieces after the rest of the valley's, in order. The drive leaves out every group whose
+      routes include the route being driven (that route has its own vehicles); a stretch two routes share
+      is one group naming both, drawn once. Pieces before the first group belong to no route.
   "sources": [...]
 }
 valley.bin, little-endian:
@@ -566,6 +573,147 @@ def build(ways, stations, shapes, driven, bounds):
     return {"pieces": pieces, "stations": stations, "snapped": snapped, "shapes": shapes, "cutM": cut_m}
 
 
+# ---------------------------------------------------------------- the routes' own carriageways
+
+ROUTE_SHARED_M = 30.0     # a route's carriageway this close to another route's, travelling the same way ...
+ROUTE_SHARED_DOT = math.cos(math.radians(30))  # ... within this angle, is the same carriageway (signed: the
+# opposite carriageway, 20 to 40 m away, travels the other way and never matches)
+ROUTE_MIN_RUN_M = 200.0   # a shared or unshared run shorter than this takes its neighbour's sharing
+ROUTE_STEP_M = 20.0       # the carriageways are resampled at this spacing before the sharing test
+
+
+def project_onto(line_xy, line_s, pts, reach):
+    """Chainage on a polyline (sampled densely: line_s at each of line_xy) of the nearest sample to each
+    point, and its distance; NaN beyond reach."""
+    grid = Grid(line_xy, max(reach, 50.0))
+    s = np.full(len(pts), np.nan)
+    d = np.full(len(pts), np.inf)
+    for k, p in enumerate(pts):
+        idx, dist = grid.near(p, reach)
+        if len(idx):
+            j = int(np.argmin(dist))
+            s[k], d[k] = line_s[idx[j]], dist[j]
+    return s, d
+
+
+def route_shape(segments, weights):
+    """The hour-of-week shape of one direction of a route: its segments' season-weighted mean weeks,
+    weighted by length x daily volume, scaled so that sum / 7 = 1."""
+    w = np.asarray(weights, float)
+    week = np.zeros(168)
+    for g in segments:
+        f = np.asarray(g["flow"], float)
+        week += (g["s1"] - g["s0"]) * (w[:, None] * f).sum(axis=0) / w.sum()
+    if week.sum() <= 0:
+        week = np.ones(168)
+    return week / (week.sum() / 7)
+
+
+def _smooth_keys(keys, step):
+    """Runs of one key shorter than ROUTE_MIN_RUN_M take the key of the run before (or after) them."""
+    keys = list(keys)
+    min_n = max(1, int(round(ROUTE_MIN_RUN_M / step)))
+    for _ in range(4):
+        bounds_, a = [], 0
+        for i in range(1, len(keys) + 1):
+            if i == len(keys) or keys[i] != keys[a]:
+                bounds_.append((a, i))
+                a = i
+        if len(bounds_) <= 1:
+            break
+        changed = False
+        for r, (a, b) in enumerate(bounds_):
+            if b - a < min_n:
+                k = keys[a - 1] if a > 0 else keys[b] if b < len(keys) else keys[a]
+                if k != keys[a]:
+                    keys[a:b] = [k] * (b - a)
+                    changed = True
+        if not changed:
+            break
+    return keys
+
+
+def route_pieces(carriageways, weights, shape0, bounds):
+    """The driven routes' own carriageways as pieces, grouped by the routes that drive them.
+
+    carriageways: [{route, label, dir ('with' | 'against'), xy (N, 2) in the direction of travel,
+                    s (N,) the ROUTE's chainage of each point (NaN off the route), segments (traffic file)}]
+    Returns {"pieces", "shapes"}: shapes numbered from shape0, one per route direction; each piece has a
+    "group" (the sorted route ids that drive it, joined by '+'). A stretch several routes drive is kept
+    from the first of them (by id) only."""
+    shapes, lines = [], []
+    for c in carriageways:
+        xy = densify(np.asarray(c["xy"], float), ROUTE_STEP_M)
+        L0 = np.concatenate([[0], np.cumsum(np.hypot(*np.diff(np.asarray(c["xy"], float), axis=0).T))])
+        L1 = np.concatenate([[0], np.cumsum(np.hypot(*np.diff(xy, axis=0).T))])
+        s = np.interp(L1 * (L0[-1] / max(L1[-1], 1e-9)), L0, np.asarray(c["s"], float))
+        sid = shape0 + len(shapes)
+        shapes.append({"id": sid, "station": f"route:{c['route']}:{c['dir']}", "dir": 0, "kind": "route",
+                       "x": float(xy[len(xy) // 2, 0]), "y": float(xy[len(xy) // 2, 1]),
+                       "location": f"{c['label']}, {'the route' if c['dir'] == 'with' else 'oncoming'}",
+                       "meanDay": 0.0, "values": route_shape(c["segments"], weights)})
+        lines.append({**c, "xy": xy, "s": s, "h": headings(xy), "shape": sid})
+    grids = {}
+    for rid in {c["route"] for c in lines}:
+        mine = [c for c in lines if c["route"] == rid]
+        grids[rid] = (Grid(np.vstack([c["xy"] for c in mine]), 100.0), np.vstack([c["h"] for c in mine]))
+
+    pieces = []
+    for c in lines:
+        xy, s, h = c["xy"], c["s"], c["h"]
+        segs = c["segments"]
+        S0, S1 = segs[0]["s0"], segs[-1]["s1"]
+        inside = ((xy[:, 0] >= bounds[0]) & (xy[:, 0] <= bounds[2]) & (xy[:, 1] >= bounds[1]) & (xy[:, 1] <= bounds[3])
+                  & np.isfinite(s) & (s >= S0) & (s <= S1))
+        keys = []
+        for k, p in enumerate(xy):
+            ks = {c["route"]}
+            for rid, (g, hd) in grids.items():
+                if rid == c["route"]:
+                    continue
+                idx, _ = g.near(p, ROUTE_SHARED_M)
+                if len(idx) and np.max(hd[idx] @ h[k]) >= ROUTE_SHARED_DOT:
+                    ks.add(rid)
+            keys.append("+".join(sorted(ks)))
+        keys = _smooth_keys(keys, ROUTE_STEP_M)
+        seg_of = np.searchsorted([g["s0"] for g in segs], np.nan_to_num(s, nan=S0), side="right") - 1
+        seg_of = np.clip(seg_of, 0, len(segs) - 1)
+        # runs of one (key, segment), inside; each kept by the first route (by id) that drives it
+        n, i = len(xy), 0
+        while i < n:
+            if not inside[i]:
+                i += 1
+                continue
+            a = i
+            while i + 1 < n and inside[i + 1] and keys[i + 1] == keys[a] and seg_of[i + 1] == seg_of[a]:
+                i += 1
+            b = i + 1
+            end = b + 1 if b < n and inside[b] else b  # the next run's first point too, so pieces join
+            i = b
+            if end - a < 2 or keys[a].split("+")[0] != c["route"]:
+                continue
+            g = segs[seg_of[a]]
+            for q in split_pieces(xy[a:end], PIECE_M):
+                q = simplify(q, SIMPLIFY_M)
+                Lq = length_of(q)
+                if Lq < 1.0:
+                    continue
+                pieces.append({"xy": q, "cls": "motorway", "oneway": True, "lanes": int(g["lanes"]),
+                               "mph": float(g["freeFlowMps"]) / MPH, "name": c["label"],
+                               "fwd": float(g.get("aadt") or 0.0), "bwd": 0.0, "shapeF": c["shape"], "shapeB": c["shape"],
+                               "station": None, "stationDist": None, "assumed": False, "length": Lq,
+                               "road": None, "wayIds": [], "group": keys[a]})
+    pieces = [p for p in pieces if p["fwd"] > 0]
+    return {"pieces": pieces, "shapes": shapes}
+
+
+def with_routes(result, routes):
+    """The valley's pieces followed by the routes' carriageways, grouped (encode writes the groups)."""
+    order = sorted(routes["pieces"], key=lambda p: p["group"])
+    return {**result, "pieces": [p for p in result["pieces"] if not p.get("group")] + order,
+            "shapes": result["shapes"] + routes["shapes"]}
+
+
 # ---------------------------------------------------------------- output
 
 def encode(result, meta):
@@ -601,6 +749,21 @@ def encode(result, meta):
         recs += rec.tobytes()
         v += len(q)
     cbytes = np.vstack(coords).tobytes()
+    groups, last = [], None
+    for i, p in enumerate(pieces):
+        g = p.get("group")
+        if g is None:
+            if groups:
+                raise ValueError("a piece of no route after the routes' groups")
+            continue
+        if g != last:
+            if any(x["id"] == g for x in groups):
+                raise ValueError(f"group {g} is not contiguous")
+            groups.append({"id": g, "routes": g.split("+"), "pieces": [i, 0]})
+            last = g
+        groups[-1]["pieces"][1] += 1
+    if len(shapes) > 255:
+        raise ValueError("more shapes than a u8 can name")
     doc = {
         "version": 1, **{k: meta[k] for k in ("city", "year", "tz")}, "quantum": QUANTUM,
         "hourOfWeek": "index = 24 * day + hour, day 0 = Monday, local time, hour = the hour that starts then",
@@ -611,6 +774,7 @@ def encode(result, meta):
         "stations": [{"id": stations[s]["id"], "aadt": stations[s]["aadt"], "location": stations[s]["location"]} for s in used_st],
         "vertices": v, "pieces": len(pieces),
         "bin": {"coords": [0, len(cbytes)], "pieces": [len(cbytes), len(recs)], "pieceBytes": PIECE_BYTES},
+        **({"groups": groups} if groups else {}),
         "assumed": {"classDefaultAadt": CLASS_DEFAULT_AADT, "classDefaultLanes": CLASS_DEFAULT_LANES,
                     "classDefaultMph": CLASS_DEFAULT_MPH,
                     "split": "two-way AADT split evenly between the directions (one-way carriageways carry half)"},
@@ -625,6 +789,10 @@ def decode(doc, blob):
     p0, pn = doc["bin"]["pieces"]
     coords = np.frombuffer(blob[c0:c0 + cn], dtype="<i2").reshape(-1, 2).astype(float) * doc["quantum"]
     recs = np.frombuffer(blob[p0:p0 + pn], dtype=PIECE_DTYPE)
+    group_of = {}
+    for g in doc.get("groups", []):
+        for i in range(g["pieces"][0], g["pieces"][0] + g["pieces"][1]):
+            group_of[i] = g["id"]
     out = []
     for r in recs:
         out.append({"xy": coords[r["start"]:r["start"] + r["n"]], "cls": doc["classes"][r["cls"]],
@@ -632,7 +800,8 @@ def decode(doc, blob):
                     "kmh": int(r["kmh"]), "fwd": int(r["fwd"]) * 10, "bwd": int(r["bwd"]) * 10,
                     "shapeF": int(r["sf"]), "shapeB": int(r["sb"]),
                     "station": None if r["st"] == 65535 else int(r["st"]),
-                    "name": None if r["name"] == 65535 else doc["names"][r["name"]]})
+                    "name": None if r["name"] == 65535 else doc["names"][r["name"]],
+                    "group": group_of.get(len(out))})
     return out
 
 
@@ -666,5 +835,7 @@ def report(result, dropped=()):
         "shapes": [{"id": s["id"], "station": s["station"], "dir": s["dir"], "kind": s["kind"], "location": s["location"],
                     "meanDay": round(s["meanDay"])} for s in result["shapes"]],
         "busiest": busiest,
+        "routeGroups": {g: round(sum(p["length"] for p in pieces if p.get("group") == g) / 1000, 1)
+                        for g in sorted({p["group"] for p in pieces if p.get("group")})},
         "tmasDaysDropped": len(dropped),
     }

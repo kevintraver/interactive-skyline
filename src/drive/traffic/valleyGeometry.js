@@ -19,8 +19,9 @@ export const LIFT_M = 1.2;
  * @param {{ heightAt: (x: number, y: number) => number, base: number, curveDrop: (x: number, y: number) => number,
  *   keep?: (i: number) => boolean }} o  keep(i) leaves out piece i when false
  * @returns {{ position: Float32Array, dir: Float32Array, along: Float32Array, traffic: Float32Array,
- *   index: Uint32Array, ribbons: number, points: number, bounds: number[] }}
- *   bounds: x0, y0, x1, y1 in map metres of everything drawn
+ *   index: Uint32Array, pieceIndex: Uint32Array, ribbons: number, points: number, bounds: number[] }}
+ *   bounds: x0, y0, x1, y1 in map metres of everything drawn; pieceIndex[i] .. pieceIndex[i + 1] is the run of
+ *   `index` that draws piece i (pieces are written in order), so a run of pieces can be left out (indexWithout)
  */
 export function buildValleyGeometry(v, { heightAt, base, curveDrop, keep = () => true }) {
   // first pass: count
@@ -45,8 +46,10 @@ export function buildValleyGeometry(v, { heightAt, base, curveDrop, keep = () =>
   const bounds = [Infinity, Infinity, -Infinity, -Infinity];
   let p = 0, q = 0, ribbons = 0;
   let px = new Float64Array(64), py = new Float64Array(64);
+  const pieceIndex = new Uint32Array(v.count + 1);
 
   for (let i = 0; i < v.count; i++) {
+    pieceIndex[i] = q;
     const m = nOut[i];
     if (!m) continue;
     if (px.length < m) { px = new Float64Array(2 * m); py = new Float64Array(2 * m); }
@@ -102,5 +105,26 @@ export function buildValleyGeometry(v, { heightAt, base, curveDrop, keep = () =>
       ribbons++;
     }
   }
-  return { position, dir, along, traffic, index, ribbons, points, bounds };
+  pieceIndex[v.count] = q;
+  return { position, dir, along, traffic, index, pieceIndex, ribbons, points, bounds };
+}
+
+/**
+ * The geometry's index without the pieces of some runs (the valley's groups: { first, count }), as a new array;
+ * the whole index when there are none.
+ */
+export function indexWithout(g, runs) {
+  if (!runs.length) return g.index;
+  const cut = runs.map((r) => [g.pieceIndex[r.first], g.pieceIndex[r.first + r.count]]).sort((a, b) => a[0] - b[0]);
+  let n = g.index.length;
+  for (const [a, b] of cut) n -= b - a;
+  const out = new Uint32Array(n);
+  let o = 0, from = 0;
+  for (const [a, b] of cut) {
+    out.set(g.index.subarray(from, a), o);
+    o += a - from;
+    from = Math.max(from, b);
+  }
+  out.set(g.index.subarray(from), o);
+  return out;
 }

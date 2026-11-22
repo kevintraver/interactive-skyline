@@ -7,8 +7,8 @@ import {
   shapeAt, densityPerMetre, lampIntensity, redShare, ribbonRadiance, driftSpeed, driftTime, driftFactor, hourOfWeekAt,
   DRIFT_CELL_M, DRIFT_CELLS, DRIFT_WRAP_S, HASH_MEAN, hash11,
 } from '../../../src/drive/traffic/valleyModel.js';
-import { decodeValley, ValleyError } from '../../../src/drive/traffic/valleyFormat.js';
-import { buildValleyGeometry, STEP_M } from '../../../src/drive/traffic/valleyGeometry.js';
+import { decodeValley, ValleyError, hiddenGroups } from '../../../src/drive/traffic/valleyFormat.js';
+import { buildValleyGeometry, indexWithout, STEP_M } from '../../../src/drive/traffic/valleyGeometry.js';
 
 const ROOT = path.resolve(import.meta.dirname, '../../..');
 const shape = Array.from({ length: 168 }, (_, h) => 0.02 + 0.06 * Math.max(0, Math.sin(((h % 24) - 6) / 24 * 2 * Math.PI)));
@@ -170,5 +170,38 @@ describe('valley format and geometry', () => {
       const n = densityPerMetre(v.fwd[i], v.shapes[v.shapeF[i]], how, v.speed[i]);
       expect(n).toBeCloseTo((v.fwd[i] * doc.shapes[v.shapeF[i]].values[114]) / 3600 / v.speed[i], 6);
     }
+    // the three routes' own carriageways are there, as groups, and driving one leaves out only its own
+    const routes = JSON.parse(fs.readFileSync(path.join(ROOT, 'public/data/lv/routes.json'), 'utf8')).routes.map((r) => r.id);
+    for (const id of routes) {
+      expect(v.groups.some((g) => g.routes.includes(id))).toBe(true);
+      const hide = hiddenGroups(v, id);
+      for (const other of routes.filter((r) => r !== id)) {
+        // the other routes keep their carriageways but for what this one shares with them
+        const kept = v.groups.filter((g) => g.routes.includes(other) && !hide.includes(g));
+        expect(kept.reduce((n, g) => n + g.count, 0)).toBeGreaterThan(10);
+      }
+    }
+  });
+
+  it('groups by route: decoded, checked, and left out of the index of the route being driven', () => {
+    const { doc, buffer } = syntheticValley();
+    // piece 0 the valley's, piece 1 a carriageway two routes share
+    const v = decodeValley({ ...doc, groups: [{ id: 'a+b', routes: ['a', 'b'], pieces: [1, 1] }] }, buffer);
+    expect(v.groups).toEqual([{ id: 'a+b', routes: ['a', 'b'], first: 1, count: 1 }]);
+    expect(decodeValley(doc, buffer).groups).toEqual([]); // an older file: no groups
+    expect(() => decodeValley({ ...doc, groups: [{ id: 'a', routes: ['a'], pieces: [0, 1] }] }, buffer)).toThrow(ValleyError); // not to the end
+    expect(() => decodeValley({ ...doc, groups: [{ id: 'a', routes: ['a'], pieces: [1, 2] }] }, buffer)).toThrow(ValleyError);
+    expect(hiddenGroups(v, 'a').map((g) => g.id)).toEqual(['a+b']);
+    expect(hiddenGroups(v, 'b').map((g) => g.id)).toEqual(['a+b']); // a shared stretch, hidden for either
+    expect(hiddenGroups(v, 'c')).toEqual([]);
+    expect(hiddenGroups(v, null)).toEqual([]);
+    const g = buildValleyGeometry(v, { heightAt: () => 0, base: 0, curveDrop: () => 0 });
+    expect(g.pieceIndex[0]).toBe(0);
+    expect(g.pieceIndex[2]).toBe(g.index.length);
+    expect(indexWithout(g, [])).toBe(g.index);
+    const cut = indexWithout(g, hiddenGroups(v, 'a'));
+    expect(Array.from(cut)).toEqual(Array.from(g.index.subarray(0, g.pieceIndex[1])));
+    const first = indexWithout(g, [{ first: 0, count: 1 }]);
+    expect(Array.from(first)).toEqual(Array.from(g.index.subarray(g.pieceIndex[1])));
   });
 });

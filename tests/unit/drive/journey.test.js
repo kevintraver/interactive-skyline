@@ -75,9 +75,16 @@ describe('journey timing', () => {
     const end = j.poseAt(j.timeAt(2900) + 600000);
     expect(end.s).toBe(2900);
     expect(end.speed).toBe(0);
+    // the route starts in a live lane: at speed at s0, not standing
     const before = j.poseAt(DEPART - 600000);
     expect(before.s).toBe(100);
-    expect(before.speed).toBe(0);
+    expect(before.speed).toBeCloseTo(70 * MPH, 9);
+    expect(j.poseAt(DEPART).speed).toBeCloseTo(70 * MPH, 9);
+    for (const t of [DEPART + 2 * 3600000 + 0.3, DEPART + 7 * 3600000 + 0.7]) {
+      const k = make();
+      k.rebase(100, t);
+      expect(k.poseAt(k.timeAt(100)).speed).toBeCloseTo(70 * MPH, 9); // whatever the rounding of the start chip
+    }
     expect(j.poseAt(DEPART + 1000).speed).toBeCloseTo(70 * MPH, 6);
   });
 });

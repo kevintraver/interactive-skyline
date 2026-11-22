@@ -2,6 +2,9 @@
 // anything on the CPU that must agree with what the GPU draws. Pure. Change both together.
 
 import { ON_TABLE } from './switching.js';
+import { TWIN_FOOT } from './sprites.glsl.js';
+
+export { TWIN_FOOT };
 
 const RAD = Math.PI / 180;
 const smoothstep01 = (a, b, x) => { const t = Math.min(1, Math.max(0, (x - a) / (b - a))); return t * t * (3 - 2 * t); };
@@ -149,14 +152,26 @@ export function twinFresnel(c, n = 1.333) {
   return 0.5 * (rs * rs + rp * rp);
 }
 
+/** Mirrors twinErf: erf by Abramowitz and Stegun 7.1.26 (error under 1.5e-7). */
+export function twinErf(x) {
+  const t = 1 / (1 + 0.3275911 * Math.abs(x));
+  const y = 1 - ((((1.061405429 * t - 1.453152027) * t + 1.421413741) * t - 0.284496736) * t + 0.254829592) * t * Math.exp(-x * x);
+  return x < 0 ? -y : y;
+}
+/** Pixels over which the streak fades in under the lamp, for a run of dUp pixels from R up to the foot. */
+export const twinTaper = (dUp) => Math.min(Math.max(0.2 * dUp, 0.5), dUp);
+
 /**
  * A twin as the shader draws it, on a level road (grade 0; the shader's plane may tilt with the car's grade).
+ * The streak runs down the screen from the point on the road under the lamp (B, the lamp's foot as seen from the eye)
+ * through the mirror point R and on toward the viewer: from B to R it brightens linearly from TWIN_FOOT to 1 (fading
+ * in over twinTaper pixels at B), below R it falls as a Gaussian of sigma sDn; across, a Gaussian of sigma sigU.
  * @param {{ lamp: number[], eye: number[], roadY: number, intensityCd: number, wet: number, slope: number,
  *   pixelAngle: number, diameterM?: number, visibilityM?: number, mask?: number, gain?: number }} o
  *   lamp, eye: scene positions; intensityCd: the lamp's intensity toward the reflection point; wet: uTwinWet
- * @returns {{ E, fresnel, dm, cosi, r, sigU, sUp, sDn, amp, reach, extent: { across, up, down }, profile(u, v) } | null}
- *   E: summed light at the eye (lux); amp: the peak per unit gain (cd/m^2 x gain is the scene value); profile(u, v)
- *   the drawn value per unit gain at pixel offsets (u across, v up), 0 outside the quad
+ * @returns {{ E, fresnel, dm, cosi, r, sigU, dUp, sDn, amp, reach, extent: { across, up, down }, profile(u, v) } | null}
+ *   E: summed light at the eye (lux); dUp: pixels from R up to B; amp: the value at R per unit gain (cd/m^2 x gain is
+ *   the scene value); profile(u, v) the drawn value per unit gain at pixel offsets from R (u across, v up), 0 outside
  */
 export function twinRule({ lamp, eye, roadY, intensityCd, wet, slope, pixelAngle, diameterM = 0.14, visibilityM = Infinity, mask = 1, gain = 1 }) {
   if (!(wet > 0)) return null;
@@ -178,19 +193,24 @@ export function twinRule({ lamp, eye, roadY, intensityCd, wet, slope, pixelAngle
   sigU = Math.max(sigU, disc, 0.6);
   sigA = Math.max(sigA, sigU);
   const D = Math.hypot(lamp[0] - eye[0], lamp[2] - eye[2]);
-  const dUp = (Math.atan(he / Math.max(Math.hypot(r[0], r[2]), 1e-3)) - Math.atan(he / Math.max(D, 1e-3))) / pixelAngle;
-  const sUp = Math.min(0.5 * sigA, Math.max(dUp, 0.5) / 3), sDn = 2.2 * sigA;
-  const amp = (E * gain) / (pixelAngle * pixelAngle * Math.PI * sigU * (sUp + sDn));
-  const reach = Math.min(Math.sqrt(2 * Math.max(Math.log(amp * 1024), 0)), 4.5);
-  const extent = { across: reach * sigU, up: reach * sUp, down: reach * sDn };
-  const edge = Math.exp(-0.5 * reach * reach);
+  const dUp = Math.max((Math.atan(he / Math.max(Math.hypot(r[0], r[2]), 1e-3)) - Math.atan(he / Math.max(D, 1e-3))) / pixelAngle, 0.5);
+  const sDn = 2.2 * sigA;
+  const a = twinTaper(dUp), Q = TWIN_FOOT;
+  const up = dUp * (1 + Q) / 2 - a * (Q / 2 + 0.15 * (1 - Q) * a / dUp); // the run from R to B, integrated
+  const amp0 = (E * gain) / (pixelAngle * pixelAngle * Math.sqrt(2 * Math.PI) * sigU * (up + Math.sqrt(Math.PI / 2) * sDn));
+  const reach = Math.min(Math.sqrt(2 * Math.max(Math.log(amp0 * 1024), 0)), 4.5);
+  const edge = Math.exp(-0.5 * reach * reach), ef = twinErf(reach / Math.SQRT2);
+  const across = (sigU * (Math.sqrt(2 * Math.PI) * ef - 2 * reach * edge)) / (1 - edge);
+  const down = (sDn * (Math.sqrt(Math.PI / 2) * ef - reach * edge)) / (1 - edge);
+  const amp = (E * gain) / (pixelAngle * pixelAngle * across * (up + down));
+  const extent = { across: reach * sigU, up: dUp, down: reach * sDn };
+  const g = (x) => Math.max(Math.exp(-0.5 * x * x) - edge, 0) / (1 - edge);
   return {
-    E, fresnel, dm, cosi, r, sigU, sUp, sDn, amp, reach, extent,
+    E, fresnel, dm, cosi, r, sigU, dUp, sDn, amp, reach, extent,
     profile(u, v) {
       if (Math.abs(u) > extent.across || v > extent.up || v < -extent.down) return 0;
-      const sv = v > 0 ? sUp : sDn;
-      const gu = Math.max(Math.exp(-0.5 * (u / sigU) ** 2) - edge, 0), gv = Math.max(Math.exp(-0.5 * (v / sv) ** 2) - edge, 0);
-      return (amp / (1 - edge)) * (gu * gv) / (1 - edge);
+      const gv = v > 0 ? (1 - (1 - Q) * v / dUp) * (1 - smoothstep01(dUp - a, dUp, v)) : g(v / sDn);
+      return amp * g(u / sigU) * gv;
     },
   };
 }

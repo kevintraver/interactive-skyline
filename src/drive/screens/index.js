@@ -17,9 +17,11 @@
 // buildings and the roadside buildings, scaled each frame by the Sphere's mean colour and falling off with distance
 // from its centre. The term is switched on in beforeRender and off in afterRender, so it only ever lights the
 // drive's frames, never the map's. It follows hide and move: hidden, the term is off; moved, its centre moves with
-// the building's offset. It listens to the app's edit events ('buildings:changed', 'buildings:rebuilt') where the
-// part context carries the event bus (the drive's context in index.js does not yet pass it on), and checks the
-// Sphere's visibility and offset each frame as well, so a change is seen in the frame it happens either way.
+// the building's offset. It follows the app's edit events on the part context's bus (ctx.app.events, src/app/events.js):
+// 'buildings:changed' after every hide, show and move step (interaction/edits.js emits one per drag step, so the light
+// moves with a dragged Sphere frame by frame) re-reads the Sphere's visibility and offset, and 'buildings:rebuilt'
+// (the height cutoff rebuilt the towers) rescans the removable buildings. Both are read once when the part starts;
+// nothing is polled per frame.
 
 import * as THREE from 'three';
 import { night } from '../../night.js';
@@ -148,28 +150,21 @@ export function createScreensPart(ctx) {
     if (mesh) attach(mesh.material);
   }
 
-  let lightOn = false, lightEnabled = true, sphereState = '';
+  let lightOn = false, lightEnabled = true, sphereState = '', sphereShown = false;
   const sphereMean = [0, 0, 0];
+  /** Read the Sphere's visibility and offset into the term (at the start, and on every edit event). */
   function placeSphere() {
-    if (!sphere) { lightOn = false; return; }
+    sphereShown = !!sphere && sphere.visible();
+    if (!sphere) { lightOn = false; sphereState = 'none'; return; }
     const c = sphere.centre();
     uniforms.uScrSphere.value.set(c[0], c[1], c[2], sphere.radius);
-    sphereState = `${sphere.visible() ? 'shown' : 'hidden'} ${c.map((v) => v.toFixed(1)).join(',')}`;
+    sphereState = `${sphereShown ? 'shown' : 'hidden'} ${c.map((v) => v.toFixed(1)).join(',')}`;
   }
-  placeSphere();
-  // The app's edit events, where the context carries the bus (the drive's context, index.js contextOf, does not
-  // yet), and in any case a check every frame of the Sphere's own state (two numbers and a flag: hide and move are
-  // seen the frame they happen), and of the removable list every 30 frames (the height cutoff rebuilds it).
-  const events = app.events ?? app.app?.events;
+  placeSphere(); // the one check at the start: the buildings were scanned above
+  // the app's edit events (ctx.app.events): a hide, show or move step, and the height cutoff's rebuild
+  const events = app.events;
   const offChanged = events?.on('buildings:changed', () => { placeSphere(); app.invalidate?.(); });
   const offRebuilt = events?.on('buildings:rebuilt', () => { scanBuildings(); placeSphere(); app.invalidate?.(); });
-  let seenKey = '', rescan = 0;
-  function followSphere() {
-    if (++rescan % 30 === 0 && sphere && !(app.tall || []).includes(sphere.entry)) { scanBuildings(); seenKey = ''; }
-    if (!sphere) return;
-    const e = sphere.entry, key = `${e.mesh.visible} ${e.offset.x} ${e.offset.y} ${e.offset.z}`;
-    if (key !== seenKey) { seenKey = key; placeSphere(); }
-  }
 
   // ---------------------------------------------------------------- the clocks
   let holding = false, heldAt = null, watch = 0;
@@ -213,9 +208,8 @@ export function createScreensPart(ctx) {
     },
     beforeRender(frame) {
       const t0 = performance.now();
-      followSphere();
       lightOn = false;
-      if (lightEnabled && sphere && sphere.visible()) {
+      if (lightEnabled && sphereShown) {
         const c = uniforms.uScrSphere.value, eye = frame.camera.position;
         const d = Math.hypot(eye.x - c.x, eye.y - c.y, eye.z - c.z);
         if (d < SPHERE_WORK_M) {

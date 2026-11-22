@@ -14,8 +14,9 @@ export class ValleyError extends Error {}
  * @returns {{ tz: string, year: number, classes: string[], shapes: Float32Array[], shapeMeta: object[], names: string[],
  *   count: number, coords: Float32Array, start: Uint32Array, n: Uint16Array, cls: Uint8Array, oneway: Uint8Array,
  *   assumed: Uint8Array, lanes: Uint8Array, speed: Float32Array, fwd: Float32Array, bwd: Float32Array,
- *   shapeF: Uint8Array, shapeB: Uint8Array, name: Uint16Array }}
- *   coords: map metres (x east, y north), two per vertex; speed m/s; fwd, bwd vehicles per day
+ *   shapeF: Uint8Array, shapeB: Uint8Array, name: Uint16Array, groups: { id: string, routes: string[], first: number, count: number }[] }}
+ *   coords: map metres (x east, y north), two per vertex; speed m/s; fwd, bwd vehicles per day;
+ *   groups: the driven routes' own carriageways, contiguous runs of pieces after the rest (none in an older file)
  */
 export function decodeValley(doc, buffer) {
   if (!doc || doc.version !== VALLEY_VERSION) throw new ValleyError(`valley: version ${doc && doc.version} is not supported`);
@@ -63,5 +64,20 @@ export function decodeValley(doc, buffer) {
     if (out.shapeF[i] >= shapes.length || out.shapeB[i] >= shapes.length) throw new ValleyError(`valley: piece ${i} names a missing shape`);
     if (!(out.speed[i] > 0)) throw new ValleyError(`valley: piece ${i} has no speed`);
   }
+  out.groups = [];
+  let end = -1;
+  for (const [k, g] of (doc.groups || []).entries()) {
+    const [first, n] = g.pieces || [];
+    if (!Array.isArray(g.routes) || !g.routes.length || !Number.isInteger(first) || !Number.isInteger(n) || n < 0) throw new ValleyError(`valley: group ${k} is malformed`);
+    if (first + n > count || (end >= 0 && first !== end)) throw new ValleyError(`valley: group ${k} does not follow the one before`);
+    end = first + n;
+    out.groups.push({ id: String(g.id), routes: g.routes.map(String), first, count: n });
+  }
+  if (end >= 0 && end !== count) throw new ValleyError('valley: the groups do not run to the last piece');
   return out;
+}
+
+/** The pieces to leave out while driving routeId: those of every group whose routes include it. */
+export function hiddenGroups(v, routeId) {
+  return (v.groups || []).filter((g) => routeId != null && g.routes.includes(routeId));
 }

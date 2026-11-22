@@ -29,6 +29,14 @@ export const LENS_MAX = 200;
 export const LENS_DEFAULT = 50;
 /** The cabin's default lens: a windshield does not fit a 50 mm frame (plan 02, section 4.5). */
 export const LENS_CABIN = 28;
+/**
+ * The cabin's default framing in a tall window. main.js holds a lens's horizontal field, capping the vertical one,
+ * so a phone held upright (390 x 844) sees the 28 mm lens's 65 degrees top to bottom, centred on the horizon: the top
+ * quarter is the roof lining. Toward this aspect the default lens lengthens and the default look tips down, so the
+ * windshield fills the top, the horizon sits in the upper half of the middle third and the instrument cluster stays
+ * above the route bar at the bottom. At aspect 1 and wider nothing changes (LENS_CABIN, level).
+ */
+export const CABIN_PORTRAIT = Object.freeze({ aspect: 0.5, lens: 70, pitch: -8 });
 export const VIEWS = ['cabin', 'clean'];
 export const DEFAULT_VIEW = 'cabin';
 export const NEAR_MIN = 1;
@@ -55,6 +63,17 @@ export const lensToHfov = (lens) => (2 * Math.atan(18 / lens)) / RAD;
 export function verticalFov(lens, aspect) {
   const v = (2 * Math.atan(Math.tan((lensToHfov(lens) * RAD) / 2) / aspect)) / RAD;
   return Math.min(v, Math.max(VFOV_CAP, lensToHfov(lens)));
+}
+
+/**
+ * The cabin's default lens (mm) and pitch (degrees, added to the visitor's look) for a window's aspect (width /
+ * height): LENS_CABIN and level from 1 up, easing to CABIN_PORTRAIT at its aspect and below.
+ */
+export function cabinFraming(aspect) {
+  if (!(aspect < 1)) return { lens: LENS_CABIN, pitch: 0 };
+  const u = clamp((1 - aspect) / (1 - CABIN_PORTRAIT.aspect), 0, 1);
+  const t = u * u * (3 - 2 * u);
+  return { lens: LENS_CABIN + (CABIN_PORTRAIT.lens - LENS_CABIN) * t, pitch: CABIN_PORTRAIT.pitch * t };
 }
 
 const aspectOf = (viewport) => {
@@ -113,7 +132,11 @@ const GLANCE_TOTAL = GLANCE_TIMES.out + GLANCE_TIMES.hold + GLANCE_TIMES.back;
  */
 export function createRig({ eyeHeight = EYE_HEIGHT, view = DEFAULT_VIEW, cabin = CABIN_DEFAULTS, realNow = () => performance.now() } = {}) {
   const look = { yaw: 0, pitch: 0 };
-  const lenses = { cabin: LENS_CABIN, clean: LENS_DEFAULT };
+  // the cabin's lens is null while it is the default, which follows the window's shape (cabinFraming)
+  const lenses = { cabin: null, clean: LENS_DEFAULT };
+  let aspectNow = globalThis.innerWidth > 0 && globalThis.innerHeight > 0 ? globalThis.innerWidth / globalThis.innerHeight : 16 / 9;
+  let applied = false;
+  const lensOf = (v) => lenses[v] ?? cabinFraming(aspectNow).lens;
   let current = VIEWS.includes(view) ? view : DEFAULT_VIEW;
   let reduceMotion = false;
   let glance = null; // { name, yaw, pitch, startMs }
@@ -122,21 +145,24 @@ export function createRig({ eyeHeight = EYE_HEIGHT, view = DEFAULT_VIEW, cabin =
   const _u = new Vector3(), _h = new Vector3(), _d = new Vector3(), _x = new Vector3(), _y = new Vector3();
   const _m = new Matrix4(), _eye = new Vector3(), _s = new Vector3();
 
-  /** The look with any glance mixed in, degrees. */
-  function effective() {
-    if (!glance) return look;
+  /** The look with any glance mixed in, degrees; `bias` is added to the look's pitch (not to a glance's target). */
+  function effective(bias = 0) {
+    const base = bias ? { yaw: look.yaw, pitch: look.pitch + bias } : look;
+    if (!glance) return base;
     const t = (realNow() - glance.startMs) / 1000;
-    if (t >= GLANCE_TOTAL) { glance = null; return look; }
+    if (t >= GLANCE_TOTAL) { glance = null; return base; }
     const e = glanceEnvelope(t);
-    return { yaw: look.yaw + (glance.yaw - look.yaw) * e, pitch: look.pitch + (glance.pitch - look.pitch) * e };
+    return { yaw: base.yaw + (glance.yaw - base.yaw) * e, pitch: base.pitch + (glance.pitch - base.pitch) * e };
   }
 
   const rig = {
     /** Degrees; yaw positive turns left, pitch positive looks up. Lens in mm, the current view's. */
     get yaw() { return look.yaw; },
     get pitch() { return look.pitch; },
-    get lens() { return lenses[current]; },
-    get state() { return { yaw: look.yaw, pitch: look.pitch, lens: lenses[current] }; },
+    get lens() { return lensOf(current); },
+    get state() { return { yaw: look.yaw, pitch: look.pitch, lens: lensOf(current) }; },
+    /** The cabin's default framing for the window now (cabinFraming): its lens, and the pitch added to the look. */
+    get framing() { return cabinFraming(aspectNow); },
     get view() { return current; },
     get reduceMotion() { return reduceMotion; },
     /** The glance in progress ('left', 'right', 'center', 'ahead') or null. */
@@ -152,16 +178,22 @@ export function createRig({ eyeHeight = EYE_HEIGHT, view = DEFAULT_VIEW, cabin =
       if (Number.isFinite(yaw) || Number.isFinite(pitch)) glance = null; // an explicit look takes over from a glance
       look.yaw = clamp(finite(yaw, look.yaw), -YAW_LIMIT, YAW_LIMIT);
       look.pitch = clamp(finite(pitch, look.pitch), PITCH_MIN, PITCH_MAX);
-      lenses[current] = clamp(finite(lens, lenses[current]), LENS_MIN, LENS_MAX);
+      if (Number.isFinite(lens)) {
+        const mm = clamp(lens, LENS_MIN, LENS_MAX);
+        // the cabin's default stays the default (following the window): the default lens for this window, or before
+        // the first frame (an address a landscape window wrote) LENS_CABIN
+        const auto = current === 'cabin' && (Math.round(mm) === Math.round(cabinFraming(aspectNow).lens) || (!applied && Math.round(mm) === LENS_CABIN));
+        lenses[current] = auto ? null : mm;
+      }
       return rig;
     },
     lookBy(dYaw = 0, dPitch = 0) { glance = null; return rig.look({ yaw: look.yaw + dYaw, pitch: look.pitch + dPitch }); },
     /** factor > 1 zooms in (a longer lens). */
-    zoomBy(factor) { return rig.look({ lens: lenses[current] * finite(factor, 1) }); },
+    zoomBy(factor) { return rig.look({ lens: lensOf(current) * finite(factor, 1) }); },
     /** Look ahead again. The lens stays as it is unless `lens` is true. */
     reset({ lens = false } = {}) {
       look.yaw = 0; look.pitch = 0; glance = null;
-      if (lens) lenses[current] = current === 'cabin' ? LENS_CABIN : LENS_DEFAULT;
+      if (lens) lenses[current] = current === 'cabin' ? null : LENS_DEFAULT;
       return rig;
     },
     /** 'cabin' or 'clean'. Each keeps its own lens; the head's direction is shared. */
@@ -193,9 +225,11 @@ export function createRig({ eyeHeight = EYE_HEIGHT, view = DEFAULT_VIEW, cabin =
      * @param {object} pose from journey.poseAt  @param {{ width?: number, height?: number, aspect?: number }} viewport
      */
     apply(camera, pose, viewport) {
-      const eff = effective();
       const aspect = aspectOf(viewport);
-      const fov = verticalFov(lenses[current], aspect);
+      aspectNow = aspect;
+      applied = true;
+      const eff = effective(current === 'cabin' ? cabinFraming(aspect).pitch : 0);
+      const fov = verticalFov(lensOf(current), aspect);
       const journey = source ? source.journey() : null;
       const wheel = journey ? wheelAngle(journey, pose.s) : 0;
       if (current === 'cabin') {

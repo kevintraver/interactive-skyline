@@ -6,6 +6,7 @@
 // { right, up, forward } (unit vectors in the scene), as the shader's `d * uHlCar` does.
 
 import { RETRO_TYPES, retroCoefficient } from '../roadside/retro.js';
+import { RETRO_SHOULDER } from './headlamps.glsl.js';
 
 const RAD = Math.PI / 180;
 
@@ -184,6 +185,19 @@ export function retroReturn({ tex, table, lamps, basis, eye, point, normal, rows
   if (marking) return out;
   const c = Math.max(cosNu, 0.05);
   return [out[0] / c, out[1] / c];
+}
+
+/**
+ * Mirrors hlShoulder: a body's two rows (displayed cd/m^2, after ageing) through the soft shoulder of RETRO_SHOULDER,
+ * both scaled by the factor the brighter one takes.
+ * @param {number[]} l [row 0, row 1]  @returns {number[]}
+ */
+export function retroShoulder(l, { knee, ceiling } = RETRO_SHOULDER) {
+  const m = Math.max(l[0], l[1]);
+  if (m <= knee) return [l[0], l[1]];
+  const x = m - knee;
+  const k = (knee + x / (1 + x / (ceiling - knee))) / m;
+  return [l[0] * k, l[1] * k];
 }
 
 // ---------------------------------------------------------------- colours (uHlChroma, uHlInk)

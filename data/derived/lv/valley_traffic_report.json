@@ -1,17 +1,17 @@
 {
  "km": {
-  "motorway": 277.0,
+  "motorway": 524.0,
   "trunk": 197.1,
   "primary": 1293.1,
   "secondary": 1180.9,
-  "total": 2948.1
+  "total": 3195.1
  },
  "byClass": {
   "motorway": {
-   "pieces": 101,
-   "station": 69,
+   "pieces": 287,
+   "station": 255,
    "default": 32,
-   "kmStation": 184.0,
+   "kmStation": 431.0,
    "kmDefault": 93.0
   },
   "trunk": {
@@ -717,6 +717,54 @@
    "kind": "arterial",
    "location": "SR-158 25' E of SR-157 (Charleston Pk Rd)",
    "meanDay": 427
+  },
+  {
+   "id": 46,
+   "station": "route:i15n:with",
+   "dir": 0,
+   "kind": "route",
+   "location": "I-15 north from Primm, the route",
+   "meanDay": 0
+  },
+  {
+   "id": 47,
+   "station": "route:i15n:against",
+   "dir": 0,
+   "kind": "route",
+   "location": "I-15 north from Primm, oncoming",
+   "meanDay": 0
+  },
+  {
+   "id": 48,
+   "station": "route:i15s:with",
+   "dir": 0,
+   "kind": "route",
+   "location": "I-15 south from Apex, the route",
+   "meanDay": 0
+  },
+  {
+   "id": 49,
+   "station": "route:i15s:against",
+   "dir": 0,
+   "kind": "route",
+   "location": "I-15 south from Apex, oncoming",
+   "meanDay": 0
+  },
+  {
+   "id": 50,
+   "station": "route:us93:with",
+   "dir": 0,
+   "kind": "route",
+   "location": "US-93 from Hoover Dam, the route",
+   "meanDay": 0
+  },
+  {
+   "id": 51,
+   "station": "route:us93:against",
+   "dir": 0,
+   "kind": "route",
+   "location": "US-93 from Hoover Dam, oncoming",
+   "meanDay": 0
   }
  ],
  "busiest": [
@@ -728,11 +776,32 @@
    "maxTwoWayAadt": 266000
   },
   {
+   "name": "I-15 north from Primm",
+   "cls": "motorway",
+   "km": 89.0,
+   "vehicleKmPerDay": 5351464,
+   "maxTwoWayAadt": 306194
+  },
+  {
+   "name": "US-93 from Hoover Dam",
+   "cls": "motorway",
+   "km": 87.2,
+   "vehicleKmPerDay": 4050431,
+   "maxTwoWayAadt": 162774
+  },
+  {
    "name": "Purple Heart Highway",
    "cls": "motorway",
    "km": 55.3,
    "vehicleKmPerDay": 3754009,
    "maxTwoWayAadt": 236000
+  },
+  {
+   "name": "I-15 south from Apex",
+   "cls": "motorway",
+   "km": 70.9,
+   "vehicleKmPerDay": 2681823,
+   "maxTwoWayAadt": 247180
   },
   {
    "name": "West Sahara Avenue",
@@ -873,33 +942,18 @@
    "km": 26.6,
    "vehicleKmPerDay": 436372,
    "maxTwoWayAadt": 46000
-  },
-  {
-   "name": "South Rainbow Boulevard",
-   "cls": "primary",
-   "km": 20.2,
-   "vehicleKmPerDay": 418582,
-   "maxTwoWayAadt": 49000
-  },
-  {
-   "name": "Pahrump Valley Highway",
-   "cls": "trunk",
-   "km": 69.3,
-   "vehicleKmPerDay": 409177,
-   "maxTwoWayAadt": 12900
-  },
-  {
-   "name": "Veterans Memorial Highway",
-   "cls": "motorway",
-   "km": 70.2,
-   "vehicleKmPerDay": 399601,
-   "maxTwoWayAadt": 24200
   }
  ],
+ "routeGroups": {
+  "i15n": 69.3,
+  "i15n+i15s": 19.7,
+  "i15s": 70.9,
+  "us93": 87.2
+ },
  "tmasDaysDropped": 1020,
- "generated": "2026-11-22T11:52:37Z",
+ "generated": "2026-11-22T13:42:55Z",
  "bytes": {
-  "json": 117506,
-  "bin": 95040
+  "json": 126486,
+  "bin": 101376
  }
 }

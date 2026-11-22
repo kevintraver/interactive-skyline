@@ -1,7 +1,9 @@
 // The `valley` drive part (plan 02, D6.6): traffic on the rest of the valley as light ribbons, no vehicles.
 //
-// Every freeway and principal arterial of the valley that is not a driven route (those have their vehicles, the
-// `traffic` part) is a pair of thin glowing strips on the ground, one per direction, offset to the right of travel.
+// Every freeway and principal arterial of the valley is a pair of thin glowing strips on the ground, one per
+// direction, offset to the right of travel. The driven routes' own carriageways are in the file as groups by route
+// (valleyFormat.js); the part leaves out the group(s) of the route being driven (setRoute), whose traffic is drawn
+// as vehicles by the `traffic` part, and keeps the other routes' freeways lit.
 // Their brightness is the light of the vehicles on them at the moment: vehicles per metre (daily volume x the
 // hour-of-week shape / speed) x each vehicle's intensity toward the eye, white where the traffic comes toward the
 // eye (head lamps), red where it goes away (tail lamps), with a pattern drifting along at the traffic's speed.
@@ -15,8 +17,8 @@
 
 import * as THREE from 'three';
 import { curveDrop } from '../../world/frame.js';
-import { decodeValley } from './valleyFormat.js';
-import { buildValleyGeometry } from './valleyGeometry.js';
+import { decodeValley, hiddenGroups } from './valleyFormat.js';
+import { buildValleyGeometry, indexWithout } from './valleyGeometry.js';
 import { valleyVertex, valleyFragment } from './valley.glsl.js';
 import { VALLEY_LAMPS, HEAD_COLOR, TAIL_COLOR, HASH_MEAN, hourOfWeekAt, driftTime } from './valleyModel.js';
 import { createTimings } from '../timing.js';
@@ -45,6 +47,16 @@ export async function createValleyPart(ctx) {
   geometry.setAttribute('aAlong', new THREE.BufferAttribute(g.along, 2));
   geometry.setAttribute('aTraffic', new THREE.BufferAttribute(g.traffic, 4));
   geometry.setIndex(new THREE.BufferAttribute(g.index, 1));
+  let routeId = null, hidden = [];
+  /** Leave out the groups of the route being driven (a new index; the vertices stay). */
+  const applyRoute = (id) => {
+    const next = hiddenGroups(data, id);
+    if (id === routeId && next.length === hidden.length) return;
+    routeId = id;
+    hidden = next;
+    geometry.setIndex(new THREE.BufferAttribute(indexWithout(g, hidden), 1));
+    ctx.app?.invalidate?.();
+  };
 
   // the shapes as a float texture, one row per shape
   const shapeTex = new Float32Array(168 * data.shapes.length);
@@ -116,6 +128,8 @@ export async function createValleyPart(ctx) {
     },
     /** Multiply the ribbons' brightness: a debugging aid for finding them in a screenshot, never a look. */
     setGainScale(k) { gainScale = k; uniforms.uGain.value = env.lighting.units.nit * fade * gainScale; ctx.app?.invalidate?.(); },
+    /** The route being driven: its own carriageways are left out (its vehicles are the `traffic` part's). */
+    setRoute({ route } = {}) { applyRoute(route?.id ?? null); },
     /** Turn the ribbons off and on (for the frame-budget probe and the screenshots). */
     setEnabled(on) { enabled = !!on; show(); ctx.app?.invalidate?.(); },
     whenSettled: () => Promise.resolve(),
@@ -123,7 +137,8 @@ export async function createValleyPart(ctx) {
       const t = timings.summary();
       return {
         visible: mesh.visible, enabled, fade, pieces: data.count, ribbons: g.ribbons, points: g.points,
-        triangles: g.index.length / 3, how: +lastHow.toFixed(3), js: { mean: t.mean, p95: t.p95, max: t.max },
+        triangles: geometry.index.count / 3, route: routeId, hidden: hidden.map((h) => h.id), groups: data.groups.map((h) => h.id),
+        how: +lastHow.toFixed(3), js: { mean: t.mean, p95: t.p95, max: t.max },
       };
     },
     mesh,

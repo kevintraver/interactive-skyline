@@ -243,11 +243,17 @@ void main() {
 // angle of incidence, I the lamp's intensity toward R by its pattern, and cover the water's share of the pavement.
 // Shape. A rough water surface (rms facet slope s) reflects the light from a band of pavement around R: a facet tilted
 // by tau sends it to the eye from an elevation shifted by tau x 2 h_l / (h_e + h_l), and sideways by that times the
-// sine of the grazing angle. So the streak is a Gaussian with sigma 2 s h_l / (h_e + h_l) along the screen's vertical
-// and that times sin(grazing) across (never narrower than the lamp's own disc), longer toward the viewer than toward
-// the lamp (sigma x 2.2 down, x 0.5 up: perspective crowds the far side; and up only to the road under the lamp, a
-// third of that distance as sigma), normalised so its summed light is E (less the little cut off where the quad ends: the profile is lowered by its
-// value at the edge, so a bright twin never shows the quad's border).
+// sine of the grazing angle (sigma 2 s h_l / (h_e + h_l) along the screen's vertical, that times sin(grazing) across,
+// never narrower than the lamp's own disc). Facets tilted toward the lamp carry the light up the screen as far as the
+// road under the lamp (B, where a wet road's reflections of it begin) and no farther; tilted away, down toward the
+// viewer. So the twin is a thin streak that starts at B: from B down to R it brightens linearly from TWIN_FOOT of its
+// peak to the peak at R (fading in over its first pixels under the lamp), and below R it falls as a Gaussian of 2.2
+// sigma (perspective stretches the near side), with a Gaussian across. It is normalised so its summed light is E
+// exactly, over the quad it is drawn on (its Gaussians lowered by their value at the quad's edge, so a bright twin
+// never shows the quad's border).
+
+/** Share of a twin's peak left at the lamp's foot (the streak brightens from there to the mirror point). Mirrored in spriteMirror.js. */
+export const TWIN_FOOT = 0.5;
 
 /** Vertex shader of the twins: the sprite shader's declarations and functions, then its own main. */
 export const spriteTwinVertex = /* glsl */ `${spriteVertex.slice(0, spriteVertex.indexOf('void main()'))}
@@ -257,9 +263,16 @@ uniform vec4 uTwinRoad;     // the car's road point x, z (scene) and the road's 
 uniform vec4 uTwinPlane;    // the road's height at the car (scene y), grade (dy per metre forward), half width (m), range (m)
 
 out vec2 vTw;               // pixels from R: across, along the screen's up there
-out vec3 vTwAmp;            // linear colour x scene radiance at the profile's peak
-out vec3 vTwSig;            // sigma across, up, down (pixels)
-out float vTwEdge;          // the profile's value at the quad's edge (subtracted, so it ends without a seam)
+out vec3 vTwAmp;            // linear colour x scene radiance at R
+out vec3 vTwSig;            // sigma across, pixels up from R to B (the road under the lamp), sigma down
+out float vTwEdge;          // the Gaussians' value at the quad's edge (subtracted, so they end without a seam)
+
+// erf by Abramowitz and Stegun 7.1.26 (error under 1.5e-7), for the share of a Gaussian inside the quad
+float twinErf(float x) {
+  float t = 1.0 / (1.0 + 0.3275911 * abs(x));
+  float y = 1.0 - ((((1.061405429 * t - 1.453152027) * t + 1.421413741) * t - 0.284496736) * t + 0.254829592) * t * exp(-x * x);
+  return x < 0.0 ? -y : y;
+}
 
 // Fresnel reflectance of water (n = 1.333) for unpolarised light, by the cosine of the angle of incidence
 float twinFresnel(float c) {
@@ -333,15 +346,20 @@ void main() {
   float disc = 0.4247 * p3.z / dm / uPixelAngle;   // the lamp's own disc, FWHM to sigma
   sigU = max(max(sigU, disc), 0.6);
   sigA = max(sigA, sigU);
-  float sUp = 0.5 * sigA, sDn = 2.2 * sigA;
-  // the streak never climbs above the point on the road under the lamp (where the reflections end)
-  float dUp = (atan(he / max(length(r.xz), 1e-3)) - atan(he / max(length(rel.xz), 1e-3))) / uPixelAngle;
-  sUp = min(sUp, max(dUp, 0.5) / 3.0);
-  vec3 c = color * (E * uGain / (uPixelAngle * uPixelAngle * 3.141592653589793 * sigU * (sUp + sDn)));
-  float cmax = max(c.r, max(c.g, c.b));
-  if (cmax < 2e-4) return;
-  float reach = min(sqrt(2.0 * max(log(cmax * 1024.0), 0.0)), 4.5);   // sigmas to where it falls under 1/1024
+  // the streak: from B, the road under the lamp as seen from the eye, down through R and on toward the viewer
+  float dUp = max((atan(he / max(length(r.xz), 1e-3)) - atan(he / max(length(rel.xz), 1e-3))) / uPixelAngle, 0.5);
+  float sDn = 2.2 * sigA;
+  float a = clamp(0.2 * dUp, 0.5, dUp), Q = ${TWIN_FOOT.toFixed(3)};
+  float runUp = dUp * (1.0 + Q) * 0.5 - a * (Q * 0.5 + 0.15 * (1.0 - Q) * a / dUp);   // B to R, integrated
+  float k0 = E * uGain / (uPixelAngle * uPixelAngle * 2.5066282746 * sigU * (runUp + 1.2533141373 * sDn));
+  float cmax0 = k0 * max(color.r, max(color.g, color.b));
+  if (cmax0 < 2e-4) return;
+  float reach = min(sqrt(2.0 * max(log(cmax0 * 1024.0), 0.0)), 4.5);   // sigmas to where it falls under 1/1024
   if (reach * sigU < 0.25) return;
+  float edge = exp(-0.5 * reach * reach), ef = twinErf(reach * 0.7071067812);
+  float acrossInt = sigU * (2.5066282746 * ef - 2.0 * reach * edge) / (1.0 - edge);
+  float downInt = sDn * (1.2533141373 * ef - reach * edge) / (1.0 - edge);
+  vec3 c = color * (E * uGain / (uPixelAngle * uPixelAngle * acrossInt * (runUp + downInt)));
 
   // the screen's up at R, and R itself pulled toward the eye
   mat3 vr = mat3(viewMatrix);
@@ -352,9 +370,9 @@ void main() {
   vec2 up = c1.xy / c1.w - c0.xy / c0.w;
   up = normalize(up * uViewport + vec2(0.0, 1e-6));
   vec2 side = vec2(up.y, -up.x);
-  vec2 px = vec2(corner.x * reach * sigU, corner.y > 0.0 ? reach * sUp : -reach * sDn);
-  vTwEdge = exp(-0.5 * reach * reach);
-  vTw = px; vTwAmp = c / (1.0 - vTwEdge); vTwSig = vec3(sigU, sUp, sDn);
+  vec2 px = vec2(corner.x * reach * sigU, corner.y > 0.0 ? dUp : -reach * sDn);
+  vTwEdge = edge;
+  vTw = px; vTwAmp = c; vTwSig = vec3(sigU, dUp, sDn);
   c0.xy += (side * px.x + up * px.y) * 2.0 / uViewport * c0.w;
   gl_Position = c0;
 }
@@ -382,11 +400,19 @@ vec3 toneSprite(vec3 c) {
   return o;
 }
 void main() {
-  float sv = vTw.y > 0.0 ? vTwSig.y : vTwSig.z;
-  float u = vTw.x / vTwSig.x, v = vTw.y / sv;
-  // separable, each axis less its value at the edge: the streak fades to nothing at the quad's border
-  float gu = max(exp(-0.5 * u * u) - vTwEdge, 0.0), gv = max(exp(-0.5 * v * v) - vTwEdge, 0.0);
-  gl_FragColor = vec4(toneSprite(vTwAmp * (gu * gv / (1.0 - vTwEdge))), 1.0);
+  // separable: across a Gaussian, along from B (up) to R a linear rise from the foot's share to 1, fading in over the
+  // first pixels under the lamp, and below R a Gaussian; the Gaussians less their value at the edge (no seam)
+  float u = vTw.x / vTwSig.x;
+  float gu = max(exp(-0.5 * u * u) - vTwEdge, 0.0) / (1.0 - vTwEdge);
+  float gv;
+  if (vTw.y > 0.0) {
+    float dUp = vTwSig.y, a = clamp(0.2 * dUp, 0.5, dUp);
+    gv = (1.0 - (1.0 - ${TWIN_FOOT.toFixed(3)}) * vTw.y / dUp) * (1.0 - smoothstep(dUp - a, dUp, vTw.y));
+  } else {
+    float v = vTw.y / vTwSig.z;
+    gv = max(exp(-0.5 * v * v) - vTwEdge, 0.0) / (1.0 - vTwEdge);
+  }
+  gl_FragColor = vec4(toneSprite(vTwAmp * (gu * gv)), 1.0);
   #include <colorspace_fragment>
 }
 `;

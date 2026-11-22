@@ -1,11 +1,14 @@
 // Headlamp pools of other vehicles (plan 02, D6.4): a soft pool of light on the road ahead of each of the
 // nearest lit vehicles, as an instanced additive decal (pools.glsl.js). One draw call, at most MAX_POOLS
-// instances; nothing by day. Cheap: no lights, no shadow maps, no change to the road's materials.
+// instances; nothing by day. Cheap: no lights, no shadow maps, no change to the road's materials. On a wet road the
+// pools are weakened as the visitor's own is (pools.glsl.js; the cover from lights/sprites.js TWIN_UNIFORMS).
 
 import * as THREE from 'three';
 import { poolVertex, poolFragment } from './pools.glsl.js';
 import { SHADOW_PULL } from './material.js';
 import { LAMP_RGB } from './lamps.js';
+import { TWIN_UNIFORMS } from '../lights/sprites.js';
+import { WET_DIFFUSE, GLOSS, fresnelWater } from '../weather/wetMirror.js';
 
 export const MAX_POOLS = 32;
 /** Vehicles farther than this (m) get no pool: by then it is a few pixels of faint road. */
@@ -20,17 +23,29 @@ export function poolBeam(beta, phi) {
   return 12000 * Math.exp(-(((beta - 1.2) / 1.6) ** 2)) * Math.exp(-((phi / 10) ** 2))
     + 3000 * Math.exp(-(((beta - 3) / 4) ** 2)) * Math.exp(-((phi / 28) ** 2));
 }
-/** Illuminance (lux) on the road at (across, along) metres from a vehicle's front, from both lamps. */
-export function poolIlluminance(across, along, halfSpacing = 0.5, height = 0.65) {
+/**
+ * Illuminance (lux) on the road at (across, along) metres from a vehicle's front, from both lamps; on a wet road
+ * (cover: the water's share of the pavement) each lamp's less what glances off the film, 1 - cover x F(incidence).
+ */
+export function poolIlluminance(across, along, halfSpacing = 0.5, height = 0.65, cover = 0) {
   let E = 0;
   for (const x0 of [-halfSpacing, halfSpacing]) {
     const gx = across - x0, gy = along;
     const flat2 = gx * gx + gy * gy, r2 = flat2 + height * height;
     const beta = Math.atan2(height, Math.sqrt(flat2)) * DEG;
     const phi = Math.atan2(gx, Math.max(gy, 1e-3)) * DEG;
-    E += (poolBeam(beta, phi) * (height / Math.sqrt(r2))) / r2;
+    const cosi = height / Math.sqrt(r2);
+    E += ((poolBeam(beta, phi) * cosi) / r2) * (1 - cover * fresnelWater(cosi));
   }
   return E;
+}
+/**
+ * Mirrors the pool shader: the decal's luminance (cd/m^2) at a point, dry or wet (the visitor's own pool's rule,
+ * weather/wet.glsl.js: the light that reaches the pavement is reflected k = 1 - cover x (1 - WET_DIFFUSE) as strongly).
+ */
+export function poolLuminance(across, along, { halfSpacing = 0.5, height = 0.65, cover = 0, rho = ASPHALT_RHO } = {}) {
+  const k = 1 - cover * (1 - WET_DIFFUSE);
+  return (rho * poolIlluminance(across, along, halfSpacing, height, cover) * k) / Math.PI;
 }
 
 /**
@@ -51,6 +66,8 @@ export function createPools({ parent, sidecar, bodyNames }) {
   const uniforms = {
     uLength: { value: POOL_LENGTH_M }, uHalfWidth: { value: 12 }, uPull: { value: SHADOW_PULL * 1.2 },
     uGain: { value: 0.1 }, uRho: { value: ASPHALT_RHO }, uColor: { value: new THREE.Vector3(...LAMP_RGB.white) },
+    // the wet road: the weather part's cover for the twins (the same object, so it follows without a call here)
+    uTwinWet: TWIN_UNIFORMS.uTwinWet, uWetPool: { value: new THREE.Vector2(GLOSS.twin, WET_DIFFUSE) },
   };
   const material = new THREE.ShaderMaterial({
     name: 'traffic-head-pools', uniforms, vertexShader: poolVertex, fragmentShader: poolFragment,

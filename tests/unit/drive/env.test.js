@@ -138,6 +138,25 @@ describe('lighting stand-ins', () => {
     expect(ambientLux(-12)).toBeLessThan(0.02);
   });
 
+  it('on the env, is dimmed by the rain\'s sky (weather skyDim), so lamps come on earlier under a dark rainy sky', () => {
+    const env = createEnv({ city: LV, nowMs: Date.parse('2026-11-21T20:00:00Z') });
+    const dry = [10, 0, -3, -6].map((el) => env.lighting.ambientLux(el));
+    env.weather.setPreset('heavy');
+    const dim = env.weather.state().skyDim;
+    expect(dim).toBeGreaterThan(0);
+    expect(dim).toBeLessThan(0.3);
+    [10, 0, -3, -6].forEach((el, i) => expect(env.lighting.ambientLux(el)).toBeCloseTo(dry[i] * dim, 9));
+    expect(env.lighting.ambientLux()).toBeCloseTo(ambientLux(env.ephemeris.sun(env.clock.now()).elevation) * dim, 6);
+    // a threshold the clear sky crosses at some elevation is crossed at a higher sun in rain: on earlier
+    const threshold = 400; // lux
+    const crossing = (f) => { for (let el = 20; el > -20; el -= 0.01) if (f(el) < threshold) return el; return NaN; };
+    const wet = crossing((el) => env.lighting.ambientLux(el));
+    env.weather.setPreset('clear');
+    const clear = crossing((el) => env.lighting.ambientLux(el));
+    expect(wet).toBeGreaterThan(clear + 1);
+    expect(env.lighting.ambientLux(-3)).toBe(ambientLux(-3)); // and exactly as before when dry
+  });
+
   it('is on the env, for an elevation or for the sun now', () => {
     const env = createEnv({ city: LV, nowMs: Date.parse('2026-11-21T20:00:00Z') }); // midday
     expect(env.lighting.ambientLux(-6)).toBe(ambientLux(-6));
