@@ -12,9 +12,11 @@ Write the road pipeline's test fixtures:
       change, a placement tag, a bridge, and a junction node with its exit link; plus a
       southbound relation and an unrelated one that must not be picked.
   tests/fixtures/roads-parity.json  what the JavaScript side must reproduce: the Python writer's
-      bytes and JSON for a small input full of rounding and wrapping edge cases, and the Python
-      refline at 200 chainages along the real i15n.main in public/data/lv/roadnet.*.
-      Regenerate after every build_roads.py run.
+      bytes and JSON for a small input full of rounding and wrapping edge cases, the Python
+      refline at 200 chainages along the real i15n.main in public/data/lv/roadnet.*, and the
+      Python cross-section (lib/crosssection.py) at chainages of the synthetic fixture
+      (tests/fixtures/roadnet, with its two tapers) and at 200 random chainages of i15n.main.
+      Regenerate after every build_roads.py run and after synthetic.js changes.
 """
 import base64
 import json
@@ -25,6 +27,7 @@ import numpy as np
 
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "scripts"))
+from lib.crosssection import edges_at, normalise_sections  # noqa: E402
 from lib.frame import create_frame  # noqa: E402
 from lib.refline import Refline  # noqa: E402
 from lib.roadnet import decode_roadnet, encode_roadnet  # noqa: E402
@@ -109,6 +112,11 @@ def parity_fixture():
     }
     inp = {"version": 1, "source": {"osm": "fixture"}, "roads": [road("a", slice(0, 25)), road("b", slice(25, 40))]}
     inp["roads"][1]["stations"] = {"spacing": 4, "note": "kept"}
+    # lane ids and a taper (optional fields) pass through both writers alike
+    inp["roads"][0]["sections"] = [
+        {"s0": 0, "s1": 48, "lanes": [{"w": 3.66, "id": 1}, {"id": 2}], "placement": "centre"},
+        {"s0": 48, "s1": 96, "lanes": [{"id": 3}, {"w": 3.66, "id": 1}, {"id": 2}], "placement": "right_of:3",
+         "taper": {"s0": 48, "s1": 80.5, "side": "left", "evidence": "placement", "W": 3.66, "L": 256.2}}]
     doc, blob = encode_roadnet(inp)
 
     real_doc = json.loads((ROOT / "public" / "data" / "lv" / "roadnet.json").read_text())
@@ -118,10 +126,29 @@ def parity_fixture():
     s = np.r_[0.0, line.length, rng.uniform(0, line.length, 198)]
     p = line.at(s)
     keys = ("x", "y", "h", "heading", "grade", "curvature", "crossfall")
+
+    def cross(sections, ss):
+        secs = normalise_sections(sections)
+        out = []
+        for v in ss:
+            for side in ("after", "before"):
+                cs = edges_at(secs, float(v), side)
+                out.append({"s": float(v), "side": side, "edges": cs["edges"], "lines": [ln["kind"] for ln in cs["lines"]],
+                            "ids": [st["id"] for st in cs["strips"] if st["kind"] == "lane"],
+                            "u": cs["taper"]["u"] if cs["taper"] else None})
+        return out
+
+    syn_doc = json.loads((OUT / "roadnet" / "roadnet.json").read_text())
+    syn = syn_doc["roads"][0]
+    s_syn = np.r_[0.0, 1599.9, 1600.0, 1650.0, 1728.1, 1800.0, 1856.2, 2000.0, 2143.8, 2200.0, 2271.9, 2399.9,
+                  2400.0, 3000.0, rng.uniform(1500, 2500, 36)]
+    s_real = np.r_[rng.uniform(0, line.length, 150), rng.uniform(44000, line.length, 50)]
     return {
         "encode": {"input": inp, "json": doc, "bin": base64.b64encode(blob).decode()},
         "refline": {"road": "i15n.main", "count": road["count"], "samples": [
             {"s": float(s[i]), **{k: float(p[k][i]) for k in keys}} for i in range(len(s))]},
+        "crosssection": {"synthetic": {"road": syn["id"], "samples": cross(syn["sections"], s_syn)},
+                         "real": {"road": "i15n.main", "samples": cross(road["sections"], s_real)}},
     }
 
 

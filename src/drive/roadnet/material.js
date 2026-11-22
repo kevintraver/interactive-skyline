@@ -6,11 +6,32 @@
  * to the car. They are identical by day; at night `roadNear` glows more, standing in for headlights
  * (which replace it in a later phase) so the markings read for about 150 m ahead while the road
  * farther off stays dim.
+ *
+ * The pavement rides 0.3 m above coarse ground and is seen at grazing angles for kilometres, so it
+ * needs a depth bias to win against the ground under it. A slope-scaled polygon offset is wrong
+ * for that: it applies to the whole mesh, and on the steep embankment skirts seen edge-on it pulls
+ * buried slopes kilometres away forward through the ground in front (the stacked wedges of the far
+ * road). Instead the vertex shader moves pavement, shoulder and marking vertices (by the mesh's
+ * `kind` attribute) towards the camera along their own view ray by PULL of their distance, which
+ * changes depth and nothing on screen; embankment vertices stay put and meet the ground honestly.
  */
 import * as THREE from 'three';
-import { drawRoadAtlas, ATLAS_W, ATLAS_H } from './atlas.js';
+import { drawRoadAtlas, ATLAS_W, ATLAS_H, KIND } from './atlas.js';
 
 const NIGHT_GLOW = { near: 0.5, far: 0.1 }; // emissive intensity on the night map
+// Fraction of its distance a pavement vertex moves towards the camera: 4 mm at 10 m, 0.4 m at 1 km,
+// 4 m at 10 km, each several times the depth buffer's resolution there with a near plane up to 5 m.
+export const PULL = 4e-4;
+
+/** Pull pavement (every kind but embankment) towards the camera in depth; see the header. */
+function pullPavement(shader) {
+  shader.vertexShader = shader.vertexShader
+    .replace('#include <common>', '#include <common>\nattribute float kind;')
+    .replace('#include <project_vertex>', [
+      '#include <project_vertex>',
+      `if ( kind < ${(KIND.embankment - 0.5).toFixed(1)} ) { mvPosition.xyz *= ${(1 - PULL).toFixed(6)}; gl_Position = projectionMatrix * mvPosition; }`,
+    ].join('\n'));
+}
 
 /** A canvas for the atlas, or null where there is none (Node). */
 function makeCanvas() {
@@ -50,12 +71,12 @@ export function createRoadMaterials({ anisotropy = 1 } = {}) {
     emissiveMap: nightMap,
     emissive: 0xffffff,
     emissiveIntensity: 0,
-    // the road is seen at grazing angles for kilometres a few decimetres above coarse ground
-    polygonOffset: true,
-    polygonOffsetFactor: -2,
-    polygonOffsetUnits: -4,
   });
   const road = make(), roadNear = make();
+  for (const m of [road, roadNear]) {
+    m.onBeforeCompile = pullPavement;
+    m.customProgramCacheKey = () => `road-pull-${PULL}`;
+  }
   road.name = 'road'; roadNear.name = 'road-near';
   return {
     road, roadNear, map, nightMap,

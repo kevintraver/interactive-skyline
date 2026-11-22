@@ -13,17 +13,33 @@ const world = (m, i) => [m.origin[0] + m.positions[3 * i], m.origin[1] + m.posit
 /** Height above sea level of a scene point, with the curvature drop taken back out. */
 const height = ([x, y, z]) => y + BASE + (x * x + z * z) / (2 * EARTH_R);
 
-/** Vertices of the row at chainage s: [first vertex index, pieces]. Rows are emitted span by span. */
-function rowAt(road, m, s, split = 0) {
+/** Every row of a mesh in order: { s, v (first vertex), pieces, cs }. Rows are emitted span by span. */
+function rowsOf(road, m, split = 0) {
+  const out = [];
   let v = 0;
   for (const sp of rowStations(road, m.s0, m.s1, m.lod, split)) {
-    const pieces = rowPieces(edgesAt(road, (sp.s0 + sp.s1) / 2));
-    for (const rs of sp.rows) {
-      if (Math.abs(rs - s) < 1e-9) return [v, pieces];
+    sp.rows.forEach((s, r) => {
+      const cs = edgesAt(road, s, r === sp.rows.length - 1 ? 'before' : 'after');
+      const pieces = rowPieces(cs);
+      out.push({ s, v, pieces, cs, last: r === sp.rows.length - 1 });
       v += pieces.length * 2;
-    }
+    });
   }
-  throw new Error(`no row at ${s}`);
+  return out;
+}
+
+/** Vertices of the row at chainage s: [first vertex index, pieces] (the first such row). */
+function rowAt(road, m, s, split = 0) {
+  const row = rowsOf(road, m, split).find((x) => Math.abs(x.s - s) < 1e-9);
+  if (!row) throw new Error(`no row at ${s}`);
+  return [row.v, row.pieces];
+}
+
+/** Lateral offset (positive left) of a vertex from the reference line at s, in plan. */
+function lateral(road, m, i, s) {
+  const p = reflineOf(road).at(s);
+  const [x, , z] = world(m, i);
+  return (x - p.x) * -Math.sin(p.heading) + (-z - p.y) * Math.cos(p.heading);
 }
 
 describe('mesher', () => {
@@ -129,12 +145,90 @@ describe('mesher', () => {
     expect(r2).toEqual([0, 64, 128, 192, 256, 320, 384, 448, 512]);
   });
 
-  it('splits at a section boundary, with each side meshed in its own section', () => {
+  it('splits at a section boundary and at the ends and middle of a taper', () => {
     const c = mesh({ s0: 1536, s1: 1792, lod: 2 });
     const spans = rowStations(main, 1536, 1792, 2);
-    expect(spans.map((sp) => [sp.s0, sp.s1])).toEqual([[1536, 1600], [1600, 1792]]);
-    const n = spans.reduce((a, sp) => a + sp.rows.length * rowPieces(edgesAt(main, (sp.s0 + sp.s1) / 2)).length * 2, 0);
+    expect(spans.map((sp) => [sp.s0, sp.s1])).toEqual([[1536, 1600], [1600, 1728.1], [1728.1, 1792]]);
+    const n = rowsOf(main, c).reduce((a, row) => a + row.pieces.length * 2, 0);
     expect(c.positions.length / 3).toBe(n);
+  });
+
+  describe('across a taper', () => {
+    // lane 4 opens over 1600..1856.2, lane 1 closes over 2143.8..2400
+    const chunks = [[1536, 1792], [1792, 2048], [2048, 2304], [2304, 2560]];
+
+    it('makes the pavement exactly as wide as the cross-section at every row, at every level', () => {
+      for (const lod of [0, 1, 2]) {
+        for (const [a, b] of chunks) {
+          const m = mesh({ s0: a, s1: b, lod });
+          for (const row of rowsOf(main, m)) {
+            const pave = row.pieces.map((pc, q) => [pc, q]).filter(([pc]) => pc.kind !== KIND.embankment);
+            const l = lateral(main, m, row.v + 2 * pave[0][1], row.s);
+            const r = lateral(main, m, row.v + 2 * pave[pave.length - 1][1] + 1, row.s);
+            expect(l).toBeCloseTo(row.cs.left, 3);
+            expect(r).toBeCloseTo(row.cs.right, 3);
+          }
+        }
+      }
+    });
+
+    it('has no step, slit or fold: rows at a cut coincide, and every row runs left to right', () => {
+      for (const [a, b] of chunks) {
+        const m = mesh({ s0: a, s1: b, lod: 0 });
+        const rows = rowsOf(main, m);
+        rows.forEach((row, k) => {
+          // across: offsets never turn back (the embankment does not fold over the road)
+          const n = row.pieces.length * 2;
+          let last = Infinity;
+          for (let i = 0; i < n; i++) {
+            const d = lateral(main, m, row.v + i, row.s);
+            expect(d).toBeLessThanOrEqual(last + 1e-3);
+            last = d;
+          }
+          // a span's last row and the next span's first row are at the same chainage: same outer edges
+          const next = rows[k + 1];
+          if (row.last && next && Math.abs(next.s - row.s) < 1e-9) {
+            for (const [i, j] of [[0, 0], [n - 1, next.pieces.length * 2 - 1]]) {
+              const p = world(m, row.v + i), q = world(m, next.v + j);
+              expect(Math.hypot(p[0] - q[0], p[1] - q[1], p[2] - q[2])).toBeLessThan(0.002);
+            }
+            expect(row.cs.left).toBeCloseTo(next.cs.left, 9);
+            expect(row.cs.right).toBeCloseTo(next.cs.right, 9);
+          }
+        });
+      }
+    });
+
+    it('leaves no cracks between chunks inside a taper at any mix of levels', () => {
+      for (const [lo, hi] of [0, 1, 2].flatMap((x) => [0, 1, 2].map((y) => [x, y]))) {
+        for (const cut of [1792, 2304]) {
+          const a = mesh({ s0: cut - 256, s1: cut, lod: lo }), b = mesh({ s0: cut, s1: cut + 256, lod: hi });
+          const [va, pa] = rowAt(main, a, cut), [vb, pb] = rowAt(main, b, cut);
+          expect(pb.length).toBe(pa.length);
+          for (let k = 0; k < pa.length * 2; k++) {
+            const p = world(a, va + k), q = world(b, vb + k);
+            expect(Math.hypot(p[0] - q[0], p[1] - q[1], p[2] - q[2])).toBeLessThan(0.002);
+          }
+        }
+      }
+    });
+
+    it('meshes the coarser levels on subsets of the finer rows', () => {
+      const rows = (lod) => rowStations(main, 1536, 2560, lod).flatMap((sp) => sp.rows);
+      const [r0, r1, r2] = [rows(0), rows(1), rows(2)];
+      expect(r1.every((s) => r0.includes(s))).toBe(true);
+      expect(r2.every((s) => r1.includes(s))).toBe(true);
+      for (const s of [1600, 1728.1, 1856.2, 2143.8, 2271.9, 2400]) expect(r2).toContain(s);
+    });
+
+    it('drops the line beside a lane narrower than half its width, and keeps one draw', () => {
+      const m = mesh({ s0: 1536, s1: 1792, lod: 0 });
+      const marks = (s) => rowsOf(main, m).find((row) => Math.abs(row.s - s) < 1e-9 && !row.last)?.pieces.filter((pc) => pc.kind === KIND.marking).length;
+      expect(marks(1700)).toBe(4); // two lane lines and two edge lines: lane 4 is still under half
+      expect(marks(1728.1)).toBe(5);
+      expect(m.ranges).toHaveLength(1);
+      for (let i = 0; i < m.normals.length; i += 3) expect(Math.hypot(m.normals[i], m.normals[i + 1], m.normals[i + 2])).toBeCloseTo(1, 5);
+    });
   });
 
   it('meshes the second road too', () => {

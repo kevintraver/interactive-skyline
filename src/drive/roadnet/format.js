@@ -90,14 +90,18 @@
  *                                         counted); "left_of:N", "middle_of:N", "right_of:N" =
  *                                         left edge, middle or right edge of lane N, counted
  *                                         from 1 at the left (OSM's placement=* values)
- *   "provenance": { ... }                 optional, free-form (default {})
+ *   "provenance": { ... },                optional, free-form (default {})
+ *   "taper": taper                        optional, never on the first section; see below
  * }
  * lane = {
  *   "w": 3.66,                            optional, metres (default 3.66)
  *   "kind": "drive",                      optional (default "drive"); free string
- *   "line": "broken"                      optional, the line on this lane's RIGHT edge when
+ *   "line": "broken",                     optional, the line on this lane's RIGHT edge when
  *                                         another lane follows: "broken" (default), "solid",
  *                                         "none". Ignored on the rightmost lane.
+ *   "id": 2                               optional integer >= 1, the lane's identity along the
+ *                                         road (see "lanes and tapers"). Default: its position
+ *                                         in the section, 1 at the left.
  * }
  * left / right = {
  *   "shoulder": metres                    optional; default right 3.05 m (10 ft); left 1.22 m
@@ -107,6 +111,59 @@
  *   "barrier", "rumble", ...              optional, passed through
  * }
  * Unknown fields anywhere are kept by the decoder and written back by the encoder.
+ *
+ * ---------------------------------------------------------------- lanes and tapers
+ * Lane identity. A lane's `id` names one strip of pavement along the whole road: a lane of one
+ * section and a lane of the next with the same id are the same lane, so "the lane with id 2"
+ * keeps meaning the same pavement when an auxiliary lane appears beside it. Either every lane
+ * of a road has an id or none does (then ids are positions, 1 at the left, which makes every
+ * change of lane count an addition or a drop on the right). Within a section ids are unique;
+ * lanes shared by two consecutive sections keep their left-to-right order. A lane whose id
+ * is not in the previous section begins at this section; one not in the next section ends
+ * with this section. The writer numbers the first section's lanes 1..n from the left and gives
+ * every new lane the next unused id, but readers rely only on the rules above.
+ *
+ * taper = {
+ *   "s0": 41180.2, "s1": 41418.0,         required, metres, s0 < s1
+ *   ...                                   anything else is provenance, passed through (the
+ *                                         reference writer adds "side", "evidence", "W", "L"
+ *                                         and, where it had to, "shortened" or "moved")
+ * }
+ * Without a taper the cross-section changes abruptly at the section's s0 (version 1 as first
+ * written; a file with no tapers reads exactly as before). With one, the change into this
+ * section's cross-section is spread over [taper.s0, taper.s1], which must contain this section's
+ * s0 and end by its s1. It blends FROM the section that contains taper.s0 (normally the previous
+ * one). A taper may start further back, so that one or more short sections lie wholly inside it:
+ * their own cross-sections are skipped (they are shorter than any taper between their
+ * neighbours could be) and they carry no taper of their own. Tapers never overlap (they may
+ * touch). Outside every taper a section's cross-section is exactly its own, so a taper may run
+ * into the section before or after its boundary: lane counts still change at each s0, geometry
+ * follows the taper. A point is inside a taper when taper.s0 <= s < taper.s1; the cross-section
+ * "just before" s (as at the far end of a mesh span) uses taper.s0 < s <= taper.s1 instead.
+ *
+ * Inside a taper, with t = (s - taper.s0) / (taper.s1 - taper.s0) and the blend
+ * u = t^3 (10 - 15 t + 6 t^2) (smootherstep: u, du/ds and d2u/ds2 run continuously into the
+ * constant cross-sections either side):
+ *   - "Previous" below is the section the taper blends from.
+ *   - The lanes are the union of both sections' lanes by id. Order: walk both lists from the
+ *     left; a lane only in the previous section comes next, else a lane only in this section,
+ *     else the shared lane (the same in both).
+ *   - Each lane's width is (1 - u) w_prev + u w_this, where a lane missing from a section has
+ *     width 0 there. A dropped lane narrows to nothing; an added lane opens from nothing.
+ *   - The left edge of the lanes (lane 1's left edge) is at (1 - u) o_prev + u o_this, where o is
+ *     that section's own left-edge offset from its placement; lanes follow it to the right.
+ *   - Shoulder widths blend the same way: (1 - u) prev + u this.
+ *   - Edge kinds and other section-level attributes are the previous section's before the
+ *     taper's middle, s < (taper.s0 + taper.s1) / 2, and this section's from it (compare s with
+ *     the middle itself, not t with 0.5, so that every reader switches at the same row). Edge lines run along the pavement edge (the outer edge
+ *     of the outermost lane, whatever its width).
+ *   - A lane line keeps its lane's `line` (from this section if the lane is in it, else from the
+ *     previous one) but is not drawn ("none") while either lane beside it is narrower than half
+ *     its full width: before the middle next to a lane only in this section, from the middle on
+ *     next to a lane only in the previous one. All kind changes in a taper happen at its middle.
+ * Writers choose taper lengths so that no lane edge moves sideways faster than 1 m per 20 m;
+ * the smootherstep's steepest slope is 1.875 times the average, so a taper of length L with a
+ * largest edge movement W keeps to that when L >= 37.5 W.
  */
 
 export const RECORD_INTS = 7;
@@ -143,11 +200,20 @@ function normaliseSection(sec, road, i) {
   if (!isNum(sec.s0) || !isNum(sec.s1) || !(sec.s1 > sec.s0)) fail(`${where} needs s0 < s1`);
   if (!Array.isArray(sec.lanes) || !sec.lanes.length) fail(`${where} has no lanes`);
   const lanes = sec.lanes.map((l, j) => {
-    const lane = { ...l, w: l?.w ?? LANE_WIDTH, kind: l?.kind ?? 'drive', line: l?.line ?? 'broken' };
+    const lane = { ...l, w: l?.w ?? LANE_WIDTH, kind: l?.kind ?? 'drive', line: l?.line ?? 'broken', id: l?.id ?? j + 1 };
     if (!isNum(lane.w) || lane.w <= 0) fail(`${where} lane ${j} width must be positive`);
     if (!['broken', 'solid', 'none'].includes(lane.line)) fail(`${where} lane ${j} line must be broken, solid or none`);
+    if (!Number.isInteger(lane.id) || lane.id < 1) fail(`${where} lane ${j} id must be an integer >= 1`);
     return lane;
   });
+  if (new Set(lanes.map((l) => l.id)).size !== lanes.length) fail(`${where} repeats a lane id`);
+  if (sec.taper !== undefined) {
+    const tp = sec.taper;
+    if (i === 0) fail(`${where} is the first section and cannot have a taper`);
+    if (!tp || !isNum(tp.s0) || !isNum(tp.s1) || !(tp.s1 > tp.s0)) fail(`${where} taper needs s0 < s1`);
+    if (tp.s0 > sec.s0 + 1e-6 || tp.s1 < sec.s0 - 1e-6) fail(`${where} taper ${tp.s0}..${tp.s1} does not contain the section start ${sec.s0}`);
+    if (tp.s1 > sec.s1 + 1e-6) fail(`${where} taper runs past the section end`);
+  }
   const side = (v, isLeft) => {
     const out = { ...(v || {}) };
     out.shoulder ??= isLeft ? (lanes.length >= 3 ? SHOULDER_WIDE : SHOULDER_NARROW) : SHOULDER_WIDE;
@@ -160,6 +226,33 @@ function normaliseSection(sec, road, i) {
   const m = /^(left_of|middle_of|right_of):(\d+)$/.exec(placement);
   if (placement !== 'centre' && !(m && +m[2] >= 1 && +m[2] <= lanes.length)) fail(`${where} placement "${placement}" is not understood`);
   return { ...sec, lanes, left: side(sec.left, true), right: side(sec.right, false), placement, provenance: sec.provenance ?? {} };
+}
+
+/** Ids on every lane or none; shared lanes keep their order; tapers stay in place and apart. */
+function checkLanesAndTapers(id, raw, sections) {
+  const tagged = raw.map((sec) => sec.lanes.map((l) => l?.id !== undefined));
+  const all = tagged.flat();
+  if (all.some(Boolean) && !all.every(Boolean)) fail(`road ${id} gives ids to some lanes but not all`);
+  let lastEnd = -Infinity;
+  for (let i = 1; i < sections.length; i++) {
+    const a = sections[i - 1].lanes.map((l) => l.id), b = sections[i].lanes.map((l) => l.id);
+    const inB = new Set(b), inA = new Set(a);
+    const sa = a.filter((x) => inB.has(x)), sb = b.filter((x) => inA.has(x));
+    if (sa.some((x, k) => x !== sb[k])) fail(`road ${id} sections ${i - 1} and ${i} swap the order of shared lanes`);
+    const tp = sections[i].taper;
+    if (!tp) continue;
+    if (tp.s0 < lastEnd - 1e-6) fail(`road ${id} section ${i} taper overlaps the one before it`);
+    lastEnd = tp.s1;
+    let k = i - 1;
+    while (k > 0 && sections[k].s0 > tp.s0) k--;
+    for (let j = k + 1; j < i; j++) if (sections[j].taper) fail(`road ${id} section ${j} lies inside the taper of section ${i} and has its own`);
+    if (k < i - 1) {
+      const a = sections[k].lanes.map((l) => l.id), b = sections[i].lanes.map((l) => l.id);
+      const inB = new Set(b), inA = new Set(a);
+      const sa = a.filter((x) => inB.has(x)), sb = b.filter((x) => inA.has(x));
+      if (sa.some((x, q) => x !== sb[q])) fail(`road ${id} the taper of section ${i} swaps the order of shared lanes`);
+    }
+  }
 }
 
 /**
@@ -219,6 +312,7 @@ export function decodeRoadNet(json, arrayBuffer) {
       if (Math.abs(sections[i].s0 - sections[i - 1].s1) > 1e-6) fail(`road ${r.id} sections ${i - 1} and ${i} do not meet`);
     }
     if (Math.abs(sections[sections.length - 1].s1 - length) > 1e-3) fail(`road ${r.id} sections end at ${sections[sections.length - 1].s1}, the road at ${length}`);
+    checkLanesAndTapers(r.id, r.sections, sections);
 
     return {
       ...r,

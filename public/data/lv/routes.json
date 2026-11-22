@@ -178,6 +178,12 @@
      "label": "Spaghetti Bowl"
     }
    ],
+   "lanePlan": [
+    {
+     "s0": 0,
+     "lane": 2
+    }
+   ],
    "opposite": "i15s.opp"
   }
  ]

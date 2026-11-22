@@ -282,5 +282,175 @@ def test_routes_json_keeps_the_shared_schema():
     assert set(r["reveal"]) >= {"s", "target", "label"}
     ss = [m["s"] for m in r["markers"]]
     assert ss == sorted(ss)
-    assert {m["kind"] for m in r["markers"]} == {"exit", "place", "reveal"}
+    assert {"exit", "place", "reveal"} <= {m["kind"] for m in r["markers"]} <= {"exit", "place", "reveal", "lane"}
     assert {"Jean", "Sloan", "I-215", "Spaghetti Bowl"} <= {m["label"] for m in r["markers"] if m["kind"] == "place"}
+
+
+# ------------------------------------------------------------------ lane changes: sides, ids, tapers
+
+from lib.crosssection import edges_at, lane_centre, normalise_sections, pavement_edges  # noqa: E402
+from lib.laneplan import path_dynamics, plan_lanes  # noqa: E402
+from lib.lanes import max_edge_rate  # noqa: E402
+
+X0, Y0 = -21000.0, -48000.0  # a straight road heading north, out in the desert
+
+
+def straight_osm(ways, ramps=()):
+    """An Overpass answer for a straight northbound I 15: `ways` is [(length m, tags)], joined end to
+    end; `ramps` is [(at m, "exit" | "entrance", side)] link ways leaving or joining there."""
+    nid = iter(range(5001, 9000))
+    nodes, elements, at = [], [], {}
+
+    def node(x, y, tags=None):
+        lat, lon = FRAME.to_geodetic(x, y)
+        n = {"type": "node", "id": next(nid), "lat": round(float(lat), 8), "lon": round(float(lon), 8)}
+        if tags:
+            n["tags"] = tags
+        nodes.append(n)
+        return n["id"]
+
+    y, prev, wid = Y0, None, 100
+    members = []
+    for length, tags in ways:
+        ids = [prev if prev is not None else node(X0, y)]
+        for k in range(1, int(length // 100) + 1):
+            ids.append(node(X0, y + k * 100))
+            at[round(y + k * 100 - Y0)] = ids[-1]
+        at[round(y - Y0)] = ids[0]
+        y += length
+        prev = ids[-1]
+        elements.append({"type": "way", "id": wid, "nodes": ids,
+                         "tags": {"highway": "motorway", "ref": "I 15", "oneway": "yes", "maxspeed": "70 mph", **tags}})
+        members.append(wid)
+        wid += 1
+    for k, (where, kind, side) in enumerate(ramps):
+        j = at[where]
+        dx = 40 if side == "right" else -40
+        far = [node(X0 + dx / 2, Y0 + where + (120 if kind == "exit" else -120)), node(X0 + dx, Y0 + where + (240 if kind == "exit" else -240))]
+        ids = [j] + far if kind == "exit" else far[::-1] + [j]
+        elements.append({"type": "way", "id": 900 + k, "nodes": ids, "tags": {"highway": "motorway_link", "oneway": "yes"}})
+    rel = {"type": "relation", "id": 1, "members": [{"type": "way", "ref": m, "role": ""} for m in members],
+           "tags": {"type": "route", "route": "road", "network": "US:I", "ref": "15", "direction": "north"}}
+    start = FRAME.to_geodetic(X0, Y0)
+    end = FRAME.to_geodetic(X0, y)
+    doc = {"version": 0.6, "osm3s": {"timestamp_osm_base": "2026-01-01T00:00:00Z"}, "elements": [rel] + elements + nodes}
+    return load_osm(doc), {"lat": float(start[0]), "lon": float(start[1])}, {"lat": float(end[0]), "lon": float(end[1])}
+
+
+def build_straight(ways, ramps=()):
+    osm, start, end = straight_osm(ways, ramps)
+    hs = FlatHeights()
+    return build_roads.build_road(osm, FRAME, hs, hs.height_at, "t.main", "I 15", "north", start, end)
+
+
+def ids_of(road):
+    return [[l["id"] for l in sec["lanes"]] for sec in road["sections"]]
+
+
+def test_a_lane_added_on_the_right_opens_after_its_boundary():
+    r, info = build_straight([(1500, {"lanes": "3"}), (1500, {"lanes": "4", "turn:lanes": "|||merge_to_left"})])
+    assert ids_of(r) == [[1, 2, 3], [1, 2, 3, 4]]
+    b = r["sections"][1]["s0"]
+    tp = r["sections"][1]["taper"]
+    # the centred placement moves the lanes over by half a lane, the new right edge by one and a half
+    assert tp["s0"] == b and tp["s1"] == pytest.approx(b + tp["W"] * 70, abs=0.1)
+    assert tp["side"] == "right" and tp["evidence"] == "turn:lanes"
+    secs = normalise_sections(r["sections"])
+    cs = edges_at(secs, b + 1)
+    assert [st["id"] for st in cs["strips"] if st["kind"] == "lane"] == [1, 2, 3, 4]
+    assert cs["lines"][3]["kind"] == "none"  # the opening lane's line waits until it is half open
+
+
+def test_a_lane_added_on_the_left_by_placement():
+    r, info = build_straight([(1500, {"lanes": "3", "placement": "right_of:2"}), (1500, {"lanes": "4", "placement": "right_of:3"})])
+    assert ids_of(r) == [[1, 2, 3], [4, 1, 2, 3]]
+    tp = r["sections"][1]["taper"]
+    assert (tp["side"], tp["evidence"], tp["W"]) == ("left", "placement", 3.66)
+    assert tp["s0"] == r["sections"][1]["s0"]
+    secs = normalise_sections(r["sections"])
+    s = np.linspace(tp["s0"] - 50, tp["s1"] + 50, 200)
+    for lid in (1, 2, 3):  # the lanes it shares with the section before do not move
+        assert np.ptp(lane_centre(secs, lid, s)) < 1e-9
+
+
+def test_a_lane_dropped_on_the_right_closes_before_its_boundary():
+    r, info = build_straight([(1500, {"lanes": "4", "placement": "right_of:2"}), (1500, {"lanes": "3", "placement": "right_of:2"})])
+    assert ids_of(r) == [[1, 2, 3, 4], [1, 2, 3]]
+    b = r["sections"][1]["s0"]
+    tp = r["sections"][1]["taper"]
+    assert (tp["side"], tp["evidence"]) == ("right", "placement")
+    assert tp["s1"] == b and tp["s0"] == pytest.approx(b - 3.66 * 70, abs=0.1)
+    secs = normalise_sections(r["sections"])
+    assert np.isnan(lane_centre(secs, 4, np.array([b]))[0])  # gone at the boundary
+    assert not np.isnan(lane_centre(secs, 4, np.array([tp["s0"] + 1]))[0])
+
+
+def test_an_exit_lane_splitting_off_is_dropped_on_the_side_of_its_ramp():
+    # no turn:lanes and no placement: only the exit ramp says which lane leaves
+    r, info = build_straight([(1500, {"lanes": "4"}), (1500, {"lanes": "3"})], ramps=[(1500, "exit", "left")])
+    assert ids_of(r) == [[1, 2, 3, 4], [2, 3, 4]]
+    tp = r["sections"][1]["taper"]
+    assert (tp["side"], tp["evidence"]) == ("left", "ramp")
+    assert tp["s1"] == r["sections"][1]["s0"]
+    # and an exit-only lane by turn:lanes leaves on the right
+    r2, _ = build_straight([(1500, {"lanes": "4", "turn:lanes": "none|none|none|slight_right"}), (1500, {"lanes": "3"})],
+                           ramps=[(1500, "exit", "right")])
+    assert ids_of(r2) == [[1, 2, 3, 4], [1, 2, 3]]
+    assert r2["sections"][1]["taper"]["evidence"] == "turn:lanes"
+
+
+def test_with_no_evidence_a_lane_comes_and_goes_on_the_right():
+    r, info = build_straight([(1500, {"lanes": "2"}), (1500, {"lanes": "3"})])
+    assert ids_of(r) == [[1, 2], [1, 2, 3]]
+    assert info["decisions"][1]["evidence"] == "rule"
+
+
+def test_two_changes_too_close_are_shortened_and_kept_within_the_rate():
+    r, info = build_straight([(1500, {"lanes": "3", "placement": "right_of:2"}), (100, {"lanes": "4", "placement": "right_of:2"}),
+                              (1500, {"lanes": "3", "placement": "right_of:2"})])
+    assert ids_of(r) == [[1, 2, 3], [1, 2, 3, 4], [1, 2, 3]]
+    t1, t2 = r["sections"][1]["taper"], r["sections"][2]["taper"]
+    assert t1["s1"] <= t2["s0"]  # they never overlap
+    assert t1["shortened"] < 1 and t2["shortened"] < 1
+    rep = {t["s"]: t for t in info["tapers"]}
+    assert all(t["shortened"] and t["rate_ok"] for t in rep.values())
+    secs = normalise_sections(r["sections"])
+    rate, _ = max_edge_rate(r["sections"], np.arange(0, info["length"], 0.25))
+    assert rate <= 1 / 20
+    assert t1["s0"] <= r["sections"][1]["s0"] <= t1["s1"] and t2["s0"] <= r["sections"][2]["s0"] <= t2["s1"]
+    left, right = pavement_edges(secs, np.arange(0, info["length"], 1.0))
+    assert np.all(np.abs(np.diff(left)) < 0.06) and np.all(np.abs(np.diff(right)) < 0.06)
+
+
+def test_tapered_pavement_is_above_the_ground():
+    r, _ = build_straight([(1500, {"lanes": "3"}), (1500, {"lanes": "5"})])
+    doc, blob = encode_roadnet({"roads": [r]})
+    dec = decode_roadnet(doc, blob)[0]
+    hs = FlatHeights()
+    assert build_roads.check_clearance(dec, hs, hs.height_at)["query"]["min_m"] >= 0.29
+
+
+def test_lane_plan_leaves_a_closing_lane_300m_ahead_and_ends_in_a_through_lane():
+    r, info = build_straight([(2000, {"lanes": "3", "placement": "right_of:2"}), (2000, {"lanes": "2", "placement": "right_of:1"})])
+    assert ids_of(r) == [[1, 2, 3], [2, 3]]  # lane 1 closes on the left
+    secs = r["sections"]
+    v = 70 * build_roads.MPH
+    plan, markers, report = plan_lanes(secs, info["length"], 1, {2, 3}, lambda s: v)
+    assert [e["lane"] for e in plan] == [1, 2]
+    closes = secs[1]["taper"]["s0"]
+    assert plan[1]["s1"] <= closes - 300
+    assert plan[1]["s1"] - plan[1]["s0"] == pytest.approx(v * 4.72, rel=0.01)  # 4 s would exceed 1.0 m/s^2
+    assert markers == [{"s": plan[1]["s0"], "kind": "lane", "side": "right", "lane": 2, "label": "Move right to lane 2"}]
+    dyn = path_dynamics(secs, plan, lambda s: v, info["length"], step=0.5)
+    assert dyn["no_lane_count"] == 0 and dyn["max_lateral_accel"] <= 1.0
+
+
+def test_routes_json_has_a_lane_plan_that_starts_in_route_lane():
+    doc = json.loads((ROOT / "public" / "data" / "lv" / "routes.json").read_text())
+    r = next(r for r in doc["routes"] if r["id"] == "i15n")
+    plan = r["lanePlan"]
+    assert plan[0] == {"s0": 0, "lane": r["lane"]}
+    for a, b in zip(plan, plan[1:]):
+        assert b["s0"] < b["s1"] and b["s0"] >= a.get("s1", a["s0"])
+    lane_markers = [m for m in r["markers"] if m["kind"] == "lane"]
+    assert len(lane_markers) == len(plan) - 1

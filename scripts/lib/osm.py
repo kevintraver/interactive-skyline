@@ -204,3 +204,19 @@ def mph(maxspeed):
         return round(float(v) / 1.609344)
     except ValueError:
         return None
+
+
+def ramps(osm, node_ids, mainline_ways):
+    """Link ways that leave (an exit, starting at a node of the line) or join (an entrance, ending
+    at one): [(index in node_ids, "exit" | "entrance", way id)], in order along the line."""
+    where = {nid: k for k, nid in enumerate(node_ids)}
+    out = []
+    for wid, w in osm.ways.items():
+        if wid in mainline_ways or w["tags"].get("highway") != "motorway_link":
+            continue
+        ns = _oriented(osm, wid)
+        if ns[0] in where:
+            out.append((where[ns[0]], "exit", wid))
+        if ns[-1] in where:
+            out.append((where[ns[-1]], "entrance", wid))
+    return sorted(out)

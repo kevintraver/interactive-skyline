@@ -1,10 +1,11 @@
-// The Python road pipeline (scripts/lib/roadnet.py, scripts/lib/refline.py) against the runtime
-// (src/drive/roadnet/format.js, refline.js). tests/fixtures/roads-parity.json is written by
+// The Python road pipeline (scripts/lib/roadnet.py, refline.py, crosssection.py) against the runtime
+// (src/drive/roadnet/format.js, refline.js, crosssection.js). tests/fixtures/roads-parity.json is written by
 // tests/fixtures/roads_make_fixtures.py from the Python side; regenerate it after build_roads.py.
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { decodeRoadNet, encodeRoadNet } from '../../src/drive/roadnet/format.js';
 import { createRefline } from '../../src/drive/roadnet/refline.js';
+import { edgesAt } from '../../src/drive/roadnet/crosssection.js';
 
 const path = (p) => new URL(p, import.meta.url);
 const fixture = JSON.parse(readFileSync(path('../fixtures/roads-parity.json'), 'utf8'));
@@ -61,5 +62,40 @@ describe('the real Las Vegas roadnet', () => {
       expect(Math.abs(out.crossfall - p.crossfall)).toBeLessThan(1e-6);
     }
     expect(worst).toBeLessThan(0.001);
+  });
+});
+
+describe('cross-section parity', () => {
+  const synJson = JSON.parse(readFileSync(path('../fixtures/roadnet/roadnet.json'), 'utf8'));
+  const synBuf = readFileSync(path('../fixtures/roadnet/roadnet.bin'));
+  const syn = decodeRoadNet(synJson, synBuf.buffer.slice(synBuf.byteOffset, synBuf.byteOffset + synBuf.byteLength));
+  const real = decodeRoadNet(realJson, realBin);
+
+  /** Every edge to 1 mm, the same lanes in the same order, the same line kinds. */
+  function agree(road, samples) {
+    let worst = 0;
+    for (const p of samples) {
+      const cs = edgesAt(road, p.s, p.side);
+      expect(cs.edges.length).toBe(p.edges.length);
+      cs.edges.forEach((d, k) => { worst = Math.max(worst, Math.abs(d - p.edges[k])); });
+      expect(cs.lines.map((l) => l.kind)).toEqual(p.lines);
+      expect(cs.strips.filter((st) => st.kind === 'lane').map((st) => st.id)).toEqual(p.ids);
+      if (p.u === null) expect(cs.taper).toBeNull(); else expect(cs.taper.u).toBeCloseTo(p.u, 9);
+    }
+    return worst;
+  }
+
+  it('agrees with the Python twin to 1 mm on the synthetic fixture, through both tapers', () => {
+    const road = syn.roads.find((r) => r.id === fixture.crosssection.synthetic.road);
+    expect(fixture.crosssection.synthetic.samples.some((p) => p.u !== null)).toBe(true);
+    expect(agree(road, fixture.crosssection.synthetic.samples)).toBeLessThan(0.001);
+  });
+
+  it('agrees with the Python twin to 1 mm at 200 random stations of i15n.main', () => {
+    const road = real.roads.find((r) => r.id === fixture.crosssection.real.road);
+    const samples = fixture.crosssection.real.samples;
+    expect(new Set(samples.map((p) => p.s)).size).toBe(200);
+    expect(samples.filter((p) => p.u !== null).length).toBeGreaterThan(10); // some fall in tapers
+    expect(agree(road, samples)).toBeLessThan(0.001);
   });
 });

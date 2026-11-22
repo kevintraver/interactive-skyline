@@ -13,6 +13,7 @@ import { buildSkirt } from '../world/terrain/skirt.js';
 import { loadRoutes } from './routes.js';
 import { createRoadMaterials } from './roadnet/material.js';
 import { createRoadChunks } from './roadnet/chunks.js';
+import { createRoadside } from './roadside/index.js';
 import { createEnv } from './env.js';
 import { createJourney } from './journey.js';
 import { defaultDeparture } from './moment.js';
@@ -41,10 +42,12 @@ export async function createSession(ctx, terrain, hooks) {
     if (!r.ok) throw new Error(`${name}: HTTP ${r.status}`);
     return r;
   };
-  const [net, wide, bitmap] = await Promise.all([
+  const [net, wide, bitmap, signs] = await Promise.all([
     loadRoutes({ fetchJson: (n) => get(n).then((r) => r.json()), fetchBinary: (n) => get(n).then((r) => r.arrayBuffer()) }),
     terrain.loadWide(),
     terrain.hasWide ? get('ground-wide.jpg').then((r) => r.blob()).then(bitmapOf) : null,
+    // the signs are dressing: a city or a build without them still drives
+    get('signs.json').then((r) => r.json()).catch(() => null),
   ]);
 
   const group = new THREE.Group();
@@ -71,6 +74,9 @@ export async function createSession(ctx, terrain, hooks) {
 
   const materials = createRoadMaterials({ anisotropy: renderer.capabilities.getMaxAnisotropy() });
   const chunks = createRoadChunks({ roadnet: net.roadnet, base: city.base, earthR: EARTH_R, parent: roads, materials });
+  const roadside = signs && createRoadside({
+    signs, roadnet: net.roadnet, base: city.base, earthR: EARTH_R, parent: roads, anisotropy: renderer.capabilities.getMaxAnisotropy(),
+  });
   const env = createEnv({ city });
   const clock = env.clock;
   const frameOf = createFrame(city);
@@ -99,6 +105,7 @@ export async function createSession(ctx, terrain, hooks) {
     seam.night = night;
     applyNight();
     chunks.setNight(night);
+    roadside?.setNight(night);
     document.documentElement.dataset.theme = night ? 'dark' : 'light';
   }
 
@@ -109,12 +116,13 @@ export async function createSession(ctx, terrain, hooks) {
     pose = journey.poseAt(clock.now());
     lap('journey');
     chunks.update({ x: pose.position.x, y: -pose.position.z });
+    roadside?.update({ x: pose.position.x, y: -pose.position.z });
     const id = ++updateId;
     loading = true;
     // Paused, the next frame is drawn once the chunks are in, not one per chunk as they arrive: the
     // mesher is quick, and on a slow GPU (or a software one) frames in between starve it of CPU.
     // Playing, the clock asks for every frame anyway.
-    chunks.whenSettled().then(() => { if (id === updateId) loading = false; invalidate(); });
+    Promise.all([chunks.whenSettled(), roadside?.whenSettled()]).then(() => { if (id === updateId) loading = false; invalidate(); });
     updateLook();
     lap('chunks');
   }
@@ -265,7 +273,7 @@ export async function createSession(ctx, terrain, hooks) {
     /** Resolves when the road chunks and terrain for the current pose are in and a frame with them has been drawn. */
     async whenSettled() {
       if (!pose || !group.visible) await nextFrame(); // seek and show bring the chunks up to date at once; otherwise a frame does
-      await Promise.all([chunks.whenSettled(), terrain.whenSettled()]);
+      await Promise.all([chunks.whenSettled(), roadside?.whenSettled(), terrain.whenSettled()]);
       const drawn = renderer.info.render.frame;
       invalidate();
       while (renderer.info.render.frame === drawn) await nextFrame();
@@ -290,6 +298,7 @@ export async function createSession(ctx, terrain, hooks) {
       return {
         render: { calls: r.calls, triangles: r.triangles },
         roads: chunks.stats(),
+        signs: roadside ? roadside.stats() : null,
         terrain: terrain.stats(),
         js: Object.fromEntries(Object.entries(timings).map(([k, v]) => [k, v.summary()])),
       };

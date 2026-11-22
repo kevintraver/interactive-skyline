@@ -38,12 +38,18 @@ describe('road atlas and materials', () => {
     expect(dirt.every((f) => f.color === '#000000')).toBe(true);
   });
 
-  it('builds stock Lambert materials without a canvas, with polygon offset, and switches night', () => {
+  it('builds stock Lambert materials without a canvas, pulling pavement (not embankment) forward in depth, and switches night', () => {
     const m = createRoadMaterials({ anisotropy: 8 });
     expect(m.map).toBe(null); // no canvas under Node: skipped cleanly
     expect(m.road.type).toBe('MeshLambertMaterial');
-    expect(m.road.polygonOffset).toBe(true);
-    expect(m.road.polygonOffsetFactor).toBeLessThan(0);
+    // a slope-scaled polygon offset pulled buried embankment through the ground far away; the bias
+    // is now per vertex, by kind, in the vertex shader
+    expect(m.road.polygonOffset).toBe(false);
+    const shader = { vertexShader: '#include <common>\nvoid main() {\n#include <project_vertex>\n}', fragmentShader: '' };
+    m.road.onBeforeCompile(shader);
+    expect(shader.vertexShader).toContain('attribute float kind;');
+    expect(shader.vertexShader).toMatch(/if \( kind < 2\.5 \) \{ mvPosition\.xyz \*= 0\.9996/);
+    expect(m.road.customProgramCacheKey()).toBe(m.roadNear.customProgramCacheKey());
     m.setNight(true);
     expect(m.roadNear.emissiveIntensity).toBeGreaterThan(m.road.emissiveIntensity);
     expect(m.road.emissiveIntensity).toBeGreaterThan(0);

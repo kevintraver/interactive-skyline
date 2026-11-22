@@ -4,6 +4,13 @@
 //
 // s is metres along the ROAD the route drives (route.s0 is not subtracted), the same s that
 // routes.json uses for markers, starts and the reveal.
+//
+// Sideways the car follows the route's lane plan (routes.json "lanePlan", written by
+// scripts/lib/laneplan.py): the centre line of one lane (a RoadNet lane id, so the same strip of
+// pavement across sections) taken from the tapered cross-section, and each planned change a
+// quintic blend from one lane's centre to the next over the change's [s0, s1]. Both are functions
+// of s alone, so the path is the same in either direction. A route without a plan stays in the
+// lane with id route.lane.
 
 import { Vector3 } from 'three';
 import { createRefline } from './roadnet/refline.js';
@@ -12,7 +19,7 @@ import { edgesAt } from './roadnet/crosssection.js';
 export const MPH = 0.44704;
 /** Peak acceleration of a speed change, m/s^2. */
 export const ACCEL = 1.0;
-/** Seconds of travel over which the car eases across a lane-centre jump at a section change. */
+/** Seconds of travel a planned lane change takes at least (the plan sets each change's span). */
 export const LANE_EASE_SECONDS = 4;
 /** Used when a road has no speed zones. */
 export const DEFAULT_MPH = 65;
@@ -138,15 +145,26 @@ export function createSpeedProfile(road, s0, s1) {
   };
 }
 
-/** Smootherstep: continuous to the second derivative, so lateral acceleration has no step. */
+/** Smootherstep (the quintic of a lane change): continuous to the second derivative. */
 const ease = (u) => (u <= 0 ? 0 : u >= 1 ? 1 : u * u * u * (u * (u * 6 - 15) + 10));
 
-/** Offset of the centre of lane `lane` (1 at the left, clamped) in a section, from the reference line. */
-function laneCentre(road, sec, lane) {
-  const n = Math.min(Math.max(1, lane), sec.lanes.length);
-  const xs = edgesAt(road, sec.s0, 'after');
-  const strip = xs.strips.find((st) => st.kind === 'lane' && st.lane === n - 1);
-  return { lane: n, d: (strip.left + strip.right) / 2 };
+/** Centre offset of the lane with this id at s; where there is none, the nearest lane by number. */
+function laneCentre(road, id, s) {
+  const lanes = edgesAt(road, s).strips.filter((st) => st.kind === 'lane');
+  const st = lanes.find((x) => x.id === id) || lanes[Math.min(Math.max(1, id), lanes.length) - 1];
+  return (st.left + st.right) / 2;
+}
+
+/** The route's lane plan, checked: [{ s0, lane }, { s0, s1, lane }, ...], or one entry from route.lane. */
+export function lanePlanOf(route) {
+  const plan = Array.isArray(route.lanePlan) && route.lanePlan.length ? route.lanePlan : [{ s0: route.s0 ?? 0, lane: route.lane ?? 1 }];
+  let last = -Infinity;
+  return plan.map((e, i) => {
+    if (!Number.isInteger(e?.lane) || e.lane < 1) throw new Error(`lane plan entry ${i} has no lane`);
+    if (i > 0 && !(Number.isFinite(e.s0) && Number.isFinite(e.s1) && e.s1 > e.s0 && e.s0 >= last)) throw new Error(`lane plan entry ${i} needs s0 < s1, after the previous change`);
+    last = i > 0 ? e.s1 : -Infinity;
+    return { s0: e.s0, s1: i > 0 ? e.s1 : e.s0, lane: e.lane };
+  });
 }
 
 /**
@@ -162,22 +180,32 @@ export function createJourney({ route, road, frame, departMs, startS, city }) {
   const start = clampS(Number.isFinite(startS) ? startS : s0);
   let depart = departMs;
 
-  // lane centre per section, and the eased offset across each change
-  const centres = road.sections.map((sec) => laneCentre(road, sec, route.lane ?? 1));
-  const steps = [];
-  for (let i = 1; i < road.sections.length; i++) {
-    const delta = centres[i].d - centres[i - 1].d;
-    if (Math.abs(delta) < 1e-9) continue;
-    const b = road.sections[i].s0;
-    const span = Math.max(1, LANE_EASE_SECONDS * profile.speedOf(b));
-    steps.push({ a: b - span / 2, span, delta });
-  }
-  const offsetAt = (s) => {
-    let d = centres[0].d;
-    for (const st of steps) d += st.delta * ease((s - st.a) / st.span);
-    return d;
+  const plan = lanePlanOf(route);
+  /** Index of the plan entry in force at s (a change counts from its s0). */
+  const entryAt = (s) => {
+    let k = 0;
+    while (k + 1 < plan.length && s >= plan[k + 1].s0) k++;
+    return k;
   };
+  /** Lateral offset of the car at s, and the lane it counts as in. */
+  const placeAt = (s) => {
+    const k = entryAt(s);
+    const e = plan[k];
+    const to = laneCentre(road, e.lane, s);
+    if (k === 0 || s >= e.s1) return { d: to, lane: e.lane };
+    const from = laneCentre(road, plan[k - 1].lane, s);
+    const u = (s - e.s0) / (e.s1 - e.s0);
+    return { d: from + (to - from) * ease(u), lane: u < 0.5 ? plan[k - 1].lane : e.lane };
+  };
+  const offsetAt = (s) => placeAt(s).d;
   const offsetSlope = (s) => (offsetAt(s + 0.01) - offsetAt(s - 0.01)) / 0.02;
+  /** Lane number from the left (1-based) of lane id at s, among the lanes of the section there. */
+  const laneNumber = (id, s) => {
+    const cs = edgesAt(road, s);
+    const k = cs.section.lanes.findIndex((l) => l.id === id);
+    if (k >= 0) return k + 1;
+    return Math.min(Math.max(1, id), cs.section.lanes.length);
+  };
 
   const r = {};
   /** Road surface at s and lateral offset d (positive left), scene axes. */
@@ -197,11 +225,10 @@ export function createJourney({ route, road, frame, departMs, startS, city }) {
   /** Pose at s, with speed and acceleration given. */
   function pose(s, speed, accel) {
     s = clampS(s);
-    const d = offsetAt(s);
+    const place = placeAt(s);
+    const d = place.d;
     const position = surface(s, d, new Vector3());
     const { curvature, grade, crossfall } = refline.at(s, r);
-    const sec = road.sections.findIndex((x) => s < x.s1);
-    const lane = centres[sec < 0 ? centres.length - 1 : sec];
     // tangent of the car's actual path: grade, lateral easing and earth curvature included
     const e = 0.25;
     const sa = Math.max(0, s - e), sb = Math.min(road.length, s + e);
@@ -214,7 +241,7 @@ export function createJourney({ route, road, frame, departMs, startS, city }) {
     const up = new Vector3().crossVectors(forward, left).normalize();
     const right = new Vector3().crossVectors(forward, up).normalize();
     return {
-      s, lane: lane.lane, lateral: d - lane.d, position, forward, up, right,
+      s, lane: laneNumber(place.lane, s), laneId: place.lane, lateral: d - laneCentre(road, place.lane, s), position, forward, up, right,
       speed, accel, curvature, grade, crossfall,
       /** Rate of lateral drift, metres per metre; the body layer will want it. */
       lateralSlope: offsetSlope(s),
@@ -233,6 +260,10 @@ export function createJourney({ route, road, frame, departMs, startS, city }) {
     reveal: route.reveal ?? null,
     starts: route.starts ?? {},
     markers: (route.markers || []).map((m) => ({ ...m })).sort((p, q) => p.s - q.s),
+    /** The lane plan the car follows: [{ s0, lane }, { s0, s1, lane }, ...], lanes by RoadNet id. */
+    lanePlan: plan.map((e) => ({ ...e })),
+    /** Lateral offset of the car from the reference line at s (positive left), metres. */
+    offsetAt,
     /** Simulation time (UTC ms) at startS. */
     get departMs() { return depart; },
     sAt,

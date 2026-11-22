@@ -1,4 +1,8 @@
 import { describe, it, expect } from 'vitest';
+import { readFileSync } from 'node:fs';
+import { decodeRoadNet } from '../../../src/drive/roadnet/format.js';
+import { laneCentreAt, tapersOf } from '../../../src/drive/roadnet/crosssection.js';
+import { parseRoutes } from '../../../src/drive/routes.js';
 import { createJourney, createSpeedProfile, MPH, ACCEL } from '../../../src/drive/journey.js';
 import { createRefline } from '../../../src/drive/roadnet/refline.js';
 import { curveDrop } from '../../../src/world/frame.js';
@@ -162,29 +166,127 @@ describe('pose', () => {
     }
   });
 
-  it('drives the centre of its lane and eases across a lane-count change', () => {
-    // lane 2 of 3 (centred) is the reference line; lane 2 of 4 is 1.83 m to its left
-    expect(offsetOf(1400, j.poseAtS(1400).position)).toBeCloseTo(0, 6);
-    expect(offsetOf(1800, j.poseAtS(1800).position)).toBeCloseTo(1.83, 6);
+  it('drives the centre of its lane through tapers, the lane keeping its identity', () => {
+    // lane 2 (the middle of three) is the reference line; lane 4 opens on the right over 1600..1856.2
+    // and lane 1 closes on the left over 2143.8..2400, and neither moves lane 2
+    for (const s of [150, 1400, 1600, 1700, 1800, 2200, 2300, 2600, 2900]) {
+      expect(offsetOf(s, j.poseAtS(s).position)).toBeCloseTo(0, 6);
+      expect(j.poseAtS(s).lateral).toBeCloseTo(0, 6);
+      expect(j.poseAtS(s).laneId).toBe(2);
+    }
     expect(j.poseAtS(1400).lane).toBe(2);
-    expect(j.poseAtS(1400).lateral).toBeCloseTo(0, 6);
-    const mid = j.poseAtS(1600);
-    expect(offsetOf(1600, mid.position)).toBeCloseTo(0.915, 3);
-    expect(mid.lateral).toBeCloseTo(0.915 - 1.83, 3);
-    // continuous, gentle, and the same whichever way it is walked
-    const up = [], down = [];
-    for (let s = 1500; s <= 1700; s += 0.25) up.push(offsetOf(s, j.poseAtS(s).position));
-    for (let s = 1700; s >= 1500; s -= 0.25) down.push(offsetOf(s, j.poseAtS(s).position));
-    expect(down.reverse()).toEqual(up);
-    for (let i = 1; i < up.length; i++) expect(Math.abs(up[i] - up[i - 1])).toBeLessThan(0.01);
-    // spread over about 4 s of travel
-    expect(offsetOf(1600 - 0.5 * 4 * 31.29 - 1, j.poseAtS(1600 - 63.6).position)).toBeCloseTo(0, 6);
-    expect(offsetOf(1664, j.poseAtS(1664).position)).toBeCloseTo(1.83, 6);
+    expect(j.poseAtS(2600).lane).toBe(1); // lane 1 has gone: lane 2 is now the leftmost
+    expect(j.lanePlan).toEqual([{ s0: 100, s1: 100, lane: 2 }]);
+  });
+
+  describe('a planned lane change', () => {
+    const v = 70 * MPH;
+    const T = 4.72; // what the pipeline uses for a 3.66 m change: 4 s would peak at 1.32 m/s^2
+    const s1 = 1840; // lane 1 starts to close at 2143.8: out of it 300 m before
+    const plan = [{ s0: 100, lane: 1 }, { s0: s1 - T * v, s1, lane: 2 }];
+    const k = createJourney({ route: { ...ROUTE, lane: 1, lanePlan: plan }, road: ROAD, frame, departMs: DEPART });
+    const step = 0.25;
+    const d = (s) => k.offsetAt(s);
+
+    it('starts in lane 1 and ends in lane 2, continuous and the same in both directions', () => {
+      expect(d(1000)).toBeCloseTo(3.66, 9);
+      expect(d(1900)).toBeCloseTo(0, 9);
+      expect(k.poseAtS(1000).lane).toBe(1);
+      expect(k.poseAtS(1900).lane).toBe(2);
+      const up = [], down = [];
+      for (let s = 1600; s <= 1900; s += step) up.push(offsetOf(s, k.poseAtS(s).position));
+      for (let s = 1900; s >= 1600; s -= step) down.push(offsetOf(s, k.poseAtS(s).position));
+      expect(down.reverse()).toEqual(up);
+      for (let i = 1; i < up.length; i++) expect(Math.abs(up[i] - up[i - 1])).toBeLessThan(0.02);
+    });
+
+    it('keeps lateral acceleration under 1.0 m/s^2 and jerk under 2.5 m/s^3', () => {
+      let aMax = 0, jMax = 0, prevA = null;
+      for (let s = 1600; s <= 1900; s += step) {
+        const d2 = (d(s + step) - 2 * d(s) + d(s - step)) / (step * step);
+        const a = v * v * d2;
+        aMax = Math.max(aMax, Math.abs(a));
+        if (prevA !== null) jMax = Math.max(jMax, Math.abs((a - prevA) / step) * v);
+        prevA = a;
+      }
+      expect(aMax).toBeGreaterThan(0.8);
+      expect(aMax).toBeLessThanOrEqual(1.0);
+      expect(jMax).toBeLessThanOrEqual(2.5);
+    });
+
+    it('is out of the closing lane 300 m before it starts to close', () => {
+      const closes = ROAD.sections[2].taper.s0;
+      for (let s = 100; s <= 2900; s += 5) if (k.poseAtS(s).laneId === 1 || s < s1) expect(closes - s >= 300 || s >= s1).toBe(true);
+      expect(closes - s1).toBeGreaterThanOrEqual(300);
+    });
   });
 
   it('clamps the lane to the lane count', () => {
     const south = createJourney({ route: route('south'), road: road('test.south'), frame, departMs: DEPART });
     const p = south.poseAtS(600);
     expect(p.lane).toBe(2);
+  });
+});
+
+describe('the real route', () => {
+  const read = (p) => readFileSync(new URL(`../../../public/data/lv/${p}`, import.meta.url));
+  const bin = read('roadnet.bin');
+  const net = decodeRoadNet(JSON.parse(read('roadnet.json')), bin.buffer.slice(bin.byteOffset, bin.byteOffset + bin.byteLength));
+  const { routes } = parseRoutes(JSON.parse(read('routes.json')), net);
+  const route = routes.find((r) => r.id === 'i15n');
+  const road = net.roads.find((r) => r.id === route.road);
+  const jr = createJourney({ route, road, frame, departMs: DEPART });
+
+  /** Where each lane stops being full width, if it ends before the road does. */
+  function laneEnds() {
+    const ends = new Map();
+    const secs = road.sections;
+    secs.forEach((sec, i) => {
+      if (i === secs.length - 1) return;
+      const next = new Set(secs[i + 1].lanes.map((l) => l.id));
+      for (const l of sec.lanes) {
+        if (next.has(l.id)) continue;
+        const tp = tapersOf(road).find((x) => x.from <= i && i < x.i);
+        ends.set(l.id, tp ? tp.s0 : secs[i + 1].s0);
+      }
+    });
+    return ends;
+  }
+
+  it('has a lane plan that starts in route.lane', () => {
+    expect(Array.isArray(route.lanePlan)).toBe(true);
+    expect(route.lanePlan[0].lane).toBe(route.lane);
+    expect(jr.lanePlan[0].lane).toBe(route.lane);
+  });
+
+  it('is in a lane, continuously, along the whole route, never one ending within 300 m', () => {
+    const ends = laneEnds();
+    let prev = jr.offsetAt(route.s0);
+    for (let s = route.s0; s <= route.s1; s += 2) {
+      const pose = jr.poseAtS(s);
+      const d = jr.offsetAt(s);
+      expect(Number.isFinite(d)).toBe(true);
+      expect(Math.abs(d - prev)).toBeLessThan(0.15); // no jumps: at most 1 m sideways per 20 m, and lane changes
+      prev = d;
+      expect(laneCentreAt(road, pose.laneId, s)).not.toBeNull();
+      const end = ends.get(pose.laneId);
+      if (end !== undefined) expect(end - s).toBeGreaterThanOrEqual(300);
+    }
+  });
+
+  it('keeps lateral acceleration under 1.0 m/s^2 and jerk under 2.5 m/s^3 at the speed there', () => {
+    const step = 0.5;
+    let aMax = 0, jMax = 0, prevA = null;
+    for (let s = route.s0 + step; s < route.s1 - step; s += step) {
+      const v = jr.speedAt(s);
+      const d0 = jr.offsetAt(s - step), d1 = jr.offsetAt(s), d2 = jr.offsetAt(s + step);
+      const a = v * v * (d2 - 2 * d1 + d0) / (step * step) + jr.profile.accelOf(s) * (d2 - d0) / (2 * step);
+      aMax = Math.max(aMax, Math.abs(a));
+      if (prevA !== null) jMax = Math.max(jMax, Math.abs(a - prevA) / step * v);
+      prevA = a;
+    }
+    console.log(`real route: lateral acceleration up to ${aMax.toFixed(3)} m/s^2, jerk up to ${jMax.toFixed(3)} m/s^3`);
+    expect(aMax).toBeLessThanOrEqual(1.0);
+    expect(jMax).toBeLessThanOrEqual(2.5);
   });
 });

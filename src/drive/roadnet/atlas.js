@@ -39,9 +39,11 @@ export function regionU(name, t) {
   return (a + inset + t * (b - a - 2 * inset)) / ATLAS_W;
 }
 
-// sun-faded desert asphalt; specks kept low in contrast so they read as texture, not blotches
+// sun-faded desert asphalt; specks kept low in contrast so they read as texture, not blotches.
+// The dirt is the average of the aerial photo within 200 m of I-15 (about #969593), so an embankment
+// reads as graded ground and not as a painted strip beside it.
 const DAY = { lane: '#6a6863', laneSpeck: ['#64625d', '#706e69', '#5f5d58'], shoulder: '#7b766d', shoulderSpeck: ['#747067', '#827d73'],
-  dirt: '#b09876', dirtSpeck: ['#a89070', '#b8a07e', '#a48c6b'], white: '#e9e8e2', yellow: '#e3b42c' };
+  dirt: '#989692', dirtSpeck: ['#908e8a', '#a09e99', '#8c8a86'], white: '#e9e8e2', yellow: '#e3b42c' };
 // Emissive map for the night look: markings stand out (they are retroreflective; this stands in
 // for headlights until they exist), asphalt barely, dirt not at all.
 const NIGHT = { lane: '#3a3a3a', laneSpeck: ['#363636', '#3e3e3e'], shoulder: '#323231', shoulderSpeck: ['#2e2e2e', '#363635'],

@@ -32,9 +32,14 @@ from lib.alignment import fit_line, stations  # noqa: E402
 from lib.frame import create_frame, curve_drop  # noqa: E402
 from lib.ground import drawn_surface  # noqa: E402
 from lib.heights import load_heights  # noqa: E402
+from lib.crosssection import normalise_sections, pavement_edges  # noqa: E402
+from lib.lanes import assign_ids, decide_sides, lane_evidence, parse_turn, place_tapers, turn_in  # noqa: E402
+from lib.median import narrow_inside_shoulders  # noqa: E402
 from lib.osm import exit_links, junctions, load_osm, mph, route_relations, stitch  # noqa: E402
 from lib.profile import envelope, smooth_from_above  # noqa: E402
+from lib.laneplan import path_dynamics, path_offsets, plan_lanes  # noqa: E402
 from lib.refline import Refline  # noqa: E402
+from lib.roadchecks import carriageways, check_clearance, edge_rates, lane_counts_match, plan_overlap  # noqa: E402
 from lib.roadnet import decode_roadnet, encode_roadnet  # noqa: E402
 from lib.sightline import building_top, eye_scene_y, visible  # noqa: E402
 
@@ -140,17 +145,6 @@ def placement_ok(p, lanes):
     return p == "centre" or bool(m and 1 <= int(m.group(2)) <= lanes)
 
 
-def left_edge(placement, lanes):
-    """Offset of lane 1's left edge from the reference line (crosssection.js leftEdgeOffset)."""
-    total = lanes * LANE_W
-    if placement == "centre":
-        return total / 2
-    kind, n = placement.split(":")
-    n = int(n)
-    before = (n - 1) * LANE_W
-    return {"left_of": before, "middle_of": before + LANE_W / 2, "right_of": before + LANE_W}[kind]
-
-
 def crossfall_rule(curvature, speed_mph):
     """2% falling to the right on tangents and gentle curves; on curves the AASHTO-style rule
     e = e_max * Rmin / R, banked into the curve. A left curve keeps the normal crown until it
@@ -203,6 +197,12 @@ def exit_text(osm, nid, links):
 
 def build_road(osm, frame, hs, top, road_id, ref, direction, start, end):
     """One carriageway between two ends. Returns (road dict for the writer, info for the report)."""
+    return finish_road(plan_road(osm, frame, hs, top, road_id, ref, direction, start, end))
+
+
+def plan_road(osm, frame, hs, top, road_id, ref, direction, start, end):
+    """The first half of build_road: the line, its stations and its lane sections with lane ids.
+    Returns its state for finish_road (and for narrow_inside_shoulders in between)."""
     to_local = frame.to_local
     sxy = tuple(float(v) for v in to_local(start["lat"], start["lon"]))
     exy = tuple(float(v) for v in to_local(end["lat"], end["lon"]))
@@ -276,15 +276,8 @@ def build_road(osm, frame, hs, top, road_id, ref, direction, start, end):
     # crossfall by rule, eased over 60 m so the pavement rolls rather than steps
     st["crossfall"] = smooth(crossfall_rule(smooth(st["curvature"], 15), speed), 15)
 
-    # pavement edges per station from the sections
-    left = np.zeros(n)
-    right = np.zeros(n)
     sections = []
     for s0, s1, (lanes, pl, (sl, sr)) in sec_runs:
-        m = (s >= s0) & (s <= s1)
-        le = left_edge(pl, lanes)
-        left[m] = np.maximum(left[m], le + sl) if m.any() else left[m]
-        right[m] = np.minimum(right[m], le - lanes * LANE_W - sr)
         sec = {"s0": rnd(s0), "s1": rnd(s1), "lanes": [{"w": LANE_W, "kind": "drive"} for _ in range(lanes)]}
         if (sl, sr) != (SHOULDER_WIDE if lanes >= 3 else SHOULDER_NARROW, SHOULDER_WIDE):
             sec["left"] = {"shoulder": sl}
@@ -295,7 +288,33 @@ def build_road(osm, frame, hs, top, road_id, ref, direction, start, end):
                              "crossfall": "rule"}
         sections.append(sec)
     sections[-1]["s1"] = length  # exactly the road's length, as the format checks
-    # stations on a boundary take the wider of the two sections (both were applied above)
+
+    # which side lanes come and go on, lane ids, and a taper at every change
+    def speed_at(sv):
+        return next((v for a, b, v in speed_runs if a <= sv <= b and v), float(np.nanmedian(speed)))
+
+    evidence = lane_evidence(osm, sections, ids, seg_way, node_s, set(chain.ways), st, to_local, SPACING)
+    decisions = decide_sides(sections, evidence)
+    assign_ids(sections, decisions)
+    return dict(locals())
+
+
+NAMES = ("osm", "hs", "top", "sections", "speed_at", "length", "decisions", "s", "st", "speed", "speed_runs",
+         "surface_runs", "bridge_runs", "road_id", "ref", "direction", "ids", "node_s", "chain", "n", "to_local",
+         "fit", "on_road", "d_s", "d_e", "raw_sections", "sec_runs", "rels", "seg_way", "evidence")
+
+
+def finish_road(state):
+    """The second half of build_road, once the sections are final: tapers, the profile, exits."""
+    (osm, hs, top, sections, speed_at, length, decisions, s, st, speed, speed_runs, surface_runs, bridge_runs,
+     road_id, ref, direction, ids, node_s, chain, n, to_local, fit, on_road, d_s, d_e, raw_sections, sec_runs,
+     rels, seg_way, evidence) = (state[k] for k in NAMES)
+    tapers = place_tapers(sections, speed_at, length, rnd)
+    for i, dc in decisions.items():
+        sections[i]["provenance"]["lane_side"] = dc["evidence"]
+        if "taper" in sections[i]:
+            sections[i]["taper"].update(side=dc["side"], evidence=dc["evidence"])
+    left, right = pavement_edges(normalise_sections(sections), s)
 
     # heights: the envelope over the highest drawn or queried ground, then smoothed from above
     def ground(px, py):
@@ -347,86 +366,10 @@ def build_road(osm, frame, hs, top, road_id, ref, direction, start, end):
         "right": right, "speed": speed, "radius": radius, "exits": exits, "length": length,
         "end_offsets": {"start_m": round(float(d_s), 1), "end_m": round(float(d_e), 1)},
         "raw_sections": raw_sections, "sec_runs": sec_runs, "relations": rels, "speed_runs": speed_runs,
+        "ids": ids, "seg_way": seg_way, "decisions": decisions, "tapers": tapers, "evidence": evidence,
+        "turn_end": turn_in(osm, seg_way, node_s, sections[-1], last=True),
     }
     return road, info
-
-
-def check_clearance(road_dec, hs, top, along=1.0, across=0.5):
-    """Lowest height of the pavement (lanes and shoulders, with crossfall, as the refline
-    interpolates it) above the ground, sampled every `along` m and `across` m. Returns the
-    minimum against the drawn surface and against the bilinear height query, and where."""
-    line = Refline(road_dec)
-    s = np.arange(0, line.length + 1e-9, along)
-    worst = {"drawn": (np.inf, 0.0), "query": (np.inf, 0.0)}
-    secs = road_dec["sections"]
-    for c in range(0, len(s), 4000):
-        ss = s[c:c + 4000]
-        p = line.at(ss)
-        # pavement edges at each s from the sections
-        le = np.zeros(len(ss))
-        ri = np.zeros(len(ss))
-        for sec in secs:
-            m = (ss >= sec["s0"]) & (ss <= sec["s1"])
-            lanes = len(sec["lanes"])
-            sl = sec.get("left", {}).get("shoulder", SHOULDER_WIDE if lanes >= 3 else SHOULDER_NARROW)
-            sr = sec.get("right", {}).get("shoulder", SHOULDER_WIDE)
-            e = left_edge(sec.get("placement", "centre"), lanes)
-            le[m] = np.maximum(le[m], e + sl)
-            ri[m] = np.minimum(ri[m], e - lanes * LANE_W - sr)
-        k = int(np.ceil((le - ri).max() / across)) + 1
-        d = ri[:, None] + (le - ri)[:, None] * np.linspace(0, 1, k)[None, :]
-        nx, ny = -np.sin(p["heading"]), np.cos(p["heading"])
-        px = p["x"][:, None] + d * nx[:, None]
-        py = p["y"][:, None] + d * ny[:, None]
-        ph = p["h"][:, None] + p["crossfall"][:, None] * d
-        for name, g in (("drawn", top(px, py)), ("query", hs.height_at(px, py))):
-            gap = ph - g
-            i = np.unravel_index(np.argmin(gap), gap.shape)
-            if gap[i] < worst[name][0]:
-                worst[name] = (float(gap[i]), float(ss[i[0]]))
-    return {k: {"min_m": round(v[0], 3), "at_s": round(v[1], 1)} for k, v in worst.items()}
-
-
-def carriageways(main, opp, step=100.0):
-    """How the opposite carriageway lies beside the main one, for the report and the browser:
-    the distance between the reference lines, which side the opposite one is on, and how much
-    higher it is, per 1 km of the main road, plus the stretches out of the ordinary."""
-    from scipy.spatial import cKDTree
-
-    tree = cKDTree(np.column_stack([opp["x"], opp["y"]]))
-    k = int(round(step / main["spacing"]))
-    idx = np.arange(0, main["count"], k)
-    d, j = tree.query(np.column_stack([main["x"][idx], main["y"][idx]]))
-    hd = main["heading"][idx]
-    lateral = -(opp["x"][j] - main["x"][idx]) * np.sin(hd) + (opp["y"][j] - main["y"][idx]) * np.cos(hd)
-    dh = opp["h"][j] - main["h"][idx]
-    s = idx * main["spacing"]
-    per_km = []
-    for km in range(int(np.ceil(s[-1] / 1000))):
-        m = (s >= km * 1000) & (s < (km + 1) * 1000)
-        if m.any():
-            per_km.append({"km": km, "apart_m": [round(float(d[m].min()), 1), round(float(d[m].max()), 1)],
-                           "opp_higher_m": [round(float(dh[m].min()), 2), round(float(dh[m].max()), 2)]})
-
-    def stretches(mask):
-        out, start = [], None
-        for i, v in enumerate(mask):
-            if v and start is None:
-                start = i
-            if (not v or i == len(mask) - 1) and start is not None:
-                end = i if v else i - 1
-                out.append({"s0": float(s[start]), "s1": float(s[end])})
-                start = None
-        return out
-
-    return {
-        "apart_m": {"min": round(float(d.min()), 1), "median": round(float(np.median(d)), 1), "max": round(float(d.max()), 1)},
-        "opposite_on_left_everywhere": bool(np.all(lateral > 0)),
-        "wrong_side": stretches(lateral <= 0),
-        "far_apart_over_45m": stretches(d > 45),
-        "height_differs_over_3m": stretches(np.abs(dh) > 3),
-        "per_km": per_km,
-    }
 
 
 def posted_seconds(speed_list, s0, s1):
@@ -477,21 +420,26 @@ def main():
         snapshots.add(osm.timestamp)
         rid = rc["id"]
         print(f"{rid}: stitching and fitting {rc['ref']} {rc['direction']}")
-        main_road, mi = build_road(osm, frame, hs, top, f"{rid}.main", rc["ref"], rc["direction"], rc["start"], rc["end"])
-        roads.append(main_road)
+        pm = plan_road(osm, frame, hs, top, f"{rid}.main", rc["ref"], rc["direction"], rc["start"], rc["end"])
         opp_dir = OPPOSITE[rc["direction"]]
         opp_id = re.sub(r"[nsew]$", opp_dir[0], rid) + ".opp"
         rr = {"id": rid, "main": {}, "opposite": {}}
         try:
             print(f"{rid}: the opposite carriageway, {rc['ref']} {opp_dir}")
-            opp_road, oi = build_road(osm, frame, hs, top, opp_id, rc["ref"], opp_dir, rc["end"], rc["start"])
-            if oi["chain"].gaps or oi["chain"].against_oneway:
-                raise ValueError(f"stitching needed gaps {oi['chain'].gaps} or ran against oneway {oi['chain'].against_oneway}")
-            roads.append(opp_road)
+            po = plan_road(osm, frame, hs, top, opp_id, rc["ref"], opp_dir, rc["end"], rc["start"])
+            if po["chain"].gaps or po["chain"].against_oneway:
+                raise ValueError(f"stitching needed gaps {po['chain'].gaps} or ran against oneway {po['chain'].against_oneway}")
         except ValueError as ex:
-            opp_road, oi = None, None
+            po = None
             rr["opposite"] = {"built": False, "why": str(ex)}
             print(f"  not built: {ex}")
+        if po is not None:
+            rr["inside_shoulders"] = narrow_inside_shoulders(pm, po)
+        main_road, mi = finish_road(pm)
+        roads.append(main_road)
+        opp_road, oi = finish_road(po) if po is not None else (None, None)
+        if opp_road is not None:
+            roads.append(opp_road)
         report["routes"][rid] = rr
         rr["_main"], rr["_opp"] = (main_road, mi), (opp_road, oi)
 
@@ -540,8 +488,13 @@ def main():
                                        "s": round(float(np.argmax(dec["h"]) * SPACING), 0)}},
                 "sections": [{"s0": sec["s0"], "s1": sec["s1"], "lanes": len(sec["lanes"]),
                               **({"placement": sec["placement"]} if "placement" in sec else {}),
-                              **({"shoulders": [sec["left"]["shoulder"], sec["right"]["shoulder"]]} if "left" in sec else {})}
-                             for sec in road["sections"]],
+                              **({"shoulders": [nsec["left"]["shoulder"], nsec["right"]["shoulder"]]} if "left" in sec or "right" in sec else {})}
+                             for sec, nsec in zip(road["sections"], normalise_sections(road["sections"]))],
+                "lane_sides": [{"s": road["sections"][i]["s0"], "lanes": [len(road["sections"][i - 1]["lanes"]), len(road["sections"][i]["lanes"])],
+                                **{k: dc[k] for k in ("side", "evidence", "conflicts")}} for i, dc in sorted(info["decisions"].items())],
+                "tapers": info["tapers"],
+                "edge_rate": edge_rates(dec),
+                "lane_counts": lane_counts_match(road["sections"], info["raw_sections"], info["length"]),
                 "speed": road["speed"],
                 "bridges": len(road["bridges"]),
                 "exits": [{k: e[k] for k in ("s", "ref", "label", "side")} for e in road["links"]],
@@ -555,14 +508,16 @@ def main():
         target = building_top(city, target_id)
         s_eye = np.arange(0, length + 1e-9, SPACING)
         p = line.at(s_eye)
-        lane = 2
-        # lane centre offsets from the sections, lane clamped to each section's count
-        d_eye = np.zeros(len(s_eye))
-        for sec in dec["sections"]:
-            m = (s_eye >= sec["s0"]) & (s_eye <= sec["s1"])
-            nl = len(sec["lanes"])
-            ln = min(lane, nl)
-            d_eye[m] = left_edge(sec.get("placement", "centre"), nl) - (ln - 0.5) * LANE_W
+        lane = 2  # the starting lane: second from the left at the start
+        through = parse_turn(mi["turn_end"], len(dec["sections"][-1]["lanes"]))
+        last_ids = [l["id"] for l in dec["sections"][-1]["lanes"]]
+        through_ids = {lid for lid, tk in zip(last_ids, through) if tk & {"through", "none"}} if through else set(last_ids)
+
+        def speed_ms(sv):
+            return next(z["mph"] for z in reversed(main_road["speed"]) if z["s0"] <= sv) * MPH
+
+        lane_plan, lane_markers, lane_report = plan_lanes(dec["sections"], length, lane, through_ids, speed_ms)
+        d_eye = path_offsets(dec["sections"], lane_plan, s_eye)
         ex = p["x"] - d_eye * np.sin(p["heading"])
         ey = p["y"] + d_eye * np.cos(p["heading"])
         eh = p["h"] + p["crossfall"] * d_eye
@@ -616,7 +571,8 @@ def main():
                 markers.append({"s": rnd(sp), "kind": "place", "label": pl["label"]})
         if reveal_s is not None:
             markers.append({"s": rnd(reveal_s), "kind": "reveal", "label": "First view of the Strip"})
-        order = {"exit": 0, "place": 1, "reveal": 2}
+        markers += lane_markers
+        order = {"exit": 0, "place": 1, "reveal": 2, "lane": 3}
         markers.sort(key=lambda m: (m["s"], order[m["kind"]]))
 
         city_exit = find_exit(rc.get("cityStart", {}).get("exit", "")) if rc.get("cityStart") else None
@@ -630,6 +586,7 @@ def main():
             "starts": {"reveal": rnd(s_before(speed_list, rev_s, LEAD_SECONDS)), "start": 0,
                        "city": rnd(city_exit["s"]) if city_exit else None},
             "markers": markers,
+            "lanePlan": lane_plan,
         }
         if opp_road is not None:
             route["opposite"] = opp_road["id"]
@@ -671,6 +628,20 @@ def main():
             cw = rr["carriageways"] = carriageways(dec, decoded[opp_road["id"]])
             acc["carriageways"] = {"ok": cw["opposite_on_left_everywhere"] and cw["apart_m"]["min"] >= 10,
                                    "apart_m": cw["apart_m"], "wrong_side": cw["wrong_side"]}
+        for key in ("main", "opposite"):
+            if rr[key].get("built"):
+                er, lc = rr[key]["edge_rate"], rr[key]["lane_counts"]
+                acc[f"{key}_edge_rate"] = {"ok": er["max_m_per_m"] <= er["limit"] + 1e-6 and not er["abrupt_changes"], **er}
+                acc[f"{key}_lane_counts"] = {"ok": lc["matching"] >= lc["stations"] - 1, "matching": lc["matching"],
+                                             "of": lc["stations"], "mismatches": lc["mismatches"]}
+        if opp_road is not None:
+            ov = rr["plan_overlap"] = plan_overlap(dec, decoded[opp_road["id"]])
+            acc["no_overlap"] = {"ok": ov["min_gap_m"] > 0, **ov}
+        dyn = path_dynamics(dec["sections"], lane_plan, speed_ms, length, step=0.5)
+        lanes_ok = all(e.get("why") for e in lane_report)
+        rr["lane_plan"] = {"plan": lane_plan, "changes": lane_report, "through_at_end": sorted(through_ids), **dyn}
+        acc["lane_plan"] = {"ok": dyn["no_lane_count"] == 0 and dyn["max_lateral_accel"] <= 1.0 and lanes_ok,
+                            "changes": len(lane_report), **{k: dyn[k] for k in ("max_lateral_accel", "at_s", "max_lateral_jerk")}}
         rr["reveal"] = reveal_info
         rr["places"] = places
         rr["acceptance"] = acc

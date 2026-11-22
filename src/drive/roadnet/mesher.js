@@ -4,11 +4,15 @@
  * Each row across the road is a run of strips, left to right: embankment skirt and slope, shoulder,
  * edge-line strip, lane, lane-line strip, ..., edge-line strip, shoulder, slope, skirt. Every strip
  * has its own two vertices so UVs and kinds can change between strips. Rows fall on every 1st, 4th
- * or 16th station (levels 0, 1, 2) plus the ends of the stretch, section boundaries and `split`
- * points, so the ends of a chunk are the same vertices at every level and neighbours never crack.
+ * or 16th station (levels 0, 1, 2) plus the ends of the stretch, section boundaries, the ends and
+ * middle of every taper and `split` points, so the ends of a chunk are the same vertices at every
+ * level and neighbours never crack. Between two such cuts the strips keep their number and kinds,
+ * and every row takes the cross-section at its own chainage (inside a taper the widths change
+ * from row to row); a span's last row asks for the cross-section "just before" its chainage, so
+ * the two rows at a cut have the same positions and may differ only in kinds.
  */
 import { createRefline } from './refline.js';
-import { edgesAt } from './crosssection.js';
+import { edgesAt, tapersOf } from './crosssection.js';
 import { CYCLE, MARK_W, KIND, regionU } from './atlas.js';
 
 export const LOD_STRIDE = [1, 4, 16]; // stations between rows, per level
@@ -48,10 +52,11 @@ export function rowPieces(cs) {
   const L = cs.left, R = cs.right;
   pieces.push({ dl: L + EMB_W, dr: L + EMBANKMENT[0][0], tl: 1, tr: EMBANKMENT[0][0] / EMB_W, region: 'dirt', kind: KIND.embankment, emb: [-1, EMB_W, EMBANKMENT[0][0]] });
   pieces.push({ dl: L + EMBANKMENT[0][0], dr: L, tl: EMBANKMENT[0][0] / EMB_W, tr: 0, region: 'dirt', kind: KIND.embankment, emb: [-1, EMBANKMENT[0][0], 0] });
+  const keepAll = !!cs.taper; // in a taper strips come and go through zero width: keep them all
   strips.forEach((st, i) => {
     const l = st.left - (i > 0 ? reach[i - 1][1] : 0);
     const r = st.right + (i < lines.length ? reach[i][0] : 0);
-    if (l - r > 1e-6) {
+    if (keepAll || l - r > 1e-6) {
       const region = st.kind === 'lane' ? 'lane' : 'shoulder';
       pieces.push({ dl: l, dr: r, tl: 0, tr: 1, region, kind: st.kind === 'lane' ? KIND.lane : KIND.shoulder });
     }
@@ -76,11 +81,16 @@ function embDrop(e) {
   return e <= w1 ? (e * d1) / w1 : d1 + (Math.min(e, w1 + w2) - w1) * (d2 / w2);
 }
 
-/** Row chainages for [s0, s1] at a level: stride stations, plus the ends, section boundaries and split points. */
+/**
+ * Row chainages for [s0, s1] at a level: stride stations, plus the ends, section boundaries, the
+ * ends and middle of every taper, and split points.
+ */
 export function rowStations(road, s0, s1, lod, split = 0) {
   const step = LOD_STRIDE[lod] * road.spacing;
   const cuts = new Set([s0, s1]);
-  for (const sec of road.sections) if (sec.s0 > s0 && sec.s0 < s1) cuts.add(sec.s0);
+  const add = (s) => { if (s > s0 && s < s1) cuts.add(s); };
+  for (const sec of road.sections) add(sec.s0);
+  for (const tp of tapersOf(road)) { add(tp.s0); add((tp.s0 + tp.s1) / 2); add(tp.s1); }
   if (split > 0) for (let s = Math.ceil(s0 / split + 1e-9) * split; s < s1 - 1e-9; s += split) cuts.add(s);
   const ends = [...cuts].sort((a, b) => a - b);
   const spans = [];
@@ -112,11 +122,13 @@ export function meshChunk({ road, s0, s1, lod, base, earthR, split = 0, origin }
   const spans = rowStations(road, s0, s1, lod, split);
   const p = {};
   let vCount = 0, iCount = 0;
+  // a row's cross-section: the span's last row asks for the one that holds up to its chainage
+  const csAt = (sp, r) => edgesAt(road, sp.rows[r], r === sp.rows.length - 1 ? 'before' : 'after');
   const rowsOf = spans.map((sp) => {
-    const pieces = rowPieces(edgesAt(road, (sp.s0 + sp.s1) / 2));
-    vCount += sp.rows.length * pieces.length * 2;
-    iCount += (sp.rows.length - 1) * pieces.length * 6;
-    return pieces;
+    const n = rowPieces(csAt(sp, 0)).length;
+    vCount += sp.rows.length * n * 2;
+    iCount += (sp.rows.length - 1) * n * 6;
+    return n;
   });
   if (!origin) {
     ref.at((s0 + s1) / 2, p);
@@ -135,10 +147,12 @@ export function meshChunk({ road, s0, s1, lod, base, earthR, split = 0, origin }
   const scratch = new Float64Array(6);
 
   spans.forEach((sp, k) => {
-    const pieces = rowsOf[k];
-    const np = pieces.length;
-    const { left: L, right: R } = edgesAt(road, (sp.s0 + sp.s1) / 2);
+    const np = rowsOf[k];
     sp.rows.forEach((s, r) => {
+      const cs = csAt(sp, r);
+      const pieces = rowPieces(cs);
+      if (pieces.length !== np) throw new Error(`mesher: the cross-section changes structure inside a span at s = ${s}`);
+      const { left: L, right: R } = cs;
       ref.at(s, p);
       const c = Math.cos(p.heading), sn = Math.sin(p.heading);
       // keep the inside embankment from folding over itself on tight curves
@@ -177,7 +191,9 @@ export function meshChunk({ road, s0, s1, lod, base, earthR, split = 0, origin }
           v++;
         }
         // normal = across x along, across running left to right
-        const bx = scratch[3] - scratch[0], by = scratch[4] - scratch[1], bz = scratch[5] - scratch[2];
+        let bx = scratch[3] - scratch[0], by = scratch[4] - scratch[1], bz = scratch[5] - scratch[2];
+        // a strip of no width (a lane opening in a taper) takes the pavement's own across direction
+        if (bx * bx + by * by + bz * bz < 1e-12) { bx = sn; by = -p.crossfall - (p.x * sn - p.y * c) / earthR; bz = c; }
         let nx = by * az - bz * ay, ny = bz * ax - bx * az, nz = bx * ay - by * ax;
         const len = Math.hypot(nx, ny, nz) || 1;
         nx /= len; ny /= len; nz /= len;

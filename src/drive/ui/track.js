@@ -28,7 +28,8 @@ export function markerLabel(m) {
 export function layoutTicks({ s0, s1, markers, reveal }) {
   const span = Math.max(1, s1 - s0);
   const ticks = [];
-  const list = [...(markers || [])];
+  // planned lane changes are markers too (kind 'lane'); they are not places a visitor seeks to
+  const list = (markers || []).filter((m) => m.kind !== 'lane');
   if (reveal && Number.isFinite(reveal.s) && !list.some((m) => m.kind === 'reveal')) list.push({ s: reveal.s, kind: 'reveal', label: reveal.label });
   list.sort((a, b) => a.s - b.s);
   for (const m of list) {

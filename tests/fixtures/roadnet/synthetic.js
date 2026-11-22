@@ -5,7 +5,9 @@
  * Road A "test.main", 3000 m northeast-bound: straight 800 m, a 60 m spiral into a 600 m radius left
  * curve for 700 m, a spiral out, straight to the end. Flat at 790 m to s = 1000, then a 200 m vertical
  * curve into a 4% climb, another back to level at s = 2400. Crossfall 2% (left edge higher), banked
- * -3% through the curve. Three lanes to s = 1600, then four.
+ * -3% through the curve. Three lanes (ids 1-3) to s = 1600; then four, lane 4 added on the right and
+ * opening over a 256.2 m taper (W = 3.66 m at 70 mph); from s = 2400 three again, lane 1 dropped on
+ * the left and closing over the 256.2 m before. Placements keep the shared lanes where they are.
  * Road B "test.south", the opposite carriageway: 1200 m alongside the first straight, 30 m to the
  * right of A, two lanes, its reference line on lane 1's left edge.
  *
@@ -84,8 +86,9 @@ export function buildSyntheticRoadNet() {
       {
         id: 'test.main', ref: 'T 1', dir: 'northeast', class: 'motorway', spacing: SPACING,
         sections: [
-          { s0: 0, s1: 1600, lanes: [{ w: 3.66 }, { w: 3.66 }, { w: 3.66 }], left: { shoulder: 3.05, edge: 'yellow' }, right: { shoulder: 3.05, edge: 'white', rumble: true }, placement: 'centre' },
-          { s0: 1600, s1: 3000, lanes: [{ w: 3.66 }, { w: 3.66 }, { w: 3.66 }, { w: 3.66 }], left: { shoulder: 3.05 }, right: { shoulder: 3.05 }, placement: 'centre' },
+          { s0: 0, s1: 1600, lanes: [{ w: 3.66, id: 1 }, { w: 3.66, id: 2 }, { w: 3.66, id: 3 }], left: { shoulder: 3.05, edge: 'yellow' }, right: { shoulder: 3.05, edge: 'white', rumble: true }, placement: 'centre' },
+          { s0: 1600, s1: 2400, lanes: [{ w: 3.66, id: 1 }, { w: 3.66, id: 2 }, { w: 3.66, id: 3 }, { w: 3.66, id: 4 }], left: { shoulder: 3.05 }, right: { shoulder: 3.05 }, placement: 'middle_of:2', taper: { s0: 1600, s1: 1856.2, side: 'right' } },
+          { s0: 2400, s1: 3000, lanes: [{ w: 3.66, id: 2 }, { w: 3.66, id: 3 }, { w: 3.66, id: 4 }], left: { shoulder: 3.05 }, right: { shoulder: 3.05 }, placement: 'middle_of:1', taper: { s0: 2143.8, s1: 2400, side: 'left' } },
         ],
         speed: [{ s0: 0, mph: 70 }],
         links: [{ s: 1500, side: 'right', kind: 'exit', ref: '1', to: 'test.x1' }],

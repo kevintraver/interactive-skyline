@@ -74,10 +74,27 @@ describe('RoadNet format', () => {
     it('rejects non-uniform spacing', () => bad((j, b) => { new DataView(b).setInt32(5 * 28, 20010, true); return b; }, /uniform 4 m spacing/));
     it('rejects positions that are not a spacing apart', () => bad((j, b) => { const v = new DataView(b); v.setInt32(5 * 28 + 4, v.getInt32(5 * 28 + 4, true) + 500, true); return b; }, /apart in plan/));
     it('rejects sections that leave a gap', () => bad((j) => { j.roads[0].sections[1].s0 = 1610; }, /do not meet/));
-    it('rejects sections that stop short of the end', () => bad((j) => { j.roads[0].sections[1].s1 = 2900; }, /sections end at 2900/));
+    it('rejects sections that stop short of the end', () => bad((j) => { j.roads[0].sections.at(-1).s1 = 2900; }, /sections end at 2900/));
     it('rejects a section with no lanes', () => bad((j) => { j.roads[0].sections[0].lanes = []; }, /no lanes/));
     it('rejects a negative lane width', () => bad((j) => { j.roads[0].sections[0].lanes[1].w = -1; }, /width must be positive/));
     it('rejects an unknown placement', () => bad((j) => { j.roads[0].sections[0].placement = 'middle_of:7'; }, /placement/));
     it('rejects a repeated id', () => bad((j) => { j.roads[1].id = 'test.main'; }, /repeated/));
+    it('rejects a lane id that is not a positive integer', () => bad((j) => { j.roads[0].sections[0].lanes[0].id = 0; }, /id must be an integer/));
+    it('rejects a lane id repeated in a section', () => bad((j) => { j.roads[0].sections[0].lanes[1].id = 1; }, /repeats a lane id/));
+    it('rejects ids on some lanes only', () => bad((j) => { delete j.roads[0].sections[0].lanes[2].id; }, /some lanes but not all/));
+    it('rejects shared lanes that swap order', () => bad((j) => { j.roads[0].sections[1].lanes[0].id = 2; j.roads[0].sections[1].lanes[1].id = 1; }, /swap the order/));
+    it('rejects a taper on the first section', () => bad((j) => { j.roads[0].sections[0].taper = { s0: 0, s1: 10 }; }, /first section/));
+    it('rejects a taper that misses its boundary', () => bad((j) => { j.roads[0].sections[1].taper = { s0: 1610, s1: 1700 }; }, /does not contain/));
+    it('rejects a taper past its section end', () => bad((j) => { j.roads[0].sections[1].taper = { s0: 1600, s1: 2500 }; }, /past the section end/));
+    it('rejects overlapping tapers', () => bad((j) => { j.roads[0].sections[2].taper = { s0: 1800, s1: 2400 }; }, /overlaps/));
+  });
+
+  it('reads lanes without ids as numbered from the left, and sections without tapers as abrupt', () => {
+    const { json, bin } = fixtureFiles();
+    const j = clone(json);
+    for (const sec of j.roads[0].sections) { delete sec.taper; for (const l of sec.lanes) delete l.id; }
+    const road = decodeRoadNet(j, bin).roads[0];
+    expect(road.sections.map((sec) => sec.lanes.map((l) => l.id))).toEqual([[1, 2, 3], [1, 2, 3, 4], [1, 2, 3]]);
+    expect(road.sections.every((sec) => sec.taper === undefined)).toBe(true);
   });
 });
