@@ -28,15 +28,15 @@ describe('the source line', () => {
   const base = { kind: 'live', dataKind: 'live', loading: false, unavailable: false, stale: false, partial: false, via: 'function', observedAtMs: Date.UTC(2026, 10, 22, 14, 56),
     station: 'KLAS', sources: [{ id: 'open-meteo', ok: true }], attribution: [], overridden: [], aerosol: 'cams', preset: null, year: null, dataTimeMs: Date.UTC(2026, 10, 22, 15) };
   it('live, history, this date in history', () => {
-    expect(describeSource(base, fmt)).toBe('Live · KLAS report 14:56');
+    expect(describeSource(base, fmt)).toBe('Live · KLAS report 14:56 · forecast model');
     expect(describeSource({ ...base, dataKind: 'archive', aerosol: 'climatology', observedAtMs: null }, fmt)).toBe('History · 2026-11-22 · reanalysis · aerosols: climatology');
-    expect(describeSource({ ...base, kind: 'history', year: 1975 }, fmt)).toBe('This date in 1975 · KLAS report 14:56');
+    expect(describeSource({ ...base, kind: 'history', year: 1975 }, fmt)).toBe('This date in 1975 · KLAS report 14:56 · forecast model');
   });
   it('says what did not answer, and when it is stale or loading or unavailable', () => {
-    expect(describeSource({ ...base, sources: [{ id: 'open-meteo-air', ok: false }, { id: 'iem', ok: false }] }, fmt)).toBe('Live · KLAS report 14:56 · no aerosols, archived reports');
-    expect(describeSource({ ...base, sources: [{ id: 'aviationweather', ok: false }, { id: 'nws', ok: true }] }, fmt)).toBe('Live · KLAS report 14:56');
-    expect(describeSource({ ...base, via: 'open-meteo', observedAtMs: null }, fmt)).toBe('Live · model · reports unavailable');
-    expect(describeSource({ ...base, stale: true }, fmt)).toBe('Live · KLAS report 14:56 · not updated lately');
+    expect(describeSource({ ...base, sources: [{ id: 'open-meteo-air', ok: false }, { id: 'iem', ok: false }] }, fmt)).toBe('Live · KLAS report 14:56 · forecast model · no aerosols, archived reports');
+    expect(describeSource({ ...base, sources: [{ id: 'aviationweather', ok: false }, { id: 'nws', ok: true }] }, fmt)).toBe('Live · KLAS report 14:56 · forecast model');
+    expect(describeSource({ ...base, via: 'open-meteo', observedAtMs: null }, fmt)).toBe('Live · forecast model · reports unavailable');
+    expect(describeSource({ ...base, stale: true }, fmt)).toBe('Live · KLAS report 14:56 · forecast model · not updated lately');
     expect(describeSource({ ...base, loading: true }, fmt)).toBe('Loading the weather…');
     expect(describeSource({ ...base, unavailable: true }, fmt)).toBe('Weather unavailable · showing Clear');
   });

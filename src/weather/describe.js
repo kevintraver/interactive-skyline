@@ -64,7 +64,7 @@ export function describeSource(st, fmt) {
   if (st.kind === 'history') parts.push(`This date in ${st.year}`);
   else parts.push(st.dataKind === 'live' ? 'Live' : `History · ${fmt.date(st.dataTimeMs)}`);
   if (st.observedAtMs !== null) parts.push(`${st.station} report ${fmt.time(st.observedAtMs)}`);
-  else parts.push(st.dataKind === 'live' ? 'model' : 'reanalysis');
+  parts.push(st.dataKind === 'live' ? 'forecast model' : 'reanalysis');
   if (st.aerosol === 'climatology') parts.push('aerosols: climatology');
   if (st.via === 'open-meteo') parts.push('reports unavailable');
   const failed = [...new Set(st.sources.filter((x) => !x.ok && !(x.id === 'aviationweather' && st.sources.some((y) => y.id === 'nws' && y.ok)))

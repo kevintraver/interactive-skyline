@@ -80,7 +80,7 @@ test.describe('weather', () => {
     await expect(page.locator('#sky')).toHaveAttribute('data-weather', 'live');
     const c = await chip(page);
     expect(c.chip).toMatch(/^(Snow|Heavy snow|Fog) · 0\.\d+ mi · \d+ °F · /);
-    expect(c.source).toMatch(/^History · Wed 22 Feb 2023 · KSLC report \d+:\d\d (AM|PM) · Weather data by Open-Meteo\.com$/);
+    expect(c.source).toMatch(/^History · Wed 22 Feb 2023 · KSLC report \d+:\d\d (AM|PM) · reanalysis · Weather data by Open-Meteo\.com$/);
     expect(requested.filter((u) => u.includes('/api/weather'))[0]).toMatch(/\/api\/weather\?city=slc&month=2023-02$/);
     expect(requested.some((u) => /open-meteo\.com/.test(u))).toBe(false); // the browser asked only the function
     await page.evaluate(() => window.__skyline.env.update());

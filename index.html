@@ -126,6 +126,58 @@
           <button type="button" id="sky-real" hidden>Back to real</button>
         </div>
         <p id="sky-source"></p>
+        <div class="seg" role="group" aria-label="Weather source">
+          <label><input type="radio" name="sky-source" value="live" /><span>Live</span></label>
+          <label><input type="radio" name="sky-source" value="history" /><span>History</span></label>
+          <label><input type="radio" name="sky-source" value="preset" /><span>Preset</span></label>
+        </div>
+        <div class="row sky-more">
+          <label id="sky-year-row" hidden>This date in <input type="number" id="sky-year" min="1940" step="1" /></label>
+          <label id="sky-preset-row" hidden>Preset <select id="sky-preset"></select></label>
+        </div>
+        <label class="check"><input type="checkbox" id="sky-adjust" /><span>Adjust the weather</span></label>
+        <div id="sky-sliders" hidden>
+          <div class="field sky-slider" data-key="lowCloud">
+            <span class="row"><label for="sky-lowCloud">Low cloud</label><span><output></output><button type="button" class="follow" hidden>Follow data</button></span></span>
+            <input type="range" id="sky-lowCloud" min="0" max="1" step="0.05" />
+          </div>
+          <div class="field sky-slider" data-key="highCloud">
+            <span class="row"><label for="sky-highCloud">High cloud</label><span><output></output><button type="button" class="follow" hidden>Follow data</button></span></span>
+            <input type="range" id="sky-highCloud" min="0" max="1" step="0.05" />
+          </div>
+          <div class="field sky-slider" data-key="cloudBase">
+            <span class="row"><label for="sky-cloudBase">Cloud base</label><span><output></output><button type="button" class="follow" hidden>Follow data</button></span></span>
+            <input type="range" id="sky-cloudBase" min="150" max="4500" step="50" />
+          </div>
+          <div class="field sky-slider" data-key="haze">
+            <span class="row"><label for="sky-haze">Haze</label><span><output></output><button type="button" class="follow" hidden>Follow data</button></span></span>
+            <input type="range" id="sky-haze" min="0" max="1.5" step="0.01" />
+          </div>
+          <div class="field sky-slider" data-key="dust">
+            <span class="row"><label for="sky-dust">Dust</label><span><output></output><button type="button" class="follow" hidden>Follow data</button></span></span>
+            <input type="range" id="sky-dust" min="0" max="5000" step="10" />
+          </div>
+          <div class="field sky-slider" data-key="humidity">
+            <span class="row"><label for="sky-humidity">Humidity</label><span><output></output><button type="button" class="follow" hidden>Follow data</button></span></span>
+            <input type="range" id="sky-humidity" min="0.02" max="1" step="0.01" />
+          </div>
+          <div class="field sky-slider" data-key="windSpeed">
+            <span class="row"><label for="sky-windSpeed">Wind speed</label><span><output></output><button type="button" class="follow" hidden>Follow data</button></span></span>
+            <input type="range" id="sky-windSpeed" min="0" max="30" step="0.5" />
+          </div>
+          <div class="field sky-slider" data-key="windDir">
+            <span class="row"><label for="sky-windDir">Wind direction</label><span><output></output><button type="button" class="follow" hidden>Follow data</button></span></span>
+            <input type="range" id="sky-windDir" min="0" max="359" step="1" />
+          </div>
+          <div class="field sky-slider" data-key="rain">
+            <span class="row"><label for="sky-rain">Rain</label><span><output></output><button type="button" class="follow" hidden>Follow data</button></span></span>
+            <input type="range" id="sky-rain" min="0" max="50" step="0.5" />
+          </div>
+          <div class="field sky-slider" data-key="lightning">
+            <span class="row"><label for="sky-lightning">Lightning</label><span><output></output><button type="button" class="follow" hidden>Follow data</button></span></span>
+            <input type="range" id="sky-lightning" min="0" max="30" step="1" />
+          </div>
+        </div>
       </div>
     </form>
 
