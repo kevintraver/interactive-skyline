@@ -15,6 +15,7 @@ import { localUp } from '../../world/frame.js';
 import { asDecoded } from './barrierFormat.js';
 import { embankmentDrop } from './geometry.js';
 import { sheetingCode } from './sheeting.js';
+import { nightWeight } from './batch.js';
 
 export const SHOW = 1200; // m: delineators within this distance are drawn
 export const REBUILD = 150; // m the car moves before the set is rebuilt
@@ -134,7 +135,8 @@ export function createDelineators({ barriers, roadnet, base, earthR, parent }) {
       if (!all.length) return;
       if (!last || Math.hypot(car.x - last.x, car.y - last.y) > REBUILD) rebuild(car);
     },
-    setNight(on) { for (const m of Object.values(faceMats)) m.emissiveIntensity = on ? NIGHT_GLOW : 0; },
+    /** true/false or how far the night glow is on (0..1, the look's `lights`). */
+    setNight(on) { const w = nightWeight(on); for (const m of Object.values(faceMats)) m.emissiveIntensity = NIGHT_GLOW * w; },
     stats() {
       const vis = [posts, faces.white, faces.yellow].filter((m) => m.visible && m.count);
       return { delineators: all.length, shown, drawCalls: vis.length,

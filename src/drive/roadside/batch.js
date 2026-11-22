@@ -24,6 +24,9 @@ export function selectVisible(signs, car, shown = new Set(), show = SHOW, keep =
   return out.sort((a, b) => a.dist - b.dist);
 }
 
+/** true/false or how far the night glow is on (a number, the look's `lights`) to a weight in 0..1. */
+export const nightWeight = (on) => (typeof on === 'number' ? Math.min(1, Math.max(0, on)) || 0 : on ? 1 : 0);
+
 /** Night band of a distance: 0 near, 1 middle, 2 far. */
 export const bandOf = (d) => (d < BANDS[0] ? 0 : d < BANDS[1] ? 1 : 2);
 

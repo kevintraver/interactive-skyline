@@ -12,7 +12,9 @@
  *
  * Night: real signs are retroreflective and the app has no headlights yet, so faces get a modest
  * emissive term from their own atlas, strongest within 200 m and dim beyond 500 m. Each page's mesh
- * carries one geometry group per band; by day the bands are merged into one draw call.
+ * carries one geometry group per band; by day the bands are merged into one draw call. Through dusk the glow
+ * scales with how far the headlight stand-in is on (setNight(0..1), the look's `beams`), and the bands split as soon
+ * as it is above zero, so nothing changes at once.
  */
 import * as THREE from 'three';
 import { createRefline } from '../roadnet/refline.js';
@@ -20,7 +22,7 @@ import { edgesAt } from '../roadnet/crosssection.js';
 import { facesOf } from './faces.js';
 import { packAtlas, drawAtlas } from './atlas.js';
 import { buildSign, signFrame } from './geometry.js';
-import { selectVisible, bandOf, packSigns } from './batch.js';
+import { selectVisible, bandOf, packSigns, nightWeight } from './batch.js';
 import { buildStructure } from './structures.js';
 import { createDelineators } from './delineators.js';
 
@@ -181,14 +183,19 @@ export function createRoadside({ signs, roadnet, base, earthR, parent, anisotrop
     if (!timer) step();
   }
 
-  return {
+  const api = {
     update,
+    /** true/false, or how far the night glow is on (0..1): the glow scales with it. */
     setNight(on) {
-      night = Boolean(on);
-      faceMats.forEach((mats) => mats.forEach((m, band) => { m.emissiveIntensity = night ? NIGHT_GLOW[band] : 0; }));
-      delineators?.setNight(night);
-      if (car) { dirty = true; update(car); }
+      const w = nightWeight(on), was = night;
+      night = w > 0;
+      faceMats.forEach((mats) => mats.forEach((m, band) => { m.emissiveIntensity = NIGHT_GLOW[band] * w; }));
+      delineators?.setNight(w);
+      // the bands only matter while anything glows; regroup when that starts or stops
+      if (car && night !== was) { dirty = true; update(car); }
     },
+    /** The drive's look (look.js): its `beams` (the headlight stand-in's share), or its boolean `night`. */
+    setLook(look) { api.setNight(look.beams ?? look.night); },
     /** Resolves when every sign wanted for the last update is built and on screen. */
     whenSettled: () => (isSettled() ? Promise.resolve() : new Promise((resolve) => waiters.push(resolve))),
     stats() {
@@ -220,4 +227,5 @@ export function createRoadside({ signs, roadnet, base, earthR, parent, anisotrop
       waiters = [];
     },
   };
+  return api;
 }

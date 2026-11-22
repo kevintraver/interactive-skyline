@@ -23,6 +23,9 @@ const NIGHT_GLOW = { near: 0.5, far: 0.1 }; // emissive intensity on the night m
 // 4 m at 10 km, each several times the depth buffer's resolution there with a near plane up to 5 m.
 export const PULL = 4e-4;
 
+/** true/false or a number to a glow weight in 0..1. */
+export const nightWeight = (on) => (typeof on === 'number' ? Math.min(1, Math.max(0, on)) || 0 : on ? 1 : 0);
+
 /** Pull pavement (every kind but embankment) towards the camera in depth; see the header. */
 function pullPavement(shader) {
   shader.vertexShader = shader.vertexShader
@@ -60,7 +63,10 @@ function atlasTexture(night, anisotropy) {
 /**
  * @param {{ anisotropy?: number }} [opts] anisotropy: pass renderer.capabilities.getMaxAnisotropy()
  * @returns {{ road: THREE.MeshLambertMaterial, roadNear: THREE.MeshLambertMaterial,
- *   map: THREE.Texture|null, nightMap: THREE.Texture|null, setNight(on: boolean): void, dispose(): void }}
+ *   map: THREE.Texture|null, nightMap: THREE.Texture|null, setNight(on: boolean|number): void,
+ *   setLook(look: { lights: number }): void, dispose(): void }}
+ *   setNight takes true/false or how far the night glow is on (0..1, the look's `lights`): the glow scales with
+ *   it, so the markings come up through dusk instead of switching.
  */
 export function createRoadMaterials({ anisotropy = 1 } = {}) {
   const map = atlasTexture(false, anisotropy);
@@ -78,12 +84,16 @@ export function createRoadMaterials({ anisotropy = 1 } = {}) {
     m.customProgramCacheKey = () => `road-pull-${PULL}`;
   }
   road.name = 'road'; roadNear.name = 'road-near';
-  return {
+  const api = {
     road, roadNear, map, nightMap,
     setNight(on) {
-      road.emissiveIntensity = on ? NIGHT_GLOW.far : 0;
-      roadNear.emissiveIntensity = on ? NIGHT_GLOW.near : 0;
+      const w = nightWeight(on);
+      road.emissiveIntensity = NIGHT_GLOW.far * w;
+      roadNear.emissiveIntensity = NIGHT_GLOW.near * w;
     },
+    /** The drive's look (look.js): its `beams` (the headlight stand-in's share), or its boolean `night`. */
+    setLook(look) { api.setNight(look.beams ?? look.night); },
     dispose() { road.dispose(); roadNear.dispose(); map?.dispose(); nightMap?.dispose(); },
   };
+  return api;
 }

@@ -64,6 +64,14 @@ describe('createRoadside on the real data', () => {
     rs.setNight(true);
     await rs.whenSettled();
     expect(rs.stats().drawCalls).toBeLessThanOrEqual(3 * a.pages + 1);
+    // through dusk the glow scales with the look's beams, and the bands stay split while anything glows
+    const faceMat = parent.getObjectByName('roadside').children[0].material[0];
+    const full = faceMat.emissiveIntensity;
+    rs.setLook({ night: true, beams: 0.25 });
+    expect(faceMat.emissiveIntensity).toBeCloseTo(full * 0.25, 12);
+    await rs.whenSettled();
+    expect(rs.stats().drawCalls).toBeGreaterThan(a.drawCalls);
+    rs.setNight(true);
     rs.update(at(20000));
     await rs.whenSettled();
     const b = rs.stats();

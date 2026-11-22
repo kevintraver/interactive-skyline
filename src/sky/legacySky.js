@@ -14,6 +14,8 @@ export function createLegacySky() {
   const HAZE = new THREE.Color(DAY.haze), ZENITH = new THREE.Color(DAY.zenith);
   const sky = {
     sun: null, hemi: null, dome: null, scene: null, invalidate: null,
+    // drive seam: while Drive mode holds the look (src/drive/skyblend.js), apply() hands it the ground and stops
+    hold: null,
     /** Add fog, dome and lights to the scene. */
     init({ scene, city, invalidate }) {
       sky.scene = scene;
@@ -30,6 +32,7 @@ export function createLegacySky() {
         }),
       );
       scene.add(sky.dome);
+      sky.dome.userData.sky = sky; // drive seam: Drive mode is given the dome and reaches the lights through it
 
       const hemi = sky.hemi = new THREE.HemisphereLight(DAY.skyLight, DAY.groundLight, DAY.hemi);
       scene.add(hemi);
@@ -53,6 +56,7 @@ export function createLegacySky() {
      * `terrain` is [{ mesh }] for the far and near ground; `imagery` whether the aerial photo is shown.
      */
     apply({ night: isNight, imagery, terrain }) {
+      if (sky.hold) { sky.hold({ imagery, terrain }); return; } // drive seam
       const look = isNight ? NIGHT : DAY;
       night.value = isNight ? 1 : 0;
       HAZE.set(look.haze);

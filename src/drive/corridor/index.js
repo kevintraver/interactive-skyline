@@ -10,7 +10,8 @@
  *
  * The material is the app's own for its low buildings (lightAtNight over a vertex-coloured Lambert, as
  * src/city/buildings.js makes it), so by day they are the same grey and at night they get the same lit
- * windows, following the shared `night` uniform the app's look sets.
+ * windows, following the shared `night` uniform the app's look sets. While driving that uniform is the look's
+ * `lights` (0..1, src/drive/look.js), so the windows here fade in through dusk with the city's, with no work here.
  *
  * Part interface (src/drive/session.js): { name, update(frame), setLook(look), whenSettled(), stats(), dispose() }.
  */
@@ -169,7 +170,7 @@ export function createCorridor({
       }
       place(x, y);
     },
-    /** The look follows the app's shared `night` uniform; kept for stats. */
+    /** The look follows the app's shared `night` uniform (set by the drive's sky blend); kept for stats. */
     setLook(l) { look = l; },
     whenSettled: () => (isSettled() ? Promise.resolve() : new Promise((resolve) => waiters.push(resolve))),
     stats() {
@@ -184,6 +185,7 @@ export function createCorridor({
         buildings: shown.reduce((a, c) => a + c.mesh.userData.buildings, 0),
         meshMsMax: meshMs.length ? Math.max(...meshMs) : 0,
         night: look?.night ?? null,
+        dusk: look?.dusk ?? null,
       };
     },
     dispose() {
