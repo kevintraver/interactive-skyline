@@ -79,8 +79,13 @@ def layer_of(tags):
     return v
 
 
-def is_i15(tags):
-    return any(r.strip().replace("-", " ") == "I 15" for r in tags.get("ref", "").split(";"))
+OWN_REF = "I 15"  # the route's own road: its ways are never ramps' streets or crossing roads
+
+
+def is_own(tags, own=None):
+    own = own or OWN_REF
+    return any(r.strip().replace("-", " ") == own for r in tags.get("ref", "").split(";"))
+
 
 
 def poly(osm, to_xy, nodes):
@@ -359,27 +364,44 @@ def find_ramps(osm, cws, to_xy):
     return specs, used
 
 
-def endpoint_index(osm):
+def _runs_along(P, F, hit, max_deg=12.0):
+    """A way whose every point on a carriageway's pavement heads along it (within max_deg, either
+    way) is a carriageway itself on a shared deck (the other direction on a bridge beyond the
+    route's end, whose ref is not the route's), not a road that crosses it."""
+    m, s, _ = hit
+    k = np.flatnonzero(m)
+    if not len(k):
+        return False
+    d = np.gradient(P, axis=0)[k]
+    hw = np.arctan2(d[:, 1], d[:, 0])
+    hr = F.line.at(s[k])["heading"]
+    return bool(np.all(np.abs(np.cos(hw - hr)) >= np.cos(np.radians(max_deg))))
+
+
+def endpoint_index(osm, own=None):
     idx = {}
     for wid, w in osm.ways.items():
-        if w["tags"].get("highway") not in ROAD_CLASSES or is_i15(w["tags"]):
+        if w["tags"].get("highway") not in ROAD_CLASSES or is_own(w["tags"], own):
             continue
         for n in (w["nodes"][0], w["nodes"][-1]):
             idx.setdefault(n, []).append(wid)
     return idx
 
 
-def find_crossings(osm, cws, to_xy, skip):
+def find_crossings(osm, cws, to_xy, skip, own=None):
     """Ways tagged bridge that cross a carriageway's pavement in plan, extended along their road
-    to chains: [{"ways", "nodes", "oneway"}]."""
-    ends = endpoint_index(osm)
+    to chains: [{"ways", "nodes", "oneway"}]. Ways of the route's own road (`own`, as "I 15") are
+    never crossings."""
+    ends = endpoint_index(osm, own)
     cand = []
     for wid, w in osm.ways.items():
         t = w["tags"]
-        if wid in skip or t.get("highway") not in ROAD_CLASSES or is_i15(t) or t.get("bridge") in (None, "no"):
+        if wid in skip or t.get("highway") not in ROAD_CLASSES or is_own(t, own) or t.get("bridge") in (None, "no"):
             continue
         P, _ = densify(poly(osm, to_xy, w["nodes"]), 2.0)
-        if any(cw["frame"].inside(P[:, 0], P[:, 1])[0].any() for cw in cws):
+        hits = [(cw, cw["frame"].inside(P[:, 0], P[:, 1])) for cw in cws]
+        hits = [(cw, h) for cw, h in hits if h[0].any()]
+        if hits and not all(_runs_along(P, cw["frame"], h) for cw, h in hits):
             cand.append(wid)
     chains, used = [], set()
     for wid in cand:
@@ -1132,9 +1154,10 @@ def _ramp_name(cws, spec, used_ids):
     return rid
 
 
-def build_interchanges(osm, cws, to_xy, ground, log=print):
+def build_interchanges(osm, cws, to_xy, ground, log=print, own_ref=None):
     """Ramps, crossing roads, junctions and structures around carriageways `cws`
-    ([{"frame": RoadFrame of the decoded road, "ids", "ways", "prefix", "links"}]).
+    ([{"frame": RoadFrame of the decoded road, "ids", "ways", "prefix", "links"}]); own_ref is the
+    route's road reference ("I 15", the default).
     Returns {"roads": [writer dicts], "junctions", "structures", "embankment": {road id: [...]},
     "report": {...}}."""
     for cw in cws:
@@ -1144,7 +1167,7 @@ def build_interchanges(osm, cws, to_xy, ground, log=print):
     route_tree = cKDTree(np.vstack([np.column_stack([cw["frame"].x, cw["frame"].y]) for cw in cws]))
     report = {"ramps": [], "crossings": [], "dropped": [], "simplified": []}
     specs, ramp_ways = find_ramps(osm, cws, to_xy)
-    chains = find_crossings(osm, cws, to_xy, ramp_ways)
+    chains = find_crossings(osm, cws, to_xy, ramp_ways, own_ref)
     log(f"  interchanges: {len(specs)} ramp chains, {len(chains)} crossing chains")
     weave_limits(osm, to_xy, specs, cws)
     built = [cw["frame"] for cw in cws]
@@ -1348,11 +1371,58 @@ def build_interchanges(osm, cws, to_xy, ground, log=print):
                         changed = True
                         report["simplified"].append({"road": dr.id, "why": f"starts clear of {v[other]}", "length_m": dr.length})
                         break
+            else:
+                # neither end alone: an overlap over more than half a ramp that reaches its free end
+                # (two link chains that run together before they meet) is cut back from that end
+                for me, other, key in (("a", "b", "a_s"), ("b", "a", "b_s")):
+                    F = next(f for f in frames if f.id == v[me])
+                    dr = getattr(F, "draft", None)
+                    if dr is None or dr.role != "ramp":
+                        continue
+                    s_lo, s_hi = v[key]
+                    if dr.free_end and s_hi >= dr.length - 2 * SPACING and int(s_lo / SPACING) - 3 > 20:
+                        dr.trim(0, int(s_lo / SPACING) - 3, junctions)
+                        changed = True
+                        report["simplified"].append({"road": dr.id, "why": f"stops short of {v[other]}", "length_m": dr.length})
+                        break
+                    if dr.free_start and s_lo <= 2 * SPACING and dr.n - (int(np.ceil(s_hi / SPACING)) + 3) > 20:
+                        dr.trim(int(np.ceil(s_hi / SPACING)) + 3, dr.n - 1, junctions)
+                        changed = True
+                        report["simplified"].append({"road": dr.id, "why": f"starts clear of {v[other]}", "length_m": dr.length})
+                        break
+                else:
+                    # a ramp that lies on another's pavement over most of its length (a link that
+                    # joins another ramp just before the carriageway) is that ramp: left out
+                    for me, other, key in (("a", "b", "a_s"), ("b", "a", "b_s")):
+                        F = next(f for f in frames if f.id == v[me])
+                        dr = getattr(F, "draft", None)
+                        if dr is None or dr.role != "ramp" or dr not in drafts:
+                            continue
+                        s_lo, s_hi = v[key]
+                        if s_hi - s_lo >= 0.5 * dr.length:
+                            drafts.remove(dr)
+                            junctions[:] = [j for j in junctions if dr.id not in (j["a"]["road"], j["b"]["road"])]
+                            report["dropped"].append({"road": dr.id, "why": f"runs on the pavement of {v[other]} over most of its length"})
+                            changed = True
+                            break
         if not changed:
             break
         built = [cw["frame"] for cw in cws] + [_frame_of(d) for d in drafts]
 
     built = [cw["frame"] for cw in cws] + [_frame_of(d) for d in drafts]
+    # what is left of same-level overlaps between two ramps: a few metres of two pavements in one
+    # plane where their gore stretches meet. They are two roads meeting: a connect junction
+    for v in plan_overlaps(built, junctions)["violations"]:
+        if v["dz_m"] > 0.1 or v["a_s"][1] - v["a_s"][0] > 12 or v["b_s"][1] - v["b_s"][0] > 12:
+            continue
+        roles = [getattr(getattr(F, "draft", None), "role", None) for F in built if F.id in (v["a"], v["b"])]
+        if roles != ["ramp", "ramp"]:
+            continue
+        La, Lb = (next(F.length for F in built if F.id == v[k]) for k in ("a", "b"))
+        junctions.append({"id": f"{v['a']}.{v['b'].split('.', 1)[-1]}.c", "kind": "connect", "side": "",
+                          "a": {"road": v["a"], "s0": round(max(0.0, v["a_s"][0] - 4), 2), "s1": round(min(La, v["a_s"][1] + 4), 2)},
+                          "b": {"road": v["b"], "s0": round(max(0.0, v["b_s"][0] - 4), 2), "s1": round(min(Lb, v["b_s"][1] + 4), 2)}})
+        report["simplified"].append({"road": v["a"], "why": f"meets {v['b']} in one plane over a few metres (a connect junction)"})
     from .structures import deck_spans, embankment_room, piers_and_abutments
     structures = []
     for F in built[len(cws):]:

@@ -5725,6 +5725,12 @@
    }
   }
  },
+ "source": {
+  "osm": "2026-11-22T04:42:20Z",
+  "osmLicence": "ODbL, (c) OpenStreetMap contributors",
+  "dem": "AWS Terrain Tiles (Terrarium), USGS 3DEP; the app's near, far and wide grids",
+  "method": "scripts/build_roads.py"
+ },
  "main_line": {
   "checked": true,
   "roads": [
@@ -5738,11 +5744,5 @@
   "roadnet.bin": 1448580,
   "total": 1688185,
   "ok": true
- },
- "source": {
-  "osm": "2026-11-22T04:42:20Z",
-  "osmLicence": "ODbL, (c) OpenStreetMap contributors",
-  "dem": "AWS Terrain Tiles (Terrarium), USGS 3DEP; the app's near, far and wide grids",
-  "method": "scripts/build_roads.py"
  }
 }

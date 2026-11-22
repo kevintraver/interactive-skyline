@@ -1,0 +1,5752 @@
+{
+ "routes": {
+  "i15s": {
+   "id": "i15s",
+   "main": {
+    "built": true,
+    "road": "i15s.main",
+    "relations": [
+     2211489,
+     2317123
+    ],
+    "length_m": 45312.0,
+    "stations": 11329,
+    "ends_off_line_m": {
+     "start_m": 0.0,
+     "end_m": 2.6
+    },
+    "stitch": {
+     "ways": 117,
+     "gaps": [],
+     "reversed_ways": [
+      1433667342
+     ],
+     "against_oneway": []
+    },
+    "fit": {
+     "nodes": 396,
+     "within_0_5m": 0.9899,
+     "p95_m": 0.234,
+     "max_m": 0.838,
+     "sigma_m": 0.075,
+     "max_curvature": 0.002986,
+     "min_radius_m": 335.0
+    },
+    "profile": {
+     "max_grade": 0.0589,
+     "min_vertical_radius_m": 2814.0,
+     "lift_over_terrain_m": {
+      "max": 7.12,
+      "max_at_s": 41992.0,
+      "median": 0.64,
+      "p95": 2.25
+     },
+     "pavement_clearance": {
+      "drawn": {
+       "min_m": 0.29,
+       "at_s": 41296.0
+      },
+      "query": {
+       "min_m": 0.28,
+       "at_s": 41296.0
+      }
+     },
+     "summit": {
+      "h": 762.2,
+      "s": 7720.0
+     }
+    },
+    "sections": [
+     {
+      "s0": 0,
+      "s1": 1741.1,
+      "lanes": 2
+     },
+     {
+      "s0": 1741.1,
+      "s1": 4975,
+      "lanes": 2,
+      "shoulders": [
+       0.0,
+       3.05
+      ]
+     },
+     {
+      "s0": 4975,
+      "s1": 5555.8,
+      "lanes": 4,
+      "shoulders": [
+       0.0,
+       3.05
+      ]
+     },
+     {
+      "s0": 5555.8,
+      "s1": 9774.2,
+      "lanes": 2,
+      "shoulders": [
+       0.0,
+       3.05
+      ]
+     },
+     {
+      "s0": 9774.2,
+      "s1": 9907.2,
+      "lanes": 4,
+      "shoulders": [
+       0.0,
+       3.05
+      ]
+     },
+     {
+      "s0": 9907.2,
+      "s1": 10657.4,
+      "lanes": 2
+     },
+     {
+      "s0": 10657.4,
+      "s1": 15553.2,
+      "lanes": 2,
+      "shoulders": [
+       0.0,
+       0.0
+      ]
+     },
+     {
+      "s0": 15553.2,
+      "s1": 16954.5,
+      "lanes": 3,
+      "shoulders": [
+       0.0,
+       0.0
+      ]
+     },
+     {
+      "s0": 16954.5,
+      "s1": 17586.8,
+      "lanes": 2
+     },
+     {
+      "s0": 17586.8,
+      "s1": 18277.6,
+      "lanes": 3
+     },
+     {
+      "s0": 18277.6,
+      "s1": 19552.2,
+      "lanes": 4
+     },
+     {
+      "s0": 19552.2,
+      "s1": 21722.2,
+      "lanes": 3
+     },
+     {
+      "s0": 21722.2,
+      "s1": 22520.9,
+      "lanes": 4
+     },
+     {
+      "s0": 22520.9,
+      "s1": 23561.7,
+      "lanes": 3
+     },
+     {
+      "s0": 23561.7,
+      "s1": 25240.6,
+      "lanes": 4
+     },
+     {
+      "s0": 25240.6,
+      "s1": 26097.9,
+      "lanes": 3,
+      "shoulders": [
+       0.95,
+       3.05
+      ]
+     },
+     {
+      "s0": 26097.9,
+      "s1": 26181.6,
+      "lanes": 4,
+      "shoulders": [
+       0.95,
+       3.05
+      ]
+     },
+     {
+      "s0": 26181.6,
+      "s1": 26835.6,
+      "lanes": 3,
+      "shoulders": [
+       0.95,
+       3.05
+      ]
+     },
+     {
+      "s0": 26835.6,
+      "s1": 29942.4,
+      "lanes": 4,
+      "shoulders": [
+       1.95,
+       3.05
+      ]
+     },
+     {
+      "s0": 29942.4,
+      "s1": 31318.7,
+      "lanes": 5,
+      "shoulders": [
+       1.25,
+       3.05
+      ]
+     },
+     {
+      "s0": 31318.7,
+      "s1": 31899.3,
+      "lanes": 4,
+      "shoulders": [
+       0.3,
+       3.05
+      ]
+     },
+     {
+      "s0": 31899.3,
+      "s1": 31974.2,
+      "lanes": 4,
+      "placement": "middle_of:3",
+      "shoulders": [
+       0.3,
+       3.05
+      ]
+     },
+     {
+      "s0": 31974.2,
+      "s1": 33710.3,
+      "lanes": 5,
+      "placement": "middle_of:2",
+      "shoulders": [
+       0.3,
+       3.05
+      ]
+     },
+     {
+      "s0": 33710.3,
+      "s1": 33760.4,
+      "lanes": 3,
+      "placement": "middle_of:2",
+      "shoulders": [
+       2.0,
+       3.05
+      ]
+     },
+     {
+      "s0": 33760.4,
+      "s1": 34517.7,
+      "lanes": 3,
+      "shoulders": [
+       1.95,
+       3.05
+      ]
+     },
+     {
+      "s0": 34517.7,
+      "s1": 34616.9,
+      "lanes": 4,
+      "shoulders": [
+       1.95,
+       3.05
+      ]
+     },
+     {
+      "s0": 34616.9,
+      "s1": 35258.7,
+      "lanes": 3,
+      "shoulders": [
+       0.65,
+       3.05
+      ]
+     },
+     {
+      "s0": 35258.7,
+      "s1": 35306.2,
+      "lanes": 5,
+      "shoulders": [
+       0.65,
+       3.05
+      ]
+     },
+     {
+      "s0": 35306.2,
+      "s1": 35740.6,
+      "lanes": 5,
+      "placement": "right_of:2",
+      "shoulders": [
+       0.65,
+       3.05
+      ]
+     },
+     {
+      "s0": 35740.6,
+      "s1": 35832.1,
+      "lanes": 6,
+      "placement": "right_of:3"
+     },
+     {
+      "s0": 35832.1,
+      "s1": 36098.9,
+      "lanes": 7,
+      "placement": "right_of:4",
+      "shoulders": [
+       2.8,
+       3.05
+      ]
+     },
+     {
+      "s0": 36098.9,
+      "s1": 36550.4,
+      "lanes": 6,
+      "placement": "right_of:4",
+      "shoulders": [
+       2.8,
+       3.05
+      ]
+     },
+     {
+      "s0": 36550.4,
+      "s1": 36645.8,
+      "lanes": 5,
+      "placement": "right_of:4",
+      "shoulders": [
+       2.8,
+       3.05
+      ]
+     },
+     {
+      "s0": 36645.8,
+      "s1": 36864.3,
+      "lanes": 4,
+      "placement": "right_of:4",
+      "shoulders": [
+       2.8,
+       3.05
+      ]
+     },
+     {
+      "s0": 36864.3,
+      "s1": 37278.8,
+      "lanes": 5,
+      "placement": "right_of:4"
+     },
+     {
+      "s0": 37278.8,
+      "s1": 37381.8,
+      "lanes": 6,
+      "placement": "right_of:4"
+     },
+     {
+      "s0": 37381.8,
+      "s1": 37559.4,
+      "lanes": 5,
+      "placement": "right_of:3"
+     },
+     {
+      "s0": 37559.4,
+      "s1": 37861.2,
+      "lanes": 4,
+      "placement": "right_of:3",
+      "shoulders": [
+       0.3,
+       3.05
+      ]
+     },
+     {
+      "s0": 37861.2,
+      "s1": 37945.7,
+      "lanes": 5,
+      "placement": "right_of:4",
+      "shoulders": [
+       0.3,
+       3.05
+      ]
+     },
+     {
+      "s0": 37945.7,
+      "s1": 38104.9,
+      "lanes": 7,
+      "placement": "right_of:4",
+      "shoulders": [
+       0.3,
+       3.05
+      ]
+     },
+     {
+      "s0": 38104.9,
+      "s1": 38276.5,
+      "lanes": 5,
+      "placement": "right_of:3",
+      "shoulders": [
+       0.3,
+       3.05
+      ]
+     },
+     {
+      "s0": 38276.5,
+      "s1": 42051.1,
+      "lanes": 5,
+      "shoulders": [
+       0.3,
+       3.05
+      ]
+     },
+     {
+      "s0": 42051.1,
+      "s1": 42657.8,
+      "lanes": 5,
+      "placement": "middle_of:3",
+      "shoulders": [
+       1.15,
+       3.05
+      ]
+     },
+     {
+      "s0": 42657.8,
+      "s1": 43154.7,
+      "lanes": 6,
+      "shoulders": [
+       0.0,
+       3.05
+      ]
+     },
+     {
+      "s0": 43154.7,
+      "s1": 43197.1,
+      "lanes": 7,
+      "shoulders": [
+       0.0,
+       3.05
+      ]
+     },
+     {
+      "s0": 43197.1,
+      "s1": 43611.3,
+      "lanes": 6,
+      "placement": "right_of:4",
+      "shoulders": [
+       0.0,
+       3.05
+      ]
+     },
+     {
+      "s0": 43611.3,
+      "s1": 44341,
+      "lanes": 6,
+      "shoulders": [
+       0.0,
+       3.05
+      ]
+     },
+     {
+      "s0": 44341,
+      "s1": 45312.0,
+      "lanes": 5,
+      "shoulders": [
+       2.2,
+       3.05
+      ]
+     }
+    ],
+    "lane_sides": [
+     {
+      "s": 4975,
+      "lanes": [
+       2,
+       4
+      ],
+      "side": "right",
+      "evidence": "turn:lanes",
+      "conflicts": []
+     },
+     {
+      "s": 5555.8,
+      "lanes": [
+       4,
+       2
+      ],
+      "side": "right",
+      "evidence": "turn:lanes",
+      "conflicts": []
+     },
+     {
+      "s": 9774.2,
+      "lanes": [
+       2,
+       4
+      ],
+      "side": "right",
+      "evidence": "turn:lanes",
+      "conflicts": []
+     },
+     {
+      "s": 9907.2,
+      "lanes": [
+       4,
+       2
+      ],
+      "side": "right",
+      "evidence": "turn:lanes",
+      "conflicts": []
+     },
+     {
+      "s": 15553.2,
+      "lanes": [
+       2,
+       3
+      ],
+      "side": "right",
+      "evidence": "rule",
+      "conflicts": []
+     },
+     {
+      "s": 16954.5,
+      "lanes": [
+       3,
+       2
+      ],
+      "side": "right",
+      "evidence": "ramp",
+      "conflicts": []
+     },
+     {
+      "s": 17586.8,
+      "lanes": [
+       2,
+       3
+      ],
+      "side": "right",
+      "evidence": "rule",
+      "conflicts": []
+     },
+     {
+      "s": 18277.6,
+      "lanes": [
+       3,
+       4
+      ],
+      "side": "right",
+      "evidence": "turn:lanes",
+      "conflicts": []
+     },
+     {
+      "s": 19552.2,
+      "lanes": [
+       4,
+       3
+      ],
+      "side": "right",
+      "evidence": "turn:lanes",
+      "conflicts": []
+     },
+     {
+      "s": 21722.2,
+      "lanes": [
+       3,
+       4
+      ],
+      "side": "right",
+      "evidence": "turn:lanes",
+      "conflicts": []
+     },
+     {
+      "s": 22520.9,
+      "lanes": [
+       4,
+       3
+      ],
+      "side": "right",
+      "evidence": "turn:lanes",
+      "conflicts": []
+     },
+     {
+      "s": 23561.7,
+      "lanes": [
+       3,
+       4
+      ],
+      "side": "right",
+      "evidence": "turn:lanes",
+      "conflicts": []
+     },
+     {
+      "s": 25240.6,
+      "lanes": [
+       4,
+       3
+      ],
+      "side": "right",
+      "evidence": "turn:lanes",
+      "conflicts": []
+     },
+     {
+      "s": 26097.9,
+      "lanes": [
+       3,
+       4
+      ],
+      "side": "right",
+      "evidence": "turn:lanes",
+      "conflicts": []
+     },
+     {
+      "s": 26181.6,
+      "lanes": [
+       4,
+       3
+      ],
+      "side": "right",
+      "evidence": "turn:lanes",
+      "conflicts": []
+     },
+     {
+      "s": 26835.6,
+      "lanes": [
+       3,
+       4
+      ],
+      "side": "right",
+      "evidence": "rule",
+      "conflicts": []
+     },
+     {
+      "s": 29942.4,
+      "lanes": [
+       4,
+       5
+      ],
+      "side": "right",
+      "evidence": "turn:lanes",
+      "conflicts": []
+     },
+     {
+      "s": 31318.7,
+      "lanes": [
+       5,
+       4
+      ],
+      "side": "right",
+      "evidence": "turn:lanes",
+      "conflicts": []
+     },
+     {
+      "s": 31974.2,
+      "lanes": [
+       4,
+       5
+      ],
+      "side": "right",
+      "evidence": "rule",
+      "conflicts": []
+     },
+     {
+      "s": 33710.3,
+      "lanes": [
+       5,
+       3
+      ],
+      "side": "right",
+      "evidence": "placement",
+      "conflicts": []
+     },
+     {
+      "s": 34517.7,
+      "lanes": [
+       3,
+       4
+      ],
+      "side": "right",
+      "evidence": "turn:lanes",
+      "conflicts": []
+     },
+     {
+      "s": 34616.9,
+      "lanes": [
+       4,
+       3
+      ],
+      "side": "right",
+      "evidence": "turn:lanes",
+      "conflicts": []
+     },
+     {
+      "s": 35258.7,
+      "lanes": [
+       3,
+       5
+      ],
+      "side": "right",
+      "evidence": "rule",
+      "conflicts": []
+     },
+     {
+      "s": 35740.6,
+      "lanes": [
+       5,
+       6
+      ],
+      "side": "left",
+      "evidence": "placement",
+      "conflicts": []
+     },
+     {
+      "s": 35832.1,
+      "lanes": [
+       6,
+       7
+      ],
+      "side": "left",
+      "evidence": "placement",
+      "conflicts": [
+       "turn:lanes"
+      ]
+     },
+     {
+      "s": 36098.9,
+      "lanes": [
+       7,
+       6
+      ],
+      "side": "right",
+      "evidence": "placement",
+      "conflicts": []
+     },
+     {
+      "s": 36550.4,
+      "lanes": [
+       6,
+       5
+      ],
+      "side": "right",
+      "evidence": "placement",
+      "conflicts": []
+     },
+     {
+      "s": 36645.8,
+      "lanes": [
+       5,
+       4
+      ],
+      "side": "right",
+      "evidence": "placement",
+      "conflicts": [
+       "ramp"
+      ]
+     },
+     {
+      "s": 36864.3,
+      "lanes": [
+       4,
+       5
+      ],
+      "side": "right",
+      "evidence": "placement",
+      "conflicts": [
+       "turn:lanes"
+      ]
+     },
+     {
+      "s": 37278.8,
+      "lanes": [
+       5,
+       6
+      ],
+      "side": "right",
+      "evidence": "placement",
+      "conflicts": [
+       "turn:lanes"
+      ]
+     },
+     {
+      "s": 37381.8,
+      "lanes": [
+       6,
+       5
+      ],
+      "side": "left",
+      "evidence": "placement",
+      "conflicts": []
+     },
+     {
+      "s": 37559.4,
+      "lanes": [
+       5,
+       4
+      ],
+      "side": "right",
+      "evidence": "placement",
+      "conflicts": []
+     },
+     {
+      "s": 37861.2,
+      "lanes": [
+       4,
+       5
+      ],
+      "side": "left",
+      "evidence": "placement",
+      "conflicts": []
+     },
+     {
+      "s": 37945.7,
+      "lanes": [
+       5,
+       7
+      ],
+      "side": "right",
+      "evidence": "placement",
+      "conflicts": [
+       "turn:lanes"
+      ]
+     },
+     {
+      "s": 38104.9,
+      "lanes": [
+       7,
+       5
+      ],
+      "side": "both",
+      "evidence": "placement",
+      "conflicts": []
+     },
+     {
+      "s": 42657.8,
+      "lanes": [
+       5,
+       6
+      ],
+      "side": "right",
+      "evidence": "rule",
+      "conflicts": []
+     },
+     {
+      "s": 43154.7,
+      "lanes": [
+       6,
+       7
+      ],
+      "side": "right",
+      "evidence": "turn:lanes",
+      "conflicts": []
+     },
+     {
+      "s": 43197.1,
+      "lanes": [
+       7,
+       6
+      ],
+      "side": "right",
+      "evidence": "turn:lanes",
+      "conflicts": []
+     },
+     {
+      "s": 44341,
+      "lanes": [
+       6,
+       5
+      ],
+      "side": "right",
+      "evidence": "turn:lanes",
+      "conflicts": []
+     }
+    ],
+    "tapers": [
+     {
+      "s": 1741.1,
+      "W_m": 1.22,
+      "mph": 75.0,
+      "L_mutcd_m": 91.5,
+      "L_m": 91.5,
+      "s0": 1695.3,
+      "s1": 1786.8,
+      "place": "across",
+      "shortened": false,
+      "moved": false,
+      "merged_across": [],
+      "rate_ok": true
+     },
+     {
+      "s": 4975,
+      "W_m": 3.66,
+      "mph": 75.0,
+      "L_mutcd_m": 274.5,
+      "L_m": 274.5,
+      "s0": 4975,
+      "s1": 5249.5,
+      "place": "after",
+      "shortened": false,
+      "moved": false,
+      "merged_across": [],
+      "rate_ok": true
+     },
+     {
+      "s": 5555.8,
+      "W_m": 3.66,
+      "mph": 75.0,
+      "L_mutcd_m": 274.5,
+      "L_m": 274.5,
+      "s0": 5281.3,
+      "s1": 5555.8,
+      "place": "before",
+      "shortened": false,
+      "moved": false,
+      "merged_across": [],
+      "rate_ok": true
+     },
+     {
+      "s": 9774.2,
+      "W_m": 3.66,
+      "mph": 75.0,
+      "L_mutcd_m": 274.5,
+      "L_m": 158.1,
+      "s0": 9749.1,
+      "s1": 9907.2,
+      "place": "after",
+      "shortened": true,
+      "moved": true,
+      "merged_across": [],
+      "rate_ok": true
+     },
+     {
+      "s": 9907.2,
+      "W_m": 3.66,
+      "mph": 75.0,
+      "L_mutcd_m": 274.5,
+      "L_m": 158.1,
+      "s0": 9907.2,
+      "s1": 10065.3,
+      "place": "before",
+      "shortened": true,
+      "moved": true,
+      "merged_across": [],
+      "rate_ok": true
+     },
+     {
+      "s": 10657.4,
+      "W_m": 3.05,
+      "mph": 75.0,
+      "L_mutcd_m": 228.8,
+      "L_m": 228.8,
+      "s0": 10543,
+      "s1": 10771.8,
+      "place": "across",
+      "shortened": false,
+      "moved": false,
+      "merged_across": [],
+      "rate_ok": true
+     },
+     {
+      "s": 15553.2,
+      "W_m": 1.83,
+      "mph": 75.0,
+      "L_mutcd_m": 137.2,
+      "L_m": 137.3,
+      "s0": 15553.2,
+      "s1": 15690.5,
+      "place": "after",
+      "shortened": false,
+      "moved": false,
+      "merged_across": [],
+      "rate_ok": true
+     },
+     {
+      "s": 16954.5,
+      "W_m": 1.83,
+      "mph": 75.0,
+      "L_mutcd_m": 137.2,
+      "L_m": 137.3,
+      "s0": 16817.2,
+      "s1": 16954.5,
+      "place": "before",
+      "shortened": false,
+      "moved": false,
+      "merged_across": [],
+      "rate_ok": true
+     },
+     {
+      "s": 17586.8,
+      "W_m": 3.66,
+      "mph": 75.0,
+      "L_mutcd_m": 274.5,
+      "L_m": 274.5,
+      "s0": 17586.8,
+      "s1": 17861.3,
+      "place": "after",
+      "shortened": false,
+      "moved": false,
+      "merged_across": [],
+      "rate_ok": true
+     },
+     {
+      "s": 18277.6,
+      "W_m": 1.83,
+      "mph": 75.0,
+      "L_mutcd_m": 137.3,
+      "L_m": 137.2,
+      "s0": 18277.6,
+      "s1": 18414.8,
+      "place": "after",
+      "shortened": false,
+      "moved": false,
+      "merged_across": [],
+      "rate_ok": true
+     },
+     {
+      "s": 19552.2,
+      "W_m": 1.83,
+      "mph": 75.0,
+      "L_mutcd_m": 137.3,
+      "L_m": 137.2,
+      "s0": 19415,
+      "s1": 19552.2,
+      "place": "before",
+      "shortened": false,
+      "moved": false,
+      "merged_across": [],
+      "rate_ok": true
+     },
+     {
+      "s": 21722.2,
+      "W_m": 1.83,
+      "mph": 65.0,
+      "L_mutcd_m": 119,
+      "L_m": 119.0,
+      "s0": 21722.2,
+      "s1": 21841.2,
+      "place": "after",
+      "shortened": false,
+      "moved": false,
+      "merged_across": [],
+      "rate_ok": true
+     },
+     {
+      "s": 22520.9,
+      "W_m": 1.83,
+      "mph": 65.0,
+      "L_mutcd_m": 119,
+      "L_m": 118.9,
+      "s0": 22402,
+      "s1": 22520.9,
+      "place": "before",
+      "shortened": false,
+      "moved": false,
+      "merged_across": [],
+      "rate_ok": true
+     },
+     {
+      "s": 23561.7,
+      "W_m": 1.83,
+      "mph": 65.0,
+      "L_mutcd_m": 119,
+      "L_m": 119.0,
+      "s0": 23561.7,
+      "s1": 23680.7,
+      "place": "after",
+      "shortened": false,
+      "moved": false,
+      "merged_across": [],
+      "rate_ok": true
+     },
+     {
+      "s": 25240.6,
+      "W_m": 3.93,
+      "mph": 65.0,
+      "L_mutcd_m": 255.5,
+      "L_m": 255.5,
+      "s0": 24985.1,
+      "s1": 25240.6,
+      "place": "before",
+      "shortened": false,
+      "moved": false,
+      "merged_across": [],
+      "rate_ok": true
+     },
+     {
+      "s": 26097.9,
+      "W_m": 1.83,
+      "mph": 65.0,
+      "L_mutcd_m": 119,
+      "L_m": 103.9,
+      "s0": 26077.7,
+      "s1": 26181.6,
+      "place": "after",
+      "shortened": true,
+      "moved": true,
+      "merged_across": [],
+      "rate_ok": true
+     },
+     {
+      "s": 26181.6,
+      "W_m": 1.83,
+      "mph": 65.0,
+      "L_mutcd_m": 119,
+      "L_m": 103.9,
+      "s0": 26181.6,
+      "s1": 26285.5,
+      "place": "before",
+      "shortened": true,
+      "moved": true,
+      "merged_across": [],
+      "rate_ok": true
+     },
+     {
+      "s": 26835.6,
+      "W_m": 2.83,
+      "mph": 65.0,
+      "L_mutcd_m": 183.9,
+      "L_m": 183.9,
+      "s0": 26835.6,
+      "s1": 27019.5,
+      "place": "after",
+      "shortened": false,
+      "moved": false,
+      "merged_across": [],
+      "rate_ok": true
+     },
+     {
+      "s": 29942.4,
+      "W_m": 1.83,
+      "mph": 65.0,
+      "L_mutcd_m": 119,
+      "L_m": 119.0,
+      "s0": 29942.4,
+      "s1": 30061.4,
+      "place": "after",
+      "shortened": false,
+      "moved": false,
+      "merged_across": [],
+      "rate_ok": true
+     },
+     {
+      "s": 31318.7,
+      "W_m": 2.78,
+      "mph": 65.0,
+      "L_mutcd_m": 180.7,
+      "L_m": 180.7,
+      "s0": 31138,
+      "s1": 31318.7,
+      "place": "before",
+      "shortened": false,
+      "moved": false,
+      "merged_across": [],
+      "rate_ok": true
+     },
+     {
+      "s": 31899.3,
+      "W_m": 1.83,
+      "mph": 65.0,
+      "L_mutcd_m": 119,
+      "L_m": 119.0,
+      "s0": 31839.8,
+      "s1": 31958.8,
+      "place": "across",
+      "shortened": false,
+      "moved": false,
+      "merged_across": [],
+      "rate_ok": true
+     },
+     {
+      "s": 31974.2,
+      "W_m": 7.32,
+      "mph": 65.0,
+      "L_mutcd_m": 475.8,
+      "L_m": 475.8,
+      "s0": 31974.2,
+      "s1": 32450,
+      "place": "after",
+      "shortened": false,
+      "moved": false,
+      "merged_across": [],
+      "rate_ok": true
+     },
+     {
+      "s": 33710.3,
+      "W_m": 7.32,
+      "mph": 65.0,
+      "L_mutcd_m": 475.8,
+      "L_m": 475.8,
+      "s0": 33234.5,
+      "s1": 33710.3,
+      "place": "before",
+      "shortened": false,
+      "moved": false,
+      "merged_across": [],
+      "rate_ok": true
+     },
+     {
+      "s": 33760.4,
+      "W_m": 0.05,
+      "mph": 65.0,
+      "L_mutcd_m": 3.2,
+      "L_m": 3.2,
+      "s0": 33758.8,
+      "s1": 33762,
+      "place": "across",
+      "shortened": false,
+      "moved": false,
+      "merged_across": [],
+      "rate_ok": true
+     },
+     {
+      "s": 34517.7,
+      "W_m": 1.83,
+      "mph": 65.0,
+      "L_mutcd_m": 119,
+      "L_m": 103.9,
+      "s0": 34513,
+      "s1": 34616.9,
+      "place": "after",
+      "shortened": true,
+      "moved": true,
+      "merged_across": [],
+      "rate_ok": true
+     },
+     {
+      "s": 34616.9,
+      "W_m": 3.13,
+      "mph": 65.0,
+      "L_mutcd_m": 203.4,
+      "L_m": 118.9,
+      "s0": 34616.9,
+      "s1": 34735.8,
+      "place": "before",
+      "shortened": true,
+      "moved": true,
+      "merged_across": [],
+      "rate_ok": true
+     },
+     {
+      "s": 35258.7,
+      "W_m": 3.66,
+      "mph": 65.0,
+      "L_mutcd_m": 237.9,
+      "L_m": 139.1,
+      "s0": 35167.1,
+      "s1": 35306.2,
+      "place": "after",
+      "shortened": true,
+      "moved": true,
+      "merged_across": [],
+      "rate_ok": true
+     },
+     {
+      "s": 35306.2,
+      "W_m": 1.83,
+      "mph": 65.0,
+      "L_mutcd_m": 119,
+      "L_m": 103.9,
+      "s0": 35306.2,
+      "s1": 35410.1,
+      "place": "across",
+      "shortened": true,
+      "moved": true,
+      "merged_across": [],
+      "rate_ok": true
+     },
+     {
+      "s": 35740.6,
+      "W_m": 6.06,
+      "mph": 65.0,
+      "L_mutcd_m": 393.9,
+      "L_m": 230.3,
+      "s0": 35601.8,
+      "s1": 35832.1,
+      "place": "after",
+      "shortened": true,
+      "moved": true,
+      "merged_across": [],
+      "rate_ok": true
+     },
+     {
+      "s": 35832.1,
+      "W_m": 3.66,
+      "mph": 65.0,
+      "L_mutcd_m": 237.9,
+      "L_m": 139.1,
+      "s0": 35832.1,
+      "s1": 35971.2,
+      "place": "after",
+      "shortened": true,
+      "moved": false,
+      "merged_across": [],
+      "rate_ok": true
+     },
+     {
+      "s": 36098.9,
+      "W_m": 3.66,
+      "mph": 65.0,
+      "L_mutcd_m": 237.9,
+      "L_m": 139.1,
+      "s0": 35971.2,
+      "s1": 36110.3,
+      "place": "before",
+      "shortened": true,
+      "moved": true,
+      "merged_across": [],
+      "rate_ok": true
+     },
+     {
+      "s": 36550.4,
+      "W_m": 3.66,
+      "mph": 65.0,
+      "L_mutcd_m": 237.9,
+      "L_m": 139.1,
+      "s0": 36411.3,
+      "s1": 36550.4,
+      "place": "before",
+      "shortened": true,
+      "moved": false,
+      "merged_across": [],
+      "rate_ok": true
+     },
+     {
+      "s": 36645.8,
+      "W_m": 3.66,
+      "mph": 65.0,
+      "L_mutcd_m": 237.9,
+      "L_m": 139.1,
+      "s0": 36550.4,
+      "s1": 36689.5,
+      "place": "before",
+      "shortened": true,
+      "moved": true,
+      "merged_across": [],
+      "rate_ok": true
+     },
+     {
+      "s": 36864.3,
+      "W_m": 3.66,
+      "mph": 65.0,
+      "L_mutcd_m": 237.9,
+      "L_m": 237.9,
+      "s0": 36864.3,
+      "s1": 37102.2,
+      "place": "after",
+      "shortened": false,
+      "moved": false,
+      "merged_across": [],
+      "rate_ok": true
+     },
+     {
+      "s": 37278.8,
+      "W_m": 3.66,
+      "mph": 65.0,
+      "L_mutcd_m": 237.9,
+      "L_m": 139.1,
+      "s0": 37242.7,
+      "s1": 37381.8,
+      "place": "after",
+      "shortened": true,
+      "moved": true,
+      "merged_across": [],
+      "rate_ok": true
+     },
+     {
+      "s": 37381.8,
+      "W_m": 3.66,
+      "mph": 65.0,
+      "L_mutcd_m": 237.9,
+      "L_m": 139.1,
+      "s0": 37381.8,
+      "s1": 37520.9,
+      "place": "before",
+      "shortened": true,
+      "moved": true,
+      "merged_across": [],
+      "rate_ok": true
+     },
+     {
+      "s": 37559.4,
+      "W_m": 3.66,
+      "mph": 65.0,
+      "L_mutcd_m": 237.9,
+      "L_m": 177.6,
+      "s0": 37520.9,
+      "s1": 37698.5,
+      "place": "before",
+      "shortened": true,
+      "moved": true,
+      "merged_across": [],
+      "rate_ok": true
+     },
+     {
+      "s": 37945.7,
+      "W_m": 7.32,
+      "mph": 65.0,
+      "L_mutcd_m": 475.8,
+      "L_m": 278.2,
+      "s0": 37826.7,
+      "s1": 38104.9,
+      "place": "after",
+      "shortened": true,
+      "moved": true,
+      "merged_across": [
+       37861.2
+      ],
+      "rate_ok": true
+     },
+     {
+      "s": 38104.9,
+      "W_m": 3.66,
+      "mph": 65.0,
+      "L_mutcd_m": 237.9,
+      "L_m": 139.1,
+      "s0": 38104.9,
+      "s1": 38244,
+      "place": "before",
+      "shortened": true,
+      "moved": true,
+      "merged_across": [],
+      "rate_ok": true
+     },
+     {
+      "s": 38276.5,
+      "W_m": 1.83,
+      "mph": 65.0,
+      "L_mutcd_m": 119,
+      "L_m": 118.9,
+      "s0": 38244,
+      "s1": 38362.9,
+      "place": "across",
+      "shortened": false,
+      "moved": true,
+      "merged_across": [],
+      "rate_ok": true
+     },
+     {
+      "s": 42051.1,
+      "W_m": 0.85,
+      "mph": 65.0,
+      "L_mutcd_m": 55.2,
+      "L_m": 55.2,
+      "s0": 42023.5,
+      "s1": 42078.7,
+      "place": "across",
+      "shortened": false,
+      "moved": false,
+      "merged_across": [],
+      "rate_ok": true
+     },
+     {
+      "s": 42657.8,
+      "W_m": 1.83,
+      "mph": 65.0,
+      "L_mutcd_m": 119,
+      "L_m": 119.0,
+      "s0": 42657.8,
+      "s1": 42776.8,
+      "place": "after",
+      "shortened": false,
+      "moved": false,
+      "merged_across": [],
+      "rate_ok": true
+     },
+     {
+      "s": 43154.7,
+      "W_m": 1.83,
+      "mph": 65.0,
+      "L_mutcd_m": 119,
+      "L_m": 103.9,
+      "s0": 43093.2,
+      "s1": 43197.1,
+      "place": "after",
+      "shortened": true,
+      "moved": true,
+      "merged_across": [],
+      "rate_ok": true
+     },
+     {
+      "s": 43197.1,
+      "W_m": 5.49,
+      "mph": 65.0,
+      "L_mutcd_m": 356.9,
+      "L_m": 208.6,
+      "s0": 43197.1,
+      "s1": 43405.7,
+      "place": "before",
+      "shortened": true,
+      "moved": true,
+      "merged_across": [],
+      "rate_ok": true
+     },
+     {
+      "s": 43611.3,
+      "W_m": 3.66,
+      "mph": 65.0,
+      "L_mutcd_m": 237.9,
+      "L_m": 237.9,
+      "s0": 43492.4,
+      "s1": 43730.3,
+      "place": "across",
+      "shortened": false,
+      "moved": false,
+      "merged_across": [],
+      "rate_ok": true
+     },
+     {
+      "s": 44341,
+      "W_m": 1.83,
+      "mph": 65.0,
+      "L_mutcd_m": 119,
+      "L_m": 118.9,
+      "s0": 44222.1,
+      "s1": 44341,
+      "place": "before",
+      "shortened": false,
+      "moved": false,
+      "merged_across": [],
+      "rate_ok": true
+     }
+    ],
+    "edge_rate": {
+     "max_m_per_m": 0.0494,
+     "at_s": 34676.0,
+     "limit": 0.05,
+     "abrupt_changes": []
+    },
+    "lane_counts": {
+     "stations": 200,
+     "matching": 200,
+     "mismatches": []
+    },
+    "speed": [
+     {
+      "s0": 0,
+      "mph": 75
+     },
+     {
+      "s0": 19552.2,
+      "mph": 65
+     }
+    ],
+    "bridges": 25,
+    "exits": [
+     {
+      "s": 5555.8,
+      "ref": "",
+      "label": "Check Station",
+      "side": "right"
+     },
+     {
+      "s": 9907.2,
+      "ref": "58",
+      "label": "Apex / Nellis Air Force Base",
+      "side": "right"
+     },
+     {
+      "s": 16954.5,
+      "ref": "54",
+      "label": "Speedway Boulevard / Hollywood Boulevard",
+      "side": "right"
+     },
+     {
+      "s": 19552.2,
+      "ref": "52",
+      "label": "Tropical Parkway",
+      "side": "right"
+     },
+     {
+      "s": 22520.9,
+      "ref": "50",
+      "label": "Lamb Boulevard",
+      "side": "right"
+     },
+     {
+      "s": 25240.6,
+      "ref": "48",
+      "label": "Craig Road",
+      "side": "right"
+     },
+     {
+      "s": 28408.9,
+      "ref": "46",
+      "label": "Cheyenne Avenue",
+      "side": "right"
+     },
+     {
+      "s": 31318.7,
+      "ref": "45",
+      "label": "Lake Mead Boulevard",
+      "side": "right"
+     },
+     {
+      "s": 33409.2,
+      "ref": "44",
+      "label": "Washington Avenue / D Street",
+      "side": "right"
+     },
+     {
+      "s": 33677,
+      "ref": "42",
+      "label": "Phoenix / Reno",
+      "side": "right"
+     },
+     {
+      "s": 36098.9,
+      "ref": "41",
+      "label": "Charleston Boulevard",
+      "side": "right"
+     },
+     {
+      "s": 36550.4,
+      "ref": "40",
+      "label": "Sahara Avenue",
+      "side": "right"
+     },
+     {
+      "s": 36645.8,
+      "ref": "",
+      "label": "Neon Gateway",
+      "side": "left"
+     },
+     {
+      "s": 40177.6,
+      "ref": "39",
+      "label": "Spring Mountain Road",
+      "side": "right"
+     },
+     {
+      "s": 41574.4,
+      "ref": "38A",
+      "label": "Flamingo Road West",
+      "side": "right"
+     },
+     {
+      "s": 42051.1,
+      "ref": "38B",
+      "label": "Flamingo Road East",
+      "side": "right"
+     },
+     {
+      "s": 43197.1,
+      "ref": "37",
+      "label": "Tropicana Avenue",
+      "side": "right"
+     },
+     {
+      "s": 44341,
+      "ref": "36",
+      "label": "Russell Road",
+      "side": "right"
+     }
+    ]
+   },
+   "opposite": {
+    "built": true,
+    "road": "i15n.opp",
+    "relations": [
+     2211488,
+     2317122
+    ],
+    "length_m": 45312.0,
+    "stations": 11329,
+    "ends_off_line_m": {
+     "start_m": 31.6,
+     "end_m": 27.4
+    },
+    "stitch": {
+     "ways": 117,
+     "gaps": [],
+     "reversed_ways": [],
+     "against_oneway": []
+    },
+    "fit": {
+     "nodes": 362,
+     "within_0_5m": 0.989,
+     "p95_m": 0.276,
+     "max_m": 1.153,
+     "sigma_m": 0.075,
+     "max_curvature": 0.00393,
+     "min_radius_m": 254.0
+    },
+    "profile": {
+     "max_grade": 0.0597,
+     "min_vertical_radius_m": 2814.0,
+     "lift_over_terrain_m": {
+      "max": 9.12,
+      "max_at_s": 36464.0,
+      "median": 0.53,
+      "p95": 2.21
+     },
+     "pavement_clearance": {
+      "drawn": {
+       "min_m": 0.295,
+       "at_s": 3896.0
+      },
+      "query": {
+       "min_m": 0.295,
+       "at_s": 3897.0
+      }
+     },
+     "summit": {
+      "h": 764.3,
+      "s": 38060.0
+     }
+    },
+    "sections": [
+     {
+      "s0": 0,
+      "s1": 1308,
+      "lanes": 5,
+      "placement": "right_of:3",
+      "shoulders": [
+       0.0,
+       3.05
+      ]
+     },
+     {
+      "s0": 1308,
+      "s1": 1399.9,
+      "lanes": 6,
+      "placement": "right_of:3",
+      "shoulders": [
+       0.0,
+       3.05
+      ]
+     },
+     {
+      "s0": 1399.9,
+      "s1": 2067.6,
+      "lanes": 5,
+      "placement": "right_of:3",
+      "shoulders": [
+       0.0,
+       3.05
+      ]
+     },
+     {
+      "s0": 2067.6,
+      "s1": 2160.4,
+      "lanes": 8,
+      "placement": "right_of:4",
+      "shoulders": [
+       0.0,
+       3.05
+      ]
+     },
+     {
+      "s0": 2160.4,
+      "s1": 2694.9,
+      "lanes": 7,
+      "placement": "right_of:3",
+      "shoulders": [
+       0.0,
+       3.05
+      ]
+     },
+     {
+      "s0": 2694.9,
+      "s1": 3107.3,
+      "lanes": 6,
+      "placement": "right_of:3",
+      "shoulders": [
+       1.15,
+       3.05
+      ]
+     },
+     {
+      "s0": 3107.3,
+      "s1": 3517.4,
+      "lanes": 5,
+      "placement": "right_of:3"
+     },
+     {
+      "s0": 3517.4,
+      "s1": 3598.5,
+      "lanes": 6,
+      "placement": "right_of:3"
+     },
+     {
+      "s0": 3598.5,
+      "s1": 4450.6,
+      "lanes": 5,
+      "placement": "right_of:3"
+     },
+     {
+      "s0": 4450.6,
+      "s1": 4786.3,
+      "lanes": 6,
+      "placement": "right_of:3"
+     },
+     {
+      "s0": 4786.3,
+      "s1": 5089.8,
+      "lanes": 7,
+      "placement": "right_of:3"
+     },
+     {
+      "s0": 5089.8,
+      "s1": 6369.6,
+      "lanes": 6,
+      "placement": "right_of:3",
+      "shoulders": [
+       2.05,
+       3.05
+      ]
+     },
+     {
+      "s0": 6369.6,
+      "s1": 6616.7,
+      "lanes": 5,
+      "placement": "right_of:3",
+      "shoulders": [
+       0.3,
+       3.05
+      ]
+     },
+     {
+      "s0": 6616.7,
+      "s1": 7164.3,
+      "lanes": 6,
+      "placement": "right_of:4",
+      "shoulders": [
+       0.3,
+       3.05
+      ]
+     },
+     {
+      "s0": 7164.3,
+      "s1": 7829.5,
+      "lanes": 7,
+      "placement": "right_of:4",
+      "shoulders": [
+       0.3,
+       3.05
+      ]
+     },
+     {
+      "s0": 7829.5,
+      "s1": 8601.1,
+      "lanes": 6,
+      "placement": "right_of:4"
+     },
+     {
+      "s0": 8601.1,
+      "s1": 9045.4,
+      "lanes": 7,
+      "placement": "right_of:5",
+      "shoulders": [
+       2.8,
+       3.05
+      ]
+     },
+     {
+      "s0": 9045.4,
+      "s1": 9190.6,
+      "lanes": 6,
+      "placement": "right_of:4",
+      "shoulders": [
+       2.8,
+       3.05
+      ]
+     },
+     {
+      "s0": 9190.6,
+      "s1": 9411.8,
+      "lanes": 8,
+      "placement": "right_of:4",
+      "shoulders": [
+       2.8,
+       3.05
+      ]
+     },
+     {
+      "s0": 9411.8,
+      "s1": 9481.3,
+      "lanes": 7,
+      "placement": "right_of:3"
+     },
+     {
+      "s0": 9481.3,
+      "s1": 9724.5,
+      "lanes": 6
+     },
+     {
+      "s0": 9724.5,
+      "s1": 9978.2,
+      "lanes": 5,
+      "shoulders": [
+       0.65,
+       3.05
+      ]
+     },
+     {
+      "s0": 9978.2,
+      "s1": 10498.6,
+      "lanes": 3,
+      "shoulders": [
+       0.65,
+       3.05
+      ]
+     },
+     {
+      "s0": 10498.6,
+      "s1": 10998.2,
+      "lanes": 4,
+      "shoulders": [
+       0.65,
+       3.05
+      ]
+     },
+     {
+      "s0": 10998.2,
+      "s1": 11845.2,
+      "lanes": 3,
+      "shoulders": [
+       1.95,
+       3.05
+      ]
+     },
+     {
+      "s0": 11845.2,
+      "s1": 12985,
+      "lanes": 5,
+      "shoulders": [
+       0.3,
+       3.05
+      ]
+     },
+     {
+      "s0": 12985,
+      "s1": 13964.5,
+      "lanes": 4,
+      "shoulders": [
+       0.3,
+       3.05
+      ]
+     },
+     {
+      "s0": 13964.5,
+      "s1": 15610.6,
+      "lanes": 5,
+      "shoulders": [
+       1.2,
+       3.05
+      ]
+     },
+     {
+      "s0": 15610.6,
+      "s1": 18742.2,
+      "lanes": 4,
+      "shoulders": [
+       0.95,
+       3.05
+      ]
+     },
+     {
+      "s0": 18742.2,
+      "s1": 20025.9,
+      "lanes": 3,
+      "shoulders": [
+       0.95,
+       3.05
+      ]
+     },
+     {
+      "s0": 20025.9,
+      "s1": 21627.8,
+      "lanes": 4
+     },
+     {
+      "s0": 21627.8,
+      "s1": 22713,
+      "lanes": 3
+     },
+     {
+      "s0": 22713,
+      "s1": 23890.5,
+      "lanes": 3,
+      "placement": "middle_of:2"
+     },
+     {
+      "s0": 23890.5,
+      "s1": 25727.6,
+      "lanes": 3
+     },
+     {
+      "s0": 25727.6,
+      "s1": 27104.7,
+      "lanes": 4
+     },
+     {
+      "s0": 27104.7,
+      "s1": 27732.3,
+      "lanes": 3
+     },
+     {
+      "s0": 27732.3,
+      "s1": 27812.2,
+      "lanes": 2
+     },
+     {
+      "s0": 27812.2,
+      "s1": 35003.8,
+      "lanes": 2,
+      "shoulders": [
+       0.0,
+       0.0
+      ]
+     },
+     {
+      "s0": 35003.8,
+      "s1": 35598.5,
+      "lanes": 2
+     },
+     {
+      "s0": 35598.5,
+      "s1": 43592.5,
+      "lanes": 2,
+      "shoulders": [
+       0.0,
+       3.05
+      ]
+     },
+     {
+      "s0": 43592.5,
+      "s1": 44510.1,
+      "lanes": 3
+     },
+     {
+      "s0": 44510.1,
+      "s1": 45312.0,
+      "lanes": 2
+     }
+    ],
+    "lane_sides": [
+     {
+      "s": 1308,
+      "lanes": [
+       5,
+       6
+      ],
+      "side": "right",
+      "evidence": "placement",
+      "conflicts": []
+     },
+     {
+      "s": 1399.9,
+      "lanes": [
+       6,
+       5
+      ],
+      "side": "right",
+      "evidence": "placement",
+      "conflicts": []
+     },
+     {
+      "s": 2067.6,
+      "lanes": [
+       5,
+       8
+      ],
+      "side": "both",
+      "evidence": "placement",
+      "conflicts": [
+       "turn:lanes"
+      ]
+     },
+     {
+      "s": 2160.4,
+      "lanes": [
+       8,
+       7
+      ],
+      "side": "left",
+      "evidence": "placement",
+      "conflicts": [
+       "turn:lanes"
+      ]
+     },
+     {
+      "s": 2694.9,
+      "lanes": [
+       7,
+       6
+      ],
+      "side": "right",
+      "evidence": "placement",
+      "conflicts": []
+     },
+     {
+      "s": 3107.3,
+      "lanes": [
+       6,
+       5
+      ],
+      "side": "right",
+      "evidence": "placement",
+      "conflicts": []
+     },
+     {
+      "s": 3517.4,
+      "lanes": [
+       5,
+       6
+      ],
+      "side": "right",
+      "evidence": "placement",
+      "conflicts": []
+     },
+     {
+      "s": 3598.5,
+      "lanes": [
+       6,
+       5
+      ],
+      "side": "right",
+      "evidence": "placement",
+      "conflicts": []
+     },
+     {
+      "s": 4450.6,
+      "lanes": [
+       5,
+       6
+      ],
+      "side": "right",
+      "evidence": "placement",
+      "conflicts": []
+     },
+     {
+      "s": 4786.3,
+      "lanes": [
+       6,
+       7
+      ],
+      "side": "right",
+      "evidence": "placement",
+      "conflicts": []
+     },
+     {
+      "s": 5089.8,
+      "lanes": [
+       7,
+       6
+      ],
+      "side": "right",
+      "evidence": "placement",
+      "conflicts": []
+     },
+     {
+      "s": 6369.6,
+      "lanes": [
+       6,
+       5
+      ],
+      "side": "right",
+      "evidence": "placement",
+      "conflicts": []
+     },
+     {
+      "s": 6616.7,
+      "lanes": [
+       5,
+       6
+      ],
+      "side": "left",
+      "evidence": "placement",
+      "conflicts": []
+     },
+     {
+      "s": 7164.3,
+      "lanes": [
+       6,
+       7
+      ],
+      "side": "right",
+      "evidence": "placement",
+      "conflicts": []
+     },
+     {
+      "s": 7829.5,
+      "lanes": [
+       7,
+       6
+      ],
+      "side": "right",
+      "evidence": "placement",
+      "conflicts": [
+       "ramp"
+      ]
+     },
+     {
+      "s": 8601.1,
+      "lanes": [
+       6,
+       7
+      ],
+      "side": "left",
+      "evidence": "placement",
+      "conflicts": []
+     },
+     {
+      "s": 9045.4,
+      "lanes": [
+       7,
+       6
+      ],
+      "side": "left",
+      "evidence": "placement",
+      "conflicts": []
+     },
+     {
+      "s": 9190.6,
+      "lanes": [
+       6,
+       8
+      ],
+      "side": "right",
+      "evidence": "placement",
+      "conflicts": [
+       "turn:lanes"
+      ]
+     },
+     {
+      "s": 9411.8,
+      "lanes": [
+       8,
+       7
+      ],
+      "side": "left",
+      "evidence": "placement",
+      "conflicts": []
+     },
+     {
+      "s": 9481.3,
+      "lanes": [
+       7,
+       6
+      ],
+      "side": "right",
+      "evidence": "placement+centre",
+      "conflicts": []
+     },
+     {
+      "s": 9724.5,
+      "lanes": [
+       6,
+       5
+      ],
+      "side": "right",
+      "evidence": "turn:lanes",
+      "conflicts": []
+     },
+     {
+      "s": 9978.2,
+      "lanes": [
+       5,
+       3
+      ],
+      "side": "right",
+      "evidence": "turn:lanes",
+      "conflicts": []
+     },
+     {
+      "s": 10498.6,
+      "lanes": [
+       3,
+       4
+      ],
+      "side": "right",
+      "evidence": "turn:lanes",
+      "conflicts": []
+     },
+     {
+      "s": 10998.2,
+      "lanes": [
+       4,
+       3
+      ],
+      "side": "right",
+      "evidence": "turn:lanes",
+      "conflicts": []
+     },
+     {
+      "s": 11845.2,
+      "lanes": [
+       3,
+       5
+      ],
+      "side": "right",
+      "evidence": "turn:lanes",
+      "conflicts": []
+     },
+     {
+      "s": 12985,
+      "lanes": [
+       5,
+       4
+      ],
+      "side": "right",
+      "evidence": "turn:lanes",
+      "conflicts": []
+     },
+     {
+      "s": 13964.5,
+      "lanes": [
+       4,
+       5
+      ],
+      "side": "right",
+      "evidence": "turn:lanes",
+      "conflicts": []
+     },
+     {
+      "s": 15610.6,
+      "lanes": [
+       5,
+       4
+      ],
+      "side": "right",
+      "evidence": "turn:lanes",
+      "conflicts": []
+     },
+     {
+      "s": 18742.2,
+      "lanes": [
+       4,
+       3
+      ],
+      "side": "right",
+      "evidence": "turn:lanes",
+      "conflicts": []
+     },
+     {
+      "s": 20025.9,
+      "lanes": [
+       3,
+       4
+      ],
+      "side": "right",
+      "evidence": "turn:lanes",
+      "conflicts": []
+     },
+     {
+      "s": 21627.8,
+      "lanes": [
+       4,
+       3
+      ],
+      "side": "right",
+      "evidence": "turn:lanes",
+      "conflicts": []
+     },
+     {
+      "s": 25727.6,
+      "lanes": [
+       3,
+       4
+      ],
+      "side": "left",
+      "evidence": "turn:lanes",
+      "conflicts": []
+     },
+     {
+      "s": 27104.7,
+      "lanes": [
+       4,
+       3
+      ],
+      "side": "left",
+      "evidence": "turn:lanes",
+      "conflicts": [
+       "ramp"
+      ]
+     },
+     {
+      "s": 27732.3,
+      "lanes": [
+       3,
+       2
+      ],
+      "side": "right",
+      "evidence": "rule",
+      "conflicts": []
+     },
+     {
+      "s": 43592.5,
+      "lanes": [
+       2,
+       3
+      ],
+      "side": "right",
+      "evidence": "turn:lanes",
+      "conflicts": []
+     },
+     {
+      "s": 44510.1,
+      "lanes": [
+       3,
+       2
+      ],
+      "side": "right",
+      "evidence": "turn:lanes",
+      "conflicts": []
+     }
+    ],
+    "tapers": [
+     {
+      "s": 1308,
+      "W_m": 3.66,
+      "mph": 65.0,
+      "L_mutcd_m": 237.9,
+      "L_m": 139.1,
+      "s0": 1260.8,
+      "s1": 1399.9,
+      "place": "after",
+      "shortened": true,
+      "moved": true,
+      "merged_across": [],
+      "rate_ok": true
+     },
+     {
+      "s": 1399.9,
+      "W_m": 3.66,
+      "mph": 65.0,
+      "L_mutcd_m": 237.9,
+      "L_m": 139.1,
+      "s0": 1399.9,
+      "s1": 1539,
+      "place": "before",
+      "shortened": true,
+      "moved": true,
+      "merged_across": [],
+      "rate_ok": true
+     },
+     {
+      "s": 2067.6,
+      "W_m": 7.32,
+      "mph": 65.0,
+      "L_mutcd_m": 475.8,
+      "L_m": 278.2,
+      "s0": 1882.2,
+      "s1": 2160.4,
+      "place": "after",
+      "shortened": true,
+      "moved": true,
+      "merged_across": [],
+      "rate_ok": true
+     },
+     {
+      "s": 2160.4,
+      "W_m": 3.66,
+      "mph": 65.0,
+      "L_mutcd_m": 237.9,
+      "L_m": 139.1,
+      "s0": 2160.4,
+      "s1": 2299.5,
+      "place": "before",
+      "shortened": true,
+      "moved": true,
+      "merged_across": [],
+      "rate_ok": true
+     },
+     {
+      "s": 2694.9,
+      "W_m": 3.66,
+      "mph": 65.0,
+      "L_mutcd_m": 237.9,
+      "L_m": 237.9,
+      "s0": 2457,
+      "s1": 2694.9,
+      "place": "before",
+      "shortened": false,
+      "moved": false,
+      "merged_across": [],
+      "rate_ok": true
+     },
+     {
+      "s": 3107.3,
+      "W_m": 3.66,
+      "mph": 65.0,
+      "L_mutcd_m": 237.9,
+      "L_m": 237.9,
+      "s0": 2869.4,
+      "s1": 3107.3,
+      "place": "before",
+      "shortened": false,
+      "moved": false,
+      "merged_across": [],
+      "rate_ok": true
+     },
+     {
+      "s": 3517.4,
+      "W_m": 3.66,
+      "mph": 65.0,
+      "L_mutcd_m": 237.9,
+      "L_m": 139.1,
+      "s0": 3459.4,
+      "s1": 3598.5,
+      "place": "after",
+      "shortened": true,
+      "moved": true,
+      "merged_across": [],
+      "rate_ok": true
+     },
+     {
+      "s": 3598.5,
+      "W_m": 3.66,
+      "mph": 65.0,
+      "L_mutcd_m": 237.9,
+      "L_m": 139.1,
+      "s0": 3598.5,
+      "s1": 3737.6,
+      "place": "before",
+      "shortened": true,
+      "moved": true,
+      "merged_across": [],
+      "rate_ok": true
+     },
+     {
+      "s": 4450.6,
+      "W_m": 3.66,
+      "mph": 65.0,
+      "L_mutcd_m": 237.9,
+      "L_m": 237.9,
+      "s0": 4450.6,
+      "s1": 4688.5,
+      "place": "after",
+      "shortened": false,
+      "moved": false,
+      "merged_across": [],
+      "rate_ok": true
+     },
+     {
+      "s": 4786.3,
+      "W_m": 3.66,
+      "mph": 65.0,
+      "L_mutcd_m": 237.9,
+      "L_m": 151.8,
+      "s0": 4786.3,
+      "s1": 4938.1,
+      "place": "after",
+      "shortened": true,
+      "moved": false,
+      "merged_across": [],
+      "rate_ok": true
+     },
+     {
+      "s": 5089.8,
+      "W_m": 3.66,
+      "mph": 65.0,
+      "L_mutcd_m": 237.9,
+      "L_m": 151.7,
+      "s0": 4938.1,
+      "s1": 5089.8,
+      "place": "before",
+      "shortened": true,
+      "moved": false,
+      "merged_across": [],
+      "rate_ok": true
+     },
+     {
+      "s": 6369.6,
+      "W_m": 3.66,
+      "mph": 65.0,
+      "L_mutcd_m": 237.9,
+      "L_m": 237.9,
+      "s0": 6131.7,
+      "s1": 6369.6,
+      "place": "before",
+      "shortened": false,
+      "moved": false,
+      "merged_across": [],
+      "rate_ok": true
+     },
+     {
+      "s": 6616.7,
+      "W_m": 3.66,
+      "mph": 65.0,
+      "L_mutcd_m": 237.9,
+      "L_m": 237.9,
+      "s0": 6616.7,
+      "s1": 6854.6,
+      "place": "after",
+      "shortened": false,
+      "moved": false,
+      "merged_across": [],
+      "rate_ok": true
+     },
+     {
+      "s": 7164.3,
+      "W_m": 3.66,
+      "mph": 65.0,
+      "L_mutcd_m": 237.9,
+      "L_m": 237.9,
+      "s0": 7164.3,
+      "s1": 7402.2,
+      "place": "after",
+      "shortened": false,
+      "moved": false,
+      "merged_across": [],
+      "rate_ok": true
+     },
+     {
+      "s": 7829.5,
+      "W_m": 3.66,
+      "mph": 65.0,
+      "L_mutcd_m": 237.9,
+      "L_m": 237.9,
+      "s0": 7591.6,
+      "s1": 7829.5,
+      "place": "before",
+      "shortened": false,
+      "moved": false,
+      "merged_across": [],
+      "rate_ok": true
+     },
+     {
+      "s": 8601.1,
+      "W_m": 3.66,
+      "mph": 65.0,
+      "L_mutcd_m": 237.9,
+      "L_m": 222.1,
+      "s0": 8601.1,
+      "s1": 8823.2,
+      "place": "after",
+      "shortened": true,
+      "moved": false,
+      "merged_across": [],
+      "rate_ok": true
+     },
+     {
+      "s": 9045.4,
+      "W_m": 3.66,
+      "mph": 65.0,
+      "L_mutcd_m": 237.9,
+      "L_m": 222.2,
+      "s0": 8823.2,
+      "s1": 9045.4,
+      "place": "before",
+      "shortened": true,
+      "moved": false,
+      "merged_across": [],
+      "rate_ok": true
+     },
+     {
+      "s": 9190.6,
+      "W_m": 7.32,
+      "mph": 65.0,
+      "L_mutcd_m": 475.8,
+      "L_m": 278.1,
+      "s0": 9064.1,
+      "s1": 9342.2,
+      "place": "after",
+      "shortened": true,
+      "moved": true,
+      "merged_across": [],
+      "rate_ok": true
+     },
+     {
+      "s": 9411.8,
+      "W_m": 3.66,
+      "mph": 65.0,
+      "L_mutcd_m": 237.9,
+      "L_m": 139.1,
+      "s0": 9342.2,
+      "s1": 9481.3,
+      "place": "before",
+      "shortened": true,
+      "moved": true,
+      "merged_across": [],
+      "rate_ok": true
+     },
+     {
+      "s": 9481.3,
+      "W_m": 3.66,
+      "mph": 65.0,
+      "L_mutcd_m": 237.9,
+      "L_m": 139.1,
+      "s0": 9481.3,
+      "s1": 9620.4,
+      "place": "before",
+      "shortened": true,
+      "moved": true,
+      "merged_across": [],
+      "rate_ok": true
+     },
+     {
+      "s": 9724.5,
+      "W_m": 4.23,
+      "mph": 65.0,
+      "L_mutcd_m": 275,
+      "L_m": 243.2,
+      "s0": 9620.4,
+      "s1": 9863.6,
+      "place": "before",
+      "shortened": true,
+      "moved": true,
+      "merged_across": [],
+      "rate_ok": true
+     },
+     {
+      "s": 9978.2,
+      "W_m": 3.66,
+      "mph": 65.0,
+      "L_mutcd_m": 237.9,
+      "L_m": 237.9,
+      "s0": 9863.6,
+      "s1": 10101.5,
+      "place": "before",
+      "shortened": false,
+      "moved": true,
+      "merged_across": [],
+      "rate_ok": true
+     },
+     {
+      "s": 10498.6,
+      "W_m": 1.83,
+      "mph": 65.0,
+      "L_mutcd_m": 119,
+      "L_m": 119.0,
+      "s0": 10498.6,
+      "s1": 10617.6,
+      "place": "after",
+      "shortened": false,
+      "moved": false,
+      "merged_across": [],
+      "rate_ok": true
+     },
+     {
+      "s": 10998.2,
+      "W_m": 1.83,
+      "mph": 65.0,
+      "L_mutcd_m": 119,
+      "L_m": 119.0,
+      "s0": 10879.2,
+      "s1": 10998.2,
+      "place": "before",
+      "shortened": false,
+      "moved": false,
+      "merged_across": [],
+      "rate_ok": true
+     },
+     {
+      "s": 11845.2,
+      "W_m": 3.66,
+      "mph": 65.0,
+      "L_mutcd_m": 237.9,
+      "L_m": 237.9,
+      "s0": 11845.2,
+      "s1": 12083.1,
+      "place": "after",
+      "shortened": false,
+      "moved": false,
+      "merged_across": [],
+      "rate_ok": true
+     },
+     {
+      "s": 12985,
+      "W_m": 1.83,
+      "mph": 65.0,
+      "L_mutcd_m": 119,
+      "L_m": 119,
+      "s0": 12866,
+      "s1": 12985,
+      "place": "before",
+      "shortened": false,
+      "moved": false,
+      "merged_across": [],
+      "rate_ok": true
+     },
+     {
+      "s": 13964.5,
+      "W_m": 2.73,
+      "mph": 65.0,
+      "L_mutcd_m": 177.4,
+      "L_m": 177.5,
+      "s0": 13964.5,
+      "s1": 14142,
+      "place": "after",
+      "shortened": false,
+      "moved": false,
+      "merged_across": [],
+      "rate_ok": true
+     },
+     {
+      "s": 15610.6,
+      "W_m": 2.08,
+      "mph": 65.0,
+      "L_mutcd_m": 135.2,
+      "L_m": 135.2,
+      "s0": 15475.4,
+      "s1": 15610.6,
+      "place": "before",
+      "shortened": false,
+      "moved": false,
+      "merged_across": [],
+      "rate_ok": true
+     },
+     {
+      "s": 18742.2,
+      "W_m": 1.83,
+      "mph": 65.0,
+      "L_mutcd_m": 119,
+      "L_m": 119.0,
+      "s0": 18623.2,
+      "s1": 18742.2,
+      "place": "before",
+      "shortened": false,
+      "moved": false,
+      "merged_across": [],
+      "rate_ok": true
+     },
+     {
+      "s": 20025.9,
+      "W_m": 3.93,
+      "mph": 65.0,
+      "L_mutcd_m": 255.5,
+      "L_m": 255.5,
+      "s0": 20025.9,
+      "s1": 20281.4,
+      "place": "after",
+      "shortened": false,
+      "moved": false,
+      "merged_across": [],
+      "rate_ok": true
+     },
+     {
+      "s": 21627.8,
+      "W_m": 1.83,
+      "mph": 65.0,
+      "L_mutcd_m": 119,
+      "L_m": 119.0,
+      "s0": 21508.8,
+      "s1": 21627.8,
+      "place": "before",
+      "shortened": false,
+      "moved": false,
+      "merged_across": [],
+      "rate_ok": true
+     },
+     {
+      "s": 25727.6,
+      "W_m": 1.83,
+      "mph": 65.0,
+      "L_mutcd_m": 119,
+      "L_m": 118.9,
+      "s0": 25727.6,
+      "s1": 25846.5,
+      "place": "after",
+      "shortened": false,
+      "moved": false,
+      "merged_across": [],
+      "rate_ok": true
+     },
+     {
+      "s": 27104.7,
+      "W_m": 1.83,
+      "mph": 65.0,
+      "L_mutcd_m": 119,
+      "L_m": 118.9,
+      "s0": 26985.8,
+      "s1": 27104.7,
+      "place": "before",
+      "shortened": false,
+      "moved": false,
+      "merged_across": [],
+      "rate_ok": true
+     },
+     {
+      "s": 27732.3,
+      "W_m": 3.66,
+      "mph": 65.0,
+      "L_mutcd_m": 237.9,
+      "L_m": 191.8,
+      "s0": 27540.5,
+      "s1": 27732.3,
+      "place": "before",
+      "shortened": true,
+      "moved": false,
+      "merged_across": [],
+      "rate_ok": true
+     },
+     {
+      "s": 27812.2,
+      "W_m": 3.05,
+      "mph": 65.0,
+      "L_mutcd_m": 198.2,
+      "L_m": 159.8,
+      "s0": 27732.3,
+      "s1": 27892.1,
+      "place": "across",
+      "shortened": true,
+      "moved": false,
+      "merged_across": [],
+      "rate_ok": true
+     },
+     {
+      "s": 35003.8,
+      "W_m": 3.05,
+      "mph": 75.0,
+      "L_mutcd_m": 228.8,
+      "L_m": 228.8,
+      "s0": 34889.4,
+      "s1": 35118.2,
+      "place": "across",
+      "shortened": false,
+      "moved": false,
+      "merged_across": [],
+      "rate_ok": true
+     },
+     {
+      "s": 35598.5,
+      "W_m": 1.22,
+      "mph": 75.0,
+      "L_mutcd_m": 91.5,
+      "L_m": 91.4,
+      "s0": 35552.8,
+      "s1": 35644.2,
+      "place": "across",
+      "shortened": false,
+      "moved": false,
+      "merged_across": [],
+      "rate_ok": true
+     },
+     {
+      "s": 43592.5,
+      "W_m": 4.88,
+      "mph": 75.0,
+      "L_mutcd_m": 366,
+      "L_m": 366.0,
+      "s0": 43592.5,
+      "s1": 43958.5,
+      "place": "after",
+      "shortened": false,
+      "moved": false,
+      "merged_across": [],
+      "rate_ok": true
+     },
+     {
+      "s": 44510.1,
+      "W_m": 3.66,
+      "mph": 75.0,
+      "L_mutcd_m": 274.5,
+      "L_m": 274.5,
+      "s0": 44235.6,
+      "s1": 44510.1,
+      "place": "before",
+      "shortened": false,
+      "moved": false,
+      "merged_across": [],
+      "rate_ok": true
+     }
+    ],
+    "edge_rate": {
+     "max_m_per_m": 0.0494,
+     "at_s": 9203.0,
+     "limit": 0.05,
+     "abrupt_changes": []
+    },
+    "lane_counts": {
+     "stations": 200,
+     "matching": 200,
+     "mismatches": []
+    },
+    "speed": [
+     {
+      "s0": 0,
+      "mph": 65
+     },
+     {
+      "s0": 28438.9,
+      "mph": 75
+     }
+    ],
+    "bridges": 26,
+    "exits": [
+     {
+      "s": 2160.4,
+      "ref": "",
+      "label": "Harmon Avenue",
+      "side": "left"
+     },
+     {
+      "s": 2694.9,
+      "ref": "38",
+      "label": "Flamingo Road",
+      "side": "right"
+     },
+     {
+      "s": 3107.3,
+      "ref": "39",
+      "label": "Spring Mountain Road",
+      "side": "right"
+     },
+     {
+      "s": 6369.6,
+      "ref": "40",
+      "label": "Sahara Avenue",
+      "side": "right"
+     },
+     {
+      "s": 7769.5,
+      "ref": "",
+      "label": "Neon Gateway",
+      "side": "left"
+     },
+     {
+      "s": 7988,
+      "ref": "41",
+      "label": "Charleston Boulevard / Grand Central Parkway",
+      "side": "right"
+     },
+     {
+      "s": 9411.8,
+      "ref": "",
+      "label": "I 11 North / US 95 North",
+      "side": "left"
+     },
+     {
+      "s": 9724.5,
+      "ref": "42A",
+      "label": "Reno / Martin L King",
+      "side": "right"
+     },
+     {
+      "s": 9978.2,
+      "ref": "42B",
+      "label": "Downtown Las Vegas / Phoenix",
+      "side": "right"
+     },
+     {
+      "s": 10998.2,
+      "ref": "43",
+      "label": "D Street / City Parkway",
+      "side": "right"
+     },
+     {
+      "s": 12985,
+      "ref": "45",
+      "label": "Lake Mead Boulevard",
+      "side": "right"
+     },
+     {
+      "s": 15610.6,
+      "ref": "46",
+      "label": "Cheyenne Avenue",
+      "side": "right"
+     },
+     {
+      "s": 18742.2,
+      "ref": "48",
+      "label": "Craig Road",
+      "side": "right"
+     },
+     {
+      "s": 21627.8,
+      "ref": "50",
+      "label": "Lamb Boulevard",
+      "side": "right"
+     },
+     {
+      "s": 23890.5,
+      "ref": "52A",
+      "label": "CC 215 West",
+      "side": "right"
+     },
+     {
+      "s": 24128.9,
+      "ref": "52B",
+      "label": "Tropical Parkway",
+      "side": "right"
+     },
+     {
+      "s": 27104.7,
+      "ref": "54",
+      "label": "Speedway Boulevard / Hollywood Boulevard",
+      "side": "right"
+     },
+     {
+      "s": 34648,
+      "ref": "58",
+      "label": "Apex / Nellis Air Force Base",
+      "side": "right"
+     },
+     {
+      "s": 44510.1,
+      "ref": "64",
+      "label": "Ely",
+      "side": "right"
+     }
+    ]
+   },
+   "inside_shoulders": [
+    {
+     "road": "i15s.main",
+     "s0": 25240.6,
+     "s1": 26097.9,
+     "shoulder_m": 0.95,
+     "was_m": 3.05
+    },
+    {
+     "road": "i15s.main",
+     "s0": 26097.9,
+     "s1": 26181.6,
+     "shoulder_m": 0.95,
+     "was_m": 3.05
+    },
+    {
+     "road": "i15s.main",
+     "s0": 26181.6,
+     "s1": 26835.6,
+     "shoulder_m": 0.95,
+     "was_m": 3.05
+    },
+    {
+     "road": "i15s.main",
+     "s0": 26835.6,
+     "s1": 29942.4,
+     "shoulder_m": 1.95,
+     "was_m": 3.05
+    },
+    {
+     "road": "i15s.main",
+     "s0": 29942.4,
+     "s1": 31318.7,
+     "shoulder_m": 1.25,
+     "was_m": 3.05
+    },
+    {
+     "road": "i15s.main",
+     "s0": 31318.7,
+     "s1": 31899.3,
+     "shoulder_m": 0.3,
+     "was_m": 3.05
+    },
+    {
+     "road": "i15s.main",
+     "s0": 31899.3,
+     "s1": 31974.2,
+     "shoulder_m": 0.3,
+     "was_m": 3.05
+    },
+    {
+     "road": "i15s.main",
+     "s0": 31974.2,
+     "s1": 33710.3,
+     "shoulder_m": 0.3,
+     "was_m": 3.05
+    },
+    {
+     "road": "i15s.main",
+     "s0": 33710.3,
+     "s1": 33760.4,
+     "shoulder_m": 2.0,
+     "was_m": 3.05
+    },
+    {
+     "road": "i15s.main",
+     "s0": 33760.4,
+     "s1": 34517.7,
+     "shoulder_m": 1.95,
+     "was_m": 3.05
+    },
+    {
+     "road": "i15s.main",
+     "s0": 34517.7,
+     "s1": 34616.9,
+     "shoulder_m": 1.95,
+     "was_m": 3.05
+    },
+    {
+     "road": "i15s.main",
+     "s0": 34616.9,
+     "s1": 35258.7,
+     "shoulder_m": 0.65,
+     "was_m": 3.05
+    },
+    {
+     "road": "i15s.main",
+     "s0": 35258.7,
+     "s1": 35306.2,
+     "shoulder_m": 0.65,
+     "was_m": 3.05
+    },
+    {
+     "road": "i15s.main",
+     "s0": 35306.2,
+     "s1": 35740.6,
+     "shoulder_m": 0.65,
+     "was_m": 3.05
+    },
+    {
+     "road": "i15s.main",
+     "s0": 35832.1,
+     "s1": 36098.9,
+     "shoulder_m": 2.8,
+     "was_m": 3.05
+    },
+    {
+     "road": "i15s.main",
+     "s0": 36098.9,
+     "s1": 36550.4,
+     "shoulder_m": 2.8,
+     "was_m": 3.05
+    },
+    {
+     "road": "i15s.main",
+     "s0": 36550.4,
+     "s1": 36645.8,
+     "shoulder_m": 2.8,
+     "was_m": 3.05
+    },
+    {
+     "road": "i15s.main",
+     "s0": 36645.8,
+     "s1": 36864.3,
+     "shoulder_m": 2.8,
+     "was_m": 3.05
+    },
+    {
+     "road": "i15s.main",
+     "s0": 37559.4,
+     "s1": 37861.2,
+     "shoulder_m": 0.3,
+     "was_m": 3.05
+    },
+    {
+     "road": "i15s.main",
+     "s0": 37861.2,
+     "s1": 37945.7,
+     "shoulder_m": 0.3,
+     "was_m": 3.05
+    },
+    {
+     "road": "i15s.main",
+     "s0": 37945.7,
+     "s1": 38104.9,
+     "shoulder_m": 0.3,
+     "was_m": 3.05
+    },
+    {
+     "road": "i15s.main",
+     "s0": 38104.9,
+     "s1": 38276.5,
+     "shoulder_m": 0.3,
+     "was_m": 3.05
+    },
+    {
+     "road": "i15s.main",
+     "s0": 38276.5,
+     "s1": 42051.1,
+     "shoulder_m": 0.3,
+     "was_m": 3.05
+    },
+    {
+     "road": "i15s.main",
+     "s0": 42051.1,
+     "s1": 42657.8,
+     "shoulder_m": 1.15,
+     "was_m": 3.05
+    },
+    {
+     "road": "i15s.main",
+     "s0": 42657.8,
+     "s1": 43154.7,
+     "shoulder_m": 0.0,
+     "was_m": 3.05
+    },
+    {
+     "road": "i15s.main",
+     "s0": 43154.7,
+     "s1": 43197.1,
+     "shoulder_m": 0.0,
+     "was_m": 3.05
+    },
+    {
+     "road": "i15s.main",
+     "s0": 43197.1,
+     "s1": 43611.3,
+     "shoulder_m": 0.0,
+     "was_m": 3.05
+    },
+    {
+     "road": "i15s.main",
+     "s0": 43611.3,
+     "s1": 44341,
+     "shoulder_m": 0.0,
+     "was_m": 3.05
+    },
+    {
+     "road": "i15s.main",
+     "s0": 44341,
+     "s1": 45312.0,
+     "shoulder_m": 2.2,
+     "was_m": 3.05
+    },
+    {
+     "road": "i15n.opp",
+     "s0": 0,
+     "s1": 1308,
+     "shoulder_m": 0.0,
+     "was_m": 3.05
+    },
+    {
+     "road": "i15n.opp",
+     "s0": 1308,
+     "s1": 1399.9,
+     "shoulder_m": 0.0,
+     "was_m": 3.05
+    },
+    {
+     "road": "i15n.opp",
+     "s0": 1399.9,
+     "s1": 2067.6,
+     "shoulder_m": 0.0,
+     "was_m": 3.05
+    },
+    {
+     "road": "i15n.opp",
+     "s0": 2067.6,
+     "s1": 2160.4,
+     "shoulder_m": 0.0,
+     "was_m": 3.05
+    },
+    {
+     "road": "i15n.opp",
+     "s0": 2160.4,
+     "s1": 2694.9,
+     "shoulder_m": 0.0,
+     "was_m": 3.05
+    },
+    {
+     "road": "i15n.opp",
+     "s0": 2694.9,
+     "s1": 3107.3,
+     "shoulder_m": 1.15,
+     "was_m": 3.05
+    },
+    {
+     "road": "i15n.opp",
+     "s0": 5089.8,
+     "s1": 6369.6,
+     "shoulder_m": 2.05,
+     "was_m": 3.05
+    },
+    {
+     "road": "i15n.opp",
+     "s0": 6369.6,
+     "s1": 6616.7,
+     "shoulder_m": 0.3,
+     "was_m": 3.05
+    },
+    {
+     "road": "i15n.opp",
+     "s0": 6616.7,
+     "s1": 7164.3,
+     "shoulder_m": 0.3,
+     "was_m": 3.05
+    },
+    {
+     "road": "i15n.opp",
+     "s0": 7164.3,
+     "s1": 7829.5,
+     "shoulder_m": 0.3,
+     "was_m": 3.05
+    },
+    {
+     "road": "i15n.opp",
+     "s0": 8601.1,
+     "s1": 9045.4,
+     "shoulder_m": 2.8,
+     "was_m": 3.05
+    },
+    {
+     "road": "i15n.opp",
+     "s0": 9045.4,
+     "s1": 9190.6,
+     "shoulder_m": 2.8,
+     "was_m": 3.05
+    },
+    {
+     "road": "i15n.opp",
+     "s0": 9190.6,
+     "s1": 9411.8,
+     "shoulder_m": 2.8,
+     "was_m": 3.05
+    },
+    {
+     "road": "i15n.opp",
+     "s0": 9724.5,
+     "s1": 9978.2,
+     "shoulder_m": 0.65,
+     "was_m": 3.05
+    },
+    {
+     "road": "i15n.opp",
+     "s0": 9978.2,
+     "s1": 10498.6,
+     "shoulder_m": 0.65,
+     "was_m": 3.05
+    },
+    {
+     "road": "i15n.opp",
+     "s0": 10498.6,
+     "s1": 10998.2,
+     "shoulder_m": 0.65,
+     "was_m": 3.05
+    },
+    {
+     "road": "i15n.opp",
+     "s0": 10998.2,
+     "s1": 11845.2,
+     "shoulder_m": 1.95,
+     "was_m": 3.05
+    },
+    {
+     "road": "i15n.opp",
+     "s0": 11845.2,
+     "s1": 12985,
+     "shoulder_m": 0.3,
+     "was_m": 3.05
+    },
+    {
+     "road": "i15n.opp",
+     "s0": 12985,
+     "s1": 13964.5,
+     "shoulder_m": 0.3,
+     "was_m": 3.05
+    },
+    {
+     "road": "i15n.opp",
+     "s0": 13964.5,
+     "s1": 15610.6,
+     "shoulder_m": 1.2,
+     "was_m": 3.05
+    },
+    {
+     "road": "i15n.opp",
+     "s0": 15610.6,
+     "s1": 18742.2,
+     "shoulder_m": 0.95,
+     "was_m": 3.05
+    },
+    {
+     "road": "i15n.opp",
+     "s0": 18742.2,
+     "s1": 20025.9,
+     "shoulder_m": 0.95,
+     "was_m": 3.05
+    }
+   ],
+   "carriageways": {
+    "apart_m": {
+     "min": 16.8,
+     "median": 30.1,
+     "max": 62.2
+    },
+    "opposite_on_left_everywhere": true,
+    "wrong_side": [],
+    "far_apart_over_45m": [
+     {
+      "s0": 35600.0,
+      "s1": 35800.0
+     },
+     {
+      "s0": 36600.0,
+      "s1": 37600.0
+     }
+    ],
+    "height_differs_over_3m": [
+     {
+      "s0": 7200.0,
+      "s1": 7300.0
+     },
+     {
+      "s0": 8500.0,
+      "s1": 8600.0
+     },
+     {
+      "s0": 9100.0,
+      "s1": 9300.0
+     },
+     {
+      "s0": 9800.0,
+      "s1": 10000.0
+     },
+     {
+      "s0": 42000.0,
+      "s1": 42200.0
+     }
+    ],
+    "per_km": [
+     {
+      "km": 0,
+      "apart_m": [
+       22.5,
+       34.7
+      ],
+      "opp_higher_m": [
+       0.68,
+       1.49
+      ]
+     },
+     {
+      "km": 1,
+      "apart_m": [
+       24.7,
+       28.6
+      ],
+      "opp_higher_m": [
+       0.25,
+       1.41
+      ]
+     },
+     {
+      "km": 2,
+      "apart_m": [
+       18.3,
+       25.4
+      ],
+      "opp_higher_m": [
+       0.44,
+       1.33
+      ]
+     },
+     {
+      "km": 3,
+      "apart_m": [
+       18.2,
+       24.2
+      ],
+      "opp_higher_m": [
+       0.22,
+       1.02
+      ]
+     },
+     {
+      "km": 4,
+      "apart_m": [
+       23.1,
+       26.5
+      ],
+      "opp_higher_m": [
+       0.85,
+       1.69
+      ]
+     },
+     {
+      "km": 5,
+      "apart_m": [
+       23.7,
+       26.4
+      ],
+      "opp_higher_m": [
+       0.79,
+       1.76
+      ]
+     },
+     {
+      "km": 6,
+      "apart_m": [
+       22.7,
+       26.7
+      ],
+      "opp_higher_m": [
+       0.34,
+       1.81
+      ]
+     },
+     {
+      "km": 7,
+      "apart_m": [
+       24.0,
+       28.3
+      ],
+      "opp_higher_m": [
+       1.4,
+       3.61
+      ]
+     },
+     {
+      "km": 8,
+      "apart_m": [
+       24.6,
+       27.2
+      ],
+      "opp_higher_m": [
+       0.2,
+       4.07
+      ]
+     },
+     {
+      "km": 9,
+      "apart_m": [
+       24.6,
+       42.4
+      ],
+      "opp_higher_m": [
+       -4.76,
+       -2.06
+      ]
+     },
+     {
+      "km": 10,
+      "apart_m": [
+       39.8,
+       42.9
+      ],
+      "opp_higher_m": [
+       -4.32,
+       0.1
+      ]
+     },
+     {
+      "km": 11,
+      "apart_m": [
+       39.9,
+       40.4
+      ],
+      "opp_higher_m": [
+       -1.4,
+       0.09
+      ]
+     },
+     {
+      "km": 12,
+      "apart_m": [
+       40.5,
+       41.0
+      ],
+      "opp_higher_m": [
+       -1.33,
+       -0.33
+      ]
+     },
+     {
+      "km": 13,
+      "apart_m": [
+       41.0,
+       41.5
+      ],
+      "opp_higher_m": [
+       -1.25,
+       -0.69
+      ]
+     },
+     {
+      "km": 14,
+      "apart_m": [
+       41.6,
+       42.1
+      ],
+      "opp_higher_m": [
+       -1.32,
+       -0.59
+      ]
+     },
+     {
+      "km": 15,
+      "apart_m": [
+       40.7,
+       41.9
+      ],
+      "opp_higher_m": [
+       -1.13,
+       -0.21
+      ]
+     },
+     {
+      "km": 16,
+      "apart_m": [
+       41.4,
+       43.1
+      ],
+      "opp_higher_m": [
+       -1.09,
+       -0.55
+      ]
+     },
+     {
+      "km": 17,
+      "apart_m": [
+       40.7,
+       44.0
+      ],
+      "opp_higher_m": [
+       -1.31,
+       0.54
+      ]
+     },
+     {
+      "km": 18,
+      "apart_m": [
+       36.0,
+       39.6
+      ],
+      "opp_higher_m": [
+       -1.14,
+       -0.32
+      ]
+     },
+     {
+      "km": 19,
+      "apart_m": [
+       34.8,
+       35.7
+      ],
+      "opp_higher_m": [
+       -0.96,
+       0.0
+      ]
+     },
+     {
+      "km": 20,
+      "apart_m": [
+       34.0,
+       36.6
+      ],
+      "opp_higher_m": [
+       -1.73,
+       -0.16
+      ]
+     },
+     {
+      "km": 21,
+      "apart_m": [
+       32.8,
+       36.8
+      ],
+      "opp_higher_m": [
+       -1.47,
+       1.37
+      ]
+     },
+     {
+      "km": 22,
+      "apart_m": [
+       29.2,
+       32.1
+      ],
+      "opp_higher_m": [
+       -0.99,
+       1.35
+      ]
+     },
+     {
+      "km": 23,
+      "apart_m": [
+       28.9,
+       35.9
+      ],
+      "opp_higher_m": [
+       -0.95,
+       -0.24
+      ]
+     },
+     {
+      "km": 24,
+      "apart_m": [
+       36.1,
+       37.0
+      ],
+      "opp_higher_m": [
+       -1.05,
+       -0.17
+      ]
+     },
+     {
+      "km": 25,
+      "apart_m": [
+       22.0,
+       37.1
+      ],
+      "opp_higher_m": [
+       -0.59,
+       -0.06
+      ]
+     },
+     {
+      "km": 26,
+      "apart_m": [
+       16.8,
+       31.3
+      ],
+      "opp_higher_m": [
+       -0.51,
+       -0.19
+      ]
+     },
+     {
+      "km": 27,
+      "apart_m": [
+       22.0,
+       34.8
+      ],
+      "opp_higher_m": [
+       -0.61,
+       -0.04
+      ]
+     },
+     {
+      "km": 28,
+      "apart_m": [
+       19.5,
+       23.4
+      ],
+      "opp_higher_m": [
+       -0.79,
+       -0.22
+      ]
+     },
+     {
+      "km": 29,
+      "apart_m": [
+       19.2,
+       27.5
+      ],
+      "opp_higher_m": [
+       -1.08,
+       0.29
+      ]
+     },
+     {
+      "km": 30,
+      "apart_m": [
+       26.3,
+       29.1
+      ],
+      "opp_higher_m": [
+       -1.47,
+       -0.93
+      ]
+     },
+     {
+      "km": 31,
+      "apart_m": [
+       19.3,
+       25.9
+      ],
+      "opp_higher_m": [
+       -1.4,
+       -0.36
+      ]
+     },
+     {
+      "km": 32,
+      "apart_m": [
+       19.3,
+       23.7
+      ],
+      "opp_higher_m": [
+       -2.08,
+       -0.2
+      ]
+     },
+     {
+      "km": 33,
+      "apart_m": [
+       19.5,
+       23.5
+      ],
+      "opp_higher_m": [
+       -1.33,
+       -0.34
+      ]
+     },
+     {
+      "km": 34,
+      "apart_m": [
+       19.0,
+       21.6
+      ],
+      "opp_higher_m": [
+       -0.23,
+       0.14
+      ]
+     },
+     {
+      "km": 35,
+      "apart_m": [
+       19.5,
+       47.3
+      ],
+      "opp_higher_m": [
+       -0.62,
+       0.09
+      ]
+     },
+     {
+      "km": 36,
+      "apart_m": [
+       39.4,
+       59.6
+      ],
+      "opp_higher_m": [
+       -0.62,
+       1.71
+      ]
+     },
+     {
+      "km": 37,
+      "apart_m": [
+       35.9,
+       62.2
+      ],
+      "opp_higher_m": [
+       -1.55,
+       0.11
+      ]
+     },
+     {
+      "km": 38,
+      "apart_m": [
+       28.8,
+       32.7
+      ],
+      "opp_higher_m": [
+       -0.88,
+       0.05
+      ]
+     },
+     {
+      "km": 39,
+      "apart_m": [
+       28.3,
+       31.3
+      ],
+      "opp_higher_m": [
+       -0.26,
+       0.03
+      ]
+     },
+     {
+      "km": 40,
+      "apart_m": [
+       28.6,
+       36.7
+      ],
+      "opp_higher_m": [
+       -0.7,
+       0.52
+      ]
+     },
+     {
+      "km": 41,
+      "apart_m": [
+       30.7,
+       35.4
+      ],
+      "opp_higher_m": [
+       -1.83,
+       0.8
+      ]
+     },
+     {
+      "km": 42,
+      "apart_m": [
+       29.2,
+       32.2
+      ],
+      "opp_higher_m": [
+       -5.56,
+       -0.29
+      ]
+     },
+     {
+      "km": 43,
+      "apart_m": [
+       25.3,
+       33.0
+      ],
+      "opp_higher_m": [
+       -0.72,
+       0.63
+      ]
+     },
+     {
+      "km": 44,
+      "apart_m": [
+       26.8,
+       29.0
+      ],
+      "opp_higher_m": [
+       -1.46,
+       -0.0
+      ]
+     },
+     {
+      "km": 45,
+      "apart_m": [
+       28.8,
+       28.9
+      ],
+      "opp_higher_m": [
+       -1.0,
+       -0.54
+      ]
+     }
+    ]
+   },
+   "plan_overlap": {
+    "min_gap_m": 0.7,
+    "at_s": 38096.0,
+    "from": "main",
+    "overlap_stretches": []
+   },
+   "lane_plan": {
+    "plan": [
+     {
+      "s0": 0,
+      "lane": 2
+     }
+    ],
+    "changes": [],
+    "through_at_end": [
+     1,
+     2,
+     19,
+     21,
+     24
+    ],
+    "max_lateral_accel": 0.95,
+    "at_s": 9782.5,
+    "max_lateral_jerk": 2.229,
+    "jerk_at_s": 43196.0,
+    "no_lane_at": [],
+    "no_lane_count": 0
+   },
+   "reveal": {
+    "target": "w135457469",
+    "target_point": {
+     "x": 1558.75,
+     "y": 3630.85,
+     "Y": 351.2,
+     "h": 971.2
+    },
+    "target_how": "model /models/lv/strat.glb, top 350.2 m above its origin at ground 621.0 m",
+    "eye_m": 1.2,
+    "lane": 2,
+    "first_visible_s": 7484.0,
+    "stays_visible_from_s": 7484.0,
+    "first_visible_s_drawn_surface": 7484.0,
+    "range_m": 28415.0,
+    "road_h_m": 761.1,
+    "visible_share_after": 1.0
+   },
+   "places": {
+    "Apex": 0,
+    "Speedway": 16954.5,
+    "I-215": 19552.2,
+    "Spaghetti Bowl": 33677,
+    "Russell Road": 45312.0
+   },
+   "acceptance": {
+    "length": {
+     "ok": true,
+     "measured_m": 45312.0,
+     "expected_m": 45200,
+     "tolerance": 0.005
+    },
+    "fit": {
+     "ok": true,
+     "share_within_0_5m": 0.9899
+    },
+    "grade": {
+     "ok": true,
+     "max": 0.0589
+    },
+    "above_terrain": {
+     "ok": true,
+     "drawn": {
+      "min_m": 0.29,
+      "at_s": 41296.0
+     },
+     "query": {
+      "min_m": 0.28,
+      "at_s": 41296.0
+     },
+     "lift_on_centre_line_m": {
+      "max": 7.12,
+      "max_at_s": 41992.0,
+      "median": 0.64,
+      "p95": 2.25
+     }
+    },
+    "opposite_above_terrain": {
+     "ok": true,
+     "max_grade": 0.0597,
+     "drawn": {
+      "min_m": 0.295,
+      "at_s": 3896.0
+     },
+     "query": {
+      "min_m": 0.295,
+      "at_s": 3897.0
+     }
+    },
+    "speed": {
+     "ok": true,
+     "zones": [
+      {
+       "s0": 0,
+       "mph": 75
+      },
+      {
+       "s0": 19552.2,
+       "mph": 65
+      }
+     ],
+     "change_to_65_km": 19.55,
+     "plan_km": null
+    },
+    "exits": {
+     "ok": true,
+     "missing": [],
+     "present": [
+      "",
+      "58",
+      "54",
+      "52",
+      "50",
+      "48",
+      "46",
+      "45",
+      "44",
+      "42",
+      "41",
+      "40",
+      "",
+      "39",
+      "38A",
+      "38B",
+      "37",
+      "36"
+     ]
+    },
+    "reveal": {
+     "ok": true,
+     "measured_s": 7484.0,
+     "expected_s": 6800,
+     "tolerance_m": 1500
+    },
+    "carriageways": {
+     "ok": true,
+     "apart_m": {
+      "min": 16.8,
+      "median": 30.1,
+      "max": 62.2
+     },
+     "wrong_side": []
+    },
+    "main_edge_rate": {
+     "ok": true,
+     "max_m_per_m": 0.0494,
+     "at_s": 34676.0,
+     "limit": 0.05,
+     "abrupt_changes": []
+    },
+    "main_lane_counts": {
+     "ok": true,
+     "matching": 200,
+     "of": 200,
+     "mismatches": []
+    },
+    "opposite_edge_rate": {
+     "ok": true,
+     "max_m_per_m": 0.0494,
+     "at_s": 9203.0,
+     "limit": 0.05,
+     "abrupt_changes": []
+    },
+    "opposite_lane_counts": {
+     "ok": true,
+     "matching": 200,
+     "of": 200,
+     "mismatches": []
+    },
+    "no_overlap": {
+     "ok": true,
+     "min_gap_m": 0.7,
+     "at_s": 38096.0,
+     "from": "main",
+     "overlap_stretches": []
+    },
+    "lane_plan": {
+     "ok": true,
+     "changes": 0,
+     "max_lateral_accel": 0.95,
+     "at_s": 9782.5,
+     "max_lateral_jerk": 2.229
+    },
+    "interchanges_exit_ramps": {
+     "ok": true,
+     "exits": 18,
+     "with_ramp_300m": 15,
+     "no_link_mapped": [],
+     "simplified": [
+      {
+       "s": 33677,
+       "ref": "42",
+       "label": "Phoenix / Reno",
+       "ramp": null,
+       "ramp_m": 0.0,
+       "ok": true,
+       "simplified": "ramp left out or shortened by the interchange rules: no profile: over another road at s 720-792; over another road at s 720-792"
+      },
+      {
+       "s": 42051.1,
+       "ref": "38B",
+       "label": "Flamingo Road East",
+       "ramp": "i15s.x38B.off",
+       "ramp_m": 232.0,
+       "ok": true,
+       "simplified": "ramp left out or shortened by the interchange rules: shortened until a profile fits: pins"
+      },
+      {
+       "s": 43197.1,
+       "ref": "37",
+       "label": "Tropicana Avenue",
+       "ramp": null,
+       "ramp_m": 0.0,
+       "ok": true,
+       "simplified": "ramp left out or shortened by the interchange rules: no profile: pins; pins"
+      }
+     ],
+     "missing": []
+    },
+    "interchanges_overpasses": {
+     "ok": true,
+     "count": 18,
+     "min_clearance_m": 5.41,
+     "dropped": [
+      {
+       "road": "x.east-tropical-parkway",
+       "name": "East Tropical Parkway",
+       "why": "a branch of a ramp, too tangled to build by rule (no profile clears the route with both ends on the ground: over another road at s 60-108; over another road at s 60-108)",
+       "branch": true
+      },
+      {
+       "road": "x.road.3",
+       "name": "",
+       "why": "a branch of a ramp, too tangled to build by rule (no profile clears the route with both ends on the ground: over another road at s 812-984; over another road at s 680-984)",
+       "branch": true
+      },
+      {
+       "road": "x.road.4",
+       "name": "",
+       "why": "a branch of a ramp, too tangled to build by rule (no profile clears the route with both ends on the ground: over another road at s 76-140; over another road at s 76-348)",
+       "branch": true
+      },
+      {
+       "road": "x.road.6",
+       "name": "",
+       "why": "a branch of a ramp, too tangled to build by rule (no profile clears the route with both ends on the ground: over another road at s 0-116; over another road at s 0-212)",
+       "branch": true
+      },
+      {
+       "road": "x.road.9",
+       "name": "",
+       "why": "a branch of a ramp, too tangled to build by rule (no profile clears the route with both ends on the ground: ends; ends)",
+       "branch": true
+      },
+      {
+       "road": "x.road",
+       "name": "",
+       "why": "a branch of a ramp, too tangled to build by rule (no profile clears the route with both ends on the ground: over another road at s 0-444; over another road at s 0-444)",
+       "branch": true
+      }
+     ],
+     "note": "branches of ramps that are too tangled to build by rule are left out and listed (simplified)"
+    },
+    "interchanges_no_ramp_through_main": {
+     "ok": true,
+     "violations": []
+    },
+    "interchanges_plan_overlap_rule": {
+     "ok": true,
+     "violations": 0,
+     "overlapping_pairs": 136,
+     "min_separation_m": 6.17
+    }
+   },
+   "interchanges": {
+    "counts": {
+     "ramps": 69,
+     "gores": 69,
+     "diverge": 32,
+     "merge": 37,
+     "connects": 14,
+     "crossings": 18,
+     "decks": 37,
+     "piers": 123,
+     "abutments": 65,
+     "roads": 87
+    },
+    "extract": {
+     "osm": "2026-11-22T09:28:51Z",
+     "elements": 36580
+    },
+    "exits": [
+     {
+      "s": 5555.8,
+      "ref": "",
+      "label": "Check Station",
+      "ramp": "i15s.xkm6.off",
+      "ramp_m": 640.0,
+      "ok": true
+     },
+     {
+      "s": 9907.2,
+      "ref": "58",
+      "label": "Apex / Nellis Air Force Base",
+      "ramp": "i15s.x58.off",
+      "ramp_m": 524.0,
+      "ok": true
+     },
+     {
+      "s": 16954.5,
+      "ref": "54",
+      "label": "Speedway Boulevard / Hollywood Boulevard",
+      "ramp": "i15s.x54.off",
+      "ramp_m": 760.0,
+      "ok": true
+     },
+     {
+      "s": 19552.2,
+      "ref": "52",
+      "label": "Tropical Parkway",
+      "ramp": "i15s.x52.off",
+      "ramp_m": 1416.0,
+      "ok": true
+     },
+     {
+      "s": 22520.9,
+      "ref": "50",
+      "label": "Lamb Boulevard",
+      "ramp": "i15s.x50.off",
+      "ramp_m": 744.0,
+      "ok": true
+     },
+     {
+      "s": 25240.6,
+      "ref": "48",
+      "label": "Craig Road",
+      "ramp": "i15s.x48.off",
+      "ramp_m": 1192.0,
+      "ok": true
+     },
+     {
+      "s": 28408.9,
+      "ref": "46",
+      "label": "Cheyenne Avenue",
+      "ramp": "i15s.x46.off",
+      "ramp_m": 992.0,
+      "ok": true
+     },
+     {
+      "s": 31318.7,
+      "ref": "45",
+      "label": "Lake Mead Boulevard",
+      "ramp": "i15s.x45.off",
+      "ramp_m": 860.0,
+      "ok": true
+     },
+     {
+      "s": 33409.2,
+      "ref": "44",
+      "label": "Washington Avenue / D Street",
+      "ramp": "i15s.x44.off",
+      "ramp_m": 528.0,
+      "ok": true
+     },
+     {
+      "s": 33677,
+      "ref": "42",
+      "label": "Phoenix / Reno",
+      "ramp": null,
+      "ramp_m": 0.0,
+      "ok": true,
+      "simplified": "ramp left out or shortened by the interchange rules: no profile: over another road at s 720-792; over another road at s 720-792"
+     },
+     {
+      "s": 36098.9,
+      "ref": "41",
+      "label": "Charleston Boulevard",
+      "ramp": "i15s.x41.off",
+      "ramp_m": 732.0,
+      "ok": true
+     },
+     {
+      "s": 36550.4,
+      "ref": "40",
+      "label": "Sahara Avenue",
+      "ramp": "i15s.x40.off",
+      "ramp_m": 2228.0,
+      "ok": true
+     },
+     {
+      "s": 36645.8,
+      "ref": "",
+      "label": "Neon Gateway",
+      "ramp": "i15s.x40.off",
+      "ramp_m": 2228.0,
+      "ok": true
+     },
+     {
+      "s": 40177.6,
+      "ref": "39",
+      "label": "Spring Mountain Road",
+      "ramp": "i15s.x39.off",
+      "ramp_m": 388.0,
+      "ok": true
+     },
+     {
+      "s": 41574.4,
+      "ref": "38A",
+      "label": "Flamingo Road West",
+      "ramp": "i15s.x38A.off",
+      "ramp_m": 876.0,
+      "ok": true
+     },
+     {
+      "s": 42051.1,
+      "ref": "38B",
+      "label": "Flamingo Road East",
+      "ramp": "i15s.x38B.off",
+      "ramp_m": 232.0,
+      "ok": true,
+      "simplified": "ramp left out or shortened by the interchange rules: shortened until a profile fits: pins"
+     },
+     {
+      "s": 43197.1,
+      "ref": "37",
+      "label": "Tropicana Avenue",
+      "ramp": null,
+      "ramp_m": 0.0,
+      "ok": true,
+      "simplified": "ramp left out or shortened by the interchange rules: no profile: pins; pins"
+     },
+     {
+      "s": 44341,
+      "ref": "36",
+      "label": "Russell Road",
+      "ramp": "i15s.x36.off",
+      "ramp_m": 512.0,
+      "ok": true
+     }
+    ],
+    "crossings": [
+     {
+      "road": "x.pabco-road",
+      "name": "Pabco Road",
+      "clearance_m": 5.51
+     },
+     {
+      "road": "x.east-craig-road",
+      "name": "East Craig Road",
+      "clearance_m": 5.44
+     },
+     {
+      "road": "x.5th-street",
+      "name": "5th Street",
+      "clearance_m": 5.5
+     },
+     {
+      "road": "x.wilbur-clark-d-i-road",
+      "name": "Wilbur Clark D.I. Road",
+      "clearance_m": 5.49
+     },
+     {
+      "road": "x.west-hacienda-avenue",
+      "name": "West Hacienda Avenue",
+      "clearance_m": 5.46
+     },
+     {
+      "road": "x.west-harmon-avenue",
+      "name": "West Harmon Avenue",
+      "clearance_m": 5.43
+     },
+     {
+      "road": "x.east-cheyenne-avenue",
+      "name": "East Cheyenne Avenue",
+      "clearance_m": 5.49
+     },
+     {
+      "road": "x.west-russell-road",
+      "name": "West Russell Road",
+      "clearance_m": 5.5
+     },
+     {
+      "road": "x.east-carey-avenue",
+      "name": "East Carey Avenue",
+      "clearance_m": 5.5
+     },
+     {
+      "road": "x.west-owens-avenue",
+      "name": "West Owens Avenue",
+      "clearance_m": 5.41
+     },
+     {
+      "road": "x.west-tropicana-avenue",
+      "name": "West Tropicana Avenue",
+      "clearance_m": 5.47
+     },
+     {
+      "road": "x.road.2",
+      "name": "",
+      "clearance_m": 5.5
+     },
+     {
+      "road": "x.road.5",
+      "name": "",
+      "clearance_m": 5.5
+     },
+     {
+      "road": "x.road.7",
+      "name": "",
+      "clearance_m": 5.45
+     },
+     {
+      "road": "x.road.8",
+      "name": "",
+      "clearance_m": 5.5
+     },
+     {
+      "road": "x.road.10",
+      "name": "",
+      "clearance_m": 11.4
+     },
+     {
+      "road": "x.road.11",
+      "name": "",
+      "clearance_m": 12.11
+     },
+     {
+      "road": "x.west-flamingo-road",
+      "name": "West Flamingo Road",
+      "clearance_m": 5.5
+     }
+    ],
+    "ramps": [
+     {
+      "road": "i15s.xkm6.off",
+      "length_m": 640.0,
+      "lanes": 1,
+      "decks": 0,
+      "max_layer": 0,
+      "side": "right",
+      "gore_start": true,
+      "gore_end": false,
+      "fit_max_m": 0.086
+     },
+     {
+      "road": "i15s.x58.off",
+      "length_m": 524.0,
+      "lanes": 1,
+      "decks": 0,
+      "max_layer": 0,
+      "side": "right",
+      "gore_start": true,
+      "gore_end": false,
+      "fit_max_m": 0.561
+     },
+     {
+      "road": "i15s.x54.off",
+      "length_m": 760.0,
+      "lanes": 1,
+      "decks": 0,
+      "max_layer": 0,
+      "side": "right",
+      "gore_start": true,
+      "gore_end": false,
+      "fit_max_m": 0.25
+     },
+     {
+      "road": "i15s.x50.off",
+      "length_m": 744.0,
+      "lanes": 1,
+      "decks": 1,
+      "max_layer": 9,
+      "side": "right",
+      "gore_start": true,
+      "gore_end": false,
+      "fit_max_m": 0.193
+     },
+     {
+      "road": "i15s.x48.off",
+      "length_m": 1192.0,
+      "lanes": 2,
+      "decks": 0,
+      "max_layer": 0,
+      "side": "right",
+      "gore_start": true,
+      "gore_end": false,
+      "fit_max_m": 0.584
+     },
+     {
+      "road": "i15s.x46.off",
+      "length_m": 992.0,
+      "lanes": 1,
+      "decks": 0,
+      "max_layer": 0,
+      "side": "right",
+      "gore_start": true,
+      "gore_end": false,
+      "fit_max_m": 0.177
+     },
+     {
+      "road": "i15s.x45.off",
+      "length_m": 860.0,
+      "lanes": 1,
+      "decks": 0,
+      "max_layer": 0,
+      "side": "right",
+      "gore_start": true,
+      "gore_end": false,
+      "fit_max_m": 1.565
+     },
+     {
+      "road": "i15s.x44.off",
+      "length_m": 528.0,
+      "lanes": 1,
+      "decks": 0,
+      "max_layer": 0,
+      "side": "right",
+      "gore_start": true,
+      "gore_end": false,
+      "fit_max_m": 0.243
+     },
+     {
+      "road": "i15s.x41.off",
+      "length_m": 732.0,
+      "lanes": 2,
+      "decks": 0,
+      "max_layer": 0,
+      "side": "right",
+      "gore_start": true,
+      "gore_end": false,
+      "fit_max_m": 0.301
+     },
+     {
+      "road": "i15s.xkm37.off",
+      "length_m": 604.0,
+      "lanes": 1,
+      "decks": 0,
+      "max_layer": 0,
+      "side": "left",
+      "gore_start": true,
+      "gore_end": false,
+      "fit_max_m": 0.08
+     },
+     {
+      "road": "i15s.x39.off",
+      "length_m": 388.0,
+      "lanes": 2,
+      "decks": 0,
+      "max_layer": 0,
+      "side": "right",
+      "gore_start": true,
+      "gore_end": false,
+      "fit_max_m": 0.318
+     },
+     {
+      "road": "i15s.x38A.off",
+      "length_m": 876.0,
+      "lanes": 1,
+      "decks": 0,
+      "max_layer": 0,
+      "side": "right",
+      "gore_start": true,
+      "gore_end": false,
+      "fit_max_m": 0.316
+     },
+     {
+      "road": "i15s.x38B.off",
+      "length_m": 232.0,
+      "lanes": 1,
+      "decks": 0,
+      "max_layer": 0,
+      "side": "right",
+      "gore_start": true,
+      "gore_end": false,
+      "fit_max_m": 1.847
+     },
+     {
+      "road": "i15s.x36.off",
+      "length_m": 512.0,
+      "lanes": 2,
+      "decks": 0,
+      "max_layer": 0,
+      "side": "right",
+      "gore_start": true,
+      "gore_end": false,
+      "fit_max_m": 0.273
+     },
+     {
+      "road": "i15n.x40.off",
+      "length_m": 584.0,
+      "lanes": 2,
+      "decks": 0,
+      "max_layer": 0,
+      "side": "right",
+      "gore_start": true,
+      "gore_end": false,
+      "fit_max_m": 0.476
+     },
+     {
+      "road": "i15n.xkm8.off",
+      "length_m": 320.0,
+      "lanes": 1,
+      "decks": 0,
+      "max_layer": 0,
+      "side": "left",
+      "gore_start": true,
+      "gore_end": false,
+      "fit_max_m": 0.146
+     },
+     {
+      "road": "i15n.x41.off",
+      "length_m": 876.0,
+      "lanes": 2,
+      "decks": 0,
+      "max_layer": 0,
+      "side": "right",
+      "gore_start": true,
+      "gore_end": false,
+      "fit_max_m": 0.246
+     },
+     {
+      "road": "i15n.x42B.off",
+      "length_m": 960.0,
+      "lanes": 2,
+      "decks": 0,
+      "max_layer": 0,
+      "side": "right",
+      "gore_start": true,
+      "gore_end": false,
+      "fit_max_m": 0.82
+     },
+     {
+      "road": "i15n.x43.off",
+      "length_m": 472.0,
+      "lanes": 1,
+      "decks": 0,
+      "max_layer": 0,
+      "side": "right",
+      "gore_start": true,
+      "gore_end": false,
+      "fit_max_m": 1.109
+     },
+     {
+      "road": "i15n.x45.off",
+      "length_m": 540.0,
+      "lanes": 2,
+      "decks": 0,
+      "max_layer": 0,
+      "side": "right",
+      "gore_start": true,
+      "gore_end": false,
+      "fit_max_m": 0.258
+     },
+     {
+      "road": "i15n.x48.off",
+      "length_m": 856.0,
+      "lanes": 2,
+      "decks": 0,
+      "max_layer": 0,
+      "side": "right",
+      "gore_start": true,
+      "gore_end": false,
+      "fit_max_m": 0.238
+     },
+     {
+      "road": "i15n.x50.off",
+      "length_m": 680.0,
+      "lanes": 1,
+      "decks": 1,
+      "max_layer": 9,
+      "side": "right",
+      "gore_start": true,
+      "gore_end": false,
+      "fit_max_m": 0.347
+     },
+     {
+      "road": "i15n.x52B.off",
+      "length_m": 828.0,
+      "lanes": 1,
+      "decks": 0,
+      "max_layer": 0,
+      "side": "right",
+      "gore_start": true,
+      "gore_end": false,
+      "fit_max_m": 0.296
+     },
+     {
+      "road": "i15n.x54.off",
+      "length_m": 832.0,
+      "lanes": 2,
+      "decks": 0,
+      "max_layer": 0,
+      "side": "right",
+      "gore_start": true,
+      "gore_end": false,
+      "fit_max_m": 0.538
+     },
+     {
+      "road": "i15n.x58.off",
+      "length_m": 556.0,
+      "lanes": 1,
+      "decks": 0,
+      "max_layer": 0,
+      "side": "right",
+      "gore_start": true,
+      "gore_end": false,
+      "fit_max_m": 0.631
+     },
+     {
+      "road": "i15n.x64.off",
+      "length_m": 688.0,
+      "lanes": 2,
+      "decks": 0,
+      "max_layer": 0,
+      "side": "right",
+      "gore_start": true,
+      "gore_end": false,
+      "fit_max_m": 0.688
+     },
+     {
+      "road": "i15s.xkm1.on",
+      "length_m": 912.0,
+      "lanes": 2,
+      "decks": 0,
+      "max_layer": 0,
+      "side": "right",
+      "gore_start": false,
+      "gore_end": true,
+      "fit_max_m": 0.523
+     },
+     {
+      "road": "i15s.xkm7.on",
+      "length_m": 752.0,
+      "lanes": 1,
+      "decks": 0,
+      "max_layer": 0,
+      "side": "right",
+      "gore_start": false,
+      "gore_end": true,
+      "fit_max_m": 0.175
+     },
+     {
+      "road": "i15s.x58.on",
+      "length_m": 652.0,
+      "lanes": 1,
+      "decks": 0,
+      "max_layer": 0,
+      "side": "right",
+      "gore_start": false,
+      "gore_end": true,
+      "fit_max_m": 0.714
+     },
+     {
+      "road": "i15s.x52.on",
+      "length_m": 848.0,
+      "lanes": 2,
+      "decks": 0,
+      "max_layer": 0,
+      "side": "right",
+      "gore_start": false,
+      "gore_end": true,
+      "fit_max_m": 0.312
+     },
+     {
+      "road": "i15s.x50.on2",
+      "length_m": 532.0,
+      "lanes": 1,
+      "decks": 0,
+      "max_layer": 0,
+      "side": "right",
+      "gore_start": false,
+      "gore_end": true,
+      "fit_max_m": 0.462
+     },
+     {
+      "road": "i15s.x48.on",
+      "length_m": 140.0,
+      "lanes": 1,
+      "decks": 0,
+      "max_layer": 0,
+      "side": "right",
+      "gore_start": false,
+      "gore_end": true,
+      "fit_max_m": 1.55
+     },
+     {
+      "road": "i15s.x46.on",
+      "length_m": 980.0,
+      "lanes": 2,
+      "decks": 0,
+      "max_layer": 0,
+      "side": "right",
+      "gore_start": false,
+      "gore_end": true,
+      "fit_max_m": 0.268
+     },
+     {
+      "road": "i15s.x45.on",
+      "length_m": 452.0,
+      "lanes": 3,
+      "decks": 0,
+      "max_layer": 0,
+      "side": "right",
+      "gore_start": false,
+      "gore_end": true,
+      "fit_max_m": 0.189
+     },
+     {
+      "road": "i15s.x45.on2",
+      "length_m": 1232.0,
+      "lanes": 3,
+      "decks": 1,
+      "max_layer": 9,
+      "side": "right",
+      "gore_start": false,
+      "gore_end": true,
+      "fit_max_m": 1.468
+     },
+     {
+      "road": "i15s.x42.on",
+      "length_m": 700.0,
+      "lanes": 2,
+      "decks": 0,
+      "max_layer": 0,
+      "side": "right",
+      "gore_start": false,
+      "gore_end": true,
+      "fit_max_m": 1.367
+     },
+     {
+      "road": "i15s.xkm37.on",
+      "length_m": 652.0,
+      "lanes": 3,
+      "decks": 0,
+      "max_layer": 0,
+      "side": "right",
+      "gore_start": false,
+      "gore_end": true,
+      "fit_max_m": 0.511
+     },
+     {
+      "road": "i15s.x39.on",
+      "length_m": 524.0,
+      "lanes": 2,
+      "decks": 0,
+      "max_layer": 0,
+      "side": "right",
+      "gore_start": false,
+      "gore_end": true,
+      "fit_max_m": 3.06
+     },
+     {
+      "road": "i15s.x38A.on",
+      "length_m": 476.0,
+      "lanes": 2,
+      "decks": 0,
+      "max_layer": 0,
+      "side": "right",
+      "gore_start": false,
+      "gore_end": true,
+      "fit_max_m": 0.378
+     },
+     {
+      "road": "i15s.x37.on",
+      "length_m": 640.0,
+      "lanes": 2,
+      "decks": 0,
+      "max_layer": 0,
+      "side": "right",
+      "gore_start": false,
+      "gore_end": true,
+      "fit_max_m": 2.534
+     },
+     {
+      "road": "i15s.x37.on2",
+      "length_m": 204.0,
+      "lanes": 1,
+      "decks": 0,
+      "max_layer": 0,
+      "side": "right",
+      "gore_start": false,
+      "gore_end": true,
+      "fit_max_m": 0.099
+     },
+     {
+      "road": "i15n.xkm1.on",
+      "length_m": 2004.0,
+      "lanes": 2,
+      "decks": 0,
+      "max_layer": 0,
+      "side": "right",
+      "gore_start": false,
+      "gore_end": true,
+      "fit_max_m": 0.276
+     },
+     {
+      "road": "i15n.x39.on",
+      "length_m": 416.0,
+      "lanes": 2,
+      "decks": 0,
+      "max_layer": 0,
+      "side": "right",
+      "gore_start": false,
+      "gore_end": true,
+      "fit_max_m": 1.064
+     },
+     {
+      "road": "i15n.x39.on2",
+      "length_m": 668.0,
+      "lanes": 1,
+      "decks": 1,
+      "max_layer": 9,
+      "side": "right",
+      "gore_start": false,
+      "gore_end": true,
+      "fit_max_m": 1.656
+     },
+     {
+      "road": "i15n.xkm7.on",
+      "length_m": 664.0,
+      "lanes": 3,
+      "decks": 0,
+      "max_layer": 0,
+      "side": "right",
+      "gore_start": false,
+      "gore_end": true,
+      "fit_max_m": 0.264
+     },
+     {
+      "road": "i15n.x41.on",
+      "length_m": 608.0,
+      "lanes": 1,
+      "decks": 0,
+      "max_layer": 0,
+      "side": "left",
+      "gore_start": false,
+      "gore_end": true,
+      "fit_max_m": 0.109
+     },
+     {
+      "road": "i15n.xkm9.on",
+      "length_m": 600.0,
+      "lanes": 3,
+      "decks": 0,
+      "max_layer": 0,
+      "side": "right",
+      "gore_start": false,
+      "gore_end": true,
+      "fit_max_m": 0.05
+     },
+     {
+      "road": "i15n.x43.on",
+      "length_m": 944.0,
+      "lanes": 2,
+      "decks": 1,
+      "max_layer": 9,
+      "side": "right",
+      "gore_start": false,
+      "gore_end": true,
+      "fit_max_m": 1.557
+     },
+     {
+      "road": "i15n.x45.on",
+      "length_m": 1032.0,
+      "lanes": 2,
+      "decks": 0,
+      "max_layer": 0,
+      "side": "right",
+      "gore_start": false,
+      "gore_end": true,
+      "fit_max_m": 0.159
+     },
+     {
+      "road": "i15n.x45.on2",
+      "length_m": 536.0,
+      "lanes": 2,
+      "decks": 0,
+      "max_layer": 0,
+      "side": "right",
+      "gore_start": false,
+      "gore_end": true,
+      "fit_max_m": 0.359
+     },
+     {
+      "road": "i15n.x46.on",
+      "length_m": 692.0,
+      "lanes": 1,
+      "decks": 0,
+      "max_layer": 0,
+      "side": "right",
+      "gore_start": false,
+      "gore_end": true,
+      "fit_max_m": 0.21
+     },
+     {
+      "road": "i15n.x48.on",
+      "length_m": 832.0,
+      "lanes": 2,
+      "decks": 0,
+      "max_layer": 0,
+      "side": "right",
+      "gore_start": false,
+      "gore_end": true,
+      "fit_max_m": 0.234
+     },
+     {
+      "road": "i15n.x50.on",
+      "length_m": 744.0,
+      "lanes": 1,
+      "decks": 0,
+      "max_layer": 0,
+      "side": "right",
+      "gore_start": false,
+      "gore_end": true,
+      "fit_max_m": 0.224
+     },
+     {
+      "road": "i15n.x54.on",
+      "length_m": 608.0,
+      "lanes": 1,
+      "decks": 0,
+      "max_layer": 0,
+      "side": "right",
+      "gore_start": false,
+      "gore_end": true,
+      "fit_max_m": 0.272
+     },
+     {
+      "road": "i15n.x54.on2",
+      "length_m": 856.0,
+      "lanes": 1,
+      "decks": 0,
+      "max_layer": 0,
+      "side": "right",
+      "gore_start": false,
+      "gore_end": true,
+      "fit_max_m": 0.487
+     },
+     {
+      "road": "i15n.x58.on",
+      "length_m": 820.0,
+      "lanes": 1,
+      "decks": 0,
+      "max_layer": 0,
+      "side": "right",
+      "gore_start": false,
+      "gore_end": true,
+      "fit_max_m": 0.264
+     },
+     {
+      "road": "i15s.x52.off",
+      "length_m": 1416.0,
+      "lanes": 1,
+      "decks": 0,
+      "max_layer": 1,
+      "side": "right",
+      "gore_start": true,
+      "gore_end": false,
+      "fit_max_m": 0.253
+     },
+     {
+      "road": "i15n.xkm9.off",
+      "length_m": 1504.0,
+      "lanes": 1,
+      "decks": 1,
+      "max_layer": 9,
+      "side": "left",
+      "gore_start": true,
+      "gore_end": false,
+      "fit_max_m": 0.837
+     },
+     {
+      "road": "i15n.x46.off",
+      "length_m": 692.0,
+      "lanes": 2,
+      "decks": 1,
+      "max_layer": 1,
+      "side": "right",
+      "gore_start": true,
+      "gore_end": false,
+      "fit_max_m": 0.149
+     },
+     {
+      "road": "i15s.x50.on",
+      "length_m": 1296.0,
+      "lanes": 1,
+      "decks": 0,
+      "max_layer": 1,
+      "side": "right",
+      "gore_start": false,
+      "gore_end": true,
+      "fit_max_m": 0.227
+     },
+     {
+      "road": "i15s.x41.on",
+      "length_m": 1220.0,
+      "lanes": 2,
+      "decks": 1,
+      "max_layer": 1,
+      "side": "right",
+      "gore_start": false,
+      "gore_end": true,
+      "fit_max_m": 0.461
+     },
+     {
+      "road": "i15s.x41.on2",
+      "length_m": 596.0,
+      "lanes": 1,
+      "decks": 0,
+      "max_layer": 0,
+      "side": "left",
+      "gore_start": false,
+      "gore_end": true,
+      "fit_max_m": 13.245
+     },
+     {
+      "road": "i15s.xkm38.on2",
+      "length_m": 3440.0,
+      "lanes": 2,
+      "decks": 2,
+      "max_layer": 9,
+      "side": "right",
+      "gore_start": false,
+      "gore_end": true,
+      "fit_max_m": 0.278
+     },
+     {
+      "road": "i15n.xkm2.on",
+      "length_m": 632.0,
+      "lanes": 2,
+      "decks": 0,
+      "max_layer": 1,
+      "side": "right",
+      "gore_start": false,
+      "gore_end": true,
+      "fit_max_m": 0.216
+     },
+     {
+      "road": "i15n.x40.on",
+      "length_m": 712.0,
+      "lanes": 2,
+      "decks": 0,
+      "max_layer": 1,
+      "side": "right",
+      "gore_start": false,
+      "gore_end": true,
+      "fit_max_m": 1.441
+     },
+     {
+      "road": "i15n.x43.on2",
+      "length_m": 1832.0,
+      "lanes": 1,
+      "decks": 3,
+      "max_layer": 9,
+      "side": "right",
+      "gore_start": false,
+      "gore_end": true,
+      "fit_max_m": 0.52
+     },
+     {
+      "road": "i15s.x40.off",
+      "length_m": 2228.0,
+      "lanes": 2,
+      "decks": 2,
+      "max_layer": 9,
+      "side": "right",
+      "gore_start": true,
+      "gore_end": false,
+      "fit_max_m": 0.255
+     },
+     {
+      "road": "i15n.x38.off",
+      "length_m": 776.0,
+      "lanes": 1,
+      "decks": 1,
+      "max_layer": 2,
+      "side": "right",
+      "gore_start": true,
+      "gore_end": false,
+      "fit_max_m": 0.667
+     },
+     {
+      "road": "i15n.x39.off",
+      "length_m": 1796.0,
+      "lanes": 2,
+      "decks": 2,
+      "max_layer": 9,
+      "side": "right",
+      "gore_start": true,
+      "gore_end": false,
+      "fit_max_m": 1.405
+     }
+    ],
+    "dropped": [
+     {
+      "road": "i15n.xkm2.off",
+      "why": "geometry: its gore would lie on i15s.main (a median ramp with no room)",
+      "node": "n137167665"
+     },
+     {
+      "road": "i15s.xkm38.on",
+      "why": "geometry: its gore would lie on i15n.opp (a median ramp with no room)"
+     },
+     {
+      "road": "x.east-tropical-parkway",
+      "name": "East Tropical Parkway",
+      "why": "a branch of a ramp, too tangled to build by rule (no profile clears the route with both ends on the ground: over another road at s 60-108; over another road at s 60-108)",
+      "branch": true
+     },
+     {
+      "road": "x.road.3",
+      "name": "",
+      "why": "a branch of a ramp, too tangled to build by rule (no profile clears the route with both ends on the ground: over another road at s 812-984; over another road at s 680-984)",
+      "branch": true
+     },
+     {
+      "road": "x.road.4",
+      "name": "",
+      "why": "a branch of a ramp, too tangled to build by rule (no profile clears the route with both ends on the ground: over another road at s 76-140; over another road at s 76-348)",
+      "branch": true
+     },
+     {
+      "road": "x.road.6",
+      "name": "",
+      "why": "a branch of a ramp, too tangled to build by rule (no profile clears the route with both ends on the ground: over another road at s 0-116; over another road at s 0-212)",
+      "branch": true
+     },
+     {
+      "road": "x.road.9",
+      "name": "",
+      "why": "a branch of a ramp, too tangled to build by rule (no profile clears the route with both ends on the ground: ends; ends)",
+      "branch": true
+     },
+     {
+      "road": "x.road",
+      "name": "",
+      "why": "a branch of a ramp, too tangled to build by rule (no profile clears the route with both ends on the ground: over another road at s 0-444; over another road at s 0-444)",
+      "branch": true
+     },
+     {
+      "road": "i15s.x42.off",
+      "why": "no profile: over another road at s 720-792; over another road at s 720-792"
+     },
+     {
+      "road": "i15n.x52A.off",
+      "why": "no profile: under ['i15n.x52B.off'] at s 240-376; under ['i15n.x52B.off'] at s 240-376"
+     },
+     {
+      "road": "i15s.x37.off",
+      "why": "no profile: pins; pins"
+     },
+     {
+      "road": "i15n.x42A.off",
+      "why": "no profile: under ['i15n.x42B.off', 'i15n.x43.on'] at s 140-408; under ['i15n.x42B.off', 'i15n.x43.on'] at s 140-408"
+     },
+     {
+      "road": "i15s.x45.on3",
+      "why": "runs on the pavement of i15s.x45.on2 over most of its length"
+     }
+    ],
+    "simplified": [
+     {
+      "road": "x.east-carey-avenue",
+      "why": "over everything it meets (its mapped level does not fit)"
+     },
+     {
+      "road": "x.west-owens-avenue",
+      "why": "approach 520.0 m, grade 0.06"
+     },
+     {
+      "road": "x.road.5",
+      "why": "over everything it meets (its mapped level does not fit)"
+     },
+     {
+      "road": "x.road.11",
+      "why": "approach 520.0 m, grade 0.06"
+     },
+     {
+      "road": "i15s.x50.off",
+      "why": "over everything it meets (its mapped level does not fit)"
+     },
+     {
+      "road": "i15s.xkm37.off",
+      "why": "ends before a road it would have to pass under",
+      "length_m": 604.0
+     },
+     {
+      "road": "i15s.x39.off",
+      "why": "shortened until a profile fits: over another road at s 456-472",
+      "length_m": 684.0
+     },
+     {
+      "road": "i15s.x39.off",
+      "why": "shortened until a profile fits: under ['x.wilbur-clark-d-i-road'] at s 436-472",
+      "length_m": 516.0
+     },
+     {
+      "road": "i15s.x39.off",
+      "why": "shortened until a profile fits: under ['x.wilbur-clark-d-i-road'] at s 436-472",
+      "length_m": 388.0
+     },
+     {
+      "road": "i15s.x38B.off",
+      "why": "shortened until a profile fits: pins",
+      "length_m": 232.0
+     },
+     {
+      "road": "i15s.x36.off",
+      "why": "ends before a road it would have to pass under",
+      "length_m": 512.0
+     },
+     {
+      "road": "i15n.xkm8.off",
+      "why": "ends before a road it would have to pass under",
+      "length_m": 564.0
+     },
+     {
+      "road": "i15n.xkm8.off",
+      "why": "shortened until a profile fits: pins",
+      "length_m": 424.0
+     },
+     {
+      "road": "i15n.xkm8.off",
+      "why": "shortened until a profile fits: pins",
+      "length_m": 320.0
+     },
+     {
+      "road": "i15n.x50.off",
+      "why": "over everything it meets (its mapped level does not fit)"
+     },
+     {
+      "road": "i15s.x50.on2",
+      "why": "ends before a road it would have to pass under",
+      "length_m": 560.0
+     },
+     {
+      "road": "i15s.x50.on2",
+      "why": "ends before a road it would have to pass under",
+      "length_m": 532.0
+     },
+     {
+      "road": "i15s.x48.on",
+      "why": "shortened until a profile fits: pins",
+      "length_m": 140.0
+     },
+     {
+      "road": "i15s.x45.on",
+      "why": "ends before a road it would have to pass under",
+      "length_m": 808.0
+     },
+     {
+      "road": "i15s.x45.on",
+      "why": "shortened until a profile fits: under ['i15s.main', 'x.road.5'] at s 0-680",
+      "length_m": 604.0
+     },
+     {
+      "road": "i15s.x45.on",
+      "why": "shortened until a profile fits: under ['i15s.main', 'x.road.5'] at s 0-476",
+      "length_m": 452.0
+     },
+     {
+      "road": "i15s.x45.on2",
+      "why": "over everything it meets (its mapped level does not fit)"
+     },
+     {
+      "road": "i15s.x45.on3",
+      "why": "shortened until a profile fits: over another road at s 236-272",
+      "length_m": 464.0
+     },
+     {
+      "road": "i15s.x45.on3",
+      "why": "shortened until a profile fits: under ['i15s.x45.on2'] at s 76-376",
+      "length_m": 344.0
+     },
+     {
+      "road": "i15s.x37.on2",
+      "why": "shortened until a profile fits: pins",
+      "length_m": 204.0
+     },
+     {
+      "road": "i15n.x39.on2",
+      "why": "over everything it meets (its mapped level does not fit)"
+     },
+     {
+      "road": "i15n.x41.on",
+      "why": "ends before a road it would have to pass under",
+      "length_m": 608.0
+     },
+     {
+      "road": "i15n.x43.on",
+      "why": "over everything it meets (its mapped level does not fit)"
+     },
+     {
+      "road": "i15n.x45.on2",
+      "why": "shortened until a profile fits: under ['i15s.x45.on2'] at s 4-20",
+      "length_m": 536.0
+     },
+     {
+      "road": "i15n.x46.on",
+      "why": "shortened until a profile fits: under ['x.east-cheyenne-avenue', 'x.road.5'] at s 0-52",
+      "length_m": 692.0
+     },
+     {
+      "road": "i15n.x50.on",
+      "why": "ends before a road it would have to pass under",
+      "length_m": 744.0
+     },
+     {
+      "road": "i15n.x54.on",
+      "why": "shortened until a profile fits: over another road at s 396-444",
+      "length_m": 812.0
+     },
+     {
+      "road": "i15n.x54.on",
+      "why": "shortened until a profile fits: under ['x.road.7'] at s 124-172",
+      "length_m": 608.0
+     },
+     {
+      "road": "i15s.x42.off",
+      "why": "shortened until a profile fits: over another road at s 720-2032",
+      "length_m": 1924.0
+     },
+     {
+      "road": "i15s.x42.off",
+      "why": "shortened until a profile fits: over another road at s 720-1924",
+      "length_m": 1444.0
+     },
+     {
+      "road": "i15s.x42.off",
+      "why": "shortened until a profile fits: over another road at s 720-1240",
+      "length_m": 1084.0
+     },
+     {
+      "road": "i15s.x42.off",
+      "why": "shortened until a profile fits: over another road at s 720-792",
+      "length_m": 816.0
+     },
+     {
+      "road": "i15s.x42.off",
+      "why": "shortened until a profile fits: over another road at s 720-792",
+      "length_m": 612.0
+     },
+     {
+      "road": "i15n.xkm9.off",
+      "why": "over everything it meets (its mapped level does not fit)"
+     },
+     {
+      "road": "i15n.x52A.off",
+      "why": "shortened until a profile fits: over another road at s 360-904",
+      "length_m": 1044.0
+     },
+     {
+      "road": "i15n.x52A.off",
+      "why": "shortened until a profile fits: under ['i15n.x52B.off'] at s 240-376",
+      "length_m": 784.0
+     },
+     {
+      "road": "i15n.x52A.off",
+      "why": "shortened until a profile fits: under ['i15n.x52B.off'] at s 240-376",
+      "length_m": 588.0
+     },
+     {
+      "road": "i15n.x52A.off",
+      "why": "shortened until a profile fits: under ['i15n.x52B.off'] at s 240-376",
+      "length_m": 444.0
+     },
+     {
+      "road": "i15n.x52A.off",
+      "why": "shortened until a profile fits: under ['i15n.x52B.off'] at s 240-376",
+      "length_m": 336.0
+     },
+     {
+      "road": "i15s.x41.on2",
+      "why": "ends before a road it would have to pass under",
+      "length_m": 596.0
+     },
+     {
+      "road": "i15s.xkm38.on2",
+      "why": "over everything it meets (its mapped level does not fit)"
+     },
+     {
+      "road": "i15n.x43.on2",
+      "why": "over everything it meets (its mapped level does not fit)"
+     },
+     {
+      "road": "i15s.x40.off",
+      "why": "over everything it meets (its mapped level does not fit)"
+     },
+     {
+      "road": "i15s.x37.off",
+      "why": "shortened until a profile fits: pins",
+      "length_m": 380.0
+     },
+     {
+      "road": "i15s.x37.off",
+      "why": "shortened until a profile fits: pins",
+      "length_m": 288.0
+     },
+     {
+      "road": "i15s.x37.off",
+      "why": "shortened until a profile fits: pins",
+      "length_m": 216.0
+     },
+     {
+      "road": "i15s.x37.off",
+      "why": "shortened until a profile fits: pins",
+      "length_m": 164.0
+     },
+     {
+      "road": "i15s.x37.off",
+      "why": "shortened until a profile fits: pins",
+      "length_m": 124.0
+     },
+     {
+      "road": "i15n.x39.off",
+      "why": "over everything it meets (its mapped level does not fit)"
+     },
+     {
+      "road": "i15n.x42A.off",
+      "why": "shortened until a profile fits: over another road at s 344-748",
+      "length_m": 1032.0
+     },
+     {
+      "road": "i15n.x42A.off",
+      "why": "shortened until a profile fits: under ['i15n.x42B.off', 'i15n.x43.on'] at s 140-724",
+      "length_m": 776.0
+     },
+     {
+      "road": "i15n.x42A.off",
+      "why": "shortened until a profile fits: under ['i15n.x42B.off', 'i15n.x43.on'] at s 140-724",
+      "length_m": 584.0
+     },
+     {
+      "road": "i15n.x42A.off",
+      "why": "shortened until a profile fits: under ['i15n.x42B.off', 'i15n.x43.on'] at s 140-408",
+      "length_m": 440.0
+     },
+     {
+      "road": "i15n.x42A.off",
+      "why": "shortened until a profile fits: under ['i15n.x42B.off', 'i15n.x43.on'] at s 140-408",
+      "length_m": 332.0
+     }
+    ],
+    "overlaps": [],
+    "acceptance": {
+     "exit_ramps": {
+      "ok": true,
+      "exits": 18,
+      "with_ramp_300m": 15,
+      "no_link_mapped": [],
+      "simplified": [
+       {
+        "s": 33677,
+        "ref": "42",
+        "label": "Phoenix / Reno",
+        "ramp": null,
+        "ramp_m": 0.0,
+        "ok": true,
+        "simplified": "ramp left out or shortened by the interchange rules: no profile: over another road at s 720-792; over another road at s 720-792"
+       },
+       {
+        "s": 42051.1,
+        "ref": "38B",
+        "label": "Flamingo Road East",
+        "ramp": "i15s.x38B.off",
+        "ramp_m": 232.0,
+        "ok": true,
+        "simplified": "ramp left out or shortened by the interchange rules: shortened until a profile fits: pins"
+       },
+       {
+        "s": 43197.1,
+        "ref": "37",
+        "label": "Tropicana Avenue",
+        "ramp": null,
+        "ramp_m": 0.0,
+        "ok": true,
+        "simplified": "ramp left out or shortened by the interchange rules: no profile: pins; pins"
+       }
+      ],
+      "missing": []
+     },
+     "overpasses": {
+      "ok": true,
+      "count": 18,
+      "min_clearance_m": 5.41,
+      "dropped": [
+       {
+        "road": "x.east-tropical-parkway",
+        "name": "East Tropical Parkway",
+        "why": "a branch of a ramp, too tangled to build by rule (no profile clears the route with both ends on the ground: over another road at s 60-108; over another road at s 60-108)",
+        "branch": true
+       },
+       {
+        "road": "x.road.3",
+        "name": "",
+        "why": "a branch of a ramp, too tangled to build by rule (no profile clears the route with both ends on the ground: over another road at s 812-984; over another road at s 680-984)",
+        "branch": true
+       },
+       {
+        "road": "x.road.4",
+        "name": "",
+        "why": "a branch of a ramp, too tangled to build by rule (no profile clears the route with both ends on the ground: over another road at s 76-140; over another road at s 76-348)",
+        "branch": true
+       },
+       {
+        "road": "x.road.6",
+        "name": "",
+        "why": "a branch of a ramp, too tangled to build by rule (no profile clears the route with both ends on the ground: over another road at s 0-116; over another road at s 0-212)",
+        "branch": true
+       },
+       {
+        "road": "x.road.9",
+        "name": "",
+        "why": "a branch of a ramp, too tangled to build by rule (no profile clears the route with both ends on the ground: ends; ends)",
+        "branch": true
+       },
+       {
+        "road": "x.road",
+        "name": "",
+        "why": "a branch of a ramp, too tangled to build by rule (no profile clears the route with both ends on the ground: over another road at s 0-444; over another road at s 0-444)",
+        "branch": true
+       }
+      ],
+      "note": "branches of ramps that are too tangled to build by rule are left out and listed (simplified)"
+     },
+     "no_ramp_through_main": {
+      "ok": true,
+      "violations": []
+     },
+     "plan_overlap_rule": {
+      "ok": true,
+      "violations": 0,
+      "overlapping_pairs": 136,
+      "min_separation_m": 6.17
+     }
+    }
+   }
+  }
+ },
+ "source": {
+  "osm": "2026-11-22T04:42:20Z",
+  "osmLicence": "ODbL, (c) OpenStreetMap contributors",
+  "dem": "AWS Terrain Tiles (Terrarium), USGS 3DEP; the app's near, far and wide grids",
+  "method": "scripts/build_roads.py"
+ },
+ "main_line": {
+  "checked": false
+ },
+ "files": {
+  "roadnet-i15s.json": 239600,
+  "roadnet-i15s.bin": 1119384,
+  "total": 1358984,
+  "ok": true
+ }
+}

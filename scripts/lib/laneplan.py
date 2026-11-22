@@ -166,6 +166,20 @@ def plan_lanes(sections, length, start_id, through_ids, speed_at):
             if ok:
                 best, clear = e, True
                 break
+        if not clear:
+            # no clear stretch with the margin kept: one later, up to where the change must be done
+            for e in np.arange(seg["b"], end, -10.0):
+                s1 = e
+                ok = True
+                for (_, a, b), (T, _) in zip(reversed(group), reversed(spans)):
+                    s0 = s1 - T * speed_at(s1)
+                    if not still((a, b), s0, s1):
+                        ok = False
+                        break
+                    s1 = s0 - GAP_SECONDS * speed_at(s0)
+                if ok:
+                    best, clear = e, True
+                    break
         s1 = best
         placed = []
         for (_, a, b), (T, width) in zip(reversed(group), reversed(spans)):

@@ -65,7 +65,10 @@ NOT_MAINLINE = re.compile(r"ramp|fly ?over|hov|frontage|\bto\b|\bfrom\b|intch to
 # Per city: the state's TMAS code. Per route: the two directions, the TRINA route name, which
 # stations may give lane shares, and truck shares by stretch (NDOT 2023 classification report,
 # trucks / AADT). A stretch starts at an exit ref of the route ("" = the route's start) and runs to
-# the next stretch. i15s and us93 are added here the same way when their roads exist.
+# the next stretch. "trinaRoute" may be a list (a route on two road numbers); "offRoute" admits a
+# permanent station beyond an end of the route (within OFF_ROUTE_M) as a shape station there, and
+# "trinaMarginDeg" widens the TRINA request to reach it. "plan" (the pattern plan 02 quotes for a
+# station) is checked where the plan quotes one.
 CITIES = {"lv": {"state": "32"}}
 ROUTES = {
     "i15n": {
@@ -84,9 +87,38 @@ ROUTES = {
         ],
         "plan": {"station": "0035440", "withRatio": 1.36, "withPeak": 15, "againstRatio": 1.41, "againstPeak": 11},
     },
+    "i15s": {
+        "with": {"road": "i15s.main", "tmasDir": 5},
+        "against": {"road": "i15n.opp", "tmasDir": 1},
+        "trinaRoute": "IR15",
+        # plan 6.5: 0035350 (3.2 mi north of the US-93 junction, past the route's start) is the
+        # primary rural shape; 0031120 (north of Exit 58) counted September-December only
+        "offRoute": {"0035350": "start"},
+        "trinaMarginDeg": 0.06,
+        "laneShareStations": ["0035350", "0031120", "0031230"],
+        "totalsOnly": ["0031210"],
+        "borrowFrom": {"0031120": "0035350"},
+        "laneShareNote": "0031210 left out: its lanes are reported unevenly by direction (plan 6.5)",
+        "trucks": [
+            {"fromExit": "", "share": 0.232, "source": "NDOT 2023: 23.2% Speedway-US-93; held from Apex to the Speedway"},
+            {"fromExit": "54", "share": 0.079, "source": "NDOT 2023: 7.9% (St. Rose-Flamingo, the urban I-15 figure); assumed from the Speedway to Russell Road"},
+        ],
+    },
+    "us93": {
+        "with": {"road": "us93.main", "tmasDir": 1},
+        "against": {"road": "us93s.opp", "tmasDir": 5},
+        # the bypass and Henderson are IR11 in TRINA; the former I-515 is still IR515
+        "trinaRoute": ["IR11", "IR515"],
+        "laneShareStations": ["0035410"],
+        "trucks": [
+            {"fromExit": "", "share": 0.213, "source": "NDOT 2023: 21.3% on the I-11 bypass; held through Henderson to Exit 62"},
+            {"fromExit": "62", "share": 0.047, "source": "NDOT 2023: 4.7% on the former I-515, from Exit 62 to the Spaghetti Bowl"},
+        ],
+    },
 }
 WITH_WEEKDAY, AGAINST_WEEKDAY = 4, 6  # Friday northbound, Sunday southbound (plan 6.5)
 ON_ROUTE_M = 200.0  # a station counts as on the route within this distance of its centreline
+OFF_ROUTE_M = 8000.0  # an "offRoute" station may lie this far beyond the route's end
 EXIT_MERGE_M = 600.0  # an opposing exit this close to one of ours is the same interchange
 
 
@@ -150,12 +182,12 @@ def tmas_text(raw, state):
     return vol_txt, st_txt
 
 
-def trina_stations(raw, route_id, frame, line_xy):
-    """TRINA stations inside the route's bounding box (cached)."""
+def trina_stations(raw, route_id, frame, line_xy, margin=0.01):
+    """TRINA stations inside the route's bounding box, `margin` degrees around it (cached)."""
     path = raw / f"trina_{route_id}.json"
     if not path.exists():
         lat, lon = frame.to_geodetic(line_xy[:, 0], line_xy[:, 1])
-        env = f"{lon.min() - 0.01},{lat.min() - 0.01},{lon.max() + 0.01},{lat.max() + 0.01}"
+        env = f"{lon.min() - margin},{lat.min() - margin},{lon.max() + margin},{lat.max() + margin}"
         feats, offset = [], 0
         while True:
             q = {"where": "1=1", "geometry": env, "geometryType": "esriGeometryEnvelope", "inSR": "4326",
@@ -237,30 +269,38 @@ def build_route(city, route_id, cfg, raw):
     ccfg = json.loads((ROOT / "data" / "cities.json").read_text())[city]
     frame = create_frame(ccfg)
     data = ROOT / "public" / "data" / city
-    doc = json.loads((data / "roadnet.json").read_text())
-    roads = {r["id"]: r for r in decode_roadnet(doc, (data / "roadnet.bin").read_bytes())}
     route = next(r for r in json.loads((data / "routes.json").read_text())["routes"] if r["id"] == route_id)
+    net = route.get("files", {}).get("roadnet", "roadnet.json")  # each route names its RoadNet
+    doc = json.loads((data / net).read_text())
+    roads = {r["id"]: r for r in decode_roadnet(doc, (data / (net[:-len(".json")] + ".bin")).read_bytes())}
     main = roads[cfg["with"]["road"]]
     opp = roads[cfg["against"]["road"]]
     length = float(route["length"])
     xy_main = np.column_stack([main["x"], main["y"]])
 
     # stage 0: the stations on the route, positioned from TRINA (TMAS coordinates are unreliable)
-    trina = trina_stations(raw, route_id, frame, xy_main)
+    trina = trina_stations(raw, route_id, frame, xy_main, cfg.get("trinaMarginDeg", 0.01))
+    names = cfg["trinaRoute"] if isinstance(cfg["trinaRoute"], list) else [cfg["trinaRoute"]]
+    off_route = cfg.get("offRoute", {})
     stations_on = []
     for f in trina["features"]:
         a = f["attributes"]
-        if not (a.get("ROUTE_NAME") or "").startswith(cfg["trinaRoute"]):
+        if not any((a.get("ROUTE_NAME") or "").startswith(nm) for nm in names):
             continue
         if NOT_MAINLINE.search(a.get("LOCATION_D") or "") or a.get(f"AADT_{YEAR}") is None:
             continue
         x, y = frame.to_local(a["LAT_DECIMAL"], a["LON_DECIMAL"])
         (i,), (d,) = nearest(xy_main, [[float(x), float(y)]])
         s = i * main["spacing"]
-        if d > ON_ROUTE_M or s <= 0 or s >= length - main["spacing"]:
+        extra = {}
+        if a["Name"] in off_route and d <= OFF_ROUTE_M:
+            # beyond an end of the route: it shapes the flows from that end
+            s = main["spacing"] if off_route[a["Name"]] == "start" else length - 2 * main["spacing"]
+            extra = {"offRoute": off_route[a["Name"]], "beyondEndM": round(d)}
+        elif d > ON_ROUTE_M or s <= 0 or s >= length - main["spacing"]:
             continue
         stations_on.append({"id": a["Name"], "s": float(s), "offset": round(d, 1), "type": a["StationType"],
-                            "aadt2way": float(a[f"AADT_{YEAR}"]), "location": (a["LOCATION_D"] or "").strip()})
+                            "aadt2way": float(a[f"AADT_{YEAR}"]), "location": (a["LOCATION_D"] or "").strip(), **extra})
     stations_on.sort(key=lambda x: x["s"])
     permanent = [x for x in stations_on if x["type"] == "Permanent"]
 
@@ -387,7 +427,8 @@ def run_pipeline(route_id, cfg, length, main, opp, roads, route, stations_on, re
         accept["twoWayTotals"].append({"station": x["id"], "counted": round(aw["twoWay"]), "product": round(prod),
                                        "relError": rel, "pass": rel <= 0.01})
         ok &= rel <= 0.01
-    plan = cfg["plan"]
+    plan = cfg.get("plan") or {"station": next((x["id"] for x in stations_on if x["type"] == "Permanent"), ""),
+                               "withRatio": None, "withPeak": None, "againstRatio": None, "againstPeak": None}
     pid = T.tmas_id(plan["station"])
     pat = {}
     for k, wd, ratio, peak in (("with", WITH_WEEKDAY, plan["withRatio"], plan["withPeak"]),
@@ -400,8 +441,8 @@ def run_pipeline(route_id, cfg, length, main, opp, roads, route, stations_on, re
         prod = T.product_day_pattern(np.array(seg["flow"]), weights, wd)
         pat[k] = {"weekday": ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"][wd], "direction": T.DIR_NAMES[dirs[k]],
                   "source": src, "product": prod, "plan": {"ratio": ratio, "peakHour": peak},
-                  "ratioWithinPlan": abs(src["ratio"] - ratio) <= 0.05,
-                  "peakNearPlan": abs(src["peakHour"] - peak) <= 1,
+                  "ratioWithinPlan": None if ratio is None else abs(src["ratio"] - ratio) <= 0.05,
+                  "peakNearPlan": None if peak is None else abs(src["peakHour"] - peak) <= 1,
                   "productMatchesSource": abs(prod["ratio"] - src["ratio"]) <= 0.01 * src["ratio"]}
         ok &= abs(prod["ratio"] - src["ratio"]) <= 0.01 * src["ratio"]
     accept["planStation"] = {"station": plan["station"], **pat}
@@ -435,7 +476,8 @@ def stations_report(stations_on, dirs, days, dropped, means, borrowed, tmas_st, 
     out = []
     for x in stations_on:
         rec = {"id": x["id"], "type": x["type"], "s": round(x["s"], 1), "offsetM": x["offset"],
-               "location": x["location"], "trinaAadt2way": x["aadt2way"]}
+               "location": x["location"], "trinaAadt2way": x["aadt2way"],
+               **{k: x[k] for k in ("offRoute", "beyondEndM") if k in x}}
         if x["type"] == "Permanent":
             per = {}
             for k, d in dirs.items():
@@ -491,7 +533,7 @@ def main():
     if len(sys.argv) < 2:
         sys.exit(__doc__)
     city = sys.argv[1]
-    wanted = sys.argv[2:] or ["i15n"]
+    wanted = sys.argv[2:] or list(ROUTES)
     raw = ROOT / "data" / "raw" / city / "traffic"
     raw.mkdir(parents=True, exist_ok=True)
     tz = json.loads((ROOT / "data" / "cities.json").read_text())[city]["tz"]
@@ -500,6 +542,9 @@ def main():
                            "2025-12-31, published 2026-03-23), the same records as FHWA's pipe-delimited TMAS files, "
                            "whose download page refuses scripted requests (HTTP 403). Real counted data; not synthetic."),
               "routes": {}}
+    rp = ROOT / "data" / "derived" / city / "traffic_report.json"
+    if rp.exists():  # routes not rebuilt this time keep their entries
+        report["routes"] = {k: v for k, v in json.loads(rp.read_text()).get("routes", {}).items() if k not in wanted}
     ok = True
     for rid in wanted:
         cfg = ROUTES[rid]
@@ -515,7 +560,7 @@ def main():
         ok &= accept["pass"]
         print(f"{rid}: {len(directions['with']['segments'])} segments, {out.stat().st_size} bytes, "
               f"acceptance {'pass' if accept['pass'] else 'FAIL'}")
-    rp = ROOT / "data" / "derived" / city / "traffic_report.json"
+    report["routes"] = {k: report["routes"][k] for k in ROUTES if k in report["routes"]}
     rp.parent.mkdir(parents=True, exist_ok=True)
     rp.write_text(json.dumps(report, indent=1, default=float))
     print(f"wrote {rp.relative_to(ROOT)}")

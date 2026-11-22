@@ -1,7 +1,7 @@
 {
  "version": 1,
  "source": {
-  "osm": "2026-11-22T04:42:20Z"
+  "osm": "2026-11-22T04:42:20Z 2026-11-22T10:27:53Z"
  },
  "routes": [
   {
@@ -184,7 +184,373 @@
      "lane": 2
     }
    ],
-   "opposite": "i15s.opp"
+   "opposite": "i15s.opp",
+   "files": {
+    "roadnet": "roadnet.json",
+    "signs": "signs.json",
+    "traffic": "traffic/i15n.json"
+   }
+  },
+  {
+   "id": "i15s",
+   "label": "I-15 south from Apex",
+   "from": "US-93 junction",
+   "to": "Russell Road",
+   "road": "i15s.main",
+   "s0": 0,
+   "s1": 45312,
+   "length": 45312,
+   "lane": 2,
+   "postedSeconds": 1470,
+   "reveal": {
+    "s": 7484,
+    "target": "w135457469",
+    "label": "The Strip comes into view"
+   },
+   "starts": {
+    "reveal": 5137,
+    "start": 0,
+    "city": 33409.2
+   },
+   "markers": [
+    {
+     "s": 0,
+     "kind": "place",
+     "label": "Apex"
+    },
+    {
+     "s": 5555.8,
+     "kind": "exit",
+     "ref": "",
+     "label": "Check Station"
+    },
+    {
+     "s": 7484,
+     "kind": "reveal",
+     "label": "First view of the Strip"
+    },
+    {
+     "s": 9907.2,
+     "kind": "exit",
+     "ref": "58",
+     "label": "Apex / Nellis Air Force Base"
+    },
+    {
+     "s": 16954.5,
+     "kind": "exit",
+     "ref": "54",
+     "label": "Speedway Boulevard / Hollywood Boulevard"
+    },
+    {
+     "s": 16954.5,
+     "kind": "place",
+     "label": "Speedway"
+    },
+    {
+     "s": 19552.2,
+     "kind": "exit",
+     "ref": "52",
+     "label": "Tropical Parkway"
+    },
+    {
+     "s": 19552.2,
+     "kind": "place",
+     "label": "I-215"
+    },
+    {
+     "s": 22520.9,
+     "kind": "exit",
+     "ref": "50",
+     "label": "Lamb Boulevard"
+    },
+    {
+     "s": 25240.6,
+     "kind": "exit",
+     "ref": "48",
+     "label": "Craig Road"
+    },
+    {
+     "s": 28408.9,
+     "kind": "exit",
+     "ref": "46",
+     "label": "Cheyenne Avenue"
+    },
+    {
+     "s": 31318.7,
+     "kind": "exit",
+     "ref": "45",
+     "label": "Lake Mead Boulevard"
+    },
+    {
+     "s": 33409.2,
+     "kind": "exit",
+     "ref": "44",
+     "label": "Washington Avenue / D Street"
+    },
+    {
+     "s": 33677,
+     "kind": "exit",
+     "ref": "42",
+     "label": "Phoenix / Reno"
+    },
+    {
+     "s": 33677,
+     "kind": "place",
+     "label": "Spaghetti Bowl"
+    },
+    {
+     "s": 36098.9,
+     "kind": "exit",
+     "ref": "41",
+     "label": "Charleston Boulevard"
+    },
+    {
+     "s": 36550.4,
+     "kind": "exit",
+     "ref": "40",
+     "label": "Sahara Avenue"
+    },
+    {
+     "s": 36645.8,
+     "kind": "exit",
+     "ref": "",
+     "label": "Neon Gateway"
+    },
+    {
+     "s": 40177.6,
+     "kind": "exit",
+     "ref": "39",
+     "label": "Spring Mountain Road"
+    },
+    {
+     "s": 41574.4,
+     "kind": "exit",
+     "ref": "38A",
+     "label": "Flamingo Road West"
+    },
+    {
+     "s": 42051.1,
+     "kind": "exit",
+     "ref": "38B",
+     "label": "Flamingo Road East"
+    },
+    {
+     "s": 43197.1,
+     "kind": "exit",
+     "ref": "37",
+     "label": "Tropicana Avenue"
+    },
+    {
+     "s": 44341,
+     "kind": "exit",
+     "ref": "36",
+     "label": "Russell Road"
+    },
+    {
+     "s": 45312,
+     "kind": "place",
+     "label": "Russell Road"
+    }
+   ],
+   "lanePlan": [
+    {
+     "s0": 0,
+     "lane": 2
+    }
+   ],
+   "opposite": "i15n.opp",
+   "files": {
+    "roadnet": "roadnet-i15s.json",
+    "signs": "signs-i15s.json",
+    "traffic": "traffic/i15s.json"
+   }
+  },
+  {
+   "id": "us93",
+   "label": "US-93 from Hoover Dam",
+   "from": "Hoover Dam bypass bridge",
+   "to": "Spaghetti Bowl",
+   "road": "us93.main",
+   "s0": 0,
+   "s1": 59456,
+   "length": 59456,
+   "lane": 2,
+   "postedSeconds": 2084,
+   "reveal": {
+    "s": 25408,
+    "target": "w135457469",
+    "label": "The Strip comes into view"
+   },
+   "starts": {
+    "reveal": 23374,
+    "start": 0,
+    "city": 55872.6
+   },
+   "markers": [
+    {
+     "s": 2719,
+     "kind": "exit",
+     "ref": "2",
+     "label": "Boulder City / Hoover Dam"
+    },
+    {
+     "s": 2719,
+     "kind": "place",
+     "label": "Boulder City"
+    },
+    {
+     "s": 21375.3,
+     "kind": "exit",
+     "ref": "14",
+     "label": "Searchlight / Boulder City"
+    },
+    {
+     "s": 22651.7,
+     "kind": "lane",
+     "side": "left",
+     "lane": 1,
+     "label": "Move left to lane 2"
+    },
+    {
+     "s": 23326.6,
+     "kind": "exit",
+     "ref": "15A",
+     "label": "Railroad Pass Casino Road"
+    },
+    {
+     "s": 23326.6,
+     "kind": "place",
+     "label": "Railroad Pass"
+    },
+    {
+     "s": 25408,
+     "kind": "reveal",
+     "label": "First view of the Strip"
+    },
+    {
+     "s": 27299.9,
+     "kind": "exit",
+     "ref": "17A",
+     "label": "Wagonwheel Drive / Nevada State Drive"
+    },
+    {
+     "s": 27815.1,
+     "kind": "exit",
+     "ref": "17B",
+     "label": "Boulder Highway"
+    },
+    {
+     "s": 29933.3,
+     "kind": "exit",
+     "ref": "19",
+     "label": "College Drive"
+    },
+    {
+     "s": 32858.5,
+     "kind": "exit",
+     "ref": "20",
+     "label": "Horizon Drive"
+    },
+    {
+     "s": 35869.9,
+     "kind": "exit",
+     "ref": "23",
+     "label": "Lake Mead Parkway"
+    },
+    {
+     "s": 35869.9,
+     "kind": "place",
+     "label": "Henderson"
+    },
+    {
+     "s": 37691.5,
+     "kind": "exit",
+     "ref": "62",
+     "label": "Auto Show Drive"
+    },
+    {
+     "s": 39996.4,
+     "kind": "exit",
+     "ref": "64A",
+     "label": "Sunset Road"
+    },
+    {
+     "s": 40295.2,
+     "kind": "exit",
+     "ref": "64B",
+     "label": "Galleria Drive"
+    },
+    {
+     "s": 42667.4,
+     "kind": "exit",
+     "ref": "65",
+     "label": "Sam Boyd Stadium"
+    },
+    {
+     "s": 46230.1,
+     "kind": "exit",
+     "ref": "68",
+     "label": "Tropicana Avenue / Harry Reid International Airport"
+    },
+    {
+     "s": 47810.8,
+     "kind": "exit",
+     "ref": "69",
+     "label": "Flamingo Road"
+    },
+    {
+     "s": 50288,
+     "kind": "exit",
+     "ref": "70",
+     "label": "Boulder Highway"
+    },
+    {
+     "s": 52977.3,
+     "kind": "exit",
+     "ref": "72",
+     "label": "Charleston Boulevard"
+    },
+    {
+     "s": 55872.6,
+     "kind": "exit",
+     "ref": "73",
+     "label": "Eastern Avenue"
+    },
+    {
+     "s": 57921.5,
+     "kind": "exit",
+     "ref": "75",
+     "label": "Downtown Las Vegas / Las Vegas Boulevard"
+    },
+    {
+     "s": 59274.1,
+     "kind": "exit",
+     "ref": "76A",
+     "label": "Los Angeles"
+    },
+    {
+     "s": 59456,
+     "kind": "place",
+     "label": "Spaghetti Bowl"
+    }
+   ],
+   "lanePlan": [
+    {
+     "s0": 0,
+     "lane": 2
+    },
+    {
+     "s0": 22651.7,
+     "s1": 22788.7,
+     "lane": 1
+    }
+   ],
+   "opposite": "us93s.opp",
+   "files": {
+    "roadnet": "roadnet-us93.json",
+    "signs": "signs-us93.json",
+    "traffic": "traffic/us93.json"
+   }
   }
  ]
 }

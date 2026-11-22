@@ -1,5 +1,5 @@
 {
- "osmSnapshot": "2026-11-22T09:36:50Z",
+ "osmSnapshot": "2026-11-22T09:36:50Z 2026-11-22T10:58:35Z 2026-11-22T10:59:35Z",
  "overtureRelease": null,
  "thresholds": {
   "near": 400.0,
@@ -8,53 +8,59 @@
   "band_area": 60.0,
   "band_height": 8.0,
   "tall": 20.0,
+  "otherRoutesBand": 800.0,
   "simplify": 1.0,
   "minHole": 6.0
  },
- "kept": 14413,
- "tall": 177,
- "cells": 37,
+ "kept": 48524,
+ "tall": 176,
+ "cells": 101,
  "byBand": {
-  "400 m-1.5 km": 10826,
-  "0-400 m": 3425,
-  "beyond 1.5 km": 162
+  "0-400 m": 18934,
+  "400 m-1.5 km": 29447,
+  "beyond 1.5 km": 143
  },
  "byRung": {
-  "osm-height": 18,
-  "osm-levels": 44,
-  "overture": 10152,
-  "guess": 4199
+  "osm-height": 19,
+  "osm-levels": 82,
+  "overture": 40251,
+  "guess": 8172
  },
  "byType": {
-  "other": 13647,
-  "house": 225,
-  "apartments": 42,
-  "retail": 151,
-  "warehouse": 103,
-  "hotel": 37,
-  "office": 7,
-  "civic": 8,
-  "canopy": 172,
+  "other": 45164,
+  "house": 2178,
+  "apartments": 249,
+  "retail": 334,
+  "warehouse": 125,
+  "hotel": 63,
+  "office": 12,
+  "civic": 35,
+  "canopy": 343,
   "shed": 21
  },
  "bySource": {
-  "osm": 10635,
-  "overture": 3637,
-  "overture-osm": 141
+  "osm": 24691,
+  "overture": 23707,
+  "overture-osm": 126
  },
  "skipped": {
-  "core:by-id": 8917,
-  "dropped:rule": 1382,
-  "core:inside": 1126,
+  "core:by-id": 9634,
+  "dropped:rule": 36757,
+  "core:inside": 1208,
   "outside-region": 1
  },
  "bytes": {
-  "total": 469511,
-  "index": 4895,
-  "tall": 16492,
-  "cells": 448124,
-  "largestCell": 58808
+  "total": 1571446,
+  "index": 11978,
+  "tall": 16376,
+  "cells": 1543092,
+  "largestCell": 98596
  },
+ "routes": [
+  "i15n",
+  "i15s",
+  "us93"
+ ],
  "perFiveKm": [
   {
    "km": [
@@ -62,7 +68,7 @@
     5
    ],
    "buildings": 99,
-   "within400": 39,
+   "within400": 38,
    "inCore": false,
    "byRung": {
     "guess": 62,
@@ -110,11 +116,11 @@
     20,
     25
    ],
-   "buildings": 44,
+   "buildings": 43,
    "within400": 17,
    "inCore": false,
    "byRung": {
-    "guess": 26,
+    "guess": 25,
     "osm-levels": 1,
     "overture": 17
    }
@@ -157,7 +163,7 @@
     45
    ],
    "buildings": 684,
-   "within400": 328,
+   "within400": 322,
    "inCore": false,
    "byRung": {
     "guess": 406,
@@ -169,13 +175,13 @@
     45,
     50
    ],
-   "buildings": 7947,
-   "within400": 1764,
+   "buildings": 7890,
+   "within400": 1721,
    "inCore": false,
    "byRung": {
-    "guess": 2578,
+    "guess": 2559,
     "osm-levels": 5,
-    "overture": 5364
+    "overture": 5326
    }
   },
   {
@@ -183,14 +189,14 @@
     50,
     55
    ],
-   "buildings": 4037,
-   "within400": 1059,
+   "buildings": 3987,
+   "within400": 1040,
    "inCore": false,
    "byRung": {
-    "guess": 927,
+    "guess": 919,
     "osm-height": 1,
     "osm-levels": 23,
-    "overture": 3086
+    "overture": 3044
    }
   },
   {
@@ -198,14 +204,14 @@
     55,
     60
    ],
-   "buildings": 1297,
-   "within400": 207,
+   "buildings": 1288,
+   "within400": 184,
    "inCore": false,
    "byRung": {
     "guess": 185,
     "osm-height": 12,
     "osm-levels": 10,
-    "overture": 1090
+    "overture": 1081
    }
   },
   {
@@ -223,15 +229,488 @@
     65,
     68.35
    ],
-   "buildings": 132,
+   "buildings": 314,
    "within400": 0,
    "inCore": true,
    "byRung": {
-    "guess": 5,
-    "overture": 127
+    "guess": 30,
+    "overture": 284
    }
   }
  ],
+ "perFiveKmByRoute": {
+  "i15n": [
+   {
+    "km": [
+     0,
+     5
+    ],
+    "buildings": 99,
+    "within400": 38,
+    "inCore": false,
+    "byRung": {
+     "guess": 62,
+     "osm-levels": 1,
+     "overture": 36
+    }
+   },
+   {
+    "km": [
+     5,
+     10
+    ],
+    "buildings": 1,
+    "within400": 1,
+    "inCore": false,
+    "byRung": {
+     "guess": 1
+    }
+   },
+   {
+    "km": [
+     10,
+     15
+    ],
+    "buildings": 0,
+    "within400": 0,
+    "inCore": false,
+    "byRung": {}
+   },
+   {
+    "km": [
+     15,
+     20
+    ],
+    "buildings": 3,
+    "within400": 3,
+    "inCore": false,
+    "byRung": {
+     "guess": 2,
+     "overture": 1
+    }
+   },
+   {
+    "km": [
+     20,
+     25
+    ],
+    "buildings": 43,
+    "within400": 17,
+    "inCore": false,
+    "byRung": {
+     "guess": 25,
+     "osm-levels": 1,
+     "overture": 17
+    }
+   },
+   {
+    "km": [
+     25,
+     30
+    ],
+    "buildings": 0,
+    "within400": 0,
+    "inCore": false,
+    "byRung": {}
+   },
+   {
+    "km": [
+     30,
+     35
+    ],
+    "buildings": 0,
+    "within400": 0,
+    "inCore": false,
+    "byRung": {}
+   },
+   {
+    "km": [
+     35,
+     40
+    ],
+    "buildings": 7,
+    "within400": 7,
+    "inCore": false,
+    "byRung": {
+     "guess": 7
+    }
+   },
+   {
+    "km": [
+     40,
+     45
+    ],
+    "buildings": 684,
+    "within400": 322,
+    "inCore": false,
+    "byRung": {
+     "guess": 406,
+     "overture": 278
+    }
+   },
+   {
+    "km": [
+     45,
+     50
+    ],
+    "buildings": 7890,
+    "within400": 1721,
+    "inCore": false,
+    "byRung": {
+     "guess": 2559,
+     "osm-levels": 5,
+     "overture": 5326
+    }
+   },
+   {
+    "km": [
+     50,
+     55
+    ],
+    "buildings": 3987,
+    "within400": 1040,
+    "inCore": false,
+    "byRung": {
+     "guess": 919,
+     "osm-height": 1,
+     "osm-levels": 23,
+     "overture": 3044
+    }
+   },
+   {
+    "km": [
+     55,
+     60
+    ],
+    "buildings": 1288,
+    "within400": 184,
+    "inCore": false,
+    "byRung": {
+     "guess": 185,
+     "osm-height": 12,
+     "osm-levels": 10,
+     "overture": 1081
+    }
+   },
+   {
+    "km": [
+     60,
+     65
+    ],
+    "buildings": 0,
+    "within400": 0,
+    "inCore": true,
+    "byRung": {}
+   },
+   {
+    "km": [
+     65,
+     68.35
+    ],
+    "buildings": 314,
+    "within400": 0,
+    "inCore": true,
+    "byRung": {
+     "guess": 30,
+     "overture": 284
+    }
+   }
+  ],
+  "i15s": [
+   {
+    "km": [
+     0,
+     5
+    ],
+    "buildings": 9,
+    "within400": 0,
+    "inCore": false,
+    "byRung": {
+     "overture": 9
+    }
+   },
+   {
+    "km": [
+     5,
+     10
+    ],
+    "buildings": 6,
+    "within400": 0,
+    "inCore": false,
+    "byRung": {
+     "guess": 1,
+     "overture": 5
+    }
+   },
+   {
+    "km": [
+     10,
+     15
+    ],
+    "buildings": 2,
+    "within400": 0,
+    "inCore": false,
+    "byRung": {
+     "guess": 1,
+     "overture": 1
+    }
+   },
+   {
+    "km": [
+     15,
+     20
+    ],
+    "buildings": 22,
+    "within400": 13,
+    "inCore": false,
+    "byRung": {
+     "guess": 6,
+     "overture": 16
+    }
+   },
+   {
+    "km": [
+     20,
+     25
+    ],
+    "buildings": 595,
+    "within400": 63,
+    "inCore": false,
+    "byRung": {
+     "guess": 229,
+     "overture": 366
+    }
+   },
+   {
+    "km": [
+     25,
+     30
+    ],
+    "buildings": 1194,
+    "within400": 283,
+    "inCore": false,
+    "byRung": {
+     "guess": 141,
+     "overture": 1053
+    }
+   },
+   {
+    "km": [
+     30,
+     35
+    ],
+    "buildings": 3062,
+    "within400": 1068,
+    "inCore": false,
+    "byRung": {
+     "guess": 263,
+     "osm-levels": 1,
+     "overture": 2798
+    }
+   },
+   {
+    "km": [
+     35,
+     40
+    ],
+    "buildings": 17,
+    "within400": 0,
+    "inCore": true,
+    "byRung": {
+     "guess": 3,
+     "overture": 14
+    }
+   },
+   {
+    "km": [
+     40,
+     45
+    ],
+    "buildings": 0,
+    "within400": 0,
+    "inCore": true,
+    "byRung": {}
+   },
+   {
+    "km": [
+     45,
+     45.31
+    ],
+    "buildings": 261,
+    "within400": 5,
+    "inCore": true,
+    "byRung": {
+     "guess": 55,
+     "osm-height": 7,
+     "osm-levels": 2,
+     "overture": 197
+    }
+   }
+  ],
+  "us93": [
+   {
+    "km": [
+     0,
+     5
+    ],
+    "buildings": 52,
+    "within400": 33,
+    "inCore": false,
+    "byRung": {
+     "guess": 35,
+     "osm-levels": 1,
+     "overture": 16
+    }
+   },
+   {
+    "km": [
+     5,
+     10
+    ],
+    "buildings": 0,
+    "within400": 0,
+    "inCore": false,
+    "byRung": {}
+   },
+   {
+    "km": [
+     10,
+     15
+    ],
+    "buildings": 15,
+    "within400": 9,
+    "inCore": false,
+    "byRung": {
+     "guess": 12,
+     "overture": 3
+    }
+   },
+   {
+    "km": [
+     15,
+     20
+    ],
+    "buildings": 10,
+    "within400": 1,
+    "inCore": false,
+    "byRung": {
+     "guess": 1,
+     "overture": 9
+    }
+   },
+   {
+    "km": [
+     20,
+     25
+    ],
+    "buildings": 25,
+    "within400": 21,
+    "inCore": false,
+    "byRung": {
+     "guess": 9,
+     "osm-levels": 4,
+     "overture": 12
+    }
+   },
+   {
+    "km": [
+     25,
+     30
+    ],
+    "buildings": 3341,
+    "within400": 1647,
+    "inCore": false,
+    "byRung": {
+     "guess": 814,
+     "overture": 2527
+    }
+   },
+   {
+    "km": [
+     30,
+     35
+    ],
+    "buildings": 4677,
+    "within400": 2478,
+    "inCore": false,
+    "byRung": {
+     "guess": 419,
+     "overture": 4258
+    }
+   },
+   {
+    "km": [
+     35,
+     40
+    ],
+    "buildings": 2939,
+    "within400": 972,
+    "inCore": false,
+    "byRung": {
+     "guess": 390,
+     "osm-levels": 1,
+     "overture": 2548
+    }
+   },
+   {
+    "km": [
+     40,
+     45
+    ],
+    "buildings": 2714,
+    "within400": 1078,
+    "inCore": false,
+    "byRung": {
+     "guess": 777,
+     "osm-levels": 5,
+     "overture": 1932
+    }
+   },
+   {
+    "km": [
+     45,
+     50
+    ],
+    "buildings": 5969,
+    "within400": 2762,
+    "inCore": false,
+    "byRung": {
+     "guess": 205,
+     "osm-levels": 17,
+     "overture": 5747
+    }
+   },
+   {
+    "km": [
+     50,
+     55
+    ],
+    "buildings": 6763,
+    "within400": 3004,
+    "inCore": false,
+    "byRung": {
+     "guess": 419,
+     "osm-height": 1,
+     "osm-levels": 1,
+     "overture": 6342
+    }
+   },
+   {
+    "km": [
+     55,
+     59.46
+    ],
+    "buildings": 4077,
+    "within400": 1593,
+    "inCore": false,
+    "byRung": {
+     "guess": 398,
+     "osm-levels": 8,
+     "overture": 3671
+    }
+   }
+  ]
+ },
  "tallList": [
   {
    "id": "w261741962",
@@ -1053,15 +1532,6 @@
    ]
   },
   {
-   "id": "w1240355800",
-   "h": 23.7,
-   "rung": "overture",
-   "c": [
-    23588,
-    -15702
-   ]
-  },
-  {
    "id": "w1170364700",
    "h": 23.6,
    "rung": "overture",
@@ -1827,5 +2297,20 @@
    ]
   }
  ],
- "heightCheck": []
+ "heightCheck": [
+  {
+   "id": "w1343930243",
+   "h": 12.2,
+   "type": "house",
+   "rung": "overture",
+   "area": 148
+  },
+  {
+   "id": "w1343930244",
+   "h": 13.8,
+   "type": "house",
+   "rung": "overture",
+   "area": 152
+  }
+ ]
 }

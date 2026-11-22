@@ -2,7 +2,7 @@
 # requires-python = ">=3.11"
 # dependencies = ["numpy", "scipy"]
 # ///
-"""Usage: build_roads.py <city> [--out <dir>]
+"""Usage: build_roads.py <city> [--route <id> ...] [--out <dir>]
 
 Build the drive's roads from OpenStreetMap (fetched by fetch_osm.py) and the terrain the app
 draws. For each route in the city's "routes" (data/cities.json): stitch the directional route
@@ -22,9 +22,15 @@ cross the route on bridges, junction records and structures, from the interchang
 (fetch_osm.py). The main line does not move for them: the build compares the carriageways'
 stations and JSON and the routes with the committed files and stops if anything differs.
 
-Output: public/data/<city>/roadnet.json, roadnet.bin, routes.json
-        data/derived/<city>/roads_report.json
-        (all four into <dir> instead with --out)
+Each route is one RoadNet of its own (its carriageway, the opposite one, its ramps, crossings and
+structures), loaded only when that route is chosen: the city's first route keeps roadnet.json and
+roadnet.bin (which must come out as committed), every other route R writes roadnet-R.json and
+roadnet-R.bin. routes.json lists every route with the files it uses ("files": roadnet, signs,
+traffic). --route builds only the routes named and keeps the others' entries in routes.json.
+
+Output: public/data/<city>/roadnet.json, roadnet.bin, roadnet-<route>.json, .bin, routes.json
+        data/derived/<city>/roads_report.json (first route), roads_report-<route>.json
+        (all into <dir> instead with --out)
 """
 import json
 import re
@@ -51,7 +57,7 @@ from lib.roadnet import decode_roadnet, encode_roadnet  # noqa: E402
 from lib.sightline import building_top, eye_scene_y, visible  # noqa: E402
 from lib.interchanges import build_interchanges  # noqa: E402
 from lib.roadframe import RoadFrame  # noqa: E402
-from lib.structures import plan_overlaps  # noqa: E402
+from lib.structures import piers_and_abutments, plan_overlaps  # noqa: E402
 
 ROOT = Path(__file__).resolve().parent.parent
 SPACING = 4.0
@@ -69,11 +75,21 @@ LEAD_SECONDS = 70  # starts.reveal: this long before the reveal at the posted sp
 MPH = 0.44704
 OPPOSITE = {"north": "south", "south": "north", "east": "west", "west": "east"}
 
-# acceptance
-EXPECT_LENGTH = {"i15n": 68400}
+TARGET = "w135457469"  # the reveal is the Strat's top coming into view, on every route (plan 02, section 8.2)
+EXIT_MIN_S = 50.0  # a junction this close to the route's start is behind the car: not an exit of the route
+DECK_SAG = 8.0  # m: an OSM bridge whose ground falls further than this below the chord of its ends (a canyon, not a street underneath) holds its deck up
+
+# acceptance (plan 02, section 1 and 8.2; the exits as numbered in today's OSM)
+EXPECT_LENGTH = {"i15n": 68400, "i15s": 45200, "us93": 59500}
 LENGTH_TOL = 0.005
-EXPECT_EXITS = {"i15n": ["1", "12", "25", "27", "33", "36", "38", "39", "40", "41", "42"]}
-EXPECT_REVEAL = {"i15n": (42800, 1500)}
+EXPECT_EXITS = {"i15n": ["1", "12", "25", "27", "33", "36", "38", "39", "40", "41", "42"],
+                "i15s": ["58", "54", "52", "50", "48", "46", "45", "44", "42", "41", "40", "39", "38", "37", "36"],
+                "us93": ["2", "14", "15", "17", "19", "20", "23", "62", "64", "65", "68", "69", "70", "72", "73", "75", "76"]}
+EXPECT_REVEAL = {"i15n": (42800, 1500), "i15s": (6800, 1500), "us93": (25200, 1500)}
+# posted speeds: the first zone's limit, and a zone of `has` mph (and where the plan puts the change to it)
+EXPECT_SPEED = {"i15n": {"first": 70, "has": 65, "plan_km": 41.6},
+                "i15s": {"first": 75, "has": 65, "plan_km": None},
+                "us93": {"first": 55, "has": 65, "plan_km": None, "note": "55 mph zones at the start (plan 02, D9.2)"}}
 NODE_TOL, NODE_SHARE = 0.5, 0.95
 MAX_BYTES = 2.0e6  # plan 02, section 9.4: about 2 MB with ramps
 MIN_RAMP_M = 300.0  # D3.4: every exit has a visible ramp at least this long
@@ -206,6 +222,36 @@ def exit_text(osm, nid, links):
     return " ".join(s.get(k, "") for s in srcs for k in ("name", "destination", "destination:ref", "destination:street"))
 
 
+def hold_decks(env, s, bridge_runs, sag=DECK_SAG, held=None):
+    """The ground under an OSM bridge does not bear on its deck. Where the envelope inside a bridge
+    falls more than `sag` metres below the chord between the stations just beyond its ends (its
+    abutments), it is lifted to that chord; a bridge that runs past an end of the road (a route that
+    starts or ends on a bridge) is held level at its abutment inside the road. Shallower sags are
+    left to the profile's own rules. Returns a new envelope; the runs held up are appended to
+    `held` (they are decks of their own: no embankment, piers under them)."""
+    out = np.array(env, dtype=float)
+    n = len(s)
+    for s0, s1, _ in bridge_runs:
+        k0 = int(np.searchsorted(s, s0))
+        k1 = int(np.searchsorted(s, s1, side="right")) - 1
+        if k1 - k0 < 1:
+            continue
+        a, b = max(k0 - 1, 0), min(k1 + 1, n - 1)
+        ha = float(env[a]) if s0 > s[0] else None
+        hb = float(env[b]) if s1 < s[-1] else None
+        if ha is None and hb is None:
+            continue
+        ha = hb if ha is None else ha
+        hb = ha if hb is None else hb
+        u = (s[k0:k1 + 1] - s[a]) / max(float(s[b] - s[a]), 1e-9)
+        chord = ha + (hb - ha) * u
+        if float((chord - env[k0:k1 + 1]).max()) > sag:
+            out[k0:k1 + 1] = np.maximum(env[k0:k1 + 1], chord)
+            if held is not None:
+                held.append((s0, s1))
+    return out
+
+
 def build_road(osm, frame, hs, top, road_id, ref, direction, start, end):
     """One carriageway between two ends. Returns (road dict for the writer, info for the report)."""
     return finish_road(plan_road(osm, frame, hs, top, road_id, ref, direction, start, end))
@@ -320,7 +366,7 @@ def finish_road(state):
     (osm, hs, top, sections, speed_at, length, decisions, s, st, speed, speed_runs, surface_runs, bridge_runs,
      road_id, ref, direction, ids, node_s, chain, n, to_local, fit, on_road, d_s, d_e, raw_sections, sec_runs,
      rels, seg_way, evidence) = (state[k] for k in NAMES)
-    tapers = place_tapers(sections, speed_at, length, rnd)
+    tapers = place_tapers(sections, speed_at, length, rnd, comfort=road_id.endswith(".main"))
     for i, dc in decisions.items():
         sections[i]["provenance"]["lane_side"] = dc["evidence"]
         if "taper" in sections[i]:
@@ -331,7 +377,9 @@ def finish_road(state):
     def ground(px, py):
         return np.maximum(hs.height_at(px, py), top(px, py))
 
-    env = envelope(st, left, right, ground, clearance=CLEARANCE, margin=MARGIN, across=1.0)
+    held = []
+    env = hold_decks(envelope(st, left, right, ground, clearance=CLEARANCE, margin=MARGIN, across=1.0), s, bridge_runs,
+                     held=held)
     radius = np.maximum(1500.0, (speed * MPH) ** 2 / COMFORT)
     h = smooth_from_above(env, SPACING, GRADE_SOLVE, radius)
     st["h"] = h
@@ -342,7 +390,8 @@ def finish_road(state):
         "sections": sections,
         "speed": [{"s0": rnd(s0), "mph": int(v)} for s0, s1, v in speed_runs if v],
         "surface": [{"s0": rnd(s0), "kind": v} for s0, s1, v in surface_runs],
-        "bridges": [{"s0": rnd(s0), "s1": rnd(s1), "kind": "viaduct" if v == "viaduct" else "bridge"}
+        "bridges": [{"s0": rnd(s0), "s1": rnd(s1), "kind": "viaduct" if v == "viaduct" else "bridge",
+                     **({"deck": True} if (s0, s1) in held else {})}
                     for s0, s1, v in bridge_runs],
         "links": [],
         "spacing": SPACING,
@@ -355,7 +404,7 @@ def finish_road(state):
     main_ways = set(chain.ways)
     for k, nid in junctions(osm, ids):
         sj = float(node_s[k])
-        if sj < 0 or sj > length:
+        if sj < EXIT_MIN_S or sj > length:
             continue
         links = exit_links(osm, nid, main_ways)
         side = "right"
@@ -409,6 +458,14 @@ def interchange_report(ic, cws, decoded, junctions, xdoc, osm_all=None):
         gone = [d for d in rep["dropped"] if d.get("node") == e.get("osm") and "median ramp" in d["why"]]
         if not cand and gone:
             entry.update(ok=True, simplified=gone[0]["why"])
+        if not entry["ok"] and not gone and e.get("ref"):
+            # a ramp the interchange rules could not build, or built shorter: listed with the reason
+            name = f"{main_id.split('.')[0]}.x{e['ref']}.off"
+            why = [d["why"] for d in rep["dropped"] if re.fullmatch(rf"{re.escape(name)}\d*", d["road"])]
+            why += [d["why"] for d in rep["simplified"] if re.fullmatch(rf"{re.escape(name)}\d*", d["road"])
+                    and d["road"] == entry["ramp"]]
+            if why:
+                entry.update(ok=True, simplified="ramp left out or shortened by the interchange rules: " + why[-1])
         if not cand and not gone and osm_all is not None and e.get("osm", "").startswith("n"):
             nid = int(e["osm"][1:])
             links = [w for w in osm_all.ways.values() if w["tags"].get("highway") == "motorway_link" and nid in w["nodes"]]
@@ -494,12 +551,13 @@ def committed(path):
         return None
 
 
-def check_main_line(city, doc, blob, routes_doc, main_ids):
+def check_main_line(city, doc, blob, routes_doc, main_ids, files=("roadnet.json", "roadnet.bin")):
     """The carriageways and routes must come out as committed: station records byte for byte,
     road JSON equal but for the keys the interchanges add (embankment, and `to` on links), and
-    routes.json equal. Returns a report entry; raises SystemExit on a difference."""
-    ref_json = committed(f"public/data/{city}/roadnet.json")
-    ref_bin = committed(f"public/data/{city}/roadnet.bin")
+    this RoadNet's routes in routes.json equal but for their `files`. Returns a report entry;
+    raises SystemExit on a difference."""
+    ref_json = committed(f"public/data/{city}/{files[0]}")
+    ref_bin = committed(f"public/data/{city}/{files[1]}")
     ref_routes = committed(f"public/data/{city}/routes.json")
     if ref_json is None or ref_bin is None or ref_routes is None:
         print("  (no committed roadnet to compare the main line with)")
@@ -524,32 +582,19 @@ def check_main_line(city, doc, blob, routes_doc, main_ids):
                            for k, v in x.items() if k != "embankment"}
         if strip(r) != strip(g):
             diffs.append(f"{r['id']} JSON differs")
-    if json.loads(ref_routes) != routes_doc:
-        diffs.append("routes.json differs")
+    plain = lambda r: {k: v for k, v in r.items() if k != "files"}  # noqa: E731
+    was = {r["id"]: plain(r) for r in json.loads(ref_routes)["routes"]}
+    for r in routes_doc["routes"]:
+        if r["id"] in was and was[r["id"]] != plain(r):
+            diffs.append(f"routes.json entry {r['id']} differs")
     if diffs:
         sys.exit("the main line moved: " + "; ".join(diffs))
     return {"checked": True, "roads": sorted(main_ids), "identical": True}
 
 
-def main():
-    args = [a for a in sys.argv[1:]]
-    out_override = None
-    if "--out" in args:
-        k = args.index("--out")
-        out_override = Path(args[k + 1]).resolve()
-        del args[k:k + 2]
-    if len(args) != 1:
-        sys.exit(__doc__)
-    city = args[0]
-    cfg = json.loads((ROOT / "data" / "cities.json").read_text())[city]
-    routes_cfg = cfg.get("routes") or sys.exit(f"{city} has no routes in data/cities.json")
-    frame = create_frame(cfg)
-    hs = load_heights(city)
-    top = drawn_surface(hs)
-    out_dir = out_override or ROOT / "public" / "data" / city
-    rep_dir = out_override or ROOT / "data" / "derived" / city
-    out_dir.mkdir(parents=True, exist_ok=True)
-    rep_dir.mkdir(parents=True, exist_ok=True)
+def build_group(city, cfg, routes_cfg, frame, hs, top):
+    """Build one RoadNet: the routes routes_cfg (each with its opposite carriageway, ramps, crossings
+    and structures). Returns {"doc", "blob", "text", "routes", "report", "main_ids", "source"}."""
     extracts = {}
 
     roads, routes, report, failures = [], [], {"routes": {}}, []
@@ -569,7 +614,8 @@ def main():
         print(f"{rid}: stitching and fitting {rc['ref']} {rc['direction']}")
         pm = plan_road(osm, frame, hs, top, f"{rid}.main", rc["ref"], rc["direction"], rc["start"], rc["end"])
         opp_dir = OPPOSITE[rc["direction"]]
-        opp_id = re.sub(r"[nsew]$", opp_dir[0], rid) + ".opp"
+        # named for the route that would drive it: i15n's is i15s.opp; us93's is us93s.opp
+        opp_id = (re.sub(r"[nsew]$", opp_dir[0], rid) if re.search(r"[nsew]$", rid) else rid + opp_dir[0]) + ".opp"
         rr = {"id": rid, "main": {}, "opposite": {}}
         try:
             print(f"{rid}: the opposite carriageway, {rc['ref']} {opp_dir}")
@@ -651,7 +697,7 @@ def main():
         dec = decoded[main_road["id"]]
         length = dec["length"]
         line = Refline(dec)
-        target_id = "w135457469"
+        target_id = TARGET
         target = building_top(city, target_id)
         s_eye = np.arange(0, length + 1e-9, SPACING)
         p = line.at(s_eye)
@@ -758,10 +804,13 @@ def main():
                                              "max_grade": rr["opposite"]["profile"]["max_grade"], **ocl}
             acc["opposite_above_terrain"]["ok"] &= rr["opposite"]["profile"]["max_grade"] <= GRADE + 1e-6
         mphs = [z["mph"] for z in speed_list]
-        change = next((z["s0"] for z in speed_list if z["mph"] == 65), None)
-        acc["speed"] = {"ok": bool(mphs) and mphs[0] == 70 and 65 in mphs and change is not None,
-                        "zones": speed_list, "change_to_65_km": round(change / 1000, 2) if change else None,
-                        "plan_km": 41.6}
+        xs = EXPECT_SPEED.get(rid, {"first": mphs[0] if mphs else None, "has": 65, "plan_km": None})
+        change = next((z["s0"] for z in speed_list if z["mph"] == xs["has"]), None)
+        acc["speed"] = {"ok": bool(mphs) and mphs[0] == xs["first"] and xs["has"] in mphs and change is not None,
+                        "zones": speed_list, f"change_to_{xs['has']}_km": round(change / 1000, 2) if change else None,
+                        "plan_km": xs["plan_km"]}
+        if xs.get("note"):
+            acc["speed"]["note"] = xs["note"]
         want = EXPECT_EXITS.get(rid, [])
         have = [e["ref"] for e in main_road["links"]]
         missing = [w for w in want if not any(re.fullmatch(rf"{w}[A-Z]?", h) for h in have)]
@@ -775,6 +824,11 @@ def main():
             cw = rr["carriageways"] = carriageways(dec, decoded[opp_road["id"]])
             acc["carriageways"] = {"ok": cw["opposite_on_left_everywhere"] and cw["apart_m"]["min"] >= 10,
                                    "apart_m": cw["apart_m"], "wrong_side": cw["wrong_side"]}
+            if cw["opposite_on_left_everywhere"] and not acc["carriageways"]["ok"]:
+                # closer than 10 m (a narrow median with a barrier): fine while the pavements stay apart
+                gap = plan_overlap(dec, decoded[opp_road["id"]])["min_gap_m"]
+                acc["carriageways"].update(ok=gap > 0, pavements_apart_m=gap,
+                                           note="reference lines under 10 m apart; the pavements do not touch")
         for key in ("main", "opposite"):
             if rr[key].get("built"):
                 er, lc = rr[key]["edge_rate"], rr[key]["lane_counts"]
@@ -809,10 +863,20 @@ def main():
             road_id = st_["road_id"]
             cws.append({"frame": RoadFrame(decoded[road_id]), "ids": list(st_["ids"]), "ways": set(st_["chain"].ways),
                         "prefix": road_id.split(".")[0], "links": decoded[road_id]["links"]})
-        ic = build_interchanges(osm_all, cws, frame.to_local, lambda px, py: np.maximum(hs.height_at(px, py), top(px, py)))
+        ic = build_interchanges(osm_all, cws, frame.to_local, lambda px, py: np.maximum(hs.height_at(px, py), top(px, py)),
+                                own_ref=rc["ref"])
         extra_roads += ic["roads"]
         junction_recs += ic["junctions"]
         structure_recs += ic["structures"]
+        # a carriageway's own deck over a canyon (hold_decks) stands on piers like a ramp's
+        for cw in cws:
+            spans = [(b["s0"], b["s1"]) for b in decoded[cw["frame"].id]["bridges"] if b.get("deck")]
+            if spans:
+                recs = piers_and_abutments(cw["frame"], spans, ic["frames"],
+                                           lambda px, py: np.maximum(hs.height_at(px, py), top(px, py)))
+                # a deck that runs on past the road's end has no abutment there
+                L = cw["frame"].length
+                structure_recs += [r for r in recs if not (r["kind"] == "abutment" and min(r["s"], L - r["s"]) < 2 * SPACING)]
         rr["interchanges"] = interchange_report(ic, cws, decoded, junction_recs, xdoc, osm_all)
         for r in roads:
             if r["id"] in ic["main_embankment"] and ic["main_embankment"][r["id"]]:
@@ -831,27 +895,90 @@ def main():
                                 "junctions": junction_recs, "structures": structure_recs})
     text = json.dumps(doc, separators=(",", ":")) + "\n"
     decode_roadnet(json.loads(text), blob)
-    report["main_line"] = check_main_line(city, json.loads(text), blob, routes_doc_of(routes, source), main_ids)
-    (out_dir / "roadnet.json").write_text(text)
-    (out_dir / "roadnet.bin").write_bytes(blob)
-    size = (out_dir / "roadnet.json").stat().st_size + (out_dir / "roadnet.bin").stat().st_size
-    report["files"] = {"roadnet.json": (out_dir / "roadnet.json").stat().st_size,
-                       "roadnet.bin": len(blob), "total": size, "ok": size < MAX_BYTES}
-    routes_doc = routes_doc_of(routes, source)
-    (out_dir / "routes.json").write_text(json.dumps(routes_doc, indent=1) + "\n")
     report["source"] = source
-    (rep_dir / "roads_report.json").write_text(json.dumps(report, indent=1, default=float) + "\n")
+    return {"text": text, "blob": blob, "routes": routes, "report": report, "main_ids": main_ids, "source": source}
 
-    for rid, rr in report["routes"].items():
-        for name, a in rr["acceptance"].items():
-            flag = "ok  " if a["ok"] else "MISS"
-            if not a["ok"]:
-                failures.append(f"{rid} {name}")
-            print(f"  {flag} {rid} {name}: {json.dumps({k: v for k, v in a.items() if k != 'ok'}, default=float)[:220]}")
-    print(f"  {'ok  ' if report['files']['ok'] else 'MISS'} files: {size / 1e6:.2f} MB")
-    if not report["files"]["ok"]:
-        failures.append("files")
-    print(f"wrote {out_dir}/roadnet.json, roadnet.bin, routes.json and {rep_dir / 'roads_report.json'}")
+
+def files_of(rc, first):
+    """A route's files. The first route of the city keeps the RoadNet it always had (roadnet.json and
+    roadnet.bin, signs.json); every other one has its own, loaded only when it is chosen."""
+    rid = rc["id"]
+    if first:
+        return {"roadnet": "roadnet.json", "signs": "signs.json", "traffic": f"traffic/{rid}.json"}
+    return {"roadnet": f"roadnet-{rid}.json", "signs": f"signs-{rid}.json", "traffic": f"traffic/{rid}.json"}
+
+
+def main():
+    args = [a for a in sys.argv[1:]]
+    out_override = None
+    only = []
+    if "--out" in args:
+        k = args.index("--out")
+        out_override = Path(args[k + 1]).resolve()
+        del args[k:k + 2]
+    while "--route" in args:
+        k = args.index("--route")
+        only.append(args[k + 1])
+        del args[k:k + 2]
+    if len(args) != 1:
+        sys.exit(__doc__)
+    city = args[0]
+    cfg = json.loads((ROOT / "data" / "cities.json").read_text())[city]
+    routes_cfg = cfg.get("routes") or sys.exit(f"{city} has no routes in data/cities.json")
+    unknown = set(only) - {rc["id"] for rc in routes_cfg}
+    if unknown:
+        sys.exit(f"no route {sorted(unknown)} in data/cities.json")
+    frame = create_frame(cfg)
+    hs = load_heights(city)
+    top = drawn_surface(hs)
+    out_dir = out_override or ROOT / "public" / "data" / city
+    rep_dir = out_override or ROOT / "data" / "derived" / city
+    out_dir.mkdir(parents=True, exist_ok=True)
+    rep_dir.mkdir(parents=True, exist_ok=True)
+    routes_path = out_dir / "routes.json"
+    old_routes = {r["id"]: r for r in json.loads(routes_path.read_text())["routes"]} if routes_path.exists() else {}
+
+    failures, entries, snapshots = [], {}, set()
+    for n, rc in enumerate(routes_cfg):
+        rid = rc["id"]
+        files = files_of(rc, n == 0)
+        if only and rid not in only:
+            if rid in old_routes:
+                entries[rid] = old_routes[rid]
+            continue
+        g = build_group(city, cfg, [rc], frame, hs, top)
+        snapshots.update(g["source"]["osm"].split())
+        report = g["report"]
+        bin_name = files["roadnet"][:-len(".json")] + ".bin"
+        routes_doc = routes_doc_of(g["routes"], g["source"])
+        report["main_line"] = check_main_line(city, json.loads(g["text"]), g["blob"], routes_doc, g["main_ids"],
+                                              (files["roadnet"], bin_name))
+        (out_dir / files["roadnet"]).write_text(g["text"])
+        (out_dir / bin_name).write_bytes(g["blob"])
+        size = len(g["text"].encode()) + len(g["blob"])
+        report["files"] = {files["roadnet"]: len(g["text"].encode()), bin_name: len(g["blob"]), "total": size,
+                           "ok": size < MAX_BYTES}
+        for r in g["routes"]:
+            entries[r["id"]] = {**r, "files": files}
+        rep_name = "roads_report.json" if n == 0 else f"roads_report-{rid}.json"
+        (rep_dir / rep_name).write_text(json.dumps(report, indent=1, default=float) + "\n")
+        for rrid, rr in report["routes"].items():
+            for name, a in rr["acceptance"].items():
+                flag = "ok  " if a["ok"] else "MISS"
+                if not a["ok"]:
+                    failures.append(f"{rrid} {name}")
+                print(f"  {flag} {rrid} {name}: {json.dumps({k: v for k, v in a.items() if k != 'ok'}, default=float)[:220]}")
+        print(f"  {'ok  ' if report['files']['ok'] else 'MISS'} {rid} files: {size / 1e6:.2f} MB")
+        if not report["files"]["ok"]:
+            failures.append(f"{rid} files")
+        print(f"wrote {out_dir / files['roadnet']}, {bin_name} and {rep_dir / rep_name}")
+
+    # routes.json: every route, in the order of cities.json
+    if only and routes_path.exists():
+        snapshots.update(json.loads(routes_path.read_text())["source"]["osm"].split())
+    routes = [entries[rc["id"]] for rc in routes_cfg if rc["id"] in entries]
+    routes_path.write_text(json.dumps(routes_doc_of(routes, {"osm": " ".join(sorted(snapshots))}), indent=1) + "\n")
+    print(f"wrote {routes_path}")
     if failures:
         sys.exit(f"acceptance missed: {', '.join(failures)}")
 

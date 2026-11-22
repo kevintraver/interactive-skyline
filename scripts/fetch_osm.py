@@ -22,8 +22,13 @@ from it, so that the bridges that cross the road come with their approaches and 
 and `layer` tags, and the streets within 800 m (to tell where a ramp meets one). It is cached apart, so the
 main line keeps being built from the first answer's snapshot.
 
+A third request per road fetches the roadside barriers (plan 02, D3.6): every way tagged
+`barrier` as guardrail, concrete barrier, cable barrier, wall, retaining wall or fence within
+barrier_m of the road's nodes and of its links' nodes, with their nodes. Cached apart as well.
+
 Output: data/raw/<city>/osm-<ref>.json     the Overpass JSON as received
         data/raw/<city>/osm-<ref>-x.json   the interchange extract
+        data/raw/<city>/osm-<ref>-barriers.json   the barrier extract
 """
 import json
 import sys
@@ -121,6 +126,29 @@ node(w.a)->.an;
 """
 
 
+BARRIER_KINDS = "guard_rail|jersey_barrier|cable_barrier|wall|retaining_wall|fence|city_wall|concrete_block"
+
+
+def barrier_query(ref, bbox, barrier_m=120):
+    """Overpass QL for the barrier extract: the road's ways (by their route relations, as in
+    query()), the motorway links at their junctions, and every `barrier` way of BARRIER_KINDS
+    within barrier_m of either's nodes, with its nodes. Tags only, never ids."""
+    prefix, num = ref.split()
+    s, w, n, e = (f"{v:.5f}" for v in bbox)
+    return f"""[out:json][timeout:600];
+rel["type"="route"]["route"="road"]["network"="{NETWORKS[prefix]}"]["ref"="{num}"]({s},{w},{n},{e})->.r;
+way(r.r)({s},{w},{n},{e})->.w;
+node(w.w)->.n;
+way(around.n:300)["highway"="motorway_link"]->.l;
+node(w.l)->.ln;
+(.n; .ln;)->.all;
+way(around.all:{barrier_m})["barrier"~"^({BARRIER_KINDS})$"]->.b;
+node(w.b)->.bn;
+.b out body;
+.bn out skel;
+"""
+
+
 def overpass(q, tries=6):
     """POST one query, retrying with exponential backoff on rate limits, timeouts and server errors."""
     wait = 15
@@ -181,6 +209,23 @@ def fetch_interchanges(city, ref, cfg, refresh=False, root=ROOT):
     return doc
 
 
+def fetch_barriers(city, ref, cfg, refresh=False, root=ROOT):
+    path = cache_path(city, ref, root, "barriers")
+    if path.exists() and not refresh:
+        doc = json.loads(path.read_text())
+        print(f"{ref} barriers: cached, snapshot {doc['osm3s']['timestamp_osm_base']} ({path.relative_to(root)})")
+        return doc
+    path.parent.mkdir(parents=True, exist_ok=True)
+    bbox = region_bbox(cfg)
+    print(f"{ref} barriers: querying Overpass")
+    doc = overpass(barrier_query(ref, bbox))
+    doc["query"] = {"ref": ref, "bbox": bbox, "extract": "barriers"}
+    path.write_text(json.dumps(doc))
+    print(f"{ref} barriers: snapshot {doc['osm3s']['timestamp_osm_base']}, {len(doc['elements'])} elements, "
+          f"{path.stat().st_size / 1e6:.1f} MB")
+    return doc
+
+
 def main():
     args = [a for a in sys.argv[1:] if not a.startswith("--")]
     if len(args) != 1:
@@ -191,6 +236,7 @@ def main():
     for ref in refs:
         fetch(city, ref, cfg, refresh="--refresh" in sys.argv)
         fetch_interchanges(city, ref, cfg, refresh="--refresh" in sys.argv)
+        fetch_barriers(city, ref, cfg, refresh="--refresh" in sys.argv)
 
 
 if __name__ == "__main__":

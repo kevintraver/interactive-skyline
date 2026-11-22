@@ -84,6 +84,17 @@ def _oriented(osm, wid, role=""):
     return ns[::-1] if flip else ns
 
 
+def _against_oneway(osm, wid, ns):
+    """The node order `ns` runs against the way's oneway tag."""
+    w = osm.ways[wid]
+    ow = w["tags"].get("oneway")
+    if ow in ("yes", "1", "true"):
+        return list(ns) != list(w["nodes"])
+    if ow == "-1":
+        return list(ns) != list(w["nodes"])[::-1]
+    return False
+
+
 def stitch(osm, relation_ids, start_xy, to_local, max_gap=100.0, stop_xy=None, stop_margin=1000.0):
     """Join the member ways of the relations into one line in the direction of travel.
 
@@ -161,7 +172,9 @@ def stitch(osm, relation_ids, start_xy, to_local, max_gap=100.0, stop_xy=None, s
         ns = oriented[nxt][::-1] if flip else oriented[nxt]
         if flip:
             chain.reversed_ways.append(nxt)
-            if osm.ways[nxt]["tags"].get("oneway") in ("yes", "1", "true"):
+            # against the way's own oneway tag (a member's role may be mistagged backward; then
+            # turning it round follows the way's direction, which is right)
+            if _against_oneway(osm, nxt, ns):
                 chain.against_oneway.append(nxt)
         if gap is None:
             chain.seg_way += [nxt] * (len(ns) - 1)

@@ -26,6 +26,11 @@ from .osm import ramps
 RATE = 20.0  # metres along per metre sideways, at the steepest point of a taper
 SLOPE_PEAK = 1.875  # the smootherstep's steepest slope over its average
 LMIN_PER_W = 38.0  # m of taper per metre of movement: 1.875 / 38 = 1 m per 20.3 m at the steepest
+A_LAT_SHIFT = 0.95  # m/s^2: a taper that moves lanes a car stays in is long enough for this at the posted speed
+Q5_PEAK = 10 / np.sqrt(3)  # the smootherstep's peak second derivative over its average (W / L^2)
+Q5_JERK = 60.0  # and its peak third derivative (W / L^3)
+J_LAT_SHIFT = 2.4  # m/s^3: the same for lateral jerk
+MPH_MS = 0.44704
 RAMP_REACH = 250.0  # m: a ramp this close to a boundary is evidence for its side
 EXIT_ONLY = {"slight_right", "right", "sharp_right"}
 EXIT_ONLY_LEFT = {"slight_left", "left", "sharp_left"}
@@ -167,6 +172,18 @@ def boundary_geometry(P, C):
     return W, f
 
 
+def shared_shift(P, C):
+    """The largest sideways movement of a lane present on both sides of a boundary (metres)."""
+    def centres(S):
+        o, out = left_edge_offset(S), {}
+        for l in S["lanes"]:
+            out[l["id"]] = o - l["w"] / 2
+            o -= l["w"]
+        return out
+    ca, cb = centres(P), centres(C)
+    return max((abs(cb[k] - ca[k]) for k in ca if k in cb), default=0.0)
+
+
 def _pack(items, length):
     """Place intervals [x, x + L], each covering its boundaries [lo, hi], in order, not overlapping,
     within [0, length], as near as possible to where they want to be. Returns (x, the indices of
@@ -190,7 +207,7 @@ def _pack(items, length):
     return x, bad
 
 
-def _item(secs, sections, a, i, speed_at):
+def _item(secs, sections, a, i, speed_at, comfort=False):
     """A taper from section a to section i (a < i), covering the boundaries a+1..i."""
     W, f = boundary_geometry(secs[a], secs[i])
     lo, hi = float(sections[a + 1]["s0"]), float(sections[i]["s0"])
@@ -198,6 +215,12 @@ def _item(secs, sections, a, i, speed_at):
     L = W * S if W > 1e-6 else 0.0
     span = hi - lo
     Lmin = max(LMIN_PER_W * W, span) if W > 1e-6 else span
+    # a lane that goes on across the boundary but moves sideways carries cars with it: never so short
+    # that following it takes more than A_LAT_SHIFT of lateral acceleration (or J_LAT_SHIFT of jerk)
+    # at the posted speed
+    Ws = shared_shift(secs[a], secs[i]) if comfort else 0.0
+    if W > 1e-6 and Ws > 1e-6:
+        Lmin = max(Lmin, S * MPH_MS * max(float(np.sqrt(Q5_PEAK * Ws / A_LAT_SHIFT)), float(np.cbrt(Q5_JERK * Ws / J_LAT_SHIFT))))
     return {"a": a, "i": i, "lo": lo, "hi": hi, "W": W, "f": f, "S": S, "L": max(L, Lmin if L else 0.0),
             "L_mutcd": L, "Lmin": Lmin, "Lp": max(L, Lmin if L else 0.0)}
 
@@ -207,12 +230,14 @@ def _want(it):
     return it["lo"] - it["f"] * (it["Lp"] - (it["hi"] - it["lo"]))
 
 
-def place_tapers(sections, speed_at, length, rnd=lambda v: round(float(v), 1)):
+def place_tapers(sections, speed_at, length, rnd=lambda v: round(float(v), 1), comfort=False):
     """Write section["taper"] at every boundary where an edge moves. `speed_at(s)` is the posted
     limit in mph. Returns a report: one entry per taper, with where tapers were shortened, moved
-    or merged across a short section."""
+    or merged across a short section. With `comfort` (the carriageway a route drives), a taper that
+    moves lanes going on across it is never shorter than A_LAT_SHIFT and J_LAT_SHIFT allow at the
+    posted speed."""
     secs = normalise_sections(sections)
-    items = [_item(secs, sections, i - 1, i, speed_at) for i in range(1, len(secs))]
+    items = [_item(secs, sections, i - 1, i, speed_at, comfort) for i in range(1, len(secs))]
 
     def shorten():
         # proportional shortening where neighbours (or the road's ends) want the same ground
@@ -240,7 +265,7 @@ def place_tapers(sections, speed_at, length, rnd=lambda v: round(float(v), 1)):
         k = min((k for k in bad if k + 1 < len(items)), key=lambda k: items[k + 1]["lo"] - items[k]["hi"], default=None)
         if k is None:
             k = bad[0] - 1
-        items[k:k + 2] = [_item(secs, sections, items[k]["a"], items[k + 1]["i"], speed_at)]
+        items[k:k + 2] = [_item(secs, sections, items[k]["a"], items[k + 1]["i"], speed_at, comfort)]
         x, bad = shorten()
 
     report = []

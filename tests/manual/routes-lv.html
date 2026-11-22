@@ -1,0 +1,19 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Routes Las Vegas</title>
+  <style>
+    html, body { margin: 0; height: 100%; background: #000; overflow: hidden; font: 12px system-ui, sans-serif; }
+    canvas { display: block; width: 100%; height: 100%; }
+    #hud { position: fixed; left: 8px; top: 8px; color: #fff; background: #0008; padding: 6px 8px; border-radius: 4px; white-space: pre; }
+  </style>
+</head>
+<body>
+  <canvas id="scene"></canvas>
+  <div id="hud">loading…</div>
+  <!-- ?route=i15n|i15s|us93&s=<chainage on the route's road>&view=driver|top|chase|side&lane=2&yaw=<deg>&pitch=<deg>&lens=<mm>&alt=<m>&night=1&furniture=0&data=<url of a folder with routes.json and the RoadNets it names> -->
+  <script type="module" src="./routes-lv.js"></script>
+</body>
+</html>

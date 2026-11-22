@@ -7,12 +7,14 @@
 The buildings beyond the core along the drive (plan 02, D7.6). The core (the city's `bbox`, drawn
 from public/data/<city>/buildings.json) is left out, so nothing is drawn twice.
 
-Kept: every building within 400 m of the route (road `i15n.main` of roadnet.json) of 30 m2 or more;
+Kept: every building within 400 m of a route (the main road of each route in routes.json, from the
+RoadNet that route names) of 30 m2 or more;
 from 400 m to 1.5 km those of 60 m2 or more or 8 m or taller (250 m2 in the plan; lowered, since the product is far under its 3 MB); anywhere in the drive region (the
 `wide` terrain grid) every building of 20 m or more. The rules are RULES in lib/corridor.py.
 
-Footprints come from OpenStreetMap through Overpass, by tags (two requests: the buildings within
-1.6 km of the route, and the tagged-tall ones in the region), cached under data/raw/<city>/. The
+Footprints come from OpenStreetMap through Overpass, by tags (one request per route for the buildings
+within 1.6 km of it, osm-corridor.json for the first route and osm-corridor-<route>.json for the
+others, and one for the tagged-tall ones in the region), cached under data/raw/<city>/. The
 heights take the ladder of build_buildings.py without LiDAR: OSM `height`, `building:levels`, then
 Overture Maps' building height (its public GeoParquet release, read anonymously with DuckDB and
 cached as data/raw/<city>/overture/heights.parquet; joined to OSM by Overture's source record),
@@ -37,7 +39,7 @@ from pathlib import Path
 import numpy as np
 import requests
 from shapely import STRtree, from_wkb
-from shapely.geometry import LineString, MultiPolygon, Point, Polygon, box
+from shapely.geometry import LineString, MultiLineString, MultiPolygon, Point, Polygon, box
 from shapely.ops import unary_union
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
@@ -52,8 +54,10 @@ ENDPOINT = "https://overpass-api.de/api/interpreter"
 HEADERS = {"User-Agent": "road-pipeline/0.1"}
 OVERTURE = "s3://overturemaps-us-west-2/release/{release}/theme=buildings/type=building/*"
 OVERTURE_LIST = "https://overturemaps-us-west-2.s3.us-west-2.amazonaws.com/?list-type=2&prefix=release/&delimiter=/"
-ROUTE_ROAD = "i15n.main"
 CELL = 2000  # m
+# the outer band (RULES["band"]) along the first route; along the others it stops here, so the three
+# routes' buildings stay within the product's budget (about 1.5 MB): they run through dense suburbs
+OTHER_BAND = 800.0
 FETCH_M = 1600  # the corridor request reaches a little past the band
 SIMPLIFY_M = 1.0
 MIN_HOLE_M2 = 6.0
@@ -144,11 +148,17 @@ def main():
     out_dir = ROOT / "public" / "data" / city / "corridor"
     derived = ROOT / "data" / "derived" / city
 
-    # ---------------------------------------------------------------- route, region, core
-    doc = json.loads((ROOT / "public" / "data" / city / "roadnet.json").read_text())
-    roads = decode_roadnet(doc, (ROOT / "public" / "data" / city / "roadnet.bin").read_bytes())
-    road = next(r for r in roads if r["id"] == ROUTE_ROAD)
-    route = LineString(np.c_[road["x"], road["y"]])
+    # ---------------------------------------------------------------- routes, region, core
+    data = ROOT / "public" / "data" / city
+    lines = []  # (route id, road id, decoded road), in the order of routes.json
+    for rt in json.loads((data / "routes.json").read_text())["routes"]:
+        net = rt.get("files", {}).get("roadnet", "roadnet.json")
+        roads = decode_roadnet(json.loads((data / net).read_text()), (data / (net[:-len(".json")] + ".bin")).read_bytes())
+        lines.append((rt["id"], rt["road"], next(r for r in roads if r["id"] == rt["road"])))
+    route_lines = [LineString(np.c_[rd["x"], rd["y"]]) for _, _, rd in lines]
+    route = MultiLineString(route_lines) if len(route_lines) > 1 else route_lines[0]
+    others = MultiLineString(route_lines[1:]) if len(route_lines) > 2 else (route_lines[1] if len(route_lines) > 1 else None)
+    other_rules = {**RULES, "band": OTHER_BAND}
     g = cfg["terrain"]["wide"]
     region = box(g["x0"], g["y0"], g["x1"], g["y1"])
     lat_c, lon_c = frame.to_geodetic(np.array([g["x0"], g["x1"], g["x0"], g["x1"]], float),
@@ -160,9 +170,13 @@ def main():
     core_ids = {b["id"] for b in json.loads((ROOT / "public" / "data" / city / "buildings.json").read_text())["buildings"]}
 
     # ---------------------------------------------------------------- fetch
-    step = int(500 / road["spacing"])
-    lat, lon = frame.to_geodetic(np.asarray(road["x"][::step]), np.asarray(road["y"][::step]))
-    osm = cached(raw / "osm-corridor.json", lambda: overpass(corridor_query(lat, lon, FETCH_M)), refresh)
+    parts = []
+    for k, (rid, _, rd) in enumerate(lines):
+        step = int(500 / rd["spacing"])
+        lat, lon = frame.to_geodetic(np.asarray(rd["x"][::step]), np.asarray(rd["y"][::step]))
+        name = "osm-corridor.json" if k == 0 else f"osm-corridor-{rid}.json"
+        parts.append(cached(raw / name, lambda lat=lat, lon=lon: overpass(corridor_query(lat, lon, FETCH_M)), refresh))
+    osm = {"osm3s": parts[0]["osm3s"], "elements": [el for p in parts for el in p["elements"]]}
     osm_tall = cached(raw / "osm-corridor-tall.json", lambda: overpass(tall_query(bbox)), refresh)
     ov_path = None
     if use_overture:
@@ -294,8 +308,10 @@ def main():
         area = p.area
         h, rung = height_of(tags, area, ovh)
         t = building_type(tags, area)
-        d = p.distance(route)
-        if not keep(d, area, h):
+        d0 = p.distance(route_lines[0])
+        d1 = p.distance(others) if others is not None else math.inf
+        d = min(d0, d1)
+        if not (keep(d0, area, h) or keep(d1, area, h, other_rules)):
             stats["dropped:rule"] += 1
             continue
         rings = tidy(p, SIMPLIFY_M, MIN_HOLE_M2)
@@ -344,10 +360,11 @@ def main():
         if stale.name not in written:
             stale.unlink()
 
-    snapshot = osm["osm3s"]["timestamp_osm_base"]
+    snapshot = " ".join(sorted({p["osm3s"]["timestamp_osm_base"] for p in parts}))
     index = {
-        "version": FORMAT_VERSION, "cellSize": CELL, "tallFrom": RULES["tall"], "route": ROUTE_ROAD,
-        "thresholds": {**RULES, "simplify": SIMPLIFY_M, "minHole": MIN_HOLE_M2},
+        "version": FORMAT_VERSION, "cellSize": CELL, "tallFrom": RULES["tall"], "route": lines[0][1],
+        "routes": [road_id for _, road_id, _ in lines],
+        "thresholds": {**RULES, "otherRoutesBand": OTHER_BAND, "simplify": SIMPLIFY_M, "minHole": MIN_HOLE_M2},
         "types": list(TYPES), "rungs": list(RUNGS),
         "counts": {"buildings": len(kept), "cells": len(index_cells), "tall": len(tall)},
         "attribution": ["Building footprints © OpenStreetMap contributors (ODbL), snapshot " + snapshot]
@@ -363,15 +380,18 @@ def main():
     # ---------------------------------------------------------------- report
     total_bytes = sum(c["bytes"] for c in index_cells) + (tall_entry["bytes"] if tall_entry else 0) + len(index_text)
     band = lambda d: "0-400 m" if d <= RULES["near"] else "400 m-1.5 km" if d <= RULES["band"] else "beyond 1.5 km"  # noqa: E731
-    per5 = []
-    s_of = [route.project(Point(b["c"])) for b in kept]
-    for k in range(0, int(math.ceil(route.length / 5000))):
-        sel = [b for b, s_ in zip(kept, s_of) if k * 5000 <= s_ < (k + 1) * 5000 and b["dist"] <= RULES["band"]]
-        mid = route.interpolate(min(route.length, k * 5000 + 2500))
-        per5.append({"km": [k * 5, min((k + 1) * 5, round(route.length / 1000, 2))], "buildings": len(sel),
-                     "within400": sum(b["dist"] <= RULES["near"] for b in sel),
-                     "inCore": bool(core.contains(mid)),
-                     "byRung": dict(sorted(Counter(RUNGS[b["rung"]] for b in sel).items()))})
+    per5_by_route = {}
+    for (rid, _, _), line in zip(lines, route_lines):
+        per5 = per5_by_route[rid] = []
+        near = [b for b in kept if Point(b["c"]).distance(line) <= RULES["band"]]
+        s_of = [line.project(Point(b["c"])) for b in near]
+        for k in range(0, int(math.ceil(line.length / 5000))):
+            sel = [b for b, s_ in zip(near, s_of) if k * 5000 <= s_ < (k + 1) * 5000]
+            mid = line.interpolate(min(line.length, k * 5000 + 2500))
+            per5.append({"km": [k * 5, min((k + 1) * 5, round(line.length / 1000, 2))], "buildings": len(sel),
+                         "within400": sum(Point(b["c"]).distance(line) <= RULES["near"] for b in sel),
+                         "inCore": bool(core.contains(mid)),
+                         "byRung": dict(sorted(Counter(RUNGS[b["rung"]] for b in sel).items()))})
     report = {
         "osmSnapshot": snapshot, "overtureRelease": ov_release, "thresholds": index["thresholds"],
         "kept": len(kept), "tall": len(tall), "cells": len(index_cells),
@@ -382,7 +402,9 @@ def main():
         "skipped": dict(stats),
         "bytes": {"total": total_bytes, "index": len(index_text), "tall": tall_entry["bytes"] if tall_entry else 0,
                   "cells": sum(c["bytes"] for c in index_cells), "largestCell": max(c["bytes"] for c in index_cells)},
-        "perFiveKm": per5,
+        "routes": [rid for rid, _, _ in lines],
+        "perFiveKm": per5_by_route[lines[0][0]],
+        "perFiveKmByRoute": per5_by_route,
         "tallList": [{"id": b["id"], "h": b["height"], "rung": RUNGS[b["rung"]], "c": [round(v) for v in b["c"]]} for b in tall],
         "heightCheck": [{"id": b["id"], "h": b["height"], "type": TYPES[b["type"]], "rung": RUNGS[b["rung"]], "area": round(b["area"])}
                         for b in kept if b["type"] in (TYPE["house"], TYPE["shed"]) and b["height"] > 12],

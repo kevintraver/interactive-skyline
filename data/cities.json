@@ -203,6 +203,41 @@
           { "label": "Spaghetti Bowl", "at": "end" }
         ],
         "cityStart": { "exit": "Russell Road" }
+      },
+      {
+        "id": "i15s",
+        "label": "I-15 south from Apex",
+        "from": "US-93 junction",
+        "to": "Russell Road",
+        "ref": "I 15",
+        "direction": "south",
+        "start": { "lat": 36.3841762, "lon": -114.8898393, "note": "Exit 64 at Apex: the junction node where US-93 leaves southbound I-15" },
+        "end": { "lat": 36.08600, "lon": -115.18093, "note": "Russell Road, where it crosses over I-15" },
+        "places": [
+          { "label": "Apex", "at": "start" },
+          { "label": "Speedway", "exit": "Speedway" },
+          { "label": "I-215", "exit": "215" },
+          { "label": "Spaghetti Bowl", "exit": "US 95" },
+          { "label": "Russell Road", "at": "end" }
+        ],
+        "cityStart": { "exit": "Washington" }
+      },
+      {
+        "id": "us93",
+        "label": "US-93 from Hoover Dam",
+        "from": "Hoover Dam bypass bridge",
+        "to": "Spaghetti Bowl",
+        "ref": "I 11",
+        "direction": "north",
+        "start": { "lat": 36.0125413, "lon": -114.7413199, "note": "the Arizona line on the bypass bridge, where OSM's Nevada relation of I-11 (with US-93) begins" },
+        "end": { "lat": 36.1748617, "lon": -115.1495806, "note": "Spaghetti Bowl: where the route reaches the interchange, just short of the Exit 76B gore" },
+        "places": [
+          { "label": "Boulder City", "exit": "Boulder City" },
+          { "label": "Railroad Pass", "exit": "Railroad Pass" },
+          { "label": "Henderson", "exit": "Lake Mead Parkway" },
+          { "label": "Spaghetti Bowl", "at": "end" }
+        ],
+        "cityStart": { "exit": "Eastern" }
       }
     ]
   }
