@@ -22,4 +22,6 @@ export const PART_FACTORIES = [
   (ctx) => import('./vehicle/cabin.js').then((m) => m.createCabin(ctx)), // the cabin, its displays and the steering wheel (D4.2, D4.5)
   (ctx) => import('./traffic/valley.js').then((m) => m.createValleyPart(ctx)), // light ribbons on the rest of the valley's roads (D6.6)
   (ctx) => import('./lights/obstruction.js').then((m) => m.createObstructionPart(ctx)), // red obstruction lights on buildings above 61 m, hidden and moved with them (D5.6)
+  (ctx) => import('./screens/index.js').then((m) => m.createScreensPart(ctx)), // screens on simulation time, their registry, the Sphere's light (D7.3, D7.5)
+  (ctx) => import('./roadside/billboards.js').then((m) => m.createBillboardsPart(ctx)), // billboards: structures, abstract faces, digital glow (D7.4, D7.5)
 ];
