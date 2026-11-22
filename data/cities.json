@@ -187,6 +187,25 @@
           "agl": 40
         }
       }
+    ],
+    "routes": [
+      {
+        "id": "i15n",
+        "label": "I-15 north from Primm",
+        "from": "California state line",
+        "to": "Spaghetti Bowl",
+        "ref": "I 15",
+        "direction": "north",
+        "start": { "lat": 35.6070746, "lon": -115.3911309, "note": "California state line at Primm, where OSM's Nevada relation begins" },
+        "end": { "lat": 36.169641, "lon": -115.158278, "note": "Spaghetti Bowl: midway between the Exit 42A and 42B gores, at the interchange's south side" },
+        "places": [
+          { "label": "Jean", "exit": "Jean" },
+          { "label": "Sloan", "exit": "Sloan" },
+          { "label": "I-215", "exit": "I 215" },
+          { "label": "Spaghetti Bowl", "at": "end" }
+        ],
+        "cityStart": { "exit": "Russell Road" }
+      }
     ]
   }
 }

@@ -1,0 +1,184 @@
+{
+ "version": 1,
+ "source": {
+  "osm": "2026-11-22T04:42:20Z"
+ },
+ "routes": [
+  {
+   "id": "i15n",
+   "label": "I-15 north from Primm",
+   "from": "California state line",
+   "to": "Spaghetti Bowl",
+   "road": "i15n.main",
+   "s0": 0,
+   "s1": 68352,
+   "length": 68352,
+   "lane": 2,
+   "postedSeconds": 2250,
+   "reveal": {
+    "s": 42664,
+    "target": "w135457469",
+    "label": "The Strip comes into view"
+   },
+   "starts": {
+    "reveal": 40557.2,
+    "start": 0,
+    "city": 55892
+   },
+   "markers": [
+    {
+     "s": 202.3,
+     "kind": "exit",
+     "ref": "1",
+     "label": "Primm"
+    },
+    {
+     "s": 8117.5,
+     "kind": "exit",
+     "ref": "",
+     "label": "Exit"
+    },
+    {
+     "s": 13637.1,
+     "kind": "exit",
+     "ref": "",
+     "label": "Exit"
+    },
+    {
+     "s": 19681.3,
+     "kind": "exit",
+     "ref": "12",
+     "label": "Jean / Goodsprings"
+    },
+    {
+     "s": 19681.3,
+     "kind": "place",
+     "label": "Jean"
+    },
+    {
+     "s": 39922.6,
+     "kind": "exit",
+     "ref": "",
+     "label": "Check Station"
+    },
+    {
+     "s": 41047.8,
+     "kind": "exit",
+     "ref": "25",
+     "label": "Sloan"
+    },
+    {
+     "s": 41047.8,
+     "kind": "place",
+     "label": "Sloan"
+    },
+    {
+     "s": 42664,
+     "kind": "reveal",
+     "label": "First view of the Strip"
+    },
+    {
+     "s": 43903.9,
+     "kind": "exit",
+     "ref": "27",
+     "label": "Southern Highlands Parkway / Saint Rose Parkway"
+    },
+    {
+     "s": 46620.3,
+     "kind": "exit",
+     "ref": "29",
+     "label": "Starr Avenue"
+    },
+    {
+     "s": 48279.2,
+     "kind": "exit",
+     "ref": "30",
+     "label": "Cactus Avenue"
+    },
+    {
+     "s": 49877.9,
+     "kind": "exit",
+     "ref": "31",
+     "label": "Silverado Ranch Boulevard"
+    },
+    {
+     "s": 52814.8,
+     "kind": "exit",
+     "ref": "33",
+     "label": "Blue Diamond Road"
+    },
+    {
+     "s": 52814.8,
+     "kind": "place",
+     "label": "I-215"
+    },
+    {
+     "s": 55892,
+     "kind": "exit",
+     "ref": "35",
+     "label": "Russell Road / Frank Sinatra Drive"
+    },
+    {
+     "s": 57874.8,
+     "kind": "exit",
+     "ref": "36",
+     "label": "Tropicana Avenue / Frank Sinatra Drive"
+    },
+    {
+     "s": 60714.9,
+     "kind": "exit",
+     "ref": "",
+     "label": "Harmon Avenue"
+    },
+    {
+     "s": 61249.4,
+     "kind": "exit",
+     "ref": "38",
+     "label": "Flamingo Road"
+    },
+    {
+     "s": 61661.8,
+     "kind": "exit",
+     "ref": "39",
+     "label": "Spring Mountain Road"
+    },
+    {
+     "s": 64924.1,
+     "kind": "exit",
+     "ref": "40",
+     "label": "Sahara Avenue"
+    },
+    {
+     "s": 66324,
+     "kind": "exit",
+     "ref": "",
+     "label": "Neon Gateway"
+    },
+    {
+     "s": 66542.5,
+     "kind": "exit",
+     "ref": "41",
+     "label": "Charleston Boulevard / Grand Central Parkway"
+    },
+    {
+     "s": 67966.4,
+     "kind": "exit",
+     "ref": "",
+     "label": "I 11 North / US 95 North"
+    },
+    {
+     "s": 68279,
+     "kind": "exit",
+     "ref": "42A",
+     "label": "Reno / Martin L King"
+    },
+    {
+     "s": 68352,
+     "kind": "place",
+     "label": "Spaghetti Bowl"
+    }
+   ],
+   "opposite": "i15s.opp"
+  }
+ ]
+}
