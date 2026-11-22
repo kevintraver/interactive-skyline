@@ -19,7 +19,10 @@ export type FrameInfo = { nowMs: number; dtWallMs: number; simMs: number; dtSimM
 export type QualityProfile = Record<string, unknown>;
 export type ModeRegistry = unknown;
 export type FrameLoop = { invalidate(): void; settle(): Promise<void> };
-export type DayEvents = Record<string, number | null>;
+/** UTC ms of each event in [dayStartMs, dayStartMs + 24 h), or null when it does not happen that day (src/sky/ephemeris.js). */
+export type DayEvents = { astronomicalDawn: number | null; nauticalDawn: number | null; civilDawn: number | null; sunrise: number | null;
+  noon: number | null; sunset: number | null; civilDusk: number | null; nauticalDusk: number | null; astronomicalDusk: number | null;
+  moonrise: number | null; moonset: number | null };
 export type AtmosphereUniforms = Record<string, unknown>;
 export type OverrideKey = string;
 export type WeatherSample = Record<string, unknown>;
@@ -54,6 +57,8 @@ export declare function createEphemeris(observer: { lat: number; lon: number; el
   at(timeMs: number): CelestialState;                          // memoised to 1 s of simulation time
   events(dayStartMs: number): DayEvents;                       // sunrise, sunset, twilights, moonrise, moonset for the scrubber
   eqjToScene(timeMs: number): Matrix3;                         // J2000 equatorial -> scene axes, for stars and the Milky Way
+  timeOfSunAltitude(altDeg: number, dayMs: number, which: 'rising' | 'setting'): number | null;   // what env.ephemeris exposes
+  readonly observer: { lat: number; lon: number; elevationM: number };
 };
 export interface BodyState { dir: Vector3; azDeg: number; altDeg: number; trueAltDeg: number; distanceM: number; angularRadiusRad: number; magnitude: number }
 export interface CelestialState {

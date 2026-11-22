@@ -17,6 +17,13 @@ describe.skipIf(!python)('skyline_tool.py', () => {
       expect(srcStatus()).toBe(before);
     });
   }
+  it('the check page\'s import map serves every package the app imports bare (astronomy-engine since phase 1)', () => {
+    const code = 'import sys; sys.path.insert(0, sys.argv[1]); import skyline_tool as t; print(t.import_map(sys.argv[2]))';
+    const out = execFileSync(python, ['-c', code, '.claude/skills/blender-landmark-model/scripts', ROOT], { cwd: ROOT, encoding: 'utf8' });
+    const map = JSON.parse(out.replace(/^<script type="importmap">|<\/script>\s*$/g, '')).imports;
+    for (const name of ['three', 'three/addons/', 'three-mesh-bvh', 'three-mesh-bvh/worker', 'astronomy-engine']) expect(map[name], name).toBeTruthy();
+    expect(map['astronomy-engine']).toBe('/node_modules/astronomy-engine/esm/astronomy.js');
+  });
   it('find and locate read data/cities.json', () => {
     expect(execFileSync(python, [TOOL, 'find', '--repo', ROOT, '--city', 'lv', '--id', 'w135457469'], { encoding: 'utf8' })).toContain('Stratosphere Tower');
     const at = JSON.parse(execFileSync(python, [TOOL, 'locate', '--repo', ROOT, '--city', 'slc', '--lat', '40.7704', '--lon', '-111.8919'], { encoding: 'utf8' }));

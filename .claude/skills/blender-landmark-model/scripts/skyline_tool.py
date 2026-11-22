@@ -757,7 +757,7 @@ def three_versions(repo: str) -> dict[str, str]:
     pkg = load_json(os.path.join(repo, "package.json")).get("dependencies", {})
     versions = {}
     root = modules_root(repo)
-    for name in ("three", "three-mesh-bvh"):
+    for name in ("three", "three-mesh-bvh", "astronomy-engine"):
         installed = os.path.join(root, name, "package.json") if root else ""
         if root and os.path.exists(installed):
             versions[name] = load_json(installed)["version"]
@@ -766,7 +766,7 @@ def three_versions(repo: str) -> dict[str, str]:
     return versions
 
 
-BARE_IMPORT = re.compile(r"""(\bfrom\s*|\bimport\s*\(?\s*)(['"])(three-mesh-bvh(?:/worker)?|three(?:/addons/[^'"]+)?)\2""")
+BARE_IMPORT = re.compile(r"""(\bfrom\s*|\bimport\s*\(?\s*)(['"])(three-mesh-bvh(?:/worker)?|three(?:/addons/[^'"]+)?|astronomy-engine)\2""")
 JSON_IMPORT = re.compile(r"""(\bfrom\s*)(['"])(\.{0,2}/[^'"]+\.json)\2""")
 
 
@@ -784,8 +784,11 @@ def modules_root(repo: str) -> str | None:
         candidates.append(os.path.join(origin, "node_modules"))
     if os.environ.get("SKYLINE_NODE_MODULES"):
         candidates.append(os.environ["SKYLINE_NODE_MODULES"])
+    # every package the app imports bare (astronomy-engine since plan 01's phase 1, where package.json lists it)
+    needed = ["three", "three-mesh-bvh"] + [n for n in ("astronomy-engine",)
+                                            if n in load_json(os.path.join(repo, "package.json")).get("dependencies", {})]
     for folder in candidates:
-        if all(os.path.exists(os.path.join(folder, n, "package.json")) for n in ("three", "three-mesh-bvh")):
+        if all(os.path.exists(os.path.join(folder, n, "package.json")) for n in needed):
             return os.path.normpath(os.path.abspath(folder))
     return None
 
@@ -802,6 +805,8 @@ def local_module(name: str) -> str:
         return "/node_modules/three/examples/jsm/" + name[len("three/addons/"):]
     if name == "three-mesh-bvh/worker":
         return "/node_modules/three-mesh-bvh/src/workers/index.js"
+    if name == "astronomy-engine":  # the sky's ephemeris (plan 01, phase 1)
+        return "/node_modules/astronomy-engine/esm/astronomy.js"
     return "/node_modules/three-mesh-bvh/src/index.js"
 
 
@@ -817,7 +822,7 @@ def rewrite_imports(source: str, local: bool) -> str:
 
 def import_map(repo: str) -> str:
     if has_local_modules(repo):
-        imports = {name: local_module(name) for name in ("three", "three-mesh-bvh", "three-mesh-bvh/worker")}
+        imports = {name: local_module(name) for name in ("three", "three-mesh-bvh", "three-mesh-bvh/worker", "astronomy-engine")}
         imports["three/addons/"] = "/node_modules/three/examples/jsm/"
     else:
         # from a CDN the BVH worker cannot start (a worker must come from the page's origin): run `pnpm install`,
@@ -828,6 +833,8 @@ def import_map(repo: str) -> str:
                    "three/addons/": f"{cdn}/three@{v['three']}/examples/jsm/",
                    "three-mesh-bvh": f"{cdn}/three-mesh-bvh@{v['three-mesh-bvh']}/build/index.module.js",
                    "three-mesh-bvh/worker": f"{cdn}/three-mesh-bvh@{v['three-mesh-bvh']}/src/workers/index.js"}
+        if "astronomy-engine" in v:
+            imports["astronomy-engine"] = f"{cdn}/astronomy-engine@{v['astronomy-engine']}/esm/astronomy.js"
     return f'<script type="importmap">{json.dumps({"imports": imports})}</script>\n'
 
 
