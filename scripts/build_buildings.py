@@ -27,6 +27,8 @@ from shapely import STRtree
 from shapely.geometry import MultiPolygon, Polygon
 from shapely.ops import unary_union
 
+from lib.ladder import GUESS_M, LEVEL_M, num, stitch  # noqa: E402  (moved there unchanged)
+
 ROOT = Path(__file__).resolve().parent.parent
 CITY = sys.argv[1]
 CFG = json.loads((ROOT / "data" / "cities.json").read_text())[CITY]
@@ -34,8 +36,6 @@ RAW = ROOT / "data" / "raw" / CITY
 OUT = ROOT / "public" / "data" / CITY
 
 TALL_M = 35.0  # buildings at or above this are individually clickable
-LEVEL_M = 3.2
-GUESS_M = 4.0
 
 terrain_meta = json.loads((OUT / "terrain.json").read_text())
 LOCAL = terrain_meta["projection"]
@@ -132,39 +132,9 @@ def lidar_sample(poly, skip=()):
 
 
 # ---------------------------------------------------------------- osm parsing
-def num(v):
-    if v is None:
-        return None
-    s = str(v).strip().lower().replace(",", ".")
-    try:
-        if s.endswith("ft") or s.endswith("'"):
-            return float(s.rstrip("ft'").strip()) * 0.3048
-        return float(s.rstrip("m").strip())
-    except ValueError:
-        return None
-
-
 def project(geom):
     xs, ys = ll_to_local.transform([p["lon"] for p in geom], [p["lat"] for p in geom])
     return list(zip(xs, ys))
-
-
-def stitch(ways):
-    """Join way fragments into closed rings."""
-    rings, pool = [], [list(w) for w in ways if len(w) >= 2]
-    while pool:
-        cur = pool.pop()
-        while cur[0] != cur[-1]:
-            for i, w in enumerate(pool):
-                if w[0] == cur[-1]:
-                    cur += w[1:]; pool.pop(i); break
-                if w[-1] == cur[-1]:
-                    cur += w[-2::-1]; pool.pop(i); break
-            else:
-                break
-        if cur[0] == cur[-1] and len(cur) >= 4:
-            rings.append(cur)
-    return rings
 
 
 def to_polys(el):

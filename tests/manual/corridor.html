@@ -1,0 +1,20 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Corridor dev page</title>
+  <style>
+    html, body { margin: 0; height: 100%; background: #000; overflow: hidden; font: 12px system-ui, sans-serif; }
+    canvas { display: block; width: 100%; height: 100%; }
+    #hud { position: fixed; left: 8px; top: 8px; color: #fff; background: #0008; padding: 6px 8px; border-radius: 4px; white-space: pre; }
+  </style>
+</head>
+<body>
+  <canvas id="scene"></canvas>
+  <div id="hud">loading…</div>
+  <!-- ?km=<route km>&view=driver|above|orbit&night=1&yaw=<deg, left>&pitch=<deg>&lens=<mm>&alt=<m above, for above>&at=x,y (map metres, for above)
+       keys: v cycles views, n toggles night, arrows drive 200 m, a/d look left/right -->
+  <script type="module" src="./corridor.js"></script>
+</body>
+</html>
