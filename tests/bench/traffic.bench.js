@@ -14,7 +14,7 @@ const QUEUE = Date.parse('2025-07-08T16:00:00Z'); // the bottleneck fixture's qu
 
 const free = createTraffic(real || busyFile(), { cache: 8 });
 const stretch = real ? [57000, 60000] : [12000, 15000];
-const queued = createTraffic(bottleneckFile(), { cache: 8 });
+const queued = createTraffic(bottleneckFile(), { cache: 8, capacityFloor: 0 });
 
 let day = 0;
 test(`build a free-flow window (${real ? 'i15n counts' : 'synthetic, 5 lanes'})`, async ({ bench }) => {
@@ -44,3 +44,24 @@ test('vehiclesIn, 3 km, both directions, inside a queue', async ({ bench }) => {
     return buf.count;
   }).run();
 });
+
+// D6.4: the traffic part's placement (fleet.place: the model's vehicles put on their lanes on both
+// carriageways) for the range the part uses at 1280 x 720 with the 50 mm lens: 1.27 km ahead, 0.44 km
+// behind. Budget with the renderer's fill: 0.5 ms (plan 02, section 9.1, traffic enumeration).
+if (real) {
+  const { decodeRoadNet } = await import('../../src/drive/roadnet/format.js');
+  const { createLaneMap } = await import('../../src/drive/traffic/lanemap.js');
+  const { createFleet } = await import('../../src/drive/traffic/fleet.js');
+  const { createFrame, EARTH_R } = await import('../../src/world/frame.js');
+  const bin = fs.readFileSync(new URL('../../public/data/lv/roadnet.bin', import.meta.url));
+  const net = decodeRoadNet(JSON.parse(fs.readFileSync(new URL('../../public/data/lv/roadnet.json', import.meta.url), 'utf8')), bin.buffer.slice(bin.byteOffset, bin.byteOffset + bin.byteLength));
+  const road = (id) => net.roads.find((r) => r.id === id);
+  const city = JSON.parse(fs.readFileSync(new URL('../../data/cities.json', import.meta.url), 'utf8')).lv;
+  const laneMap = createLaneMap({ traffic: free, roads: { with: road('i15n.main'), against: road('i15s.opp') } });
+  const fleet = createFleet({ traffic: free, laneMap, frame: createFrame(city), lengths: [4.9, 4.6, 5.89, 5.93, 22.24, 13.72], earthR: EARTH_R });
+  const PEAK = Date.parse('2026-07-11T00:30:00Z'); // Friday 17:30 PDT
+  let g = 0;
+  test('fleet.place, km 63, Friday 17:30, 1.27 km ahead and 0.44 km behind (i15n)', async ({ bench }) => {
+    await bench('fleet.place, city, Friday peak', () => fleet.place(PEAK + (g++ % 600) * 16.7, 63000 - 444, 63000 + 1267, null).count).run();
+  });
+}

@@ -8,7 +8,7 @@ const HOUR = 3600e3;
 const ramps = rampsFile();
 const trR = createTraffic(ramps);
 const bfile = bottleneckFile();
-const trB = createTraffic(bfile);
+const trB = createTraffic(bfile, { capacityFloor: 0 }); // the fixture's flow is demand: 5000/h into 4000/h
 /** Tuesday 8 July 2025, 08:00 PDT: inside the constant 5000/h block of the bottleneck file. */
 const T8 = at('2025-07-08T15:00:00Z');
 
@@ -156,7 +156,7 @@ describe('a bottleneck matches the kinematic-wave closed form', () => {
 describe('seeking and scrubbing', () => {
   for (const [name, tr, f, ms] of [['free flow', trR, ramps, at('2025-07-11T22:10:00Z')], ['queue', trB, bfile, T8 + 40 * 60e3]]) {
     it(`${name}: N and the vehicles are identical when rebuilt after a seek away and back`, () => {
-      const t = createTraffic(f, { cache: 1 });
+      const t = createTraffic(f, f === bfile ? { cache: 1, capacityFloor: 0 } : { cache: 1 });
       const n1 = [0, 5000, 10000, 15000].map((s) => t.slotAt('with', 2, s, ms));
       const v1 = snap(t, 'with', 12000, 19000, ms);
       const a1 = snap(t, 'against', 2000, 9000, ms);

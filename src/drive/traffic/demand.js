@@ -65,6 +65,8 @@ export const DEFAULTS = Object.freeze({
   jitter: 0.08, // slot fraction: small speed variation that never reorders a lane
   minSpeed: 0.5, // m/s, floor in a jam
   cache: 4, // windows kept
+  fadeSeconds: 1.5, // s of travel over which a vehicle joining or leaving at a segment boundary fades (the buffer's fade)
+  capacityFloor: 1.05, // capacity read is at least the counted peak times this (0: the file's capacity as is)
 });
 
 /** A reusable result buffer for vehiclesIn; grows (and only then allocates) when full. */
@@ -73,7 +75,7 @@ export function createVehicleBuffer(capacity = 512) {
   b.grow = (n) => {
     const old = b.capacity ? b : null;
     const make = (T) => new T(n);
-    const fields = { id: Float64Array, k: Float64Array, s: Float64Array, speed: Float32Array, accel: Int8Array, lane: Uint8Array, lanes: Uint8Array, body: Uint8Array, colour: Uint32Array, truck: Uint8Array };
+    const fields = { id: Float64Array, k: Float64Array, s: Float64Array, speed: Float32Array, accel: Int8Array, lane: Uint8Array, lanes: Uint8Array, body: Uint8Array, colour: Uint32Array, truck: Uint8Array, fade: Float32Array };
     for (const [name, T] of Object.entries(fields)) {
       const a = make(T);
       if (old) a.set(b[name].subarray(0, b.count));
@@ -95,7 +97,7 @@ function segIndex(x0, J, x) {
 }
 
 /** The static description of one direction, in travel coordinates x (0 at its entry). */
-function buildDirection(name, dirIndex, D, range, clock, refMonth) {
+function buildDirection(name, dirIndex, D, range, clock, refMonth, capacityFloor) {
   const [S0, S1] = range;
   const L = S1 - S0;
   const raw = name === 'with' ? D.segments : D.segments.slice().reverse();
@@ -121,8 +123,20 @@ function buildDirection(name, dirIndex, D, range, clock, refMonth) {
     for (let l = 0; l < lanes; l++) { w[l] = TRUCK_LANE_WEIGHT[Math.min(lanes - 1 - l, 2)]; wsum += share[l] * w[l]; }
     for (let l = 0; l < lanes; l++) ts[l] = Math.min(1, (g.truckShare * w[l]) / (wsum || 1));
     const vfe = 1 / slow;
-    const cap = g.capacityVph / 3600;
-    return { j, lanes, share, vl, ts, vfe, cap, flow: createSegmentFlow(g.flow, clock, refMonth), src: g };
+    const flow = createSegmentFlow(g.flow, clock, refMonth);
+    // Counts are departures: a counted hour can never have carried more than the road's capacity. Where
+    // the capacity derived from OSM lane counts is below what was counted (a lane missing from OSM, a
+    // capacity per lane set too low) the table would make a queue that was not there, so the capacity
+    // read is never below the counted peak (the table's highest mean, or the continuous curve's peak
+    // through it, if higher) times the margin. capacityFloor 0 reads the file as pure demand (tests).
+    let capVph = g.capacityVph;
+    if (capacityFloor > 0) {
+      let tableMax = 0;
+      for (const season of g.flow) for (const q of season) if (q > tableMax) tableMax = q;
+      capVph = Math.max(capVph, Math.max(tableMax, flow.peak()) * capacityFloor);
+    }
+    const cap = capVph / 3600;
+    return { j, lanes, share, vl, ts, vfe, cap, capVph, raisedCap: capVph > g.capacityVph, flow, src: g };
   });
   const tauC = new Float64Array(J + 1), Kc = new Float64Array(J + 1), tmid = new Float64Array(J);
   const tauL = [];
@@ -164,7 +178,7 @@ export function createTraffic(data, options = {}) {
   const file = data && data.range ? data : parseTraffic(data);
   const o = { ...DEFAULTS, ...options };
   const clock = createClock(file.tz, file.seasonOfMonth);
-  const dirs = DIRECTIONS.map((name, i) => buildDirection(name, i, file.directions[name], file.range, clock, file.year * 12));
+  const dirs = DIRECTIONS.map((name, i) => buildDirection(name, i, file.directions[name], file.range, clock, file.year * 12, o.capacityFloor));
   for (const d of dirs) {
     // jam storage with the chosen wave speed
     for (let j = 0; j < d.J; j++) {
@@ -540,7 +554,9 @@ export function createTraffic(data, options = {}) {
    * Fills `out` (createVehicleBuffer) from index 0, or after its current count when append.
    * Per vehicle: id (unique per direction, lane and slot), k (slot), s (route chainage), speed (m/s,
    * along its own direction), accel (-1 braking, 0, +1), lane (1 = leftmost of its direction),
-   * lanes (lanes there), body (index into BODIES), colour (32-bit seed), truck (0/1).
+   * lanes (lanes there), body (index into BODIES), colour (32-bit seed), truck (0/1), fade (0..1: below
+   * 1 within fadeSeconds of travel of the segment boundary where the vehicle joins or leaves by a ramp,
+   * or of the route's ends; 0 at the boundary itself, so a renderer that multiplies by it never pops).
    */
   function vehiclesIn(dir, sA, sB, simMs, out, append = false) {
     const d = dirOf(dir);
@@ -592,6 +608,12 @@ export function createTraffic(data, options = {}) {
         out.body[i] = body;
         out.colour[i] = hash32(k, lane.salt + 57);
         out.truck[i] = truck ? 1 : 0;
+        // fade where the vehicle joins (not a vehicle on the previous segment) or leaves (not on the next)
+        let fade = 1;
+        const fd = Math.max(1, Math.abs(v)) * o.fadeSeconds;
+        if (x - d.x0[j] < fd && (j === 0 || !present(d, win, lane, j - 1, k))) fade = Math.min(fade, (x - d.x0[j]) / fd);
+        if (d.x0[j + 1] - x < fd && (j === d.J - 1 || !present(d, win, lane, j + 1, k))) fade = Math.min(fade, (d.x0[j + 1] - x) / fd);
+        out.fade[i] = fade < 0 ? 0 : fade;
       }
     }
     return out;
@@ -743,6 +765,8 @@ export function createTraffic(data, options = {}) {
     /** Lanes per direction that carry slots: [{ lane, slotVph, truckSlots, saturated }]. */
     lanes: (dir) => dirOf(dir).lanes.filter(Boolean).map((L) => ({ lane: L.l + 1, slotVph: L.A * 3600, truckSlots: L.P, saturated: L.saturated })),
     segments: (dir) => dirOf(dir).segs.map((g) => g.src),
+    /** The capacity the model reads per segment (vph), and whether the counts raised it above the file's. */
+    capacities: (dir) => dirOf(dir).segs.map((g) => ({ s0: g.src.s0, s1: g.src.s1, fileVph: g.src.capacityVph, vph: g.capVph, raised: g.raisedCap })),
     vehiclesIn, stateAt, demandAt,
     slotAt, slotPosition, slotSpeed: slotSpeedAt, slotTime, isPresent, nearestSlot, levelSet, crossings,
     /** The window (internal) serving a time: for tests and the debug overlay. */
