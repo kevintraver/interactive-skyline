@@ -1,0 +1,135 @@
+{
+ "file": "stars.bin",
+ "count": 9096,
+ "recordBytes": 12,
+ "order": "V magnitude, brightest first",
+ "layout": [
+  {
+   "name": "direction",
+   "type": "int16",
+   "count": 3,
+   "scale": 3.051850947599719e-05,
+   "note": "J2000 equatorial unit vector at epoch 2000.0: x toward RA 0h, y toward RA 6h, z toward the north celestial pole"
+  },
+  {
+   "name": "vmag",
+   "type": "int16",
+   "count": 1,
+   "scale": 0.001,
+   "note": "Johnson V"
+  },
+  {
+   "name": "color",
+   "type": "uint8",
+   "count": 3,
+   "scale": 0.00392156862745098,
+   "note": "linear sRGB, largest channel 255: black body at Ballesteros' temperature for B-V (EPL 97, 34008, eq. 14), CIE xy from Kim et al. 2002"
+  },
+  {
+   "name": "flags",
+   "type": "uint8",
+   "count": 1,
+   "bits": {
+    "variable": 1,
+    "multiple": 2,
+    "colourFromSpectralType": 4,
+    "colourDefault": 8
+   }
+  }
+ ],
+ "properMotion": "not applied; the largest in the catalogue moves a star about 0.1 degree in 50 years",
+ "names": {
+  "Sirius": 0,
+  "Canopus": 1,
+  "Arcturus": 2,
+  "Rigil Kentaurus": 3,
+  "Vega": 4,
+  "Capella": 5,
+  "Rigel": 6,
+  "Procyon": 7,
+  "Achernar": 8,
+  "Betelgeuse": 9,
+  "Hadar": 10,
+  "Altair": 11,
+  "Aldebaran": 12,
+  "Antares": 13,
+  "Spica": 14,
+  "Pollux": 15,
+  "Fomalhaut": 16,
+  "Mimosa": 17,
+  "Deneb": 18,
+  "Acrux": 19,
+  "Regulus": 21,
+  "Adhara": 22,
+  "Shaula": 24,
+  "Bellatrix": 25,
+  "Elnath": 26,
+  "Miaplacidus": 27,
+  "Alnilam": 28,
+  "Alioth": 31,
+  "Mirfak": 33,
+  "Dubhe": 34,
+  "Kaus Australis": 36,
+  "Alkaid": 38,
+  "Peacock": 43,
+  "Castor": 46,
+  "Hamal": 48,
+  "Polaris": 50,
+  "Nunki": 51,
+  "Alnitak": 53,
+  "Alpheratz": 54,
+  "Saiph": 56,
+  "Rasalhague": 59,
+  "Algol": 61,
+  "Denebola": 62,
+  "Alsuhail": 65,
+  "Schedar": 66,
+  "Mintaka": 67,
+  "Caph": 73,
+  "Mizar": 74,
+  "Dschubba": 79,
+  "Merak": 80,
+  "Phecda": 86,
+  "Alderamin": 87,
+  "Markab": 91,
+  "Megrez": 236
+ },
+ "source": {
+  "catalogue": "Yale Bright Star Catalogue, 5th Revised Ed. (Preliminary Version), CDS V/50",
+  "citation": "Hoffleit D., Warren Jr W.H. 1991, The Bright Star Catalogue, 5th Revised Ed., Astronomical Data Center, NSSDC/ADC (CDS V/50)",
+  "url": "https://cdsarc.cds.unistra.fr/ftp/V/50/catalog.gz",
+  "readme": "https://cdsarc.cds.unistra.fr/ftp/V/50/ReadMe",
+  "mirrors": [
+   "https://cdsarc.cds.unistra.fr/ftp/V/50/",
+   "https://vizier.cfa.harvard.edu/ftp/cats/V/50/"
+  ],
+  "retrieved": "2026-11-22",
+  "licence": "No licence or restriction stated in the catalogue's ReadMe",
+  "records": 9110
+ },
+ "dropped": {
+  "count": 14,
+  "hr": [
+   92,
+   95,
+   182,
+   1057,
+   1841,
+   2472,
+   2496,
+   3515,
+   3671,
+   6309,
+   6515,
+   7189,
+   7539,
+   8296
+  ],
+  "why": "no J2000 position: novae and extragalactic objects kept only to preserve the numbering"
+ },
+ "colour": {
+  "fromBV": 8786,
+  "fromSpectralType": 297,
+  "default": 13
+ }
+}

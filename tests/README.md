@@ -2,7 +2,8 @@
 
 | Command | What | Where it runs |
 |---|---|---|
-| `pnpm test:unit` | Vitest: `src/core`, extrusion, cities.json shape, source hygiene, the landmark tool, upper bounds on hot code | CI and locally |
+| `pnpm test:unit` | Vitest: `src/core`, extrusion, the sky data readers and their committed files, cities.json shape, source hygiene, the landmark tool, upper bounds on hot code | CI and locally |
+| `pnpm test:py` | pytest on the data pipelines in `scripts/` (`tests/python/`): parsers, encoders and the committed outputs against their sidecars, never the network; needs [uv](https://docs.astral.sh/uv/) | CI and locally |
 | `pnpm test:e2e` | Playwright on SwiftShader (`webgl2-software`): goldens, the `window.__skyline` contract, the buildless boot, the deterministic performance budgets | CI and locally |
 | `pnpm test` | both of the above | |
 | `pnpm test:perf` | timing on this machine's GPU (`gpu` project, one worker) against `tests/reference/perf/timing/<machine id>.json` | locally only |
