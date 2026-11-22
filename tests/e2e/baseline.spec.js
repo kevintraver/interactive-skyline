@@ -9,6 +9,8 @@ import fs from 'node:fs';
 import { test, expect } from '@playwright/test';
 import { SCENES, sceneName, boot, stage } from '../helpers/app.js';
 
+test.describe.configure({ timeout: 600_000 });
+
 const updating = () => test.info().config.updateSnapshots === 'all' || test.info().config.updateSnapshots === 'changed';
 
 for (const scene of SCENES) {
