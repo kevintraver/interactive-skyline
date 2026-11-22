@@ -6,6 +6,8 @@
 //   above: the camera is put that high over the car, looking down at the road ahead (the traffic part redraws
 //   for that camera; other parts keep the car camera's frame); seq: that many frames dtMs apart (name-0, name-1, ...).
 //   play: ms of real time to run the clock at 1x before the shot (the per-frame timings then cover playing frames).
+//   ui: keep the interface's overlays in the picture (by default they are hidden).
+//   Also prints the lamps' state (sprites, far vehicles, ribbons, pools) and, with play, their per-frame JavaScript.
 // Prints the traffic part's stats per frame (and with play the p95 of its per-frame JavaScript).
 import { chromium } from '@playwright/test';
 import { mkdirSync } from 'node:fs';
@@ -44,7 +46,8 @@ for (const [name, s, iso, look, opt = {}] of shots) {
         d.pause();
         await d.whenSettled();
         const st = d.stats();
-        perf = { place: st.traffic.js.place, draw: st.traffic.js.draw, total: st.js.total, frames: st.js.total.count - (st0.js.total.count || 0) };
+        const m = (x) => x && { mean: +x.mean.toFixed(3), p95: +x.p95.toFixed(2), max: +x.max.toFixed(2) };
+        perf = { place: m(st.traffic.js.place), draw: m(st.traffic.js.draw), lamps: m(st.traffic.js.lamps), sub: st.traffic.js.sub, total: m(st.js.total), frames: st.js.total.count - (st0.js.total.count || 0) };
       }
       if (above) {
         const p = d.pose(), cam = sk.camera;
@@ -60,10 +63,14 @@ for (const [name, s, iso, look, opt = {}] of shots) {
       return { s: Math.round(p.s), lane: p.lane, night: p.night, iso: p.iso, calls: st.render?.calls, triangles: st.render?.triangles, traffic: st.traffic, perf };
     }, { s, t: Date.parse(iso) + f * (opt.dtMs || 500), look: look || {}, above: opt.above || 0, first: f === 0, play: opt.play || 0 });
     const file = n > 1 ? `${name}-${f}` : name;
+    // the picture only: every overlay hidden (ui: true keeps them)
+    if (!opt.ui) await page.evaluate(() => { for (const el of document.body.querySelectorAll('*')) if (!(el instanceof HTMLCanvasElement) && !el.querySelector('canvas')) el.style.visibility = 'hidden'; });
     await page.screenshot({ path: `${out}/${file}.png` });
+    if (!opt.ui) await page.evaluate(() => { for (const el of document.body.querySelectorAll('*')) el.style.visibility = ''; });
     const tr = info.traffic || {};
     if (info.perf) console.log('perf', file, JSON.stringify(info.perf));
-    console.log('shot', file, JSON.stringify({ s: info.s, triangles: info.triangles, lane: info.lane, night: info.night, iso: info.iso, calls: info.calls, enumerated: tr.enumerated, placed: tr.placed, drawn: tr.drawn, detailed: tr.detailed, coarse: tr.coarse, gapped: tr.gapped, range: tr.range, place: tr.js?.place?.last?.toFixed(3), draw: tr.js?.draw?.last?.toFixed(3) }));
+    console.log('shot', file, JSON.stringify({ s: info.s, triangles: info.triangles, lane: info.lane, night: info.night, iso: info.iso, calls: info.calls, enumerated: tr.enumerated, placed: tr.placed, drawn: tr.drawn, detailed: tr.detailed, coarse: tr.coarse, gapped: tr.gapped, range: tr.range, car: tr.car, place: tr.js?.place?.last?.toFixed(3), draw: tr.js?.draw?.last?.toFixed(3), lampsMs: tr.js?.lamps?.last?.toFixed(3) }));
+    if (tr.lamps) console.log('  lamps', JSON.stringify({ on: tr.lamps.on, lux: tr.lamps.ambientLux, sprites: tr.lamps.sprites, vehicles: tr.lamps.vehicles, far: tr.lamps.farVehicles, tiles: tr.lamps.far?.tiles, built: tr.lamps.far?.built, buildMs: Math.round(tr.lamps.far?.buildMs), listed: tr.listed, exact: tr.exact, merge: tr.lamps.mergeDist, ribbons: tr.lamps.ribbons?.visible, pools: tr.lamps.pools }));
   }
 }
 await browser.close();

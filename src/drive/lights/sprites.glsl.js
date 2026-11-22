@@ -196,6 +196,8 @@ in vec2 vPx;
 in vec3 vAmp;
 in vec4 vShape;
 in float vHaloNorm;
+uniform float uWhiten;         // share of the clipping excess turned to white (1: street lamps; vehicle lamps less, so a
+                               // red lamp stays red)
 
 // the tone of a sprite: three's ACES filmic fit applied to luminance, keeping the hue, and whitening only what
 // would clip, so a far lamp keeps its colour and a near one burns to a white core with a coloured rim
@@ -210,7 +212,7 @@ vec3 toneSprite(vec3 c) {
   if (y <= 0.0) return vec3(0.0);
   vec3 o = c * (acesFit(y) / y);
   float m = max(o.r, max(o.g, o.b));
-  if (m > 1.0) o = mix(o / m, vec3(1.0), (m - 1.0) / m);
+  if (m > 1.0) o = mix(o / m, vec3(1.0), uWhiten * (m - 1.0) / m);
   return o;
 }
 

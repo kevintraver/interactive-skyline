@@ -31,6 +31,13 @@
 // The class coordinate v_k decides truck or not (trucks are a share P_l of slots, weighted to the
 // right lanes), with each class thinned to the segment's truck share.
 //
+// Lane travel times. By default a lane's free travel time tau_l(x) is piecewise linear by segment (its
+// segment's free speed: freeFlowMps plus the lane's offset). options.lanePace replaces it for chosen lanes
+// with a finer table (uniform steps of h metres of travel), so a lane's speed can follow any profile along
+// the road (traffic/reference.js: the lanes referenced to the visitor's journey). setLaneShift(dir, lane,
+// seconds) adds a constant to a lane's entry times (T = t - tau - delay - shift): it slides the lane's slot
+// grid along without rebuilding anything (windows depend on differences of tau only).
+//
 // Windows. The surface is built for a window of simulation time: tiles of `tileHours` with
 // `marginHours` either side (six hours by default), plus `preHours` of run-in for slots already on
 // the road, and bottleneck queues are traced back `lookbackHours`. A time always maps to the same
@@ -71,11 +78,12 @@ export const DEFAULTS = Object.freeze({
 
 /** A reusable result buffer for vehiclesIn; grows (and only then allocates) when full. */
 export function createVehicleBuffer(capacity = 512) {
-  const b = { count: 0, capacity: 0 };
+  // every field declared up front (a fixed shape; see fleet.js)
+  const b = { count: 0, capacity: 0, grow: null, id: null, k: null, s: null, speed: null, accel: null, lane: null, lanes: null, body: null, colour: null, truck: null, fade: null, join: null, leave: null, fadeM: null, acc: null };
   b.grow = (n) => {
     const old = b.capacity ? b : null;
     const make = (T) => new T(n);
-    const fields = { id: Float64Array, k: Float64Array, s: Float64Array, speed: Float32Array, accel: Int8Array, lane: Uint8Array, lanes: Uint8Array, body: Uint8Array, colour: Uint32Array, truck: Uint8Array, fade: Float32Array };
+    const fields = { id: Float64Array, k: Float64Array, s: Float64Array, speed: Float32Array, accel: Int8Array, lane: Uint8Array, lanes: Uint8Array, body: Uint8Array, colour: Uint32Array, truck: Uint8Array, fade: Float32Array, join: Float64Array, leave: Float64Array, fadeM: Float32Array, acc: Float32Array };
     for (const [name, T] of Object.entries(fields)) {
       const a = make(T);
       if (old) a.set(b[name].subarray(0, b.count));
@@ -94,6 +102,47 @@ function segIndex(x0, J, x) {
   let lo = 0, hi = J - 1;
   while (lo < hi) { const m = (lo + hi + 1) >> 1; if (x0[m] <= x) lo = m; else hi = m - 1; }
   return lo;
+}
+
+/** Index of the travel-time piece of a lane holding x (clamped to the first and last pieces). */
+function pieceIndex(lane, x) {
+  const m = lane.m;
+  if (lane.h > 0) { const i = Math.floor(x / lane.h); return i < 0 ? 0 : i >= m ? m - 1 : i; }
+  const px = lane.px;
+  let lo = 0, hi = m - 1;
+  while (lo < hi) { const k = (lo + hi + 1) >> 1; if (px[k] <= x) lo = k; else hi = k - 1; }
+  return lo;
+}
+/** Free travel time of a lane from the entry to x (s): linear in each piece, extended beyond the ends. */
+function tauX(lane, x) { const i = pieceIndex(lane, x); return lane.pt[i] + (x - lane.px[i]) * lane.pp[i]; }
+/** Pace (s/m) of a lane's free travel at x. */
+function paceX(lane, x) { return lane.pp[pieceIndex(lane, x)]; }
+
+/**
+ * Replace lanes' travel-time pieces by tables: spec[l] (0-based lane) = { h, tau } with tau[i] the free travel
+ * time to x = i * h (the last point at the direction's length L), increasing; null keeps the segment pieces.
+ */
+function applyLanePace(d, spec) {
+  if (!spec) return;
+  for (let l = 0; l < d.lanes.length; l++) {
+    const lane = d.lanes[l], sp = spec[l];
+    if (!lane || !sp) continue;
+    const { h, tau } = sp;
+    const m = tau.length - 1;
+    if (!(h > 0) || m < 1 || (m - 1) * h >= d.L + 1e-6 || m * h < d.L - 1e-6) throw new Error(`traffic: lanePace for ${d.name} lane ${l + 1} does not cover 0..${d.L} in steps of ${h}`);
+    const px = new Float64Array(m + 1), pt = Float64Array.from(tau), pp = new Float64Array(m);
+    for (let i = 0; i <= m; i++) px[i] = Math.min(i * h, d.L);
+    for (let i = 0; i < m; i++) {
+      const dx = px[i + 1] - px[i];
+      pp[i] = dx > 0 ? (pt[i + 1] - pt[i]) / dx : (i > 0 ? pp[i - 1] : 1 / 30);
+      if (!(pp[i] > 0)) throw new Error(`traffic: lanePace for ${d.name} lane ${l + 1} is not increasing at piece ${i}`);
+    }
+    Object.assign(lane, { px, pt, pp, m, h });
+    // tau at each segment start (crossStart reads it)
+    const tauSeg = new Float64Array(d.J + 1);
+    for (let j = 0; j <= d.J; j++) tauSeg[j] = tauX(lane, d.x0[j]);
+    lane.tau = tauSeg;
+  }
 }
 
 /** The static description of one direction, in travel coordinates x (0 at its entry). */
@@ -164,7 +213,14 @@ function buildDirection(name, dirIndex, D, range, clock, refMonth, capacityFloor
     });
     if (!(need > 0)) { lanes.push(null); continue; }
     const vph = clamp(need * 1.02, MIN_SLOT_VPH, MAX_SLOT_VPH);
-    lanes.push({ l, A: vph / 3600, P, thetaT, thetaC, share, vl, tau: tauL[l], salt: dirIndex * 16 + l, saturated: need * 1.02 > MAX_SLOT_VPH });
+    const pace = new Float64Array(J);
+    for (let j = 0; j < J; j++) pace[j] = 1 / vl[j];
+    lanes.push({
+      l, A: vph / 3600, P, thetaT, thetaC, share, vl, tau: tauL[l], salt: dirIndex * 16 + l, saturated: need * 1.02 > MAX_SLOT_VPH,
+      // travel-time pieces (see "Lane travel times"): breakpoints px, tau there pt, pace (s/m) per piece pp;
+      // h > 0 when the pieces are uniform (O(1) lookup); the default pieces are the segments
+      px: x0, pt: tauL[l], pp: pace, m: J, h: 0, shift: 0,
+    });
   }
   return { name, dirIndex, road: D.road, S0, S1, L, J, x0, segs, Lmax, lanes, tauC, Kc, tmid, kj, vfe, cap };
 }
@@ -179,6 +235,7 @@ export function createTraffic(data, options = {}) {
   const o = { ...DEFAULTS, ...options };
   const clock = createClock(file.tz, file.seasonOfMonth);
   const dirs = DIRECTIONS.map((name, i) => buildDirection(name, i, file.directions[name], file.range, clock, file.year * 12, o.capacityFloor));
+  if (o.lanePace) for (const d of dirs) applyLanePace(d, o.lanePace[d.name]);
   for (const d of dirs) {
     // jam storage with the chosen wave speed
     for (let j = 0; j < d.J; j++) {
@@ -342,10 +399,9 @@ export function createTraffic(data, options = {}) {
         if (!lane) { win.delay.push(null); win.dB.push(null); win.mf.push(null); continue; }
         const del = new Float32Array(nc * nr);
         let zero = true;
-        const tauX = (x) => { const j = segIndex(x0, J, x); return lane.tau[j] + (x - x0[j]) / lane.vl[j]; };
-        let tPrev = tauX(xs[0]);
+        let tPrev = tauX(lane, xs[0]);
         for (let ci = 0; ci + 1 < nc; ci++) {
-          const tNext = tauX(xs[ci + 1]);
+          const tNext = tauX(lane, xs[ci + 1]);
           const dtau = tNext - tPrev;
           tPrev = tNext;
           if (zero && rrOne[ci] && rrOne[ci + 1]) continue;
@@ -417,17 +473,15 @@ export function createTraffic(data, options = {}) {
     return out;
   }
   const scratch = [0, 0, 0];
-  const tauAt = (d, lane, x, j) => lane.tau[j] + (x - d.x0[j]) / lane.vl[j];
 
-  /** Entry time (s) of the slot through (x, t) in lane l: T = t - tau(x) - delay. */
+  /** Entry time (s) of the slot through (x, t) in lane l: T = t - tau(x) - delay - shift. */
   function entryTime(d, win, lane, x, t) {
-    const j = segIndex(d.x0, d.J, x);
-    return t - tauAt(d, lane, x, j) - delayAt(win, lane.l, x, t, scratch)[0];
+    return t - tauX(lane, x) - delayAt(win, lane.l, x, t, scratch)[0] - lane.shift;
   }
 
   /** Time (s) at which continuous slot n crosses the start of segment j. */
   function crossStart(d, win, lane, j, n) {
-    const c = n / lane.A + lane.tau[j];
+    const c = n / lane.A + lane.tau[j] + lane.shift;
     if (!win.congested) return c;
     const dB = win.dB[lane.l], nr = win.nr, base = j * nr, G0 = win.G0, dt = win.dt;
     const h = (i) => G0 + i * dt - dB[base + i];
@@ -476,20 +530,25 @@ export function createTraffic(data, options = {}) {
   }
   const jit = [0, 0, 0];
 
-  /** Solve tau(x) + delay(x, t) = y for x in lane l, starting the walk at segment j0. Returns x. */
-  function invert(d, win, lane, y, t, j0) {
-    const { x0, J } = d;
+  /**
+   * Solve tau(x) + delay(x, t) = y for x in lane l. In free flow the walk over the lane's pieces starts at
+   * hint.i and leaves it at the piece found (consecutive solves for growing y walk forward). Returns x.
+   */
+  const hint0 = { i: 0 };
+  function invert(d, win, lane, y, t, hint = hint0) {
     if (!win.congested) {
-      let j = j0;
-      while (j + 1 < J && lane.tau[j + 1] <= y) j++;
-      while (j > 0 && lane.tau[j] > y) j--;
-      return x0[j] + (y - lane.tau[j]) * lane.vl[j];
+      const pt = lane.pt, m = lane.m;
+      let i = hint.i < m ? hint.i : m - 1;
+      while (i + 1 < m && pt[i + 1] <= y) i++;
+      while (i > 0 && pt[i] > y) i--;
+      hint.i = i;
+      return lane.px[i] + (y - pt[i]) / lane.pp[i];
     }
     // g(x) = tau(x) + delay(x, t), increasing; bracket on the grid columns, then solve per piece
-    const g = (x) => { const j = segIndex(x0, J, x); return tauAt(d, lane, x, j) + delayAt(win, lane.l, x, t, scratch)[0]; };
+    const g = (x) => tauX(lane, x) + delayAt(win, lane.l, x, t, scratch)[0];
     let a = 0, b = d.L;
-    if (y <= g(0)) return (y - g(0)) * lane.vl[0];
-    if (y >= g(b)) return b + (y - g(b)) * lane.vl[J - 1];
+    if (y <= g(0)) return (y - g(0)) / lane.pp[0];
+    if (y >= g(b)) return b + (y - g(b)) / lane.pp[lane.m - 1];
     // binary search on columns
     let lo = 0, hi = win.nc - 1;
     while (hi - lo > 1) { const m = (lo + hi) >> 1; if (g(win.xs[m]) <= y) lo = m; else hi = m; }
@@ -509,12 +568,10 @@ export function createTraffic(data, options = {}) {
     walk.ca = Math.max(0, Math.floor(xa / win.dx) - 1);
     walk.cb = Math.min(win.nc - 1, Math.ceil(xb / win.dx) + 1);
     walk.ci = walk.ca;
-    let j = segIndex(d.x0, d.J, win.xs[walk.ca]);
     for (let ci = walk.ca; ci <= walk.cb; ci++) {
       const x = win.xs[ci];
-      while (j + 1 < d.J && d.x0[j + 1] <= x) j++;
       colD[ci] = del[ci * nr + n] * (1 - v) + del[ci * nr + n + 1] * v;
-      colG[ci] = tauAt(d, lane, x, j) + colD[ci];
+      colG[ci] = tauX(lane, x) + colD[ci];
     }
   }
   function invertWalk(d, win, lane, y) {
@@ -527,13 +584,14 @@ export function createTraffic(data, options = {}) {
     walk.ci = ci;
     const a = win.xs[ci], b = win.xs[ci + 1];
     const da = colD[ci], slope = b > a ? (colD[ci + 1] - da) / (b - a) : 0;
-    let j = segIndex(d.x0, d.J, a);
+    const px = lane.px;
+    let i = pieceIndex(lane, a);
     for (;;) {
-      const pa = Math.max(a, d.x0[j]), pb = Math.min(b, d.x0[j + 1]);
-      const g0 = lane.tau[j] + (pa - d.x0[j]) / lane.vl[j] + da + slope * (pa - a);
-      const rate = 1 / lane.vl[j] + slope;
-      if (j + 1 >= d.J || pb >= b || y <= g0 + rate * (pb - pa)) return pa + (y - g0) / rate;
-      j++;
+      const pa = Math.max(a, px[i]), pb = Math.min(b, px[i + 1]);
+      const g0 = lane.pt[i] + (pa - px[i]) * lane.pp[i] + da + slope * (pa - a);
+      const rate = lane.pp[i] + slope;
+      if (i + 1 >= lane.m || pb >= b || y <= g0 + rate * (pb - pa)) return pa + (y - g0) / rate;
+      i++;
     }
   }
 
@@ -541,7 +599,7 @@ export function createTraffic(data, options = {}) {
   function slotSpeed(d, win, lane, x, j, t, epsDot) {
     delayAt(win, lane.l, x, t, scratch);
     const Tt = 1 - scratch[1];
-    const Tx = -1 / lane.vl[j] - scratch[2];
+    const Tx = -paceX(lane, x) - scratch[2];
     return (epsDot / lane.A - Tt) / Tx;
   }
 
@@ -557,8 +615,15 @@ export function createTraffic(data, options = {}) {
    * lanes (lanes there), body (index into BODIES), colour (32-bit seed), truck (0/1), fade (0..1: below
    * 1 within fadeSeconds of travel of the segment boundary where the vehicle joins or leaves by a ramp,
    * or of the route's ends; 0 at the boundary itself, so a renderer that multiplies by it never pops).
+   * With opts.lookaheadS (for a renderer that moves vehicles on for a while, far.js): also join and leave, the
+   * route chainage of the boundary where the vehicle joined (within fadeSeconds behind it) and where it will
+   * leave (within lookaheadS of travel plus fadeSeconds ahead), NaN where none, and fadeM, the fade distance, so
+   * that fade at a later place is min(1, travelled past join / fadeM, left to leave / fadeM); and the vehicles
+   * that will join within lookaheadS (on the next segment and not on their own), with fade 0 and join set.
    */
-  function vehiclesIn(dir, sA, sB, simMs, out, append = false) {
+  const pieceHint = { i: 0 };
+  function vehiclesIn(dir, sA, sB, simMs, out, append = false, opts = null) {
+    const look = opts && opts.lookaheadS > 0 ? opts.lookaheadS : 0;
     const d = dirOf(dir);
     const t = simMs / 1000;
     const win = windowAt(d, t);
@@ -575,14 +640,20 @@ export function createTraffic(data, options = {}) {
       const nLo = A * entryTime(d, win, lane, xb, t) - o.jitter;
       let j = ja;
       if (win.congested) prepareWalk(d, win, lane, t, xa, xb);
+      pieceHint.i = pieceIndex(lane, xa);
       for (let k = Math.floor(nHi); k >= Math.ceil(nLo); k--) {
         jitter(lane, k, t, jit);
-        const y = t - (k + jit[0]) / A;
-        const x = win.congested ? invertWalk(d, win, lane, y) : invert(d, win, lane, y, t, j);
+        const y = t - (k + jit[0]) / A - lane.shift;
+        const x = win.congested ? invertWalk(d, win, lane, y) : invert(d, win, lane, y, t, pieceHint);
         if (x < xa) continue;
         if (x > xb) break;
         while (j + 1 < d.J && d.x0[j + 1] <= x) j++;
-        if (!present(d, win, lane, j, k)) continue;
+        let joining = false;
+        if (!present(d, win, lane, j, k)) {
+          // joins within the lookahead: on the next segment though not on this one
+          if (!look || j + 1 >= d.J || d.x0[j + 1] - x > look * lane.vl[j] * 1.1 || !present(d, win, lane, j + 1, k)) continue;
+          joining = true;
+        }
         if (out.count >= out.capacity) out.grow(out.capacity * 2);
         const i = out.count++;
         const v = slotSpeed(d, win, lane, x, j, t, jit[1]);
@@ -592,7 +663,7 @@ export function createTraffic(data, options = {}) {
         const x2 = Math.min(d.L, x + v * 0.5);
         let j2 = j;
         while (j2 + 1 < d.J && d.x0[j2 + 1] <= x2) j2++;
-        if (win.congested || j2 !== j) acc += (slotSpeed(d, win, lane, x2, j2, t + 0.5, 0) - slotSpeed(d, win, lane, x, j, t, 0)) / 0.5;
+        if (win.congested || j2 !== j || lane.pp[pieceIndex(lane, x2)] !== lane.pp[pieceIndex(lane, x)]) acc += (slotSpeed(d, win, lane, x2, j2, t + 0.5, 0) - slotSpeed(d, win, lane, x, j, t, 0)) / 0.5;
         const truck = classV(k, lane.salt) < lane.P;
         const h = hash32(k, lane.salt);
         let body;
@@ -603,6 +674,7 @@ export function createTraffic(data, options = {}) {
         out.s[i] = toS(d, x);
         out.speed[i] = v;
         out.accel[i] = acc < -0.4 ? -1 : acc > 0.4 ? 1 : 0;
+        out.acc[i] = acc;
         out.lane[i] = lane.l + 1;
         out.lanes[i] = d.segs[j].lanes;
         out.body[i] = body;
@@ -611,8 +683,17 @@ export function createTraffic(data, options = {}) {
         // fade where the vehicle joins (not a vehicle on the previous segment) or leaves (not on the next)
         let fade = 1;
         const fd = Math.max(1, Math.abs(v)) * o.fadeSeconds;
-        if (x - d.x0[j] < fd && (j === 0 || !present(d, win, lane, j - 1, k))) fade = Math.min(fade, (x - d.x0[j]) / fd);
-        if (d.x0[j + 1] - x < fd && (j === d.J - 1 || !present(d, win, lane, j + 1, k))) fade = Math.min(fade, (d.x0[j + 1] - x) / fd);
+        if (joining) {
+          fade = 0;
+          if (look) { out.join[i] = toS(d, d.x0[j + 1]); out.leave[i] = NaN; out.fadeM[i] = fd; }
+        } else {
+          const joins = x - d.x0[j] < fd && (j === 0 || !present(d, win, lane, j - 1, k));
+          if (joins) fade = Math.min(fade, (x - d.x0[j]) / fd);
+          const reach = look ? fd + look * Math.max(1, Math.abs(v)) * 1.1 : fd;
+          const leaves = d.x0[j + 1] - x < reach && (j === d.J - 1 || !present(d, win, lane, j + 1, k));
+          if (leaves) fade = Math.min(fade, (d.x0[j + 1] - x) / fd);
+          if (look) { out.join[i] = joins ? toS(d, d.x0[j]) : NaN; out.leave[i] = leaves ? toS(d, d.x0[j + 1]) : NaN; out.fadeM[i] = fd; }
+        }
         out.fade[i] = fade < 0 ? 0 : fade;
       }
     }
@@ -635,8 +716,8 @@ export function createTraffic(data, options = {}) {
     for (const lane of d.lanes) {
       if (!lane || !(lane.share[j] > 0)) continue;
       delayAt(win, lane.l, x, t, scratch);
-      const Tt = 1 - scratch[1], Tx = -1 / lane.vl[j] - scratch[2];
-      const n = lane.A * (t - tauAt(d, lane, x, j) - scratch[0]);
+      const Tt = 1 - scratch[1], Tx = -paceX(lane, x) - scratch[2];
+      const n = lane.A * (t - tauX(lane, x) - scratch[0] - lane.shift);
       const phi = Math.min(1, phiAt(d, win, lane, j, crossStart(d, win, lane, j, n)));
       const ql = phi * lane.A * Tt, kl = -phi * lane.A * Tx;
       lanes.push({ lane: lane.l + 1, q: ql, k: kl, v: ql / kl });
@@ -645,6 +726,29 @@ export function createTraffic(data, options = {}) {
     out.q = q; out.k = k; out.v = k > 0 ? q / k : d.vfe[j];
     out.vph = q * 3600;
     out.congested = out.v < d.vfe[j] * 0.95;
+    return out;
+  }
+
+  /**
+   * Density (veh/m) of each lane of one direction at route chainage s and simMs, into out[0..7] (lane 1 first;
+   * 0 for lanes with no traffic there). The per-lane terms of stateAt without its allocations: the light
+   * ribbons read it for a few hundred places a frame.
+   */
+  function laneDensities(dir, s, simMs, out) {
+    const d = dirOf(dir);
+    const t = simMs / 1000;
+    const win = windowAt(d, t);
+    const x = clamp(toX(d, s), 0, d.L);
+    const j = segIndex(d.x0, d.J, x);
+    for (let i = 0; i < out.length; i++) out[i] = 0;
+    for (const lane of d.lanes) {
+      if (!lane || !(lane.share[j] > 0) || lane.l >= out.length) continue;
+      delayAt(win, lane.l, x, t, scratch);
+      const Tx = -paceX(lane, x) - scratch[2];
+      const n = lane.A * (t - tauX(lane, x) - scratch[0] - lane.shift);
+      const phi = Math.min(1, phiAt(d, win, lane, j, crossStart(d, win, lane, j, n)));
+      out[lane.l] = -phi * lane.A * Tx;
+    }
     return out;
   }
 
@@ -671,22 +775,21 @@ export function createTraffic(data, options = {}) {
   /** Route chainage of continuous slot n at simMs (no jitter), NaN when it is not on the route. */
   function slotPosition(dir, lane, n, simMs) {
     const d = dirOf(dir), L = laneOf(d, lane), t = simMs / 1000;
-    const x = invert(d, windowAt(d, t), L, t - n / L.A, t, 0);
+    const x = invert(d, windowAt(d, t), L, t - n / L.A - L.shift, t, { i: 0 });
     return x < 0 || x > d.L ? NaN : toS(d, x);
   }
   /** Speed (m/s) of continuous slot n at simMs (no jitter). */
   function slotSpeedAt(dir, lane, n, simMs) {
     const d = dirOf(dir), L = laneOf(d, lane), t = simMs / 1000;
     const win = windowAt(d, t);
-    const x = clamp(invert(d, win, L, t - n / L.A, t, 0), 0, d.L);
+    const x = clamp(invert(d, win, L, t - n / L.A - L.shift, t, { i: 0 }), 0, d.L);
     return slotSpeed(d, win, L, x, segIndex(d.x0, d.J, x), t, 0);
   }
   /** simMs at which continuous slot n passes route chainage s. */
   function slotTime(dir, lane, n, s) {
     const d = dirOf(dir), L = laneOf(d, lane);
     const x = clamp(toX(d, s), 0, d.L);
-    const j = segIndex(d.x0, d.J, x);
-    const c = n / L.A + tauAt(d, L, x, j);
+    const c = n / L.A + tauX(L, x) + L.shift;
     let t = c;
     for (let it = 0; it < 4; it++) {
       const win = windowAt(d, t);
@@ -767,7 +870,12 @@ export function createTraffic(data, options = {}) {
     segments: (dir) => dirOf(dir).segs.map((g) => g.src),
     /** The capacity the model reads per segment (vph), and whether the counts raised it above the file's. */
     capacities: (dir) => dirOf(dir).segs.map((g) => ({ s0: g.src.s0, s1: g.src.s1, fileVph: g.src.capacityVph, vph: g.capVph, raised: g.raisedCap })),
-    vehiclesIn, stateAt, demandAt,
+    vehiclesIn, stateAt, demandAt, laneDensities,
+    /** Slide lane `lane` (1 = leftmost) of `dir` along by `seconds` of entry time (see "Lane travel times"). */
+    setLaneShift(dir, lane, seconds) { laneOf(dirOf(dir), lane).shift = Number.isFinite(seconds) ? seconds : 0; },
+    laneShift: (dir, lane) => laneOf(dirOf(dir), lane).shift,
+    /** Free travel time (s) of a lane from the direction's entry to route chainage s, shift excluded. */
+    freeTau(dir, lane, s) { const d = dirOf(dir); return tauX(laneOf(d, lane), clamp(toX(d, s), 0, d.L)); },
     slotAt, slotPosition, slotSpeed: slotSpeedAt, slotTime, isPresent, nearestSlot, levelSet, crossings,
     /** The window (internal) serving a time: for tests and the debug overlay. */
     windowAt: (dir, simMs) => windowAt(dirOf(dir), simMs / 1000),

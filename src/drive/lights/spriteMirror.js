@@ -103,15 +103,16 @@ export function warmSodium(seconds, startUv, steadyUv) {
   };
 }
 
-/** The sprite tone (fragment shader): ACES fit on luminance, hue kept, only what would clip whitened. */
-export function toneSprite([r, g, b]) {
+/** The sprite tone (fragment shader): ACES fit on luminance, hue kept, only what would clip whitened (whiten: the share
+ * of it, the layer's uWhiten, 1 by default). */
+export function toneSprite([r, g, b], whiten = 1) {
   const y = 0.2126 * r + 0.7152 * g + 0.0722 * b;
   if (!(y > 0)) return [0, 0, 0];
   const x = y / 0.6;
   const t = Math.min(1, Math.max(0, (x * (x + 0.0245786) - 0.000090537) / (x * (0.983729 * x + 0.432951) + 0.238081)));
   let o = [r, g, b].map((c) => (c * t) / y);
   const m = Math.max(...o);
-  if (m > 1) o = o.map((c) => (c / m) * (1 - (m - 1) / m) + (m - 1) / m);
+  if (m > 1) { const w = (whiten * (m - 1)) / m; o = o.map((c) => (c / m) * (1 - w) + w); }
   return o;
 }
 

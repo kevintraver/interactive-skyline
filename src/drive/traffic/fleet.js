@@ -17,7 +17,17 @@
 //   - the lane map's weight (a lane narrowing in a taper, a traffic lane with no road lane);
 //   - the gap kept around the visitor's car (below).
 //
-// The gap around the visitor's car (until D6.5 lets the car follow traffic). The car drives its lane at
+// The visitor's car as one of the traffic (D6.5, reference.js). With a reference (createFleet's `reference`)
+// the car's lane runs at the car's speed and the car rides an integer slot K of it in free flow: each frame the
+// fleet reads the car's continuous slot number n_l = slotAt(l, car.s, t) in every lane of its direction, and the
+// slot nearest it, round(n_l), is the car's place in lane l: that vehicle (if the slot is one) is drawn only
+// as far as it is clear of the car sideways (side factor below), so in the car's own lane it never is, and in a
+// lane the car moves into or out of it dissolves over the lateral band. The gap rule below is then only a
+// guard: it is weighed in by how far the car is off an integer slot in its reference lane (0 within GUARD_IN
+// of an integer, whole beyond GUARD_IN + GUARD_BAND), which happens in a queue, before departure and after
+// arrival, and nowhere in free flow; the hard rule (no overlap) always holds.
+//
+// The gap around the visitor's car (without a reference, and as the guard). The car drives its lane at
 // the posted speed, so vehicles of the same stream would run through it. A vehicle of the car's own
 // direction is left out when it overlaps the car's path sideways (|lateral| < LAT_IN m between centres,
 // fading out from LAT_OUT, so a lane change of the car does not pop anyone) AND it is within the headway
@@ -39,27 +49,38 @@ export const GAP = Object.freeze({
   AHEAD_M: 12, BEHIND_M: 6, BAND_M: 20, // m, bumper to bumper
   HARD_M: 2, // m beyond the half lengths: always 0
 });
+/** The guard is weighed in as the car's slot number leaves an integer by GUARD_IN .. GUARD_IN + GUARD_BAND slots. */
+export const GUARD_IN = 0.15;
+export const GUARD_BAND = 0.15;
 const smooth = (x) => (x <= 0 ? 0 : x >= 1 ? 1 : x * x * (3 - 2 * x));
 
 /** Body index (demand.js BODIES order) -> name in vehicles.json. */
 export const BODY_NAMES = ['sedan', 'crossover', 'pickup', 'van', 'tractor_trailer', 'coach'];
 
 /**
- * @param {{ traffic: object, laneMap: object, frame: { sceneY(h, x, y): number }, lengths: number[], earthR: number }} opts
- *   lengths: body lengths (m) in BODY_NAMES order; earthR: the radius the scene's curve drop uses.
+ * @param {{ traffic: object, laneMap: object, frame: { sceneY(h, x, y): number }, lengths: number[], earthR: number, reference?: object }} opts
+ *   lengths: body lengths (m) in BODY_NAMES order; earthR: the radius the scene's curve drop uses;
+ *   reference: reference.js's createReference for the journey (the car takes a slot), or none (the gap rule).
  */
-export function createFleet({ traffic, laneMap, frame, lengths, earthR }) {
+export function createFleet({ traffic, laneMap, frame, lengths, earthR, reference = null }) {
   const bufs = { with: createVehicleBuffer(512), against: createVehicleBuffer(512) };
   const slotRate = { with: new Float64Array(9), against: new Float64Array(9) };
   for (const dir of ['with', 'against']) for (const L of traffic.lanes(dir)) slotRate[dir][L.lane] = L.slotVph / 3600;
 
   // the placed vehicles, struct of arrays
-  const out = { count: 0, capacity: 0 };
   const FIELDS = {
     pos: [Float64Array, 3], fwd: [Float32Array, 3], up: [Float32Array, 3],
     alpha: [Float32Array, 1], brake: [Uint8Array, 1], body: [Uint8Array, 1], colour: [Uint32Array, 1],
     id: [Float64Array, 1], dir: [Uint8Array, 1], lane: [Uint8Array, 1], s: [Float64Array, 1], k: [Float64Array, 1],
     speed: [Float32Array, 1], sRoad: [Float64Array, 1], d: [Float32Array, 1], fade: [Float32Array, 1], weight: [Float32Array, 1], gap: [Float32Array, 1],
+    join: [Float64Array, 1], leave: [Float64Array, 1], fadeM: [Float32Array, 1], acc: [Float32Array, 1], dds: [Float32Array, 1],
+  };
+  // every field declared up front: a fixed shape keeps the per-vehicle writes fast (fields added one by one with
+  // computed keys would turn the object into a dictionary)
+  const out = {
+    count: 0, capacity: 0, pos: null, fwd: null, up: null, alpha: null, brake: null, body: null, colour: null, id: null, dir: null,
+    lane: null, s: null, k: null, speed: null, sRoad: null, d: null, fade: null, weight: null, gap: null, join: null, leave: null,
+    fadeM: null, acc: null, dds: null,
   };
   function grow(n) {
     for (const [name, [T, w]] of Object.entries(FIELDS)) {
@@ -74,22 +95,44 @@ export function createFleet({ traffic, laneMap, frame, lengths, earthR }) {
   const r = {}, lm = { sRoad: 0, d: 0, dds: 0, w: 0 };
   const nCar = new Float64Array(9);
   const nCarOk = new Uint8Array(9);
-  const stats = { enumerated: 0, placed: 0, hidden: 0, gapped: 0 };
+  const stats = { enumerated: 0, placed: 0, hidden: 0, gapped: 0, refLane: 0, carSlot: NaN, slotOff: 0, guard: 0 };
+  const lanesWith = new Uint8Array(9);
+  for (const L of traffic.lanes('with')) lanesWith[L.lane] = 1;
+  const nCarAt = (lane, s, simMs) => {
+    if (!nCarOk[lane]) { nCar[lane] = slotRate.with[lane] > 0 ? traffic.slotAt('with', lane, s, simMs) : NaN; nCarOk[lane] = 1; }
+    return nCar[lane];
+  };
 
   /**
    * Place the vehicles between route chainages sA and sB at simMs.
    * @param {number} simMs  @param {number} sA  @param {number} sB
    * @param {{ s: number, position: {x,y,z}, forward: {x,y,z}, right: {x,y,z} } | null} car the visitor's pose (null: no gap)
+   * @param {{ lookaheadS?: number }} [opts] lookaheadS: for far.js, which moves vehicles on for that long: keep the
+   *   vehicles whose opacity is 0 now and fill join, leave and fadeM (demand.js vehiclesIn)
    * @returns the placed vehicles { count, pos[3n], fwd[3n], up[3n], alpha, brake, body, colour, id, dir (0 with, 1 against), lane, s, k, speed, ... }
    */
-  function place(simMs, sA, sB, car) {
+  function place(simMs, sA, sB, car, opts = null) {
+    const keep = !!(opts && opts.lookaheadS > 0);
     out.count = 0;
     stats.enumerated = 0; stats.hidden = 0; stats.gapped = 0;
     nCarOk.fill(0);
+    // with a reference: how far the car is off an integer slot in its own lane weighs in the guard
+    let guardW = 1;
+    if (car && reference) {
+      const rl = reference.refLaneAt(car.s);
+      stats.refLane = rl;
+      if (lanesWith[rl]) {
+        const nr = nCarAt(rl, car.s, simMs);
+        const off = Math.abs(nr - Math.round(nr));
+        stats.carSlot = Math.round(nr); stats.slotOff = off;
+        guardW = smooth((off - GUARD_IN) / GUARD_BAND);
+      }
+      stats.guard = guardW;
+    }
     for (let di = 0; di < 2; di++) {
       const dir = di === 0 ? 'with' : 'against';
       const b = bufs[dir];
-      traffic.vehiclesIn(dir, sA, sB, simMs, b);
+      traffic.vehiclesIn(dir, sA, sB, simMs, b, false, opts);
       stats.enumerated += b.count;
       const ld = laneMap.dirs[dir];
       const ref = ld.refline;
@@ -100,7 +143,7 @@ export function createFleet({ traffic, laneMap, frame, lengths, earthR }) {
         laneMap.atDir(ld, lane, bS[v], lm);
         const fade = bFade[v];
         let alpha = fade * lm.w;
-        if (alpha <= 0.002) { stats.hidden++; continue; }
+        if (alpha <= 0.002 && !keep) { stats.hidden++; continue; }
         ref.at(lm.sRoad, r);
         const ch = Math.cos(r.heading), sh = Math.sin(r.heading);
         const d = lm.d;
@@ -140,12 +183,10 @@ export function createFleet({ traffic, laneMap, frame, lengths, earthR }) {
             const gapM = Math.abs(lon) - half;
             let along;
             if (gapM < GAP.HARD_M) along = 0;
+            else if (reference && guardW === 0) along = 1;
             else {
               // slot headway in the vehicle's lane
-              if (!nCarOk[lane]) {
-                nCar[lane] = slotRate.with[lane] > 0 ? traffic.slotAt('with', lane, car.s, simMs) : NaN;
-                nCarOk[lane] = 1;
-              }
+              nCarAt(lane, car.s, simMs);
               const rate = slotRate.with[lane];
               const h = rate > 0 ? (nCar[lane] - bK[v]) / rate : (lon > 0 ? Infinity : -Infinity);
               let slotF, metF;
@@ -157,13 +198,19 @@ export function createFleet({ traffic, laneMap, frame, lengths, earthR }) {
                 metF = smooth((gapM - GAP.BEHIND_M) / GAP.BAND_M);
               }
               along = slotF < metF ? slotF : metF;
+              if (reference) along = 1 - guardW * (1 - along);
             }
             gapA = side > along ? side : along;
+            // the car's own slot in this lane: drawn only as far as it is clear of the car sideways
+            if (reference && side < gapA) {
+              const nl = nCarAt(lane, car.s, simMs);
+              if (bK[v] === Math.round(nl) && Math.abs(nl - bK[v]) < 0.6) gapA = side;
+            }
             if (gapA < 1) stats.gapped++;
           }
         }
         alpha *= gapA;
-        if (alpha <= 0.002) { stats.hidden++; continue; }
+        if (alpha <= 0.002 && !keep) { stats.hidden++; continue; }
 
         if (out.count >= out.capacity) { grow(out.capacity * 2); P = out.pos; FW = out.fwd; UP = out.up; }
         const i = out.count++, i3 = 3 * i;
@@ -185,6 +232,7 @@ export function createFleet({ traffic, laneMap, frame, lengths, earthR }) {
         out.fade[i] = fade;
         out.weight[i] = lm.w;
         out.gap[i] = gapA;
+        if (keep) { out.join[i] = b.join[v]; out.leave[i] = b.leave[v]; out.fadeM[i] = b.fadeM[v]; out.acc[i] = b.acc[v]; out.dds[i] = lm.dds; }
       }
     }
     stats.placed = out.count;

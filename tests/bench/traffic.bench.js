@@ -65,3 +65,33 @@ if (real) {
     await bench('fleet.place, city, Friday peak', () => fleet.place(PEAK + (g++ % 600) * 16.7, 63000 - 444, 63000 + 1267, null).count).run();
   });
 }
+
+// D6.4 lamps and D6.5: the traffic part's per-frame JavaScript at the evening peak in the city with lamps (plan 02,
+// section 9.1; budget for the whole part 0.6 ms): every vehicle out to 4 km ahead from the far field (far.js), the
+// exact placement within 300 m ahead and 150 m behind with the car on its slot (fleet.js, reference.js), and the
+// lamp sprites written for all of them (lampLayer.js). Reported by `pnpm bench`, not gated.
+const { haveRoutes, loadRoute, LENGTHS: L6 } = await import('../unit/traffic/routes.js');
+if (haveRoutes) {
+  const THREE = await import('three');
+  const { createFarField } = await import('../../src/drive/traffic/far.js');
+  const { createLampLayer } = await import('../../src/drive/traffic/lampLayer.js');
+  const { EARTH_R: R } = await import('../../src/world/frame.js');
+  const route = loadRoute('i15n');
+  const sidecar = JSON.parse(fs.readFileSync(new URL('../../public/models/drive/vehicles.json', import.meta.url), 'utf8'));
+  const far = createFarField({ traffic: route.traffic, laneMap: route.laneMap, frame: route.frame, lengths: L6, earthR: R });
+  const lamps = createLampLayer({ parent: new THREE.Group(), sidecar });
+  const NIGHT_PEAK = Date.parse('2026-11-21T01:30:00Z'); // Friday 17:30 PST, dark
+  route.journey.rebase(60000, NIGHT_PEAK);
+  route.reference.shifts(route.traffic, route.journey);
+  let h = 0;
+  test('traffic frame with lamps, km 60, Friday 17:30 at night (i15n)', async ({ bench }) => {
+    await bench('far field 4.5 km + exact 0.5 km + lamp sprites', () => {
+      const t = NIGHT_PEAK + (h++ % 600) * 16.7;
+      const pose = route.journey.poseAt(t);
+      const list = far.collect(t, [pose.s - 544, pose.s + 4000], [pose.s - 454, pose.s + 1277]);
+      route.fleet.place(t, pose.s - 190, pose.s + 340, pose);
+      lamps.update({ near: null, far: list, carS: pose.s, ahead: 4000, behind: 544, band: 0.25, eye: pose.position, on: true, pxPerRad: 1500 });
+      return lamps.stats().sprites;
+    }).run();
+  });
+}

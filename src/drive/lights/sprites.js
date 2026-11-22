@@ -36,9 +36,10 @@ import { LUMINAIRE_DIAMETER_M } from './lamps.js';
 const ALWAYS_ON = 1e30;
 
 /**
- * @param {{ capacity: number, name?: string, minPx?: number, halo?: number, renderOrder?: number }} opts
+ * @param {{ capacity: number, name?: string, minPx?: number, halo?: number, renderOrder?: number, whiten?: number }} opts
+ *   whiten: share of a clipping colour's excess turned to white (default 1)
  */
-export function createSpriteLayer({ capacity, name = 'sprites', minPx = 1.5, halo = 0.006, renderOrder = 10 }) {
+export function createSpriteLayer({ capacity, name = 'sprites', minPx = 1.5, halo = 0.006, renderOrder = 10, whiten = 1 }) {
   if (!(capacity > 0)) throw new Error('sprites: capacity is required');
   const rows = Math.ceil(capacity / SPRITE_TEX_WIDTH);
   const texels = SPRITE_TEX_WIDTH * rows;
@@ -73,6 +74,9 @@ export function createSpriteLayer({ capacity, name = 'sprites', minPx = 1.5, hal
     uOnTable: { value: new Float32Array(ON_TABLE_N).fill(1e6) }, uOnSpec: { value: new THREE.Vector3(ON_TABLE.log0, ON_TABLE.step, ON_TABLE.n) },
     uSodium: { value: new THREE.Vector4(0.2, 0.5, 0.25, 0.52) }, uGlowRange: { value: new THREE.Vector2(800, 1000) }, uGroundAlbedo: { value: 0.15 },
     uPatKind: { value: patKind }, uPatK: { value: patK },
+    // how much of what would clip turns white (spriteMirror.js toneSprite); 1, the default, for every layer but the
+    // vehicle lamps (traffic/lampLayer.js), which keep more of their colour
+    uWhiten: { value: whiten },
   };
   const material = new THREE.ShaderMaterial({
     name, uniforms, vertexShader: spriteVertex, fragmentShader: spriteFragment,
@@ -128,6 +132,24 @@ export function createSpriteLayer({ capacity, name = 'sprites', minPx = 1.5, hal
       }
     },
     markDirty() { for (const t of textures) t.needsUpdate = true; },
+    /**
+     * For dynamic layers rewritten every frame (vehicle lamps): upload only the texture rows holding instances
+     * 0..count-1 and draw those (and drop any draw list). Added for traffic/lampLayer.js; commit() is unchanged.
+     */
+    commitRows(count) {
+      count = Math.max(0, Math.min(count, capacity));
+      if (usingList) { identity(); indexAttr.clearUpdateRanges(); indexAttr.needsUpdate = true; usingList = false; }
+      const rowsUsed = Math.ceil(count / SPRITE_TEX_WIDTH);
+      if (rowsUsed) {
+        for (const t of textures) {
+          t.clearUpdateRanges();
+          for (let r = 0; r < rowsUsed; r++) t.addUpdateRange(r * SPRITE_TEX_WIDTH * 4, Math.min(SPRITE_TEX_WIDTH, count - r * SPRITE_TEX_WIDTH) * 4);
+          t.needsUpdate = true;
+        }
+      }
+      drawCount = count;
+      geometry.instanceCount = count;
+    },
 
     /** Draw these instances only (a cull's result): indices into the instance textures, n of them, each with
      * weight 1 or weights[j]. */
