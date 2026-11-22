@@ -40,7 +40,8 @@ The build started on branch `feat/vegas-drive` on 2026-11-21. These are the assu
 
 - No tile pyramid. D1.1 (pyramid math), D1.2, D1.3's streaming, D1.7 and all of Phase 2 except the interface are deferred.
 - `createTerrain()` keeps the public interface of sections 5.5 and 11.2 (`heightAt`, `groundY`, `inBuildArea`, `whenSettled`, with `setViews`, `prefetchAlong` and `update` accepted and ignored) over three fixed grids: the existing `near` and `far`, and a new coarse `wide` grid for the drive region (about x −56..48 km, y −64..48 km), built by the existing terrain and imagery scripts, about 3 MB or less, loaded only when Drive is entered.
-- The road is fitted to that coarse ground at run time. Road heights are sampled from the same grids by a Python twin and smoothed under the grade limits. The mesher adds an apron that blends from the pavement edge to the terrain, and the terrain mesh under the corridor is lowered so nothing shows through the road. D3.3's offline carve is not done.
+- The road rides on top of that coarse ground; the terrain is not modified. `build_roads.py` samples the same grids through a Python twin, takes the highest ground under the whole pavement width at each station, adds 0.3 m, and smooths the profile from above under the grade limits, so the pavement is never below the terrain. The mesher adds a fixed embankment on each side (a 1:4 slope, then a steep skirt) that runs into the ground wherever the ground is. D3.3's offline carve is not done, and the mesher needs no terrain data.
+- The drive camera uses a near plane that follows the view (about 1 m when looking down, about 5 m when looking level), because one fixed near plane cannot serve both the road at the bumper and the skyline 25 km away on today's depth buffer. The sky dome follows the drive camera.
 - The reveal is computed over this coarse elevation, so its acceptance widens to within 1.5 km of km 42.8.
 
 **What Phase 1 shows.**
