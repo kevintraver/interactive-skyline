@@ -4,9 +4,11 @@
 // Structures are instanced over the whole product (about 400 boards, five draw calls): a mono-pole, a steel frame
 // behind every face, a catwalk under it, the floodlights of the static faces, and the faces. A board has one face, or
 // two in a V whose apex is toward the road (panelsOf, the twin of scripts/lib/billboards.py panels()).
-// Faces show original abstract artwork (screens/art.js): a static face one design, lit from below at night by its
-// own lamps; a digital face a new design every HOLD_S seconds of simulation time with a quick fade (screens/digital.js),
-// at a level that follows the ambient illuminance. The faces are screens in the registry (`screens` part), and the
+// Faces show fictional 1990s advertisements (public/textures/billboards/, packed by scripts/pack_billboards.py;
+// the choice, fit and rotation are billboardsImages.js): a static face one image, lit from below at night by its own
+// lamps; a digital face a new image every HOLD_S seconds of simulation time with a quick fade (screens/digital.js), at
+// a level that follows the ambient illuminance. The atlas loads after the part is in (the faces are plain until
+// then); if it fails, the faces show the generated abstract artwork of screens/art.js instead, never nothing. The faces are screens in the registry (`screens` part), and the
 // digital ones nearest the car light the road and ground in front of them (a surface term, screens/light.glsl.js).
 //
 // Per frame: two uniforms (the content time and the levels) and, for the glow, the nearest digital faces to the car.
@@ -19,7 +21,8 @@ import { buildAtlas, hash32 } from '../screens/art.js';
 import { contentSeconds } from '../screens/clock.js';
 import { digitalLevel, digitalMean, phaseOf, staticLevel } from '../screens/digital.js';
 import { GLOW_BODY, GLOW_HEAD, GLOW_MAX } from '../screens/light.glsl.js';
-import { faceMaterial } from './billboardsFace.js';
+import { faceMaterial, PLAIN } from './billboardsFace.js';
+import { adMean, assignImages, loadAds, shaderTables, textureBytes } from './billboardsImages.js';
 
 const RAD = Math.PI / 180;
 /** Metres in front of a digital face that its glow reaches. */
@@ -59,14 +62,23 @@ export function panelsOf(b) {
 /** The seed of face p of a board (24 bits: it travels to the shader as a float). */
 export const faceSeed = (seed, p) => hash32((seed + p * 0x632be5ab) >>> 0) & 0xffffff;
 
+/** Metres around a board's centre over which its base finds the lowest ground. */
+const POLE_FOOT = 0.6;
+
 /** @param {object} ctx the part context (parts.js) */
 export async function createBillboardsPart(ctx) {
   const doc = await ctx.optional('billboards.json');
   if (!doc || !Array.isArray(doc.boards) || !doc.boards.length) return null;
   const { env, terrain } = ctx;
-  const groundY = terrain.groundY;
+  // a board stands on the ground as drawn (terrain.surfaceY), at the lowest point around its pole, so on a slope
+  // the pole never hangs on its downhill side
+  const groundY = (x, y) => {
+    let lo = terrain.surfaceY(x, y);
+    for (let k = 0; k < 8; k++) lo = Math.min(lo, terrain.surfaceY(x + POLE_FOOT * Math.cos(k * Math.PI / 4), y + POLE_FOOT * Math.sin(k * Math.PI / 4)));
+    return lo;
+  };
   const boards = doc.boards.map((r) => boardOf(r, doc.fields));
-  const atlas = buildAtlas();
+  let atlas = null; // the generated artwork, built only if the advertisements fail to load
   const timings = createTimings();
 
   // ---------------------------------------------------------------- the faces' layout
@@ -76,23 +88,25 @@ export async function createBillboardsPart(ctx) {
     panelsOf(b).forEach((p, i) => {
       const seed = faceSeed(b.seed >>> 0, i);
       faces.push({
-        board: b, x: p.x, y: p.y, gy, cx: p.x, cy: gy + b.bottom + b.h / 2, cz: -p.y, nx: p.normal[0], nz: -p.normal[1],
-        ax: p.along[0], az: -p.along[1], w: b.w, h: b.h, seed, phase: phaseOf(seed), digital: b.digital === 1,
+        index: faces.length, panel: i, board: b, x: p.x, y: p.y, gy, cx: p.x, cy: gy + b.bottom + b.h / 2, cz: -p.y, nx: p.normal[0], nz: -p.normal[1],
+        ax: p.along[0], az: -p.along[1], w: b.w, h: b.h, aspect: b.w / b.h, seed, phase: phaseOf(seed), digital: b.digital === 1,
       });
     });
   }
 
   // ---------------------------------------------------------------- materials
-  const art = new THREE.DataTexture(atlas.data, atlas.width, atlas.height, THREE.RGBAFormat, THREE.UnsignedByteType);
-  art.colorSpace = THREE.SRGBColorSpace;
-  art.generateMipmaps = true;
-  art.minFilter = THREE.LinearMipmapLinearFilter;
-  art.magFilter = THREE.LinearFilter;
-  art.anisotropy = ctx.app.renderer.capabilities.getMaxAnisotropy();
-  art.needsUpdate = true;
+  const renderer = ctx.app.renderer;
+  const anisotropy = Math.min(16, renderer.capabilities.getMaxAnisotropy());
+  const blank = new THREE.DataTexture(new Uint8Array([255, 255, 255, 255]), 1, 1);
+  blank.needsUpdate = true;
+  const blankTable = new THREE.DataTexture(new Float32Array(8), 1, 2, THREE.RGBAFormat, THREE.FloatType);
+  blankTable.needsUpdate = true;
   const uniforms = {
-    uArt: { value: art }, uTime: { value: 0 }, uDigitalLevel: { value: 0.5 }, uStaticLevel: { value: 0 },
+    uArt: { value: blank }, uAds: { value: blank }, uAdTable: { value: blankTable }, uAdTexel: { value: new THREE.Vector2(1, 1) },
+    uMode: { value: 0 }, uTime: { value: 0 }, uDigitalLevel: { value: 0.5 }, uStaticLevel: { value: 0 },
   };
+  let art = null, ads = null, table = null, mode = 'plain', adMeans = null, assigned = null;
+  const loadInfo = { state: 'loading' };
   const faceMat = faceMaterial(new THREE.MeshLambertMaterial({ color: 0xffffff }), uniforms);
   const steel = new THREE.MeshLambertMaterial({ color: 0x6f7377 });
   const frameMat = new THREE.MeshLambertMaterial({ color: 0x3c3f43 });
@@ -111,6 +125,7 @@ export async function createBillboardsPart(ctx) {
   const lamps = new THREE.InstancedMesh(boxGeo, lampMat, Math.max(1, nLamps));
   const faceMesh = new THREE.InstancedMesh(faceGeo, faceMat, faces.length);
   const aFace = new Float32Array(faces.length * 4);
+  const aAd = new Float32Array(faces.length * 4).fill(1), aFit = new Float32Array(faces.length * 2).fill(1);
   const m = new THREE.Matrix4(), q = new THREE.Quaternion(), s = new THREE.Vector3(), p = new THREE.Vector3();
   const basis = new THREE.Matrix4(), xAxis = new THREE.Vector3(), yAxis = new THREE.Vector3(0, 1, 0), zAxis = new THREE.Vector3();
 
@@ -131,7 +146,16 @@ export async function createBillboardsPart(ctx) {
     q.setFromRotationMatrix(basis);
     const at = (dz, dy) => p.set(f.cx + f.nx * dz, f.cy + dy, f.cz + f.nz * dz);
     faceMesh.setMatrixAt(i, m.compose(at(0.02, 0), q, s.set(f.w, f.h, 1)));
-    frames.setMatrixAt(i, m.compose(at(-0.3, 0), q, s.set(f.w + 0.3, f.h + 0.3, 0.55)));
+    if (f.board.sides === 2 && faces[i + (f.panel ? -1 : 1)]?.board === f.board) {
+      // a face of a V: a shallow frame that stops short of the apex (the face's start, against `along`), so it never
+      // stands in front of the other face, whose plane meets this one there at the V's opening angle
+      const o = faces[i + (f.panel ? -1 : 1)], cosOpen = -(f.nx * o.nx + f.nz * o.nz);
+      const open = Math.acos(Math.max(-1, Math.min(1, cosOpen))), depth = 0.2;
+      const inset = open < Math.PI / 2 ? Math.min(1, (depth + 0.03) / Math.tan(Math.max(open, 0.05))) : 0;
+      const w = f.w + 0.15 - inset, shift = (0.15 + inset) / 2;
+      m.compose(at(-0.02 - depth / 2, 0).addScaledVector(xAxis.set(f.ax, 0, f.az), shift), q, s.set(w, f.h + 0.3, depth));
+      frames.setMatrixAt(i, m);
+    } else frames.setMatrixAt(i, m.compose(at(-0.3, 0), q, s.set(f.w + 0.3, f.h + 0.3, 0.55)));
     walks.setMatrixAt(i, m.compose(at(0.55, -f.h / 2 - 0.25), q, s.set(f.w, 0.08, 1.0)));
     aFace.set([f.seed, f.digital ? 1 : 0, f.phase, 0], i * 4);
     if (!f.digital) {
@@ -144,6 +168,9 @@ export async function createBillboardsPart(ctx) {
     }
   });
   faceGeo.setAttribute('aFace', new THREE.InstancedBufferAttribute(aFace, 4));
+  const aAdAttr = new THREE.InstancedBufferAttribute(aAd, 4), aFitAttr = new THREE.InstancedBufferAttribute(aFit, 2);
+  faceGeo.setAttribute('aAd', aAdAttr);
+  faceGeo.setAttribute('aFit', aFitAttr);
   const group = new THREE.Group();
   group.name = 'billboards';
   for (const mesh of [poles, frames, walks, lamps, faceMesh]) {
@@ -162,13 +189,87 @@ export async function createBillboardsPart(ctx) {
     id: `billboard:${i}`, kind: 'billboard', name: f.digital ? 'digital billboard' : 'billboard', area: f.w * f.h, digital: f.digital,
     centre: () => [f.cx, f.cy, f.cz], visible: () => group.visible,
     meanColor(simMs, out = [0, 0, 0]) {
-      if (f.digital) digitalMean(atlas.means, f.seed, f.phase, contentSeconds(simMs), out);
-      else for (let c = 0; c < 3; c++) out[c] = atlas.means[(f.seed % (atlas.means.length / 3)) * 3 + c];
+      faceMean(i, contentSeconds(simMs), out);
       const k = f.digital ? dLevel : sLevel;
       out[0] *= k; out[1] *= k; out[2] *= k;
       return out;
     },
   }));
+
+  /** The mean colour (linear, level 1) face i shows at content time t: its image's, the artwork's, or the blank face's. */
+  function faceMean(i, t, out) {
+    const f = faces[i];
+    if (mode === 'ads') return adMean(adMeans, assigned[i], f.phase, t, out);
+    if (mode === 'art') {
+      if (f.digital) return digitalMean(atlas.means, f.seed, f.phase, t, out);
+      for (let c = 0; c < 3; c++) out[c] = atlas.means[(f.seed % (atlas.means.length / 3)) * 3 + c];
+      return out;
+    }
+    out[0] = PLAIN[0]; out[1] = PLAIN[1]; out[2] = PLAIN[2];
+    return out;
+  }
+
+  // ---------------------------------------------------------------- the advertisements, after the part is in
+  const texture = (img, w, h) => {
+    const t = img ? new THREE.Texture(img) : new THREE.DataTexture(atlas.data, w, h, THREE.RGBAFormat, THREE.UnsignedByteType);
+    t.colorSpace = THREE.SRGBColorSpace;
+    t.flipY = false; // an ImageBitmap comes flipped already; the artwork's rows start at the bottom
+    t.generateMipmaps = true;
+    t.minFilter = THREE.LinearMipmapLinearFilter;
+    t.magFilter = THREE.LinearFilter;
+    t.anisotropy = anisotropy;
+    t.needsUpdate = true;
+    return t;
+  };
+  function useArt(why) {
+    if (disposed) return;
+    loadInfo.state = 'art';
+    loadInfo.error = String(why?.message || why);
+    console.warn(`billboards: the advertisements did not load (${loadInfo.error}); showing the generated artwork`);
+    atlas = buildAtlas();
+    art = texture(null, atlas.width, atlas.height);
+    uniforms.uArt.value = art;
+    mode = 'art';
+    uniforms.uMode.value = 1;
+    ctx.app.invalidate?.();
+  }
+  let disposed = false;
+  const loading = (async () => {
+    const { chooseCabinModel, probeDevice } = await import('../vehicle/cabin.js');
+    const tier = chooseCabinModel(probeDevice(renderer)) === 'low' ? 'low' : 'high';
+    const got = await loadAds(tier);
+    if (disposed) { got.bitmap.close?.(); return; }
+    const { doc, bitmap } = got;
+    const t0 = performance.now();
+    const boardIndex = new Map(boards.map((b, i) => [b, i]));
+    assigned = assignImages(faces.map((f) => ({ board: boardIndex.get(f.board), x: f.x, y: f.y, seed: f.seed, aspect: f.aspect, digital: f.digital })), doc.images);
+    assigned.forEach((a, i) => { aAd.set([a.base, a.n, a.start, a.step], i * 4); aFit.set(a.fit, i * 2); });
+    aAdAttr.needsUpdate = true;
+    aFitAttr.needsUpdate = true;
+    const tables = shaderTables(doc, tier), n = doc.images.length, td = new Float32Array(n * 8);
+    for (let i = 0; i < n; i++) { td.set(tables.rects.subarray(i * 4, i * 4 + 4), i * 4); td.set(tables.means.subarray(i * 3, i * 3 + 3), (n + i) * 4); }
+    table = new THREE.DataTexture(td, n, 2, THREE.RGBAFormat, THREE.FloatType);
+    table.needsUpdate = true;
+    const t1 = performance.now();
+    await new Promise((r) => setTimeout(r, 0)); // the upload in a task of its own, between frames
+    if (disposed) { bitmap.close?.(); return; }
+    const t2 = performance.now();
+    ads = texture(bitmap);
+    renderer.initTexture(ads); // the upload and the mipmaps now, not in the middle of a frame
+    renderer.initTexture(table);
+    const t3 = performance.now();
+    adMeans = tables.means;
+    uniforms.uAds.value = ads;
+    uniforms.uAdTable.value = table;
+    uniforms.uAdTexel.value.set(1 / bitmap.width, 1 / bitmap.height);
+    mode = 'ads';
+    uniforms.uMode.value = 2;
+    Object.assign(loadInfo, {
+      state: 'ads', tier, images: n, size: [bitmap.width, bitmap.height], bytes: got.bytes, gpuBytes: textureBytes(bitmap.width, bitmap.height),
+      fetchMs: +got.fetchMs.toFixed(1), decodeMs: +got.decodeMs.toFixed(1), assignMs: +(t1 - t0).toFixed(1), uploadMs: +(t3 - t2).toFixed(1),
+    });
+    ctx.app.invalidate?.();
+  })().catch(useArt);
 
   const glow = {
     uScrGlowP: { value: Array.from({ length: GLOW_MAX }, () => new THREE.Vector4()) },
@@ -200,7 +301,7 @@ export async function createBillboardsPart(ctx) {
       const L = glow.uScrGlowL.value[i];
       if (i >= glowCount || !group.visible) { L.set(0, 0, 0); continue; }
       const f = near[i][1];
-      digitalMean(atlas.means, f.seed, f.phase, t, mean);
+      faceMean(f.index, t, mean);
       L.set(mean[0] * dLevel, mean[1] * dLevel, mean[2] * dLevel);
       glow.uScrGlowP.value[i].set(f.cx, f.cy, f.cz, f.w * f.h);
       glow.uScrGlowN.value[i].set(f.nx, 0, f.nz, GLOW_RANGE);
@@ -238,17 +339,21 @@ export async function createBillboardsPart(ctx) {
       const t = timings.summary();
       return {
         boards: boards.length, faces: faces.length, digital: digitals.length, lamps: nLamps, glow: glowCount,
+        images: { ...loadInfo },
         level: { digital: +dLevel.toFixed(3), static: +sLevel.toFixed(3), ambientLux: +ambient.toFixed(3) },
         js: { mean: t.mean, p95: t.p95, max: t.max },
       };
     },
+    /** Resolves once the faces show the advertisements or, failing those, the artwork. */
+    whenSettled: () => loading,
     dispose() {
+      disposed = true;
       offGround();
       for (const d of detach) d();
       group.removeFromParent();
       for (const g of [poleGeo, boxGeo, faceGeo]) g.dispose();
       for (const mt of [faceMat, steel, frameMat, lampMat]) mt.dispose();
-      art.dispose();
+      for (const t of [blank, blankTable, art, ads, table]) t?.dispose();
     },
   };
   group.userData.billboardsPart = part; // for tests/manual/screens-shots.mjs

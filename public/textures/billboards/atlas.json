@@ -1,0 +1,1063 @@
+{
+ "version": 1,
+ "gutter": 8,
+ "tiers": {
+  "high": {
+   "file": "atlas-high.webp",
+   "w": 2048,
+   "h": 1816,
+   "bytes": 816228
+  },
+  "low": {
+   "file": "atlas-low.webp",
+   "w": 1440,
+   "h": 1312,
+   "bytes": 487002
+  }
+ },
+ "images": [
+  {
+   "id": "bulletin-01",
+   "kind": "bulletin",
+   "aspect": 3.413333,
+   "rect": {
+    "high": [
+     8,
+     8,
+     496,
+     145
+    ],
+    "low": [
+     8,
+     8,
+     344,
+     101
+    ]
+   },
+   "mean": [
+    0.35378,
+    0.186186,
+    0.10713
+   ],
+   "luminance": 0.216109
+  },
+  {
+   "id": "bulletin-02",
+   "kind": "bulletin",
+   "aspect": 3.413333,
+   "rect": {
+    "high": [
+     520,
+     8,
+     496,
+     145
+    ],
+    "low": [
+     368,
+     8,
+     344,
+     101
+    ]
+   },
+   "mean": [
+    0.342122,
+    0.229381,
+    0.269584
+   ],
+   "luminance": 0.256253
+  },
+  {
+   "id": "bulletin-03",
+   "kind": "bulletin",
+   "aspect": 3.413333,
+   "rect": {
+    "high": [
+     1032,
+     8,
+     496,
+     145
+    ],
+    "low": [
+     728,
+     8,
+     344,
+     101
+    ]
+   },
+   "mean": [
+    0.411293,
+    0.266594,
+    0.099025
+   ],
+   "luminance": 0.285258
+  },
+  {
+   "id": "bulletin-04",
+   "kind": "bulletin",
+   "aspect": 3.413333,
+   "rect": {
+    "high": [
+     1544,
+     8,
+     496,
+     145
+    ],
+    "low": [
+     1088,
+     8,
+     344,
+     101
+    ]
+   },
+   "mean": [
+    0.147741,
+    0.210105,
+    0.218128
+   ],
+   "luminance": 0.197426
+  },
+  {
+   "id": "bulletin-05",
+   "kind": "bulletin",
+   "aspect": 3.413333,
+   "rect": {
+    "high": [
+     8,
+     169,
+     496,
+     145
+    ],
+    "low": [
+     8,
+     125,
+     344,
+     101
+    ]
+   },
+   "mean": [
+    0.115295,
+    0.127944,
+    0.135344
+   ],
+   "luminance": 0.125789
+  },
+  {
+   "id": "bulletin-06",
+   "kind": "bulletin",
+   "aspect": 3.413333,
+   "rect": {
+    "high": [
+     520,
+     169,
+     496,
+     145
+    ],
+    "low": [
+     368,
+     125,
+     344,
+     101
+    ]
+   },
+   "mean": [
+    0.243287,
+    0.122563,
+    0.164926
+   ],
+   "luminance": 0.151288
+  },
+  {
+   "id": "bulletin-07",
+   "kind": "bulletin",
+   "aspect": 3.413333,
+   "rect": {
+    "high": [
+     1032,
+     169,
+     496,
+     145
+    ],
+    "low": [
+     728,
+     125,
+     344,
+     101
+    ]
+   },
+   "mean": [
+    0.375666,
+    0.226368,
+    0.15534
+   ],
+   "luminance": 0.25298
+  },
+  {
+   "id": "bulletin-08",
+   "kind": "bulletin",
+   "aspect": 3.413333,
+   "rect": {
+    "high": [
+     1544,
+     169,
+     496,
+     145
+    ],
+    "low": [
+     1088,
+     125,
+     344,
+     101
+    ]
+   },
+   "mean": [
+    0.245218,
+    0.099263,
+    0.140039
+   ],
+   "luminance": 0.133237
+  },
+  {
+   "id": "bulletin-09",
+   "kind": "bulletin",
+   "aspect": 3.413333,
+   "rect": {
+    "high": [
+     8,
+     330,
+     496,
+     145
+    ],
+    "low": [
+     8,
+     242,
+     344,
+     101
+    ]
+   },
+   "mean": [
+    0.232878,
+    0.286979,
+    0.325404
+   ],
+   "luminance": 0.278251
+  },
+  {
+   "id": "bulletin-10",
+   "kind": "bulletin",
+   "aspect": 3.413333,
+   "rect": {
+    "high": [
+     520,
+     330,
+     496,
+     145
+    ],
+    "low": [
+     368,
+     242,
+     344,
+     101
+    ]
+   },
+   "mean": [
+    0.185564,
+    0.104826,
+    0.109731
+   ],
+   "luminance": 0.122345
+  },
+  {
+   "id": "bulletin-11",
+   "kind": "bulletin",
+   "aspect": 3.413333,
+   "rect": {
+    "high": [
+     1032,
+     330,
+     496,
+     145
+    ],
+    "low": [
+     728,
+     242,
+     344,
+     101
+    ]
+   },
+   "mean": [
+    0.225445,
+    0.179747,
+    0.175172
+   ],
+   "luminance": 0.189132
+  },
+  {
+   "id": "bulletin-12",
+   "kind": "bulletin",
+   "aspect": 3.413333,
+   "rect": {
+    "high": [
+     1544,
+     330,
+     496,
+     145
+    ],
+    "low": [
+     1088,
+     242,
+     344,
+     101
+    ]
+   },
+   "mean": [
+    0.193319,
+    0.153404,
+    0.199476
+   ],
+   "luminance": 0.165216
+  },
+  {
+   "id": "bulletin-13",
+   "kind": "bulletin",
+   "aspect": 3.413333,
+   "rect": {
+    "high": [
+     8,
+     491,
+     496,
+     145
+    ],
+    "low": [
+     8,
+     359,
+     344,
+     101
+    ]
+   },
+   "mean": [
+    0.252252,
+    0.119677,
+    0.138438
+   ],
+   "luminance": 0.149217
+  },
+  {
+   "id": "bulletin-14",
+   "kind": "bulletin",
+   "aspect": 3.413333,
+   "rect": {
+    "high": [
+     520,
+     491,
+     496,
+     145
+    ],
+    "low": [
+     368,
+     359,
+     344,
+     101
+    ]
+   },
+   "mean": [
+    0.258235,
+    0.200767,
+    0.236282
+   ],
+   "luminance": 0.215549
+  },
+  {
+   "id": "bulletin-15",
+   "kind": "bulletin",
+   "aspect": 3.413333,
+   "rect": {
+    "high": [
+     1032,
+     491,
+     496,
+     145
+    ],
+    "low": [
+     728,
+     359,
+     344,
+     101
+    ]
+   },
+   "mean": [
+    0.298665,
+    0.223567,
+    0.18734
+   ],
+   "luminance": 0.236917
+  },
+  {
+   "id": "bulletin-16",
+   "kind": "bulletin",
+   "aspect": 3.413333,
+   "rect": {
+    "high": [
+     1544,
+     491,
+     496,
+     145
+    ],
+    "low": [
+     1088,
+     359,
+     344,
+     101
+    ]
+   },
+   "mean": [
+    0.281634,
+    0.297461,
+    0.388398
+   ],
+   "luminance": 0.300662
+  },
+  {
+   "id": "bulletin-17",
+   "kind": "bulletin",
+   "aspect": 3.413333,
+   "rect": {
+    "high": [
+     8,
+     652,
+     496,
+     145
+    ],
+    "low": [
+     8,
+     476,
+     344,
+     101
+    ]
+   },
+   "mean": [
+    0.236956,
+    0.175397,
+    0.268034
+   ],
+   "luminance": 0.195173
+  },
+  {
+   "id": "bulletin-18",
+   "kind": "bulletin",
+   "aspect": 3.413333,
+   "rect": {
+    "high": [
+     520,
+     652,
+     496,
+     145
+    ],
+    "low": [
+     368,
+     476,
+     344,
+     101
+    ]
+   },
+   "mean": [
+    0.204307,
+    0.092425,
+    0.092323
+   ],
+   "luminance": 0.116204
+  },
+  {
+   "id": "bulletin-19",
+   "kind": "bulletin",
+   "aspect": 3.413333,
+   "rect": {
+    "high": [
+     1032,
+     652,
+     496,
+     145
+    ],
+    "low": [
+     728,
+     476,
+     344,
+     101
+    ]
+   },
+   "mean": [
+    0.28897,
+    0.178105,
+    0.230742
+   ],
+   "luminance": 0.205475
+  },
+  {
+   "id": "bulletin-20",
+   "kind": "bulletin",
+   "aspect": 3.413333,
+   "rect": {
+    "high": [
+     1544,
+     652,
+     496,
+     145
+    ],
+    "low": [
+     1088,
+     476,
+     344,
+     101
+    ]
+   },
+   "mean": [
+    0.346297,
+    0.248836,
+    0.330083
+   ],
+   "luminance": 0.275422
+  },
+  {
+   "id": "bulletin-21",
+   "kind": "bulletin",
+   "aspect": 3.413333,
+   "rect": {
+    "high": [
+     8,
+     813,
+     496,
+     145
+    ],
+    "low": [
+     8,
+     593,
+     344,
+     101
+    ]
+   },
+   "mean": [
+    0.314575,
+    0.263651,
+    0.186924
+   ],
+   "luminance": 0.268938
+  },
+  {
+   "id": "bulletin-22",
+   "kind": "bulletin",
+   "aspect": 3.413333,
+   "rect": {
+    "high": [
+     520,
+     813,
+     496,
+     145
+    ],
+    "low": [
+     368,
+     593,
+     344,
+     101
+    ]
+   },
+   "mean": [
+    0.198855,
+    0.192637,
+    0.269305
+   ],
+   "luminance": 0.199494
+  },
+  {
+   "id": "bulletin-23",
+   "kind": "bulletin",
+   "aspect": 3.413333,
+   "rect": {
+    "high": [
+     1032,
+     813,
+     496,
+     145
+    ],
+    "low": [
+     728,
+     593,
+     344,
+     101
+    ]
+   },
+   "mean": [
+    0.358955,
+    0.317469,
+    0.302479
+   ],
+   "luminance": 0.325207
+  },
+  {
+   "id": "bulletin-24",
+   "kind": "bulletin",
+   "aspect": 3.413333,
+   "rect": {
+    "high": [
+     1544,
+     813,
+     496,
+     145
+    ],
+    "low": [
+     1088,
+     593,
+     344,
+     101
+    ]
+   },
+   "mean": [
+    0.363472,
+    0.202241,
+    0.224715
+   ],
+   "luminance": 0.238141
+  },
+  {
+   "id": "bulletin-25",
+   "kind": "bulletin",
+   "aspect": 3.413333,
+   "rect": {
+    "high": [
+     8,
+     974,
+     496,
+     145
+    ],
+    "low": [
+     8,
+     710,
+     344,
+     101
+    ]
+   },
+   "mean": [
+    0.322866,
+    0.21457,
+    0.181943
+   ],
+   "luminance": 0.235238
+  },
+  {
+   "id": "bulletin-26",
+   "kind": "bulletin",
+   "aspect": 3.413333,
+   "rect": {
+    "high": [
+     520,
+     974,
+     496,
+     145
+    ],
+    "low": [
+     368,
+     710,
+     344,
+     101
+    ]
+   },
+   "mean": [
+    0.19369,
+    0.338928,
+    0.287038
+   ],
+   "luminance": 0.304304
+  },
+  {
+   "id": "bulletin-27",
+   "kind": "bulletin",
+   "aspect": 3.413333,
+   "rect": {
+    "high": [
+     1032,
+     974,
+     496,
+     145
+    ],
+    "low": [
+     728,
+     710,
+     344,
+     101
+    ]
+   },
+   "mean": [
+    0.481839,
+    0.165249,
+    0.199363
+   ],
+   "luminance": 0.235019
+  },
+  {
+   "id": "bulletin-28",
+   "kind": "bulletin",
+   "aspect": 3.413333,
+   "rect": {
+    "high": [
+     1544,
+     974,
+     496,
+     145
+    ],
+    "low": [
+     1088,
+     710,
+     344,
+     101
+    ]
+   },
+   "mean": [
+    0.278429,
+    0.187141,
+    0.107941
+   ],
+   "luminance": 0.200831
+  },
+  {
+   "id": "bulletin-29",
+   "kind": "bulletin",
+   "aspect": 3.413333,
+   "rect": {
+    "high": [
+     8,
+     1135,
+     496,
+     145
+    ],
+    "low": [
+     8,
+     827,
+     344,
+     101
+    ]
+   },
+   "mean": [
+    0.290734,
+    0.175375,
+    0.128565
+   ],
+   "luminance": 0.196521
+  },
+  {
+   "id": "bulletin-30",
+   "kind": "bulletin",
+   "aspect": 3.413333,
+   "rect": {
+    "high": [
+     520,
+     1135,
+     496,
+     145
+    ],
+    "low": [
+     368,
+     827,
+     344,
+     101
+    ]
+   },
+   "mean": [
+    0.354594,
+    0.22759,
+    0.228046
+   ],
+   "luminance": 0.254624
+  },
+  {
+   "id": "bulletin-31",
+   "kind": "bulletin",
+   "aspect": 3.413333,
+   "rect": {
+    "high": [
+     1032,
+     1135,
+     496,
+     145
+    ],
+    "low": [
+     728,
+     827,
+     344,
+     101
+    ]
+   },
+   "mean": [
+    0.504479,
+    0.18325,
+    0.076324
+   ],
+   "luminance": 0.243823
+  },
+  {
+   "id": "bulletin-32",
+   "kind": "bulletin",
+   "aspect": 3.413333,
+   "rect": {
+    "high": [
+     1544,
+     1135,
+     496,
+     145
+    ],
+    "low": [
+     1088,
+     827,
+     344,
+     101
+    ]
+   },
+   "mean": [
+    0.320392,
+    0.324646,
+    0.289449
+   ],
+   "luminance": 0.3212
+  },
+  {
+   "id": "poster-01",
+   "kind": "poster",
+   "aspect": 2.0,
+   "rect": {
+    "high": [
+     8,
+     1296,
+     496,
+     248
+    ],
+    "low": [
+     8,
+     944,
+     344,
+     172
+    ]
+   },
+   "mean": [
+    0.449986,
+    0.213488,
+    0.193008
+   ],
+   "luminance": 0.262289
+  },
+  {
+   "id": "poster-02",
+   "kind": "poster",
+   "aspect": 2.0,
+   "rect": {
+    "high": [
+     520,
+     1296,
+     496,
+     248
+    ],
+    "low": [
+     368,
+     944,
+     344,
+     172
+    ]
+   },
+   "mean": [
+    0.304193,
+    0.191925,
+    0.09263
+   ],
+   "luminance": 0.208624
+  },
+  {
+   "id": "poster-03",
+   "kind": "poster",
+   "aspect": 2.0,
+   "rect": {
+    "high": [
+     1032,
+     1296,
+     496,
+     248
+    ],
+    "low": [
+     728,
+     944,
+     344,
+     172
+    ]
+   },
+   "mean": [
+    0.165641,
+    0.212857,
+    0.179812
+   ],
+   "luminance": 0.200433
+  },
+  {
+   "id": "poster-04",
+   "kind": "poster",
+   "aspect": 2.0,
+   "rect": {
+    "high": [
+     1544,
+     1296,
+     496,
+     248
+    ],
+    "low": [
+     1088,
+     944,
+     344,
+     172
+    ]
+   },
+   "mean": [
+    0.26482,
+    0.123675,
+    0.362086
+   ],
+   "luminance": 0.170896
+  },
+  {
+   "id": "poster-05",
+   "kind": "poster",
+   "aspect": 2.0,
+   "rect": {
+    "high": [
+     8,
+     1560,
+     496,
+     248
+    ],
+    "low": [
+     8,
+     1132,
+     344,
+     172
+    ]
+   },
+   "mean": [
+    0.212759,
+    0.169406,
+    0.08301
+   ],
+   "luminance": 0.172385
+  },
+  {
+   "id": "poster-06",
+   "kind": "poster",
+   "aspect": 2.0,
+   "rect": {
+    "high": [
+     520,
+     1560,
+     496,
+     248
+    ],
+    "low": [
+     368,
+     1132,
+     344,
+     172
+    ]
+   },
+   "mean": [
+    0.227479,
+    0.288654,
+    0.370112
+   ],
+   "luminance": 0.28153
+  },
+  {
+   "id": "poster-07",
+   "kind": "poster",
+   "aspect": 2.0,
+   "rect": {
+    "high": [
+     1032,
+     1560,
+     496,
+     248
+    ],
+    "low": [
+     728,
+     1132,
+     344,
+     172
+    ]
+   },
+   "mean": [
+    0.355331,
+    0.243161,
+    0.225225
+   ],
+   "luminance": 0.265713
+  },
+  {
+   "id": "poster-08",
+   "kind": "poster",
+   "aspect": 2.0,
+   "rect": {
+    "high": [
+     1544,
+     1560,
+     496,
+     248
+    ],
+    "low": [
+     1088,
+     1132,
+     344,
+     172
+    ]
+   },
+   "mean": [
+    0.474325,
+    0.324179,
+    0.284366
+   ],
+   "luminance": 0.353225
+  }
+ ],
+ "sources": {
+  "manifest.json": "05dae06ea750f53630cd039f710b4d3a443657a0",
+  "bulletin-01.webp": "0d1c26efe6f505bff39545861ee85647512968e3",
+  "bulletin-02.webp": "76e196cf5a37e10f3d821d951bd33bb0736ef3ca",
+  "bulletin-03.webp": "53d82b8aff64118f02289c59d5c94a3fd27f93cc",
+  "bulletin-04.webp": "986e97824ab0437364ce8127e6bcc83b7e5e49e0",
+  "bulletin-05.webp": "e7ca45ad0f5769142a33a3ba8593d74deadd4108",
+  "bulletin-06.webp": "e6c65d4646d53f79f3dad9f14ba9c04745a95e5c",
+  "bulletin-07.webp": "90de226ad9a3d0bca8cf7797bf0078cf7a5eeb37",
+  "bulletin-08.webp": "329245553754089191374bab712c1485827d2323",
+  "bulletin-09.webp": "fc83f625824a95d05b6c714dc80695ca697a14a6",
+  "bulletin-10.webp": "32ae9b31e561ad168108a0424128f47d44d3c111",
+  "bulletin-11.webp": "e8fc184fd27b61ad4cde7bba5fa61f8033ebed7f",
+  "bulletin-12.webp": "764eb5e7e6b58d89e6680f372c6116078a55d690",
+  "bulletin-13.webp": "5beed84cf8d2859d516d8cc4c5c608e5139c6295",
+  "bulletin-14.webp": "244005084e00b455c8dc5572673127286af7c3f4",
+  "bulletin-15.webp": "9098f7287d23a04b61e0bbb9e3300a6650eb0569",
+  "bulletin-16.webp": "6fad6ea0c0ea55446393f738a3aed82041c3ea9b",
+  "bulletin-17.webp": "250d9cd13145ec9ad019ab2831ece781b3ccfc03",
+  "bulletin-18.webp": "191fcd2024c85eeb74471417413f6322042ddb0c",
+  "bulletin-19.webp": "2f5960a4b540ce965f1aab278a5cf8536c63547a",
+  "bulletin-20.webp": "5dfdfb04ff48729f64cfc4a41cf616da43b453ab",
+  "bulletin-21.webp": "796c81631d16b880366d77f2d6bc7274796b6449",
+  "bulletin-22.webp": "14402939fd4dfd3cca5836e9a36a915c0c5a539c",
+  "bulletin-23.webp": "ecb371d9b50489b7acb86bb35948cbccf7bc3881",
+  "bulletin-24.webp": "d9f982003008203823676c9bebe19088eb43bc8d",
+  "bulletin-25.webp": "fee90441e98167b929d5cd2fd4b4e0b8a7a23a6f",
+  "bulletin-26.webp": "d459d57b49c4ab1d7a18141998c55737e25783ab",
+  "bulletin-27.webp": "825cab55c3cea9123fb9707c676babe8ad21ea71",
+  "bulletin-28.webp": "402ca942e1e77828c01954fe265473b3cd40b241",
+  "bulletin-29.webp": "e932a831b287ed30688c0374f11d262084a37c30",
+  "bulletin-30.webp": "4d7c5422f6fa01e4b0c8daecd37fca9afd0b4d33",
+  "bulletin-31.webp": "d617fd16100cf90a996c7db1a6964254e9864ee2",
+  "bulletin-32.webp": "fda05c7a4fb81f54abbc03ec8bcc22a6cde885ef",
+  "poster-01.webp": "1c21d2a23d8b92dd8f3af1b33177aa057dc9ee83",
+  "poster-02.webp": "a8ccf0f2b4287fbd96ed4bdcbeb9b837fed4610a",
+  "poster-03.webp": "d1811f3f0772b0f19aeb890bd5d38f813ee332ae",
+  "poster-04.webp": "39e90d5810b6508023271579066ea65a12f967c5",
+  "poster-05.webp": "a4ad11741c0f7f0b52122f0ed12def72798133bc",
+  "poster-06.webp": "3ecbd6f22e392773a6a9f814c23dd4eed8565c84",
+  "poster-07.webp": "9a4ab600a1d8862c1ad73ec2843eb8a2581bd515",
+  "poster-08.webp": "df3016df2e95531691c188100694d2f308abf568"
+ }
+}
