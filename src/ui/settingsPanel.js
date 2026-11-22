@@ -39,11 +39,11 @@ export function initSettingsPanel(app) {
         t.mesh.material.needsUpdate = true;
       }
     }
-    if (changed === null || changed === 'night' || changed === 'imagery') sky.apply({ night: settings.night, imagery: settings.imagery, terrain });
+    if (changed === null || changed === 'night' || changed === 'imagery') sky.apply({ night: app.nightNow(), imagery: settings.imagery, terrain }); // drive seam
     app.tall.forEach(app.paint);
     hint.querySelector('b').textContent = `Click a ${settings.highlight ? 'blue' : 'tall'} building to hide or move it.`;
     // the interface goes dark with the sky
-    document.documentElement.dataset.theme = settings.night ? 'dark' : 'light';
+    document.documentElement.dataset.theme = app.nightNow() ? 'dark' : 'light'; // drive seam
     nightBtn.setAttribute('aria-pressed', String(settings.night));
     nightBtn.title = settings.night ? 'Switch to day' : 'Switch to night';
     nightBtn.setAttribute('aria-label', nightBtn.title);

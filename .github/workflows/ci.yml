@@ -31,6 +31,9 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm test:unit
+      # the data pipeline's tests (pytest, through uv; tests/data/requirements.txt)
+      - uses: astral-sh/setup-uv@v7
+      - run: pnpm test:data
       - run: pnpm exec playwright install --with-deps chromium
       - run: pnpm test:e2e
         env:

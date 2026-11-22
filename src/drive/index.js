@@ -1,12 +1,14 @@
-// Drive mode's entry point, joined to main.js by one call (initDrive) and the `seam` object it passes.
+// Drive mode's entry point, joined to the app by one call in main.js (initDrive) and the `app.drive` seam.
 // This module is light: the mode switch, the address, the test hooks, and handing the app's camera
 // between the map and the drive. The drive itself (session.js and everything it imports) is loaded,
 // downloaded and built only the first time Drive is entered.
 //
-// The seam (main.js, marked "drive seam"): while seam.active the animation loop calls seam.frame
-// instead of the map controls and the camera glide, skips the viewpoint snapshots, and paints
-// removable buildings in their natural colours; seam.night, when not null, is the look applyNight
-// shows instead of the saved setting; focusOn calls seam.focus.
+// The seam (lines marked "drive seam" in main.js, interaction/edits.js, interaction/focus.js and
+// ui/settingsPanel.js): while app.drive.active the frame loop calls seam.frame instead of the map
+// controls and the camera glide, skips the viewpoint snapshots and calls seam.render instead of
+// drawing the scene itself; removable buildings are painted in their natural colours; seam.night,
+// when not null, is the look the sky and the interface show instead of the saved setting
+// (app.nightNow()); focusOn calls seam.focus.
 
 import { createTerrain } from '../world/terrain/index.js';
 import { decodeDriveState, encodeDriveState, clearDriveState } from './url.js';
@@ -24,19 +26,34 @@ const WRITE_EVERY_MS = 1000;
 const NOON = 12 * 60, NIGHT = 3 * 60;
 
 /**
- * @param {object} ctx
- * @param {object} ctx.city  an entry of data/cities.json   @param {string} ctx.cityId  @param {string} ctx.DATA  '/data/<city>'
- * @param {import('three').Scene} ctx.scene  @param {import('three').PerspectiveCamera} ctx.camera  the app's one camera
- * @param {object} ctx.controls  OrbitControls  @param {import('three').WebGLRenderer} ctx.renderer  @param {HTMLCanvasElement} ctx.canvas
- * @param {object} ctx.settings  the visitor's settings; read, never written
- * @param {{ active: boolean, night: boolean|null, frame: Function|null, focus: Function|null }} ctx.seam
- * @param {() => void} ctx.invalidate  @param {() => void} ctx.applyNight  @param {() => void} ctx.repaint  repaints removable buildings
- * @param {() => void} ctx.resize  @param {() => void} ctx.stopFlight  @param {(text: string, undoable: boolean) => void} ctx.showToast
- * @param {import('three').Mesh} ctx.sky  the sky dome  @param {Array<[import('three').Mesh, string]>} ctx.ground  terrain meshes with their grid names
- * @param {object} ctx.terrainMeta  terrain.json  @param {{ near: ArrayBuffer, far: ArrayBuffer }} ctx.buffers
- * @param {object[]} ctx.tall  removable buildings  @param {() => import('three').Mesh} ctx.getLow  the merged low buildings
+ * What the drive takes from the app (src/app/context.js and the modules that add to it), as one object.
+ * @param {object} app  the shared application context, with the city, terrain and buildings loaded
+ * @param {{ terrainData: { meta: object, near: ArrayBuffer, far: ArrayBuffer } }} loaded  terrain.json and the grids main.js downloaded
  */
-export function initDrive(ctx) {
+function contextOf(app, { terrainData }) {
+  const { city, cityId, scene, camera, controls, renderer, canvas, settings, invalidate, sky, terrain, tall } = app;
+  return {
+    city, cityId, DATA: `/data/${cityId}`, scene, camera, controls, renderer, canvas, settings, invalidate, tall,
+    /** { active, night, frame, render, focus }: the seam main.js reads (see the top of this file) */
+    seam: app.drive,
+    applyNight: () => sky.apply({ night: app.nightNow(), imagery: settings.imagery, terrain }),
+    repaint: () => tall.forEach(app.paint),
+    resize: () => app.views.resize(),
+    stopFlight: () => app.stopFlight(),
+    showToast: (text, undoable) => app.showToast(text, undoable),
+    getLow: () => app.buildings.low,
+    sky: sky.dome,
+    ground: [[terrain[0].mesh, 'far'], [terrain[1].mesh, 'near']],
+    terrainMeta: terrainData.meta, buffers: { near: terrainData.near, far: terrainData.far },
+  };
+}
+
+/**
+ * @param {object} app  the shared application context (see contextOf)
+ * @param {{ terrainData: object }} loaded
+ */
+export function initDrive(app, loaded) {
+  const ctx = contextOf(app, loaded);
   const { city, DATA, camera, controls, canvas, settings, seam, invalidate } = ctx;
   const terrain = createTerrain({
     meta: ctx.terrainMeta, buffers: ctx.buffers, base: city.base,
@@ -268,6 +285,7 @@ export function initDrive(ctx) {
     saveMap();
     controls.enabled = false;
     seam.frame = (now) => session.frame(now);
+    seam.render = () => session.render();
     seam.focus = (entry) => {
       const b = entry.data;
       session.lookAt(entry.offset.clone().set(b.c[0], b.ground - city.base + b.h * 0.6, -b.c[1]).add(entry.offset));
@@ -294,7 +312,7 @@ export function initDrive(ctx) {
     wasPlaying = session.clock.playing;
     session.clock.pause();
     seam.active = false;
-    seam.frame = seam.focus = null;
+    seam.frame = seam.render = seam.focus = null;
     seam.night = null;
     session.show(false);
     ctx.applyNight();

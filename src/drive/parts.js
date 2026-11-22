@@ -1,0 +1,19 @@
+// The drive's optional features, one line each. A factory gets the part context below and returns a
+// part (see the top of session.js), a promise of one, or nothing when its data is missing. Factories
+// run once the session has its road, terrain and clock; one that throws is reported and left out,
+// and the drive goes on without it.
+//
+// ctx = {
+//   app        the app's own context: city, cityId, DATA, scene, camera, renderer, settings, tall, invalidate, ...
+//   session    the drive session (journey, pose, clock, rig, env, net as getters; addPart)
+//   get(name)  fetch a file of this city's data directory (rejects unless the answer is 2xx)
+//   optional(name)  the same as JSON, or null when the file is missing
+//   group, roads     the drive's scene group, and the group under it that holds everything on the road
+//   terrain, wideMesh, ground    the terrain provider, the wide ground mesh, the app's ground meshes [[mesh, grid], ...]
+//   net, env, clock, rig, frameOf, earthR, base
+//   materials, chunks, roadside  the road materials, the road chunk system and the signs (null without signs)
+// }
+
+/** @type {Array<(ctx: object) => (object | null | undefined | Promise<object | null | undefined>)>} */
+export const PART_FACTORIES = [
+];

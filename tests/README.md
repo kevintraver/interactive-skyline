@@ -2,12 +2,15 @@
 
 | Command | What | Where it runs |
 |---|---|---|
-| `pnpm test:unit` | Vitest: `src/core`, extrusion, cities.json shape, source hygiene, the landmark tool, upper bounds on hot code | CI and locally |
-| `pnpm test:e2e` | Playwright on SwiftShader (`webgl2-software`): goldens, the `window.__skyline` contract, the buildless boot, the deterministic performance budgets | CI and locally |
+| `pnpm test:unit` | Vitest: `src/core`, extrusion, cities.json shape, source hygiene, the landmark tool, upper bounds on hot code; the drive's frame, terrain, road net, journey, rig, signs and UI formatting | CI and locally |
+| `pnpm test:data` | pytest (through `uv`): the data pipeline's Python twins (frame, heights, roads, roadside) | CI and locally |
+| `pnpm test:e2e` | Playwright on SwiftShader (`webgl2-software`): goldens, the `window.__skyline` contract, the buildless boot, the deterministic performance budgets, then Drive mode (`drive-software`: `drive.spec.js`, `drive-ui.spec.js`), then the drive's per-frame JavaScript alone (`drive-timing`, `drive.perf.spec.js`) | CI and locally |
 | `pnpm test` | both of the above | |
 | `pnpm test:perf` | timing on this machine's GPU (`gpu` project, one worker) against `tests/reference/perf/timing/<machine id>.json` | locally only |
 | `pnpm test:perf:software` | the same timing suite on SwiftShader, gated at 2x | locally |
 | `pnpm bench` | micro-benchmarks (`vitest bench`), reported, not gated | locally |
+| `pnpm test:goldens:drive:update` | writes the drive goldens (`drive-*.png`) that differ or are missing, for this platform | locally |
+| `node tests/manual/drive-shots.mjs` | GPU screenshots of the drive for review (usage in its header) | locally |
 
 ## Golden images
 
@@ -28,6 +31,17 @@ golden coverage until Linux goldens are committed.** To make them:
 
 `pnpm test:goldens:update` rewrites the goldens of the platform it runs on. Do it only when a change is meant to
 change the picture, and say so in the commit.
+
+### Drive goldens
+
+`tests/e2e/drive.spec.js` compares the WebGL canvas only (no DOM) at five places on route `i15n` (`drive-km5`,
+`drive-km33`, `drive-reveal`, `drive-km62`, `drive-km62-day`) within 0.2 % of pixels, in the same folder and under the
+same per-platform rule as the map's. They are provisional: the drive's picture changes as its later phases land.
+`pnpm test:goldens:drive:update` writes them; it never touches the map's. A SwiftShader frame of the drive takes
+seconds, so the drive specs have a 15-minute timeout, share one page per test, and run in a project of their own,
+`drive-software`, after the map suite (beside it they starve the render-on-demand budgets). The drive's per-frame
+JavaScript is timed in `drive-timing`, last and alone: with other software renderers busy on every core the page
+being timed is starved.
 
 ## Performance (plan 01, section 8.7)
 

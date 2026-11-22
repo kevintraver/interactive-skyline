@@ -5,11 +5,18 @@
 // Scene axes: x east, y up, z south. "Map" coordinates are (x east, y north) in metres from the
 // city origin, so the map point (x, y) at scene height Y is the scene position (x, Y, -y).
 
-/** Earth radius with standard refraction: what the eye sees, not the geoid. Same value as main.js. */
-export const EARTH_R = 6371000 * (7 / 6);
+import { EFFECTIVE_RADIUS, curveDrop } from '../core/earth.js';
 
-/** How far the ground has fallen below the tangent plane at the origin. Same expression as main.js. */
-export const curveDrop = (x, z) => (x * x + z * z) / (2 * EARTH_R);
+// Shared with src/core/earth.js (plan 01), the source of truth for the map's ground: the refraction-adjusted
+// radius and the curve drop are the same double and the same function. The transverse Mercator below is not
+// shared: earth.js uses Krüger's series to 4th order, this one to 6th (nanometres at the end of the routes),
+// and the two differ in the last bits, so the drive keeps its own, held to pyproj by tests/fixtures/frame.json.
+
+/** Earth radius with standard refraction: what the eye sees, not the geoid. earth.js's EFFECTIVE_RADIUS. */
+export const EARTH_R = EFFECTIVE_RADIUS;
+
+/** How far the ground has fallen below the tangent plane at the origin (earth.js). */
+export { curveDrop };
 
 /** True vertical at a map position, in scene axes. `out` is any object with set(x, y, z) and normalize(). */
 export const localUp = (x, z, out) => out.set(x, EARTH_R, z).normalize();

@@ -1,23 +1,26 @@
 {
   "bundle": {
     "chunks": {
+      "frame.js": 67074,
       "generateMeshBVH.worker.js": 47185,
-      "index.css": 3013,
-      "index.js": 204530
+      "index.css": 4482,
+      "index.js": 151800,
+      "mesher.worker.js": 3942,
+      "session.js": 21794
     },
-    "cssGzip": 3013,
-    "jsGzip": 251715
+    "cssGzip": 4482,
+    "jsGzip": 291795
   },
   "bytes": {
     "lv": {
-      "beforeReady": 29220088,
-      "requests": 147,
-      "total": 31215807
+      "beforeReady": 29236555,
+      "requests": 148,
+      "total": 31232274
     },
     "slc": {
-      "beforeReady": 21906969,
-      "requests": 88,
-      "total": 21959925
+      "beforeReady": 21923294,
+      "requests": 89,
+      "total": 21976250
     }
   },
   "scenes": {

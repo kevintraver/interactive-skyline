@@ -311,7 +311,7 @@ button { font: inherit; color: inherit; background: none; border: 0; padding: 0;
   .browsing .routes { display: none; }
   .route-card { padding: 4px 4px 4px 6px; }
   .route-card .map { width: 36px; height: 36px; }
-  .route-card .pick { gap: 10px; }
+  .route-card .pick { gap: 10px; min-height: 40px; } /* a 40 px target, also when several routes show their pick buttons */
   .route-card .what b { font-size: 13px; }
   .route-card .facts { font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .route-card .more { display: grid; place-items: center; width: 40px; height: 40px; flex: none; border-radius: 8px; color: var(--muted); }

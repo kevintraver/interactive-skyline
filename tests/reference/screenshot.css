@@ -1,0 +1,3 @@
+/* Applied to page screenshots (toHaveScreenshot, playwright.config.js stylePath). The map goldens predate Drive mode,
+   so its Map/Drive switch, the one control it adds to the map, is hidden in them; drive-ui.spec.js tests the switch. */
+#modes { visibility: hidden !important; }

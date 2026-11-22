@@ -9,6 +9,7 @@ export function initFocus(app) {
   function fly(dur, at) { flight = { t0: performance.now(), dur, at }; }
   /** Glide the camera so one building sits in the middle of the view, keeping the current viewing direction. */
   function focusOn(entry) {
+    if (app.drive.active) return app.drive.focus(entry); // drive seam: turn the head instead
     const b = entry.data;
     const q0 = controls.target.clone(), q1 = new THREE.Vector3(b.c[0], b.ground - BASE + b.h * 0.5, -b.c[1]).add(entry.offset);
     const dir = camera.position.clone().sub(controls.target).normalize();
@@ -42,4 +43,5 @@ export function initFocus(app) {
   compass.addEventListener('click', () => orbitTo({ turn: 0 }));
   controls.addEventListener('change', () => { compass.firstElementChild.style.rotate = `${controls.getAzimuthalAngle()}rad`; });
   Object.assign(app, { focusOn, stepFlight, flying: () => !!flight });
+  app.stopFlight = () => { flight = null; }; // drive seam
 }

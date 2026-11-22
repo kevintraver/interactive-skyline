@@ -50,16 +50,11 @@ describe('frame', () => {
     expect(Math.hypot(up.x, up.y, up.z)).toBeCloseTo(1, 12);
   });
 
-  it('uses the same EARTH_R and curveDrop as main.js, bit for bit', () => {
-    const src = read('../../src/main.js');
-    const r = src.match(/const EARTH_R = ([^;]+);/)[1];
-    const drop = src.match(/const curveDrop = ([^;]+);/)[1];
-    const mainR = new Function(`return ${r};`)();
-    const mainDrop = new Function('EARTH_R', `return ${drop};`)(mainR);
-    expect(Object.is(EARTH_R, mainR)).toBe(true);
-    for (let k = 0; k < 2000; k++) {
-      const x = (Math.random() - 0.5) * 2e5, z = (Math.random() - 0.5) * 2e5;
-      expect(Object.is(curveDrop(x, z), mainDrop(x, z))).toBe(true);
-    }
+  it('uses the EARTH_R and curveDrop of the map ground (src/core/earth.js), bit for bit', async () => {
+    const earth = await import('../../src/core/earth.js');
+    expect(Object.is(EARTH_R, earth.EFFECTIVE_RADIUS)).toBe(true);
+    expect(curveDrop).toBe(earth.curveDrop);
+    // and the map's ground (src/city/terrain.js) is lowered with that same function
+    expect(read('../../src/city/terrain.js')).toMatch(/import \{[^}]*\bcurveDrop\b[^}]*\} from '\.\.\/core\/earth\.js'/);
   });
 });

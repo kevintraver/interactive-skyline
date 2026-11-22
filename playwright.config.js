@@ -4,6 +4,10 @@
 //   webgl2-software  Chromium on SwiftShader (software WebGL2). Deterministic enough for goldens; the one CI runs.
 //   gpu              Chromium on this machine's GPU. Local only: timing budgets (pnpm test:perf).
 //   software-timing  The timing suite on SwiftShader, gated at 2x (pnpm test:perf:software).
+//   drive-software   Drive mode (drive*.spec.js) on SwiftShader, after webgl2-software: a drive frame takes seconds
+//                    there, and beside the map suite it starves the render-on-demand budgets' timing.
+//   drive-timing     The drive's own per-frame JavaScript (*.perf.spec.js) on SwiftShader, last and alone: with
+//                    other software renderers busy on every core the page timed is starved.
 //
 // Golden images are per platform (Chromium's text and SwiftShader output differ between macOS and Linux), so
 // the snapshot path carries {platform}. A spec compares only when a snapshot for the running platform exists;
@@ -17,7 +21,9 @@ const GPU = ['--ignore-gpu-blocklist', '--enable-gpu', ...(process.platform === 
 export default defineConfig({
   testDir: 'tests/e2e',
   timeout: 120_000,
-  expect: { timeout: 30_000, toHaveScreenshot: { maxDiffPixelRatio: 0.001, animations: 'disabled', caret: 'hide' } },
+  expect: { timeout: 30_000, toHaveScreenshot: { maxDiffPixelRatio: 0.001, animations: 'disabled', caret: 'hide',
+    // the map goldens predate Drive mode's Map/Drive switch; it is hidden in page screenshots (see the file)
+    stylePath: 'tests/reference/screenshot.css' } },
   fullyParallel: true,
   workers: process.env.CI ? 1 : 2,
   retries: 0,
@@ -39,7 +45,7 @@ export default defineConfig({
   projects: [
     {
       name: 'webgl2-software',
-      testIgnore: /perf\.timing\.spec\.js/,
+      testIgnore: [/perf\.timing\.spec\.js/, /\.perf\.spec\.js$/, /drive[\w.-]*\.spec\.js$/],
       use: { ...devices['Desktop Chrome'], viewport: { width: 1280, height: 800 }, deviceScaleFactor: 1,
         launchOptions: { args: SOFTWARE } },
     },
@@ -56,6 +62,21 @@ export default defineConfig({
       name: 'software-timing',
       testMatch: /perf\.timing\.spec\.js/,
       retries: 2, // a noisy measurement passes when taken again; a real slowdown does not (helpers/perf.js, GATES)
+      use: { ...devices['Desktop Chrome'], viewport: { width: 1280, height: 800 }, deviceScaleFactor: 1,
+        launchOptions: { args: SOFTWARE } },
+    },
+    {
+      name: 'drive-software',
+      testMatch: /drive[\w.-]*\.spec\.js$/,
+      testIgnore: /\.perf\.spec\.js$/,
+      dependencies: ['webgl2-software'],
+      use: { ...devices['Desktop Chrome'], viewport: { width: 1280, height: 800 }, deviceScaleFactor: 1,
+        launchOptions: { args: SOFTWARE } },
+    },
+    {
+      name: 'drive-timing',
+      testMatch: /\.perf\.spec\.js$/,
+      dependencies: ['drive-software'],
       use: { ...devices['Desktop Chrome'], viewport: { width: 1280, height: 800 }, deviceScaleFactor: 1,
         launchOptions: { args: SOFTWARE } },
     },

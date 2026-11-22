@@ -23,10 +23,14 @@ import { initPopovers } from './ui/popovers.js';
 import { initSettingsPanel } from './ui/settingsPanel.js';
 import { initCityMenu } from './ui/cityMenu.js';
 import { initAttractions } from './attractions.js';
+import { initDrive } from './drive/index.js'; // drive seam
 import cities from '../data/cities.json';
 
 const app = createApp(cities);
 const { cityId, city, pending, settings, scene, camera, renderer, controls, loop, invalidate } = app;
+// drive seam: Drive mode (src/drive/index.js) sets these while it is active; `night` is its look, never saved
+const drive = app.drive = { active: false, night: null, frame: null, render: null, focus: null };
+app.nightNow = () => drive.night ?? settings.night; // drive seam
 app.format = createFormat(settings, city);
 app.sky = createLegacySky().init(app);
 
@@ -63,13 +67,13 @@ performance.mark('skyline-ready');
 
 loop.start(renderer, {
   before(now) {
-    app.stepFlight(now);
-    controls.update();
+    if (drive.active) drive.frame(now); // drive seam: the drive moves the camera, not the map controls
+    else { app.stepFlight(now); controls.update(); } // drive seam
   },
   render() {
     // while the camera is still, so the extra frames cost nothing during a drag
-    if (app.views.stale && !app.flying() && !app.dragging()) { app.views.stale = false; app.views.snap(); }
-    renderer.render(scene, camera);
+    if (app.views.stale && !app.flying() && !app.dragging() && !drive.active) { app.views.stale = false; app.views.snap(); } // drive seam
+    if (drive.active) drive.render(); else renderer.render(scene, camera); // drive seam: while driving, the drive owns the draw
     if (!performance.getEntriesByName('skyline-frame').length) performance.mark('skyline-frame');
   },
 });
@@ -77,4 +81,8 @@ loop.start(renderer, {
 installHooks(app);
 
 // extras, the fountain show and animated LED surfaces (skyline-integration v5, src/attractions.js)
-initAttractions({ cityId, scene, camera, renderer, settings, invalidate, groundY, tall });
+// drive seam: night-only extras follow the drive's look
+initAttractions({ cityId, scene, camera, renderer, settings: new Proxy(settings, { get: (o, k) => (k === 'night' ? app.nightNow() : o[k]) }), invalidate, groundY, tall });
+
+// drive seam: Drive mode, offered for cities with routes; it adds window.__skyline.drive and .terrain
+initDrive(app, { terrainData });

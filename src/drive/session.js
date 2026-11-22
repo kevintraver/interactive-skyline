@@ -2,9 +2,18 @@
 // this module only then). It owns the drive's scene objects (wide ground, skirts, road chunks), the
 // clock, the journey and the rig, and runs one frame at a time from the app's animation loop.
 //
-// The usual frame (plan 02, section 5.7): clock.advance -> journey.poseAt -> chunks.update ->
-// rig.apply on the app's own camera. Everything else (which look, what the pill shows) follows from
-// the pose and the clock, so a frame is a pure function of simulation time and the look state.
+// The usual frame (plan 02, section 5.7): clock.advance -> journey.poseAt -> parts' update ->
+// rig.apply on the app's own camera; then, when the app asks for a frame, render(): parts'
+// beforeRender, the draw, parts' afterRender. Everything else (which look, what the pill shows)
+// follows from the pose and the clock, so a frame is a pure function of simulation time and the look state.
+//
+// Parts. Each drive feature (the road chunks, the roadside signs, the terrain's loading, and every
+// later one) is registered with addPart(part), where a part is
+//   { name, update?(frame), setLook?(look), whenSettled?(), stats?(), beforeRender?(frame), afterRender?(frame), dispose?() }
+//   frame = { simMs, dtSimMs, pose, camera, viewport, night, sun: { elevation, azimuth }, rate, playing }
+//   look  = { night: boolean, dusk: number }   dusk 0 by day .. 1 by night (0 or 1 until the looks blend)
+// update runs when the pose moved (every frame while the clock plays), setLook when the look changes
+// (and once on registering, if there is a look already), whenSettled and stats over all parts.
 
 import * as THREE from 'three';
 import { createFrame, EARTH_R, localUp } from '../world/frame.js';
@@ -14,6 +23,8 @@ import { loadRoutes } from './routes.js';
 import { createRoadMaterials } from './roadnet/material.js';
 import { createRoadChunks } from './roadnet/chunks.js';
 import { createRoadside } from './roadside/index.js';
+import { createCorridor } from './corridor/index.js';
+import { PART_FACTORIES } from './parts.js';
 import { createEnv } from './env.js';
 import { createJourney } from './journey.js';
 import { defaultDeparture } from './moment.js';
@@ -36,18 +47,20 @@ const bitmapOf = (blob) => createImageBitmap(blob, { imageOrientation: 'flipY', 
  * @param {{ onFrame: (session: object) => void }} hooks onFrame runs at the end of every drive frame (the UI)
  */
 export async function createSession(ctx, terrain, hooks) {
+  const ctx0 = ctx;
   const { city, DATA, scene, renderer, camera, seam, invalidate, applyNight, settings, tall, getLow, ground } = ctx;
   const get = async (name) => {
     const r = await fetch(`${DATA}/${name}`);
     if (!r.ok) throw new Error(`${name}: HTTP ${r.status}`);
     return r;
   };
-  const [net, wide, bitmap, signs] = await Promise.all([
+  // the signs, barriers and roadside buildings are dressing: a city or a build without them still drives
+  const optional = (name) => get(name).then((r) => r.json()).catch(() => null);
+  const [net, wide, bitmap, signs, barriers, corridorIndex] = await Promise.all([
     loadRoutes({ fetchJson: (n) => get(n).then((r) => r.json()), fetchBinary: (n) => get(n).then((r) => r.arrayBuffer()) }),
     terrain.loadWide(),
     terrain.hasWide ? get('ground-wide.jpg').then((r) => r.blob()).then(bitmapOf) : null,
-    // the signs are dressing: a city or a build without them still drives
-    get('signs.json').then((r) => r.json()).catch(() => null),
+    optional('signs.json'), optional('barriers.json'), optional('corridor/index.json'),
   ]);
 
   const group = new THREE.Group();
@@ -72,16 +85,64 @@ export async function createSession(ctx, terrain, hooks) {
   group.add(roads);
   scene.add(group);
 
+  const parts = [];
+  let look = null, frame = null, lastSimMs = null;
+  /** Register a part (see the top of this file). Returns it. */
+  function addPart(part) {
+    if (!part || typeof part.name !== 'string') throw new Error('a drive part needs a name');
+    if (parts.some((p) => p.name === part.name)) throw new Error(`a drive part named "${part.name}" is registered already`);
+    parts.push(part);
+    if (look) part.setLook?.(look);
+    return part;
+  }
+
   const materials = createRoadMaterials({ anisotropy: renderer.capabilities.getMaxAnisotropy() });
-  const chunks = createRoadChunks({ roadnet: net.roadnet, base: city.base, earthR: EARTH_R, parent: roads, materials });
+  const chunks = createRoadChunks({ roadnet: net.roadnet, base: city.base, earthR: EARTH_R, parent: roads, materials, barriers });
   const roadside = signs && createRoadside({
-    signs, roadnet: net.roadnet, base: city.base, earthR: EARTH_R, parent: roads, anisotropy: renderer.capabilities.getMaxAnisotropy(),
+    signs, barriers, roadnet: net.roadnet, base: city.base, earthR: EARTH_R, parent: roads, anisotropy: renderer.capabilities.getMaxAnisotropy(),
   });
   const env = createEnv({ city });
   const clock = env.clock;
   const frameOf = createFrame(city);
   const rig = createRig();
   const journeys = new Map();
+
+  // the road chunks, the signs and the terrain as parts, through thin adapters over their own APIs
+  const car = (f) => ({ x: f.pose.position.x, y: -f.pose.position.z });
+  addPart({
+    name: 'roads', update: (f) => chunks.update(car(f)), setLook: (l) => chunks.setNight(l.night),
+    whenSettled: () => chunks.whenSettled(), stats: () => chunks.stats(), dispose: () => chunks.dispose(),
+  });
+  if (roadside) {
+    addPart({
+      name: 'signs', update: (f) => roadside.update(car(f)), setLook: (l) => roadside.setNight(l.night),
+      whenSettled: () => roadside.whenSettled(), stats: () => roadside.stats(), dispose: () => roadside.dispose(),
+    });
+  }
+  addPart({ name: 'terrain', whenSettled: () => terrain.whenSettled(), stats: () => terrain.stats() });
+  if (corridorIndex && wide) {
+    addPart(createCorridor({
+      index: corridorIndex, fetchBinary: (f) => get(`corridor/${f}`).then((r) => r.arrayBuffer()), heightAt: terrain.heightAt,
+      base: city.base, earthR: EARTH_R, parent: group, anisotropy: renderer.capabilities.getMaxAnisotropy(),
+    }));
+  }
+
+  // the optional features (parts.js) join as they finish loading; the drive does not wait for them to start
+  let partsReady = Promise.resolve();
+  function loadParts() {
+    const ctx = {
+      app: ctx0, session, get, optional, group, roads, terrain, wideMesh, ground, net, env, clock, rig, frameOf,
+      earthR: EARTH_R, base: city.base, materials, chunks, roadside,
+    };
+    partsReady = Promise.all(PART_FACTORIES.map(async (factory) => {
+      try {
+        const part = await factory(ctx);
+        if (!part) return;
+        addPart(part);
+        if (frame) part.update?.(frame);
+      } catch (e) { console.warn(`drive part left out: ${e && e.message ? e.message : e}`); }
+    })).then(() => { needPose = true; invalidate(); });
+  }
 
   let journey = null, pose = null, needPose = true, lastNow = null, loading = false, updateId = 0;
   // the hold-position lock (plan 02, section 4.3) and the start chip the visitor last chose
@@ -98,37 +159,45 @@ export async function createSession(ctx, terrain, hooks) {
     return journeys.get(route.id);
   }
 
-  /** The look (day or night) for the clock's time; switches the app's look and the road's, not the saved setting. */
-  function updateLook() {
-    const night = isNightAt(env.ephemeris.sun(clock.now()).elevation);
+  /** The look for the sun's elevation; switches the app's look and the parts', not the saved setting. */
+  function updateLook(sun) {
+    const night = isNightAt(sun.elevation);
     if (seam.night === night) return;
     seam.night = night;
+    look = { night, dusk: night ? 1 : 0 };
     applyNight();
-    chunks.setNight(night);
-    roadside?.setNight(night);
+    for (const p of parts) p.setLook?.(look);
     document.documentElement.dataset.theme = night ? 'dark' : 'light';
   }
 
-  /** Bring the pose, the road chunks and the look up to date with the clock. */
+  /** Bring the pose, the parts and the look up to date with the clock. */
   function update() {
     let t = performance.now();
     const lap = (name) => { const n = performance.now(); timings[name].add(n - t); t = n; };
-    pose = journey.poseAt(clock.now());
+    const simMs = clock.now();
+    pose = journey.poseAt(simMs);
     lap('journey');
-    chunks.update({ x: pose.position.x, y: -pose.position.z });
-    roadside?.update({ x: pose.position.x, y: -pose.position.z });
+    const sun = env.ephemeris.sun(simMs);
+    frame = {
+      simMs, dtSimMs: lastSimMs === null ? 0 : simMs - lastSimMs, pose, camera, viewport: viewport(),
+      night: isNightAt(sun.elevation), sun: { elevation: sun.elevation, azimuth: sun.azimuth }, rate: clock.rate, playing: clock.playing,
+    };
+    lastSimMs = simMs;
+    for (const p of parts) p.update?.(frame);
     const id = ++updateId;
     loading = true;
-    // Paused, the next frame is drawn once the chunks are in, not one per chunk as they arrive: the
+    // Paused, the next frame is drawn once the parts are in, not one per chunk as they arrive: the
     // mesher is quick, and on a slow GPU (or a software one) frames in between starve it of CPU.
     // Playing, the clock asks for every frame anyway.
-    Promise.all([chunks.whenSettled(), roadside?.whenSettled()]).then(() => { if (id === updateId) loading = false; invalidate(); });
-    updateLook();
+    settledParts().then(() => { if (id === updateId) loading = false; invalidate(); });
+    updateLook(sun);
     lap('chunks');
   }
+  const settledParts = () => partsReady.then(() => Promise.all(parts.map((p) => p.whenSettled?.())));
 
   const session = {
-    net, env, clock, rig, chunks, group, terrain, timings,
+    net, env, clock, rig, chunks, group, terrain, timings, addPart,
+    get parts() { return parts.map((p) => p.name); },
     get journey() { return journey; },
     get pose() { return pose; },
     get loading() { return loading; },
@@ -242,6 +311,20 @@ export async function createSession(ctx, terrain, hooks) {
       if (clock.playing) invalidate();
     },
 
+    /** Draw the frame (app.drive.render, while driving): parts' beforeRender, the scene, parts' afterRender. */
+    render() {
+      if (frame) for (const p of parts) p.beforeRender?.(frame);
+      renderer.render(scene, camera);
+      if (frame) for (const p of parts) p.afterRender?.(frame);
+    },
+
+    /** Remove every part's objects, last registered first. The session is unusable after this. */
+    dispose() {
+      for (const p of [...parts].reverse()) p.dispose?.();
+      parts.length = 0;
+      scene.remove(group);
+    },
+
     /** Look at a point in the scene: the head turns, the car does not. */
     lookAt(point) {
       const eye = camera.position, up = localUp(eye.x, eye.z, new THREE.Vector3());
@@ -270,10 +353,10 @@ export async function createSession(ctx, terrain, hooks) {
       return !(low && low.geometry.boundsTree && ray.intersectObject(low, false).length);
     },
 
-    /** Resolves when the road chunks and terrain for the current pose are in and a frame with them has been drawn. */
+    /** Resolves when every part (road chunks, signs, terrain, ...) is in for the current pose and a frame with them has been drawn. */
     async whenSettled() {
-      if (!pose || !group.visible) await nextFrame(); // seek and show bring the chunks up to date at once; otherwise a frame does
-      await Promise.all([chunks.whenSettled(), roadside?.whenSettled(), terrain.whenSettled()]);
+      if (!pose || !group.visible) await nextFrame(); // seek and show bring the parts up to date at once; otherwise a frame does
+      await settledParts();
       const drawn = renderer.info.render.frame;
       invalidate();
       while (renderer.info.render.frame === drawn) await nextFrame();
@@ -297,9 +380,8 @@ export async function createSession(ctx, terrain, hooks) {
       const r = renderer.info.render;
       return {
         render: { calls: r.calls, triangles: r.triangles },
-        roads: chunks.stats(),
-        signs: roadside ? roadside.stats() : null,
-        terrain: terrain.stats(),
+        signs: null, // a city or build without signs
+        ...Object.fromEntries(parts.filter((p) => p.stats).map((p) => [p.name, p.stats()])),
         js: Object.fromEntries(Object.entries(timings).map(([k, v]) => [k, v.summary()])),
       };
     },
@@ -321,6 +403,7 @@ export async function createSession(ctx, terrain, hooks) {
     return tops.get(geo).clone();
   }
 
+  loadParts();
   return session;
 }
 

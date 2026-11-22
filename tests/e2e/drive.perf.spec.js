@@ -1,16 +1,16 @@
 // Timing of the drive's own per-frame JavaScript (journey, rig, road chunks, signs, controls). Frame time as
 // a whole means nothing under the software renderer, so this is the number the drive is held to.
 //
-// It runs in the `perf` project, alone and after everything else (see playwright.config.js): with three
-// software renderers busy on every core the page being timed is starved, and the same code that takes
-// 0.9 ms at the 95th percentile on its own was measured at 6.8 ms. To run just this:
-//   E2E_PORT=5199 pnpm exec playwright test --project=perf --no-deps
+// It runs in the `drive-timing` project, alone and after everything else (see playwright.config.js): with
+// several software renderers busy on every core the page being timed is starved, and the same code that
+// takes 0.9 ms at the 95th percentile on its own was measured at 6.8 ms. To run just this:
+//   pnpm exec playwright test --project=drive-timing --no-deps
 import { test, expect } from '@playwright/test';
-import { openCity } from './helpers.js';
+import { openCity, DRIVE_TIMEOUT } from '../helpers/drive.js';
 
 const ROUTE = 'i15n';
 
-test.describe.configure({ timeout: 900_000 });
+test.describe.configure({ timeout: DRIVE_TIMEOUT });
 
 test('lv drive: its own JavaScript stays within the per-frame budget', async ({ page }) => {
   await openCity(page, 'lv');

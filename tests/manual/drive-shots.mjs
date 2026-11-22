@@ -1,6 +1,6 @@
 // Screenshots of the real drive on the GPU, for looking at frames (the e2e goldens use the slow software
-// renderer; this takes about a second a frame). Serve the repo first:
-//   pnpm exec vite --port 5212 --strictPort
+// renderer; this takes about a second a frame). Serve the repo first, as source or as the production build:
+//   pnpm exec vite --port 5212 --strictPort        or   pnpm build && pnpm preview --port 5212 --strictPort
 // then: node tests/manual/drive-shots.mjs <out-dir> <port> '<shots>'   (keep the out dir outside the repo)
 // <shots> is JSON: [[name, s in metres, "day" | "night", { yaw, pitch, lens }?], ...]
 import { chromium } from '@playwright/test';

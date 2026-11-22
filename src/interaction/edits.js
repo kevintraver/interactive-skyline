@@ -24,9 +24,10 @@ export function initEdits(app) {
   function paint(e) {
     const { hovered, selected } = app;
     const m = e.mesh.material;
-    m.color.copy(e === selected ? SELECT : e === hovered ? (settings.highlight ? HOVER : WHITE) : settings.highlight ? REMOVABLE : GRAY);
-    m.emissiveIntensity = settings.highlight && e !== selected ? sky.tint(settings.night) : 0;
-    e.mesh.children[0].visible = settings.highlight;
+    const highlight = settings.highlight && !app.drive.active; // drive seam: natural colours, no edge lines while driving
+    m.color.copy(e === selected ? SELECT : e === hovered ? (highlight ? HOVER : WHITE) : highlight ? REMOVABLE : GRAY); // drive seam
+    m.emissiveIntensity = highlight && e !== selected ? sky.tint(settings.night) : 0; // drive seam
+    e.mesh.children[0].visible = highlight; // drive seam
     e.mesh.position.copy(e.offset);
     e.marker.visible = isHidden(e) || isMoved(e);
     e.marker.material.opacity = e === hovered ? 0.75 : 0.42;

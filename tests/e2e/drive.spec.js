@@ -1,48 +1,16 @@
 // Drive mode on real data: I-15 north from Primm (route i15n). Each test shares one page, because a
-// SwiftShader load takes over half a minute and a drive frame several seconds; see helpers.js for how
-// frames are made deterministic. Goldens are the canvas only. The default moment (moment.js) changes its
+// SwiftShader load takes over half a minute and a drive frame several seconds; see tests/helpers/drive.js
+// for how frames are made deterministic. Goldens are the canvas only. The default moment (moment.js) changes its
 // clock time from day to day, but the canvas depends only on the look it picks, which it keeps.
 import { test, expect } from '@playwright/test';
-import { openCity, captureCanvas, FROZEN_AT, GOLDEN } from './helpers.js';
+import { openCity, openAt, captureCanvas, expectGolden, watchConsole, keepPixels, pixelsDiffer, DRIVE_TIMEOUT } from '../helpers/drive.js';
 
 const ROUTE = 'i15n';
 const STRAT = 'w135457469';
 const SPHERE = 'w976405284';
 const MPH70 = 70 * 0.44704; // 31.29 m/s
 
-// a drive frame under the software renderer is slow; a test here waits for several dozen
-test.describe.configure({ timeout: 900_000 });
-
-/**
- * Fail the test on any console error or warning, and on uncaught errors. SwiftShader's own performance
- * notes ("GL Driver Message ... GPU stall due to ReadPixels", from the viewpoint snapshots and the canvas
- * captures) are the driver talking, not the app, and the map logs them too.
- */
-function watchConsole(page) {
-  const problems = [];
-  page.on('console', (m) => {
-    if ((m.type() === 'error' || m.type() === 'warning') && !/GL Driver Message/.test(m.text())) problems.push(`[${m.type()}] ${m.text()}`);
-  });
-  page.on('pageerror', (e) => problems.push(`[pageerror] ${e.message}`));
-  return problems;
-}
-
-/** Open the app at an address, the way openCity does for a plain city. */
-async function openAt(page, query) {
-  await page.addInitScript(() => {
-    try { localStorage.clear(); localStorage.setItem('slc-skyline-hinted', '1'); } catch { /* defaults apply */ }
-  });
-  await page.routeWebSocket(/.*/, () => {});
-  await page.goto(`/?${query}`);
-  await page.waitForFunction(() => performance.getEntriesByName('skyline-ready').length > 0
-    && window.__skyline && window.__skyline.attractions && window.__skyline.drive, null, { timeout: 120_000 });
-  await page.evaluate(async (at) => {
-    const s = window.__skyline;
-    s.attractions.freeze(at);
-    await s.attractions.ready;
-    s.attractions.freeze(at);
-  }, FROZEN_AT);
-}
+test.describe.configure({ timeout: DRIVE_TIMEOUT });
 
 const drive = (page, fn, arg) => page.evaluate(fn, arg);
 /** Seek, wait until the frame is settled and drawn, and return the pose. */
@@ -93,7 +61,7 @@ test('lv drive: motion, seeking and the reveal', async ({ page }) => {
   await test.step('the same { s, t } reached two ways draws the same frame', async () => {
     const at = await seekSettled(page, { s: 2000 }).then(() => seekSettled(page, { s: 33000 }));
     const first = await captureCanvas(page);
-    expect.soft(first).toMatchSnapshot('drive-km33.png', GOLDEN);
+    expectGolden(first, 'drive-km33.png');
     await seekSettled(page, { s: 60000 });
     const again = await seekSettled(page, { s: 33000, t: at.t });
     expect(again.s).toBeCloseTo(at.s, 6);
@@ -127,13 +95,13 @@ test('lv drive: opened from an address, goldens, and hiding the Sphere', async (
     await test.step(`golden ${name}`, async () => {
       const p = await seekSettled(page, { s });
       expect(p.night).toBe(night);
-      expect.soft(await captureCanvas(page)).toMatchSnapshot(`drive-${name}.png`, GOLDEN);
+      expectGolden(await captureCanvas(page), `drive-${name}.png`);
     });
   }
   await test.step('golden km62 in the other look', async () => {
     const p = await seekSettled(page, { s: 62000, t: Date.parse('2026-11-21T21:00:00Z') });
     expect(p.night).toBe(false);
-    expect.soft(await captureCanvas(page)).toMatchSnapshot('drive-km62-day.png', GOLDEN);
+    expectGolden(await captureCanvas(page), 'drive-km62-day.png');
   });
 
   await test.step('a Sphere hidden on the map is gone from the drive, and back once restored', async () => {
@@ -171,6 +139,7 @@ test('lv drive: the mode switch, and leaving restores the map exactly', async ({
   const problems = watchConsole(page);
   await openCity(page, 'lv');
   const before = await page.evaluate(() => ({ stored: localStorage.getItem('slc-skyline-settings'), settings: { ...window.__skyline.settings } }));
+  await keepPixels(page, 'map');
   await page.getByRole('button', { name: 'Drive', exact: true }).click();
   await drive(page, async () => {
     const d = window.__skyline.drive;
@@ -193,6 +162,8 @@ test('lv drive: the mode switch, and leaving restores the map exactly', async ({
     theme: document.documentElement.dataset.theme,
   }));
   expect(after).toEqual({ ...before, mode: null, active: false, theme: 'light' });
-  expect.soft(await captureCanvas(page)).toMatchSnapshot('lv-east-day.png', GOLDEN);
+  // the map's own frame, as it was before Drive (a few pixels of SwiftShader noise allowed)
+  await keepPixels(page, 'back');
+  expect(await pixelsDiffer(page, 'map', 'back')).toBeLessThan(0.002);
   expect(problems).toEqual([]);
 });

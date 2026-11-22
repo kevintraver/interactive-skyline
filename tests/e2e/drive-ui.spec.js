@@ -1,20 +1,11 @@
 // Drive mode's controls on real data (route i15n): the route card's start chips, the route bar's thumb,
 // rate and keys, the hold-position lock with the time-of-day popover, the address round trip, Map and
 // back, and the phone layout. One test and two page loads, because a SwiftShader load takes over half a
-// minute; everything is asserted on state (the pose, the DOM, the address), never on pixels.
+// minute (the city has several routes; the steps use i15n's card, the current one); everything is asserted on state (the pose, the DOM, the address), never on pixels.
 import { test, expect } from '@playwright/test';
-import { openCity } from './helpers.js';
+import { openCity, watchConsole, DRIVE_TIMEOUT } from '../helpers/drive.js';
 
-test.describe.configure({ timeout: 900_000 });
-
-function watchConsole(page) {
-  const problems = [];
-  page.on('console', (m) => {
-    if ((m.type() === 'error' || m.type() === 'warning') && !/GL Driver Message/.test(m.text())) problems.push(`[${m.type()}] ${m.text()}`);
-  });
-  page.on('pageerror', (e) => problems.push(`[pageerror] ${e.message}`));
-  return problems;
-}
+test.describe.configure({ timeout: DRIVE_TIMEOUT });
 
 const run = (page, fn, arg) => page.evaluate(fn, arg);
 const pose = (page) => run(page, () => window.__skyline.drive.pose());
@@ -39,7 +30,7 @@ test('lv drive controls: starts, route bar, rate, lock, time of day, address, ph
 
   await test.step('the hint says how to drive, and the card shows the route', async () => {
     expect(await page.locator('#hint span').textContent()).toBe('Drag to look around. Scroll to zoom. Space to pause.');
-    const card = page.locator('.route-card');
+    const card = page.locator('.route-card.current');
     await expect(card).toBeVisible();
     await expect(card.locator('.facts')).toHaveText('42.5 mi · 38 min at the limits');
     await expect(card.locator('.map path.line')).toHaveCount(1);
@@ -165,7 +156,7 @@ test('lv drive controls: starts, route bar, rate, lock, time of day, address, ph
     await page.getByRole('button', { name: 'Dusk', exact: true }).click();
     expect((await pose(page)).s).toBeCloseTo(a.s, 3);
     // a press outside closes the popover (on the card's text: a press on the scene might pick a building)
-    await page.locator('.route-card .what b').click();
+    await page.locator('.route-card.current .what b').click();
     await expect(page.locator('#drive-time')).toBeHidden();
     await lock.click();
     await expect(lock).toHaveAttribute('aria-pressed', 'false');
@@ -187,7 +178,7 @@ test('lv drive controls: starts, route bar, rate, lock, time of day, address, ph
 
     await page.getByRole('button', { name: 'Map', exact: true }).click();
     expect(await params(page)).toEqual({ city: 'lv' });
-    await expect(page.locator('.route-card')).toBeHidden();
+    await expect(page.locator('.route-card.current')).toBeHidden();
     expect(await page.locator('#hint span').textContent()).toBe('Drag to move the map. Scroll to zoom. Right-drag to rotate.');
     await page.getByRole('button', { name: 'Drive', exact: true }).click();
     await run(page, async () => {
@@ -204,7 +195,7 @@ test('lv drive controls: starts, route bar, rate, lock, time of day, address, ph
   await test.step('at 390 x 844 everything fits, nothing overlaps, targets are 40 px', async () => {
     await page.setViewportSize({ width: 390, height: 844 });
     await run(page, () => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r))));
-    await page.locator('.route-card .more').click();
+    await page.locator('.route-card.current .more').click();
     const layout = await run(page, () => {
       const vis = (e) => e.getClientRects().length > 0 && getComputedStyle(e).visibility !== 'hidden';
       const rect = (e) => { const r = e.getBoundingClientRect(); return { l: r.left, t: r.top, r: r.right, b: r.bottom, w: r.width, h: r.height }; };
@@ -223,7 +214,7 @@ test('lv drive controls: starts, route bar, rate, lock, time of day, address, ph
     expect(layout.small).toEqual([]);
     expect(layout.overlaps).toEqual([]);
     expect(layout.scroll).toBeLessThanOrEqual(layout.width);
-    await page.locator('.route-card .more').click();
+    await page.locator('.route-card.current .more').click();
     await page.setViewportSize({ width: 1280, height: 800 });
   });
 
