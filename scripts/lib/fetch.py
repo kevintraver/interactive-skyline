@@ -73,3 +73,17 @@ def overpass(query, cache: Path):
     cache.write_bytes(r.content)
     time.sleep(5)  # Overpass asks for restraint between heavy queries
     return r.json()
+
+
+def cached_get(url, cache: Path, refresh=False):
+    """GET `url` once and keep the response under `cache` (bytes, plus a .meta.json with the status and type).
+
+    Returns (content_type, bytes). A cached copy is used unless `refresh`."""
+    meta = cache.with_suffix(cache.suffix + ".meta.json")
+    if cache.exists() and meta.exists() and not refresh:
+        return json.loads(meta.read_text())["contentType"], cache.read_bytes()
+    cache.parent.mkdir(parents=True, exist_ok=True)
+    r = _get(url, timeout=120)
+    cache.write_bytes(r.content)
+    meta.write_text(json.dumps({"url": url, "status": r.status_code, "contentType": r.headers.get("content-type", "")}))
+    return r.headers.get("content-type", ""), r.content
