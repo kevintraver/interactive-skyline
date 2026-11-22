@@ -73,6 +73,10 @@ describe('clearance', () => {
     expect(allowedHeight(35, 1.7)).toBe(1.7);
     expect(allowedHeight(10, -5)).toBe(-5);
   });
+  it('holds a camera that was clear to the clearance for its new distance', () => {
+    expect(allowedHeight(301, 300, 300)).toBe(301); // was exactly clear at 30 km; zoomed out 100 m
+    expect(allowedHeight(301, 250, 300)).toBe(250); // was already low
+  });
 });
 
 describe('the pivot ground', () => {

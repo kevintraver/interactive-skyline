@@ -36,10 +36,13 @@ export function clampAxis(v, lo, hi, prev) {
 export const clearanceFor = (dist) => Math.max(10, 0.01 * dist);
 
 /**
- * The height above ground the camera must keep after an update: the clearance, or, if it was already lower than
- * that before the update (a street-level view puts it there), no lower than it was. Never pushes it up by itself.
+ * The height above ground the camera must keep after an update. A camera that was clear before the update
+ * (`before` at least `clearanceBefore`, the clearance for its old distance) must keep the full clearance for its new
+ * distance. One that was already lower (a street-level view puts it there) may not go lower than it was, and is
+ * never pushed up by itself.
  */
-export const allowedHeight = (clearance, before) => Math.min(clearance, before);
+export const allowedHeight = (clearance, before, clearanceBefore = clearance) =>
+  (before >= clearanceBefore - 1e-6 ? clearance : Math.min(clearance, before));
 
 /** How wide an area the pivot's ground is averaged over: wider as the camera pulls back. */
 export const smoothRadius = (dist) => Math.min(1500, Math.max(30, 0.08 * dist));
@@ -167,10 +170,10 @@ export function createCameraLimits({ camera, controls, ground, pivotGround, boun
       if (dy !== 0) { tgt.y += dy; pos.y += dy; fixed = true; }
     }
     // 3. the camera stays above the ground
-    const before = cam0.y - ground(cam0.x, cam0.z);
-    const agl = allowedHeight(clearanceFor(dist), before);
-    if (pos.y - ground(pos.x, pos.z) >= agl) return fixed;
     const r0 = dist3(cam0, tgt0);
+    const before = cam0.y - ground(cam0.x, cam0.z);
+    const agl = allowedHeight(clearanceFor(dist), before, clearanceFor(r0));
+    if (pos.y - ground(pos.x, pos.z) >= agl) return fixed;
     if (Math.abs(dist - r0) > 1e-4 * r0) {
       // a zoom: stop it where it meets the clearance (bisect between where the camera was and where it went)
       copy(c1, pos); copy(t1, tgt);
@@ -185,7 +188,10 @@ export function createCameraLimits({ camera, controls, ground, pivotGround, boun
       limits.stats.zoomStopped++;
     }
     // a tilt or a turn (or what the zoom left): limit the polar angle by lifting the camera along its orbit
-    if (liftAlongOrbit(pos, tgt, ground, agl)) {
+    // (lifted straight up, the distance grows and so does its 1 %: lift once more for that)
+    const lifted = liftAlongOrbit(pos, tgt, ground, agl);
+    if (lifted) liftAlongOrbit(pos, tgt, ground, Math.max(agl, allowedHeight(clearanceFor(dist3(pos, tgt)), before, clearanceFor(r0))));
+    if (lifted) {
       const spin = controls._sphericalDelta;
       if (spin && spin.phi > 0) spin.phi = 0; // stop the tilt here rather than push against it each frame
       limits.stats.lifted++;
