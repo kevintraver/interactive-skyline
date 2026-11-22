@@ -18,7 +18,9 @@
 // The glass (D4.3, D4.4) is attached here rather than as parts of its own, because both draw within the cabin's
 // pass: the mirror passes (mirrors.js) run in afterRender just before the cabin is drawn, and the windshield layer
 // (windshield.js) is a mesh of the cabin scene. Their sizes and rates come from glassPresets.js by the cabin's
-// model. The part exposes them as `glass` { options, mirrors, windshield }.
+// model. The part exposes them as `glass` { options, mirrors, windshield, rain }. Rain on the glass (D8.2: drops, film,
+// wiper blades; glassRain.js) is three more meshes of the cabin scene, drawn before the veil, fed from env.weather;
+// its state for tests is glass.rain.state() { mode, angle, dropCount, ... }.
 
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
@@ -27,6 +29,7 @@ import { instrumentText, screenText, createInstrumentCanvas, createScreenCanvas 
 import { createTimings } from '../timing.js';
 import { createMirrors } from './mirrors.js';
 import { createWindshield } from './windshield.js';
+import { createGlassRain } from './glassRain.js';
 import { glassPresetFor } from './glassPresets.js';
 
 export const CABIN_NEAR = 0.05;
@@ -178,7 +181,7 @@ export async function createCabin(ctx) {
 
   // ---------------------------------------------------------------- the glass: mirrors and windshield
   const glassOptions = glassPresetFor(model);
-  let mirrorPass = null, windshieldLayer = null;
+  let mirrorPass = null, windshieldLayer = null, rainLayer = null;
   try {
     const strides = glassOptions.mirrors.groundStride || {};
     const ground = [...(ctx.ground || []).map(([mesh, grid]) => [mesh, strides[grid] || 1]), ...(ctx.wideMesh ? [[ctx.wideMesh, strides.wide || 1]] : [])];
@@ -188,6 +191,9 @@ export async function createCabin(ctx) {
   try {
     if (glassOptions.windshield.enabled) windshieldLayer = createWindshield({ cabinScene, corners: windshield.corners, options: glassOptions.windshield, env });
   } catch (e) { console.warn(`cabin windshield left out: ${e && e.message ? e.message : e}`); }
+  try {
+    if (glassOptions.rain?.enabled) rainLayer = createGlassRain({ cabinScene, corners: windshield.corners, options: glassOptions.rain, env, session, renderer });
+  } catch (e) { console.warn(`cabin rain on the glass left out: ${e && e.message ? e.message : e}`); }
   const _sunDir = new THREE.Vector3();
 
   // ---------------------------------------------------------------- displays
@@ -279,7 +285,7 @@ export async function createCabin(ctx) {
     get readout() { return { ...readout }; },
     setLook(l) { look = { night: !!l.night, dusk: Number.isFinite(l.dusk) ? l.dusk : l.night ? 1 : 0 }; mirrorPass?.setLook(look); },
     /** The mirrors and the windshield layer (mirrors.js, windshield.js) and the options they were made with. */
-    glass: { options: glassOptions, mirrors: mirrorPass, windshield: windshieldLayer },
+    glass: { options: glassOptions, mirrors: mirrorPass, windshield: windshieldLayer, rain: rainLayer },
     update(frame) { if (rig.view === 'cabin') updateDisplays(frame, false); },
     afterRender(frame) {
       const L = rig.last;
@@ -304,12 +310,14 @@ export async function createCabin(ctx) {
           lampPoints: traffic?.lampPoints ? traffic.lampPoints() : null, eyeWorld: frame.camera.position,
         });
       }
+      rainLayer?.update(frame, { sky: scene.fog?.color });
       let mirrorJs = 0;
       if (mirrorPass) {
         mirrorPass.shade(worldHemi, worldSun);
         mirrorJs = mirrorPass.render(frame, L);
       }
       const tm = performance.now();
+      rainLayer?.copyFrame(cabinCamera); // the world as drawn, for the drops' lenses (only while it rains)
       const auto = renderer.autoClear;
       renderer.autoClear = false;
       renderer.clearDepth();
@@ -328,11 +336,13 @@ export async function createCabin(ctx) {
     stats: () => ({
       model, renders, calls: part.lastCalls ?? 0, js: timing.summary(),
       mirrors: mirrorPass ? mirrorPass.stats() : null, windshield: windshieldLayer ? windshieldLayer.stats() : null,
+      rain: rainLayer ? rainLayer.stats() : null,
     }),
     dispose() {
       root.traverse((o) => { if (o.isMesh) o.geometry.dispose(); });
       mirrorPass?.dispose();
       windshieldLayer?.dispose();
+      rainLayer?.dispose();
       for (const m of [...Object.values(materials), instrumentsMat, screenMat, ...mirrorMats]) m.dispose();
       instrumentsTex.dispose(); screenTex.dispose();
     },

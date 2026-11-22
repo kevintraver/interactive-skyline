@@ -15,6 +15,8 @@
 //         rear-view mirror only; the door mirrors are kept here, small and slow, so the low model is not blind
 //         to the sides.)
 // Sizes follow each face's aspect (doors 0.20 x 0.12 m, interior 0.25 x 0.07 m in cabin.json).
+// Rain on the glass (D8.2, glassRain.js): drop sites siteM apart (high 2 cm: 83 x 41 = 3,403 sites; low 3 cm: 56 x 27
+// = 1,512), each drawn as three instances (the sitting drop and two runners) whose vertex shader walks at most 64 bins.
 
 export const GLASS_PRESETS = Object.freeze({
   high: Object.freeze({
@@ -28,6 +30,7 @@ export const GLASS_PRESETS = Object.freeze({
       right: Object.freeze({ size: [320, 192], every: 4, phase: 3 }),
     }),
     windshield: Object.freeze({ enabled: true, maskSize: [512, 256], lamps: 4, dashboard: true }),
+    rain: Object.freeze({ enabled: true, siteM: 0.02 }),
   }),
   low: Object.freeze({
     mirrors: Object.freeze({
@@ -40,6 +43,7 @@ export const GLASS_PRESETS = Object.freeze({
       right: Object.freeze({ size: [160, 96], every: 8, phase: 6 }),
     }),
     windshield: Object.freeze({ enabled: true, maskSize: [256, 128], lamps: 2, dashboard: false }),
+    rain: Object.freeze({ enabled: true, siteM: 0.03 }),
   }),
 });
 

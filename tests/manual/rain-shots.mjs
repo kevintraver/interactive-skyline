@@ -1,6 +1,10 @@
 // Screenshots of the drive in rain on the GPU (a copy of cabin-shots.mjs, itself drive-shots.mjs with the cabin's
 // options, plus a rain option for the weather part, src/drive/weather/).
-// Extra option: rain (mm/h; 0 or absent: clear).
+// Extra options: rain (mm/h; 0 or absent: clear); dt (seconds: after seeking to s at the time, the clock moves on dt,
+// the car with it: a sequence through a wipe is the same s and time with dt 0, 0.1, 0.2, ...); speed (m/s: the drops on
+// the glass as if the car went at that speed, glass.rain.setSpeedOverride; absent: the journey's own); glass false
+// switches rain on the glass off (D8.2); play (real ms to play at `rate` before the shot, then pause: for the look at
+// fast clock rates; not reproducible).
 // Serve the repo first:   pnpm exec vite --port 5281 --strictPort
 // then: node tests/manual/rain-shots.mjs <out-dir> <port> '<shots>' [width] [height]   (keep the out dir outside the repo)
 // <shots> is JSON: [[name, s in metres, "day" | "night" | ISO time, { view, yaw, pitch, lens, reduceMotion, glance,
@@ -57,7 +61,18 @@ async function shoot(s, when, opt) {
     const g = d.cabin()?.glass;
     g?.windshield?.setEnabled(opt.veil !== false);
     g?.mirrors?.setEnabled(opt.mirrors !== false);
+    g?.rain?.setEnabled(opt.glass !== false);
+    g?.rain?.setSpeedOverride(Number.isFinite(opt.speed) ? opt.speed : null);
     d.seek({ s, t });
+    if (opt.dt) d.seek({ t: t + opt.dt * 1000 });
+    if (opt.play) {
+      // the clock's rate by the bar's buttons (the drive's API has no setter)
+      const btn = (c) => document.querySelector(`#drivebar .rate .${c}`);
+      for (let i = 0; i < 8 && !btn('slower').disabled; i++) btn('slower').click();
+      for (let i = 0; i < 8 && d.pose().rate < (opt.rate || 1); i++) btn('faster').click();
+      d.play(); await new Promise((r) => setTimeout(r, opt.play));
+      if (!opt.keepPlaying) d.pause();
+    }
     const look = { yaw: 0, pitch: 0, ...opt };
     d.look({ yaw: look.yaw, pitch: look.pitch, ...(look.lens ? { lens: look.lens } : {}) });
     await d.whenSettled();
@@ -81,7 +96,7 @@ async function shoot(s, when, opt) {
       s: Math.round(p.s), night: p.night, sunEl: +p.sunElevation.toFixed(2), iso: p.iso, view: p.view, lens: p.lens, model: c?.model,
       mirrors: st?.mirrors && { renders: st.mirrors.renders, pixels: st.mirrors.pixels, calls: st.mirrors.calls },
       veil: st?.windshield && { S: st.windshield.scenePerLux, sunLux: Math.round(st.windshield.sunLux), lit: st.windshield.lit, lamps: st.windshield.lamps },
-      clip, weather: weather?.stats(),
+      clip, weather: weather?.stats(), glass: g?.rain ? (({ mode, angle, dropCount, comfort }) => ({ mode, angle: +angle.toFixed(1), dropCount, comfort }))(g.rain.state()) : null,
     };
   }, { s, t, opt });
 }

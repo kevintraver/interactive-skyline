@@ -361,7 +361,90 @@ test('lv drive cabin: mirrors show the road behind on the correct side; settled 
     expect(r.inCabin).toBe(true);
     expect(r.after).toBe(r.before);
     expect(r.w.enabled).toBe(true);
-    expect(r.presets).toEqual(['mirrors', 'windshield']);
+    expect(r.presets).toEqual(['mirrors', 'windshield', 'rain']);
+  });
+
+  expect(problems).toEqual([]);
+});
+
+// Rain on the windshield (plan 02, D8.2): drops, film and wipers are a pure function of simulation time, so the same
+// time gives the same pixels over the glass after seeking away and back; dry, the rain layer draws nothing.
+test('lv drive cabin: rain on the glass is the same at the same time; dry leaves the glass as it was', async ({ page }) => {
+  const problems = watchConsole(page);
+  await openCity(page, 'lv');
+  const NIGHT = Date.parse('2026-11-22T02:30:00Z');
+  await run(page, async (t) => {
+    const d = window.__skyline.drive;
+    await d.start('i15n', { s: 44200, t });
+    d.pause();
+    while (!d.cabin()) await new Promise((r) => setTimeout(r, 100));
+    await d.whenSettled();
+  }, NIGHT);
+
+  /** In the page: set the rain, go to (s, t), settle, and read the canvas over the windshield opening. */
+  const glassPixels = (at) => run(page, async ({ s, t, rain, glass }) => {
+    const sk = window.__skyline, d = sk.drive, c = d.cabin();
+    let weather = null;
+    sk.scene.traverse((o) => { if (o.userData?.weatherPart) weather = o.userData.weatherPart; });
+    weather.setRain(rain);
+    c.glass.rain.setEnabled(glass !== false);
+    d.seek({ s, t });
+    await d.whenSettled();
+    sk.invalidate();
+    for (let i = 0; i < 3; i++) await new Promise((r) => requestAnimationFrame(r));
+    const canvas = document.getElementById('scene');
+    // the opening's box on the canvas, through the cabin camera
+    const cam = c.cabinCamera, xs = [], ys = [];
+    for (const k of ['bottomLeft', 'bottomRight', 'topRight', 'topLeft']) {
+      const q = c.windshield.corners[k].clone().applyMatrix4(cam.matrixWorldInverse).applyMatrix4(cam.projectionMatrix);
+      xs.push(((q.x + 1) / 2) * canvas.width); ys.push(((1 - q.y) / 2) * canvas.height);
+    }
+    const x0 = Math.max(0, Math.floor(Math.min(...xs))), y0 = Math.max(0, Math.floor(Math.min(...ys)));
+    const x1 = Math.min(canvas.width, Math.ceil(Math.max(...xs))), y1 = Math.min(canvas.height, Math.ceil(Math.max(...ys)));
+    const tmp = Object.assign(document.createElement('canvas'), { width: canvas.width, height: canvas.height });
+    const g = tmp.getContext('2d');
+    g.drawImage(canvas, 0, 0);
+    const data = Array.from(g.getImageData(x0, y0, x1 - x0, y1 - y0).data);
+    const st = c.glass.rain.state();
+    return { data, box: [x0, y0, x1, y1], mode: st.mode, angle: st.angle, dropCount: st.dropCount, visible: c.glass.rain.meshes.map((m) => m.visible) };
+  }, at);
+  /** Share of pixels that differ by more than `tol` in any channel. */
+  const differ = (a, b, tol = 2) => {
+    expect(a.box).toEqual(b.box);
+    let n = 0;
+    for (let i = 0; i < a.data.length; i += 4) {
+      if (Math.abs(a.data[i] - b.data[i]) > tol || Math.abs(a.data[i + 1] - b.data[i + 1]) > tol || Math.abs(a.data[i + 2] - b.data[i + 2]) > tol) n++;
+    }
+    return n / (a.data.length / 4);
+  };
+
+  const here = { s: 44200, t: NIGHT + 7300, rain: 12 };
+  await test.step('in heavy rain the same time gives the same glass after seeking away and back, forward and backward', async () => {
+    const a = await glassPixels(here);
+    expect(a.mode).toBe('high');
+    expect(a.dropCount).toBeGreaterThan(100);
+    expect(a.visible).toEqual([true, true, true]);
+    await glassPixels({ ...here, s: 47000, t: here.t + 600000 }); // away, forward
+    const b = await glassPixels(here);
+    expect(b.angle).toBe(a.angle);
+    expect(b.dropCount).toBe(a.dropCount);
+    expect(differ(a, b), 'after a seek forward and back').toBeLessThan(0.002);
+    await glassPixels({ ...here, s: 41000, t: here.t - 900000 }); // away, backward
+    const c = await glassPixels(here);
+    expect(differ(a, c), 'after a seek backward and back').toBeLessThan(0.002);
+    // and the glass does show something: without the rain layer the same frame differs over much of the opening
+    const bare = await glassPixels({ ...here, glass: false });
+    expect(differ(a, bare, 8)).toBeGreaterThan(0.02);
+  });
+
+  await test.step('dry: wipers off, no drops, and the rain layer leaves the glass\'s pixels as they were', async () => {
+    const dry = await glassPixels({ ...here, rain: 0 });
+    expect(dry.mode).toBe('off');
+    expect(dry.dropCount).toBe(0);
+    expect(dry.visible).toEqual([false, false, false]);
+    const without = await glassPixels({ ...here, rain: 0, glass: false });
+    expect(differ(dry, without, 0)).toBe(0);
+    await glassPixels({ ...here, rain: 0, glass: true });
   });
 
   expect(problems).toEqual([]);
