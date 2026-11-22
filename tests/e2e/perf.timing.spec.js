@@ -110,3 +110,49 @@ for (const city of CITIES) {
     for (const [k, v] of Object.entries(m.edits)) check(`${k} to frame`, v, base.edits[k], 'median', FRAME_SLACK_MS);
   });
 }
+
+// T1.5 (plan 01, phase 1): scrubbing the time of day. Every input event moves the clock, and each rendered frame
+// then runs the clock, the ephemeris, env.update and the legacy sky. That CPU work must leave the 16.7 ms of a
+// 60 Hz frame to the GPU: gated absolutely at 4 ms (median) per step. The frame rate during a scrub is recorded
+// with the scene's own GPU frame time, so a report shows whether 60 fps is held (it cannot be faster than the
+// scene itself renders: the phase 0 baseline puts every scene above 13 ms of GPU time on the reference M4).
+for (const city of CITIES) {
+  test(`scrubbing the time of day ${city}`, async ({ page }) => {
+    await boot(page, city);
+    await page.evaluate(() => { window.__skyline.attractions.freeze(47); document.getElementById('sky-toggle').click(); });
+    const r = await page.evaluate(async () => {
+      const s = window.__skyline, scrub = document.getElementById('sky-scrub'), raf = () => new Promise((d) => requestAnimationFrame(d));
+      s.env.enterClock();
+      s.clock.setLocal({ year: 2026, month: 6, day: 21, hour: 6, minute: 0 });
+      for (let i = 0; i < 5; i++) await raf();
+      // CPU cost of one scrub step: input -> clock -> env.update -> legacy sky (no rendering)
+      const cpu = [];
+      for (let i = 0; i < 200; i++) {
+        const t0 = performance.now();
+        scrub.value = String(360 + i * 3);
+        scrub.dispatchEvent(new Event('input', { bubbles: true }));
+        s.env.update();
+        cpu.push(performance.now() - t0);
+      }
+      // frames the app renders while the scrubber moves every animation frame for three seconds
+      scrub.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true }));
+      const f0 = s.perf.frames(), t0 = performance.now();
+      let i = 0;
+      while (performance.now() - t0 < 3000) {
+        scrub.value = String(360 + (i++ % 600));
+        scrub.dispatchEvent(new Event('input', { bubbles: true }));
+        await raf();
+      }
+      const fps = ((s.perf.frames() - f0) * 1000) / (performance.now() - t0);
+      scrub.dispatchEvent(new PointerEvent('pointerup', { bubbles: true }));
+      const gpu = await s.perf.renderFrames(60, 10);
+      cpu.sort((a, b) => a - b);
+      return { cpuMedianMs: cpu[100], cpuP95Ms: cpu[190], fps, sceneMs: gpu.ms.sort((a, b) => a - b)[30] };
+    });
+    test.info().annotations.push({ type: 'scrub', description: JSON.stringify(r) });
+    expect(r.cpuMedianMs, `a scrub step costs ${round(r.cpuMedianMs)} ms of CPU${busy}`).toBeLessThan(software ? 8 : 4);
+    // the scrub renders as fast as the scene can: within 15 % of 1000 / (GPU frame time), capped at 60
+    const ceiling = Math.min(60, 1000 / r.sceneMs);
+    expect(r.fps, `${round(r.fps)} fps while scrubbing; the scene alone renders at most ${round(ceiling)}${busy}`).toBeGreaterThan(ceiling * (software ? 0.5 : 0.85));
+  });
+}

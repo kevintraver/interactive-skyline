@@ -85,6 +85,7 @@ export function initSettingsPanel(app) {
   });
   nightBtn.addEventListener('click', () => setSetting('night', !settings.night));
   function openOptions(open) {
+    if (open && app.closePopovers) app.closePopovers('settings');
     form.hidden = !open;
     optionsBtn.setAttribute('aria-expanded', String(open));
   }

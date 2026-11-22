@@ -18,6 +18,9 @@
         <g id="i-sun"><circle cx="10" cy="10" r="3.2" /><path d="M10 2.5v2M10 15.5v2M2.5 10h2M15.5 10h2M4.7 4.7l1.4 1.4M13.9 13.9l1.4 1.4M4.7 15.3l1.4-1.4M13.9 6.1l1.4-1.4" /></g>
         <g id="i-layers"><path d="m10 3 7 4-7 4-7-4 7-4z" /><path d="m3 11 7 4 7-4" /></g>
         <g id="i-eye"><path d="M2 10s3-5.5 8-5.5S18 10 18 10s-3 5.5-8 5.5S2 10 2 10z" /><circle cx="10" cy="10" r="2.3" /></g>
+        <g id="i-clock"><circle cx="10" cy="10" r="7" /><path d="M10 6v4.2l2.8 1.8" /></g>
+        <g id="i-play"><path d="M7 5.2v9.6l7.6-4.8z" /></g>
+        <g id="i-pause"><path d="M7.5 5.5v9M12.5 5.5v9" /></g>
         <g id="i-eye-off"><path d="M2 10s3-5.5 8-5.5S18 10 18 10s-3 5.5-8 5.5S2 10 2 10z" /><path d="M4 16 16 4" /></g>
       </defs>
     </svg>
@@ -63,6 +66,7 @@
 
     <div id="tools">
       <button id="night" aria-pressed="false"><svg class="icon" viewBox="0 0 20 20" aria-hidden="true"><use href="#i-moon" /></svg></button>
+      <button id="sky-toggle" aria-expanded="false" aria-controls="sky" aria-label="Time of day" title="Time of day (T)"><svg class="icon" viewBox="0 0 20 20" aria-hidden="true"><use href="#i-clock" /></svg></button>
       <button id="options-toggle" aria-expanded="false" aria-controls="settings" aria-label="Map options" title="Map options"><svg class="icon" viewBox="0 0 20 20" aria-hidden="true"><use href="#i-layers" /></svg></button>
       <button id="compass" aria-label="Face north" title="Face north">
         <svg viewBox="0 0 20 20" aria-hidden="true"><path class="n" d="M10 2.5 13 10H7z" /><path class="s" d="M10 17.5 13 10H7z" /></svg>
@@ -86,6 +90,36 @@
       </div>
       <button type="button" id="settings-reset">Reset options</button>
       <p id="about"></p>
+    </form>
+
+    <form id="sky" class="pop" aria-label="Time of day" onsubmit="return false" hidden>
+      <div class="row sky-now">
+        <button type="button" id="sky-play" aria-label="Play" title="Play (Space)"><svg class="icon" viewBox="0 0 20 20" aria-hidden="true"><use href="#i-play" /></svg></button>
+        <output id="sky-time" aria-live="off"></output>
+        <button type="button" id="sky-live" title="Now (N)">Now</button>
+      </div>
+      <label class="field">
+        <span class="row"><span>Time of day</span><output id="sky-phase"></output></span>
+        <span class="sky-track" aria-hidden="true"><span class="tick" data-event="sunrise"></span><span class="tick" data-event="sunset"></span></span>
+        <input type="range" id="sky-scrub" min="0" max="1439" step="1" aria-label="Time of day" />
+        <span class="row sky-ticks"><output id="sky-sunrise"></output><output id="sky-sunset"></output></span>
+      </label>
+      <div class="seg" role="group" aria-label="Jump to">
+        <label><input type="radio" name="sky-jump" value="sunrise" /><span>Sunrise</span></label>
+        <label><input type="radio" name="sky-jump" value="noon" /><span>Noon</span></label>
+        <label><input type="radio" name="sky-jump" value="sunset" /><span>Sunset</span></label>
+        <label><input type="radio" name="sky-jump" value="night" /><span>Night</span></label>
+      </div>
+      <div class="row sky-more">
+        <label>Date <input type="date" id="sky-date" min="1940-01-01" /></label>
+        <label>Speed <select id="sky-speed">
+          <option value="0">Paused</option>
+          <option value="1">1×</option>
+          <option value="60">1 min/s</option>
+          <option value="600">10 min/s</option>
+          <option value="3600">1 h/s</option>
+        </select></label>
+      </div>
     </form>
 
     <div id="tip" hidden></div>

@@ -10,6 +10,7 @@ export function initCityMenu(app) {
     cityMenu.append(a);
   }
   function openCities(open) {
+    if (open && app.closePopovers) app.closePopovers('cities');
     cityMenu.hidden = !open;
     cityBtn.setAttribute('aria-expanded', String(open));
   }

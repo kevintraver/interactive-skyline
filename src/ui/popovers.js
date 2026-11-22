@@ -6,12 +6,19 @@ export function initPopovers(app) {
   const search = document.getElementById('search');
   const cityMenu = document.getElementById('city-menu'), cityBtn = document.getElementById('city');
   const form = document.getElementById('settings'), optionsBtn = document.getElementById('options-toggle');
+  const sky = document.getElementById('sky'), skyBtn = document.getElementById('sky-toggle');
   const POPS = [
     { open: () => !menu.hidden, inside: () => [menu], close: () => app.closeMenu() },
     { open: () => !results.hidden, inside: () => [results, document.getElementById('bar')], close: () => app.browse(false) },
     { open: () => !cityMenu.hidden, inside: () => [cityMenu, cityBtn], close: () => app.openCities(false) },
     { open: () => !form.hidden, inside: () => [form, optionsBtn], close: () => app.openOptions(false) },
+    { open: () => !sky.hidden, inside: () => [sky, skyBtn], close: () => app.openSky(false) },
   ];
+  // only one of #settings, #sky and #city-menu is open at a time (plan 01, decision 3), however it was opened
+  const OPENERS = { settings: () => app.openOptions, sky: () => app.openSky, cities: () => app.openCities };
+  app.closePopovers = (except) => {
+    for (const [name, opener] of Object.entries(OPENERS)) if (name !== except && opener()) opener()(false);
+  };
   addEventListener('pointerdown', (ev) => {
     for (const pop of POPS) if (pop.open() && !pop.inside().some((el) => el.contains(ev.target))) pop.close();
   }, true);
