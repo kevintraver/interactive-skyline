@@ -1,0 +1,1042 @@
+{
+  "version": 1,
+  "glb": "vehicles.glb",
+  "axes": "glTF: +Y up, vehicle faces -Z, right side +X, origin on the ground under the footprint centre, metres",
+  "material": "VehicleBody",
+  "colour": {
+    "attribute": "COLOR_0",
+    "three": "color",
+    "space": "linear sRGB",
+    "type": "UNSIGNED_BYTE VEC4 normalized (alpha always 1)",
+    "note": "Per-corner baked colour; paintable surfaces are white. GLTFLoader turns vertexColors on."
+  },
+  "extensions_required": [
+    "KHR_mesh_quantization"
+  ],
+  "extensions_note": "Only NORMAL is quantized (normalized BYTE); GLTFLoader supports it natively.",
+  "paint": {
+    "attribute": "_PAINT",
+    "three": "_paint",
+    "type": "FLOAT SCALAR",
+    "values": "1 on paint, 0 elsewhere (no values in between)",
+    "use": "colour = COLOR_0.rgb * mix(vec3(1), instanceColor, _paint)"
+  },
+  "lamps_note": "Positions in each body's glTF frame, about 1-3 cm outside the lens face. Pairs are [left, right] (left = -X). chmsl is null where FMVSS 108 does not require one (80 in = 2.03 m or wider). clearance entries carry colour, kind and the facing direction (front = -Z, rear = +Z, left = -X, right = +X).",
+  "bodies": {
+    "sedan": {
+      "length": 4.9,
+      "width": 1.84,
+      "height": 1.45,
+      "wheelbase": 2.83,
+      "tyre_diameter": 0.668,
+      "bbox_lod0": {
+        "min": [
+          -1.03,
+          0.0,
+          -2.47
+        ],
+        "max": [
+          1.03,
+          1.45,
+          2.47
+        ]
+      },
+      "triangles": {
+        "lod0": 620,
+        "lod1": 56
+      },
+      "nodes": {
+        "lod0": "sedan_lod0",
+        "lod1": "sedan_lod1"
+      },
+      "lamps": {
+        "head": [
+          [
+            -0.459,
+            0.65,
+            -2.47
+          ],
+          [
+            0.459,
+            0.65,
+            -2.47
+          ]
+        ],
+        "tail": [
+          [
+            -0.563,
+            0.88,
+            2.47
+          ],
+          [
+            0.563,
+            0.88,
+            2.47
+          ]
+        ],
+        "chmsl": [
+          0.0,
+          1.42,
+          0.96
+        ],
+        "side_marker_front": [
+          [
+            -0.89,
+            0.61,
+            -2.27
+          ],
+          [
+            0.89,
+            0.61,
+            -2.27
+          ]
+        ],
+        "side_marker_rear": [
+          [
+            -0.904,
+            0.88,
+            2.29
+          ],
+          [
+            0.904,
+            0.88,
+            2.29
+          ]
+        ],
+        "clearance": []
+      }
+    },
+    "crossover": {
+      "length": 4.6,
+      "width": 1.86,
+      "height": 1.7,
+      "wheelbase": 2.69,
+      "tyre_diameter": 0.725,
+      "bbox_lod0": {
+        "min": [
+          -1.03,
+          0.0,
+          -2.32
+        ],
+        "max": [
+          1.03,
+          1.7,
+          2.32
+        ]
+      },
+      "triangles": {
+        "lod0": 644,
+        "lod1": 56
+      },
+      "nodes": {
+        "lod0": "crossover_lod0",
+        "lod1": "crossover_lod1"
+      },
+      "lamps": {
+        "head": [
+          [
+            -0.491,
+            0.85,
+            -2.32
+          ],
+          [
+            0.491,
+            0.85,
+            -2.32
+          ]
+        ],
+        "tail": [
+          [
+            -0.621,
+            1.05,
+            2.32
+          ],
+          [
+            0.621,
+            1.05,
+            2.32
+          ]
+        ],
+        "chmsl": [
+          0.0,
+          1.68,
+          2.04
+        ],
+        "side_marker_front": [
+          [
+            -0.906,
+            0.81,
+            -2.12
+          ],
+          [
+            0.906,
+            0.81,
+            -2.12
+          ]
+        ],
+        "side_marker_rear": [
+          [
+            -0.923,
+            1.05,
+            2.14
+          ],
+          [
+            0.923,
+            1.05,
+            2.14
+          ]
+        ],
+        "clearance": []
+      }
+    },
+    "pickup": {
+      "length": 5.89,
+      "width": 2.03,
+      "height": 1.97,
+      "wheelbase": 3.68,
+      "tyre_diameter": 0.815,
+      "bbox_lod0": {
+        "min": [
+          -1.12,
+          0.0,
+          -2.965
+        ],
+        "max": [
+          1.12,
+          1.97,
+          2.965
+        ]
+      },
+      "triangles": {
+        "lod0": 588,
+        "lod1": 64
+      },
+      "nodes": {
+        "lod0": "pickup_lod0",
+        "lod1": "pickup_lod1"
+      },
+      "lamps": {
+        "head": [
+          [
+            -0.714,
+            1.04,
+            -2.965
+          ],
+          [
+            0.714,
+            1.04,
+            -2.965
+          ]
+        ],
+        "tail": [
+          [
+            -0.924,
+            1.1,
+            2.965
+          ],
+          [
+            0.924,
+            1.1,
+            2.965
+          ]
+        ],
+        "chmsl": [
+          0.0,
+          1.93,
+          0.9
+        ],
+        "side_marker_front": [
+          [
+            -1.012,
+            1.0,
+            -2.765
+          ],
+          [
+            1.012,
+            1.0,
+            -2.765
+          ]
+        ],
+        "side_marker_rear": [
+          [
+            -1.016,
+            1.1,
+            2.785
+          ],
+          [
+            1.016,
+            1.1,
+            2.785
+          ]
+        ],
+        "clearance": []
+      }
+    },
+    "van": {
+      "length": 5.93,
+      "width": 2.02,
+      "height": 2.55,
+      "wheelbase": 3.66,
+      "tyre_diameter": 0.74,
+      "bbox_lod0": {
+        "min": [
+          -1.17,
+          0.0,
+          -2.985
+        ],
+        "max": [
+          1.17,
+          2.55,
+          2.985
+        ]
+      },
+      "triangles": {
+        "lod0": 600,
+        "lod1": 56
+      },
+      "nodes": {
+        "lod0": "van_lod0",
+        "lod1": "van_lod1"
+      },
+      "lamps": {
+        "head": [
+          [
+            -0.629,
+            0.94,
+            -2.985
+          ],
+          [
+            0.629,
+            0.94,
+            -2.985
+          ]
+        ],
+        "tail": [
+          [
+            -0.92,
+            1.06,
+            2.985
+          ],
+          [
+            0.92,
+            1.06,
+            2.985
+          ]
+        ],
+        "chmsl": [
+          0.0,
+          2.47,
+          2.985
+        ],
+        "side_marker_front": [
+          [
+            -1.0,
+            0.9,
+            -2.785
+          ],
+          [
+            1.0,
+            0.9,
+            -2.785
+          ]
+        ],
+        "side_marker_rear": [
+          [
+            -1.02,
+            1.06,
+            2.805
+          ],
+          [
+            1.02,
+            1.06,
+            2.805
+          ]
+        ],
+        "clearance": []
+      }
+    },
+    "tractor_trailer": {
+      "length": 22.24,
+      "width": 2.59,
+      "height": 4.11,
+      "wheelbase": 5.9,
+      "tyre_diameter": 1.05,
+      "bbox_lod0": {
+        "min": [
+          -1.295,
+          0.0,
+          -11.15
+        ],
+        "max": [
+          1.295,
+          4.11,
+          11.14
+        ]
+      },
+      "triangles": {
+        "lod0": 924,
+        "lod1": 72
+      },
+      "nodes": {
+        "lod0": "tractor_trailer_lod0",
+        "lod1": "tractor_trailer_lod1"
+      },
+      "lamps": {
+        "head": [
+          [
+            -0.71,
+            1.025,
+            -11.09
+          ],
+          [
+            0.71,
+            1.025,
+            -11.09
+          ]
+        ],
+        "tail": [
+          [
+            -1.05,
+            1.02,
+            11.15
+          ],
+          [
+            1.05,
+            1.02,
+            11.15
+          ]
+        ],
+        "chmsl": null,
+        "side_marker_front": [
+          [
+            -1.13,
+            1.62,
+            -10.57
+          ],
+          [
+            1.13,
+            1.62,
+            -10.57
+          ]
+        ],
+        "side_marker_rear": [
+          [
+            -1.305,
+            1.1,
+            10.82
+          ],
+          [
+            1.305,
+            1.1,
+            10.82
+          ]
+        ],
+        "clearance": [
+          {
+            "p": [
+              -0.3,
+              3.15,
+              -8.43
+            ],
+            "color": "amber",
+            "kind": "identification",
+            "facing": "front"
+          },
+          {
+            "p": [
+              0.0,
+              3.15,
+              -8.43
+            ],
+            "color": "amber",
+            "kind": "identification",
+            "facing": "front"
+          },
+          {
+            "p": [
+              0.3,
+              3.15,
+              -8.43
+            ],
+            "color": "amber",
+            "kind": "identification",
+            "facing": "front"
+          },
+          {
+            "p": [
+              -1.06,
+              3.08,
+              -8.43
+            ],
+            "color": "amber",
+            "kind": "clearance",
+            "facing": "front"
+          },
+          {
+            "p": [
+              1.06,
+              3.08,
+              -8.43
+            ],
+            "color": "amber",
+            "kind": "clearance",
+            "facing": "front"
+          },
+          {
+            "p": [
+              -1.255,
+              4.03,
+              -5.04
+            ],
+            "color": "amber",
+            "kind": "clearance",
+            "facing": "front"
+          },
+          {
+            "p": [
+              -1.255,
+              4.03,
+              11.13
+            ],
+            "color": "red",
+            "kind": "clearance",
+            "facing": "rear"
+          },
+          {
+            "p": [
+              1.255,
+              4.03,
+              -5.04
+            ],
+            "color": "amber",
+            "kind": "clearance",
+            "facing": "front"
+          },
+          {
+            "p": [
+              1.255,
+              4.03,
+              11.13
+            ],
+            "color": "red",
+            "kind": "clearance",
+            "facing": "rear"
+          },
+          {
+            "p": [
+              -0.25,
+              4.01,
+              11.13
+            ],
+            "color": "red",
+            "kind": "identification",
+            "facing": "rear"
+          },
+          {
+            "p": [
+              0.0,
+              4.01,
+              11.13
+            ],
+            "color": "red",
+            "kind": "identification",
+            "facing": "rear"
+          },
+          {
+            "p": [
+              0.25,
+              4.01,
+              11.13
+            ],
+            "color": "red",
+            "kind": "identification",
+            "facing": "rear"
+          },
+          {
+            "p": [
+              -1.305,
+              1.17,
+              -4.73
+            ],
+            "color": "amber",
+            "kind": "side_marker",
+            "facing": "left"
+          },
+          {
+            "p": [
+              -1.305,
+              1.17,
+              -0.992
+            ],
+            "color": "amber",
+            "kind": "intermediate_side_marker",
+            "facing": "left"
+          },
+          {
+            "p": [
+              -1.305,
+              1.17,
+              3.045
+            ],
+            "color": "amber",
+            "kind": "intermediate_side_marker",
+            "facing": "left"
+          },
+          {
+            "p": [
+              -1.305,
+              1.17,
+              7.083
+            ],
+            "color": "amber",
+            "kind": "intermediate_side_marker",
+            "facing": "left"
+          },
+          {
+            "p": [
+              -1.305,
+              4.01,
+              -4.88
+            ],
+            "color": "amber",
+            "kind": "upper_marker",
+            "facing": "left"
+          },
+          {
+            "p": [
+              -1.305,
+              4.01,
+              3.045
+            ],
+            "color": "amber",
+            "kind": "upper_marker",
+            "facing": "left"
+          },
+          {
+            "p": [
+              -1.305,
+              4.01,
+              10.97
+            ],
+            "color": "amber",
+            "kind": "upper_marker",
+            "facing": "left"
+          },
+          {
+            "p": [
+              1.305,
+              1.17,
+              -4.73
+            ],
+            "color": "amber",
+            "kind": "side_marker",
+            "facing": "right"
+          },
+          {
+            "p": [
+              1.305,
+              1.17,
+              -0.992
+            ],
+            "color": "amber",
+            "kind": "intermediate_side_marker",
+            "facing": "right"
+          },
+          {
+            "p": [
+              1.305,
+              1.17,
+              3.045
+            ],
+            "color": "amber",
+            "kind": "intermediate_side_marker",
+            "facing": "right"
+          },
+          {
+            "p": [
+              1.305,
+              1.17,
+              7.083
+            ],
+            "color": "amber",
+            "kind": "intermediate_side_marker",
+            "facing": "right"
+          },
+          {
+            "p": [
+              1.305,
+              4.01,
+              -4.88
+            ],
+            "color": "amber",
+            "kind": "upper_marker",
+            "facing": "right"
+          },
+          {
+            "p": [
+              1.305,
+              4.01,
+              3.045
+            ],
+            "color": "amber",
+            "kind": "upper_marker",
+            "facing": "right"
+          },
+          {
+            "p": [
+              1.305,
+              4.01,
+              10.97
+            ],
+            "color": "amber",
+            "kind": "upper_marker",
+            "facing": "right"
+          }
+        ]
+      },
+      "paint_note": "Only the tractor is paint; the trailer box has its own off-white.",
+      "trailer_length": 16.15
+    },
+    "coach": {
+      "length": 13.72,
+      "width": 2.59,
+      "height": 3.5,
+      "wheelbase": 7.24,
+      "tyre_diameter": 1.05,
+      "bbox_lod0": {
+        "min": [
+          -1.295,
+          0.0,
+          -6.88
+        ],
+        "max": [
+          1.295,
+          3.5,
+          6.88
+        ]
+      },
+      "triangles": {
+        "lod0": 704,
+        "lod1": 48
+      },
+      "nodes": {
+        "lod0": "coach_lod0",
+        "lod1": "coach_lod1"
+      },
+      "lamps": {
+        "head": [
+          [
+            -0.975,
+            0.82,
+            -6.88
+          ],
+          [
+            0.975,
+            0.82,
+            -6.88
+          ]
+        ],
+        "tail": [
+          [
+            -1.09,
+            1.2,
+            6.88
+          ],
+          [
+            1.09,
+            1.2,
+            6.88
+          ]
+        ],
+        "chmsl": null,
+        "side_marker_front": [
+          [
+            -1.305,
+            0.8,
+            -6.51
+          ],
+          [
+            1.305,
+            0.8,
+            -6.51
+          ]
+        ],
+        "side_marker_rear": [
+          [
+            -1.305,
+            0.9,
+            6.51
+          ],
+          [
+            1.305,
+            0.9,
+            6.51
+          ]
+        ],
+        "clearance": [
+          {
+            "p": [
+              -1.115,
+              3.42,
+              -6.48
+            ],
+            "color": "amber",
+            "kind": "clearance",
+            "facing": "front"
+          },
+          {
+            "p": [
+              -1.195,
+              3.42,
+              6.87
+            ],
+            "color": "red",
+            "kind": "clearance",
+            "facing": "rear"
+          },
+          {
+            "p": [
+              1.115,
+              3.42,
+              -6.48
+            ],
+            "color": "amber",
+            "kind": "clearance",
+            "facing": "front"
+          },
+          {
+            "p": [
+              1.195,
+              3.42,
+              6.87
+            ],
+            "color": "red",
+            "kind": "clearance",
+            "facing": "rear"
+          },
+          {
+            "p": [
+              -0.25,
+              3.45,
+              -6.46
+            ],
+            "color": "amber",
+            "kind": "identification",
+            "facing": "front"
+          },
+          {
+            "p": [
+              -0.25,
+              3.42,
+              6.87
+            ],
+            "color": "red",
+            "kind": "identification",
+            "facing": "rear"
+          },
+          {
+            "p": [
+              0.0,
+              3.45,
+              -6.46
+            ],
+            "color": "amber",
+            "kind": "identification",
+            "facing": "front"
+          },
+          {
+            "p": [
+              0.0,
+              3.42,
+              6.87
+            ],
+            "color": "red",
+            "kind": "identification",
+            "facing": "rear"
+          },
+          {
+            "p": [
+              0.25,
+              3.45,
+              -6.46
+            ],
+            "color": "amber",
+            "kind": "identification",
+            "facing": "front"
+          },
+          {
+            "p": [
+              0.25,
+              3.42,
+              6.87
+            ],
+            "color": "red",
+            "kind": "identification",
+            "facing": "rear"
+          },
+          {
+            "p": [
+              -1.305,
+              0.85,
+              -0.84
+            ],
+            "color": "amber",
+            "kind": "intermediate_side_marker",
+            "facing": "left"
+          },
+          {
+            "p": [
+              -1.195,
+              3.4,
+              -4.452
+            ],
+            "color": "amber",
+            "kind": "upper_marker",
+            "facing": "left"
+          },
+          {
+            "p": [
+              -1.195,
+              3.4,
+              -0.0
+            ],
+            "color": "amber",
+            "kind": "upper_marker",
+            "facing": "left"
+          },
+          {
+            "p": [
+              -1.195,
+              3.4,
+              4.452
+            ],
+            "color": "amber",
+            "kind": "upper_marker",
+            "facing": "left"
+          },
+          {
+            "p": [
+              1.305,
+              0.85,
+              -0.84
+            ],
+            "color": "amber",
+            "kind": "intermediate_side_marker",
+            "facing": "right"
+          },
+          {
+            "p": [
+              1.195,
+              3.4,
+              -4.452
+            ],
+            "color": "amber",
+            "kind": "upper_marker",
+            "facing": "right"
+          },
+          {
+            "p": [
+              1.195,
+              3.4,
+              -0.0
+            ],
+            "color": "amber",
+            "kind": "upper_marker",
+            "facing": "right"
+          },
+          {
+            "p": [
+              1.195,
+              3.4,
+              4.452
+            ],
+            "color": "amber",
+            "kind": "upper_marker",
+            "facing": "right"
+          }
+        ]
+      },
+      "tag_axle_behind_drive": 1.37
+    }
+  },
+  "mix": {
+    "assumed": true,
+    "note": "Assumed generic US freeway mix, not data. Light vehicles and trucks are separate shares.",
+    "light": {
+      "sedan": 0.28,
+      "crossover": 0.46,
+      "pickup": 0.2,
+      "van": 0.06
+    },
+    "truck": {
+      "tractor_trailer": 0.9,
+      "coach": 0.1
+    }
+  },
+  "palette": {
+    "assumed": true,
+    "note": "Assumed weights shaped like published US colour-popularity surveys; hex is sRGB.",
+    "colors": [
+      {
+        "name": "white",
+        "hex": "F2F2F0",
+        "weight": 0.17
+      },
+      {
+        "name": "pearl white",
+        "hex": "E8E6DF",
+        "weight": 0.07
+      },
+      {
+        "name": "black",
+        "hex": "141517",
+        "weight": 0.2
+      },
+      {
+        "name": "dark grey",
+        "hex": "3C3F44",
+        "weight": 0.12
+      },
+      {
+        "name": "medium grey",
+        "hex": "6E7276",
+        "weight": 0.07
+      },
+      {
+        "name": "silver",
+        "hex": "A9ADB1",
+        "weight": 0.11
+      },
+      {
+        "name": "dark blue",
+        "hex": "1E2D4F",
+        "weight": 0.06
+      },
+      {
+        "name": "mid blue",
+        "hex": "3A5F94",
+        "weight": 0.04
+      },
+      {
+        "name": "red",
+        "hex": "A0151B",
+        "weight": 0.08
+      },
+      {
+        "name": "dark red",
+        "hex": "5A1418",
+        "weight": 0.03
+      },
+      {
+        "name": "beige",
+        "hex": "B5A68A",
+        "weight": 0.03
+      },
+      {
+        "name": "dark green",
+        "hex": "2B3E33",
+        "weight": 0.02
+      }
+    ]
+  }
+}
