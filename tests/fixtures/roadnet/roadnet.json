@@ -1,0 +1,112 @@
+{
+  "version": 1,
+  "source": {
+    "generator": "tests/fixtures/roadnet/synthetic.js"
+  },
+  "roads": [
+    {
+      "id": "test.main",
+      "ref": "T 1",
+      "dir": "northeast",
+      "class": "motorway",
+      "sections": [
+        {
+          "s0": 0,
+          "s1": 1600,
+          "lanes": [
+            {
+              "w": 3.66
+            },
+            {
+              "w": 3.66
+            },
+            {
+              "w": 3.66
+            }
+          ],
+          "left": {
+            "shoulder": 3.05,
+            "edge": "yellow"
+          },
+          "right": {
+            "shoulder": 3.05,
+            "edge": "white",
+            "rumble": true
+          },
+          "placement": "centre"
+        },
+        {
+          "s0": 1600,
+          "s1": 3000,
+          "lanes": [
+            {
+              "w": 3.66
+            },
+            {
+              "w": 3.66
+            },
+            {
+              "w": 3.66
+            },
+            {
+              "w": 3.66
+            }
+          ],
+          "left": {
+            "shoulder": 3.05
+          },
+          "right": {
+            "shoulder": 3.05
+          },
+          "placement": "centre"
+        }
+      ],
+      "speed": [
+        {
+          "s0": 0,
+          "mph": 70
+        }
+      ],
+      "links": [
+        {
+          "s": 1500,
+          "side": "right",
+          "kind": "exit",
+          "ref": "1",
+          "to": "test.x1"
+        }
+      ],
+      "stations": {
+        "offset": 0,
+        "count": 751,
+        "spacing": 4
+      }
+    },
+    {
+      "id": "test.south",
+      "ref": "T 1",
+      "dir": "southwest",
+      "class": "motorway",
+      "sections": [
+        {
+          "s0": 0,
+          "s1": 1200,
+          "lanes": [
+            {
+              "w": 3.66
+            },
+            {
+              "w": 3.66
+            }
+          ],
+          "placement": "left_of:1"
+        }
+      ],
+      "stations": {
+        "offset": 751,
+        "count": 301,
+        "spacing": 4
+      }
+    }
+  ]
+}

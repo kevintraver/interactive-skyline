@@ -1,0 +1,99 @@
+/**
+ * The road texture atlas, shared by the mesher (which writes UVs into it) and the material (which
+ * draws it). Pure; draws through any object with `fillStyle` and `fillRect`, so tests can run it
+ * under Node with a recording stub.
+ *
+ * Across (u) the atlas is a row of regions; along (v) it is one marking cycle, 12.192 m (40 ft),
+ * repeating, keyed on chainage: v = s / CYCLE. Lines sit inside 1 m wide marking regions that the
+ * mesher maps to 1 m wide strips centred on each lane boundary, so a line is the same 0.15 m
+ * whatever the lane or shoulder width, and every region's border is plain asphalt or dirt. That
+ * keeps mipmaps from bleeding one region's line into another, which is what makes the lines
+ * hold up at grazing angles together with anisotropic filtering.
+ */
+
+export const CYCLE = 12.192; // m: a 10 ft line and a 30 ft gap (MUTCD)
+export const DASH = 3.048; // m
+export const LINE_W = 0.15; // m: 6 in normal line
+export const MARK_W = 1.0; // m: width of a marking strip, centred on its boundary
+export const ATLAS_W = 512;
+export const ATLAS_H = 512;
+
+/** Regions in atlas pixels [u0, u1). Marking regions span MARK_W metres. */
+export const REGIONS = {
+  lane: [0, 96],
+  broken: [96, 160], // white line centred, broken
+  solid: [160, 224], // white line centred, solid
+  yellow: [224, 288], // lane side at u0; line from the middle 0.15 m towards u1 (the shoulder)
+  white: [288, 352], // likewise
+  shoulder: [352, 448],
+  dirt: [448, 512],
+};
+
+/** Kinds written to the mesh's `kind` attribute. */
+export const KIND = { lane: 0, marking: 1, shoulder: 2, embankment: 3 };
+
+/** u for a fraction t (0..1) across region `name`; plain regions are inset so mips never reach a neighbour. */
+export function regionU(name, t) {
+  const [a, b] = REGIONS[name];
+  const inset = name === 'lane' || name === 'shoulder' || name === 'dirt' ? 6 : 0;
+  return (a + inset + t * (b - a - 2 * inset)) / ATLAS_W;
+}
+
+// sun-faded desert asphalt; specks kept low in contrast so they read as texture, not blotches
+const DAY = { lane: '#6a6863', laneSpeck: ['#64625d', '#706e69', '#5f5d58'], shoulder: '#7b766d', shoulderSpeck: ['#747067', '#827d73'],
+  dirt: '#b09876', dirtSpeck: ['#a89070', '#b8a07e', '#a48c6b'], white: '#e9e8e2', yellow: '#e3b42c' };
+// Emissive map for the night look: markings stand out (they are retroreflective; this stands in
+// for headlights until they exist), asphalt barely, dirt not at all.
+const NIGHT = { lane: '#3a3a3a', laneSpeck: ['#363636', '#3e3e3e'], shoulder: '#323231', shoulderSpeck: ['#2e2e2e', '#363635'],
+  dirt: '#000000', dirtSpeck: [], white: '#f0f0ea', yellow: '#f0c040' };
+
+/** Small deterministic generator, so the texture is the same every load. */
+function rng(seed) {
+  let a = seed >>> 0;
+  return () => { a = (a + 0x6d2b79f5) >>> 0; let t = a; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
+}
+
+function specks(ctx, [u0, u1], colors, count, rand, h) {
+  if (!colors.length) return;
+  for (let i = 0; i < count; i++) {
+    ctx.fillStyle = colors[(rand() * colors.length) | 0];
+    const sz = 1 + ((rand() * 2) | 0);
+    ctx.fillRect(u0 + rand() * (u1 - u0 - sz), rand() * (h - sz), sz, sz);
+  }
+}
+
+/**
+ * Draw the atlas into a 2D context of ATLAS_W x ATLAS_H pixels.
+ * @param {{ fillStyle: string, fillRect: Function }} ctx
+ * @param {{ night?: boolean, seed?: number }} [opts] night: draw the emissive map instead
+ */
+export function drawRoadAtlas(ctx, { night = false, seed = 7 } = {}) {
+  const p = night ? NIGHT : DAY;
+  const W = ATLAS_W, H = ATLAS_H;
+  const rand = rng(seed);
+  const pxM = (name) => (REGIONS[name][1] - REGIONS[name][0]) / MARK_W; // pixels per metre across a marking region
+  const fill = (color, u0, v0, w, h) => { ctx.fillStyle = color; ctx.fillRect(u0, v0, w, h); };
+
+  // ground colours; marking regions are lane asphalt on the lane side, shoulder asphalt beyond an edge line
+  fill(p.lane, 0, 0, REGIONS.yellow[0], H);
+  for (const name of ['yellow', 'white']) {
+    const [a, b] = REGIONS[name];
+    const mid = a + (b - a) / 2;
+    fill(p.lane, a, 0, mid - a, H);
+    fill(p.shoulder, mid, 0, b - mid, H);
+  }
+  fill(p.shoulder, REGIONS.shoulder[0], 0, REGIONS.shoulder[1] - REGIONS.shoulder[0], H);
+  fill(p.dirt, REGIONS.dirt[0], 0, REGIONS.dirt[1] - REGIONS.dirt[0], H);
+  const area = (r) => ((r[1] - r[0]) * H) / 60;
+  specks(ctx, [0, REGIONS.yellow[0]], p.laneSpeck, area([0, REGIONS.yellow[0]]), rand, H);
+  specks(ctx, REGIONS.shoulder, p.shoulderSpeck, area(REGIONS.shoulder), rand, H);
+  specks(ctx, REGIONS.dirt, p.dirtSpeck, area(REGIONS.dirt) * 3, rand, H);
+
+  // lines last, over the specks
+  const lw = LINE_W * pxM('broken');
+  const centre = (name) => REGIONS[name][0] + (REGIONS[name][1] - REGIONS[name][0]) / 2;
+  fill(p.white, centre('broken') - lw / 2, 0, lw, (DASH / CYCLE) * H);
+  fill(p.white, centre('solid') - lw / 2, 0, lw, H);
+  fill(p.yellow, centre('yellow'), 0, lw, H);
+  fill(p.white, centre('white'), 0, lw, H);
+}
