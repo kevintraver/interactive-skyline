@@ -3,15 +3,24 @@
 // run once the session has its road, terrain and clock; one that throws is reported and left out,
 // and the drive goes on without it.
 //
+// Routes. The drive can switch routes (session.js, "Routes"). A part whose work depends on the route (its
+// RoadNet, its signs) adds the optional hook setRoute({ route, roadnet, road, files }): called when the route
+// changes and once on registering; `route` is routes.json's entry, `roadnet` the decoded RoadNet it runs on,
+// `road` its road there, `files` its file names (roadnet, bin, signs, barriers, traffic). Valley-wide parts
+// (billboards, the valley's ribbons, screens, obstruction lights) need none.
+//
 // ctx = {
-//   app        the app's own context: city, cityId, DATA, scene, camera, renderer, settings, tall, invalidate, ...
+//   app        the app's own context: city, cityId, DATA, scene, camera, renderer, settings, tall, invalidate,
+//              events (the app's bus, src/app/events.js: 'buildings:changed', 'buildings:rebuilt'), ...
 //   session    the drive session (journey, pose, clock, rig, env, net as getters; addPart)
 //   get(name)  fetch a file of this city's data directory (rejects unless the answer is 2xx)
 //   optional(name)  the same as JSON, or null when the file is missing
 //   group, roads     the drive's scene group, and the group under it that holds everything on the road
 //   terrain, wideMesh, ground    the terrain provider, the wide ground mesh, the app's ground meshes [[mesh, grid], ...]
-//   net, env, clock, rig, frameOf, earthR, base
-//   materials, chunks, roadside  the road materials, the road chunk system and the signs (null without signs)
+//   net, env, clock, rig, frameOf, earthR, base   (net: routes.js; net.roadnet is the RoadNet loaded last)
+//   materials  the road materials, shared by every route
+//   chunks, roadside  getters: the current route's road chunk system and signs (null without signs); read them
+//              when needed, not once, since a route change replaces them
 // }
 
 /** @type {Array<(ctx: object) => (object | null | undefined | Promise<object | null | undefined>)>} */
@@ -24,4 +33,5 @@ export const PART_FACTORIES = [
   (ctx) => import('./lights/obstruction.js').then((m) => m.createObstructionPart(ctx)), // red obstruction lights on buildings above 61 m, hidden and moved with them (D5.6)
   (ctx) => import('./screens/index.js').then((m) => m.createScreensPart(ctx)), // screens on simulation time, their registry, the Sphere's light (D7.3, D7.5)
   (ctx) => import('./roadside/billboards.js').then((m) => m.createBillboardsPart(ctx)), // billboards: structures, abstract faces, digital glow (D7.4, D7.5)
+  (ctx) => import('./weather/index.js').then((m) => m.createWeatherPart(ctx)), // rain on the stand-in weather: wet road, reflected lamps, rain, spray, grey sky (D8.1, D8.3)
 ];

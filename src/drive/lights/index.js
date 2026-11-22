@@ -71,7 +71,7 @@ export async function createLampsPart(ctx) {
   floorAlt -= 150; // below the lowest lamp: the horizon test stays conservative
 
   // the sprite layer: instance i is lamp i of the product
-  const layer = createSpriteLayer({ capacity: n, name: 'lamp-sprites' });
+  const layer = createSpriteLayer({ capacity: n, name: 'lamp-sprites', reflect: true }); // reflect: twins on wet pavement (weather)
   const patternOf = new Map();
   for (const t of types.list) {
     patternOf.set(t.id, layer.definePattern({ kind: t.optic, kDown: t.kDown, kUp: t.kUp, downShare: 1 - t.uplight }));
@@ -102,8 +102,9 @@ export async function createLampsPart(ctx) {
   for (const [mesh] of ctx.ground || []) attach(mesh.material, 'ground');
   let corridorMat = null, corridorCheck = 0, corridorGroup;
 
-  const roads = ctx.net?.roadnet?.roads || [];
-  const poles = createPoles({ pack, types, roads, groundY: terrain.groundY, parent: ctx.group });
+  // the poles stand near the roads of the route's RoadNet: rebuilt when the route changes (setRoute)
+  let poleRoads = ctx.net?.roadnet || null;
+  let poles = createPoles({ pack, types, roads: poleRoads?.roads || [], groundY: terrain.groundY, parent: ctx.group });
 
   const onTable = createOnTable(env.ephemeris);
   const table = new Float32Array(37);
@@ -270,6 +271,14 @@ export async function createLampsPart(ctx) {
       });
       timings.add(pendingMs + performance.now() - t0);
       pendingMs = 0;
+    },
+    /** Another route: its RoadNet's roads decide which lamps get poles. */
+    setRoute({ roadnet }) {
+      if (!roadnet || roadnet === poleRoads) return;
+      poleRoads = roadnet;
+      poles.dispose();
+      poles = createPoles({ pack, types, roads: roadnet.roads, groundY: terrain.groundY, parent: ctx.group });
+      poles.setVisible(enabled);
     },
     whenSettled: () => pools.whenSettled(),
     stats() {

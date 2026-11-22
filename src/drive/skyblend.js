@@ -13,6 +13,13 @@
 // between sun and moon. Rounding the time keeps the light, and so the shadows, a pure function of simulation time.
 // Low in the sky a step moves long shadows a long way, so the shadows fade out between 10 and 2 degrees (look.js
 // shadowAt) and are gone before the steps would show.
+//
+// Weather (plan 02, phase 8; the one hook the weather adds here): setSkyWeather({ overcast, skyDim, visibilityM }) from
+// the weather part (src/drive/weather/index.js) repaints every held blend with the sky greyed and dimmed toward an
+// overcast one (toward a dim warm grey at night: a cloud deck lit by the city), the sun's direct light and shadows
+// cut to what comes through cloud, the hemisphere light set for an overcast sky, and the fog thickened to reach 95%
+// at the visibility (FogExp2: density sqrt(-ln 0.05) / visibility, never thinner than the app's own). With overcast 0
+// (dry: the default) paint() is exactly what it was. The rules are weatheredLook below.
 
 import * as THREE from 'three';
 import { night } from '../night.js';
@@ -36,6 +43,55 @@ void main(){
   float w = glowAmount * exp(-h * 5.0) * (0.4 * toward + 0.6 * t6);
   gl_FragColor = vec4(mix(c, glow, clamp(w, 0.0, 1.0)), 1.0);
 }`;
+
+/** The weather's state for the sky, shared by every blend (setSkyWeather). */
+let skyWeather = { overcast: 0, skyDim: 1, visibilityM: Infinity };
+const blends = new Set();
+/** A rain-lit cloud deck over the city at night, sRGB (ASSUMED, by eye: a dim orange-grey). */
+const CITY_CLOUD = [0.2, 0.16, 0.13];
+
+/**
+ * Tell the drive's sky about the weather (env.weather.state(): overcast 0..1, skyDim the daylight's share of a clear
+ * sky's, visibilityM). Repaints any blend holding the sky.
+ */
+export function setSkyWeather({ overcast = 0, skyDim = 1, visibilityM = Infinity } = {}) {
+  skyWeather = { overcast: Math.min(1, Math.max(0, overcast || 0)), skyDim: Math.min(1, Math.max(0.01, skyDim)), visibilityM: visibilityM > 0 ? visibilityM : Infinity };
+  for (const b of blends) b();
+}
+
+/**
+ * The look with the weather on it (pure): sRGB colours greyed and dimmed by overcast and skyDim (toward CITY_CLOUD
+ * by the look's `lights` at night), the sun's light and shadows and the warm band cut, the hemisphere raised by the
+ * sun's lost light x skyDim (ASSUMED shares: direct sun kept 0.15 x skyDim; the lost light comes back diffuse, skyDim
+ * of it, half on level ground: an overcast day keeps about skyDim of a clear one's light), and the fog density for the
+ * visibility. Overcast 0 returns the look itself and the base density.
+ */
+export function weatheredLook(look, weather, baseDensity) {
+  const w = weather.overcast;
+  if (!(w > 0)) return { look, fogDensity: baseDensity };
+  const lights = Math.min(1, Math.max(0, look.lights ?? 0));
+  const dimSrgb = weather.skyDim ** (1 / 2.2);
+  const grey = (c) => {
+    const y = 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2];
+    return c.map((v, i) => {
+      const target = (1 - lights) * y * dimSrgb + lights * CITY_CLOUD[i];
+      return v + (target - v) * 0.85 * w;
+    });
+  };
+  const s = look.sky;
+  const skyLight = grey(s.skyLight);
+  // the sun's light that the cloud takes away comes back as the overcast sky's diffuse light, skyDim of it (over a
+  // sun about 30 degrees up: half of it on level ground), given to the hemisphere through its new (grey) colour
+  const kept = 1 - w + w * 0.15 * weather.skyDim;
+  const lost = look.light.intensity * (1 - kept);
+  const lumLin = (c) => c.reduce((a, v, i) => a + [0.2126, 0.7152, 0.0722][i] * Math.max(v, 0) ** 2.2, 0);
+  const hemiAdd = (lost * weather.skyDim * 0.5) / Math.max(lumLin(skyLight), 0.05);
+  const sky = { ...s, haze: grey(s.haze), zenith: grey(s.zenith), glow: grey(s.glow), skyLight, groundLight: grey(s.groundLight),
+    glowAmount: s.glowAmount * (1 - 0.85 * w), hemi: s.hemi + hemiAdd };
+  const light = { ...look.light, intensity: look.light.intensity * kept, shadow: look.light.shadow * (1 - w) };
+  const fogDensity = Math.max(baseDensity, Number.isFinite(weather.visibilityM) ? (w * Math.sqrt(-Math.log(0.05))) / weather.visibilityM : 0);
+  return { look: { ...look, sky, light }, fogDensity };
+}
 
 /** Scene direction (x east, y up, z south) for an azimuth clockwise from north and an elevation, degrees. */
 export function sceneDirection(azimuth, elevation, out = new THREE.Vector3()) {
@@ -63,19 +119,27 @@ export function createSkyBlend({ dome, renderer, invalidate, ephemeris, ground, 
     vertexShader: DOME_VERTEX, fragmentShader: DOME_FRAGMENT,
   });
   material.name = 'drive sky';
-  let held = null, look = null, simStep = null, shadowKey = null, refreshes = 0;
+  blends.add(paint);
+  let held = null, current = null, simStep = null, shadowKey = null, refreshes = 0;
   let terrain = ground.map(([mesh]) => ({ mesh })), withImagery = imagery();
   const dir = new THREE.Vector3();
   const srgb = (color, rgb) => color.setRGB(rgb[0], rgb[1], rgb[2], THREE.SRGBColorSpace);
 
   function take() {
-    held = { material: dome.material, position: sky.sun.position.clone(), shadow: sky.sun.shadow.intensity };
+    held = { material: dome.material, position: sky.sun.position.clone(), shadow: sky.sun.shadow.intensity, fogDensity: sky.scene?.fog?.density };
     dome.material = material;
     sky.hold = (g) => { terrain = g.terrain; withImagery = g.imagery; paint(); };
   }
 
   function paint() {
-    if (!held || !look) return;
+    if (!held || !current) return;
+    const wl = weatheredLook(current, skyWeather, held.fogDensity);
+    const look = wl.look; // the look with the weather on it (itself when dry)
+    // the fog's density is touched only while it rains, and put back once when it stops
+    if (sky.scene?.fog && Number.isFinite(held.fogDensity) && (skyWeather.overcast > 0 || held.fogSet)) {
+      sky.scene.fog.density = wl.fogDensity;
+      held.fogSet = skyWeather.overcast > 0;
+    }
     const s = look.sky, u = material.uniforms;
     srgb(u.horizon.value, s.haze);
     srgb(u.zenith.value, s.zenith);
@@ -116,8 +180,8 @@ export function createSkyBlend({ dome, renderer, invalidate, ephemeris, ground, 
     /** Show a look (look.js lookAt) at a simulation time; takes the sky the first time. */
     set(next, simMs) {
       const step = Math.round(simMs / SUN_STEP_MS);
-      if (look === next && step === simStep && held) return;
-      look = next;
+      if (current === next && step === simStep && held) return;
+      current = next;
       simStep = step;
       if (!held) take();
       paint();
@@ -129,13 +193,14 @@ export function createSkyBlend({ dome, renderer, invalidate, ephemeris, ground, 
       dome.material = held.material;
       sky.sun.position.copy(held.position);
       sky.sun.shadow.intensity = held.shadow;
+      if (sky.scene?.fog && Number.isFinite(held.fogDensity)) sky.scene.fog.density = held.fogDensity;
       held = null;
-      look = null;
+      current = null;
       shadowKey = null;
       renderer.shadowMap.needsUpdate = true;
       invalidate();
     },
-    stats: () => ({ held: !!held, shadowRefreshes: refreshes, source: look?.light.source ?? null }),
-    dispose() { material.dispose(); },
+    stats: () => ({ held: !!held, shadowRefreshes: refreshes, source: current?.light.source ?? null, overcast: skyWeather.overcast }),
+    dispose() { blends.delete(paint); material.dispose(); },
   };
 }

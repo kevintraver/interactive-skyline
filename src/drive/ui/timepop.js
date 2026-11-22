@@ -1,9 +1,12 @@
 // The time-of-day popover, opened from the route bar's clock: a 24-hour slider for the city's local
 // time and three jumps (Dusk, Noon, Night). The jumps always keep the car where it is; the slider
-// obeys the hold-position lock. Opens and closes like the app's other popovers: from its button,
+// obeys the hold-position lock. Below them, the weather: four rain presets (env.js RAIN_PRESETS) chosen through
+// weather/control.js, which carries the choice to the drive's weather and the address. Opens and closes like the app's other popovers: from its button,
 // on Escape and on a press outside, with aria-expanded on the button.
 
 import { formatMinutes, localParts } from './format.js';
+import { RAIN_PRESETS } from '../env.js';
+import { rainChoice, chooseRain, onRainChoice, presetOf } from '../weather/control.js';
 
 /**
  * @param {{ button: HTMLButtonElement, tz: string, onTime: (minutes: number, done: boolean) => void,
@@ -26,6 +29,10 @@ export function createTimePop({ button, tz, onTime, onJump, state }) {
       <button type="button" data-jump="noon">Noon</button>
       <button type="button" data-jump="night" title="3 a.m.">Night</button>
     </div>
+    <span class="row" style="margin-top: 12px; display: flex;"><span>Weather</span></span>
+    <div class="jumps rain" role="radiogroup" aria-label="Weather" style="margin-top: 6px;">
+      ${RAIN_PRESETS.map((p) => `<button type="button" role="radio" data-rain="${p.id}" title="${p.mmPerHour ? `About ${p.mmPerHour} mm of rain an hour` : 'No rain'}" style="padding: 7px 4px;">${p.id === 'clear' ? 'Clear' : p.id === 'light' ? 'Light' : p.id === 'heavy' ? 'Heavy' : 'Rain'}</button>`).join('\n      ')}
+    </div>
     <p class="note"></p>`;
   document.body.append(el);
   const range = el.querySelector('input'), out = el.querySelector('output'), note = el.querySelector('.note');
@@ -41,7 +48,7 @@ export function createTimePop({ button, tz, onTime, onJump, state }) {
   function open(on) {
     el.hidden = !on;
     button.setAttribute('aria-expanded', String(on));
-    if (on) { api.update(state()); place(); }
+    if (on) { api.update(state()); markRain(); place(); }
   }
 
   button.addEventListener('click', () => open(el.hidden));
@@ -52,6 +59,23 @@ export function createTimePop({ button, tz, onTime, onJump, state }) {
     onTime(+range.value, false);
   });
   range.addEventListener('change', () => { sliding = false; onTime(+range.value, true); });
+  // the weather row: the chosen preset is marked (aria-checked, and the popover's stronger fill)
+  const rainButtons = [...el.querySelectorAll('[data-rain]')];
+  function markRain() {
+    const id = presetOf(rainChoice()).id;
+    for (const b of rainButtons) {
+      const on = b.dataset.rain === id;
+      b.setAttribute('aria-checked', String(on));
+      b.style.background = on ? 'var(--fill-strong)' : '';
+      b.style.boxShadow = on ? 'inset 0 0 0 1.5px currentColor' : '';
+    }
+  }
+  el.querySelector('.rain').addEventListener('click', (ev) => {
+    const b = ev.target.closest('button');
+    if (b) chooseRain(b.dataset.rain);
+  });
+  onRainChoice(markRain);
+  markRain();
   el.querySelector('.jumps').addEventListener('click', (ev) => {
     const b = ev.target.closest('button');
     if (b) onJump(b.dataset.jump);

@@ -1,7 +1,8 @@
 // Stand-ins for plan 01's EnvPort (plan 02, section 11.1): only what the drive's first phase needs.
 // Each member is deleted as plan 01 lands its real one. Pure maths, no DOM and no three.
 //
-// Present here: clock, ephemeris, quality (fixed 'high'), weather (always dry), and lighting's units and
+// Present here: clock, ephemeris, quality (fixed 'high'), weather (rain presets the visitor picks; see the weather
+// stand-in below), and lighting's units and
 // ambientLux (stand-ins tied to today's fixed exposure; plan 01's exposure replaces both).
 // Plan 01 adds: transport (the shared timeline UI, attachJourney, slotAbove), the rest of lighting
 // (sunDirection, shadow focus, colour from CCT or spectrum), exposure, atmosphere,
@@ -254,6 +255,108 @@ export const LIGHTING_UNITS = Object.freeze({
   lux: 0.1,
 });
 
+// ---------------------------------------------------------------- weather stand-in
+// Plan 01's weather service (live samples, a wet layer, rain, dust) replaces this. Until then the visitor picks one
+// of four presets and everything follows from its rain rate by the rules below: a pure function of the preset (or of
+// the rate the test hook sets), with no history, so choosing Rain gives the wet road at once. Clear is the default
+// and is exactly the dry state the drive had before.
+//
+// The rules (R in mm/h):
+//  wetness      1 - exp(-R / 2). ASSUMED: a road's texture and drainage take about the first 1-2 mm/h before a
+//               continuous film forms, so light rain leaves it damp with the wheel paths wet (0.39) and 4 mm/h and up
+//               cover it (0.86, 1.00 at 12).
+//  visibilityM  16 km x R^-0.6 (16 km at 1 mm/h, 7 km at 4, 3.6 km at 12), 80 km dry as before. ASSUMED: a fit to
+//               the usual ranges reported for rain (around 10 km and more in light rain, a few km in heavy rain);
+//               the drive uses it as the lamps' e-folding length (exp(-d / visibility), plan 02, 11.1) and as the
+//               5% contrast distance of the fog (skyblend.js).
+//  skyDim       daylight as a share of the clear sky's: 1 dry, 0.45 x R^-0.37 in rain (0.45 at 1 mm/h, 0.27 at 4,
+//               0.18 at 12). ASSUMED, within the range of CIE overcast against clear skies (an overcast sky gives
+//               roughly a tenth to a half of clear-sky daylight); rain needs cloud, so any rain starts at 0.45.
+//  overcast     0 dry, 1 in rain: how far the sky goes grey (skyblend.js setSkyWeather).
+//  puddles      clamp((R - 4) / 8, 0, 1): standing water in the wheel paths only in heavy rain. ASSUMED.
+//  wind         from 200 degrees (south-south-west, the usual quarter of Las Vegas's winter storms: ASSUMED) at 2, 4
+//               and 7 m/s for the three rain presets; still when clear.
+//  tempC        none: the stand-in has no temperature (hasTemperature false), so the cabin shows none.
+
+/** The presets, in the order the time popover shows them. */
+export const RAIN_PRESETS = Object.freeze([
+  Object.freeze({ id: 'clear', label: 'Clear', mmPerHour: 0, windMps: 0 }),
+  Object.freeze({ id: 'light', label: 'Light rain', mmPerHour: 1, windMps: 2 }),
+  Object.freeze({ id: 'moderate', label: 'Rain', mmPerHour: 4, windMps: 4 }),
+  Object.freeze({ id: 'heavy', label: 'Heavy rain', mmPerHour: 12, windMps: 7 }),
+]);
+/** Visibility when dry (m): what the lamps were given before the weather existed. */
+export const DRY_VISIBILITY_M = 80000;
+const WIND_FROM_DEG = 200;
+const MAX_RATE = 100;
+
+/** The weather state for a rain rate (mm/h), by the rules above. Pure. windMps defaults to the nearest preset's. */
+export function weatherFor(mmPerHour, { windMps, windFromDeg = WIND_FROM_DEG, preset = null } = {}) {
+  const R = Math.min(MAX_RATE, Math.max(0, Number(mmPerHour) || 0));
+  const raining = R > 0;
+  let wind = windMps;
+  if (!Number.isFinite(wind)) {
+    let best = RAIN_PRESETS[0];
+    for (const p of RAIN_PRESETS) if (Math.abs(p.mmPerHour - R) < Math.abs(best.mmPerHour - R)) best = p;
+    wind = raining ? Math.max(best.windMps, 1) : 0;
+  }
+  return Object.freeze({
+    preset,
+    precipMmPerHour: R,
+    precipKind: raining ? 'rain' : 'none',
+    wetness: raining ? 1 - Math.exp(-R / 2) : 0,
+    puddles: Math.min(1, Math.max(0, (R - 4) / 8)),
+    visibilityM: raining ? 16000 * R ** -0.6 : DRY_VISIBILITY_M,
+    skyDim: raining ? Math.min(1, 0.45 * R ** -0.37) : 1,
+    overcast: raining ? 1 : 0,
+    windMps: wind,
+    windSpeed: wind,
+    windFromDeg: raining ? windFromDeg : 0,
+    dust: 0,
+    tempC: null,
+    hasTemperature: false,
+  });
+}
+
+/**
+ * The weather stand-in: env.weather. state() is cached (the lamps read it every frame).
+ *   setPreset(id)          one of RAIN_PRESETS' ids; unknown ids are ignored
+ *   setRain(mmPerHour)     any rate (a test hook): the state follows by the same rules, preset null
+ *   on('change', fn)       fn(state) after every change of state; on('lightning') never fires here
+ */
+export function createWeather({ preset = 'clear' } = {}) {
+  const listeners = new Set();
+  let current = weatherFor(0, { preset: 'clear' });
+  const set = (next) => {
+    const same = Object.keys(next).every((k) => next[k] === current[k]);
+    current = next;
+    if (!same) for (const fn of [...listeners]) fn(current);
+  };
+  const weather = {
+    hasTemperature: false,
+    presets: RAIN_PRESETS,
+    state: () => current,
+    setPreset(id) {
+      const p = RAIN_PRESETS.find((x) => x.id === id);
+      if (p) set(weatherFor(p.mmPerHour, { windMps: p.windMps, preset: p.id }));
+      return weather;
+    },
+    setRain(mmPerHour) {
+      const R = Number(mmPerHour);
+      if (!Number.isFinite(R)) return weather;
+      const p = RAIN_PRESETS.find((x) => x.mmPerHour === R);
+      set(p ? weatherFor(p.mmPerHour, { windMps: p.windMps, preset: p.id }) : weatherFor(R));
+      return weather;
+    },
+    on(type, fn) {
+      if (type !== 'change') return () => {};
+      listeners.add(fn);
+      return () => listeners.delete(fn);
+    },
+  };
+  return weather.setPreset(preset);
+}
+
 /**
  * The EnvPort stand-in.
  * @param {{ city: object, nowMs?: number, playing?: boolean, rate?: number }} opts
@@ -273,9 +376,6 @@ export function createEnv({ city, nowMs, playing, rate } = {}) {
       /** Horizontal illuminance (lux) for a sun elevation in degrees; with no argument, the sun now. */
       ambientLux: (sunElevationDeg) => ambientLux(sunElevationDeg ?? ephemeris.sun(clock.now()).elevation),
     },
-    weather: {
-      state: () => ({ precipMmPerHour: 0, precipKind: 'none', wetness: 0, puddles: 0, windFromDeg: 0, windSpeed: 0, visibilityM: 80000, dust: 0, tempC: 20 }),
-      on: () => () => {},
-    },
+    weather: createWeather(),
   };
 }

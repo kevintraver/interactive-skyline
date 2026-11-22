@@ -226,3 +226,167 @@ void main() {
   #include <colorspace_fragment>
 }
 `;
+
+// ---------------------------------------------------------------- reflected twins (plan 02, D8.1)
+// Added for the weather (src/drive/weather/): each sprite of a layer made with `reflect` gains a twin on wet pavement,
+// drawn by a second mesh over the same instance textures with its own short list of instances near the car
+// (sprites.js). Nothing above changes. Mirror: spriteMirror.js twinRule, twinFresnel; tests/unit/weather/twins.test.js.
+//
+// Geometry. The road near the car is taken as a plane through the car's road point with the car's grade (uTwinPlane);
+// a light h_l above it, seen from an eye h_e above it, has its mirror image h_l below the plane, and the image's ray
+// meets the pavement at the reflection point R (a share h_e / (h_e + h_l) of the way). The twin is drawn at R (pulled
+// a little toward the eye, so the pavement does not hide it), only where R lies on the carriageways around the car
+// (|across| under the half width, |along| under the range, both with soft edges) and from 5-15 m out (nearer, at
+// steep incidence, a lamp's reflection spreads into a broad sheen over its pool, which the pool already shows).
+// Light. The summed light of the twin is the mirror's: E = cover x F(i) x T x I(toward R) / d_m^2, where d_m is the
+// distance to the mirror image (the reflected path), F the Fresnel reflectance of water (n 1.333, unpolarised) at the
+// angle of incidence, I the lamp's intensity toward R by its pattern, and cover the water's share of the pavement.
+// Shape. A rough water surface (rms facet slope s) reflects the light from a band of pavement around R: a facet tilted
+// by tau sends it to the eye from an elevation shifted by tau x 2 h_l / (h_e + h_l), and sideways by that times the
+// sine of the grazing angle. So the streak is a Gaussian with sigma 2 s h_l / (h_e + h_l) along the screen's vertical
+// and that times sin(grazing) across (never narrower than the lamp's own disc), longer toward the viewer than toward
+// the lamp (sigma x 2.2 down, x 0.5 up: perspective crowds the far side; and up only to the road under the lamp, a
+// third of that distance as sigma), normalised so its summed light is E (less the little cut off where the quad ends: the profile is lowered by its
+// value at the edge, so a bright twin never shows the quad's border).
+
+/** Vertex shader of the twins: the sprite shader's declarations and functions, then its own main. */
+export const spriteTwinVertex = /* glsl */ `${spriteVertex.slice(0, spriteVertex.indexOf('void main()'))}
+uniform float uTwinWet;     // water's share of the pavement, 0..1: 0 draws nothing
+uniform float uTwinSlope;   // rms facet slope of the wet surface, radians
+uniform vec4 uTwinRoad;     // the car's road point x, z (scene) and the road's forward x, z (unit)
+uniform vec4 uTwinPlane;    // the road's height at the car (scene y), grade (dy per metre forward), half width (m), range (m)
+
+out vec2 vTw;               // pixels from R: across, along the screen's up there
+out vec3 vTwAmp;            // linear colour x scene radiance at the profile's peak
+out vec3 vTwSig;            // sigma across, up, down (pixels)
+out float vTwEdge;          // the profile's value at the quad's edge (subtracted, so it ends without a seam)
+
+// Fresnel reflectance of water (n = 1.333) for unpolarised light, by the cosine of the angle of incidence
+float twinFresnel(float c) {
+  c = clamp(c, 0.0, 1.0);
+  float n = 1.333;
+  float st = sqrt(max(0.0, 1.0 - c * c)) / n;
+  float ct = sqrt(max(0.0, 1.0 - st * st));
+  float rs = (c - n * ct) / (c + n * ct);
+  float rp = (ct - n * c) / (ct + n * c);
+  return 0.5 * (rs * rs + rp * rp);
+}
+
+void main() {
+  gl_Position = vec4(2.0, 2.0, 2.0, 1.0);
+  vTw = vec2(0.0); vTwAmp = vec3(0.0); vTwSig = vec3(1.0); vTwEdge = 0.0;
+  vPx = vec2(0.0); vAmp = vec3(0.0); vShape = vec4(1.0, 2.0, 1.0, 0.0); vHaloNorm = 0.0;
+  if (!(uTwinWet > 0.0)) return;
+  int idx = int(spriteIndex.x + 0.5);
+  ivec2 st = ivec2(idx % ${SPRITE_TEX_WIDTH}, idx / ${SPRITE_TEX_WIDTH});
+  vec4 p0 = texelFetch(tPos, st, 0);
+  vec4 p1 = texelFetch(tColor, st, 0);
+  vec4 p2 = texelFetch(tAxis, st, 0);
+  vec4 p3 = texelFetch(tSwitch, st, 0);
+  if (!(uAmbient < p3.x)) return;
+
+  // the plane, relative to the eye: y = -he + grade * (forward . xz)
+  vec2 fwd = uTwinRoad.zw;
+  vec2 eyeQ = cameraPosition.xz - uTwinRoad.xy;
+  float he = cameraPosition.y - (uTwinPlane.x + uTwinPlane.y * dot(eyeQ, fwd));
+  vec3 rel = p0.xyz - cameraPosition;
+  float hl = rel.y - (-he + uTwinPlane.y * dot(rel.xz, fwd));
+  if (he < 0.1 || hl < 0.1) return;
+  vec3 m = vec3(rel.x, rel.y - 2.0 * hl, rel.z);  // the mirror image
+  float dm = length(m);
+  if (dm < 1.0) return;
+  vec3 r = m * (he / (he + hl));                  // the reflection point
+  vec2 rq = eyeQ + r.xz;
+  float along = dot(rq, fwd), across = dot(rq, vec2(-fwd.y, fwd.x));
+  float mask = (1.0 - smoothstep(uTwinPlane.z - 4.0, uTwinPlane.z, abs(across))) * (1.0 - smoothstep(0.75 * uTwinPlane.w, uTwinPlane.w, abs(along)))
+    * smoothstep(5.0, 15.0, length(r.xz));   // nearer, a lamp's reflection is a broad sheen the pools already show
+  if (!(mask > 0.0)) return;
+
+  vec3 color = p1.rgb;
+  float flux = 1.0;
+  if (p3.y > 0.5) {
+    float s = onSeconds(p3.x);
+    if (!(s >= 0.0)) s = 0.0;
+    float pc = 1.0 - exp(-(s / 140.0) * (s / 140.0));
+    float pf = 1.0 - exp(-(s / 100.0) * (s / 100.0));
+    flux = 0.05 + 0.95 * pf;
+    color = linearSrgbFromXyz(xyzFromUv(mix(uSodium.xy, uSodium.zw, pc)));
+  }
+  // the lamp's intensity toward R (the pattern's "toward the eye" is toward R here)
+  vec3 dirL = normalize(r - rel);
+  int pid = int(p1.a + 0.5);
+  float kind = uPatKind[pid];
+  float theta = acos(clamp(dot(p2.xyz, dirL), -1.0, 1.0)) / RAD;
+  bool avg = p2.w < -9.0;
+  float phi = 0.0;
+  if (!avg) {
+    float az = atan(-dirL.z, dirL.x) / RAD;
+    phi = mod(az - p2.w / RAD + 90.0 + 540.0, 360.0) - 180.0;
+  }
+  float I = p0.w * patternShape(kind, uPatK[pid], theta, phi, avg) * flux * spriteIndex.y;
+
+  float cosi = (he + hl) / dm;
+  float E = uTwinWet * mask * twinFresnel(cosi) * exp(-dm / uVisibility) * I / (dm * dm);
+  float k = hl / (he + hl);
+  float sigU = 2.0 * uTwinSlope * cosi * k / uPixelAngle;
+  float sigA = 2.0 * uTwinSlope * k / uPixelAngle;
+  float disc = 0.4247 * p3.z / dm / uPixelAngle;   // the lamp's own disc, FWHM to sigma
+  sigU = max(max(sigU, disc), 0.6);
+  sigA = max(sigA, sigU);
+  float sUp = 0.5 * sigA, sDn = 2.2 * sigA;
+  // the streak never climbs above the point on the road under the lamp (where the reflections end)
+  float dUp = (atan(he / max(length(r.xz), 1e-3)) - atan(he / max(length(rel.xz), 1e-3))) / uPixelAngle;
+  sUp = min(sUp, max(dUp, 0.5) / 3.0);
+  vec3 c = color * (E * uGain / (uPixelAngle * uPixelAngle * 3.141592653589793 * sigU * (sUp + sDn)));
+  float cmax = max(c.r, max(c.g, c.b));
+  if (cmax < 2e-4) return;
+  float reach = min(sqrt(2.0 * max(log(cmax * 1024.0), 0.0)), 4.5);   // sigmas to where it falls under 1/1024
+  if (reach * sigU < 0.25) return;
+
+  // the screen's up at R, and R itself pulled toward the eye
+  mat3 vr = mat3(viewMatrix);
+  vec3 pr = r * (1.0 - min(0.03, 1.5 / max(length(r), 1.0)));
+  vec4 c0 = projectionMatrix * vec4(vr * pr, 1.0);
+  vec4 c1 = projectionMatrix * vec4(vr * (pr + vec3(0.0, 0.02 * length(r) + 0.05, 0.0)), 1.0);
+  if (c0.w <= 0.0 || c1.w <= 0.0) return;
+  vec2 up = c1.xy / c1.w - c0.xy / c0.w;
+  up = normalize(up * uViewport + vec2(0.0, 1e-6));
+  vec2 side = vec2(up.y, -up.x);
+  vec2 px = vec2(corner.x * reach * sigU, corner.y > 0.0 ? reach * sUp : -reach * sDn);
+  vTwEdge = exp(-0.5 * reach * reach);
+  vTw = px; vTwAmp = c / (1.0 - vTwEdge); vTwSig = vec3(sigU, sUp, sDn);
+  c0.xy += (side * px.x + up * px.y) * 2.0 / uViewport * c0.w;
+  gl_Position = c0;
+}
+`;
+
+/** Fragment shader of the twins: the anisotropic Gaussian, toned like the sprites. */
+export const spriteTwinFragment = /* glsl */ `
+in vec2 vTw;
+in vec3 vTwAmp;
+in vec3 vTwSig;
+in float vTwEdge;
+uniform float uWhiten;
+float acesFit(float x) {
+  x = x / 0.6;
+  float a = x * (x + 0.0245786) - 0.000090537;
+  float b = x * (0.983729 * x + 0.4329510) + 0.238081;
+  return clamp(a / b, 0.0, 1.0);
+}
+vec3 toneSprite(vec3 c) {
+  float y = dot(c, vec3(0.2126, 0.7152, 0.0722));
+  if (y <= 0.0) return vec3(0.0);
+  vec3 o = c * (acesFit(y) / y);
+  float m = max(o.r, max(o.g, o.b));
+  if (m > 1.0) o = mix(o / m, vec3(1.0), uWhiten * (m - 1.0) / m);
+  return o;
+}
+void main() {
+  float sv = vTw.y > 0.0 ? vTwSig.y : vTwSig.z;
+  float u = vTw.x / vTwSig.x, v = vTw.y / sv;
+  // separable, each axis less its value at the edge: the streak fades to nothing at the quad's border
+  float gu = max(exp(-0.5 * u * u) - vTwEdge, 0.0), gv = max(exp(-0.5 * v * v) - vTwEdge, 0.0);
+  gl_FragColor = vec4(toneSprite(vTwAmp * (gu * gv / (1.0 - vTwEdge))), 1.0);
+  #include <colorspace_fragment>
+}
+`;

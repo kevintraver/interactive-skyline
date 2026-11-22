@@ -137,3 +137,60 @@ export function instanceIntensity({ pos, eye, intensity, kind, k, axis, aimRad, 
   }
   return { intensity: I, theta, phi, distance: d };
 }
+
+// ---------------------------------------------------------------- reflected twins (sprites.glsl.js spriteTwinVertex)
+
+/** Mirrors twinFresnel: Fresnel reflectance of water (n 1.333), unpolarised, by the cosine of the incidence angle. */
+export function twinFresnel(c, n = 1.333) {
+  c = Math.min(1, Math.max(0, c));
+  const st = Math.sqrt(Math.max(0, 1 - c * c)) / n;
+  const ct = Math.sqrt(Math.max(0, 1 - st * st));
+  const rs = (c - n * ct) / (c + n * ct), rp = (ct - n * c) / (ct + n * c);
+  return 0.5 * (rs * rs + rp * rp);
+}
+
+/**
+ * A twin as the shader draws it, on a level road (grade 0; the shader's plane may tilt with the car's grade).
+ * @param {{ lamp: number[], eye: number[], roadY: number, intensityCd: number, wet: number, slope: number,
+ *   pixelAngle: number, diameterM?: number, visibilityM?: number, mask?: number, gain?: number }} o
+ *   lamp, eye: scene positions; intensityCd: the lamp's intensity toward the reflection point; wet: uTwinWet
+ * @returns {{ E, fresnel, dm, cosi, r, sigU, sUp, sDn, amp, reach, extent: { across, up, down }, profile(u, v) } | null}
+ *   E: summed light at the eye (lux); amp: the peak per unit gain (cd/m^2 x gain is the scene value); profile(u, v)
+ *   the drawn value per unit gain at pixel offsets (u across, v up), 0 outside the quad
+ */
+export function twinRule({ lamp, eye, roadY, intensityCd, wet, slope, pixelAngle, diameterM = 0.14, visibilityM = Infinity, mask = 1, gain = 1 }) {
+  if (!(wet > 0)) return null;
+  const he = eye[1] - roadY, hl = lamp[1] - roadY;
+  if (he < 0.1 || hl < 0.1) return null;
+  const m = [lamp[0] - eye[0], lamp[1] - 2 * hl - eye[1], lamp[2] - eye[2]];
+  const dm = Math.hypot(...m);
+  if (dm < 1) return null;
+  const t = he / (he + hl);
+  const r = m.map((x) => x * t);
+  const cosi = (he + hl) / dm;
+  const fresnel = twinFresnel(cosi);
+  const nearFade = smoothstep01(5, 15, Math.hypot(r[0], r[2]));
+  const E = wet * mask * nearFade * fresnel * Math.exp(-dm / visibilityM) * intensityCd / (dm * dm);
+  const k = hl / (he + hl);
+  let sigU = (2 * slope * cosi * k) / pixelAngle;
+  let sigA = (2 * slope * k) / pixelAngle;
+  const disc = (0.4247 * diameterM) / dm / pixelAngle;
+  sigU = Math.max(sigU, disc, 0.6);
+  sigA = Math.max(sigA, sigU);
+  const D = Math.hypot(lamp[0] - eye[0], lamp[2] - eye[2]);
+  const dUp = (Math.atan(he / Math.max(Math.hypot(r[0], r[2]), 1e-3)) - Math.atan(he / Math.max(D, 1e-3))) / pixelAngle;
+  const sUp = Math.min(0.5 * sigA, Math.max(dUp, 0.5) / 3), sDn = 2.2 * sigA;
+  const amp = (E * gain) / (pixelAngle * pixelAngle * Math.PI * sigU * (sUp + sDn));
+  const reach = Math.min(Math.sqrt(2 * Math.max(Math.log(amp * 1024), 0)), 4.5);
+  const extent = { across: reach * sigU, up: reach * sUp, down: reach * sDn };
+  const edge = Math.exp(-0.5 * reach * reach);
+  return {
+    E, fresnel, dm, cosi, r, sigU, sUp, sDn, amp, reach, extent,
+    profile(u, v) {
+      if (Math.abs(u) > extent.across || v > extent.up || v < -extent.down) return 0;
+      const sv = v > 0 ? sUp : sDn;
+      const gu = Math.max(Math.exp(-0.5 * (u / sigU) ** 2) - edge, 0), gv = Math.max(Math.exp(-0.5 * (v / sv) ** 2) - edge, 0);
+      return (amp / (1 - edge)) * (gu * gv) / (1 - edge);
+    },
+  };
+}

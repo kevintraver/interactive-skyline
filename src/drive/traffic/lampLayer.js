@@ -77,7 +77,7 @@ function templateOf(spec, pat, merged = false) {
  */
 export function createLampLayer({ parent, sidecar, capacity = CAPACITY }) {
   // whiten 0.2: a red tail lamp keeps its red core (the street lamps' full whitening turns every red lamp white)
-  const layer = createSpriteLayer({ capacity, name: 'vehicle-lamps', minPx: 1.5, halo: 0.01, renderOrder: 11, whiten: WHITEN });
+  const layer = createSpriteLayer({ capacity, name: 'vehicle-lamps', minPx: 1.5, halo: 0.01, renderOrder: 11, whiten: WHITEN, reflect: true }); // reflect: twins on wet pavement (weather)
   const pat = {
     head: layer.definePattern({ kind: 'lobe', exponent: LOBE.head }),
     tail: layer.definePattern({ kind: 'lobe', exponent: LOBE.tail }),
