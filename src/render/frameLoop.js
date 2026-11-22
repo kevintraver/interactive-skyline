@@ -30,6 +30,9 @@ export function createFrameLoop({
   hidden = () => typeof document !== 'undefined' && document.hidden,
 } = {}) {
   let dirty = true, running = false, lastRender = -Infinity, frameNo = 0;
+  // when the tier's next frame is due: a steady cadence (500 ms, 33 ms) that a late animation frame does not push
+  // back, so twice a second stays twice a second when frames arrive irregularly
+  let nextDue = -Infinity;
   const subsystems = []; // { sub, order, seq }
   let seq = 0;
   const settlers = [];
@@ -82,12 +85,15 @@ export function createFrameLoop({
         before(nowMs);
         const previous = loop.tier;
         const tier = loop.tier = vote();
-        const due = nowMs - lastRender >= INTERVAL[tier] - SLACK_MS;
+        const interval = INTERVAL[tier];
+        if (tier !== previous) nextDue = lastRender + interval;
+        const due = interval === 0 || (Number.isFinite(interval) && nowMs >= nextDue - SLACK_MS);
         if (!dirty && !due) {
           if (tier === 'idle' && settlers.length) settlers.splice(0).forEach((fn) => fn());
           return;
         }
         dirty = false;
+        if (Number.isFinite(interval) && interval > 0) nextDue = nowMs - nextDue > interval ? nowMs + interval : nextDue + interval;
         // wall time since the last rendered frame; after an idle stretch (the clock was paused) only one frame's
         // worth, so a clock that starts playing does not jump by the time it stood still
         const dtWallMs = Number.isFinite(lastRender) ? Math.min(nowMs - lastRender, previous === 'idle' ? 1000 / 60 : 1000) : 0;

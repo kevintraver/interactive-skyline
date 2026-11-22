@@ -9,6 +9,12 @@ function fakeScheduler() {
   return {
     raf: (fn) => { queue.push(fn); return queue.length; },
     now: () => now,
+    /** One animation frame `ms` after the last. */
+    advanceBy(ms) {
+      now += ms;
+      const q = queue; queue = [];
+      for (const fn of q) fn(now);
+    },
     /** Run `seconds` of 60 Hz frames. */
     run(seconds) {
       for (let i = 0; i < Math.round(seconds * 60); i++) {
@@ -96,6 +102,22 @@ describe('frame loop tiers', () => {
     t.s.run(10);
     expect(t.renders()).toBeGreaterThanOrEqual(298);
     expect(t.renders()).toBeLessThanOrEqual(302);
+  });
+
+  it('keeps twice a second when animation frames arrive irregularly (a loaded machine)', () => {
+    const s = fakeScheduler();
+    const loop = createFrameLoop({ raf: s.raf, now: s.now });
+    let renders = 0;
+    loop.add({ demand: () => 'ambient' }, 0);
+    loop.start(null, { before() {}, render() { renders++; } });
+    s.run(0.05);
+    renders = 0;
+    // frames every 300 to 450 ms: rendering 500 ms after the last render would wait a whole extra frame each time
+    const gaps = [300, 450, 350, 420, 310, 440];
+    let t = 0;
+    for (let i = 0; i < 60; i++) { t += gaps[i % gaps.length]; s.advanceBy(gaps[i % gaps.length]); }
+    expect(renders / (t / 1000)).toBeGreaterThan(1.8);
+    expect(renders / (t / 1000)).toBeLessThanOrEqual(2.2);
   });
 
   it('the highest vote wins', () => {
