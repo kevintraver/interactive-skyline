@@ -2,12 +2,17 @@
 // overrides), the provider the environment reads, and the weather rows of #sky.
 import { createWeatherService } from './service.js';
 import { presetSample } from './presets.js';
+import { atmosphereMedium } from './derive.js';
 import { initWeatherRows } from '../ui/weatherRows.js';
 
 export function startWeather(app) {
   const { city, cityId, env } = app;
   const service = createWeatherService({ cityId, city });
-  env.setWeather({ sample: (t) => service.sample(t), preset: (id, t) => presetSample(id, t, service.groundM) });
+  env.setWeather({
+    sample: (t) => service.sample(t),
+    preset: (id, t) => presetSample(id, t, service.groundM),
+    medium: (s) => atmosphereMedium(s, { elevationM: city.base }), // the scene's ground, where the atmosphere starts
+  });
   service.on('change', () => env.weatherChanged());
   initWeatherRows(app, service);
   app.weather = service;

@@ -7,6 +7,8 @@ import { createEphemeris } from '../../../src/sky/ephemeris.js';
 import { presetSample } from '../../../src/weather/presets.js';
 import { atmosphereMedium } from '../../../src/weather/derive.js';
 
+const medium = (s) => atmosphereMedium(s, { elevationM: 620 });
+
 const LV = { origin: { lat: 36.1147, lon: -115.1728 }, base: 620, tz: 'America/Los_Angeles' };
 const T = Date.UTC(2026, 5, 21, 19);
 
@@ -20,17 +22,19 @@ function make() {
   const provider = {
     sample: (t) => { asked.sample.push(t); const s = presetSample('dusty', t, 620); s.wind = { dirDeg: 90, speedMs: 10, gustMs: 14 }; return s; },
     preset: (id, t) => { asked.preset.push(id); return presetSample(id, t, 620); },
+    medium,
   };
   return { clock, env, asked, provider };
 }
 
 describe('env and the weather', () => {
-  it('pinned: the clear stub, its medium, and nothing asked of the weather', () => {
+  it('pinned: the clear stub, no medium until the weather code loads, then the stub\'s; nothing sampled', () => {
     const { env, asked, provider } = make();
     expect(env.state.weather).toEqual(clearWeather(env.state.timeMs));
-    expect(env.state.medium).toEqual(atmosphereMedium(clearWeather(0), { elevationM: 620 }));
+    expect(env.state.medium).toBe(null);
     expect(env.state.wind.length()).toBe(0);
     env.setWeather(provider);
+    expect(env.state.medium).toEqual(medium(clearWeather(0)));
     env.update();
     expect(asked).toEqual({ request: 0, sample: [], preset: [] });
     expect(env.state.weather.source.surface).toBe('preset');

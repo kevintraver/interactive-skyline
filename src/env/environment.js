@@ -5,7 +5,8 @@
 //
 // Weather (phase 5): src/weather/ loads on demand and hands the facade a provider (setWeather). In the clock state the
 // weather is the provider's sample at the clock's time (the clear preset until data arrives); the pinned looks stay
-// clear. `state.medium` is the atmosphere's medium derived from it (section 7.5), which phase 3 writes into its uniforms.
+// clear. `state.medium` is the atmosphere's medium derived from it (section 7.5), which phase 3 writes into its uniforms;
+// it comes from the provider too (so no weather code is in the boot bundle) and is null until the provider has loaded.
 //
 // Two states (sections 4.2 and 5.6, decision 3 after review):
 //   pinned  the default: today's two looks. `settings.night` is the persisted boolean; the state is the classic
@@ -18,7 +19,6 @@ import { colorTemperatureToLinearSrgb, luxFromMagnitude, cdM2FromMagArcsec2, mag
 import { PINNED_NIGHT } from '../app/settings.js';
 import { parseTimeParam } from '../sim/clock.js';
 import { createEnvNodes } from './nodes.js';
-import { atmosphereMedium } from '../weather/medium.js';
 
 /** 23 March 2026 23:08 UTC: astronomy-engine puts the Sun at azimuth 245.00, altitude 32.05 over Las Vegas. */
 export const CLASSIC_AFTERNOON = Date.UTC(2026, 2, 23, 23, 8);
@@ -154,7 +154,7 @@ export function createEnvironment({ city, clock, ephemeris, settings, seed = nul
       exposure: { ev100: frozen.ev100 ?? ev100FromIlluminance(Math.max(horizontalLux, 1e-4)), scale: 1 },
       lights: { cityFactor: frozen.lights ?? 1, windows: switchOn, street: switchOn, signs: switchOn },
       weather, wind: new Vector3(Math.sin(toward) * wind.speedMs, 0, -Math.cos(toward) * wind.speedMs), visibilityM: weather.visibilityM,
-      medium: atmosphereMedium(weather, { elevationM: city.base }),
+      medium: wx.provider && wx.provider.medium ? wx.provider.medium(weather) : null,
       rain: { rateMmH: 0, fallSpeedMs: 0, streakM: 0 }, wetness: { film: 0, puddles: 0 }, lightning: { flash: 0, last: null },
     };
   }
@@ -234,11 +234,15 @@ export function createEnvironment({ city, clock, ephemeris, settings, seed = nul
     },
     unfreeze() { frozen = {}; if (mode === 'clock') env.update(); },
 
-    /** Phase 5: the weather provider ({ sample(t), preset(id, t) }, src/weather/client.js) and how to ask for it. */
+    /** Phase 5: the weather provider ({ sample(t), preset(id, t), medium(sample) }, src/weather/client.js) and how to ask for it. */
     setWeather(provider) { wx.provider = provider; env.weatherChanged(); },
     setWeatherRequest(fn) { wx.request = fn; },
     /** The provider's data or settings changed: rebuild the state in the clock state, and tell 'weather' listeners. */
-    weatherChanged() { if (mode === 'clock' && env.state) env.update(); emit('weather'); },
+    weatherChanged() {
+      if (mode === 'clock' && env.state) env.update();
+      else if (env.state && wx.provider && wx.provider.medium) env.state.medium = wx.provider.medium(env.state.weather); // pinned: still clear
+      emit('weather');
+    },
     get frozen() { return { ...frozen }; },
 
     lights: createLightRegistry(),

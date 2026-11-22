@@ -28,6 +28,9 @@ export type DayEvents = { astronomicalDawn: number | null; nauticalDawn: number 
   noon: number | null; sunset: number | null; civilDusk: number | null; nauticalDusk: number | null; astronomicalDusk: number | null;
   moonrise: number | null; moonset: number | null };
 export type AtmosphereUniforms = Record<string, unknown>;
+/** src/weather/medium.js atmosphereMedium(): what phase 3 writes into its uniforms with setAtmosphereFromWeather(). */
+export interface AtmosphereMedium { rayleighExtinctionPerM: number; aerosolExtinctionPerM: number; aerosolScaleHeightM: number; aerosolOpticalDepth: number;
+  angstrom: number; asymmetryG: number; singleScatteringAlbedo: number; singleScatteringAlbedo440: number; dustShare: number; visibilityM: number }
 export type OverrideKey = 'lowCloud' | 'highCloud' | 'cloudBase' | 'haze' | 'dust' | 'humidity' | 'windSpeed' | 'windDir' | 'rain' | 'lightning';
 // section 6.4 (src/weather/schema.js): one instant after fusion and overrides; SI units, UTC ms, heights above sea level
 export interface CloudLayer { genus: 'cu' | 'tcu' | 'cb' | 'sc' | 'st' | 'ac' | 'as' | 'ci' | 'cs'; baseM: number; topM: number; cover: number }
@@ -227,6 +230,7 @@ export interface EnvState {
   lights: { cityFactor: number;                 // the lights-out slider, 0..1
             windows: number; street: number; signs: number };   // 0..1 switch-on state from dusk and hour of night
   weather: WeatherSample;                       // section 6.4; interpolated, overrides applied
+  medium: AtmosphereMedium | null;              // section 7.5, from the weather; null until the weather code has loaded (phase 5)
   wind: Vector3;                                // m/s at 10 m, world axes
   visibilityM: number;                          // meteorological range at the camera
   rain: { rateMmH: number; fallSpeedMs: number; streakM: number };   // at the camera
