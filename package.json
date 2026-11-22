@@ -15,6 +15,7 @@
     "test:perf": "playwright test --project=gpu --workers=1",
     "bench": "vitest bench --run --reporter=verbose",
     "test:perf:software": "playwright test --project=software-timing --workers=1",
+    "test:perf:ab": "playwright test --project=gpu-ab --workers=1",
     "test:perf:update": "SKYLINE_PERF_UPDATE=1 playwright test --project=gpu --workers=1",
     "test:perf:budgets:update": "SKYLINE_PERF_UPDATE=1 playwright test --project=webgl2-software perf.budgets --workers=1"
   },

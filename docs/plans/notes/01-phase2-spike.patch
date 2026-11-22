@@ -1,0 +1,98 @@
+diff --git a/src/app/context.js b/src/app/context.js
+index 1d3e5c3..54b3062 100644
+--- a/src/app/context.js
++++ b/src/app/context.js
+@@ -1,4 +1,5 @@
+ import * as THREE from 'three';
++import { WebGPURenderer } from 'three/webgpu';
+ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+ import { loadSettings } from './settings.js';
+ import { DEFAULTS } from './settings.js';
+@@ -32,15 +33,23 @@ export function createApp(cities) {
+   const settings = { ...DEFAULTS, ...loadSettings() };
+ 
+   const canvas = document.getElementById('scene');
+-  const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, preserveDrawingBuffer: true });
++  const qp = new URLSearchParams(location.search);
++  const spike = qp.get('renderer') === 'webgpu';
++  const renderer = spike ? new WebGPURenderer({ canvas, antialias: true, forceWebGL: qp.get('backend') === 'webgl', trackTimestamp: qp.get('backend') !== 'webgl' })
++    : new THREE.WebGLRenderer({ canvas, antialias: true, preserveDrawingBuffer: true });
+   renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+   renderer.toneMapping = THREE.ACESFilmicToneMapping;
+   renderer.toneMappingExposure = 1.0;
+   renderer.shadowMap.enabled = true;
+   renderer.shadowMap.type = THREE.PCFShadowMap;
+-  renderer.shadowMap.autoUpdate = false;
++  if (!spike) renderer.shadowMap.autoUpdate = false;
++  const scene0 = { s: null };
++  if (spike) Object.defineProperty(renderer.shadowMap, 'needsUpdate', { get: () => false, set(v) {
++    if (v && scene0.s) scene0.s.traverse((o) => { if (o.isLight && o.shadow) { o.shadow.autoUpdate = false; o.shadow.needsUpdate = true; } });
++  } });
+ 
+   const scene = new THREE.Scene();
++  scene0.s = scene;
+   const camera = new THREE.PerspectiveCamera(27, 1, 5, 150000);
+   const controls = new OrbitControls(camera, canvas);
+   controls.enableDamping = true;
+diff --git a/src/attractions.js b/src/attractions.js
+index 6760cd6..fb7ac1a 100644
+--- a/src/attractions.js
++++ b/src/attractions.js
+@@ -220,7 +220,7 @@ export function initAttractions({ cityId, scene, camera, renderer, settings, inv
+           console.warn(`Extra ${spec.name} failed to load (${spec.url}).`, err);
+         }
+       }),
+-      ...showSpecs.map(async (spec) => {
++      ...(renderer.isWebGPURenderer ? [] : showSpecs).map(async (spec) => {
+         try {
+           const r = await fetch(spec.url);
+           if (!r.ok || !(r.headers.get('content-type') || '').includes('json')) throw new Error(`HTTP ${r.status}`);
+diff --git a/src/city/terrain.js b/src/city/terrain.js
+index f000c60..cd7c811 100644
+--- a/src/city/terrain.js
++++ b/src/city/terrain.js
+@@ -92,7 +92,7 @@ export async function loadTerrain({ scene, renderer, base }, terrainData, mapsPe
+     const t = new THREE.Texture(bitmap);
+     t.flipY = false;
+     t.colorSpace = THREE.SRGBColorSpace;
+-    t.anisotropy = renderer.capabilities.getMaxAnisotropy();
++    t.anisotropy = (renderer.getMaxAnisotropy ? renderer.getMaxAnisotropy() : renderer.capabilities.getMaxAnisotropy());
+     t.needsUpdate = true;
+     return t;
+   });
+diff --git a/src/main.js b/src/main.js
+index c743459..b353e89 100644
+--- a/src/main.js
++++ b/src/main.js
+@@ -30,6 +30,7 @@ import cities from '../data/cities.json';
+ 
+ const app = createApp(cities);
+ const { cityId, city, pending, settings, scene, camera, renderer, controls, loop, invalidate } = app;
++if (renderer.isWebGPURenderer) await renderer.init();
+ app.format = createFormat(settings, city);
+ app.sky = createLegacySky().init(app);
+ initSim(app);
+diff --git a/src/night.js b/src/night.js
+index c2b35d8..c15f4ed 100644
+--- a/src/night.js
++++ b/src/night.js
+@@ -155,6 +155,7 @@ diffuseColor.rgb = facadeAlbedo;`;
+  * `glow` colors and get lit windows (and the day facade detail) only where their `windows` attribute is set.
+  */
+ export function lightAtNight(material, { windows = true } = {}) {
++  if (typeof location !== 'undefined' && /[?&]plain=1/.test(location.search)) return material; // T2.0 spike only
+   material.onBeforeCompile = (shader) => {
+     shader.uniforms.uNight = night;
+     shader.uniforms.uClock = clock;
+diff --git a/src/sky/legacySky.js b/src/sky/legacySky.js
+index e770b11..d8e3f3f 100644
+--- a/src/sky/legacySky.js
++++ b/src/sky/legacySky.js
+@@ -65,6 +65,7 @@ export function createLegacySky() {
+       void main(){ float t = pow(clamp(d.y, 0.0, 1.0), 0.45); gl_FragColor = vec4(mix(horizon, zenith, t), 1.0); }`,
+         }),
+       );
++      if (renderer.isWebGPURenderer) sky.dome.material = new THREE.MeshBasicMaterial({ color: HAZE, side: THREE.BackSide, depthWrite: false, fog: false });
+       scene.add(sky.dome);
+ 
+       const hemi = sky.hemi = new THREE.HemisphereLight(DAY.skyLight, DAY.groundLight, DAY.hemi);

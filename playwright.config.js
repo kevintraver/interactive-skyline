@@ -13,6 +13,8 @@ import { defineConfig, devices } from '@playwright/test';
 const PORT = Number(process.env.SKYLINE_PORT || 4791);
 const SOFTWARE = ['--enable-unsafe-swiftshader', '--ignore-gpu-blocklist', '--use-angle=swiftshader', '--use-gl=angle'];
 const GPU = ['--ignore-gpu-blocklist', '--enable-gpu', ...(process.platform === 'darwin' ? ['--use-angle=metal'] : [])];
+// WebGPU in headless Chromium, with timestamp queries for the performance hook (src/render/perf.js)
+const WEBGPU = ['--enable-unsafe-webgpu', '--enable-webgpu-developer-features'];
 
 export default defineConfig({
   testDir: 'tests/e2e',
@@ -39,7 +41,7 @@ export default defineConfig({
   projects: [
     {
       name: 'webgl2-software',
-      testIgnore: /perf\.timing\.spec\.js/,
+      testIgnore: /perf\.(timing|ab)\.spec\.js/,
       // software frames take seconds, and under load from other work a test can run out of time: one more try, and
       // the report then lists it as flaky. A wrong image or count fails both tries.
       retries: 1,
@@ -53,6 +55,13 @@ export default defineConfig({
       retries: 2, // a noisy measurement passes when taken again; a real slowdown does not (helpers/perf.js, GATES)
       use: { ...devices['Desktop Chrome'], viewport: { width: 1280, height: 800 }, deviceScaleFactor: 1,
         launchOptions: { args: GPU } },
+    },
+    {
+      // the classic renderer against the new one, interleaved in one run, on this machine's GPU (pnpm test:perf:ab)
+      name: 'gpu-ab',
+      testMatch: /perf\.ab\.spec\.js/,
+      use: { ...devices['Desktop Chrome'], viewport: { width: 1280, height: 800 }, deviceScaleFactor: 1,
+        launchOptions: { args: [...GPU, ...WEBGPU] } },
     },
     {
       // the timing suite on SwiftShader: recorded, and gated only at 2x
