@@ -163,7 +163,6 @@ button { font: inherit; color: inherit; background: none; border: 0; padding: 0;
 #sky-play { display: grid; place-items: center; width: 32px; height: 32px; border-radius: 8px; background: var(--fill); }
 #sky-play:hover, #sky-live:hover { background: var(--fill-strong); }
 #sky-play .icon { width: 18px; height: 18px; }
-#sky-play[aria-pressed="true"] .icon { fill: currentColor; stroke: none; }
 #sky-play .icon use[href="#i-play"] { fill: currentColor; }
 #sky-live { padding: 6px 12px; border-radius: 8px; background: var(--fill); font-weight: 600; }
 #sky-live[aria-pressed="true"] { color: var(--blue); }

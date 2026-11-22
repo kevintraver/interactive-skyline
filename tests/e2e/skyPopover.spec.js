@@ -45,6 +45,11 @@ test.describe('the #sky popover', () => {
     expect(Math.abs((await state(page)).t - ev.noon)).toBeLessThan(1000);
     await page.locator('#sky-play').click();
     expect(await state(page)).toMatchObject({ playing: true, rate: 1 });
+    // the pause icon is two strokes: it must be drawn (it was invisible while a rule set stroke: none when playing)
+    expect(await page.evaluate(() => {
+      const svg = document.querySelector('#sky-play svg'), use = svg.querySelector('use');
+      return { href: use.getAttribute('href'), stroke: getComputedStyle(svg).stroke };
+    })).toMatchObject({ href: '#i-pause', stroke: expect.not.stringMatching(/^none$/) });
     await page.locator('#sky-speed').selectOption('600');
     expect(await state(page)).toMatchObject({ playing: true, rate: 600 });
     await page.locator('#sky-play').click();
