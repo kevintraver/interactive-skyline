@@ -1,0 +1,145 @@
+{
+ "product": "monthly aerosol climatology",
+ "city": "slc",
+ "source": "Open-Meteo air-quality API (CAMS global, 0.4 deg), hourly at the city origin",
+ "attribution": "Generated using Copernicus Atmosphere Monitoring Service information",
+ "period": [
+  "2022-08-04",
+  "2026-10-31"
+ ],
+ "built": "2026-11-22",
+ "units": {
+  "aod550": "optical depth at 550 nm, whole column",
+  "dustUgM3": "µg/m³ near the surface",
+  "pm10UgM3": "µg/m³",
+  "pm25UgM3": "µg/m³"
+ },
+ "months": [
+  {
+   "month": 1,
+   "hours": 2976,
+   "aod550Median": 0.08,
+   "aod550Mean": 0.086,
+   "aod550P90": 0.14,
+   "dustUgM3": 0.0,
+   "pm10UgM3": 15.4,
+   "pm25UgM3": 12.2
+  },
+  {
+   "month": 2,
+   "hours": 2712,
+   "aod550Median": 0.11,
+   "aod550Mean": 0.124,
+   "aod550P90": 0.21,
+   "dustUgM3": 1.0,
+   "pm10UgM3": 17.5,
+   "pm25UgM3": 13.1
+  },
+  {
+   "month": 3,
+   "hours": 2976,
+   "aod550Median": 0.14,
+   "aod550Mean": 0.16,
+   "aod550P90": 0.25,
+   "dustUgM3": 4.0,
+   "pm10UgM3": 23.4,
+   "pm25UgM3": 13.7
+  },
+  {
+   "month": 4,
+   "hours": 2880,
+   "aod550Median": 0.16,
+   "aod550Mean": 0.189,
+   "aod550P90": 0.32,
+   "dustUgM3": 10.0,
+   "pm10UgM3": 25.4,
+   "pm25UgM3": 13.1
+  },
+  {
+   "month": 5,
+   "hours": 2976,
+   "aod550Median": 0.18,
+   "aod550Mean": 0.202,
+   "aod550P90": 0.35,
+   "dustUgM3": 12.0,
+   "pm10UgM3": 20.7,
+   "pm25UgM3": 11.0
+  },
+  {
+   "month": 6,
+   "hours": 2880,
+   "aod550Median": 0.15,
+   "aod550Mean": 0.168,
+   "aod550P90": 0.28,
+   "dustUgM3": 5.0,
+   "pm10UgM3": 14.5,
+   "pm25UgM3": 8.8
+  },
+  {
+   "month": 7,
+   "hours": 2976,
+   "aod550Median": 0.15,
+   "aod550Mean": 0.166,
+   "aod550P90": 0.3,
+   "dustUgM3": 5.0,
+   "pm10UgM3": 12.8,
+   "pm25UgM3": 7.8
+  },
+  {
+   "month": 8,
+   "hours": 3648,
+   "aod550Median": 0.12,
+   "aod550Mean": 0.149,
+   "aod550P90": 0.26,
+   "dustUgM3": 5.0,
+   "pm10UgM3": 12.4,
+   "pm25UgM3": 7.5
+  },
+  {
+   "month": 9,
+   "hours": 3600,
+   "aod550Median": 0.1,
+   "aod550Mean": 0.117,
+   "aod550P90": 0.2,
+   "dustUgM3": 11.0,
+   "pm10UgM3": 14.6,
+   "pm25UgM3": 7.6
+  },
+  {
+   "month": 10,
+   "hours": 3720,
+   "aod550Median": 0.08,
+   "aod550Mean": 0.086,
+   "aod550P90": 0.15,
+   "dustUgM3": 4.0,
+   "pm10UgM3": 13.7,
+   "pm25UgM3": 8.1
+  },
+  {
+   "month": 11,
+   "hours": 2880,
+   "aod550Median": 0.07,
+   "aod550Mean": 0.084,
+   "aod550P90": 0.14,
+   "dustUgM3": 1.0,
+   "pm10UgM3": 15.6,
+   "pm25UgM3": 10.7
+  },
+  {
+   "month": 12,
+   "hours": 2976,
+   "aod550Median": 0.07,
+   "aod550Mean": 0.077,
+   "aod550P90": 0.13,
+   "dustUgM3": 0.0,
+   "pm10UgM3": 15.8,
+   "pm25UgM3": 12.0
+  }
+ ],
+ "seasons": {
+  "DJF": 0.095,
+  "MAM": 0.183,
+  "JJA": 0.16,
+  "SON": 0.097
+ }
+}
