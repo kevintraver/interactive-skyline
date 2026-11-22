@@ -1,0 +1,1532 @@
+{
+ "us93": {
+  "road": "us93.main",
+  "length_m": 59456.0,
+  "checks": {
+   "exits": {
+    "numbered": 19,
+    "with_guide_signs": 19,
+    "numbered_without_legend": [],
+    "fewer_than_three": [],
+    "ok": true
+   },
+   "legends": {
+    "mismatches": [],
+    "denylist_hits": [],
+    "ok": true
+   },
+   "spacing": {
+    "min_m": 60.0,
+    "violations": [],
+    "ok": true
+   },
+   "dimensions": {
+    "problems": [],
+    "ok": true
+   }
+  },
+  "counts": {
+   "by_kind": {
+    "mile": 37,
+    "advance": 32,
+    "exit": 19,
+    "gore": 19,
+    "route": 14,
+    "speed": 14,
+    "sequence": 3
+   },
+   "by_provenance": {
+    "rule": 37,
+    "osm": 101
+   },
+   "total": 138
+  },
+  "exits": [
+   {
+    "exit": "2",
+    "osm": "n289547988",
+    "s": 2719,
+    "side": "right",
+    "kinds": [
+     "advance 1 mi",
+     "advance 0.5 mi",
+     "exit direction",
+     "gore"
+    ],
+    "omitted": []
+   },
+   {
+    "exit": "14",
+    "osm": "n5035122687",
+    "s": 21375.3,
+    "side": "right",
+    "kinds": [
+     "advance 2 mi",
+     "advance 1 mi",
+     "advance 0.5 mi",
+     "exit direction",
+     "gore"
+    ],
+    "omitted": []
+   },
+   {
+    "exit": "15A",
+    "osm": "n5035122824",
+    "s": 23326.6,
+    "side": "right",
+    "kinds": [
+     "advance 1 mi",
+     "advance 0.5 mi",
+     "exit direction",
+     "gore"
+    ],
+    "omitted": []
+   },
+   {
+    "exit": "17A",
+    "osm": "n137068199",
+    "s": 27299.9,
+    "side": "right",
+    "kinds": [
+     "advance 1 mi",
+     "advance 0.5 mi",
+     "exit direction",
+     "gore"
+    ],
+    "omitted": []
+   },
+   {
+    "exit": "17B",
+    "osm": "n137068196",
+    "s": 27815.1,
+    "side": "right",
+    "kinds": [
+     "interchange sequence",
+     "exit direction",
+     "gore"
+    ],
+    "omitted": [
+     {
+      "advance": 1,
+      "why": "closely spaced: no room after the previous interchange",
+      "room_m": 265.2
+     },
+     {
+      "advance": 0.5,
+      "why": "closely spaced: no room after the previous interchange",
+      "room_m": 265.2
+     }
+    ]
+   },
+   {
+    "exit": "19",
+    "osm": "n264159131",
+    "s": 29933.3,
+    "side": "right",
+    "kinds": [
+     "advance 1 mi",
+     "advance 0.5 mi",
+     "exit direction",
+     "gore"
+    ],
+    "omitted": []
+   },
+   {
+    "exit": "20",
+    "osm": "n137407348",
+    "s": 32858.5,
+    "side": "right",
+    "kinds": [
+     "advance 1 mi",
+     "advance 0.5 mi",
+     "exit direction",
+     "gore"
+    ],
+    "omitted": []
+   },
+   {
+    "exit": "23",
+    "osm": "n137407067",
+    "s": 35869.9,
+    "side": "right",
+    "kinds": [
+     "advance 1 mi",
+     "advance 0.5 mi",
+     "exit direction",
+     "gore"
+    ],
+    "omitted": [
+     {
+      "advance": 2,
+      "why": "closely spaced: no room after the previous interchange",
+      "room_m": 2761.4
+     }
+    ]
+   },
+   {
+    "exit": "62",
+    "osm": "n1440622073",
+    "s": 37691.5,
+    "side": "right",
+    "kinds": [
+     "advance 0.5 mi",
+     "interchange sequence",
+     "exit direction",
+     "gore"
+    ],
+    "omitted": [
+     {
+      "advance": 1,
+      "why": "closely spaced: no room after the previous interchange",
+      "room_m": 1571.6
+     }
+    ]
+   },
+   {
+    "exit": "64A",
+    "osm": "n1440622011",
+    "s": 39996.4,
+    "side": "right",
+    "kinds": [
+     "advance 1 mi",
+     "advance 0.5 mi",
+     "exit direction",
+     "gore"
+    ],
+    "omitted": []
+   },
+   {
+    "exit": "64B",
+    "osm": "n137407163",
+    "s": 40295.2,
+    "side": "right",
+    "kinds": [
+     "interchange sequence",
+     "exit direction",
+     "gore"
+    ],
+    "omitted": [
+     {
+      "advance": 1,
+      "why": "closely spaced: no room after the previous interchange",
+      "room_m": 48.8
+     },
+     {
+      "advance": 0.5,
+      "why": "closely spaced: no room after the previous interchange",
+      "room_m": 48.8
+     }
+    ]
+   },
+   {
+    "exit": "65",
+    "osm": "n304595854",
+    "s": 42667.4,
+    "side": "right",
+    "kinds": [
+     "advance 1 mi",
+     "advance 0.5 mi",
+     "exit direction",
+     "gore"
+    ],
+    "omitted": []
+   },
+   {
+    "exit": "68",
+    "osm": "n137050760",
+    "s": 46230.1,
+    "side": "right",
+    "kinds": [
+     "advance 1 mi",
+     "advance 0.5 mi",
+     "exit direction",
+     "gore"
+    ],
+    "omitted": []
+   },
+   {
+    "exit": "69",
+    "osm": "n3153308089",
+    "s": 47810.8,
+    "side": "right",
+    "kinds": [
+     "advance 0.5 mi",
+     "interchange sequence",
+     "exit direction",
+     "gore"
+    ],
+    "omitted": [
+     {
+      "advance": 1,
+      "why": "closely spaced: no room after the previous interchange",
+      "room_m": 1330.7
+     }
+    ]
+   },
+   {
+    "exit": "70",
+    "osm": "n137088958",
+    "s": 50288,
+    "side": "right",
+    "kinds": [
+     "advance 1 mi",
+     "advance 0.5 mi",
+     "exit direction",
+     "gore"
+    ],
+    "omitted": []
+   },
+   {
+    "exit": "72",
+    "osm": "n137131616",
+    "s": 52977.3,
+    "side": "right",
+    "kinds": [
+     "advance 1 mi",
+     "advance 0.5 mi",
+     "exit direction",
+     "gore"
+    ],
+    "omitted": []
+   },
+   {
+    "exit": "73",
+    "osm": "n137095451",
+    "s": 55872.6,
+    "side": "right",
+    "kinds": [
+     "advance 1 mi",
+     "advance 0.5 mi",
+     "exit direction",
+     "gore"
+    ],
+    "omitted": []
+   },
+   {
+    "exit": "75",
+    "osm": "n1834821648",
+    "s": 57921.5,
+    "side": "right",
+    "kinds": [
+     "advance 1 mi",
+     "advance 0.5 mi",
+     "exit direction",
+     "gore"
+    ],
+    "omitted": []
+   },
+   {
+    "exit": "76A",
+    "osm": "n137212537",
+    "s": 59274.1,
+    "side": "right",
+    "kinds": [
+     "advance 0.5 mi",
+     "exit direction",
+     "gore"
+    ],
+    "omitted": [
+     {
+      "advance": 2,
+      "why": "closely spaced: no room after the previous interchange",
+      "room_m": 1102.6
+     },
+     {
+      "advance": 1,
+      "why": "closely spaced: no room after the previous interchange",
+      "room_m": 1102.6
+     },
+     {
+      "sequence": true,
+      "why": "no second interchange within reach"
+     }
+    ]
+   }
+  ],
+  "unsigned_exits": [],
+  "closely_spaced": [
+   {
+    "exit": "17B",
+    "s": 27815.1,
+    "kinds": [
+     "interchange sequence",
+     "exit direction",
+     "gore"
+    ],
+    "omitted": [
+     {
+      "advance": 1,
+      "why": "closely spaced: no room after the previous interchange",
+      "room_m": 265.2
+     },
+     {
+      "advance": 0.5,
+      "why": "closely spaced: no room after the previous interchange",
+      "room_m": 265.2
+     }
+    ]
+   },
+   {
+    "exit": "23",
+    "s": 35869.9,
+    "kinds": [
+     "advance 1 mi",
+     "advance 0.5 mi",
+     "exit direction",
+     "gore"
+    ],
+    "omitted": [
+     {
+      "advance": 2,
+      "why": "closely spaced: no room after the previous interchange",
+      "room_m": 2761.4
+     }
+    ]
+   },
+   {
+    "exit": "62",
+    "s": 37691.5,
+    "kinds": [
+     "advance 0.5 mi",
+     "interchange sequence",
+     "exit direction",
+     "gore"
+    ],
+    "omitted": [
+     {
+      "advance": 1,
+      "why": "closely spaced: no room after the previous interchange",
+      "room_m": 1571.6
+     }
+    ]
+   },
+   {
+    "exit": "64B",
+    "s": 40295.2,
+    "kinds": [
+     "interchange sequence",
+     "exit direction",
+     "gore"
+    ],
+    "omitted": [
+     {
+      "advance": 1,
+      "why": "closely spaced: no room after the previous interchange",
+      "room_m": 48.8
+     },
+     {
+      "advance": 0.5,
+      "why": "closely spaced: no room after the previous interchange",
+      "room_m": 48.8
+     }
+    ]
+   },
+   {
+    "exit": "69",
+    "s": 47810.8,
+    "kinds": [
+     "advance 0.5 mi",
+     "interchange sequence",
+     "exit direction",
+     "gore"
+    ],
+    "omitted": [
+     {
+      "advance": 1,
+      "why": "closely spaced: no room after the previous interchange",
+      "room_m": 1330.7
+     }
+    ]
+   },
+   {
+    "exit": "76A",
+    "s": 59274.1,
+    "kinds": [
+     "advance 0.5 mi",
+     "exit direction",
+     "gore"
+    ],
+    "omitted": [
+     {
+      "advance": 2,
+      "why": "closely spaced: no room after the previous interchange",
+      "room_m": 1102.6
+     },
+     {
+      "advance": 1,
+      "why": "closely spaced: no room after the previous interchange",
+      "room_m": 1102.6
+     },
+     {
+      "sequence": true,
+      "why": "no second interchange within reach"
+     }
+    ]
+   }
+  ],
+  "denylist_changes": [],
+  "median_too_narrow": [],
+  "dropped_by_spacing": [
+   {
+    "kind": "sequence",
+    "s_nominal": 40070.8,
+    "side": "right"
+   }
+  ],
+  "ground_fixes": [],
+  "overhead": [
+   {
+    "kind": "advance",
+    "s": 34260.6,
+    "exit": "23",
+    "why": "4 lanes",
+    "structure": "span",
+    "d": -5.19,
+    "clearance_m": 5.52
+   },
+   {
+    "kind": "exit",
+    "s": 35719.9,
+    "exit": "23",
+    "why": "4 lanes",
+    "structure": "span",
+    "d": -4.21,
+    "clearance_m": 5.52
+   },
+   {
+    "kind": "exit",
+    "s": 37541.5,
+    "exit": "62",
+    "why": "4 lanes",
+    "structure": "cantilever",
+    "d": -6.86,
+    "clearance_m": 5.5
+   },
+   {
+    "kind": "advance",
+    "s": 41058.1,
+    "exit": "65",
+    "why": "5 lanes",
+    "structure": "span",
+    "d": -9.76,
+    "clearance_m": 5.54
+   },
+   {
+    "kind": "advance",
+    "s": 41862.7,
+    "exit": "65",
+    "why": "4 lanes",
+    "structure": "cantilever",
+    "d": -3.26,
+    "clearance_m": 5.54
+   },
+   {
+    "kind": "exit",
+    "s": 42517.4,
+    "exit": "65",
+    "why": "4 lanes",
+    "structure": "cantilever",
+    "d": -5.13,
+    "clearance_m": 5.52
+   },
+   {
+    "kind": "exit",
+    "s": 47660.8,
+    "exit": "69",
+    "why": "4 lanes",
+    "structure": "cantilever",
+    "d": -6.15,
+    "clearance_m": 5.56
+   },
+   {
+    "kind": "advance",
+    "s": 48678.7,
+    "exit": "70",
+    "why": "4 lanes",
+    "structure": "cantilever",
+    "d": -6.94,
+    "clearance_m": 5.56
+   },
+   {
+    "kind": "advance",
+    "s": 49483.3,
+    "exit": "70",
+    "why": "4 lanes",
+    "structure": "cantilever",
+    "d": -6.94,
+    "clearance_m": 5.59
+   },
+   {
+    "kind": "exit",
+    "s": 50138.0,
+    "exit": "70",
+    "why": "4 lanes",
+    "structure": "cantilever",
+    "d": -5.97,
+    "clearance_m": 5.56
+   },
+   {
+    "kind": "advance",
+    "s": 51368.0,
+    "exit": "72",
+    "why": "4 lanes",
+    "structure": "span",
+    "d": -2.97,
+    "clearance_m": 5.55
+   },
+   {
+    "kind": "advance",
+    "s": 52172.6,
+    "exit": "72",
+    "why": "4 lanes",
+    "structure": "cantilever",
+    "d": -6.56,
+    "clearance_m": 5.55
+   },
+   {
+    "kind": "exit",
+    "s": 52827.3,
+    "exit": "72",
+    "why": "4 lanes",
+    "structure": "cantilever",
+    "d": -5.58,
+    "clearance_m": 5.55
+   },
+   {
+    "kind": "advance",
+    "s": 57116.8,
+    "exit": "75",
+    "why": "4 lanes",
+    "structure": "cantilever",
+    "d": -5.8,
+    "clearance_m": 5.46
+   },
+   {
+    "kind": "exit",
+    "s": 57771.5,
+    "exit": "75",
+    "why": "4 lanes",
+    "structure": "span",
+    "d": -4.82,
+    "clearance_m": 5.53
+   }
+  ],
+  "structures": {
+   "cantilever": 10,
+   "span": 5
+  },
+  "left_offsets": []
+ },
+ "barriers": {
+  "fit": {
+   "median": {
+    "unit": "m of clear median",
+    "rule": "barrier where clear median < threshold",
+    "positives_train": 1578,
+    "stations_train": 2615,
+    "positives_test": 308,
+    "stations_test": 750,
+    "threshold": 9.51,
+    "fitted": true,
+    "train": {
+     "precision": 0.612,
+     "recall": 0.999,
+     "f1": 0.759,
+     "tp": 1577,
+     "fp": 999,
+     "fn": 1,
+     "stations": 2615
+    },
+    "holdout": {
+     "precision": 0.411,
+     "recall": 1.0,
+     "f1": 0.582,
+     "tp": 308,
+     "fp": 442,
+     "fn": 0,
+     "stations": 750
+    }
+   },
+   "fill": {
+    "unit": "m of fill",
+    "rule": "barrier where fill > threshold",
+    "positives_train": 624,
+    "stations_train": 11107,
+    "positives_test": 254,
+    "stations_test": 1979,
+    "threshold": 3.0,
+    "fitted": false,
+    "best_fit": 2.95,
+    "train_at_best_fit": {
+     "precision": 0.115,
+     "recall": 0.926,
+     "f1": 0.205,
+     "tp": 578,
+     "fp": 4448,
+     "fn": 46,
+     "stations": 11107
+    },
+    "why": "the best threshold scores F1 0.205 on the training share (< 0.3): the feature does not explain where OSM maps this barrier; design value kept",
+    "holdout": {
+     "precision": 0.348,
+     "recall": 1.0,
+     "f1": 0.517,
+     "tp": 254,
+     "fp": 475,
+     "fn": 0,
+     "stations": 1979
+    }
+   },
+   "median_cable": {
+    "placed": false,
+    "why": "OSM maps no cable barrier along the route, so no fit supports one in the wide median"
+   }
+  },
+  "osm_mapped_m": {
+   "concrete": 10100,
+   "wall": 792,
+   "guardrail": 3512,
+   "fence": 1352
+  },
+  "placed_m": {
+   "concrete mapped": 6944,
+   "concrete rule": 26232,
+   "guardrail mapped": 3116,
+   "guardrail rule": 32216,
+   "wall mapped": 692
+  },
+  "roads": {
+   "us93.main": {
+    "runs": 355,
+    "delineators": 577
+   },
+   "us93s.opp": {
+    "runs": 178,
+    "delineators": 386
+   },
+   "us93.x14.off": {
+    "runs": 0,
+    "delineators": 32
+   },
+   "us93.x15A.off": {
+    "runs": 1,
+    "delineators": 13
+   },
+   "us93.x17A.off": {
+    "runs": 0,
+    "delineators": 26
+   },
+   "us93.x17B.off": {
+    "runs": 0,
+    "delineators": 32
+   },
+   "us93.x19.off": {
+    "runs": 0,
+    "delineators": 44
+   },
+   "us93.x20.off": {
+    "runs": 0,
+    "delineators": 28
+   },
+   "us93.x64A.off": {
+    "runs": 0,
+    "delineators": 22
+   },
+   "us93.x65.off": {
+    "runs": 0,
+    "delineators": 24
+   },
+   "us93.x68.off": {
+    "runs": 0,
+    "delineators": 28
+   },
+   "us93.x69.off": {
+    "runs": 0,
+    "delineators": 48
+   },
+   "us93.x70.off": {
+    "runs": 0,
+    "delineators": 30
+   },
+   "us93.x72.off": {
+    "runs": 0,
+    "delineators": 24
+   },
+   "us93.x73.off": {
+    "runs": 0,
+    "delineators": 20
+   },
+   "us93s.x75B.off": {
+    "runs": 0,
+    "delineators": 30
+   },
+   "us93s.x75A.off": {
+    "runs": 0,
+    "delineators": 17
+   },
+   "us93s.x73.off": {
+    "runs": 0,
+    "delineators": 26
+   },
+   "us93s.x72.off": {
+    "runs": 0,
+    "delineators": 24
+   },
+   "us93s.x70.off": {
+    "runs": 0,
+    "delineators": 24
+   },
+   "us93s.x69.off": {
+    "runs": 0,
+    "delineators": 42
+   },
+   "us93s.x68.off": {
+    "runs": 0,
+    "delineators": 24
+   },
+   "us93s.x65.off": {
+    "runs": 0,
+    "delineators": 22
+   },
+   "us93s.x64B.off": {
+    "runs": 2,
+    "delineators": 22
+   },
+   "us93s.x64A.off": {
+    "runs": 2,
+    "delineators": 17
+   },
+   "us93s.x62.off": {
+    "runs": 0,
+    "delineators": 32
+   },
+   "us93s.x20.off": {
+    "runs": 2,
+    "delineators": 19
+   },
+   "us93s.x19.off": {
+    "runs": 0,
+    "delineators": 38
+   },
+   "us93s.x17.off": {
+    "runs": 1,
+    "delineators": 40
+   },
+   "us93s.x15A.off": {
+    "runs": 0,
+    "delineators": 16
+   },
+   "us93s.x14.off": {
+    "runs": 0,
+    "delineators": 62
+   },
+   "us93s.xkm53.off": {
+    "runs": 2,
+    "delineators": 0
+   },
+   "us93s.x2.off": {
+    "runs": 10,
+    "delineators": 0
+   },
+   "us93.x2.on": {
+    "runs": 10,
+    "delineators": 0
+   },
+   "us93.x14.on": {
+    "runs": 2,
+    "delineators": 48
+   },
+   "us93.x15A.on": {
+    "runs": 0,
+    "delineators": 46
+   },
+   "us93.x15A.on2": {
+    "runs": 0,
+    "delineators": 0
+   },
+   "us93.x19.on": {
+    "runs": 0,
+    "delineators": 38
+   },
+   "us93.x20.on": {
+    "runs": 0,
+    "delineators": 34
+   },
+   "us93.x62.on": {
+    "runs": 0,
+    "delineators": 40
+   },
+   "us93.x64A.on": {
+    "runs": 2,
+    "delineators": 17
+   },
+   "us93.x64B.on": {
+    "runs": 2,
+    "delineators": 38
+   },
+   "us93.x65.on": {
+    "runs": 2,
+    "delineators": 26
+   },
+   "us93.x65.on2": {
+    "runs": 0,
+    "delineators": 30
+   },
+   "us93.x69.on": {
+    "runs": 0,
+    "delineators": 30
+   },
+   "us93.x69.on3": {
+    "runs": 0,
+    "delineators": 34
+   },
+   "us93.x70.on": {
+    "runs": 0,
+    "delineators": 28
+   },
+   "us93.x72.on": {
+    "runs": 0,
+    "delineators": 26
+   },
+   "us93.x73.on": {
+    "runs": 0,
+    "delineators": 18
+   },
+   "us93.x76A.on": {
+    "runs": 0,
+    "delineators": 14
+   },
+   "us93.x76A.on2": {
+    "runs": 0,
+    "delineators": 0
+   },
+   "us93s.x73.on": {
+    "runs": 0,
+    "delineators": 16
+   },
+   "us93s.x70.on": {
+    "runs": 0,
+    "delineators": 38
+   },
+   "us93s.x70.on2": {
+    "runs": 0,
+    "delineators": 24
+   },
+   "us93s.x68.on": {
+    "runs": 0,
+    "delineators": 0
+   },
+   "us93s.x68.on2": {
+    "runs": 0,
+    "delineators": 0
+   },
+   "us93s.x68.on3": {
+    "runs": 0,
+    "delineators": 30
+   },
+   "us93s.x64B.on": {
+    "runs": 0,
+    "delineators": 26
+   },
+   "us93s.x62.on": {
+    "runs": 0,
+    "delineators": 38
+   },
+   "us93s.x23.on2": {
+    "runs": 3,
+    "delineators": 39
+   },
+   "us93s.x20.on2": {
+    "runs": 0,
+    "delineators": 24
+   },
+   "us93s.x17.on": {
+    "runs": 0,
+    "delineators": 28
+   },
+   "us93s.x17.on2": {
+    "runs": 0,
+    "delineators": 14
+   },
+   "us93s.x17.on3": {
+    "runs": 0,
+    "delineators": 20
+   },
+   "us93s.x14.on": {
+    "runs": 3,
+    "delineators": 11
+   },
+   "us93s.x14.on2": {
+    "runs": 0,
+    "delineators": 24
+   },
+   "us93s.xkm53.on": {
+    "runs": 3,
+    "delineators": 0
+   },
+   "us93s.x2.on": {
+    "runs": 6,
+    "delineators": 0
+   },
+   "us93.x2.off": {
+    "runs": 19,
+    "delineators": 1
+   },
+   "us93.x23.off": {
+    "runs": 10,
+    "delineators": 48
+   },
+   "us93.x62.off": {
+    "runs": 0,
+    "delineators": 32
+   },
+   "us93.x64B.off": {
+    "runs": 4,
+    "delineators": 50
+   },
+   "us93.x75.off": {
+    "runs": 0,
+    "delineators": 22
+   },
+   "us93.x76A.off": {
+    "runs": 25,
+    "delineators": 58
+   },
+   "us93s.x23.off": {
+    "runs": 2,
+    "delineators": 72
+   },
+   "us93.x17B.on": {
+    "runs": 2,
+    "delineators": 14
+   },
+   "us93.x69.on2": {
+    "runs": 2,
+    "delineators": 48
+   },
+   "us93s.x75A.on": {
+    "runs": 0,
+    "delineators": 20
+   },
+   "us93s.x64A.on": {
+    "runs": 2,
+    "delineators": 52
+   },
+   "us93s.x23.on": {
+    "runs": 2,
+    "delineators": 16
+   },
+   "us93s.x20.on": {
+    "runs": 1,
+    "delineators": 48
+   }
+  },
+  "check_points": [
+   {
+    "s": 990.9,
+    "km": 0.99,
+    "left": {
+     "placed": "concrete",
+     "osm": null,
+     "basis": "rule only",
+     "agrees": null
+    },
+    "right": {
+     "placed": "concrete",
+     "osm": null,
+     "basis": "rule only",
+     "agrees": null
+    }
+   },
+   {
+    "s": 2972.8,
+    "km": 2.97,
+    "left": {
+     "placed": "concrete",
+     "osm": "concrete",
+     "basis": "mapped",
+     "agrees": true
+    },
+    "right": {
+     "placed": "guardrail",
+     "osm": "guardrail",
+     "basis": "mapped",
+     "agrees": true
+    }
+   },
+   {
+    "s": 4954.7,
+    "km": 4.95,
+    "left": {
+     "placed": "concrete",
+     "osm": null,
+     "basis": "rule only",
+     "agrees": null
+    },
+    "right": {
+     "placed": "guardrail",
+     "osm": null,
+     "basis": "rule only",
+     "agrees": null
+    }
+   },
+   {
+    "s": 6936.5,
+    "km": 6.94,
+    "left": {
+     "placed": "concrete",
+     "osm": null,
+     "basis": "rule only",
+     "agrees": null
+    },
+    "right": {
+     "placed": "guardrail",
+     "osm": null,
+     "basis": "rule only",
+     "agrees": null
+    }
+   },
+   {
+    "s": 8918.4,
+    "km": 8.92,
+    "left": {
+     "placed": "guardrail",
+     "osm": null,
+     "basis": "rule only",
+     "agrees": null
+    },
+    "right": {
+     "placed": "none",
+     "osm": null,
+     "basis": "rule only",
+     "agrees": null
+    }
+   },
+   {
+    "s": 10900.3,
+    "km": 10.9,
+    "left": {
+     "placed": "none",
+     "osm": null,
+     "basis": "rule only",
+     "agrees": null
+    },
+    "right": {
+     "placed": "none",
+     "osm": null,
+     "basis": "rule only",
+     "agrees": null
+    }
+   },
+   {
+    "s": 12882.1,
+    "km": 12.88,
+    "left": {
+     "placed": "none",
+     "osm": null,
+     "basis": "rule only",
+     "agrees": null
+    },
+    "right": {
+     "placed": "none",
+     "osm": null,
+     "basis": "rule only",
+     "agrees": null
+    }
+   },
+   {
+    "s": 14864.0,
+    "km": 14.86,
+    "left": {
+     "placed": "none",
+     "osm": null,
+     "basis": "rule only",
+     "agrees": null
+    },
+    "right": {
+     "placed": "none",
+     "osm": null,
+     "basis": "rule only",
+     "agrees": null
+    }
+   },
+   {
+    "s": 16845.9,
+    "km": 16.85,
+    "left": {
+     "placed": "none",
+     "osm": null,
+     "basis": "rule only",
+     "agrees": null
+    },
+    "right": {
+     "placed": "none",
+     "osm": null,
+     "basis": "rule only",
+     "agrees": null
+    }
+   },
+   {
+    "s": 18827.7,
+    "km": 18.83,
+    "left": {
+     "placed": "none",
+     "osm": null,
+     "basis": "rule only",
+     "agrees": null
+    },
+    "right": {
+     "placed": "none",
+     "osm": null,
+     "basis": "rule only",
+     "agrees": null
+    }
+   },
+   {
+    "s": 20809.6,
+    "km": 20.81,
+    "left": {
+     "placed": "none",
+     "osm": null,
+     "basis": "rule only",
+     "agrees": null
+    },
+    "right": {
+     "placed": "none",
+     "osm": null,
+     "basis": "rule only",
+     "agrees": null
+    }
+   },
+   {
+    "s": 22791.5,
+    "km": 22.79,
+    "left": {
+     "placed": "guardrail",
+     "osm": null,
+     "basis": "rule only",
+     "agrees": null
+    },
+    "right": {
+     "placed": "guardrail",
+     "osm": null,
+     "basis": "rule only",
+     "agrees": null
+    }
+   },
+   {
+    "s": 24773.3,
+    "km": 24.77,
+    "left": {
+     "placed": "none",
+     "osm": null,
+     "basis": "rule only",
+     "agrees": null
+    },
+    "right": {
+     "placed": "none",
+     "osm": null,
+     "basis": "rule only",
+     "agrees": null
+    }
+   },
+   {
+    "s": 26755.2,
+    "km": 26.76,
+    "left": {
+     "placed": "none",
+     "osm": null,
+     "basis": "rule only",
+     "agrees": null
+    },
+    "right": {
+     "placed": "none",
+     "osm": null,
+     "basis": "rule only",
+     "agrees": null
+    }
+   },
+   {
+    "s": 28737.1,
+    "km": 28.74,
+    "left": {
+     "placed": "concrete",
+     "osm": null,
+     "basis": "rule only",
+     "agrees": null
+    },
+    "right": {
+     "placed": "none",
+     "osm": null,
+     "basis": "rule only",
+     "agrees": null
+    }
+   },
+   {
+    "s": 30718.9,
+    "km": 30.72,
+    "left": {
+     "placed": "concrete",
+     "osm": null,
+     "basis": "rule only",
+     "agrees": null
+    },
+    "right": {
+     "placed": "none",
+     "osm": null,
+     "basis": "rule only",
+     "agrees": null
+    }
+   },
+   {
+    "s": 32700.8,
+    "km": 32.7,
+    "left": {
+     "placed": "concrete",
+     "osm": null,
+     "basis": "rule only",
+     "agrees": null
+    },
+    "right": {
+     "placed": "none",
+     "osm": null,
+     "basis": "rule only",
+     "agrees": null
+    }
+   },
+   {
+    "s": 34682.7,
+    "km": 34.68,
+    "left": {
+     "placed": "concrete",
+     "osm": null,
+     "basis": "rule only",
+     "agrees": null
+    },
+    "right": {
+     "placed": "none",
+     "osm": null,
+     "basis": "rule only",
+     "agrees": null
+    }
+   },
+   {
+    "s": 36664.5,
+    "km": 36.66,
+    "left": {
+     "placed": "concrete",
+     "osm": "concrete",
+     "basis": "mapped",
+     "agrees": true
+    },
+    "right": {
+     "placed": "guardrail",
+     "osm": null,
+     "basis": "rule only",
+     "agrees": null
+    }
+   },
+   {
+    "s": 38646.4,
+    "km": 38.65,
+    "left": {
+     "placed": "none",
+     "osm": null,
+     "basis": "rule only",
+     "agrees": null
+    },
+    "right": {
+     "placed": "none",
+     "osm": null,
+     "basis": "rule only",
+     "agrees": null
+    }
+   },
+   {
+    "s": 40628.3,
+    "km": 40.63,
+    "left": {
+     "placed": "concrete",
+     "osm": null,
+     "basis": "rule only",
+     "agrees": null
+    },
+    "right": {
+     "placed": "none",
+     "osm": null,
+     "basis": "rule only",
+     "agrees": null
+    }
+   },
+   {
+    "s": 42610.1,
+    "km": 42.61,
+    "left": {
+     "placed": "wall",
+     "osm": "wall",
+     "basis": "mapped",
+     "agrees": true
+    },
+    "right": {
+     "placed": "none",
+     "osm": null,
+     "basis": "rule only",
+     "agrees": null
+    }
+   },
+   {
+    "s": 44592.0,
+    "km": 44.59,
+    "left": {
+     "placed": "concrete",
+     "osm": null,
+     "basis": "rule only",
+     "agrees": null
+    },
+    "right": {
+     "placed": "none",
+     "osm": null,
+     "basis": "rule only",
+     "agrees": null
+    }
+   },
+   {
+    "s": 46573.9,
+    "km": 46.57,
+    "left": {
+     "placed": "none",
+     "osm": null,
+     "basis": "rule only",
+     "agrees": null
+    },
+    "right": {
+     "placed": "none",
+     "osm": null,
+     "basis": "rule only",
+     "agrees": null
+    }
+   },
+   {
+    "s": 48555.7,
+    "km": 48.56,
+    "left": {
+     "placed": "concrete",
+     "osm": null,
+     "basis": "rule only",
+     "agrees": null
+    },
+    "right": {
+     "placed": "none",
+     "osm": null,
+     "basis": "rule only",
+     "agrees": null
+    }
+   },
+   {
+    "s": 50537.6,
+    "km": 50.54,
+    "left": {
+     "placed": "concrete",
+     "osm": null,
+     "basis": "rule only",
+     "agrees": null
+    },
+    "right": {
+     "placed": "none",
+     "osm": null,
+     "basis": "rule only",
+     "agrees": null
+    }
+   },
+   {
+    "s": 52519.5,
+    "km": 52.52,
+    "left": {
+     "placed": "none",
+     "osm": null,
+     "basis": "rule only",
+     "agrees": null
+    },
+    "right": {
+     "placed": "none",
+     "osm": null,
+     "basis": "rule only",
+     "agrees": null
+    }
+   },
+   {
+    "s": 54501.3,
+    "km": 54.5,
+    "left": {
+     "placed": "concrete",
+     "osm": null,
+     "basis": "rule only",
+     "agrees": null
+    },
+    "right": {
+     "placed": "concrete",
+     "osm": "wall",
+     "basis": "mapped",
+     "agrees": false
+    }
+   },
+   {
+    "s": 56483.2,
+    "km": 56.48,
+    "left": {
+     "placed": "concrete",
+     "osm": null,
+     "basis": "rule only",
+     "agrees": null
+    },
+    "right": {
+     "placed": "none",
+     "osm": null,
+     "basis": "rule only",
+     "agrees": null
+    }
+   },
+   {
+    "s": 58465.1,
+    "km": 58.47,
+    "left": {
+     "placed": "concrete",
+     "osm": "concrete",
+     "basis": "mapped",
+     "agrees": true
+    },
+    "right": {
+     "placed": "concrete",
+     "osm": null,
+     "basis": "rule only",
+     "agrees": null
+    }
+   }
+  ],
+  "rules": {
+   "median": "concrete median barrier where the clear median is under the fitted threshold, centre at half the clear width within (0.45, 1.2) m of the left edge",
+   "fill": "guardrail where the fill 3-9 m outside the edge exceeds the threshold",
+   "approach": "guardrail 45 m before and 15 m after every parapet bridge",
+   "piers": "guardrail 40 m before to 10 m past any pier within 10 m of the edge",
+   "drop_off": "concrete barrier where the embankment is held under 4.0 m and the road stands over 1.0 m",
+   "cuts": "no barrier in a gore opening (junction range +- margin), on a parapet bridge, or on another road's pavement within 4.9 m vertically",
+   "delineators": "white on the right, yellow on the left in open medians at least 6 m wide; 400 ft on tangents, MUTCD Table 3F-1 on curves, 100 ft on ramps; none beside a barrier"
+  }
+ },
+ "files": {
+  "signs-us93.json": 33901,
+  "limit": 150000,
+  "barriers-us93.json": 44691,
+  "barrier_limit": 100000,
+  "ok": true
+ },
+ "denylist": {
+  "file": "data/sign_denylist.txt",
+  "terms": 76
+ },
+ "sheeting": {
+  "signs": "signs.json: each record's `sheeting` is [background, legend]; the runtime puts it on the face mesh as vertex attributes `retro` (background) and `retroLegend` (legend), codes in src/drive/roadside/sheeting.js",
+  "barriers": "road chunks carry a `retro` vertex attribute: reflectors on guardrail and concrete barrier are white (right) or yellow (left); everything else 0",
+  "delineators": "one InstancedMesh per reflector colour, material names 'delineator white' and 'delineator yellow', each with a `retro` instance attribute"
+ }
+}
