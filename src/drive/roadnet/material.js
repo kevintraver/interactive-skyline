@@ -16,7 +16,7 @@
  * changes depth and nothing on screen; embankment vertices stay put and meet the ground honestly.
  */
 import * as THREE from 'three';
-import { drawRoadAtlas, ATLAS_W, ATLAS_H, KIND } from './atlas.js';
+import { drawRoadAtlas, ATLAS_W, ATLAS_H, KIND, V_CYCLES } from './atlas.js';
 
 const NIGHT_GLOW = { near: 0.5, far: 0.1 }; // emissive intensity on the night map
 // Fraction of its distance a pavement vertex moves towards the camera: 4 mm at 10 m, 0.4 m at 1 km,
@@ -53,6 +53,7 @@ function atlasTexture(night, anisotropy) {
   t.wrapS = THREE.ClampToEdgeWrapping; // regions sit side by side across
   t.wrapT = THREE.RepeatWrapping; // one marking cycle along, repeating with chainage
   t.flipY = false; // v = 0 at the top of the canvas, where the dashes start
+  t.repeat.set(1, 1 / V_CYCLES); // the canvas stacks V_CYCLES marking cycles; the mesh's v counts cycles (atlas.js)
   t.minFilter = THREE.LinearMipmapLinearFilter;
   t.magFilter = THREE.LinearFilter;
   t.generateMipmaps = true;
@@ -84,15 +85,20 @@ export function createRoadMaterials({ anisotropy = 1 } = {}) {
     m.customProgramCacheKey = () => `road-pull-${PULL}`;
   }
   road.name = 'road'; roadNear.name = 'road-near';
+  // with real headlights (lights/headlights.js) the stand-in glow gives way: markings are lit by what the lamps return
+  let headlights = false, lastNight = 0;
   const api = {
     road, roadNear, map, nightMap,
     setNight(on) {
-      const w = nightWeight(on);
+      lastNight = on;
+      const w = headlights ? 0 : nightWeight(on);
       road.emissiveIntensity = NIGHT_GLOW.far * w;
       roadNear.emissiveIntensity = NIGHT_GLOW.near * w;
     },
     /** The drive's look (look.js): its `beams` (the headlight stand-in's share), or its boolean `night`. */
     setLook(look) { api.setNight(look.beams ?? look.night); },
+    /** true while real headlights light the road (the stand-in glow is then off); false brings the glow back. */
+    setHeadlights(on) { headlights = !!on; api.setNight(lastNight); },
     dispose() { road.dispose(); roadNear.dispose(); map?.dispose(); nightMap?.dispose(); },
   };
   return api;

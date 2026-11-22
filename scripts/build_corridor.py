@@ -26,6 +26,12 @@ A rerun with a warm cache makes no request and writes the same bytes. --refresh 
 
 The format is specified at the top of src/drive/corridor/format.js (writer: lib/corridor_format.py).
 
+Heights the ladder gets badly wrong (resort towers drawn as their casino floors) are corrected by
+data/corridor_overrides.json (lib/corridor_overrides.py): a height, its source, and where one outline
+holds a podium and a tower, the tower's footprint. An overridden building is written with the rung
+`osm-height` (a stated height; the format has no rung of its own for it) and listed in the report.
+An override may name an OSM building the corridor requests missed; it is taken from Overture's copy.
+
 Output: public/data/<city>/corridor/index.json, c<i>_<j>.bin per 2 km cell, tall.bin
         data/derived/<city>/corridor_report.json
 """
@@ -45,6 +51,7 @@ from shapely.ops import unary_union
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from lib.corridor import RULES, building_type, height_of, keep, tidy  # noqa: E402
 from lib.corridor_format import RUNG, RUNGS, TYPE, TYPES, encode_cell  # noqa: E402
+from lib import corridor_overrides  # noqa: E402
 from lib.frame import create_frame  # noqa: E402
 from lib.ladder import stitch  # noqa: E402
 from lib.roadnet import decode_roadnet  # noqa: E402
@@ -226,6 +233,11 @@ def main():
             continue
         elements[key] = el
 
+    # hand corrections of heights (data/corridor_overrides.json)
+    ov_doc_path = ROOT / "data" / "corridor_overrides.json"
+    fixes = corridor_overrides.load(json.loads(ov_doc_path.read_text()), frame.to_local) if ov_doc_path.exists() else []
+    fix_ids = sorted({o["osm"] for o in fixes if o["osm"]})
+
     ov_by_osm, ov_tall, ov_osm_tall = {}, [], []
     ov_release = None
     if ov_path:
@@ -244,6 +256,12 @@ def main():
         ov_osm_tall = [(rec.split("@")[0], h, wkb) for rec, h, wkb in con.execute(
             f"SELECT src_record, height, wkb FROM '{ov_path}' WHERE src_dataset = 'OpenStreetMap' AND height >= {RULES['tall']} ORDER BY src_record").fetchall()
             if rec and rec.split("@")[0] not in elements]
+        # overridden OSM buildings that neither request brought, whatever Overture's height
+        have = elements.keys() | {oid for oid, _, _ in ov_osm_tall}
+        missing = [i for i in fix_ids if i not in have]
+        if missing:
+            rows = con.execute(f"SELECT src_record, height, wkb FROM '{ov_path}' WHERE src_dataset = 'OpenStreetMap' ORDER BY src_record").fetchall()
+            ov_osm_tall += [(rec.split("@")[0], h, wkb) for rec, h, wkb in rows if rec and rec.split("@")[0] in missing]
         rel = ov_path.parent / "release.txt"
         ov_release = rel.read_text().strip() if rel.exists() else None
         print(f"Overture: {len(ov_by_osm):,} OSM buildings with a height, {len(ov_tall):,} others near the route or tall")
@@ -294,10 +312,27 @@ def main():
                     holes.append(np.c_[hx, hy])
                 p = Polygon(np.c_[x, y], holes).buffer(0)
                 if isinstance(p, Polygon) and p.area > 4:
-                    cand.append((oid, p, {"building": "yes"}, float(h), "overture-osm"))
+                    cand.append((oid, p, {"building": "yes"}, None if h is None else float(h), "overture-osm"))
+
+    pieces, fixed = [], []  # (id, polygon, tags, height, rung, source)
+    for key, p, tags, ovh, src in cand:
+        h, rung = height_of(tags, p.area, ovh)
+        o = corridor_overrides.find(fixes, key, p) if fixes else None
+        if o is not None:
+            o["hit"] = True
+        if o is None:
+            pieces.append((key, p, tags, h, rung, src))
+            continue
+        for pid, q, qh, qr in corridor_overrides.apply(o, key, p, h, rung, RUNG["osm-height"]):
+            pieces.append((pid, q, tags, qh, qr, src))
+            fixed.append({"id": pid, "from": round(h, 1), "h": round(qh, 1), "area": round(q.area), "source": o["source"], "note": o["note"]})
+
+    for o in fixes:
+        if not o.get("hit"):
+            print(f"corridor override not used: {o['osm'] or o['point'].coords[0]} ({o['note']})", file=sys.stderr)
 
     kept = []
-    for key, p, tags, ovh, src in cand:
+    for key, p, tags, h, rung, src in pieces:
         c = p.centroid
         if core.contains(c):
             stats["core:inside"] += 1
@@ -306,7 +341,6 @@ def main():
             stats["outside-region"] += 1
             continue
         area = p.area
-        h, rung = height_of(tags, area, ovh)
         t = building_type(tags, area)
         d0 = p.distance(route_lines[0])
         d1 = p.distance(others) if others is not None else math.inf
@@ -405,6 +439,7 @@ def main():
         "routes": [rid for rid, _, _ in lines],
         "perFiveKm": per5_by_route[lines[0][0]],
         "perFiveKmByRoute": per5_by_route,
+        "overrides": fixed,
         "tallList": [{"id": b["id"], "h": b["height"], "rung": RUNGS[b["rung"]], "c": [round(v) for v in b["c"]]} for b in tall],
         "heightCheck": [{"id": b["id"], "h": b["height"], "type": TYPES[b["type"]], "rung": RUNGS[b["rung"]], "area": round(b["area"])}
                         for b in kept if b["type"] in (TYPE["house"], TYPE["shed"]) and b["height"] > 12],

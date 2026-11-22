@@ -59,7 +59,8 @@ def test_i15n_is_byte_for_byte_as_committed():
             pytest.skip("no committed RoadNet")
         assert (DATA / name).read_bytes() == ref
     ref = committed("public/data/lv/routes.json")
-    was = next(r for r in json.loads(ref)["routes"] if r["id"] == "i15n")
+    # `files` names a route's own files; it came with the other routes and is not part of the route itself
+    was = {k: v for k, v in next(r for r in json.loads(ref)["routes"] if r["id"] == "i15n").items() if k != "files"}
     now = {k: v for k, v in route("i15n").items() if k != "files"}
     assert now == was
 

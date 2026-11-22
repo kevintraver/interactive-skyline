@@ -77,7 +77,11 @@ describe('structure mesher', () => {
 
   it('cuts rows at the ends of decks and hidden shoulders, and gives each span its mode', () => {
     const spans = rowStations(cross, 0, 300, 0);
-    expect(spans.map((sp) => [sp.s0, sp.s1, sp.mode.deck])).toEqual([[0, 120, false], [120, 180, true], [180, 300, false]]);
+    // the deck's expansion joints (atlas.js JOINT) are spans of their own inside it
+    const joints = spans.filter((sp) => sp.surface.joint);
+    expect(joints.map((sp) => [sp.s0, sp.s1 - sp.s0, sp.mode.deck]).map(([a, l, d]) => [a, +l.toFixed(6), d])).toEqual([[120, 0.3, true], [179.7, 0.3, true]]);
+    const merged = spans.filter((sp) => !sp.surface.joint).map((sp) => [sp.s0, sp.s1, sp.mode.deck]);
+    expect(merged.map(([a, b, d]) => [+a.toFixed(6), +b.toFixed(6), d])).toEqual([[0, 120, false], [120.3, 179.7, true], [180, 300, false]]);
     const mspans = rowStations(main, 0, 512, 0);
     expect(mspans.find((sp) => sp.s0 === 200 && sp.s1 === 380).mode.hideR).toBe(true);
   });

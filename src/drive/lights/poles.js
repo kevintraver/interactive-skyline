@@ -1,7 +1,8 @@
 // Street-lamp poles near the car (plan 02, D5.4): an instanced pole, and an instanced arm with its head, for the
 // lamps within POLE_ROAD_M of a road of the RoadNet and within POLE_CAR_M of the car, so a pool on the pavement
 // has a visible source. The lamp position in the inventory is the head; the pole stands an arm's length back from
-// it, against the aim, or where the aim is unknown, on the side away from the nearest road. The set is a function of
+// it, against the aim, or where the aim is unknown, on the side away from the nearest road. The packer has already moved
+// every pole off the modelled pavement (scripts/pack_lamps.py); one on a crossing road's deck stands on the deck (`lift`). The set is a function of
 // the car's position snapped to SNAP_M, so scrubbing gives the same poles.
 
 import * as THREE from 'three';
@@ -92,9 +93,10 @@ export function createPoles({ pack, types, roads, groundY, parent, capacity = 60
           let a = Number.isFinite(pack.aim[i]) ? (pack.aim[i] * Math.PI) / 180 : toRoad[i];
           if (!Number.isFinite(a)) a = 0;
           const fx = x - Math.cos(a) * len, fy = y - Math.sin(a) * len;
+          const lift = pack.lift ? pack.lift[i] : 0; // on a deck, the pole stands on it (scripts/pack_lamps.py)
           const gyY = groundY(fx, fy);
           const top = gyY + pack.mount[i];
-          m4.makeScale(1, pack.mount[i], 1).setPosition(fx, gyY - 0.3, -fy);
+          m4.makeScale(1, pack.mount[i] - lift, 1).setPosition(fx, gyY + lift - 0.3, -fy);
           poles.setMatrixAt(count, m4);
           q.setFromAxisAngle(up, a); // map angle a about +y turns +x toward map +y (scene -z)
           s.setScalar(len / ARM_M);

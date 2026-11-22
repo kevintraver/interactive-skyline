@@ -25,7 +25,7 @@
  */
 import { createRefline } from './refline.js';
 import { edgesAt, tapersOf } from './crosssection.js';
-import { CYCLE, MARK_W, KIND, regionU } from './atlas.js';
+import { CYCLE, MARK_W, KIND, regionU, tileFor, surfaceAt, surfaceCuts } from './atlas.js';
 import { sweepBarriers } from '../roadside/sweep.js';
 
 export const LOD_STRIDE = [1, 4, 16]; // stations between rows, per level
@@ -182,6 +182,7 @@ export function rowStations(road, s0, s1, lod, split = 0) {
   for (const tp of tapersOf(road)) { add(tp.s0); add((tp.s0 + tp.s1) / 2); add(tp.s1); }
   for (const b of road.bridges || []) { add(b.s0); add(b.s1); }
   for (const h of road.hides || []) { add(h.s0); add(h.s1); }
+  for (const c of surfaceCuts(road)) add(c); // asphalt to concrete, and bridge expansion joints (atlas.js)
   if (split > 0) for (let s = Math.ceil(s0 / split + 1e-9) * split; s < s1 - 1e-9; s += split) cuts.add(s);
   const ends = [...cuts].sort((a, b) => a - b);
   const spans = [];
@@ -190,7 +191,7 @@ export function rowStations(road, s0, s1, lod, split = 0) {
     const rows = [a];
     for (let s = (Math.floor(a / step + 1e-9) + 1) * step; s < b - 1e-6; s += step) rows.push(s);
     rows.push(b);
-    spans.push({ s0: a, s1: b, rows, mode: modeAt(road, (a + b) / 2) });
+    spans.push({ s0: a, s1: b, rows, mode: modeAt(road, (a + b) / 2), surface: surfaceAt(road, (a + b) / 2) });
   }
   return spans;
 }
@@ -267,6 +268,7 @@ export function meshChunk({ road, s0, s1, lod, base, earthR, split = 0, origin, 
 
   spans.forEach((sp, k) => {
     const np = rowsOf[k];
+    const lastLane = modePieces(csAt(sp, 0), sp.mode).findLastIndex((pc) => pc.kind === KIND.lane); // the right-hand lane wears most
     sp.rows.forEach((s, r) => {
       const cs = csAt(sp, r);
       const pieces = modePieces(cs, sp.mode);
@@ -301,7 +303,7 @@ export function meshChunk({ road, s0, s1, lod, base, earthR, split = 0, origin, 
           positions[v * 3] = lx; positions[v * 3 + 1] = ly; positions[v * 3 + 2] = lz;
           grow(lx, ly, lz);
           // an embankment squeezed into a few metres is a retaining wall: concrete, not dirt
-          uvs[v * 2] = pc.emb && (pc.emb[0] < 0 ? scaleL : scaleR) * EMB_W < WALL ? regionU('concrete', e ? pc.tr : pc.tl) : regionU(pc.region, e ? pc.tr : pc.tl);
+          uvs[v * 2] = pc.emb && (pc.emb[0] < 0 ? scaleL : scaleR) * EMB_W < WALL ? regionU('concrete', e ? pc.tr : pc.tl) : regionU(tileFor(pc.region, { ...sp.surface, right: q === lastLane }), e ? pc.tr : pc.tl);
           uvs[v * 2 + 1] = vv;
           kind[v] = pc.kind;
           v++;

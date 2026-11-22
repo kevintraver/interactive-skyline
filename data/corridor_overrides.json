@@ -1,0 +1,208 @@
+{
+ "_doc": [
+  "Hand corrections to the heights of corridor buildings (scripts/build_corridor.py, scripts/lib/corridor_overrides.py).",
+  "Each entry names a building by OSM id ('osm') or by a point inside it ('point': [lat, lon]), gives 'height' in metres above ground and its 'source' (a reference, or 'estimated' with how).",
+  "Where one outline covers a podium and a tower, 'tower' gives the tower's footprint ('polygon': [[lat, lon], ...], clipped to the outline; or 'fraction' of the outline's area about 'at') and 'podium' the rest's height (default: the ladder's).",
+  "Notes give the place, and the building's name only as OSM itself has it. No logos or signs are drawn."
+ ],
+ "buildings": [
+  {
+   "osm": "w437195222",
+   "note": "Primm, east of I-15 (OSM: Buffalo Bill's Resort & Casino): hotel towers over the casino floor",
+   "height": 50,
+   "source": "estimated: 16 floors (Wikipedia, building article) at 3.1 m; tower footprint traced from USGS NAIP imagery",
+   "tower": {
+    "polygon": [
+     [
+      35.613966,
+      -115.385265
+     ],
+     [
+      35.613982,
+      -115.384669
+     ],
+     [
+      35.613182,
+      -115.384649
+     ],
+     [
+      35.613165,
+      -115.385245
+     ]
+    ]
+   },
+   "podium": 12
+  },
+  {
+   "osm": "r20284437",
+   "note": "Primm, east of I-15 (OSM: Primm Valley Resort & Casino): the hotel ring around the pool",
+   "height": 40,
+   "source": "estimated: shadow length and room count; tower footprint traced from USGS NAIP imagery",
+   "tower": {
+    "polygon": [
+     [
+      35.610708,
+      -115.385792
+     ],
+     [
+      35.610789,
+      -115.384519
+     ],
+     [
+      35.610368,
+      -115.384042
+     ],
+     [
+      35.609519,
+      -115.384102
+     ],
+     [
+      35.609382,
+      -115.384897
+     ],
+     [
+      35.609843,
+      -115.385733
+     ]
+    ]
+   },
+   "podium": 12
+  },
+  {
+   "osm": "w148990683",
+   "note": "Primm, west of I-15 (OSM: Whiskey Pete's (closed)): the outline is the hotel wings",
+   "height": 38,
+   "source": "estimated: shadow length in USGS NAIP imagery"
+  },
+  {
+   "osm": "w501940847",
+   "note": "St. Rose Parkway, west of I-15 (OSM: The M Resort): the curved hotel tower at the south end",
+   "height": 119,
+   "source": "about 119 m (390 ft), the figure in the build brief; tower footprint traced from USGS NAIP imagery",
+   "tower": {
+    "polygon": [
+     [
+      35.964521,
+      -115.171266
+     ],
+     [
+      35.964547,
+      -115.170539
+     ],
+     [
+      35.964521,
+      -115.16966
+     ],
+     [
+      35.964353,
+      -115.16982
+     ],
+     [
+      35.964314,
+      -115.170499
+     ],
+     [
+      35.964353,
+      -115.171118
+     ]
+    ]
+   },
+   "podium": 14
+  },
+  {
+   "osm": "w747285316",
+   "note": "Silverado Ranch Boulevard, west of I-15: the hotel tower slab (OSM tags it one level)",
+   "height": 111,
+   "source": "skydb.net: 111 m (365 ft), 25 floors"
+  },
+  {
+   "osm": "w1036290086",
+   "note": "Blue Diamond Road, west of I-15 (OSM: The Berkley, Las Vegas): the timeshare tower",
+   "height": 58,
+   "source": "estimated: 18 floors (Wikipedia, Silverton article) at 3.2 m; Overture's 30 m is low"
+  },
+  {
+   "osm": "w27738460",
+   "note": "Henderson, Sunset Road beside US-93/95: the casino hotel's tower (outline tagged commercial, no height)",
+   "height": 70,
+   "source": "Wikipedia: 21-story tower, 230 ft",
+   "tower": {
+    "polygon": [
+     [
+      36.061056,
+      -115.039585
+     ],
+     [
+      36.061143,
+      -115.039478
+     ],
+     [
+      36.0607,
+      -115.038769
+     ],
+     [
+      36.060605,
+      -115.038876
+     ]
+    ]
+   },
+   "podium": 12
+  },
+  {
+   "osm": "w195180390",
+   "note": "Boulder City, beside US-93 (OSM: Hoover Dam Lodge): the hotel block",
+   "height": 22,
+   "source": "estimated: shadow length; tower footprint traced from USGS NAIP imagery",
+   "tower": {
+    "polygon": [
+     [
+      36.010477,
+      -114.784827
+     ],
+     [
+      36.010484,
+      -114.784533
+     ],
+     [
+      36.0101,
+      -114.784501
+     ],
+     [
+      36.010089,
+      -114.7848
+     ]
+    ]
+   }
+  },
+  {
+   "osm": "w265375511",
+   "note": "I-15 south, the speedway: south-west frontstretch grandstand",
+   "height": 26,
+   "source": "estimated: shadow length in USGS NAIP imagery; Overture 18 m"
+  },
+  {
+   "osm": "w265375512",
+   "note": "I-15 south, the speedway: frontstretch grandstand",
+   "height": 26,
+   "source": "estimated: shadow length in USGS NAIP imagery; Overture 15 m"
+  },
+  {
+   "osm": "w1017279619",
+   "note": "Boulder City, a school: OSM height=30 on one level",
+   "height": 8,
+   "source": "estimated: one storey (OSM building:levels=1)"
+  },
+  {
+   "osm": "w520547150",
+   "note": "Boulder City, a school: OSM height=30 on one level",
+   "height": 8,
+   "source": "estimated: one storey (OSM building:levels=1)"
+  },
+  {
+   "osm": "w1017279618",
+   "note": "Boulder City, a school: OSM height=30 on one level",
+   "height": 8,
+   "source": "estimated: one storey (OSM building:levels=1)"
+  }
+ ]
+}

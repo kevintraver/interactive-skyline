@@ -13,9 +13,10 @@ const ROOT = new URL('../../../', import.meta.url).pathname;
 const buf = (b) => b.buffer.slice(b.byteOffset, b.byteOffset + b.byteLength);
 const python = (() => { try { execFileSync('python3', ['--version']); return true; } catch { return false; } })();
 
-/** Every wanted lamp has one got lamp at its quantised position (1/64 m), with the same fields. */
+/** Every wanted lamp has one got lamp at its quantised position (1/64 m), with the same fields; all but `moved` of
+ * them when the packer moved poles off the pavement (scripts/pack_lamps.py), those within 60 m of where they were. */
 const qkey = (x, y) => `${Math.round(x * 64)},${Math.round(y * 64)}`;
-function expectSameLamps(want, got) {
+function expectSameLamps(want, got, moved = 0) {
   expect(got.length).toBe(want.length);
   const byKey = new Map();
   for (const g of got) { const k = qkey(g.x, g.y); if (!byKey.has(k)) byKey.set(k, []); byKey.get(k).push(g); }
@@ -29,13 +30,17 @@ function expectSameLamps(want, got) {
   };
   // plain checks per lamp (an expect per field and lamp is slow over 195,000 lamps), one assertion at the end
   const bad = [];
+  let badCount = 0;
   for (const w of want) {
     const g = take(w);
     const ok = g && Math.abs(w.x - g.x) <= 1 / 64 + 1e-6 && Math.abs(w.y - g.y) <= 1 / 64 + 1e-6 && g.enclosed === w.enclosed
       && (w.aim == null ? Number.isNaN(g.aim) : Math.abs(((w.aim - g.aim + 540) % 360) - 180) <= 0.71);
-    if (!ok && bad.length < 5) bad.push({ want: w, got: g });
+    if (!ok) { badCount++; if (bad.length < 5) bad.push({ want: w, got: g }); }
   }
-  expect(bad).toEqual([]);
+  if (!moved) { expect(bad).toEqual([]); return; }
+  // a moved lamp may land within 1/64 m of where it was (a deck lamp whose arm already reached back), or leave the region
+  expect(badCount).toBeLessThanOrEqual(moved);
+  expect(badCount).toBeGreaterThan(moved * 0.98);
 }
 const fromPack = (p) => Array.from({ length: p.count }, (_, i) => ({ x: p.x[i], y: p.y[i], mount: p.mount[i], type: p.type[i], lumens: p.lumens[i], enclosed: p.enclosed[i], aim: p.aim[i] }));
 const fromInventory = (recs) => recs.map((r) => ({ ...r, enclosed: r.flags & 0x10 ? 1 : 0 }));
@@ -76,7 +81,7 @@ describe.runIf(existsSync(served) && existsSync(join(ROOT, 'data/derived/lv/lamp
     const pack = decodeLampPack(meta, buf(readFileSync(join(ROOT, 'public/data/lv/lamps-drive.bin'))));
     const [x0, y0, x1, y1] = meta.region;
     const inv = fromInventory(decodeLampRecords(buf(readFileSync(join(ROOT, 'data/derived/lv/lamps.bin'))))).filter((l) => l.x >= x0 && l.x < x1 && l.y >= y0 && l.y < y1);
-    expectSameLamps(inv, fromPack(pack));
+    expectSameLamps(inv, fromPack(pack), meta.cleared?.moved ?? 0);
     expect(meta.enclosed).toBe(inv.filter((l) => l.enclosed).length);
   }, 30000);
 });

@@ -16,7 +16,8 @@ const TYPED = { uint32: Uint32Array, uint16: Uint16Array, uint8: Uint8Array };
  * @property {number} nx  @property {number} ny
  * @property {Uint32Array} cellStart   nx * ny + 1
  * @property {Float64Array} x  @property {Float64Array} y   local metres, x east, y north
- * @property {Float32Array} mount      metres
+ * @property {Float32Array} mount      metres above the ground (a deck's lift included)
+ * @property {Float32Array} lift       metres: the structure (a crossing road's deck) the pole stands on, above the ground
  * @property {Uint8Array} type  @property {Uint8Array} enclosed  @property {Uint8Array} rule
  * @property {Float32Array} lumens
  * @property {Float32Array} aim        degrees counter-clockwise from +x, NaN when unknown
@@ -29,6 +30,7 @@ export function decodeLampPack(meta, buffer) {
   for (const d of meta.arrays) a[d.name] = new TYPED[d.type](buffer, d.offset, d.length);
   const n = meta.count, { cell, q, mountQ, nx } = meta;
   const bits = meta.bits;
+  const lift = new Float32Array(n);
   const x = new Float64Array(n), y = new Float64Array(n), mount = new Float32Array(n), lumens = new Float32Array(n), aim = new Float32Array(n);
   const type = new Uint8Array(n), enclosed = new Uint8Array(n), rule = new Uint8Array(n);
   const start = a.cellStart;
@@ -43,14 +45,15 @@ export function decodeLampPack(meta, buffer) {
   }
   for (let i = 0; i < n; i++) {
     const k = a.kind[i];
-    mount[i] = a.mount[i] / mountQ;
+    lift[i] = a.lift ? a.lift[i] / mountQ : 0; // packs before the clearing have no lift
+    mount[i] = a.mount[i] / mountQ + lift[i];
     type[i] = k & bits.type;
     enclosed[i] = k & bits.enclosed ? 1 : 0;
     rule[i] = k & bits.rule ? 1 : 0;
     lumens[i] = a.flux[i] * 10;
     aim[i] = k & bits.aimKnown ? (a.aim[i] * 360) / 256 : NaN;
   }
-  return { count: n, cell, x0: meta.x0, y0: meta.y0, nx, ny: meta.ny, cellStart: start, x, y, mount, type, enclosed, rule, lumens, aim, lampTypes: meta.lampTypes };
+  return { count: n, cell, x0: meta.x0, y0: meta.y0, nx, ny: meta.ny, cellStart: start, x, y, mount, lift, type, enclosed, rule, lumens, aim, lampTypes: meta.lampTypes };
 }
 
 /** Index of the cell holding map point (x, y), or -1 outside the grid. */

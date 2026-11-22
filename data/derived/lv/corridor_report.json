@@ -12,48 +12,48 @@
   "simplify": 1.0,
   "minHole": 6.0
  },
- "kept": 48524,
- "tall": 176,
+ "kept": 48533,
+ "tall": 182,
  "cells": 101,
  "byBand": {
-  "0-400 m": 18934,
-  "400 m-1.5 km": 29447,
-  "beyond 1.5 km": 143
+  "0-400 m": 18940,
+  "400 m-1.5 km": 29453,
+  "beyond 1.5 km": 140
  },
  "byRung": {
-  "osm-height": 19,
-  "osm-levels": 82,
-  "overture": 40251,
-  "guess": 8172
+  "osm-height": 35,
+  "osm-levels": 81,
+  "overture": 40248,
+  "guess": 8169
  },
  "byType": {
-  "other": 45164,
+  "other": 45165,
   "house": 2178,
   "apartments": 249,
-  "retail": 334,
+  "retail": 335,
   "warehouse": 125,
-  "hotel": 63,
+  "hotel": 72,
   "office": 12,
-  "civic": 35,
+  "civic": 33,
   "canopy": 343,
   "shed": 21
  },
  "bySource": {
-  "osm": 24691,
+  "osm": 24698,
   "overture": 23707,
-  "overture-osm": 126
+  "overture-osm": 128
  },
  "skipped": {
   "core:by-id": 9634,
-  "dropped:rule": 36757,
+  "dropped:rule": 36761,
   "core:inside": 1208,
   "outside-region": 1
  },
  "bytes": {
-  "total": 1571446,
-  "index": 11978,
-  "tall": 16376,
-  "cells": 1543092,
+  "total": 1571595,
+  "index": 11979,
+  "tall": 16648,
+  "cells": 1542968,
   "largestCell": 98596
  },
  "routes": [
@@ -67,13 +67,14 @@
     0,
     5
    ],
-   "buildings": 99,
-   "within400": 38,
+   "buildings": 106,
+   "within400": 42,
    "inCore": false,
    "byRung": {
-    "guess": 62,
+    "guess": 61,
+    "osm-height": 10,
     "osm-levels": 1,
-    "overture": 36
+    "overture": 34
    }
   },
   {
@@ -175,11 +176,12 @@
     45,
     50
    ],
-   "buildings": 7890,
+   "buildings": 7891,
    "within400": 1721,
    "inCore": false,
    "byRung": {
-    "guess": 2559,
+    "guess": 2558,
+    "osm-height": 2,
     "osm-levels": 5,
     "overture": 5326
    }
@@ -194,9 +196,9 @@
    "inCore": false,
    "byRung": {
     "guess": 919,
-    "osm-height": 1,
-    "osm-levels": 23,
-    "overture": 3044
+    "osm-height": 3,
+    "osm-levels": 22,
+    "overture": 3043
    }
   },
   {
@@ -245,13 +247,14 @@
      0,
      5
     ],
-    "buildings": 99,
-    "within400": 38,
+    "buildings": 106,
+    "within400": 42,
     "inCore": false,
     "byRung": {
-     "guess": 62,
+     "guess": 61,
+     "osm-height": 10,
      "osm-levels": 1,
-     "overture": 36
+     "overture": 34
     }
    },
    {
@@ -353,11 +356,12 @@
      45,
      50
     ],
-    "buildings": 7890,
+    "buildings": 7891,
     "within400": 1721,
     "inCore": false,
     "byRung": {
-     "guess": 2559,
+     "guess": 2558,
+     "osm-height": 2,
      "osm-levels": 5,
      "overture": 5326
     }
@@ -372,9 +376,9 @@
     "inCore": false,
     "byRung": {
      "guess": 919,
-     "osm-height": 1,
-     "osm-levels": 23,
-     "overture": 3044
+     "osm-height": 3,
+     "osm-levels": 22,
+     "overture": 3043
     }
    },
    {
@@ -460,11 +464,12 @@
      15,
      20
     ],
-    "buildings": 22,
+    "buildings": 24,
     "within400": 13,
     "inCore": false,
     "byRung": {
      "guess": 6,
+     "osm-height": 2,
      "overture": 16
     }
    },
@@ -553,11 +558,12 @@
      0,
      5
     ],
-    "buildings": 52,
+    "buildings": 53,
     "within400": 33,
     "inCore": false,
     "byRung": {
      "guess": 35,
+     "osm-height": 1,
      "osm-levels": 1,
      "overture": 16
     }
@@ -657,11 +663,12 @@
      40,
      45
     ],
-    "buildings": 2714,
+    "buildings": 2715,
     "within400": 1078,
     "inCore": false,
     "byRung": {
-     "guess": 777,
+     "guess": 776,
+     "osm-height": 2,
      "osm-levels": 5,
      "overture": 1932
     }
@@ -711,6 +718,200 @@
    }
   ]
  },
+ "overrides": [
+  {
+   "id": "r20284437",
+   "from": 12.0,
+   "h": 12.0,
+   "area": 17256,
+   "source": "estimated: shadow length and room count; tower footprint traced from USGS NAIP imagery",
+   "note": "Primm, east of I-15 (OSM: Primm Valley Resort & Casino): the hotel ring around the pool"
+  },
+  {
+   "id": "r20284437:2",
+   "from": 12.0,
+   "h": 12.0,
+   "area": 893,
+   "source": "estimated: shadow length and room count; tower footprint traced from USGS NAIP imagery",
+   "note": "Primm, east of I-15 (OSM: Primm Valley Resort & Casino): the hotel ring around the pool"
+  },
+  {
+   "id": "r20284437:3",
+   "from": 12.0,
+   "h": 12.0,
+   "area": 39,
+   "source": "estimated: shadow length and room count; tower footprint traced from USGS NAIP imagery",
+   "note": "Primm, east of I-15 (OSM: Primm Valley Resort & Casino): the hotel ring around the pool"
+  },
+  {
+   "id": "r20284437:4",
+   "from": 12.0,
+   "h": 12.0,
+   "area": 23,
+   "source": "estimated: shadow length and room count; tower footprint traced from USGS NAIP imagery",
+   "note": "Primm, east of I-15 (OSM: Primm Valley Resort & Casino): the hotel ring around the pool"
+  },
+  {
+   "id": "r20284437:tower",
+   "from": 12.0,
+   "h": 40.0,
+   "area": 7491,
+   "source": "estimated: shadow length and room count; tower footprint traced from USGS NAIP imagery",
+   "note": "Primm, east of I-15 (OSM: Primm Valley Resort & Casino): the hotel ring around the pool"
+  },
+  {
+   "id": "w1017279618",
+   "from": 30.0,
+   "h": 8.0,
+   "area": 4872,
+   "source": "estimated: one storey (OSM building:levels=1)",
+   "note": "Boulder City, a school: OSM height=30 on one level"
+  },
+  {
+   "id": "w1017279619",
+   "from": 30.0,
+   "h": 8.0,
+   "area": 8117,
+   "source": "estimated: one storey (OSM building:levels=1)",
+   "note": "Boulder City, a school: OSM height=30 on one level"
+  },
+  {
+   "id": "w1036290086",
+   "from": 30.1,
+   "h": 58.0,
+   "area": 2746,
+   "source": "estimated: 18 floors (Wikipedia, Silverton article) at 3.2 m; Overture's 30 m is low",
+   "note": "Blue Diamond Road, west of I-15 (OSM: The Berkley, Las Vegas): the timeshare tower"
+  },
+  {
+   "id": "w148990683",
+   "from": 11.5,
+   "h": 38.0,
+   "area": 7886,
+   "source": "estimated: shadow length in USGS NAIP imagery",
+   "note": "Primm, west of I-15 (OSM: Whiskey Pete's (closed)): the outline is the hotel wings"
+  },
+  {
+   "id": "w195180390",
+   "from": 6.2,
+   "h": 6.2,
+   "area": 7099,
+   "source": "estimated: shadow length; tower footprint traced from USGS NAIP imagery",
+   "note": "Boulder City, beside US-93 (OSM: Hoover Dam Lodge): the hotel block"
+  },
+  {
+   "id": "w195180390:2",
+   "from": 6.2,
+   "h": 6.2,
+   "area": 17,
+   "source": "estimated: shadow length; tower footprint traced from USGS NAIP imagery",
+   "note": "Boulder City, beside US-93 (OSM: Hoover Dam Lodge): the hotel block"
+  },
+  {
+   "id": "w195180390:tower",
+   "from": 6.2,
+   "h": 22.0,
+   "area": 931,
+   "source": "estimated: shadow length; tower footprint traced from USGS NAIP imagery",
+   "note": "Boulder City, beside US-93 (OSM: Hoover Dam Lodge): the hotel block"
+  },
+  {
+   "id": "w27738460",
+   "from": 9.5,
+   "h": 12.0,
+   "area": 48600,
+   "source": "Wikipedia: 21-story tower, 230 ft",
+   "note": "Henderson, Sunset Road beside US-93/95: the casino hotel's tower (outline tagged commercial, no height)"
+  },
+  {
+   "id": "w27738460:tower",
+   "from": 9.5,
+   "h": 70.0,
+   "area": 1123,
+   "source": "Wikipedia: 21-story tower, 230 ft",
+   "note": "Henderson, Sunset Road beside US-93/95: the casino hotel's tower (outline tagged commercial, no height)"
+  },
+  {
+   "id": "w437195222",
+   "from": 8.3,
+   "h": 12.0,
+   "area": 28974,
+   "source": "estimated: 16 floors (Wikipedia, building article) at 3.1 m; tower footprint traced from USGS NAIP imagery",
+   "note": "Primm, east of I-15 (OSM: Buffalo Bill's Resort & Casino): hotel towers over the casino floor"
+  },
+  {
+   "id": "w437195222:2",
+   "from": 8.3,
+   "h": 12.0,
+   "area": 125,
+   "source": "estimated: 16 floors (Wikipedia, building article) at 3.1 m; tower footprint traced from USGS NAIP imagery",
+   "note": "Primm, east of I-15 (OSM: Buffalo Bill's Resort & Casino): hotel towers over the casino floor"
+  },
+  {
+   "id": "w437195222:3",
+   "from": 8.3,
+   "h": 12.0,
+   "area": 117,
+   "source": "estimated: 16 floors (Wikipedia, building article) at 3.1 m; tower footprint traced from USGS NAIP imagery",
+   "note": "Primm, east of I-15 (OSM: Buffalo Bill's Resort & Casino): hotel towers over the casino floor"
+  },
+  {
+   "id": "w437195222:tower",
+   "from": 8.3,
+   "h": 50.0,
+   "area": 2595,
+   "source": "estimated: 16 floors (Wikipedia, building article) at 3.1 m; tower footprint traced from USGS NAIP imagery",
+   "note": "Primm, east of I-15 (OSM: Buffalo Bill's Resort & Casino): hotel towers over the casino floor"
+  },
+  {
+   "id": "w501940847",
+   "from": 12.0,
+   "h": 14.0,
+   "area": 27637,
+   "source": "about 119 m (390 ft), the figure in the build brief; tower footprint traced from USGS NAIP imagery",
+   "note": "St. Rose Parkway, west of I-15 (OSM: The M Resort): the curved hotel tower at the south end"
+  },
+  {
+   "id": "w501940847:tower",
+   "from": 12.0,
+   "h": 119.0,
+   "area": 2717,
+   "source": "about 119 m (390 ft), the figure in the build brief; tower footprint traced from USGS NAIP imagery",
+   "note": "St. Rose Parkway, west of I-15 (OSM: The M Resort): the curved hotel tower at the south end"
+  },
+  {
+   "id": "w520547150",
+   "from": 30.0,
+   "h": 8.0,
+   "area": 4977,
+   "source": "estimated: one storey (OSM building:levels=1)",
+   "note": "Boulder City, a school: OSM height=30 on one level"
+  },
+  {
+   "id": "w747285316",
+   "from": 3.2,
+   "h": 111.0,
+   "area": 7471,
+   "source": "skydb.net: 111 m (365 ft), 25 floors",
+   "note": "Silverado Ranch Boulevard, west of I-15: the hotel tower slab (OSM tags it one level)"
+  },
+  {
+   "id": "w265375511",
+   "from": 18.2,
+   "h": 26.0,
+   "area": 15352,
+   "source": "estimated: shadow length in USGS NAIP imagery; Overture 18 m",
+   "note": "I-15 south, the speedway: south-west frontstretch grandstand"
+  },
+  {
+   "id": "w265375512",
+   "from": 15.4,
+   "h": 26.0,
+   "area": 21532,
+   "source": "estimated: shadow length in USGS NAIP imagery; Overture 15 m",
+   "note": "I-15 south, the speedway: frontstretch grandstand"
+  }
+ ],
  "tallList": [
   {
    "id": "w261741962",
@@ -728,6 +929,33 @@
    "c": [
     -28107,
     -59802
+   ]
+  },
+  {
+   "id": "w501940847:tower",
+   "h": 119.0,
+   "rung": "osm-height",
+   "c": [
+    214,
+    -16673
+   ]
+  },
+  {
+   "id": "w747285316",
+   "h": 111.0,
+   "rung": "osm-height",
+   "c": [
+    -320,
+    -11480
+   ]
+  },
+  {
+   "id": "w27738460:tower",
+   "h": 70.0,
+   "rung": "osm-height",
+   "c": [
+    12039,
+    -5964
    ]
   },
   {
@@ -776,6 +1004,33 @@
    ]
   },
   {
+   "id": "w1036290086",
+   "h": 58.0,
+   "rung": "osm-height",
+   "c": [
+    -1119,
+    -8235
+   ]
+  },
+  {
+   "id": "w437195222:tower",
+   "h": 50.0,
+   "rung": "osm-height",
+   "c": [
+    -19220,
+    -55588
+   ]
+  },
+  {
+   "id": "r20284437:tower",
+   "h": 40.0,
+   "rung": "osm-height",
+   "c": [
+    -19224,
+    -55960
+   ]
+  },
+  {
    "id": "w472813576",
    "h": 38.4,
    "rung": "osm-levels",
@@ -818,6 +1073,15 @@
    "c": [
     -73,
     -11698
+   ]
+  },
+  {
+   "id": "w148990683",
+   "h": 38.0,
+   "rung": "osm-height",
+   "c": [
+    -19882,
+    -55788
    ]
   },
   {
@@ -926,42 +1190,6 @@
    "c": [
     8608,
     -4794
-   ]
-  },
-  {
-   "id": "w1036290086",
-   "h": 30.1,
-   "rung": "overture",
-   "c": [
-    -1119,
-    -8235
-   ]
-  },
-  {
-   "id": "w1017279618",
-   "h": 30.0,
-   "rung": "osm-height",
-   "c": [
-    30208,
-    -16077
-   ]
-  },
-  {
-   "id": "w1017279619",
-   "h": 30.0,
-   "rung": "osm-height",
-   "c": [
-    30660,
-    -16031
-   ]
-  },
-  {
-   "id": "w520547150",
-   "h": 30.0,
-   "rung": "osm-height",
-   "c": [
-    30199,
-    -15901
    ]
   },
   {
@@ -1268,6 +1496,24 @@
    "c": [
     -6678,
     10622
+   ]
+  },
+  {
+   "id": "w265375511",
+   "h": 26.0,
+   "rung": "osm-height",
+   "c": [
+    14187,
+    17523
+   ]
+  },
+  {
+   "id": "w265375512",
+   "h": 26.0,
+   "rung": "osm-height",
+   "c": [
+    14370,
+    17770
    ]
   },
   {
@@ -1943,6 +2189,15 @@
    "c": [
     -6638,
     -9041
+   ]
+  },
+  {
+   "id": "w195180390:tower",
+   "h": 22.0,
+   "rung": "osm-height",
+   "c": [
+    34991,
+    -11517
    ]
   },
   {
