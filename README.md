@@ -38,7 +38,7 @@ What you see:
 
 - **The road.** Lanes, shoulders, tapers, ramps and gores, bridges that cross overhead, concrete barriers, guardrail, walls and delineators. The pavement has wheel-path wear, rumble strips and joints on the bridge decks.
 - **Signs.** Green guide signs before every exit, overhead where the road is wide, speed limits, route shields and mile markers, lettered with the real exit numbers and destinations.
-- **The roadside.** About 50,000 buildings along the three routes, beyond the modelled core, and 408 billboards.
+- **The roadside.** About 50,000 buildings along the three routes, beyond the modelled core, and 408 billboards carrying made-up advertisements in the style of the 1990s.
 - **Traffic.** Sedans, crossovers, pickups, vans, tractor-trailers and coaches on both carriageways, as many as the 2025 counts give for that hour of that day of the week. Beyond 4 km they become a ribbon of light per lane, and the rest of the valley's freeways and main roads carry ribbons of their own.
 - **Night.** Your headlights light the road and make the signs and lane lines shine back. Street lamps light up through dusk, sodium ones warming up orange. Other vehicles carry head, tail and stop lamps. Towers over 61 m carry red obstruction lights, and the Sphere lights its surroundings.
 - **The car.** The default view is from the driver's seat of a generic crossover, with speed and time on the cluster, a route display, three working mirrors and a windshield that hazes around a low sun and oncoming lamps. The car rides the road's texture and the bridge joints. The clean view drops the car and puts the eye 1.2 m above the road.
@@ -51,6 +51,8 @@ What you see:
 ![US-93 by day, climbing out of Black Canyon after the Hoover Dam bridge](docs/drive-dam.jpg)
 
 ![The clean view on I-15 south, an overhead guide sign before the Spaghetti Bowl](docs/drive-clean.jpg)
+
+![A billboard beside I-15 with one of the made-up advertisements: "Pre Dented For You"](docs/drive-billboard.jpg)
 
 ### The three routes
 
@@ -95,7 +97,7 @@ The address bar follows the drive, so a link opens the same place, time, route, 
 
 - **Roads and lanes** come from OpenStreetMap: the route relations, lane counts, speed limits, exits and their destinations, and mapped barriers. The road's height is set by rule over the coarse elevation the app already has: the highest ground under the pavement plus 0.3 m, smoothed under a 6 % grade limit, with a fixed embankment down to the ground. Interchanges and the bridges over the road take their heights by rule too. Around Hoover Dam a finer patch of ground (20 m posts, 6 m imagery) gives Black Canyon its walls, and the road is carved into it, because the elevation data predates the highway.
 - **Signs** are placed by the MUTCD's rules and carry the real exit numbers and destinations. Route numbers sit in plain shields of this project's drawing, and no legend carries a trade name: a deny-list (`data/sign_denylist.txt`) is checked on every build.
-- **Billboards** stand where OpenStreetMap and the City of Las Vegas and Clark County billboard layers put them. Their faces are generated abstract patterns, with no words, letters or marks.
+- **Billboards** stand where OpenStreetMap and the City of Las Vegas and Clark County billboard layers put them. Their faces carry forty made-up advertisements in the style of 1990s roadside boards (`public/textures/billboards/`): the pictures were generated with an image model through OpenAI's Codex, one per joke and without lettering, and the lettering was set in code on top. Every business is fictional, with no real brand, person, character, phone number or address; any resemblance to a real business is unintended. If the images fail to load, the faces fall back to generated abstract patterns.
 - **Buildings** along the routes are OpenStreetMap footprints, plus Overture Maps footprints (from Microsoft's) for tall buildings OpenStreetMap lacks. Heights are OpenStreetMap's where tagged, else Overture's, else a guess by type and area; 13 resort towers and grandstands that both sources get wrong have hand-set heights (`data/corridor_overrides.json`; 24 outlines in the report). Of 49,859 buildings, 41,285 take Overture's height and 8,441 are guesses (`data/derived/lv/corridor_report.json`). Those 20 m and taller cannot be hidden or moved.
 - **Traffic** comes from 2025 counts: FHWA's hourly counts at the permanent stations, as published in the national transportation atlas, and NDOT's annual counts between them, with NDOT's 2023 truck shares. The road's capacity (2,300 cars an hour a lane) and the speed of each lane are assumed. Your car does not slow in a queue; the counts show none on these routes.
 - **Street lamps** are the agencies' own inventories (Clark County, the City of Las Vegas, Henderson, Boulder City), with OpenStreetMap's, and a rule only where no inventory reaches: 196,300 lamps, 13 % of them placed by rule (`data/derived/lv/lights_report.json`).

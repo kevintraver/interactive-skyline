@@ -91,6 +91,11 @@ The user asked for the build to be driven to the end. These are the assumptions 
 - **Lamp inventory.** D5.3 is built once, as plan 01's T4.0 (`scripts/build_lights.py`), and used here.
 - **Terrain.** Still deferred with the tile pyramid: Phase 2, D3.2 and D3.3. Ramps and overpasses take their heights by rule over the coarse ground, as the main line does.
 
+**After the owner drove it (2026-11-22).** Two things the owner reported, and what was decided:
+
+- *"The road had intersections with mountainous regions"* and *"some of the structures look like they are floating."* Cause: everything was placed by the terrain's bilinear height while the ground is drawn as triangles, which differ by metres in a twisted cell of coarse mountain terrain; ramps were the roads under hillsides (up to 9.4 m), and ramp ends, sign posts, billboards and roadside buildings hung in the air. The drive now has one **drawn ground** (`terrain.surfaceAt`, `Heights.drawn_at`: the same triangles the meshes draw) for everything it places and for every road's profile, and `scripts/check_ground.py` with its tests holds it: no drawn ground above any pavement, every structure and object on the ground or on its road, with the exceptions recorded in `tests/data/ground_known.json`. The map's own `heightAt` is unchanged.
+- *Billboard images.* The owner asked for billboard images that are funny and look like they are from the 1990s, made with Codex. Section 7.9's generated abstract faces are now only the fallback: the boards carry forty fictional advertisements (`public/textures/billboards/`), their pictures generated with an image model through Codex and their lettering set in code. The plan's rule still holds in full: no real business, person, character, phone number or address, and every string is checked against `data/sign_denylist.txt`.
+
 **State of the second stretch** (kept current as work lands; the table above is the state on 2026-11-22 before it). One row per task of section 10 that this branch touched; tasks not listed were not started.
 
 | Task | State |
@@ -103,7 +108,7 @@ The user asked for the build to be driven to the end. These are the assumptions 
 | D3.1 lanes and tapers | Done from OSM tags. HOV lanes are still not told apart from other lanes. |
 | D3.2 vertical truth from LiDAR | Deferred with the terrain: profiles are set by rule over the coarse ground. |
 | D3.3 carve and aprons | Deferred, with one exception: the Hoover Dam patch (20 m posts, 6 m imagery) is carved along US-93's design profile, because the elevation predates the highway's cuts (`scripts/lib/carve.py`, `data/derived/lv/terrain_patch-dam.json`). Elsewhere the road rides on the coarse ground with a fixed embankment. |
-| D3.4 interchanges | Done by rule: 68 ramps with gores, 17 crossings with decks, piers and abutments on `i15n`. Five small flyovers and a few ramps that would not fit are left out and listed in `roads_report.json`. |
+| D3.4 interchanges | Done by rule: 68 ramps with gores, 17 crossings with decks, piers and abutments on `i15n`. Five small flyovers and a few ramps that would not fit are left out and listed in `roads_report.json`. After the drawn-ground fix, ramp and crossing ends come down to the ground or are cut back to it, and six crossing stubs that could not come down are left out. |
 | D3.5 road material | Done as a baked canvas atlas, not a node material: wheel-path wear, oil, a lighter crown, worn paint, rumble strips, concrete decks with slab and expansion joints; the texture repeats every 48.8 m. Lane lines 3.048 m on, 9.144 m off. |
 | D3.6 barriers, D3.7 signs | Done: concrete, guardrail and walls (OSM where mapped, fitted rules elsewhere), delineators, overhead signs on cantilevers and spans; legends from OSM, checked against the trade-name deny-list. |
 | D3.8 lane journey | Done (first stretch). |
@@ -120,7 +125,7 @@ The user asked for the build to be driven to the end. These are the assumptions 
 | D6.5 the visitor's car in traffic | Done differently: the car rides a slot of its lane, and the slot is never drawn. The journey does not slow in a queue; the 2025 counts show none on these routes. |
 | D6.6 valley ribbons | Done for the valley's freeways and arterials, and for the routes not being driven. |
 | D7.1, D7.2 fit to VIIRS | Blocked: the Black Marble grid needs a NASA Earthdata login, which this build does not have. Plan 01's `build_nightlights.py` exists and is tested on synthetic tiles only. |
-| D7.3 screens, D7.4 billboards, D7.5 screen light | Done: the extras run on simulation time while driving; 408 billboards from OSM and the city's and county's layers, with generated abstract faces; the Sphere lights its surroundings and the light follows a hide or a move. |
+| D7.3 screens, D7.4 billboards, D7.5 screen light | Done: the extras run on simulation time while driving; 408 billboards from OSM and the city's and county's layers, carrying forty fictional 1990s-style advertisements (asked for by the owner; generated abstract faces are the fallback); the Sphere lights its surroundings and the light follows a hide or a move. |
 | D7.6 buildings beyond the core | Done from OSM footprints and Overture heights, in 2 km cells, for all three routes (49,859 buildings, 1.6 MB). The 20 m and taller ones do not join the removable list. The Overture release was not recorded (`overtureRelease` is null in `corridor_report.json`). |
 | D7.7 city level of detail | Not done; it waits for plan 01's quality presets. |
 | D8.1 wet road, D8.3 spray | Done against a weather stand-in (`env.weather`, four presets): wet asphalt, reflected streaks of lamps, falling rain, spray. Dry, every added term is zero. |
