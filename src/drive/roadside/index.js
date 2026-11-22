@@ -1,7 +1,10 @@
 /**
  * The roadside signs of plan 02 task D3.7, by day: guide signs, speed limits, route confirmation
  * and mile markers from signs.json (scripts/build_roadside.py), drawn into a canvas atlas and
- * batched so the whole set costs a handful of draw calls.
+ * batched so the whole set costs a handful of draw calls. Overhead guide signs hang from truss
+ * structures (structures.js) merged into the supports mesh; delineators from barriers.json
+ * (delineators.js) are three instanced meshes. Every face carries its sheeting as the vertex
+ * attributes `retro` and `retroLegend` (sheeting.js).
  *
  * Signs within SHOW (2 km) of the car are built, nearest first, and packed into one mesh per atlas
  * page for the faces and one for the supports, relative to a local origin near the car (float32
@@ -18,6 +21,8 @@ import { facesOf } from './faces.js';
 import { packAtlas, drawAtlas } from './atlas.js';
 import { buildSign, signFrame } from './geometry.js';
 import { selectVisible, bandOf, packSigns } from './batch.js';
+import { buildStructure } from './structures.js';
+import { createDelineators } from './delineators.js';
 
 const NIGHT_GLOW = [0.42, 0.14, 0.04]; // emissive intensity by band, near to far
 const BUILD_BUDGET = 48; // signs built per step; the rest follow on the next tick
@@ -30,12 +35,13 @@ function makeCanvas(w, h) {
 }
 
 /**
- * @param {{ signs: object, roadnet: object, base: number, earthR: number, parent: THREE.Object3D, anisotropy?: number }} opts
- *   signs: signs.json; roadnet: the decoded RoadNet; base and earthR: as for the road chunks
+ * @param {{ signs: object, roadnet: object, base: number, earthR: number, parent: THREE.Object3D, anisotropy?: number, barriers?: object|null }} opts
+ *   signs: signs.json; roadnet: the decoded RoadNet; base and earthR: as for the road chunks;
+ *   barriers: barriers.json (for its delineators), optional
  * @returns {{ update(car: { x: number, y: number }): void, setNight(on: boolean): void,
  *   whenSettled(): Promise<void>, stats(): object, dispose(): void }}
  */
-export function createRoadside({ signs, roadnet, base, earthR, parent, anisotropy = 1 }) {
+export function createRoadside({ signs, roadnet, base, earthR, parent, anisotropy = 1, barriers = null }) {
   const roadsById = new Map(roadnet.roads.map((r) => [r.id, r]));
   const all = []; // { rec, tab, faces, road, map, built }
   const faceByKey = new Map();
@@ -49,6 +55,11 @@ export function createRoadside({ signs, roadnet, base, earthR, parent, anisotrop
       for (const f of fs) faceByKey.set(f.key, f.face);
       const tab = fs.find((f) => f.plate === 'tab')?.face || null;
       all.push({ rec, tab, faces: fs, road: ctx, map: signFrame(rec, ctx).map, built: null });
+    }
+    // overhead structures are items of their own: no faces, only supports
+    for (const st of r.structures || []) {
+      const first = r.signs[st.signs[0]];
+      all.push({ structure: st, recs: r.signs, faces: [], road: ctx, map: signFrame({ ...first, s: st.s }, ctx).map, built: null });
     }
   }
 
@@ -95,6 +106,7 @@ export function createRoadside({ signs, roadnet, base, earthR, parent, anisotrop
     return { page: r.page, u0: r.x / pg.w, v0: r.y / pg.h, u1: (r.x + r.w) / pg.w, v1: (r.y + r.h) / pg.h };
   };
 
+  const delineators = barriers ? createDelineators({ barriers, roadnet, base, earthR, parent: group }) : null;
   let night = false, disposed = false, car = null, origin = null;
   let shown = new Set(), bands = new Map(), wanted = [], dirty = false, timer = null;
   let waiters = [];
@@ -111,7 +123,7 @@ export function createRoadside({ signs, roadnet, base, earthR, parent, anisotrop
     packed.faces.forEach((pf, p) => {
       const old = faceMeshes[p].geometry;
       const g = new THREE.BufferGeometry();
-      setAttrs(g, [['position', pf.position, 3], ['normal', pf.normal, 3], ['uv', pf.uv, 2]], pf.index);
+      setAttrs(g, [['position', pf.position, 3], ['normal', pf.normal, 3], ['uv', pf.uv, 2], ['retro', pf.retro, 1], ['retroLegend', pf.retroLegend, 1]], pf.index);
       for (const gr of pf.groups) g.addGroup(gr.start, gr.count, gr.band);
       faceMeshes[p].geometry = g;
       faceMeshes[p].visible = pf.index.length > 0;
@@ -138,7 +150,10 @@ export function createRoadside({ signs, roadnet, base, earthR, parent, anisotrop
       const s = all[w.index];
       if (s.built) continue;
       if (n++ >= BUILD_BUDGET) break;
-      s.built = buildSign(s.rec, s.tab, s.road, uvOf(s));
+      if (s.structure) {
+        const b = buildStructure(s.structure, s.recs, s.road);
+        s.built = { faces: [], support: b.support, frame: b.frame };
+      } else s.built = buildSign(s.rec, s.tab, s.road, uvOf(s));
       dirty = true;
     }
     if (dirty) assemble();
@@ -157,6 +172,7 @@ export function createRoadside({ signs, roadnet, base, earthR, parent, anisotrop
   function update(pos) {
     if (disposed) return;
     car = { x: pos.x, y: pos.y };
+    delineators?.update(car);
     wanted = selectVisible(all, car, shown);
     const set = new Set(wanted.map((w) => w.index));
     if (set.size !== shown.size || wanted.some((w) => !shown.has(w.index))) dirty = true;
@@ -170,24 +186,32 @@ export function createRoadside({ signs, roadnet, base, earthR, parent, anisotrop
     setNight(on) {
       night = Boolean(on);
       faceMats.forEach((mats) => mats.forEach((m, band) => { m.emissiveIntensity = night ? NIGHT_GLOW[band] : 0; }));
+      delineators?.setNight(night);
       if (car) { dirty = true; update(car); }
     },
     /** Resolves when every sign wanted for the last update is built and on screen. */
     whenSettled: () => (isSettled() ? Promise.resolve() : new Promise((resolve) => waiters.push(resolve))),
     stats() {
-      const out = { signs: all.length, shown: shown.size, built: all.filter((s) => s.built).length, pages: atlas.pages.length,
-        ppm: atlas.ppm, faces: faceByKey.size, drawCalls: 0, triangles: 0 };
+      const out = { signs: all.filter((s) => s.rec).length, structures: all.filter((s) => s.structure).length, shown: shown.size,
+        built: all.filter((s) => s.built).length, pages: atlas.pages.length, ppm: atlas.ppm, faces: faceByKey.size, drawCalls: 0, triangles: 0 };
       for (const m of [...faceMeshes, supportMesh]) {
         if (!m.visible || !m.geometry.index) continue;
         const gs = m.geometry.groups.length ? m.geometry.groups : [{ count: m.geometry.index.count }];
         out.drawCalls += gs.length;
         out.triangles += m.geometry.index.count / 3;
       }
+      if (delineators) {
+        const d = delineators.stats();
+        out.delineators = d.shown;
+        out.drawCalls += d.drawCalls;
+        out.triangles += d.triangles;
+      }
       return out;
     },
     dispose() {
       disposed = true;
       if (timer) clearTimeout(timer);
+      delineators?.dispose();
       parent.remove(group);
       for (const m of [...faceMeshes, supportMesh]) m.geometry.dispose();
       faceMats.flat().forEach((m) => m.dispose());

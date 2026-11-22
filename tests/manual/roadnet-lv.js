@@ -12,6 +12,7 @@ import { createRoadChunks } from '../../src/drive/roadnet/chunks.js';
 import { createRefline } from '../../src/drive/roadnet/refline.js';
 import { edgesAt } from '../../src/drive/roadnet/crosssection.js';
 import { heightField } from '../../src/world/terrain/heightfield.js';
+import { createRoadside } from '../../src/drive/roadside/index.js';
 
 const q = new URLSearchParams(location.search);
 const DATA = q.get('data') || '/data/lv';
@@ -25,7 +26,8 @@ const hud = document.getElementById('hud');
 
 const getJson = (base, n) => fetch(`${base}/${n}`).then((r) => r.json());
 const getBin = (base, n) => fetch(`${base}/${n}`).then((r) => r.arrayBuffer());
-const [json, bin, terrainMeta] = await Promise.all([getJson(DATA, 'roadnet.json'), getBin(DATA, 'roadnet.bin'), getJson('/data/lv', 'terrain.json')]);
+const opt = (n) => (q.get('furniture') === '0' ? Promise.resolve(null) : getJson(DATA, n).catch(() => null));
+const [json, bin, terrainMeta, signsDoc, barriersDoc] = await Promise.all([getJson(DATA, 'roadnet.json'), getBin(DATA, 'roadnet.bin'), getJson('/data/lv', 'terrain.json'), opt('signs.json'), opt('barriers.json')]);
 const grids = Object.fromEntries(await Promise.all(['near', 'far', 'wide'].map(async (n) => [n, heightField(await getBin('/data/lv', terrainMeta.grids[n].file), terrainMeta.grids[n])])));
 const heightAt = (x, y) => (grids.near.contains(x, y) ? grids.near : grids.far.contains(x, y) ? grids.far : grids.wide).sample(x, y);
 const roadnet = decodeRoadNet(json, bin);
@@ -68,7 +70,8 @@ function buildGround(cx, cy) {
 const roadsGroup = new THREE.Group();
 scene.add(roadsGroup);
 const materials = createRoadMaterials({ anisotropy: renderer.capabilities.getMaxAnisotropy() });
-const roads = createRoadChunks({ roadnet, base: BASE, earthR: EARTH_R, parent: roadsGroup, materials });
+const roads = createRoadChunks({ roadnet, base: BASE, earthR: EARTH_R, parent: roadsGroup, materials, barriers: barriersDoc });
+const roadside = signsDoc && createRoadside({ signs: signsDoc, barriers: barriersDoc, roadnet, base: BASE, earthR: EARTH_R, parent: roadsGroup, anisotropy: renderer.capabilities.getMaxAnisotropy() });
 
 function applyNight() {
   const L = isNight ? NIGHT : DAY;
@@ -77,6 +80,7 @@ function applyNight() {
   hemi.color.set(L.skyLight); hemi.groundColor.set(L.groundLight); hemi.intensity = L.hemi;
   sun.color.set(L.sun); sun.intensity = L.sunPower;
   roads.setNight(isNight);
+  roadside?.setNight(isNight);
 }
 
 function place() {
@@ -111,6 +115,7 @@ function place() {
   camera.updateProjectionMatrix();
   buildGround(mx, my);
   roads.update({ x: mx, y: my });
+  roadside?.update({ x: mx, y: my });
 }
 
 function resize() {
@@ -128,8 +133,11 @@ applyNight();
 renderer.setAnimationLoop(() => {
   renderer.render(scene, camera);
   const b = roads.stats();
-  hud.textContent = `${view}  s ${s.toFixed(0)} m  ${isNight ? 'night' : 'day'}  lens ${lens} mm\nroads ${roadnet.roads.length}  junctions ${roadnet.junctions.length}  structures ${roadnet.structures.length}\nroad draw calls ${b.drawCalls}  triangles ${Math.round(b.triangles)}  L0 ${b.lod0}  L1 ${b.lod1}`;
+  const rs = roadside?.stats();
+  hud.textContent = `${view}  s ${s.toFixed(0)} m  ${isNight ? 'night' : 'day'}  lens ${lens} mm\nroads ${roadnet.roads.length}  junctions ${roadnet.junctions.length}  structures ${roadnet.structures.length}\nroad draw calls ${b.drawCalls}  triangles ${Math.round(b.triangles)}  L0 ${b.lod0}  L1 ${b.lod1}` +
+    (rs ? `\nroadside draw calls ${rs.drawCalls}  triangles ${Math.round(rs.triangles)}  signs ${rs.shown}  delineators ${rs.delineators ?? 0}` : '');
+  window.__stats = { roads: b, roadside: rs };
 });
-await Promise.race([roads.whenSettled(), new Promise((r) => setTimeout(r, 30000))]);
+await Promise.race([Promise.all([roads.whenSettled(), roadside?.whenSettled()]), new Promise((r) => setTimeout(r, 30000))]);
 await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
 window.__ready = true;

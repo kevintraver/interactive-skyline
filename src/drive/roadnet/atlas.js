@@ -15,7 +15,7 @@ export const CYCLE = 12.192; // m: a 10 ft line and a 30 ft gap (MUTCD)
 export const DASH = 3.048; // m
 export const LINE_W = 0.15; // m: 6 in normal line
 export const MARK_W = 1.0; // m: width of a marking strip, centred on its boundary
-export const ATLAS_W = 640;
+export const ATLAS_W = 768;
 export const ATLAS_H = 512;
 
 /** Regions in atlas pixels [u0, u1). Marking regions span MARK_W metres. */
@@ -29,15 +29,17 @@ export const REGIONS = {
   dirt: [448, 512],
   concrete: [512, 576], // decks, parapets, piers, abutments
   gore: [576, 640], // the painted area between a carriageway and a ramp: shoulder asphalt, white chevrons
+  steel: [640, 704], // galvanized guardrail, posts and cable barrier
+  reflector: [704, 768], // barrier reflectors: white sheeting in the left half, yellow in the right
 };
 
 /** Kinds written to the mesh's `kind` attribute. */
-export const KIND = { lane: 0, marking: 1, shoulder: 2, embankment: 3, structure: 4 };
+export const KIND = { lane: 0, marking: 1, shoulder: 2, embankment: 3, structure: 4, barrier: 5, reflector: 6 };
 
 /** u for a fraction t (0..1) across region `name`; plain regions are inset so mips never reach a neighbour. */
 export function regionU(name, t) {
   const [a, b] = REGIONS[name];
-  const inset = name === 'lane' || name === 'shoulder' || name === 'dirt' || name === 'concrete' || name === 'gore' ? 6 : 0;
+  const inset = name === 'lane' || name === 'shoulder' || name === 'dirt' || name === 'concrete' || name === 'gore' || name === 'steel' ? 6 : 0;
   return (a + inset + t * (b - a - 2 * inset)) / ATLAS_W;
 }
 
@@ -48,11 +50,14 @@ export function regionU(name, t) {
 // piers read as structure beside the asphalt without glaring in the desert sun.
 const DAY = { lane: '#6a6863', laneSpeck: ['#64625d', '#706e69', '#5f5d58'], shoulder: '#7b766d', shoulderSpeck: ['#747067', '#827d73'],
   dirt: '#989692', dirtSpeck: ['#908e8a', '#a09e99', '#8c8a86'], white: '#e9e8e2', yellow: '#e3b42c',
-  concrete: '#aaa59b', concreteSpeck: ['#a29d93', '#b1aca2', '#9c978e'] };
+  concrete: '#aaa59b', concreteSpeck: ['#a29d93', '#b1aca2', '#9c978e'], steel: '#a9afb2', steelSpeck: ['#9fa5a8', '#b3b8bb'],
+  reflWhite: '#f4f4ef', reflYellow: '#f2c230' };
 // Emissive map for the night look: markings stand out (they are retroreflective; this stands in
 // for headlights until they exist), asphalt barely, dirt not at all.
 const NIGHT = { lane: '#3a3a3a', laneSpeck: ['#363636', '#3e3e3e'], shoulder: '#323231', shoulderSpeck: ['#2e2e2e', '#363635'],
-  dirt: '#000000', dirtSpeck: [], white: '#f0f0ea', yellow: '#f0c040', concrete: '#1c1c1b', concreteSpeck: [] };
+  dirt: '#000000', dirtSpeck: [], white: '#f0f0ea', yellow: '#f0c040', concrete: '#1c1c1b', concreteSpeck: [], steel: '#151617', steelSpeck: [],
+  // reflectors glow like the markings: a stand-in for headlights until they exist
+  reflWhite: '#ffffff', reflYellow: '#ffc840' };
 
 /** Small deterministic generator, so the texture is the same every load. */
 function rng(seed) {
@@ -110,6 +115,14 @@ export function drawRoadAtlas(ctx, { night = false, seed = 7 } = {}) {
       const v0 = (H * 0.25 + (r / rows) * H * 0.35) % H;
       fill(p.white, u0, v0, w, band);
     }
+  }
+
+  fill(p.steel, REGIONS.steel[0], 0, REGIONS.steel[1] - REGIONS.steel[0], H);
+  specks(ctx, REGIONS.steel, p.steelSpeck, area(REGIONS.steel), rand, H);
+  {
+    const [r0, r1] = REGIONS.reflector, mid = (r0 + r1) / 2;
+    fill(p.reflWhite, r0, 0, mid - r0, H);
+    fill(p.reflYellow, mid, 0, r1 - mid, H);
   }
 
   // lines last, over the specks

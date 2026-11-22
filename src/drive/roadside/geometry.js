@@ -10,6 +10,14 @@
  */
 import { localUp } from '../../world/frame.js';
 import { EMBANKMENT } from '../roadnet/mesher.js';
+import { sheetingCode, sheetingOfColour } from './sheeting.js';
+
+/** [background, legend] sheeting codes of a plate: the record's `sheeting`, else its colours; the exit plaque is a white legend on green. */
+function sheetingOf(rec, plate) {
+  if (plate === 'tab') return [sheetingCode('green'), sheetingCode('white')];
+  const [bg, fg] = rec.sheeting || [sheetingOfColour(rec.bg), sheetingOfColour(rec.fg)];
+  return [sheetingCode(bg), sheetingCode(fg)];
+}
 
 const THICK = 0.06; // panel thickness, m
 const BURY = 0.8; // posts go this far below the embankment surface
@@ -45,17 +53,18 @@ export function signFrame(rec, road) {
   const e = road.edges(rec.s);
   const left = rec.side === 'left';
   const dEdge = left ? e.left : e.right;
-  const dCentre = dEdge + (left ? 1 : -1) * (rec.offset + rec.w / 2);
+  // an overhead panel hangs over the lanes at offset d, its height measured from the pavement under it
+  const dCentre = rec.over ? rec.d : dEdge + (left ? 1 : -1) * (rec.offset + rec.w / 2);
   const sn = Math.sin(p.heading), cs = Math.cos(p.heading);
   const mx = p.x - sn * dCentre, my = p.y + cs * dCentre;
-  const edgeH = p.h + p.crossfall * dEdge;
+  const edgeH = p.h + p.crossfall * (rec.over ? rec.d : dEdge);
   const base = [mx, edgeH - road.base - (mx * mx + my * my) / (2 * road.earthR), -my];
   const u = localUp(base[0], base[2], v3());
   const up = [u.x, u.y, u.z];
   const travel = [cs, 0, -sn];
   const face = norm(add([-travel[0], -travel[1], -travel[2]], up, dot(travel, up))); // -travel, made level
   const right = norm(cross(up, face));
-  return { base, up, face, right, edgeH, map: [mx, my], sideSign: left ? -1 : 1 };
+  return { base, up, face, right, edgeH, map: [mx, my], sideSign: left ? -1 : 1, d: dCentre, p, edges: e };
 }
 
 /** The plates of a sign in its own frame: x along `right` from the panel centre, y up from the pavement edge. */
@@ -103,7 +112,7 @@ export function buildSign(rec, tab, road, uvOf) {
     top = Math.max(top, y1);
     const uv = uvOf(pl.plate);
     faces.push({
-      page: uv.page, normal: f.face,
+      page: uv.page, normal: f.face, retro: sheetingOf(rec, pl.plate),
       pos: [...at(x0, y0, 0), ...at(x1, y0, 0), ...at(x1, y1, 0), ...at(x0, y1, 0)],
       uv: [uv.u0, uv.v1, uv.u1, uv.v1, uv.u1, uv.v0, uv.u0, uv.v0],
     });
@@ -116,7 +125,7 @@ export function buildSign(rec, tab, road, uvOf) {
     quad(at(x0, y0, b), at(x0, y0, 0), at(x0, y1, 0), at(x0, y1, b), neg(f.right), BACK_COLOUR);
   }
   const posts = [];
-  for (const p of postsOf(rec)) {
+  for (const p of rec.over ? [] : postsOf(rec)) { // an overhead panel hangs from its structure
     // how far outside the shoulder edge this post stands, and the embankment surface there
     const lateral = rec.offset + rec.w / 2 + f.sideSign * p.x;
     const yFoot = -embankmentDrop(lateral) - BURY;

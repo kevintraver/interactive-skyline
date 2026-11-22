@@ -67,17 +67,37 @@ export function fitText(ctx, text, capPx, maxWidth, { lines = 1 } = {}) {
   return { lines: [{ text, width: w(text) * MIN_CONDENSE }], capPx: capSmall, scaleX: MIN_CONDENSE, shrunk: true };
 }
 
-/** Draw fitted text with its left end at x and its baseline at y. */
-function drawFitted(ctx, fit, x, y, lineGap = 0) {
+/**
+ * Extra stroke weight, as a fraction of the letter height, for the small signs read from far off
+ * at a few pixels: highway numerals (FHWA Series E) are heavier than a system bold, and a thin
+ * stroke averages away into the panel in the texture's smaller mip levels.
+ */
+export const WEIGHT = { speedWord: 0.06, speedNum: 0.08, mileWord: 0.06, mileNum: 0.09, route: 0.05 };
+
+/** Draw fitted text with its left end at x and its baseline at y, thickened by `weight` letter heights. */
+function drawFitted(ctx, fit, x, y, lineGap = 0, weight = 0) {
   ctx.font = font(fit.capPx);
   fit.lines.forEach((ln, i) => {
     ctx.save();
     ctx.translate(x, y + i * (fit.capPx + lineGap));
     ctx.scale(fit.scaleX, 1);
     ctx.fillText(ln.text, 0, 0);
+    if (weight > 0 && ctx.strokeText) {
+      ctx.lineJoin = 'round';
+      ctx.lineWidth = weight * fit.capPx;
+      ctx.strokeStyle = ctx.fillStyle;
+      ctx.strokeText(ln.text, 0, 0);
+    }
     ctx.restore();
   });
 }
+
+/** fitText for a weighted legend: the stroke's extra width stays inside maxWidth. */
+const fitWeighted = (ctx, text, capPx, maxWidth, weight) => {
+  const f = fitText(ctx, text, capPx, maxWidth - weight * capPx);
+  f.lines.forEach((ln) => { ln.width += weight * f.capPx; });
+  return f;
+};
 
 function roundRect(ctx, x, y, w, h, r) {
   ctx.beginPath();
@@ -183,6 +203,16 @@ export function layoutGuide(ctx, face, W, H, capPx) {
   return { rows, inner };
 }
 
+/**
+ * Left edge, in px, of a guide face's arrow box: centred under EXIT and its number on a gore sign
+ * (MUTCD E5-1), at the side of the exit on any other guide sign.
+ */
+export function arrowX(face, W, capPx) {
+  const a = LAYOUT.arrow * capPx;
+  if (face.centreArrow || face.kind === 'gore') return (W - a) / 2;
+  return face.arrow === 'left' ? LAYOUT.side * capPx : W - LAYOUT.side * capPx - a;
+}
+
 function drawGuide(ctx, face, W, H, ppm) {
   const capPx = face.cap * ppm;
   panel(ctx, W, H, face.bg, face.fg, LAYOUT.border * ppm, LAYOUT.edge * ppm, Math.min(W, H) * 0.08);
@@ -196,7 +226,7 @@ function drawGuide(ctx, face, W, H, ppm) {
       drawFitted(ctx, r.dist, right - r.dist.lines[0].width, r.y + capPx);
     } else if (r.kind === 'arrow') {
       const a = LAYOUT.arrow * capPx;
-      drawArrow(ctx, face.arrow === 'left' ? left : right - a, r.y, a, face.arrow === 'left');
+      drawArrow(ctx, arrowX(face, W, capPx), r.y, a, face.arrow === 'left');
     } else if (r.kind === 'shields') drawShieldRow(ctx, face.shields, W, r.y, capPx);
     ctx.fillStyle = COLOURS[face.fg];
   }
@@ -253,7 +283,7 @@ function drawTab(ctx, face, W, H, ppm) {
 }
 
 function drawGore(ctx, face, W, H, ppm) {
-  drawGuide(ctx, { ...face, lines: face.number ? ['EXIT', face.number] : ['EXIT'], arrow: face.arrow }, W, H, ppm);
+  drawGuide(ctx, { ...face, lines: face.number ? ['EXIT', face.number] : ['EXIT'], arrow: face.arrow, centreArrow: true }, W, H, ppm);
 }
 
 function drawSpeed(ctx, face, W, H, ppm) {
@@ -262,23 +292,23 @@ function drawSpeed(ctx, face, W, H, ppm) {
   const inner = W - 6 * IN * ppm;
   const word = 8 * IN * ppm;
   for (const [t, y] of [['SPEED', 5], ['LIMIT', 16]]) {
-    const f = fitText(ctx, t, word, inner);
-    drawFitted(ctx, f, (W - f.lines[0].width) / 2, (y * IN) * ppm + word);
+    const f = fitWeighted(ctx, t, word, inner, WEIGHT.speedWord);
+    drawFitted(ctx, f, (W - f.lines[0].width) / 2 + (WEIGHT.speedWord * f.capPx) / 2, (y * IN) * ppm + word, 0, WEIGHT.speedWord);
   }
-  const f = fitText(ctx, String(face.mph), face.cap * ppm, inner);
-  drawFitted(ctx, f, (W - f.lines[0].width) / 2, 30 * IN * ppm + f.capPx);
+  const f = fitWeighted(ctx, String(face.mph), face.cap * ppm, inner, WEIGHT.speedNum);
+  drawFitted(ctx, f, (W - f.lines[0].width) / 2 + (WEIGHT.speedNum * f.capPx) / 2, 30 * IN * ppm + f.capPx, 0, WEIGHT.speedNum);
 }
 
 function drawMile(ctx, face, W, H, ppm) {
   panel(ctx, W, H, 'green', 'white', 0.5 * IN * ppm, 0.375 * IN * ppm, 1.5 * IN * ppm);
   ctx.fillStyle = COLOURS.white;
   const inner = W - 2 * IN * ppm;
-  const f = fitText(ctx, 'MILE', 4 * IN * ppm, inner);
-  drawFitted(ctx, f, (W - f.lines[0].width) / 2, 2 * IN * ppm + f.capPx);
+  const f = fitWeighted(ctx, 'MILE', 4 * IN * ppm, inner, WEIGHT.mileWord);
+  drawFitted(ctx, f, (W - f.lines[0].width) / 2 + (WEIGHT.mileWord * f.capPx) / 2, 2 * IN * ppm + f.capPx, 0, WEIGHT.mileWord);
   let y = 8 * IN * ppm;
   for (const d of String(face.mile)) { // stacked digits, as on freeway reference location signs
-    const g = fitText(ctx, d, face.cap * ppm, inner);
-    drawFitted(ctx, g, (W - g.lines[0].width) / 2, y + g.capPx);
+    const g = fitWeighted(ctx, d, face.cap * ppm, inner, WEIGHT.mileNum);
+    drawFitted(ctx, g, (W - g.lines[0].width) / 2 + (WEIGHT.mileNum * g.capPx) / 2, y + g.capPx, 0, WEIGHT.mileNum);
     y += g.capPx + 2 * IN * ppm;
   }
 }

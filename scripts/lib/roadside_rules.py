@@ -155,10 +155,10 @@ def mile_candidates(length):
 def solve(cands, spacing=SOLVE_SPACING, step=STEP):
     """Place candidates in priority order, each at the free position nearest its nominal chainage
     inside its window. Returns (placed, dropped); placed records gain `s` and `shift`."""
-    taken = {"left": [], "right": []}
+    taken = {}
     placed, dropped = [], []
     for c in sorted(cands, key=lambda c: (c["prio"], c["s_nom"])):
-        row = taken[c["side"]]
+        row = taken.setdefault(c.get("row", c["side"]), [])
         best = None
         n = int(max(c["s_nom"] - c["lo"], c["hi"] - c["s_nom"]) / step) + 1
         for i in range(n + 1):

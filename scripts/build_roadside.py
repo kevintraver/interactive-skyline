@@ -2,20 +2,28 @@
 # requires-python = ">=3.11"
 # dependencies = ["numpy", "scipy"]
 # ///
-"""Usage: build_roadside.py <city>
+"""Usage: build_roadside.py <city> [route]     (route defaults to i15n)
 
-The signs a driver expects on the freeway, by day: green guide signs at every exit (advance
-signs, exit direction sign, gore sign), speed limits, route confirmation and mile markers, placed
-by MUTCD rule along each route's road and lettered from OpenStreetMap's tags (plan 02, D3.7).
+The roadside a driver expects on the freeway, by day (plan 02, D3.6 and D3.7): green guide signs
+at every exit (advance signs, exit direction sign, gore sign), overhead on truss structures where
+the road has four or more lanes or the exit leaves on the left, speed limits, route confirmation
+and mile markers, placed by MUTCD rule along the route's road and lettered from OpenStreetMap's
+tags; barriers (concrete median barrier, guardrail, walls) from OSM's `barrier` ways where they
+are mapped and fitted rules elsewhere; delineators at MUTCD spacing.
 
-Inputs, all local (no network): public/data/<city>/roadnet.json and .bin and routes.json (from
-build_roads.py), data/raw/<city>/osm-<ref>.json (from fetch_osm.py), the terrain grids, and the
-deny-list data/sign_denylist.txt of trade names no legend may carry (assumption A5).
+Files by route: route i15n reads roadnet.json and .bin and writes signs.json and barriers.json;
+any other route R reads roadnet-R.json and roadnet-R.bin and writes signs-R.json, barriers-R.json
+(and its report as roadside_report-R.json). routes.json, or routes-R.json where it exists, gives
+the route's road.
+
+Inputs, all local (no network): those roadnet files (from build_roads.py),
+data/raw/<city>/osm-<ref>.json and osm-<ref>-barriers.json (from fetch_osm.py), the terrain
+grids, and the deny-list data/sign_denylist.txt of trade names no legend may carry (A5).
 
 The script checks its acceptance numbers, writes them to the report and exits non-zero when one
 is missed (the outputs are still written, to look at).
 
-Output: public/data/<city>/signs.json, data/derived/<city>/roadside_report.json
+Output: public/data/<city>/signs[-R].json, barriers[-R].json, data/derived/<city>/roadside_report[-R].json
 """
 import json
 import sys
@@ -23,6 +31,7 @@ from collections import Counter
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
+from lib.frame import create_frame  # noqa: E402
 from lib.heights import load_heights  # noqa: E402
 from lib.osm import load_osm  # noqa: E402
 from lib.refline import Refline  # noqa: E402
@@ -33,16 +42,23 @@ from lib.roadside_legend import denied, exit_legend, load_denylist  # noqa: E402
 from lib.roadside_place import Median, panel_ground  # noqa: E402
 from lib.roadside_rules import (SPACING, exit_candidates, mile_candidates, route_candidates, solve,  # noqa: E402
                                 speed_candidates)
+from lib import roadside_barriers as barriers  # noqa: E402
+from lib.roadside_barrier_format import encode_barriers  # noqa: E402
+from lib.roadside_overhead import MIN_CLEAR, MOUNT as OVER_MOUNT, clearance, is_overhead, lanes_at, overhead_place  # noqa: E402
 
 ROOT = Path(__file__).resolve().parent.parent
 DENYLIST = ROOT / "data" / "sign_denylist.txt"
 MAX_BYTES = 150_000
+MAX_BARRIER_BYTES = 100_000
+DEFAULT_ROUTE = "i15n"
 # a left-exit sign the median cannot hold: "drop" it (reported as overhead on the real road) or
 # stand it on the "right" shoulder with its LEFT plaque
 MEDIAN_FALLBACK = "drop"
 # section 7.4 and the MUTCD, for the acceptance check: inches of capital letter height per kind
 CAP_RANGE = {"advance": (16, 20), "exit": (16, 20), "sequence": (16, 20), "gore": (12, 16), "speed": (16, 24),
              "route": (12, 24), "mile": (6, 12)}
+# the sheeting of each face, background then legend, for the night work (ASTM D4956 colours)
+SHEETING = {"green": "green", "white": "white", "black": "none", "yellow": "yellow"}
 COLOUR_OK = {"advance": ("green", "white"), "exit": ("green", "white"), "sequence": ("green", "white"),
              "gore": ("green", "white"), "mile": ("green", "white"), "speed": ("white", "black"),
              "route": ("white", "black")}
@@ -60,7 +76,7 @@ def ramp_tags(osm, nid):
     return out
 
 
-def build_route(rc, route, roads, osm, heights, deny, report):
+def build_route(rc, route, roads, osm, heights, deny, report, bctx=None):
     road = roads[route["road"]]
     opp = roads.get(route.get("opposite") or "")
     line = Refline(road)
@@ -90,10 +106,15 @@ def build_route(rc, route, roads, osm, heights, deny, report):
     cands = ex_c + speed_candidates(speed, exits, length) + route_candidates(exits, length, road.get("dir", "north")) \
         + mile_candidates(length)
 
+    # overhead where the real road has them: four or more lanes, or a left exit (MUTCD 2E.24)
+    for c in cands:
+        if is_overhead(c["kind"], c["side"], lanes_at(road, c["s_nom"])):
+            c["over"] = True
+            c["row"] = "over"
     # a sign on the left needs a median wide enough to stand in, clear of the opposite pavement
     moved = []
     for c in cands:
-        if c["side"] != "left":
+        if c["side"] != "left" or c.get("over"):
             continue
         probe = record({**c, "s": c["s_nom"]}, index, entries, road.get("ref", ""))
         clear = median.clear(c["s_nom"])
@@ -118,10 +139,23 @@ def build_route(rc, route, roads, osm, heights, deny, report):
     placed, dropped = solve([c for c in cands if not c.get("drop")])
     records = []
     ground_fixes = []
+    structures = []
     for c in placed:
         r = record(c, index, entries, road.get("ref", ""))
+        r["sheeting"] = [SHEETING[r["bg"]], SHEETING[r["fg"]]]
         if c.get("moved") is not None:
             r["moved"] = "median"
+        if c.get("over") and bctx is not None:
+            r["over"] = True
+            r["mount"] = OVER_MOUNT
+            r["offset"] = 0.0
+            r["d"], st = overhead_place(road, bctx["geom"], r, bctx["pavements"],
+                                        barriers.median_offset_fn(bctx), barriers.clear_fn(bctx))
+            st["signs"] = [len(records)]
+            r["structure"] = len(structures)
+            structures.append(st)
+            records.append(r)
+            continue
         if r["side"] == "left":
             clear = median.clear(r["s"])
             r["offset"] = round(max(MIN_OFFSET, min(r["offset"], (clear - r["w"]) / 2)), 2)
@@ -157,8 +191,8 @@ def build_route(rc, route, roads, osm, heights, deny, report):
     hits = sorted({f"{t!r}: {h}" for t in texts for h in denied(t, deny)})
     checks["legends"] = {"mismatches": legend_bad, "denylist_hits": hits, "ok": not legend_bad and not hits}
     close = []
-    for side in ("left", "right"):
-        ss = sorted(r["s"] for r in records if r["side"] == side)
+    for side in ("left", "right", "over"):
+        ss = sorted(r["s"] for r in records if ("over" if r.get("over") else r["side"]) == side)
         close += [(side, a, b) for a, b in zip(ss, ss[1:]) if b - a < SPACING]
     checks["spacing"] = {"min_m": SPACING, "violations": close, "ok": not close}
     bad = []
@@ -169,17 +203,22 @@ def build_route(rc, route, roads, osm, heights, deny, report):
             bad.append(f'{r["kind"]} at {r["s"]}: letters {cap_in:.1f} in')
         if (r["bg"], r["fg"]) != COLOUR_OK[r["kind"]]:
             bad.append(f'{r["kind"]} at {r["s"]}: colours {r["bg"]}/{r["fg"]}')
+        if r.get("over"):
+            clr = clearance(road, line, r)
+            if clr < MIN_CLEAR - 1e-6:
+                bad.append(f'{r["kind"]} at {r["s"]}: overhead clearance {clr:.2f} m')
+            continue
         if r["mount"] < MIN_MOUNT.get(r["kind"], 7 * 0.3048) - 1e-6:
             bad.append(f'{r["kind"]} at {r["s"]}: mounted {r["mount"]} m')
         if r["offset"] < MIN_OFFSET - 1e-6:
             bad.append(f'{r["kind"]} at {r["s"]}: offset {r["offset"]} m')
     checks["dimensions"] = {"problems": bad, "ok": not bad}
 
-    lanes = lambda s: len(next(x for x in road["sections"] if x["s0"] <= s <= x["s1"])["lanes"])  # noqa: E731
     overhead = [{"kind": r["kind"], "s": r["s"], "exit": entries[r["exit"]]["number"] or entries[r["exit"]]["osm"],
-                 "why": "left exit" if entries[r["exit"]]["side"] == "left" else f"{lanes(r['s'])} lanes"}
-                for r in records if r["kind"] in ("advance", "exit", "sequence")
-                and (entries[r["exit"]]["side"] == "left" or lanes(r["s"]) >= 4)]
+                 "why": "left exit" if entries[r["exit"]]["side"] == "left" else f"{lanes_at(road, r['s'])} lanes",
+                 "structure": structures[r["structure"]]["kind"], "d": r["d"],
+                 "clearance_m": round(clearance(road, line, r), 2)}
+                for r in records if r.get("over")]
     corridor = [n for n in notes if any("closely" in o.get("why", "") for o in n["omitted"])]
     report[rc["id"]] = {
         "road": road["id"], "length_m": length, "checks": checks,
@@ -191,61 +230,109 @@ def build_route(rc, route, roads, osm, heights, deny, report):
         "closely_spaced": [{"exit": n["exit"], "s": n["s"], "kinds": n["kinds"], "omitted": n["omitted"]} for n in corridor],
         "denylist_changes": deny_changes, "median_too_narrow": moved, "dropped_by_spacing": [
             {"kind": d["kind"], "s_nominal": round(d["s_nom"], 1), "side": d["side"]} for d in dropped],
-        "ground_fixes": ground_fixes, "would_be_overhead": overhead,
+        "ground_fixes": ground_fixes, "overhead": overhead,
+        "structures": {"cantilever": sum(1 for s in structures if s["kind"] == "cantilever"),
+                       "span": sum(1 for s in structures if s["kind"] == "span")},
         "left_offsets": [{"kind": r["kind"], "s": r["s"], "offset": r["offset"]} for r in records if r["side"] == "left"],
     }
-    return {"id": road["id"], "route": rc["id"], "exits": entries, "signs": records}
+    return {"id": road["id"], "route": rc["id"], "exits": entries, "signs": records, "structures": structures}
+
+
+def suffix_of(route_id):
+    """'' for the default route, '-<route>' for any other (file names)."""
+    return "" if route_id == DEFAULT_ROUTE else f"-{route_id}"
 
 
 def main():
-    if len(sys.argv) != 2:
+    args = [a for a in sys.argv[1:] if not a.startswith("--")]
+    if len(args) not in (1, 2):
         sys.exit(__doc__)
-    city = sys.argv[1]
+    city = args[0]
+    route_id = args[1] if len(args) == 2 else DEFAULT_ROUTE
+    sfx = suffix_of(route_id)
     cfg = json.loads((ROOT / "data" / "cities.json").read_text())[city]
     routes_cfg = cfg.get("routes") or sys.exit(f"{city} has no routes in data/cities.json")
+    rc = next((r for r in routes_cfg if r["id"] == route_id), None) or sys.exit(f"{city} has no route {route_id} in data/cities.json")
     data = ROOT / "public" / "data" / city
-    doc = json.loads((data / "roadnet.json").read_text())
-    roads = {r["id"]: r for r in decode_roadnet(doc, (data / "roadnet.bin").read_bytes())}
-    routes = {r["id"]: r for r in json.loads((data / "routes.json").read_text())["routes"]}
+    rn_json, rn_bin = data / f"roadnet{sfx}.json", data / f"roadnet{sfx}.bin"
+    for f in (rn_json, rn_bin):
+        if not f.exists():
+            sys.exit(f"{f.relative_to(ROOT)} is missing: run  uv run scripts/build_roads.py {city} first")
+    doc = json.loads(rn_json.read_text())
+    roads = {r["id"]: r for r in decode_roadnet(doc, rn_bin.read_bytes())}
+    routes_path = data / f"routes{sfx}.json"
+    if not routes_path.exists():
+        routes_path = data / "routes.json"
+    routes = {r["id"]: r for r in json.loads(routes_path.read_text())["routes"]}
+    if route_id not in routes:
+        sys.exit(f"{routes_path.relative_to(ROOT)} has no route {route_id}")
+    route = routes[route_id]
     heights = load_heights(city)
     deny = load_denylist(DENYLIST)
-    report, out_roads, snapshots = {}, [], set()
-    for rc in routes_cfg:
-        path = ROOT / "data" / "raw" / city / f"osm-{rc['ref'].lower().replace(' ', '')}.json"
-        if not path.exists():
-            sys.exit(f"{path.relative_to(ROOT)} is missing: run  uv run scripts/fetch_osm.py {city}")
-        osm = load_osm(json.loads(path.read_text()))
-        snapshots.add(osm.timestamp)
-        print(f"{rc['id']}: placing signs along {routes[rc['id']]['road']}")
-        out_roads.append(build_route(rc, routes[rc["id"]], roads, osm, heights, deny, report))
+    report = {}
+    slug = rc["ref"].lower().replace(" ", "")
+    path = ROOT / "data" / "raw" / city / f"osm-{slug}.json"
+    bpath = ROOT / "data" / "raw" / city / f"osm-{slug}-barriers.json"
+    for f in (path, bpath):
+        if not f.exists():
+            sys.exit(f"{f.relative_to(ROOT)} is missing: run  uv run scripts/fetch_osm.py {city}")
+    osm = load_osm(json.loads(path.read_text()))
+    bosm = load_osm(json.loads(bpath.read_text()))
 
-    out = {"version": 1, "source": {
-        "osm": " ".join(sorted(snapshots)), "osmLicence": "ODbL, (c) OpenStreetMap contributors",
-        "method": "scripts/build_roadside.py", "positions": "rule (MUTCD 2B, 2D, 2E, 2H); no public sign inventory",
-        "denylist": str(DENYLIST.relative_to(ROOT))}, "roads": out_roads}
+    opp = route.get("opposite") or next((r["id"] for r in roads.values() if r["id"] != route["road"]
+                                         and (r.get("role") or "main") == "main" and r.get("ref") == roads[route["road"]].get("ref")), None)
+    print(f"{route_id}: barriers along {route['road']} (opposite {opp}) and its ramps")
+    b_roads, b_report, bctx = barriers.build(roads, doc.get("junctions", []), [dict(s) for s in doc.get("structures", [])],
+                                             route["road"], opp, bosm, create_frame(cfg), heights)
+    print(f"{route_id}: placing signs along {route['road']}")
+    out_road = build_route(rc, route, roads, osm, heights, deny, report, bctx)
+
+    src = {"osm": osm.timestamp, "osmLicence": "ODbL, (c) OpenStreetMap contributors",
+           "method": "scripts/build_roadside.py", "positions": "rule (MUTCD 2B, 2D, 2E, 2H); no public sign inventory",
+           "denylist": str(DENYLIST.relative_to(ROOT)),
+           "sheeting": "each sign's [background, legend] sheeting in `sheeting`: white, yellow, green, red or none (ASTM D4956)"}
+    out = {"version": 1, "source": src, "roads": [out_road]}
     text = json.dumps(out, separators=(",", ":"), ensure_ascii=False) + "\n"
-    (data / "signs.json").write_text(text)
+    signs_path = data / f"signs{sfx}.json"
+    signs_path.write_text(text)
     size = len(text.encode())
+    btext = encode_barriers({"source": {"osm": bosm.timestamp, "osmLicence": "ODbL, (c) OpenStreetMap contributors",
+                                        "method": "scripts/build_roadside.py (scripts/lib/roadside_barriers.py)",
+                                        "route": route_id},
+                             "roads": b_roads})
+    barriers_path = data / f"barriers{sfx}.json"
+    barriers_path.write_text(btext)
+    bsize = len(btext.encode())
     rep_dir = ROOT / "data" / "derived" / city
     rep_dir.mkdir(parents=True, exist_ok=True)
-    report["files"] = {"signs.json": size, "limit": MAX_BYTES, "ok": size < MAX_BYTES}
+    report["barriers"] = b_report
+    report["files"] = {signs_path.name: size, "limit": MAX_BYTES, barriers_path.name: bsize, "barrier_limit": MAX_BARRIER_BYTES,
+                       "ok": size < MAX_BYTES and bsize < MAX_BARRIER_BYTES}
     report["denylist"] = {"file": str(DENYLIST.relative_to(ROOT)), "terms": len(deny)}
-    (rep_dir / "roadside_report.json").write_text(json.dumps(report, indent=1, ensure_ascii=False) + "\n")
+    report["sheeting"] = {
+        "signs": "signs.json: each record's `sheeting` is [background, legend]; the runtime puts it on the face mesh as vertex "
+                 "attributes `retro` (background) and `retroLegend` (legend), codes in src/drive/roadside/sheeting.js",
+        "barriers": "road chunks carry a `retro` vertex attribute: reflectors on guardrail and concrete barrier are white (right) or "
+                    "yellow (left); everything else 0",
+        "delineators": "one InstancedMesh per reflector colour, material names 'delineator white' and 'delineator yellow', each "
+                       "with a `retro` instance attribute"}
+    rep_path = rep_dir / f"roadside_report{sfx}.json"
+    rep_path.write_text(json.dumps(report, indent=1, ensure_ascii=False) + "\n")
 
     failures = []
-    for rid, rr in report.items():
-        if rid in ("files", "denylist"):
-            continue
-        print(f"{rid}: {rr['counts']['total']} signs {rr['counts']['by_kind']}")
-        for name, ch in rr["checks"].items():
-            print(f"  {'ok  ' if ch['ok'] else 'MISS'} {name}")
-            if not ch["ok"]:
-                failures.append(f"{rid} {name}")
-                print("       " + json.dumps({k: v for k, v in ch.items() if k != "ok"})[:600])
-    print(f"  {'ok  ' if report['files']['ok'] else 'MISS'} signs.json: {size / 1000:.1f} kB")
+    rr = report[rc["id"]]
+    print(f"{route_id}: {rr['counts']['total']} signs {rr['counts']['by_kind']}, structures {rr['structures']}")
+    for name, ch in rr["checks"].items():
+        print(f"  {'ok  ' if ch['ok'] else 'MISS'} {name}")
+        if not ch["ok"]:
+            failures.append(f"{route_id} {name}")
+            print("       " + json.dumps({k: v for k, v in ch.items() if k != "ok"})[:600])
+    print(f"  barriers: {b_report['placed_m']}")
+    print(f"  fit: median {b_report['fit']['median'].get('threshold')} m, fill {b_report['fit']['fill'].get('threshold')} m")
+    print(f"  {'ok  ' if report['files']['ok'] else 'MISS'} {signs_path.name}: {size / 1000:.1f} kB, {barriers_path.name}: {bsize / 1000:.1f} kB")
     if not report["files"]["ok"]:
         failures.append("files")
-    print(f"wrote {(data / 'signs.json').relative_to(ROOT)} and {(rep_dir / 'roadside_report.json').relative_to(ROOT)}")
+    print(f"wrote {signs_path.relative_to(ROOT)}, {barriers_path.relative_to(ROOT)} and {rep_path.relative_to(ROOT)}")
     if failures:
         sys.exit(f"acceptance missed: {', '.join(failures)}")
 

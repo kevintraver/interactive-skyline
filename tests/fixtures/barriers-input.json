@@ -1,0 +1,16 @@
+{
+  "source": {"osm": "2026-11-22T10:25:51Z", "note": "fixture for the barriers format (tests/data/test_barriers.py, tests/unit/roadside/barrierFormat.test.js)"},
+  "roads": [
+    {"id": "test.main", "runs": [
+      {"s0": 0, "s1": 120.04, "side": "left", "type": "concrete", "o0": 0.45, "o1": 1.2049999, "prov": "rule", "open0": true, "open1": false},
+      {"s0": 120.04, "s1": 300.25, "side": "left", "type": "concrete", "o0": 1.2049999, "o1": 1.2, "prov": "mapped", "open0": false, "open1": true},
+      {"s0": 572.0, "s1": 612.0, "side": "right", "type": "guardrail", "o0": 0.3, "o1": 0.3, "prov": "rule", "open0": true, "open1": true},
+      {"s0": 900.15, "s1": 1104.75, "side": "right", "type": "wall", "o0": 13.625, "o1": 12.99, "prov": "mapped", "open0": true, "open1": true, "h": 4.0, "z0": -0.0, "z1": -0.285},
+      {"s0": 1200, "s1": 1300, "side": "left", "type": "cable", "o0": -0.004, "o1": 2.5, "prov": "rule", "open0": true, "open1": true}
+    ], "delineators": [
+      {"side": "right", "colour": "white", "o": 0.9, "s": [30.0, 151.92, 273.84, 395.76]},
+      {"side": "left", "colour": "yellow", "o": 0.9, "s": [30.04, 66.5]}
+    ]},
+    {"id": "test.ramp", "role": "ramp", "runs": [], "delineators": [{"side": "right", "colour": "white", "o": 0.9, "s": [30, 60.48]}]}
+  ]
+}

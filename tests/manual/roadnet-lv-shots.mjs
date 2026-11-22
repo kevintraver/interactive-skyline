@@ -1,11 +1,12 @@
 // GPU screenshots of tests/manual/roadnet-lv.html. Serve the repo first:
-//   pnpm exec vite --port 5201 --strictPort
+//   pnpm exec vite --port 5201 --strictPort   (or another port, passed as PORT=...)
 // then: node tests/manual/roadnet-lv-shots.mjs <out-dir> [shots as JSON [[name, query], ...]] [--software]
 // To look at a roadnet that is not in public/data/lv yet, serve its folder with CORS and pass
 // data=<its url> in each query.
 import { chromium } from '@playwright/test';
 import { mkdirSync } from 'node:fs';
 
+const PORT = process.env.PORT || 5201;
 const args = process.argv.slice(2).filter((a) => !a.startsWith('--'));
 const software = process.argv.includes('--software');
 const out = args[0];
@@ -23,7 +24,7 @@ const page = await browser.newPage({ viewport: { width: 1280, height: 720 } });
 page.on('console', (m) => { if (m.type() === 'error' || m.type() === 'warning') console.log(`[${m.type()}]`, m.text()); });
 page.on('pageerror', (e) => console.log('[pageerror]', e.message));
 for (const [name, query] of shots) {
-  await page.goto(`http://localhost:5201/tests/manual/roadnet-lv.html?${query}`);
+  await page.goto(`http://localhost:${PORT}/tests/manual/roadnet-lv.html?${query}`);
   await page.waitForFunction(() => window.__ready === true, null, { timeout: 120000 });
   await page.screenshot({ path: `${out}/${name}.png` });
   console.log('shot', name, (await page.locator('#hud').textContent()).replace(/\n/g, ' | '));

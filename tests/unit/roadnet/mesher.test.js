@@ -256,7 +256,7 @@ describe('mesher', () => {
     handle({ type: 'mesh', id: 7, road: 0, s0: 0, s1: 256, lod: 1 });
     handle({ type: 'mesh', id: 8, road: 3, s0: 0, s1: 256, lod: 1 });
     expect(out[0].data.id).toBe(7);
-    expect(out[0].transfer).toHaveLength(7);
+    expect(out[0].transfer).toHaveLength(8); // origin, positions, normals, uvs, kind, retro, indices, sphere
     expect(out[0].transfer).toContain(out[0].data.mesh.positions.buffer);
     expect(out[1].data.error).toBeTruthy();
   });

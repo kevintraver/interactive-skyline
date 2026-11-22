@@ -11,6 +11,9 @@
  * For a 70 km road: 5 batches, plus about 16 level-1 and 4 level-0 chunks around the car, plus one
  * extra group for the batch with the hole: about 26 draw calls.
  *
+ * Barriers (barriers.json, `barriers`) are swept into the same chunks by the worker, so they cost
+ * no draw call of their own; their level of detail follows the chunk's (src/drive/roadside/sweep.js).
+ *
  * The small roads of the interchanges (ramps and crossing roads, role !== 'main') are not chunked
  * road by road, which would cost a draw call per road: they are cut into pieces of at most 256 m,
  * and the pieces are gathered by where they lie, on a CLUSTER-metre grid, into one chunk per
@@ -19,6 +22,7 @@
 import * as THREE from 'three';
 import { CHUNK_STATIONS } from './mesher.js';
 import { createRefline } from './refline.js';
+import { asDecoded } from '../roadside/barrierFormat.js';
 
 const BATCH_CHUNKS = 64;
 const CLUSTER = 768; // m: grid cell that gathers the pieces of the small roads into one chunk
@@ -35,6 +39,7 @@ function toMesh(m, material) {
   g.setAttribute('normal', new THREE.BufferAttribute(m.normals, 3));
   g.setAttribute('uv', new THREE.BufferAttribute(m.uvs, 2));
   g.setAttribute('kind', new THREE.BufferAttribute(m.kind, 1));
+  if (m.retro) g.setAttribute('retro', new THREE.BufferAttribute(m.retro, 1)); // sheeting code (src/drive/roadside/sheeting.js)
   g.setIndex(new THREE.BufferAttribute(m.indices, 1));
   const [cx, cy, cz, r] = m.sphere;
   g.boundingSphere = new THREE.Sphere(new THREE.Vector3(cx, cy, cz), r);
@@ -49,10 +54,11 @@ function toMesh(m, material) {
 /**
  * @param {{ roadnet: { roads: object[] }, base: number, earthR: number, parent: THREE.Object3D,
  *   materials: { road: THREE.Material, roadNear?: THREE.Material, setNight?: (on: boolean) => void },
+ *   barriers?: object|null,
  *   createWorker?: () => { postMessage: Function, onmessage: Function|null, terminate?: Function },
  *   near?: number, mid?: number, maxInFlight?: number }} opts
  */
-export function createRoadChunks({ roadnet, base, earthR, parent, materials, createWorker = defaultWorker, near = 400, mid = 2000, maxInFlight = 4 }) {
+export function createRoadChunks({ roadnet, base, earthR, parent, materials, barriers = null, createWorker = defaultWorker, near = 400, mid = 2000, maxInFlight = 4 }) {
   const worker = createWorker();
   const nearMat = materials.roadNear || materials.road;
   const chunks = []; // { road, index, s0, s1, cx, cy, radius, want, have, pending, dist, batch }
@@ -117,7 +123,10 @@ export function createRoadChunks({ roadnet, base, earthR, parent, materials, cre
   }
 
   worker.onmessage = (e) => receive(e.data);
-  worker.postMessage({ type: 'init', roads: roadnet.roads, base, earthR });
+  // barriers (barriers.json, decoded or raw) ride along with their roads into the worker, which sweeps them into the chunks
+  const runsById = new Map((barriers ? asDecoded(barriers).roads : []).map((r) => [r.id, r.runs]));
+  const workerRoads = runsById.size ? roadnet.roads.map((r) => (runsById.get(r.id)?.length ? { ...r, barriers: runsById.get(r.id) } : r)) : roadnet.roads;
+  worker.postMessage({ type: 'init', roads: workerRoads, base, earthR });
 
   function send(target, msg) {
     const id = nextId++;

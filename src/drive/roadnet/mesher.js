@@ -16,10 +16,17 @@
  * or joins, the road's shoulder on that side is hidden and the gore is filled; an embankment stops
  * where the road's `embankment` entries say; piers and abutments are boxes and wedges. All of it
  * goes into the same buffers, so a chunk stays one draw call.
+ *
+ * Barriers (src/drive/roadside/barrierFormat.js, attached to a road as `road.barriers`, the decoded
+ * runs) are swept profiles from src/drive/roadside/sweep.js, written into the same buffers, with
+ * their level of detail following the chunk's. Every vertex also carries `retro`, the sheeting of
+ * a retroreflective element (src/drive/roadside/sheeting.js: 0 none, 1 white, 2 yellow, ...); only
+ * barrier reflectors have one.
  */
 import { createRefline } from './refline.js';
 import { edgesAt, tapersOf } from './crosssection.js';
 import { CYCLE, MARK_W, KIND, regionU } from './atlas.js';
+import { sweepBarriers } from '../roadside/sweep.js';
 
 export const LOD_STRIDE = [1, 4, 16]; // stations between rows, per level
 export const CHUNK_STATIONS = 64; // 256 m at 4 m spacing
@@ -190,7 +197,22 @@ export function rowStations(road, s0, s1, lod, split = 0) {
 
 /** Growable buffers for the geometry that is not a strip of the road itself. */
 function extraBuffers() {
-  return { p: [], n: [], uv: [], k: [], idx: [], v: 0 };
+  return { p: [], n: [], uv: [], k: [], r: [], idx: [], v: 0 };
+}
+
+/**
+ * How much of its full width the embankment keeps on each side at a row: squeezed on the inside of
+ * a tight curve so it does not fold, and short of other roads where the road's `embankment` says.
+ */
+export function embScales(road, p, L, R, s) {
+  const inner = Math.abs(p.curvature) > 1e-9 ? FOLD / Math.abs(p.curvature) : Infinity;
+  let scaleL = p.curvature > 0 ? Math.max(0.05, Math.min(1, (inner - L) / EMB_W)) : 1;
+  let scaleR = p.curvature < 0 ? Math.max(0.05, Math.min(1, (inner + R) / EMB_W)) : 1;
+  if (road.embankment?.length) {
+    scaleL = Math.min(scaleL, roomAt(road, s, 'left') / EMB_W);
+    scaleR = Math.min(scaleR, roomAt(road, s, 'right') / EMB_W);
+  }
+  return [scaleL, scaleR];
 }
 
 /**
@@ -201,7 +223,7 @@ function extraBuffers() {
  *   the reference line at the middle of the stretch, rounded to whole metres, so every level of a
  *   chunk shares it); roads: every road of the network (decoded), for the gores of this road
  * @returns {{ origin: Float64Array, positions: Float32Array, normals: Float32Array, uvs: Float32Array,
- *   kind: Uint8Array, indices: Uint16Array|Uint32Array, ranges: { s0: number, s1: number, start: number, count: number }[],
+ *   kind: Uint8Array, retro: Uint8Array, indices: Uint16Array|Uint32Array, ranges: { s0: number, s1: number, start: number, count: number }[],
  *   sphere: Float32Array, lod: number, s0: number, s1: number }}
  *   positions are scene metres relative to origin, curvature drop included; `kind` is KIND per vertex;
  *   `ranges` are index ranges per split piece (one range without split); sphere is [cx, cy, cz, r] local.
@@ -253,13 +275,7 @@ export function meshChunk({ road, s0, s1, lod, base, earthR, split = 0, origin, 
       ref.at(s, p);
       const c = Math.cos(p.heading), sn = Math.sin(p.heading);
       // keep the inside embankment from folding over itself on tight curves, and short of other roads
-      const inner = Math.abs(p.curvature) > 1e-9 ? FOLD / Math.abs(p.curvature) : Infinity;
-      let scaleL = p.curvature > 0 ? Math.max(0.05, Math.min(1, (inner - L) / EMB_W)) : 1;
-      let scaleR = p.curvature < 0 ? Math.max(0.05, Math.min(1, (inner + R) / EMB_W)) : 1;
-      if (road.embankment?.length) {
-        scaleL = Math.min(scaleL, roomAt(road, s, 'left') / EMB_W);
-        scaleR = Math.min(scaleR, roomAt(road, s, 'right') / EMB_W);
-      }
+      const [scaleL, scaleR] = embScales(road, p, L, R, s);
       // scene tangent of the reference line, for normals
       const ax = c, ay = p.grade - (p.x * c + p.y * sn) / earthR, az = -sn;
       const vv = (s - vBase) / CYCLE;
@@ -314,7 +330,7 @@ export function meshChunk({ road, s0, s1, lod, base, earthR, split = 0, origin, 
     const atSplit = split > 0 && Math.abs(sp.s1 / split - Math.round(sp.s1 / split)) < 1e-9;
     if (atSplit || k === spans.length - 1) {
       const last = k === spans.length - 1 && sp.s1 >= ref.length - 1e-9;
-      extras(ex, road, roads, rangeS0, sp.s1, last, { base, earthR, origin, vBase, grow });
+      extras(ex, road, roads, rangeS0, sp.s1, last, { base, earthR, origin, vBase, grow, lod });
       rangeParts.push({ s0: rangeS0, s1: sp.s1, strip: [rangeStart, ii - rangeStart], extra: [exStart, ex.idx.length - exStart] });
       rangeStart = ii; rangeS0 = sp.s1; exStart = ex.idx.length;
     }
@@ -327,6 +343,7 @@ export function meshChunk({ road, s0, s1, lod, base, earthR, split = 0, origin, 
     normals: v === total ? normals : concatF32(normals, ex.n, total * 3),
     uvs: v === total ? uvs : concatF32(uvs, ex.uv, total * 2),
     kind: v === total ? kind : concatU8(kind, ex.k, total),
+    retro: concatU8(new Uint8Array(v), ex.r, total),
   };
   const indices = total < 65536 ? new Uint16Array(ii + ex.idx.length) : new Uint32Array(ii + ex.idx.length);
   const ranges = [];
@@ -352,12 +369,12 @@ function concatU8(a, extra, n) { const out = new Uint8Array(n); out.set(a); out.
  */
 function extras(ex, road, roads, s0, s1, last, ctx) {
   const inRange = (s) => s >= s0 && (s < s1 || (last && s <= s1));
-  const { base, earthR, origin, vBase, grow } = ctx;
+  const { base, earthR, origin, vBase, grow, lod = 0 } = ctx;
   const twoR = 2 * earthR;
-  const put = (mx, my, hh, u, vv, k) => {
+  const put = (mx, my, hh, u, vv, k, retro = 0) => {
     const X = mx, Y = hh - base - (mx * mx + my * my) / twoR, Z = -my;
     const lx = X - origin[0], ly = Y - origin[1], lz = Z - origin[2];
-    ex.p.push(lx, ly, lz); ex.uv.push(u, vv); ex.k.push(k);
+    ex.p.push(lx, ly, lz); ex.uv.push(u, vv); ex.k.push(k); ex.r.push(retro);
     grow(lx, ly, lz);
     return ex.v++;
   };
@@ -421,6 +438,39 @@ function extras(ex, road, roads, s0, s1, last, ctx) {
     }
   }
 
+  // barriers: swept profiles, posts and reflectors (src/drive/roadside/sweep.js)
+  if (road.barriers?.length) {
+    const q = {};
+    const BK = { barrier: KIND.barrier, reflector: KIND.reflector };
+    sweepBarriers(road.barriers, s0, s1, last, {
+      lod,
+      step: LOD_STRIDE[lod] * road.spacing,
+      vAt: (s) => (s - vBase) / CYCLE,
+      frameAt(s, side, o, wallZ) {
+        ref.at(s, q);
+        const cs = edgesAt(road, s);
+        const left = side === 'left';
+        const edge = left ? cs.left : cs.right, sgn = left ? 1 : -1;
+        const d = edge + sgn * o;
+        const sn = Math.sin(q.heading), c = Math.cos(q.heading);
+        const hEdge = q.h + q.crossfall * edge;
+        let h;
+        if (wallZ !== null) h = hEdge + wallZ;
+        else if (o <= 0) h = q.h + q.crossfall * d;
+        else {
+          const [scL, scR] = embScales(road, q, cs.left, cs.right, s);
+          const sc = left ? scL : scR;
+          // over an embankment squeezed into a wall the barrier stands at the edge, on top of it
+          h = sc * EMB_W < WALL ? hEdge : hEdge - embDrop(o / sc);
+        }
+        return { x: q.x - d * sn, y: q.y + d * c, h, ox: -sn * sgn, oy: c * sgn, fx: c, fy: sn };
+      },
+      put: (mx, my, h, region, tt, vv, kind, retro) => put(mx, my, h, regionU(region, tt), vv, BK[kind], retro),
+      normal: (nx, ny, nz) => { ex.n.push(nx, ny, nz); },
+      tri: (a, b, c) => { ex.idx.push(a, b, c); },
+    });
+  }
+
   // deck ends: close the slab where a deck begins and ends
   for (const b of road.bridges || []) {
     if (!b.deck) continue;
@@ -470,7 +520,7 @@ function extras(ex, road, roads, s0, s1, last, ctx) {
 }
 
 /** The buffers of a meshChunk result, for postMessage's transfer list. */
-export const transferablesOf = (m) => [m.origin.buffer, m.positions.buffer, m.normals.buffer, m.uvs.buffer, m.kind.buffer, m.indices.buffer, m.sphere.buffer];
+export const transferablesOf = (m) => [m.origin.buffer, m.positions.buffer, m.normals.buffer, m.uvs.buffer, m.kind.buffer, m.retro.buffer, m.indices.buffer, m.sphere.buffer];
 
 /**
  * Mesh several stretches (of any roads) into one set of buffers with one shared origin, with an
@@ -487,7 +537,7 @@ export function meshParts({ parts, groups, lod, base, earthR, origin, roads }) {
   const fixed = parts.map((pt) => meshChunk({ road: roads[pt.road], s0: pt.s0, s1: pt.s1, lod, base, earthR, origin, roads }));
   let nv = 0, ni = 0;
   for (const m of fixed) { nv += m.kind.length; ni += m.indices.length; }
-  const positions = new Float32Array(nv * 3), normals = new Float32Array(nv * 3), uvs = new Float32Array(nv * 2), kind = new Uint8Array(nv);
+  const positions = new Float32Array(nv * 3), normals = new Float32Array(nv * 3), uvs = new Float32Array(nv * 2), kind = new Uint8Array(nv), retro = new Uint8Array(nv);
   const indices = nv < 65536 ? new Uint16Array(ni) : new Uint32Array(ni);
   const ranges = Array.from({ length: groups }, (_, g) => ({ group: g, start: 0, count: 0 }));
   let v = 0, at = 0;
@@ -496,7 +546,7 @@ export function meshParts({ parts, groups, lod, base, earthR, origin, roads }) {
     ranges[g].start = at;
     fixed.forEach((m, i) => {
       if (parts[i].group !== g) return;
-      positions.set(m.positions, v * 3); normals.set(m.normals, v * 3); uvs.set(m.uvs, v * 2); kind.set(m.kind, v);
+      positions.set(m.positions, v * 3); normals.set(m.normals, v * 3); uvs.set(m.uvs, v * 2); kind.set(m.kind, v); retro.set(m.retro, v);
       for (let j = 0; j < m.indices.length; j++) indices[at++] = m.indices[j] + v;
       const [cx, cy, cz, r] = m.sphere;
       minX = Math.min(minX, cx - r); maxX = Math.max(maxX, cx + r);
@@ -507,5 +557,5 @@ export function meshParts({ parts, groups, lod, base, earthR, origin, roads }) {
     ranges[g].count = at - ranges[g].start;
   }
   const sphere = new Float32Array(nv ? [(minX + maxX) / 2, (minY + maxY) / 2, (minZ + maxZ) / 2, Math.hypot(maxX - minX, maxY - minY, maxZ - minZ) / 2] : [0, 0, 0, 0]);
-  return { origin: Float64Array.from(origin || [0, 0, 0]), positions, normals, uvs, kind, indices, ranges, sphere, lod, s0: 0, s1: 0 };
+  return { origin: Float64Array.from(origin || [0, 0, 0]), positions, normals, uvs, kind, retro, indices, ranges, sphere, lod, s0: 0, s1: 0 };
 }

@@ -32,7 +32,7 @@ export const bandOf = (d) => (d < BANDS[0] ? 0 : d < BANDS[1] ? 1 : 2);
  * @param {{ index: number, band: number, built: ReturnType<import('./geometry.js').buildSign> }[]} items
  * @param {number[]} origin scene position subtracted from every vertex (the mesh sits there)
  * @param {number} pages number of atlas pages
- * @returns {{ faces: { position: Float32Array, normal: Float32Array, uv: Float32Array, index: Uint32Array,
+ * @returns {{ faces: { position: Float32Array, normal: Float32Array, uv: Float32Array, retro: Uint8Array, retroLegend: Uint8Array, index: Uint32Array,
  *   groups: { start: number, count: number, band: number }[], ranges: Map<number, { start: number, count: number }> }[],
  *   support: { position: Float32Array, normal: Float32Array, color: Float32Array, index: Uint32Array, ranges: Map<number, object> } }}
  *   faces[p].groups run near band last (2, 1, 0), each a contiguous index range; ranges give each
@@ -46,8 +46,10 @@ export function packSigns(items, origin, pages) {
     for (const it of byBand) for (const q of it.built.faces) if (q.page === p) quads.push({ it, q });
     const n = quads.length;
     const position = new Float32Array(n * 12), normal = new Float32Array(n * 12), uv = new Float32Array(n * 8), index = new Uint32Array(n * 6);
+    const retro = new Uint8Array(n * 4), retroLegend = new Uint8Array(n * 4);
     const groups = [], ranges = new Map();
     quads.forEach(({ it, q }, k) => {
+      if (q.retro) { retro.fill(q.retro[0], k * 4, k * 4 + 4); retroLegend.fill(q.retro[1], k * 4, k * 4 + 4); }
       for (let c = 0; c < 4; c++) {
         for (let a = 0; a < 3; a++) {
           position[k * 12 + c * 3 + a] = q.pos[c * 3 + a] - origin[a];
@@ -63,7 +65,7 @@ export function packSigns(items, origin, pages) {
       const r = ranges.get(it.index);
       if (r) r.count += 6; else ranges.set(it.index, { start: k * 6, count: 6 });
     });
-    faces.push({ position, normal, uv, index, groups, ranges });
+    faces.push({ position, normal, uv, retro, retroLegend, index, groups, ranges });
   }
   let nv = 0, ni = 0;
   for (const it of items) { nv += it.built.support.pos.length / 3; ni += it.built.support.idx.length; }
