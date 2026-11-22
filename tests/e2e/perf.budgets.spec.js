@@ -46,10 +46,17 @@ for (const city of CITIES) {
 
 for (const scene of SCENES) {
   test(`scene ${sceneName(scene)}: draw counts and render on demand`, async ({ page }) => {
+    test.setTimeout(300_000); // a Las Vegas night scene on SwiftShader passed the default two minutes under load
     await boot(page, scene.city);
     await stage(page, scene);
     const info = await page.evaluate(() => window.__skyline.perf.info());
-    await sleep(1000); // anything the staging asked for (view tiles, shadows) is drawn by now
+    // anything the staging asked for (shadows, then the view tiles 400 ms later) is drawn first. Wait for the loop
+    // itself to say so: on a loaded machine a software frame takes seconds, and a fixed sleep let the staged frame
+    // land in the idle count
+    await sleep(1000);
+    await page.evaluate(() => window.__skyline.loop.settle());
+    await sleep(600);
+    await page.evaluate(() => window.__skyline.loop.settle());
     // held still, nothing may render
     const f0 = await page.evaluate(() => window.__skyline.perf.frames());
     await sleep(IDLE_MS);
@@ -57,6 +64,8 @@ for (const scene of SCENES) {
     // with the show clocks running, frames are asked for only while something animates in view (at most 30 a second)
     await page.evaluate(() => window.__skyline.attractions.freeze(null));
     await sleep(500);
+    // the frame that un-freezing asks for is drawn before counting (when nothing animates, the loop goes idle again)
+    if (!(await page.evaluate(() => window.__skyline.attractions.animating()))) await page.evaluate(() => window.__skyline.loop.settle());
     const f1 = await page.evaluate(() => window.__skyline.perf.frames());
     await sleep(IDLE_MS);
     const { live, animating } = await page.evaluate((start) => ({ live: window.__skyline.perf.frames() - start, animating: window.__skyline.attractions.animating() }), f1);
