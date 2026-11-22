@@ -128,8 +128,10 @@ test.describe('the weather rows of #sky', () => {
         const box = await page.locator('#sky').evaluate((el) => {
           const r = el.getBoundingClientRect();
           return { top: r.top, bottom: r.bottom, left: r.left, right: r.right, scroll: el.scrollHeight > el.clientHeight, overflow: getComputedStyle(el).overflowY,
-            theme: document.documentElement.dataset.theme };
+            theme: document.documentElement.dataset.theme, bar: document.getElementById('bar').getBoundingClientRect().bottom };
         });
+        // at 720 px and below the search bar spans the top: #sky stays below it
+        if (width <= 720) expect(box.top).toBeGreaterThanOrEqual(box.bar);
         expect(box.theme).toBe(theme);
         expect(box.top).toBeGreaterThanOrEqual(0);
         expect(box.left).toBeGreaterThanOrEqual(0);

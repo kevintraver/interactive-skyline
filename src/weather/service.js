@@ -20,8 +20,9 @@ export const FIRST_MS = Date.UTC(1940, 0, 1);
 export const PREFETCH_MS = 36 * H;
 /** Refresh live data this often while it is in use and the tab is visible. */
 export const REFRESH_MS = 5 * MIN;
-/** A failed request is tried again after this long, when something asks again. */
-export const RETRY_MS = MIN;
+/** A failed request is tried again after this long, when something asks again (short: on a slow device a long frame
+ * can outlast the request's own timeout). */
+export const RETRY_MS = 15000;
 
 /**
  * @param {{ cityId: string, city: object, fetch?: typeof fetch, now?: () => number, apiBase?: string,

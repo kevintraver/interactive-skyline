@@ -11,8 +11,12 @@
 import { defineConfig, devices } from '@playwright/test';
 
 const PORT = Number(process.env.SKYLINE_PORT || 4791);
-const SOFTWARE = ['--enable-unsafe-swiftshader', '--ignore-gpu-blocklist', '--use-angle=swiftshader', '--use-gl=angle'];
-const GPU = ['--ignore-gpu-blocklist', '--enable-gpu', ...(process.platform === 'darwin' ? ['--use-angle=metal'] : [])];
+// No test reaches a real weather service (plan 01, phase 5): their hosts do not resolve in the test browser. A spec
+// that wants weather routes it itself (tests/helpers/weatherRoutes.js). This costs nothing, unlike a page.route on
+// every request, which slowed each boot by about ten seconds on SwiftShader.
+const NO_WEATHER = '--host-resolver-rules=MAP *.open-meteo.com ~NOTFOUND, MAP aviationweather.gov ~NOTFOUND, MAP api.weather.gov ~NOTFOUND, MAP mesonet.agron.iastate.edu ~NOTFOUND';
+const SOFTWARE = ['--enable-unsafe-swiftshader', '--ignore-gpu-blocklist', '--use-angle=swiftshader', '--use-gl=angle', NO_WEATHER];
+const GPU = ['--ignore-gpu-blocklist', '--enable-gpu', ...(process.platform === 'darwin' ? ['--use-angle=metal'] : []), NO_WEATHER];
 
 export default defineConfig({
   testDir: 'tests/e2e',

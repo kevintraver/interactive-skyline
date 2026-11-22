@@ -13,11 +13,12 @@ export const SHOW_TIME = 47;
 export const WEATHER_URLS = /\/api\/weather|open-meteo\.com|aviationweather\.gov|api\.weather\.gov|mesonet\.agron\.iastate\.edu/;
 
 /**
- * Open a city and wait until the app, its extras and its fountain shows are loaded. Weather requests are blocked
- * unless a spec routes them itself (`weather: false`): no e2e test reaches a real weather service.
+ * Open a city and wait until the app, its extras and its fountain shows are loaded. No e2e test reaches a real
+ * weather service: playwright.config.js makes their hosts unresolvable, and `vite preview` has no /api (it answers
+ * with the app page, which the client does not take for weather). `weather` is kept for the specs that route weather
+ * themselves and has no effect.
  */
 export async function boot(page, city, { weather = true } = {}) {
-  if (weather) await page.route(WEATHER_URLS, (route) => route.abort());
   await page.goto(`/?city=${city}`);
   await page.waitForFunction(() => window.__skyline && window.__skyline.attractions, null, { timeout: 90_000 });
   await page.evaluate(() => window.__skyline.attractions.ready);
