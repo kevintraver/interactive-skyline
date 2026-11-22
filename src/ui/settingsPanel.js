@@ -66,7 +66,9 @@ export function initSettingsPanel(app) {
   function applyDisplay(changed) {
     const q = app.quality;
     if (q && (changed === null || changed === 'quality')) {
-      const r = q.set(settings.quality);
+      // ?q= (the landmark checker, the bench) wins at start-up; a choice made in #settings replaces it
+      if (changed === 'quality') q.urlChoice = null;
+      const r = q.set(q.urlChoice || (q.classic ? 'high' : settings.quality));
       if (!r.ok) { settings.quality = q.choice; saveSettings(settings); for (const el of form.elements.quality || []) el.checked = el.value === q.choice; }
     }
     if (app.look && (changed === null || changed === 'exposureMode' || changed === 'exposureComp')) {

@@ -80,6 +80,8 @@ export function initQuality(app) {
   const quality = app.quality = createQuality({ backend, detected, choice, apply,
     caps: { reversedDepth: !!renderer.reversedDepthBuffer } });
   quality.gpu = gpu;
+  /** ?q= for this visit: it wins over the stored choice until the user picks one in #settings */
+  quality.urlChoice = ['low', 'high', 'ultra', 'auto'].includes(asked) ? asked : null;
   quality.classic = classic;
 
   // the benchmark, once per GPU and backend, after the first frame and only where the decision table is not sure
