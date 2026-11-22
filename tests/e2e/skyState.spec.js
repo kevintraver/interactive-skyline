@@ -77,6 +77,7 @@ for (const city of CITIES) {
     });
 
     test('a ?t= link opens in the clock state at that instant', async ({ page }) => {
+      test.setTimeout(300_000); // three page loads, the last with the live clock running (software frames take seconds)
       await page.goto(`/?city=${city}&t=2026-06-21T23:30:00Z`);
       await page.waitForFunction(() => window.__skyline && window.__skyline.attractions);
       const r = await page.evaluate(() => ({ mode: window.__skyline.env.mode, t: window.__skyline.clock.timeMs, playing: window.__skyline.clock.playing }));
