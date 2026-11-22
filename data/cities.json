@@ -6,6 +6,12 @@
       "lon": -111.8919
     },
     "originNote": "Temple Square",
+    "tz": "America/Denver",
+    "icao": "KSLC",
+    "iemStation": "SLC",
+    "iemNetwork": "UT_ASOS",
+    "stationElevationM": 1288.1,
+    "stationNote": "Salt Lake City International Airport; elevation 4,226 ft from NOAA station metadata (api.weather.gov/stations/KSLC, read 21 Nov 2026)",
     "bbox": [
       40.738,
       -111.918,
@@ -82,6 +88,12 @@
       "lon": -115.1728
     },
     "originNote": "Las Vegas Boulevard at Flamingo Road",
+    "tz": "America/Los_Angeles",
+    "icao": "KLAS",
+    "iemStation": "LAS",
+    "iemNetwork": "NV_ASOS",
+    "stationElevationM": 664.5,
+    "stationNote": "Harry Reid International Airport; elevation 2,180 ft from NOAA station metadata (api.weather.gov/stations/KLAS, read 21 Nov 2026)",
     "bbox": [
       36.085,
       -115.2,
