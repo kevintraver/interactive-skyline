@@ -1,6 +1,8 @@
 // Loads the drive's routes and, for each route, the road network it runs on. Every route names its
-// own files in routes.json ("files": { "roadnet", "signs", "traffic" }); a route without them uses
-// roadnet.json. A RoadNet is fetched only when a route on it is chosen, and kept once loaded.
+// own files in routes.json ("files": { "roadnet", "signs", "traffic" }, and optionally "barriers"); a route
+// without them uses roadnet.json. Its barriers file, unless named, sits beside its RoadNet: barriers.json for
+// roadnet.json, barriers-<x>.json for roadnet-<x>.json (scripts/build_roadside.py writes them so). A route may
+// carry an "outline" ([[x, y], ...] map metres, simplified) for the route picker's small map. A RoadNet is fetched only when a route on it is chosen, and kept once loaded.
 // Fetching is injected so the app can use fetch() and tests can read from disk.
 
 import { decodeRoadNet } from './roadnet/format.js';
@@ -30,6 +32,7 @@ export function filesOf(route) {
     roadnet,
     bin: `${roadnet.slice(0, -'.json'.length)}.bin`,
     signs: f.signs ?? 'signs.json',
+    barriers: f.barriers ?? (roadnet === DEFAULT_ROADNET ? 'barriers.json' : roadnet.replace(/^roadnet/, 'barriers')),
     traffic: f.traffic ?? `traffic/${route?.id}.json`,
   };
 }
@@ -105,7 +108,7 @@ export function checkRoute(route, roadnet) {
  *   roadOf(route | id)                 its road in its RoadNet; throws if that RoadNet is not loaded yet
  *   roadnetOf(route | id)              its RoadNet, or null if not loaded yet
  *   isLoaded(route | id)               whether its RoadNet is loaded
- *   filesOf(route | id)                { roadnet, bin, signs, traffic }: the file names it uses
+ *   filesOf(route | id)                { roadnet, bin, signs, barriers, traffic }: the file names it uses
  *   loadRoute(id) -> Promise           fetch (once) and check its RoadNet, make it `roadnet`;
  *                                      resolves to { route, roadnet, road }
  */

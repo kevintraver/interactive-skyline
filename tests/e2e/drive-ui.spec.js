@@ -1,4 +1,5 @@
-// Drive mode's controls on real data (route i15n): the route card's start chips, the route bar's thumb,
+// Drive mode's controls on real data (route i15n): the route picker (collapsed to its chip while driving, the
+// cards when opened) and the card's start chips, the route bar's thumb,
 // rate and keys, the hold-position lock with the time-of-day popover, the address round trip, Map and
 // back, and the phone layout. One test and two page loads, because a SwiftShader load takes over half a
 // minute (the city has several routes; the steps use i15n's card, the current one); everything is asserted on state (the pose, the DOM, the address), never on pixels.
@@ -28,8 +29,19 @@ test('lv drive controls: starts, route bar, rate, lock, time of day, address, ph
   await untilPlayingThenPause(page);
   const route = await run(page, () => window.__skyline.drive.route());
 
-  await test.step('the hint says how to drive, and the card shows the route', async () => {
+  await test.step('the hint says how to drive; the picker is one chip, and opens to the cards', async () => {
     expect(await page.locator('#hint span').textContent()).toBe('Drag to look around. Scroll to zoom. Space to pause.');
+    const chip = page.locator('.route-chip');
+    await expect(chip).toBeVisible();
+    await expect(chip).toHaveAttribute('aria-expanded', 'false');
+    await expect(chip.locator('.name')).toHaveText('I-15 north from Primm');
+    await expect(page.locator('.route-list')).toBeHidden();
+    await chip.click();
+    await expect(chip).toHaveAttribute('aria-expanded', 'true');
+    await expect(page.locator('.route-card')).toHaveCount(3);
+    // every card has its facts and its outline map before its route is loaded
+    await expect(page.locator('.route-card[data-route="us93"] .facts')).toHaveText(/ mi · \d+ min at the limits$/);
+    await expect(page.locator('.route-card[data-route="i15s"] .map path.line')).toHaveCount(1);
     const card = page.locator('.route-card.current');
     await expect(card).toBeVisible();
     await expect(card.locator('.facts')).toHaveText('42.5 mi · 38 min at the limits');
@@ -39,12 +51,20 @@ test('lv drive controls: starts, route bar, rate, lock, time of day, address, ph
 
   await test.step('each start chip puts the car at its start', async () => {
     for (const [key, name] of [['start', 'From the start'], ['city', 'Through the city'], ['reveal', 'Before the view opens']]) {
-      await page.getByRole('button', { name, exact: true }).click();
+      if (await page.locator('.route-list').isHidden()) await page.locator('.route-chip').click();
+      const chipButton = page.locator('.route-card.current').getByRole('button', { name, exact: true });
+      await chipButton.click();
+      await expect(page.locator('.route-list')).toBeHidden(); // a choice folds the picker
       const p = await untilPlayingThenPause(page);
       expect(p.s, key).toBeGreaterThanOrEqual(route.starts[key] - 0.5);
       expect(p.s, key).toBeLessThan(route.starts[key] + 300);
-      await expect(page.getByRole('button', { name, exact: true })).toHaveAttribute('aria-pressed', 'true');
+      await expect(chipButton).toHaveAttribute('aria-pressed', 'true');
     }
+    // Escape folds an open picker
+    await page.locator('.route-chip').click();
+    await expect(page.locator('.route-list')).toBeVisible();
+    await page.keyboard.press('Escape');
+    await expect(page.locator('.route-list')).toBeHidden();
   });
 
   await test.step('dragging the thumb moves the car, and the clock with it', async () => {
@@ -155,8 +175,8 @@ test('lv drive controls: starts, route bar, rate, lock, time of day, address, ph
     expect(later.s).toBeCloseTo(a.s, 3);
     await page.getByRole('button', { name: 'Dusk', exact: true }).click();
     expect((await pose(page)).s).toBeCloseTo(a.s, 3);
-    // a press outside closes the popover (on the card's text: a press on the scene might pick a building)
-    await page.locator('.route-card.current .what b').click();
+    // a press outside closes the popover (on the route bar's text: a press on the scene might pick a building)
+    await page.locator('#drivebar .ahead').click();
     await expect(page.locator('#drive-time')).toBeHidden();
     await lock.click();
     await expect(lock).toHaveAttribute('aria-pressed', 'false');
@@ -179,6 +199,7 @@ test('lv drive controls: starts, route bar, rate, lock, time of day, address, ph
     await page.getByRole('button', { name: 'Map', exact: true }).click();
     expect(await params(page)).toEqual({ city: 'lv' });
     await expect(page.locator('.route-card.current')).toBeHidden();
+    await expect(page.locator('.route-chip')).toBeHidden();
     expect(await page.locator('#hint span').textContent()).toBe('Drag to move the map. Scroll to zoom. Right-drag to rotate.');
     await page.getByRole('button', { name: 'Drive', exact: true }).click();
     await run(page, async () => {
@@ -195,6 +216,14 @@ test('lv drive controls: starts, route bar, rate, lock, time of day, address, ph
   await test.step('at 390 x 844 everything fits, nothing overlaps, targets are 40 px', async () => {
     await page.setViewportSize({ width: 390, height: 844 });
     await run(page, () => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r))));
+    // collapsed, the chip shares the row of Map | Drive
+    const row = await run(page, () => {
+      const r = (sel) => document.querySelector(sel).getBoundingClientRect();
+      return { modes: r('#modes').top, chip: r('.route-chip').top, chipRight: r('.route-chip').right };
+    });
+    expect(Math.abs(row.chip - row.modes)).toBeLessThan(2);
+    expect(row.chipRight).toBeLessThanOrEqual(390);
+    await page.locator('.route-chip').click();
     await page.locator('.route-card.current .more').click();
     const layout = await run(page, () => {
       const vis = (e) => e.getClientRects().length > 0 && getComputedStyle(e).visibility !== 'hidden';
@@ -205,8 +234,8 @@ test('lv drive controls: starts, route bar, rate, lock, time of day, address, ph
         .filter((e) => { const r = rect(e); return r.w < 40 || r.h < 40; }).map((e) => e.outerHTML.slice(0, 80));
       const hit = (a, b) => a.l < b.r && b.l < a.r && a.t < b.b && b.t < a.b;
       const bar = rect(document.getElementById('drivebar'));
-      const overlaps = ['#tools', '#credit', '.routes'].filter((sel) => hit(bar, rect(document.querySelector(sel))));
-      const card = rect(document.querySelector('.routes'));
+      const overlaps = ['#tools', '#credit', '.routes', '.route-list'].filter((sel) => hit(bar, rect(document.querySelector(sel))));
+      const card = rect(document.querySelector('.route-list'));
       if (hit(card, rect(document.getElementById('tools')))) overlaps.push('card/tools');
       return { outside, small, overlaps, scroll: document.scrollingElement.scrollWidth, width: innerWidth };
     });
@@ -215,6 +244,7 @@ test('lv drive controls: starts, route bar, rate, lock, time of day, address, ph
     expect(layout.overlaps).toEqual([]);
     expect(layout.scroll).toBeLessThanOrEqual(layout.width);
     await page.locator('.route-card.current .more').click();
+    await page.keyboard.press('Escape');
     await page.setViewportSize({ width: 1280, height: 800 });
   });
 

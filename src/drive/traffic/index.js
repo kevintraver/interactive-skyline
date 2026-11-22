@@ -270,6 +270,15 @@ export async function createTrafficPart(ctx) {
       look.lights = lk.lights ?? dusk;
       if (Number.isFinite(lk.ambientLux)) look.ambient = lk.ambientLux;
     },
+    /** Another route: the other routes' models (their ribbons' geometry) are let go; the journey's is loaded by ensure(). */
+    setRoute({ route }) {
+      for (const [id, p] of models) {
+        if (id === route.id) continue;
+        models.delete(id);
+        p.then((m) => m?.ribbons.dispose());
+        if (id === currentId) { currentId = null; current = null; renderer.clear(); lamps.clear(); pools.clear(); }
+      }
+    },
     whenSettled: () => loading,
     stats() {
       const f = current?.fleet.stats();

@@ -58,6 +58,7 @@ from lib.sightline import building_top, eye_scene_y, visible  # noqa: E402
 from lib.interchanges import build_interchanges  # noqa: E402
 from lib.roadframe import RoadFrame  # noqa: E402
 from lib.structures import piers_and_abutments, plan_overlaps  # noqa: E402
+from lib.valley_traffic import simplify  # noqa: E402
 
 ROOT = Path(__file__).resolve().parent.parent
 SPACING = 4.0
@@ -551,10 +552,15 @@ def committed(path):
         return None
 
 
+# keys of a routes.json entry that came after i15n's RoadNet was fixed: `files` (with the other routes) and
+# `outline` (the route picker's small map); the main-line check compares the rest
+LATER_ROUTE_KEYS = ("files", "outline")
+
+
 def check_main_line(city, doc, blob, routes_doc, main_ids, files=("roadnet.json", "roadnet.bin")):
     """The carriageways and routes must come out as committed: station records byte for byte,
     road JSON equal but for the keys the interchanges add (embankment, and `to` on links), and
-    this RoadNet's routes in routes.json equal but for their `files`. Returns a report entry;
+    this RoadNet's routes in routes.json equal but for the keys that came later (LATER_ROUTE_KEYS). Returns a report entry;
     raises SystemExit on a difference."""
     ref_json = committed(f"public/data/{city}/{files[0]}")
     ref_bin = committed(f"public/data/{city}/{files[1]}")
@@ -582,7 +588,7 @@ def check_main_line(city, doc, blob, routes_doc, main_ids, files=("roadnet.json"
                            for k, v in x.items() if k != "embankment"}
         if strip(r) != strip(g):
             diffs.append(f"{r['id']} JSON differs")
-    plain = lambda r: {k: v for k, v in r.items() if k != "files"}  # noqa: E731
+    plain = lambda r: {k: v for k, v in r.items() if k not in LATER_ROUTE_KEYS}  # noqa: E731
     was = {r["id"]: plain(r) for r in json.loads(ref_routes)["routes"]}
     for r in routes_doc["routes"]:
         if r["id"] in was and was[r["id"]] != plain(r):
@@ -780,6 +786,7 @@ def build_group(city, cfg, routes_cfg, frame, hs, top):
                        "city": rnd(city_exit["s"]) if city_exit else None},
             "markers": markers,
             "lanePlan": lane_plan,
+            "outline": outline_of(dec),
         }
         if opp_road is not None:
             route["opposite"] = opp_road["id"]
@@ -897,6 +904,18 @@ def build_group(city, cfg, routes_cfg, frame, hs, top):
     decode_roadnet(json.loads(text), blob)
     report["source"] = source
     return {"text": text, "blob": blob, "routes": routes, "report": report, "main_ids": main_ids, "source": source}
+
+OUTLINE_TOL = 120.0  # m: Douglas-Peucker tolerance of a route's outline (the picker's small map)
+OUTLINE_ROUND = 10  # m: its points are rounded to this
+
+
+def outline_of(dec):
+    """A route's simplified line for the route picker's small map: map metres [[x, y], ...] (x east,
+    y north), from its first station to its last, a few dozen points. Lets a card draw a route whose
+    RoadNet is not loaded yet."""
+    xy = np.column_stack([np.asarray(dec["x"], float), np.asarray(dec["y"], float)])
+    pts = simplify(xy, OUTLINE_TOL)
+    return [[int(round(x / OUTLINE_ROUND) * OUTLINE_ROUND), int(round(y / OUTLINE_ROUND) * OUTLINE_ROUND)] for x, y in pts]
 
 
 def files_of(rc, first):

@@ -26,9 +26,10 @@ function twoNets({ southRoad = 'test.south', failB = false } = {}) {
 
 describe('routes on several RoadNets', () => {
   it('names the files of a route, with the first route\'s defaults', () => {
-    expect(filesOf({ id: 'i15n' })).toEqual({ roadnet: 'roadnet.json', bin: 'roadnet.bin', signs: 'signs.json', traffic: 'traffic/i15n.json' });
+    expect(filesOf({ id: 'i15n' })).toEqual({ roadnet: 'roadnet.json', bin: 'roadnet.bin', signs: 'signs.json', barriers: 'barriers.json', traffic: 'traffic/i15n.json' });
     expect(filesOf({ id: 'x', files: { roadnet: 'roadnet-x.json', signs: 'signs-x.json' } }))
-      .toEqual({ roadnet: 'roadnet-x.json', bin: 'roadnet-x.bin', signs: 'signs-x.json', traffic: 'traffic/x.json' });
+      .toEqual({ roadnet: 'roadnet-x.json', bin: 'roadnet-x.bin', signs: 'signs-x.json', barriers: 'barriers-x.json', traffic: 'traffic/x.json' });
+    expect(filesOf({ id: 'x', files: { roadnet: 'roadnet-x.json', barriers: 'b.json' } }).barriers).toBe('b.json');
     expect(() => filesOf({ id: 'x', files: { roadnet: 'roadnet-x.bin' } })).toThrow(RoutesError);
   });
 
@@ -105,6 +106,8 @@ describe.skipIf(!doc || doc.routes.length < 3)('public/data/lv: the three routes
       expect(existsSync(new URL(f.roadnet, DATA))).toBe(true);
       expect(existsSync(new URL(f.bin, DATA))).toBe(true);
       expect(f.traffic).toBe(`traffic/${r.id}.json`);
+      expect(existsSync(new URL(f.signs, DATA))).toBe(true);
+      expect(existsSync(new URL(f.barriers, DATA))).toBe(true);
     }
     expect(filesOf(doc.routes[0])).toMatchObject({ roadnet: 'roadnet.json', signs: 'signs.json' });
     expect(filesOf(doc.routes[1])).toMatchObject({ roadnet: 'roadnet-i15s.json', signs: 'signs-i15s.json' });

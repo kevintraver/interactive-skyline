@@ -50,7 +50,7 @@ button { font: inherit; color: inherit; background: none; border: 0; padding: 0;
 #scene.grabbing { cursor: grabbing; }
 
 /* every floating surface shares one skin */
-#bar, .views button, #results, #card, .pop, #tools > button, .zoom, #hint, #changes, #menu, #modes, #drivebar, .route-card {
+#bar, .views button, #results, #card, .pop, #tools > button, .zoom, #hint, #changes, #menu, #modes, #drivebar, .route-card, .route-chip {
   background: var(--surface);
   border: 1px solid var(--line);
   border-radius: 12px;
@@ -195,10 +195,26 @@ button { font: inherit; color: inherit; background: none; border: 0; padding: 0;
 #changes button { padding: 5px 12px; border-radius: 7px; background: var(--fill); font-weight: 600; }
 #changes button:hover { background: var(--fill-strong); }
 
-/* ---- Drive: the route cards, where the viewpoints are in Map */
-:root { --drive-card: 300px; --drivebar-w: min(760px, calc(100vw - 2 * (var(--drive-card) + var(--gap) + 16px))); }
-.routes { position: fixed; z-index: 3; left: var(--gap); bottom: 28px; display: flex; flex-direction: column; gap: 8px; width: var(--drive-card); }
-.route-card { position: relative; padding: 10px 12px 12px; overflow: hidden; }
+/* ---- Drive: the route picker, beside Map | Drive. Collapsed (while driving) it is one chip for the route being
+   driven; open, the route cards drop below the search bar, where the building list and card open in Map */
+:root { --drivebar-w: min(760px, calc(100vw - 2 * (var(--gap) + 56px))); }
+.routes { flex: none; min-width: 0; }
+.route-chip { position: relative; display: flex; align-items: center; gap: 8px; height: 46px; max-width: 300px; padding: 0 8px 0 6px; overflow: hidden; font-weight: 600; }
+.route-chip:hover { background-color: color-mix(in srgb, var(--surface), var(--ink) 9%); }
+.route-chip .map { width: 34px; height: 34px; flex: none; border-radius: 7px; background: var(--fill); }
+.route-chip .map .line { fill: none; stroke: var(--muted); stroke-width: 3.2; stroke-linecap: round; stroke-linejoin: round; }
+.route-chip .name { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.route-chip .icon { width: 18px; height: 18px; color: var(--muted); transition: rotate 0.15s; }
+.routes.open .route-chip .icon { rotate: 180deg; }
+.routes.open .route-chip { color: var(--blue); }
+.route-chip .progress { position: absolute; left: 0; right: 0; bottom: 0; height: 2px; overflow: hidden; background: var(--fill); }
+.route-chip .progress i { display: block; width: 35%; height: 100%; background: var(--blue); animation: drive-loading 1.3s ease-in-out infinite; }
+@keyframes drive-loading { from { transform: translateX(-100%); } to { transform: translateX(290%); } }
+
+.route-list { position: fixed; z-index: 3; top: calc(var(--gap) + 54px); left: var(--gap); width: var(--bar); max-height: calc(100vh - var(--gap) - 54px - 100px); overflow-y: auto; display: flex; flex-direction: column; gap: 8px; scrollbar-width: thin; }
+.browsing .route-list { display: none; }
+.route-card { position: relative; flex: none; padding: 10px 12px 12px; overflow: hidden; }
+.route-card.current { outline: 2px solid var(--blue); outline-offset: -1px; }
 .route-card .head { display: flex; align-items: center; gap: 8px; }
 .route-card .pick { flex: 1; min-width: 0; display: flex; align-items: center; gap: 12px; text-align: left; border-radius: 8px; }
 .route-card button.pick:hover { background: var(--fill); }
@@ -211,14 +227,10 @@ button { font: inherit; color: inherit; background: none; border: 0; padding: 0;
 .route-card .what b { display: block; font-weight: 650; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .route-card .facts { display: block; color: var(--muted); font-size: 12.5px; font-variant-numeric: tabular-nums; }
 .route-card .more { display: none; }
-.route-card:not(.current) .starts { display: none; }
 .starts { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
 .starts button { padding: 6px 10px; border-radius: 8px; background: var(--fill); font-size: 12.5px; font-weight: 600; }
 .starts button:hover { background: var(--fill-strong); }
 .starts button[aria-pressed="true"] { background: var(--blue); color: var(--surface); }
-.route-card .progress { position: absolute; left: 0; right: 0; bottom: 0; height: 2px; overflow: hidden; background: var(--fill); }
-.route-card .progress i { display: block; width: 35%; height: 100%; background: var(--blue); animation: drive-loading 1.3s ease-in-out infinite; }
-@keyframes drive-loading { from { transform: translateX(-100%); } to { transform: translateX(290%); } }
 
 /* ---- Drive: the route bar in #dock */
 #drivebar { display: flex; align-items: center; gap: 8px; width: var(--drivebar-w); padding: 6px 6px 6px 4px; font-variant-numeric: tabular-nums; white-space: nowrap; }
@@ -317,13 +329,18 @@ button { font: inherit; color: inherit; background: none; border: 0; padding: 0;
   #drivebar .ctl { flex: 1; min-width: 0; }
   #drivebar .speed { min-width: 0; }
   .track { height: 32px; }
-  .routes { top: calc(var(--gap) + 102px); bottom: auto; right: var(--gap); width: auto; }
-  .browsing .routes { display: none; }
+  /* the picker's chip shares the row of Map | Drive; the open cards span the width below it */
+  #top:has(> .routes:not([hidden])) { flex-direction: row; flex-wrap: wrap; }
+  .routes { flex: 1; }
+  .route-chip { height: 40px; max-width: none; width: 100%; }
+  .route-chip .map { width: 30px; height: 30px; }
+  .route-list { top: calc(var(--gap) + 102px); right: var(--gap); width: auto; max-height: calc(100vh - var(--gap) - 102px - 150px); }
   .route-card { padding: 4px 4px 4px 6px; }
   .route-card .map { width: 36px; height: 36px; }
   .route-card .pick { gap: 10px; min-height: 40px; } /* a 40 px target, also when several routes show their pick buttons */
   .route-card .what b { font-size: 13px; }
   .route-card .facts { font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .route-card.current { outline-offset: -2px; }
   .route-card .more { display: grid; place-items: center; width: 40px; height: 40px; flex: none; border-radius: 8px; color: var(--muted); }
   .route-card .more:hover { background: var(--fill); }
   .route-card .more .icon { transition: rotate 0.15s; }
@@ -335,17 +352,17 @@ button { font: inherit; color: inherit; background: none; border: 0; padding: 0;
   #drive-view .glances button { min-height: 40px; }
 }
 
-/* side by side, the card and the bar need about 1100 px; narrower, the card sits above the bar */
+/* the route bar spans the width between the map's buttons */
 @media (min-width: 721px) and (max-width: 1100px) {
   :root { --drivebar-w: calc(100vw - 2 * var(--gap) - 96px); }
-  .routes { bottom: calc(28px + 60px + 8px); }
-  /* the hint and the toast keep to the right of the card */
-  .driving #dock { align-items: flex-end; }
-  .driving #dock > :not(#drivebar) { max-width: calc(100vw - 2 * var(--gap) - 96px - var(--drive-card) - 16px); }
+}
+/* the narrowest phones: the bar's row has no room for the speed (the cabin's cluster shows it) */
+@media (max-width: 420px) {
+  #drivebar .speed { display: none; }
 }
 
 @media (prefers-reduced-motion: reduce) {
   #loading { transition: none; }
-  .route-card .progress i { width: 100%; opacity: 0.5; animation: none; }
-  .route-card .more .icon { transition: none; }
+  .route-chip .progress i { width: 100%; opacity: 0.5; animation: none; }
+  .route-card .more .icon, .route-chip .icon { transition: none; }
 }

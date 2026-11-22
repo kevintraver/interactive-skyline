@@ -59,10 +59,27 @@ def test_i15n_is_byte_for_byte_as_committed():
             pytest.skip("no committed RoadNet")
         assert (DATA / name).read_bytes() == ref
     ref = committed("public/data/lv/routes.json")
-    # `files` names a route's own files; it came with the other routes and is not part of the route itself
-    was = {k: v for k, v in next(r for r in json.loads(ref)["routes"] if r["id"] == "i15n").items() if k != "files"}
-    now = {k: v for k, v in route("i15n").items() if k != "files"}
+    # keys that came later and are not part of the route itself: `files` names a route's own files (it came with
+    # the other routes), `outline` is the route picker's small map (build_roads.LATER_ROUTE_KEYS)
+    later = ("files", "outline")
+    was = {k: v for k, v in next(r for r in json.loads(ref)["routes"] if r["id"] == "i15n").items() if k not in later}
+    now = {k: v for k, v in route("i15n").items() if k not in later}
     assert now == was
+
+
+@pytest.mark.parametrize("rid", ["i15n", *NEW])
+def test_each_route_has_an_outline_along_its_road(rid):
+    """The route picker's small map: a few dozen points, from the route's first station to its last, never far
+    from its road."""
+    r = route(rid)
+    doc = json.loads((DATA / r["files"]["roadnet"]).read_text())
+    road = next(x for x in decode_roadnet(doc, (DATA / r["files"]["roadnet"].replace(".json", ".bin")).read_bytes()) if x["id"] == r["road"])
+    pts = np.asarray(r["outline"], float)
+    assert 2 <= len(pts) <= 80
+    xy = np.column_stack([road["x"], road["y"]])
+    assert np.hypot(*(pts[0] - xy[0])) < 20 and np.hypot(*(pts[-1] - xy[-1])) < 20
+    d = np.min(np.hypot(xy[None, :, 0] - pts[:, None, 0], xy[None, :, 1] - pts[:, None, 1]), axis=1)
+    assert d.max() < build_roads.OUTLINE_TOL + build_roads.OUTLINE_ROUND
 
 
 @pytest.mark.parametrize("rid", NEW)

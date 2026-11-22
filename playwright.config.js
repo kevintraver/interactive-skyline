@@ -4,7 +4,7 @@
 //   webgl2-software  Chromium on SwiftShader (software WebGL2). Deterministic enough for goldens; the one CI runs.
 //   gpu              Chromium on this machine's GPU. Local only: timing budgets (pnpm test:perf).
 //   software-timing  The timing suite on SwiftShader, gated at 2x (pnpm test:perf:software).
-//   drive-software   Drive mode (drive*.spec.js) on SwiftShader, after webgl2-software: a drive frame takes seconds
+//   drive-software   Drive mode (drive*.spec.js, routes.spec.js) on SwiftShader, after webgl2-software: a drive frame takes seconds
 //                    there, and beside the map suite it starves the render-on-demand budgets' timing.
 //   drive-timing     The drive's own per-frame JavaScript (*.perf.spec.js) on SwiftShader, last and alone: with
 //                    other software renderers busy on every core the page timed is starved.
@@ -45,7 +45,7 @@ export default defineConfig({
   projects: [
     {
       name: 'webgl2-software',
-      testIgnore: [/perf\.timing\.spec\.js/, /\.perf\.spec\.js$/, /drive[\w.-]*\.spec\.js$/],
+      testIgnore: [/perf\.timing\.spec\.js/, /\.perf\.spec\.js$/, /(drive[\w.-]*|routes)\.spec\.js$/],
       use: { ...devices['Desktop Chrome'], viewport: { width: 1280, height: 800 }, deviceScaleFactor: 1,
         launchOptions: { args: SOFTWARE } },
     },
@@ -67,7 +67,7 @@ export default defineConfig({
     },
     {
       name: 'drive-software',
-      testMatch: /drive[\w.-]*\.spec\.js$/,
+      testMatch: /(drive[\w.-]*|routes)\.spec\.js$/,
       testIgnore: /\.perf\.spec\.js$/,
       dependencies: ['webgl2-software'],
       use: { ...devices['Desktop Chrome'], viewport: { width: 1280, height: 800 }, deviceScaleFactor: 1,

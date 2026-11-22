@@ -5563,7 +5563,12 @@
   "method": "scripts/build_roads.py"
  },
  "main_line": {
-  "checked": false
+  "checked": true,
+  "roads": [
+   "us93.main",
+   "us93s.opp"
+  ],
+  "identical": true
  },
  "files": {
   "roadnet-us93.json": 245733,

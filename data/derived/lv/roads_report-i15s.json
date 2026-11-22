@@ -5741,7 +5741,12 @@
   "method": "scripts/build_roads.py"
  },
  "main_line": {
-  "checked": false
+  "checked": true,
+  "roads": [
+   "i15n.opp",
+   "i15s.main"
+  ],
+  "identical": true
  },
  "files": {
   "roadnet-i15s.json": 239600,

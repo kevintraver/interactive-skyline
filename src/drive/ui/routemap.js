@@ -72,3 +72,38 @@ export function routeShape(road, { s0 = 0, s1, size = 64, pad = 5, tol = 0.35, i
   };
   return { d, size, at, mark, points: kept.length };
 }
+
+/**
+ * The same small map from a route's outline (routes.json `outline`: a few dozen map points, simplified by the
+ * build), so a route can be drawn before its RoadNet is loaded. `at(s)` places a chainage by its share of the
+ * route's length along the outline.
+ * @param {number[][]} outline [[x, y], ...] map metres, x east, y north, from the route's start to its end
+ * @param {{ s0?: number, s1?: number, size?: number, pad?: number, include?: number[][] }} [opts]
+ * @returns {{ d: string, size: number, at: (s: number) => [number, number], points: number, mark: (x: number, y: number) => [number, number] }}
+ */
+export function outlineShape(outline, { s0 = 0, s1 = 1, size = 64, pad = 5, include = [[0, 0]] } = {}) {
+  const pts = outline.length ? outline : [[0, 0]];
+  let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+  const grow = (x, y) => { minX = Math.min(minX, x); maxX = Math.max(maxX, x); minY = Math.min(minY, y); maxY = Math.max(maxY, y); };
+  for (const [x, y] of pts) grow(x, y);
+  for (const [x, y] of include) grow(x, y);
+  const scale = (size - 2 * pad) / Math.max(1, maxX - minX, maxY - minY);
+  const ox = pad + ((size - 2 * pad) - (maxX - minX) * scale) / 2;
+  const oy = pad + ((size - 2 * pad) - (maxY - minY) * scale) / 2;
+  const mark = (x, y) => [ox + (x - minX) * scale, size - (oy + (y - minY) * scale)];
+  const r1 = (v) => Math.round(v * 10) / 10;
+  const d = pts.map(([x, y], i) => { const [a, b] = mark(x, y); return `${i ? 'L' : 'M'}${r1(a)} ${r1(b)}`; }).join('');
+  // cumulative length along the outline, for at(s)
+  const cum = [0];
+  for (let i = 1; i < pts.length; i++) cum.push(cum[i - 1] + Math.hypot(pts[i][0] - pts[i - 1][0], pts[i][1] - pts[i - 1][1]));
+  const total = cum[cum.length - 1];
+  const at = (s) => {
+    if (!(total > 0)) return mark(pts[0][0], pts[0][1]);
+    const f = Math.min(1, Math.max(0, (s - s0) / Math.max(1e-9, s1 - s0))) * total;
+    let i = 1;
+    while (i < cum.length - 1 && cum[i] < f) i++;
+    const u = (f - cum[i - 1]) / Math.max(1e-9, cum[i] - cum[i - 1]);
+    return mark(pts[i - 1][0] + (pts[i][0] - pts[i - 1][0]) * u, pts[i - 1][1] + (pts[i][1] - pts[i - 1][1]) * u);
+  };
+  return { d, size, at, mark, points: pts.length };
+}

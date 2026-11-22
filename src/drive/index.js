@@ -34,9 +34,11 @@ const NOON = 12 * 60, NIGHT = 3 * 60;
  * @param {{ terrainData: { meta: object, near: ArrayBuffer, far: ArrayBuffer } }} loaded  terrain.json and the grids main.js downloaded
  */
 function contextOf(app, { terrainData }) {
-  const { city, cityId, scene, camera, controls, renderer, canvas, settings, invalidate, sky, terrain, tall } = app;
+  const { city, cityId, scene, camera, controls, renderer, canvas, settings, invalidate, sky, terrain, tall, events } = app;
   return {
     city, cityId, DATA: `/data/${cityId}`, scene, camera, controls, renderer, canvas, settings, invalidate, tall,
+    /** the app's event bus (src/app/events.js): 'buildings:changed' after a hide, show or move, 'buildings:rebuilt' */
+    events,
     /** { active, night, frame, render, focus }: the seam main.js reads (see the top of this file) */
     seam: app.drive,
     applyNight: () => sky.apply({ night: app.nightNow(), imagery: settings.imagery, terrain }),
@@ -88,7 +90,20 @@ export function initDrive(app, loaded) {
   const hintText = el.hint.querySelector('span');
   const mapHint = hintText.textContent;
   const bar = createRouteBar({ dock: document.getElementById('dock'), tz, units, onToggle: toggle, onRate: rate, onLock: lock, onSeek: seekS });
-  const cards = createRouteCards({ after: el.views, routes, units, onStart: chooseStart, onRoute: (id) => enter(id).catch(() => {}) });
+  const cards = createRouteCards({ parent: document.getElementById('top'), routes, units, onStart: chooseStart, onRoute: chooseRoute });
+  // routes.json (facts and outlines for every card), fetched the first time Drive is entered and handed to the session
+  let routesDoc = null;
+  function loadRoutesDoc() {
+    if (!routesDoc) {
+      routesDoc = fetch(`${DATA}/routes.json`).then((r) => { if (!r.ok) throw new Error(`routes.json: HTTP ${r.status}`); return r.json(); });
+      routesDoc.then((doc) => {
+        for (const r of doc.routes || []) {
+          cards.setInfo(r.id, { length: r.length ?? r.s1 - r.s0, postedSeconds: r.postedSeconds, s0: r.s0, s1: r.s1, reveal: r.reveal, outline: r.outline });
+        }
+      }, () => { routesDoc = null; });
+    }
+    return routesDoc;
+  }
   const timePop = createTimePop({
     button: bar.time, tz, onTime, onJump,
     state: () => ({ simMs: session ? session.clock.now() : Date.now(), locked: !!session?.locked }),
@@ -132,6 +147,9 @@ export function initDrive(app, loaded) {
       if (b.dataset.mode === 'drive') enter(routeId).catch(() => {}); else exit();
     });
   }
+
+  // the search box takes the corner the open picker uses: opening it folds the picker
+  document.getElementById('search')?.addEventListener('focus', () => cards.dismiss());
 
   // ---------------------------------------------------------------- the controls
   /** Cabin or clean. Neither the pose nor the simulation time changes: only the camera does. */
@@ -183,8 +201,13 @@ export function initDrive(app, loaded) {
     session.keepPlace(t);
     writeAddress();
   }
+  /** A route card: that route, from its default start at its default moment, at once (also while driving). */
+  function chooseRoute(id) {
+    enter(id, { route: true }).catch(() => {});
+  }
   /** A start chip: the car goes there at that start's default moment, then plays once the road is in. */
-  async function chooseStart(key) {
+  async function chooseStart(key, id = routeId) {
+    if (id !== routeId || !session || session.route !== id) { enter(id, { route: true, startKey: key }).catch(() => {}); return; }
     if (!session?.journey || !seam.active) return;
     const token = ++entering;
     session.clock.pause();
@@ -254,12 +277,13 @@ export function initDrive(app, loaded) {
   function setCompassTitle(text) { el.compass.title = text; el.compass.setAttribute('aria-label', text); }
 
   // ---------------------------------------------------------------- entering and leaving
-  /** Load the drive the first time; a failed download shows one toast and leaves the app in Map. */
-  function load() {
+  /** Load the drive the first time (on route `id`); a failed download shows one toast and leaves the app in Map. */
+  function load(id) {
     if (session) return Promise.resolve(session);
     if (!loadingSession) {
-      loadingSession = import('./session.js')
-        .then(({ createSession }) => createSession(ctx, terrain, { onFrame }))
+      const doc = loadRoutesDoc().catch(() => null);
+      loadingSession = Promise.all([import('./session.js'), doc])
+        .then(([{ createSession }, d]) => createSession(ctx, terrain, { onFrame }, { route: id, routesDoc: d || undefined }))
         .then((s) => (session = s))
         .catch((err) => { loadingSession = null; throw err; });
     }
@@ -267,20 +291,27 @@ export function initDrive(app, loaded) {
   }
 
   /**
-   * Enter Drive on a route. Resolves once the first frame is settled; the clock then plays, unless
-   * it was paused when the visitor last left Drive or the address named a moment (a shared link
-   * opens paused on it).
-   * @param {string} id  @param {{ s?: number, t?: number, view?: string, yaw?: number, pitch?: number, lens?: number }} [at]
+   * Enter Drive on a route, or switch to another route while driving. Resolves once the first frame is settled;
+   * the clock then plays, unless it was paused when the visitor last left Drive or the address named a moment
+   * (a shared link opens paused on it). Another route (or `route: true`, a card chosen) starts at that route's
+   * default start and moment, or at the start chip `startKey`.
+   * @param {string} id
+   * @param {{ s?: number, t?: number, view?: string, yaw?: number, pitch?: number, lens?: number, route?: boolean, startKey?: string }} [at]
    */
   async function enter(id, at = {}) {
     const token = ++entering;
+    const switching = seam.active && !!session && id !== session.route;
     showMode('drive');
     bar.show(true);
-    cards.show(true);
+    if (!seam.active) cards.show(true); // entering from Map: the routes show while the drive loads
+    cards.setRoute(id);
     cards.setLoading(true);
-    bar.setStatus(session ? null : 'Loading the drive…');
+    timePop.open(false);
+    viewPop.open(false);
+    bar.setStatus(!session ? 'Loading the drive…' : switching || (session.route !== id) ? 'Loading the route…' : null);
+    loadRoutesDoc().catch(() => {});
     try {
-      await load();
+      await load(id);
     } catch (err) {
       if (token === entering) {
         bar.show(false);
@@ -293,9 +324,26 @@ export function initDrive(app, loaded) {
       throw err;
     }
     if (token !== entering) return; // the visitor went back to Map while it loaded
-    const fresh = !session.journey || id !== routeId || Number.isFinite(at.s) || Number.isFinite(at.t);
+    const fresh = !session.journey || id !== routeId || id !== session.route || at.route || Number.isFinite(at.s) || Number.isFinite(at.t);
     routeId = id;
-    if (fresh) session.configure(id, at);
+    if (fresh) {
+      if (session.route !== id) session.clock.pause();
+      try {
+        await session.configure(id, at);
+      } catch (err) {
+        if (token === entering) {
+          cards.setLoading(false);
+          bar.setStatus(null);
+          routeId = session.route;
+          cards.setRoute(routeId);
+          ctx.showToast('That route could not be loaded.', false);
+        }
+        console.warn(`Drive route ${id} failed to load.`, err);
+        throw err;
+      }
+      if (token !== entering) return; // another route or Map was chosen meanwhile
+      if (at.startKey) session.startFrom(at.startKey);
+    }
     showRoute();
     if (at.view === 'cabin' || at.view === 'clean') view = at.view;
     session.rig.setView(view).setReduceMotion(reduceMotion());
@@ -311,6 +359,7 @@ export function initDrive(app, loaded) {
     }
     if (token !== entering || !seam.active) return;
     bar.setStatus(null);
+    cards.underway(); // the drive is under way: the picker folds to its chip
     if (!Number.isFinite(at.t) && (fresh || wasPlaying)) session.clock.play();
     writeAddress();
   }
@@ -410,6 +459,10 @@ export function initDrive(app, loaded) {
     stats: () => (session ? { ...session.stats(), active: seam.active } : null),
     active: () => seam.active,
     route: () => (session?.journey ? { ...session.journey.route } : null),
+    /** Open (true) or collapse (false) the route picker; toggle without an argument. */
+    picker(open) { cards.setOpen(open === undefined ? !cards.state.open : !!open); },
+    /** { shown, open, loading, current }: the route picker's state. */
+    pickerState: () => cards.state,
   };
 
   // ?mode=drive opens straight into the drive

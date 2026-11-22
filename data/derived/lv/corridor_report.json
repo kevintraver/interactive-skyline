@@ -1,5 +1,5 @@
 {
- "osmSnapshot": "2026-11-22T09:36:50Z 2026-11-22T10:58:35Z 2026-11-22T10:59:35Z",
+ "osmSnapshot": "2026-11-22T09:36:50Z 2026-11-22T10:59:35Z 2026-11-22T13:05:21Z",
  "overtureRelease": null,
  "thresholds": {
   "near": 400.0,
@@ -12,48 +12,48 @@
   "simplify": 1.0,
   "minHole": 6.0
  },
- "kept": 48533,
+ "kept": 49859,
  "tall": 182,
- "cells": 101,
+ "cells": 105,
  "byBand": {
-  "0-400 m": 18940,
-  "400 m-1.5 km": 29453,
+  "0-400 m": 19572,
+  "400 m-1.5 km": 30147,
   "beyond 1.5 km": 140
  },
  "byRung": {
   "osm-height": 35,
-  "osm-levels": 81,
-  "overture": 40248,
-  "guess": 8169
+  "osm-levels": 98,
+  "overture": 41285,
+  "guess": 8441
  },
  "byType": {
-  "other": 45165,
-  "house": 2178,
-  "apartments": 249,
-  "retail": 335,
-  "warehouse": 125,
-  "hotel": 72,
+  "other": 46197,
+  "house": 2180,
+  "apartments": 266,
+  "retail": 455,
+  "warehouse": 216,
+  "hotel": 83,
   "office": 12,
-  "civic": 33,
-  "canopy": 343,
-  "shed": 21
+  "civic": 34,
+  "canopy": 394,
+  "shed": 22
  },
  "bySource": {
-  "osm": 24698,
+  "osm": 26031,
   "overture": 23707,
-  "overture-osm": 128
+  "overture-osm": 121
  },
  "skipped": {
-  "core:by-id": 9634,
-  "dropped:rule": 36761,
+  "core:by-id": 9806,
+  "dropped:rule": 40647,
   "core:inside": 1208,
   "outside-region": 1
  },
  "bytes": {
-  "total": 1571595,
-  "index": 11979,
+  "total": 1615940,
+  "index": 12432,
   "tall": 16648,
-  "cells": 1542968,
+  "cells": 1586860,
   "largestCell": 98596
  },
  "routes": [
@@ -231,12 +231,12 @@
     65,
     68.35
    ],
-   "buildings": 314,
+   "buildings": 343,
    "within400": 0,
    "inCore": true,
    "byRung": {
-    "guess": 30,
-    "overture": 284
+    "guess": 36,
+    "overture": 307
    }
   }
  ],
@@ -411,12 +411,12 @@
      65,
      68.35
     ],
-    "buildings": 314,
+    "buildings": 343,
     "within400": 0,
     "inCore": true,
     "byRung": {
-     "guess": 30,
-     "overture": 284
+     "guess": 36,
+     "overture": 307
     }
    }
   ],
@@ -426,11 +426,12 @@
      0,
      5
     ],
-    "buildings": 9,
-    "within400": 0,
+    "buildings": 29,
+    "within400": 7,
     "inCore": false,
     "byRung": {
-     "overture": 9
+     "guess": 9,
+     "overture": 20
     }
    },
    {
@@ -438,12 +439,12 @@
      5,
      10
     ],
-    "buildings": 6,
-    "within400": 0,
+    "buildings": 18,
+    "within400": 6,
     "inCore": false,
     "byRung": {
-     "guess": 1,
-     "overture": 5
+     "guess": 9,
+     "overture": 9
     }
    },
    {
@@ -451,11 +452,11 @@
      10,
      15
     ],
-    "buildings": 2,
+    "buildings": 5,
     "within400": 0,
     "inCore": false,
     "byRung": {
-     "guess": 1,
+     "guess": 4,
      "overture": 1
     }
    },
@@ -464,13 +465,13 @@
      15,
      20
     ],
-    "buildings": 24,
-    "within400": 13,
+    "buildings": 92,
+    "within400": 45,
     "inCore": false,
     "byRung": {
-     "guess": 6,
+     "guess": 29,
      "osm-height": 2,
-     "overture": 16
+     "overture": 61
     }
    },
    {
@@ -478,12 +479,13 @@
      20,
      25
     ],
-    "buildings": 595,
-    "within400": 63,
+    "buildings": 820,
+    "within400": 110,
     "inCore": false,
     "byRung": {
-     "guess": 229,
-     "overture": 366
+     "guess": 334,
+     "osm-levels": 11,
+     "overture": 475
     }
    },
    {
@@ -491,12 +493,13 @@
      25,
      30
     ],
-    "buildings": 1194,
-    "within400": 283,
+    "buildings": 1798,
+    "within400": 612,
     "inCore": false,
     "byRung": {
-     "guess": 141,
-     "overture": 1053
+     "guess": 219,
+     "osm-levels": 4,
+     "overture": 1575
     }
    },
    {
@@ -504,13 +507,13 @@
      30,
      35
     ],
-    "buildings": 3062,
-    "within400": 1068,
+    "buildings": 3439,
+    "within400": 1238,
     "inCore": false,
     "byRung": {
-     "guess": 263,
-     "osm-levels": 1,
-     "overture": 2798
+     "guess": 305,
+     "osm-levels": 3,
+     "overture": 3131
     }
    },
    {
@@ -518,12 +521,12 @@
      35,
      40
     ],
-    "buildings": 17,
+    "buildings": 34,
     "within400": 0,
     "inCore": true,
     "byRung": {
-     "guess": 3,
-     "overture": 14
+     "guess": 7,
+     "overture": 27
     }
    },
    {
@@ -707,13 +710,13 @@
      55,
      59.46
     ],
-    "buildings": 4077,
+    "buildings": 4087,
     "within400": 1593,
     "inCore": false,
     "byRung": {
-     "guess": 398,
+     "guess": 401,
      "osm-levels": 8,
-     "overture": 3671
+     "overture": 3678
     }
    }
   ]
@@ -816,6 +819,22 @@
    "note": "Boulder City, beside US-93 (OSM: Hoover Dam Lodge): the hotel block"
   },
   {
+   "id": "w265375511",
+   "from": 18.2,
+   "h": 26.0,
+   "area": 15352,
+   "source": "estimated: shadow length in USGS NAIP imagery; Overture 18 m",
+   "note": "I-15 south, the speedway: south-west frontstretch grandstand"
+  },
+  {
+   "id": "w265375512",
+   "from": 15.4,
+   "h": 26.0,
+   "area": 21532,
+   "source": "estimated: shadow length in USGS NAIP imagery; Overture 15 m",
+   "note": "I-15 south, the speedway: frontstretch grandstand"
+  },
+  {
    "id": "w27738460",
    "from": 9.5,
    "h": 12.0,
@@ -894,22 +913,6 @@
    "area": 7471,
    "source": "skydb.net: 111 m (365 ft), 25 floors",
    "note": "Silverado Ranch Boulevard, west of I-15: the hotel tower slab (OSM tags it one level)"
-  },
-  {
-   "id": "w265375511",
-   "from": 18.2,
-   "h": 26.0,
-   "area": 15352,
-   "source": "estimated: shadow length in USGS NAIP imagery; Overture 18 m",
-   "note": "I-15 south, the speedway: south-west frontstretch grandstand"
-  },
-  {
-   "id": "w265375512",
-   "from": 15.4,
-   "h": 26.0,
-   "area": 21532,
-   "source": "estimated: shadow length in USGS NAIP imagery; Overture 15 m",
-   "note": "I-15 south, the speedway: frontstretch grandstand"
   }
  ],
  "tallList": [

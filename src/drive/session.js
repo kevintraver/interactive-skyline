@@ -7,15 +7,26 @@
 // beforeRender, the draw, parts' afterRender. Everything else (which look, what the pill shows)
 // follows from the pose and the clock, so a frame is a pure function of simulation time and the look state.
 //
+// Routes. The session is on one route at a time (routeswitch.js). A route brings its own RoadNet, road chunks,
+// signs and barriers (the route's "kit"); configure() on another route loads that route's files (routes.js
+// filesOf), builds its kit, disposes of the old kit (its chunk meshes, its mesher worker, its sign atlas and
+// materials, its delineators), then tells the parts (setRoute below). While a switch loads and settles, the last frame
+// stays on screen (render draws nothing), so no frame shows the road missing or two routes at once.
+//
 // Parts. Each drive feature (the road chunks, the roadside signs, the terrain's loading, and every
 // later one) is registered with addPart(part), where a part is
-//   { name, update?(frame), setLook?(look), whenSettled?(), stats?(), beforeRender?(frame), afterRender?(frame), dispose?() }
+//   { name, update?(frame), setLook?(look), setRoute?(route), whenSettled?(), stats?(), beforeRender?(frame), afterRender?(frame), dispose?() }
 //   frame = { simMs, dtSimMs, pose, camera, viewport, night, sun: { elevation, azimuth }, rate, playing }
 //   look  = look.js lookAt(): { night: boolean, dusk: number, lights: number, beams: number, sun, ambientLux, sky, light, street }
 //           dusk 0 by day .. 1 by night, in steps of 1 / LOOK_STEPS; lights 0..1, how far the city's lights are on;
 //           beams 0..1, how far the drive's headlight stand-ins (road and sign glow) are on
+//   route = { route, roadnet, road, files }: the route (routes.json, parsed), the decoded RoadNet it runs on, its
+//           road in that RoadNet, and its file names (routes.js filesOf: roadnet, bin, signs, barriers, traffic)
 // update runs when the pose moved (every frame while the clock plays), setLook when the look changes
-// (and once on registering, if there is a look already), whenSettled and stats over all parts.
+// (and once on registering, if there is a look already), setRoute when the route changes (and once on
+// registering, if a route is set; before the journey moves onto the new route, so session.journey may still
+// be the old one's), whenSettled and stats over all parts. The part context's `chunks` and `roadside` (parts.js)
+// are the current route's.
 
 import * as THREE from 'three';
 import { createFrame, EARTH_R, localUp } from '../world/frame.js';
@@ -26,6 +37,7 @@ import { createRoadMaterials } from './roadnet/material.js';
 import { createRoadChunks } from './roadnet/chunks.js';
 import { createRoadside } from './roadside/index.js';
 import { createCorridor } from './corridor/index.js';
+import { createRouteSwitch } from './routeswitch.js';
 import { PART_FACTORIES } from './parts.js';
 import { createEnv } from './env.js';
 import { createJourney } from './journey.js';
@@ -50,12 +62,17 @@ const LOOK_STEPS = 512;
 
 const bitmapOf = (blob) => createImageBitmap(blob, { imageOrientation: 'flipY', premultiplyAlpha: 'none', colorSpaceConversion: 'none' });
 
+/** The longest a route switch keeps the last frame on screen while the new route's road comes in, ms. */
+const HOLD_MAX_MS = 15000;
+
 /**
  * Download and build everything the drive needs. Rejects (leaving nothing in the scene) when a file fails.
  * @param {object} ctx the context initDrive was given  @param {object} terrain from createTerrain
  * @param {{ onFrame: (session: object) => void }} hooks onFrame runs at the end of every drive frame (the UI)
+ * @param {{ route?: string, routesDoc?: Promise<object>|object }} [opts] the route to load first (default the
+ *   first in routes.json), and routes.json when the caller has it already
  */
-export async function createSession(ctx, terrain, hooks) {
+export async function createSession(ctx, terrain, hooks, { route: firstRoute, routesDoc } = {}) {
   const ctx0 = ctx;
   const { city, DATA, scene, renderer, camera, seam, invalidate, applyNight, settings, tall, getLow, ground } = ctx;
   const get = async (name) => {
@@ -65,11 +82,12 @@ export async function createSession(ctx, terrain, hooks) {
   };
   // the signs, barriers and roadside buildings are dressing: a city or a build without them still drives
   const optional = (name) => get(name).then((r) => r.json()).catch(() => null);
-  const [net, wide, bitmap, signs, barriers, corridorIndex] = await Promise.all([
-    loadRoutes({ fetchJson: (n) => get(n).then((r) => r.json()), fetchBinary: (n) => get(n).then((r) => r.arrayBuffer()) }),
+  const fetchJson = (n) => (n === 'routes.json' && routesDoc ? Promise.resolve(routesDoc) : get(n).then((r) => r.json()));
+  const [net, wide, bitmap, corridorIndex] = await Promise.all([
+    loadRoutes({ fetchJson, fetchBinary: (n) => get(n).then((r) => r.arrayBuffer()) }, { route: firstRoute }),
     terrain.loadWide(),
     terrain.hasWide ? get('ground-wide.jpg').then((r) => r.blob()).then(bitmapOf) : null,
-    optional('signs.json'), optional('barriers.json'), optional('corridor/index.json'),
+    optional('corridor/index.json'),
   ]);
 
   const group = new THREE.Group();
@@ -102,32 +120,51 @@ export async function createSession(ctx, terrain, hooks) {
     if (parts.some((p) => p.name === part.name)) throw new Error(`a drive part named "${part.name}" is registered already`);
     parts.push(part);
     if (look) part.setLook?.(look);
+    if (routes.kit) part.setRoute?.(routeInfo(routes.kit));
     return part;
   }
 
-  const materials = createRoadMaterials({ anisotropy: renderer.capabilities.getMaxAnisotropy() });
-  const chunks = createRoadChunks({ roadnet: net.roadnet, base: city.base, earthR: EARTH_R, parent: roads, materials, barriers });
-  const roadside = signs && createRoadside({
-    signs, barriers, roadnet: net.roadnet, base: city.base, earthR: EARTH_R, parent: roads, anisotropy: renderer.capabilities.getMaxAnisotropy(),
+  const anisotropy = renderer.capabilities.getMaxAnisotropy();
+  const materials = createRoadMaterials({ anisotropy });
+  // a route's kit: its road chunks, signs and barriers (see the top of this file); the materials are shared by all
+  const routes = createRouteSwitch({
+    async load(id) {
+      const { route, roadnet, road } = await net.loadRoute(id);
+      const files = net.filesOf(route);
+      const [signs, barriers] = await Promise.all([optional(files.signs), optional(files.barriers)]);
+      return { id: route.id, route, roadnet, road, files, signs, barriers };
+    },
+    build(d) {
+      const chunks = createRoadChunks({ roadnet: d.roadnet, base: city.base, earthR: EARTH_R, parent: roads, materials, barriers: d.barriers });
+      const roadside = d.signs ? createRoadside({
+        signs: d.signs, barriers: d.barriers, roadnet: d.roadnet, base: city.base, earthR: EARTH_R, parent: roads, anisotropy,
+      }) : null;
+      if (roadside && look) roadside.setLook(look);
+      return { ...d, chunks, roadside, dispose() { roadside?.dispose(); chunks.dispose(); } };
+    },
   });
+  const routeInfo = (k) => ({ route: k.route, roadnet: k.roadnet, road: k.road, files: k.files });
+  routes.onSwap((k) => { for (const p of parts) p.setRoute?.(routeInfo(k)); });
+  await routes.use(firstRoute ?? net.routes[0].id);
   const env = createEnv({ city });
   const clock = env.clock;
   const frameOf = createFrame(city);
   const rig = createRig();
   const journeys = new Map();
 
-  // the road chunks, the signs and the terrain as parts, through thin adapters over their own APIs
+  // the road chunks, the signs and the terrain as parts, through thin adapters over their own APIs; the first two
+  // follow the current route's kit (its chunks and its signs; a route without signs has none)
   const car = (f) => ({ x: f.pose.position.x, y: -f.pose.position.z });
   addPart({
-    name: 'roads', update: (f) => chunks.update(car(f)), setLook: (l) => materials.setLook(l),
-    whenSettled: () => chunks.whenSettled(), stats: () => chunks.stats(), dispose: () => chunks.dispose(),
+    name: 'roads', update: (f) => routes.kit?.chunks.update(car(f)), setLook: (l) => materials.setLook(l),
+    whenSettled: () => routes.whenSettled((k) => k.chunks.whenSettled()),
+    stats: () => ({ ...routes.kit?.chunks.stats(), route: routes.id }), dispose: () => routes.dispose(),
   });
-  if (roadside) {
-    addPart({
-      name: 'signs', update: (f) => roadside.update(car(f)), setLook: (l) => roadside.setLook(l),
-      whenSettled: () => roadside.whenSettled(), stats: () => roadside.stats(), dispose: () => roadside.dispose(),
-    });
-  }
+  addPart({
+    name: 'signs', update: (f) => routes.kit?.roadside?.update(car(f)), setLook: (l) => routes.kit?.roadside?.setLook(l),
+    whenSettled: () => routes.whenSettled((k) => k.roadside?.whenSettled()),
+    stats: () => routes.kit?.roadside?.stats() ?? null,
+  });
   addPart({ name: 'terrain', whenSettled: () => terrain.whenSettled(), stats: () => terrain.stats() });
   if (corridorIndex && wide) {
     addPart(createCorridor({
@@ -141,7 +178,9 @@ export async function createSession(ctx, terrain, hooks) {
   function loadParts() {
     const ctx = {
       app: ctx0, session, get, optional, group, roads, terrain, wideMesh, ground, net, env, clock, rig, frameOf,
-      earthR: EARTH_R, base: city.base, materials, chunks, roadside,
+      earthR: EARTH_R, base: city.base, materials,
+      get chunks() { return routes.kit?.chunks ?? null; },
+      get roadside() { return routes.kit?.roadside ?? null; },
     };
     partsReady = Promise.all(PART_FACTORIES.map(async (factory) => {
       try {
@@ -154,6 +193,8 @@ export async function createSession(ctx, terrain, hooks) {
   }
 
   let journey = null, pose = null, needPose = true, lastNow = null, loading = false, updateId = 0;
+  // a route switch keeps the last frame on screen until the new route's parts are in (see the top of this file)
+  let holdUntil = 0;
   // the rig's body and head layers read the journey and the simulation time (vehicle/motion.js)
   rig.bind({ journey: () => journey, now: () => clock.now() });
   // the hold-position lock (plan 02, section 4.3) and the start chip the visitor last chose
@@ -168,6 +209,22 @@ export async function createSession(ctx, terrain, hooks) {
       journeys.set(route.id, createJourney({ route, road: net.roadOf(route), frame: frameOf, departMs: 0, startS: route.starts.reveal, city: ctx.cityId }));
     }
     return journeys.get(route.id);
+  }
+
+  /** Put the car on a loaded route (configure's work once the route is current). */
+  function place(routeId, { s, t } = {}) {
+    const before = journey;
+    journey = journeyFor(routeId);
+    if (before && before !== journey) startKey = 'reveal'; // another route starts from its default chip
+    const startS = Number.isFinite(s) ? s : journey.route.starts.reveal ?? journey.s0;
+    if (Number.isFinite(t)) journey.rebase(startS, t);
+    else {
+      const d = defaultDeparture({ journey, env, startS });
+      journey.rebase(startS, Number.isFinite(d.startMs) ? d.startMs : Date.now());
+    }
+    clock.seek(journey.timeAt(startS));
+    needPose = true;
+    invalidate();
   }
 
   // The look (look.js) for the sun: blended on the app's sky (skyblend.js), the parts told when dusk moves a step,
@@ -224,7 +281,7 @@ export async function createSession(ctx, terrain, hooks) {
   const settledParts = () => partsReady.then(() => Promise.all(parts.map((p) => p.whenSettled?.())));
 
   const session = {
-    net, env, clock, rig, chunks, group, terrain, timings, addPart,
+    net, env, clock, rig, group, terrain, timings, addPart,
     get parts() { return parts.map((p) => p.name); },
     /** A registered part by name, or null. */
     part: (name) => parts.find((p) => p.name === name) || null,
@@ -236,22 +293,36 @@ export async function createSession(ctx, terrain, hooks) {
     /** The car is at the end of the route, holding there. */
     get arrived() { return !!(pose && journey && pose.s >= journey.s1 - 1); },
 
+    /** The route the session is on (its id), and the one it is switching to, or null. */
+    get route() { return routes.id; },
+    get switching() { return routes.switching; },
+    /** The current route's road chunks and signs (null without signs). */
+    get chunks() { return routes.kit?.chunks ?? null; },
+    get roadside() { return routes.kit?.roadside ?? null; },
+
     /**
      * Put the car on a route. With no time, the default moment (moment.js): today, timed so the reveal
      * falls in mid civil twilight. With a time, the journey is re-timed so `s` falls at `t`.
+     * On the current route this is done at once; on another, that route is loaded first (see the top of this
+     * file). Resolves when the car is on the route; resolves without moving it when a later configure() for
+     * another route superseded this one; rejects when the route's files fail (the car stays where it was).
      * @param {string} routeId  @param {{ s?: number, t?: number }} [at]
+     * @returns {Promise<void>}
      */
-    configure(routeId, { s, t } = {}) {
-      journey = journeyFor(routeId);
-      const startS = Number.isFinite(s) ? s : journey.route.starts.reveal ?? journey.s0;
-      if (Number.isFinite(t)) journey.rebase(startS, t);
-      else {
-        const d = defaultDeparture({ journey, env, startS });
-        journey.rebase(startS, Number.isFinite(d.startMs) ? d.startMs : Date.now());
+    configure(routeId, at = {}) {
+      if (!net.route(routeId)) return Promise.reject(new Error(`no route "${routeId}" (routes: ${net.routes.map((r) => r.id).join(', ')})`));
+      if (routes.id === routeId) {
+        if (routes.switching) { routes.use(routeId); holdUntil = 0; } // drops a switch to another route still loading
+        place(routeId, at);
+        return Promise.resolve();
       }
-      clock.seek(journey.timeAt(startS));
-      needPose = true;
-      invalidate();
+      holdUntil = performance.now() + HOLD_MAX_MS;
+      return routes.use(routeId).then((k) => {
+        if (!k) return; // superseded
+        place(routeId, at);
+        if (group.visible) update();
+        settledParts().then(() => { if (routes.id === routeId) { holdUntil = 0; invalidate(); } });
+      }, (err) => { if (!routes.switching) holdUntil = 0; invalidate(); throw err; });
     },
 
     /** Move the car: both s and t re-time the journey; s alone moves the clock to when the car is there. */
@@ -344,6 +415,7 @@ export async function createSession(ctx, terrain, hooks) {
 
     /** Draw the frame (app.drive.render, while driving): parts' beforeRender, the scene, parts' afterRender. */
     render() {
+      if (holdUntil > performance.now()) return; // a route switch: the last frame stays until the new road is in
       if (frame) for (const p of parts) p.beforeRender?.(frame);
       renderer.render(scene, camera);
       if (frame) for (const p of parts) p.afterRender?.(frame);

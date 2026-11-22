@@ -163,19 +163,35 @@ export async function createHeadlightsPart(ctx) {
   attach(ctx.materials?.roadNear, 'road');
   attach(ctx.wideMesh?.material);
   for (const [mesh] of ctx.ground || []) attach(mesh.material);
-  const roadside = ctx.roads?.getObjectByName('roadside');
-  roadside?.traverse((o) => {
-    if (!o.isMesh) return;
-    const mats = Array.isArray(o.material) ? o.material : [o.material];
-    for (const m of mats) {
-      if (m.name === 'delineator white') attach(m, 'delineator', { uHlRow: { value: 0 } });
-      else if (m.name === 'delineator yellow') attach(m, 'delineator', { uHlRow: { value: 1 } });
-      else if (/^signs /.test(m.name)) attach(m, 'sign');
-      else attach(m);
-    }
-  });
+  // the signs and delineators are the route's own (session.js): attached again when the route changes (setRoute)
+  let roadsideOf = null, roadsideUndo = [], roadsideCounts = { beam: 0, retro: 0 };
+  function attachRoadside() {
+    if (ctx.roadside === roadsideOf) return;
+    for (const u of roadsideUndo.reverse()) u();
+    for (const m of roadsideMats) lit.delete(m);
+    counts.beam -= roadsideCounts.beam; counts.retro -= roadsideCounts.retro;
+    roadsideUndo = []; roadsideMats.length = 0;
+    roadsideOf = ctx.roadside;
+    const from = undo.length, before = { ...counts };
+    ctx.roads?.getObjectByName('roadside')?.traverse((o) => {
+      if (!o.isMesh) return;
+      const mats = Array.isArray(o.material) ? o.material : [o.material];
+      for (const m of mats) {
+        if (lit.has(m)) continue;
+        roadsideMats.push(m);
+        if (m.name === 'delineator white') attach(m, 'delineator', { uHlRow: { value: 0 } });
+        else if (m.name === 'delineator yellow') attach(m, 'delineator', { uHlRow: { value: 1 } });
+        else if (/^signs /.test(m.name)) attach(m, 'sign');
+        else attach(m);
+      }
+    });
+    roadsideUndo = undo.splice(from);
+    roadsideCounts = { beam: counts.beam - before.beam, retro: counts.retro - before.retro };
+    ctx.roadside?.setHeadlights?.(true);
+  }
+  const roadsideMats = [];
+  attachRoadside();
   ctx.materials?.setHeadlights?.(true);
-  ctx.roadside?.setHeadlights?.(true);
 
   // the roadside buildings and the traffic arrive later: look for their materials now and then
   let lateCheck = 0;
@@ -237,13 +253,15 @@ export async function createHeadlightsPart(ctx) {
       timings.add(performance.now() - t0);
     },
     setLook(look) { beams = look.beams ?? (look.night ? 1 : 0); apply(); },
+    /** Another route: its signs and delineators get the beam and retro terms (the road's materials are shared). */
+    setRoute() { attachRoadside(); },
     stats() {
       const t = timings.summary();
       return { on, high, beams, ambientLux: ambient, materials: { beam: counts.beam, retro: counts.retro }, mask: !!markTex, js: { mean: t.mean, p95: t.p95, max: t.max } };
     },
     dispose() {
       if (typeof window !== 'undefined') window.removeEventListener('keydown', onKey);
-      for (const u of undo.reverse()) u();
+      for (const u of [...undo, ...roadsideUndo].reverse()) u();
       ctx.materials?.setHeadlights?.(false);
       ctx.roadside?.setHeadlights?.(false);
       for (const t of [beamTex.low, beamTex.high, retroTex, markTex]) t?.dispose();

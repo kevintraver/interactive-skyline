@@ -4,8 +4,9 @@
 // Which buildings: the app's removable towers (src/city/buildings.js `tall`: { data, mesh, offset }), and the
 // drive corridor's tall set (public/data/<city>/corridor/tall.bin, every building of 20 m or more along the
 // routes). A tower's lights are attached to it: hiding it removes them and moving it moves them, following the
-// app's edit events ('buildings:changed', 'buildings:rebuilt'; src/app/events.js). Corridor buildings cannot be
-// edited. (While driving the context has no `events` today, so the part also checks the towers before each draw.)
+// app's edit events ('buildings:changed', 'buildings:rebuilt'; src/app/events.js), which the drive's context carries
+// (index.js contextOf). Corridor buildings cannot be edited. A context without the bus falls back to checking the
+// towers before each draw.
 //
 // Where: at the top of the building's highest volume. A roof up to 30 m across gets one lamp at its middle; a
 // larger one a lamp at each of its two to four outline corners farthest apart (the advisory circular asks for
@@ -194,12 +195,20 @@ export async function createObstructionPart(ctx) {
   }
   const flashKey = (simMs) => { let k = ''; for (const [, id] of flashers) k += flashOn(id, simMs); return k; };
 
-  // The edit events, where the drive's context carries them; and in any case a check of the towers' visibility and
-  // offsets before each draw (a hundred-odd numbers), so a hide or a move shows on the next frame either way.
-  const offChanged = app.events?.on('buildings:changed', () => { dirty = true; app.invalidate?.(); });
+  // The edit events (every hide, show, move and put-back emits 'buildings:changed'; the height cutoff
+  // 'buildings:rebuilt'). Without the bus, a check of the towers' visibility and offsets before each draw (a
+  // hundred-odd numbers) does the same a frame later.
+  const events = app.events;
+  const offChanged = events?.on('buildings:changed', () => { dirty = true; app.invalidate?.(); });
   let lastEdit = '', lastTall = tall.length;
   const editKey = () => { let k = ''; for (const { entry: e } of towers) k += e.mesh.visible ? `${e.offset.x},${e.offset.y},${e.offset.z};` : 'h;'; return k; };
-  const offRebuilt = app.events?.on('buildings:rebuilt', () => { scan(); dirty = true; app.invalidate?.(); });
+  const offRebuilt = events?.on('buildings:rebuilt', () => { scan(); dirty = true; app.invalidate?.(); });
+  /** Without the bus: notice a rebuild or an edit by looking. */
+  function poll() {
+    if (tall.length !== lastTall || (tall.length && towers.length && !tall.includes(towers[0].entry))) { lastTall = tall.length; scan(); dirty = true; } // the height cutoff rebuilt the towers
+    const ek = editKey();
+    if (ek !== lastEdit) { lastEdit = ek; dirty = true; }
+  }
   let simMs = 0;
 
   return {
@@ -215,9 +224,7 @@ export async function createObstructionPart(ctx) {
     beforeRender() {
       if (!on) return;
       const t0 = performance.now();
-      if (tall.length !== lastTall || (tall.length && towers.length && !tall.includes(towers[0].entry))) { lastTall = tall.length; scan(); dirty = true; } // the height cutoff rebuilt the towers
-      const ek = editKey();
-      if (ek !== lastEdit) { lastEdit = ek; dirty = true; }
+      if (!events) poll();
       if (dirty) { write(simMs); lastFlash = flashKey(simMs); } else if (flashers.length) {
         const k = flashKey(simMs);
         if (k !== lastFlash) { lastFlash = k; for (const [i, id] of flashers) layer.data[0][i * 4 + 3] = FLASH_CD * flashOn(id, simMs); layer.commitRows(count); }
@@ -231,8 +238,7 @@ export async function createObstructionPart(ctx) {
     },
     /** For tests: the lamps as drawn, [{ x, y, z, intensity }]. */
     lamps() {
-      const ek = editKey();
-      if (ek !== lastEdit) { lastEdit = ek; dirty = true; }
+      if (!events) poll();
       if (dirty) write(simMs);
       const a = layer.data[0];
       return Array.from({ length: count }, (_, i) => ({ x: a[4 * i], y: a[4 * i + 1], z: a[4 * i + 2], intensity: a[4 * i + 3] }));
