@@ -1,0 +1,348 @@
+{
+  "version": 1,
+  "units": "metres",
+  "axes": "glTF: +X right, +Y up, -Z forward (the car faces -Z); origin on the road surface under the driver's eye. Place the model with the camera rig's body frame directly.",
+  "files": {
+    "high": "cabin.glb",
+    "low": "cabin-low.glb"
+  },
+  "triangles": {
+    "low": 3660,
+    "high": 12782
+  },
+  "eye": [
+    0.0,
+    1.2,
+    0.0
+  ],
+  "neckPivot": [
+    0.0,
+    1.2,
+    0.1
+  ],
+  "carCenterX": 0.37,
+  "body": {
+    "width": 1.85,
+    "roofTop": 1.66,
+    "front": -2.95,
+    "rear": 2.2,
+    "note": "front/rear are glTF z of the modelled extent"
+  },
+  "mirrors": {
+    "left": {
+      "node": "MirrorLeft",
+      "center": [
+        -0.66,
+        1.07,
+        -0.81
+      ],
+      "normal": [
+        0.2858,
+        0.0615,
+        0.9563
+      ],
+      "right": [
+        0.9581,
+        0.0,
+        -0.2864
+      ],
+      "up": [
+        -0.0176,
+        0.9981,
+        -0.059
+      ],
+      "width": 0.2,
+      "height": 0.12,
+      "corners": {
+        "bottomLeft": [
+          -0.7548,
+          1.0101,
+          -0.7778
+        ],
+        "bottomRight": [
+          -0.5631,
+          1.0101,
+          -0.8351
+        ],
+        "topRight": [
+          -0.5652,
+          1.1299,
+          -0.8422
+        ],
+        "topLeft": [
+          -0.7569,
+          1.1299,
+          -0.7849
+        ]
+      },
+      "kind": "flat"
+    },
+    "right": {
+      "node": "MirrorRight",
+      "center": [
+        1.4,
+        1.07,
+        -0.81
+      ],
+      "normal": [
+        -0.428,
+        0.0427,
+        0.9028
+      ],
+      "right": [
+        0.9036,
+        0.0,
+        0.4284
+      ],
+      "up": [
+        0.0183,
+        0.9991,
+        -0.0385
+      ],
+      "width": 0.2,
+      "height": 0.12,
+      "corners": {
+        "bottomLeft": [
+          1.3085,
+          1.0101,
+          -0.8505
+        ],
+        "bottomRight": [
+          1.4893,
+          1.0101,
+          -0.7648
+        ],
+        "topRight": [
+          1.4915,
+          1.1299,
+          -0.7695
+        ],
+        "topLeft": [
+          1.3107,
+          1.1299,
+          -0.8552
+        ]
+      },
+      "kind": "convex",
+      "radiusM": 1.4
+    },
+    "center": {
+      "node": "MirrorCenter",
+      "center": [
+        0.37,
+        1.36,
+        -0.62
+      ],
+      "normal": [
+        -0.2607,
+        -0.1191,
+        0.958
+      ],
+      "right": [
+        0.9649,
+        0.0,
+        0.2626
+      ],
+      "up": [
+        -0.0313,
+        0.9929,
+        0.1149
+      ],
+      "width": 0.25,
+      "height": 0.07,
+      "corners": {
+        "bottomLeft": [
+          0.2505,
+          1.3252,
+          -0.6568
+        ],
+        "bottomRight": [
+          0.4917,
+          1.3252,
+          -0.5912
+        ],
+        "topRight": [
+          0.4895,
+          1.3948,
+          -0.5832
+        ],
+        "topLeft": [
+          0.2483,
+          1.3948,
+          -0.6488
+        ]
+      },
+      "kind": "flat",
+      "minFovDeg": 20
+    }
+  },
+  "mirrorsNote": "Each mirror face's UVs run 0..1 with u to the driver's right and v up as seen from the eye; a reflection rendered from the mirrored eye must be flipped in u.",
+  "instruments": {
+    "node": "Instruments",
+    "center": [
+      0.0,
+      1.025,
+      -0.86
+    ],
+    "normal": [
+      0.0,
+      0.1994,
+      0.9799
+    ],
+    "right": [
+      1.0,
+      0.0,
+      0.0
+    ],
+    "up": [
+      0.0,
+      0.9799,
+      -0.1994
+    ],
+    "width": 0.3,
+    "height": 0.1,
+    "corners": {
+      "bottomLeft": [
+        -0.15,
+        0.976,
+        -0.85
+      ],
+      "bottomRight": [
+        0.15,
+        0.976,
+        -0.85
+      ],
+      "topRight": [
+        0.15,
+        1.074,
+        -0.87
+      ],
+      "topLeft": [
+        -0.15,
+        1.074,
+        -0.87
+      ]
+    }
+  },
+  "centerScreen": {
+    "node": "CenterScreen",
+    "center": [
+      0.37,
+      1.01,
+      -0.86
+    ],
+    "normal": [
+      -0.237,
+      0.191,
+      0.9526
+    ],
+    "right": [
+      0.9704,
+      0.0,
+      0.2414
+    ],
+    "up": [
+      0.0461,
+      0.9816,
+      -0.1854
+    ],
+    "width": 0.27,
+    "height": 0.155,
+    "corners": {
+      "bottomLeft": [
+        0.2354,
+        0.9339,
+        -0.8782
+      ],
+      "bottomRight": [
+        0.4974,
+        0.9339,
+        -0.813
+      ],
+      "topRight": [
+        0.5046,
+        1.0861,
+        -0.8418
+      ],
+      "topLeft": [
+        0.2426,
+        1.0861,
+        -0.907
+      ]
+    }
+  },
+  "displaysNote": "UVs 0..1, u to the right and v up as the driver reads them.",
+  "wheel": {
+    "node": "Wheel",
+    "pivot": [
+      0.0,
+      0.82,
+      -0.55
+    ],
+    "axis": [
+      0.0,
+      0.3907,
+      0.9205
+    ],
+    "rimRadius": 0.185,
+    "note": "The Wheel node's origin is the pivot and its rotation is identity; axis points from the wheel toward the driver, so a positive angle about it turns the wheel anticlockwise as the driver sees it (a left turn)."
+  },
+  "windshield": {
+    "corners": {
+      "bottomLeft": [
+        -0.4625,
+        0.96,
+        -1.34
+      ],
+      "bottomRight": [
+        1.2025,
+        0.96,
+        -1.34
+      ],
+      "topRight": [
+        1.1425,
+        1.44,
+        -0.68
+      ],
+      "topLeft": [
+        -0.4025,
+        1.44,
+        -0.68
+      ]
+    },
+    "note": "The opening between the A-pillars' inner edges, the cowl and the header, on the glass line. No glass is modelled."
+  },
+  "view": {
+    "pillarYawLeftDeg": 22.9,
+    "pillarYawRightDeg": 48.2,
+    "forwardViewDeg": 71.1,
+    "roadVisibleFromM": 11.3,
+    "roadAt12mVisible": true,
+    "mirror_left": {
+      "yawDeg": 39.2,
+      "pitchDeg": -7.1,
+      "visibleSamples": "9/9"
+    },
+    "mirror_right": {
+      "yawDeg": -59.9,
+      "pitchDeg": -4.6,
+      "visibleSamples": "9/9"
+    },
+    "mirror_center": {
+      "yawDeg": -30.8,
+      "pitchDeg": 12.5,
+      "visibleSamples": "9/9"
+    },
+    "instrumentsVisibleSamples": "15/15",
+    "screenVisibleSamples": "15/15"
+  },
+  "materials": [
+    "CabinDash",
+    "CabinTrim",
+    "CabinPillar",
+    "Hood",
+    "MirrorHousing",
+    "Mirror",
+    "Screen"
+  ]
+}
