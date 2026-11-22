@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
-import { createEnv, createClock, RATE_MIN, RATE_MAX } from '../../../src/drive/env.js';
+import { createEnv, createClock, RATE_MIN, RATE_MAX, ambientLux, NIGHT_SKY_LUX, LIGHTING_UNITS } from '../../../src/drive/env.js';
 import { LV } from './helpers.js';
 
 // Reference positions at the Las Vegas origin (36.1147 N, 115.1728 W). NOAA's online calculator
@@ -111,5 +111,54 @@ describe('clock', () => {
     expect(spy).not.toHaveBeenCalled();
     expect(seen.length).toBe(5);
     expect(() => c.on('nope', spy)).toThrow();
+  });
+});
+
+describe('lighting stand-ins', () => {
+  // Schlyter, radfaq section 10 (the table env.js carries): values at its own nodes, plus the night sky's 0.002 lux.
+  it.each([
+    [90, 129000], [30, 46300], [0, 759], [-0.83, 450], [-6, 3.41], [-12, 0.00806], [-18, 0.000645],
+  ])('ambientLux(%s) is the tabulated %s lux', (el, lux) => {
+    const tol = el === -0.83 ? 0.06 : 0.012; // -0.83 (sunset) is between nodes
+    expect(Math.abs((ambientLux(el) - NIGHT_SKY_LUX) / lux - 1)).toBeLessThan(tol);
+  });
+
+  it('runs from full day through the twilights to a moonless night, monotonically', () => {
+    expect(ambientLux(-40)).toBeCloseTo(NIGHT_SKY_LUX, 5);
+    expect(ambientLux(120)).toBe(ambientLux(90));
+    expect(ambientLux(NaN)).toBe(NIGHT_SKY_LUX);
+    let prev = 0;
+    for (let el = -30; el <= 90; el += 0.1) {
+      const e = ambientLux(el);
+      expect(e).toBeGreaterThan(prev);
+      prev = e;
+    }
+    // civil twilight ends near the "dark limit of civil twilight" (3.4 lux), nautical near 0.01 lux
+    expect(ambientLux(-6)).toBeCloseTo(3.4, 1);
+    expect(ambientLux(-12)).toBeLessThan(0.02);
+  });
+
+  it('is on the env, for an elevation or for the sun now', () => {
+    const env = createEnv({ city: LV, nowMs: Date.parse('2026-11-21T20:00:00Z') }); // midday
+    expect(env.lighting.ambientLux(-6)).toBe(ambientLux(-6));
+    expect(env.lighting.ambientLux()).toBe(ambientLux(env.ephemeris.sun(env.clock.now()).elevation));
+    expect(env.lighting.ambientLux()).toBeGreaterThan(10000);
+    env.clock.seek(Date.parse('2026-11-22T06:00:00Z')); // 22:00 local
+    expect(env.lighting.ambientLux()).toBeCloseTo(NIGHT_SKY_LUX, 4);
+  });
+
+  it('maps cd/m2, candela and lux with one consistent scale, ordered sensibly against the night look', () => {
+    const u = createEnv({ city: LV }).lighting.units;
+    expect(u).toBe(LIGHTING_UNITS);
+    // three: E = I / d^2 and L = albedo E / pi, so the three constants must agree
+    expect(u.candela).toBe(u.lux);
+    expect(u.nit).toBe(u.lux);
+    const sign = 25 * u.nit; // section 7.4's worked guide-sign legend
+    const window = 0.56; // a lit pane in src/night.js, scene units
+    const litRoad = (15 * 0.1 / Math.PI) * u.nit; // 15 lux on asphalt
+    const moonGround = 0.003; // the night look's asphalt (env.js, LIGHTING_UNITS)
+    expect(sign).toBeGreaterThan(window);
+    expect(window).toBeGreaterThan(litRoad);
+    expect(litRoad).toBeGreaterThan(5 * moonGround);
   });
 });
