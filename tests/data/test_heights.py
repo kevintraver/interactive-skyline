@@ -86,3 +86,88 @@ def test_slc_has_no_wide_grid():
     assert list(slc.grids) == ["near", "far"]
     x, y = 0.0, -60000.0
     assert slc.height_at(x, y) == slc.grid("far").sample(x, y)
+
+
+# ---- the drive's patches (build_terrain.py "patches", the dam's around US-93 in Black Canyon)
+
+def test_the_dam_patch_is_listed_and_loaded(lv):
+    cfg = json.loads((ROOT / "data" / "cities.json").read_text())["lv"]["terrain"]["patches"]
+    assert list(lv.patches) == [p["id"] for p in cfg] == ["dam"]
+    dam = lv.grid("dam")
+    c = cfg[0]
+    assert dam.extents == (c["x0"], c["y0"], c["x1"], c["y1"]) and dam.step == c["step"]
+    wide = lv.grid("wide")
+    assert (dam.x0 - wide.x0) % wide.step == 0 and (dam.y1 - wide.y0) % wide.step == 0
+    assert [g.name for g in lv.layers] == ["near", "dam", "far", "wide"]
+    assert "dam" not in lv.meta["grids"]  # the map reads grids only
+
+
+def test_height_at_takes_the_finest_covering_grid(lv):
+    dam, wide = lv.grid("dam"), lv.grid("wide")
+    rng = np.random.default_rng(8)
+    x = rng.uniform(dam.x0 - 1500, dam.x1 + 3000, 4000)  # the far grid ends 1.5 km west of the patch
+    y = rng.uniform(dam.y0 - 3000, dam.y1 + 3000, 4000)
+    inside = dam.contains(x, y)
+    got = lv.height_at(x, y)
+    assert np.array_equal(got[inside], dam.sample(x[inside], y[inside]))
+    assert np.array_equal(got[~inside], wide.sample(x[~inside], y[~inside]))
+    plain = load_heights("lv", patches=False)
+    assert np.array_equal(plain.height_at(x[~inside], y[~inside]), got[~inside])
+    assert not plain.patches and plain.grid("dam") is None
+
+
+def test_continuous_at_the_patch_edge(lv):
+    dam = lv.grid("dam")
+    f = np.linspace(0.003, 0.997, 600)
+    xs, ys = dam.x0 + f * (dam.x1 - dam.x0), dam.y0 + f * (dam.y1 - dam.y0)
+    e = 0.01
+    pairs = [((dam.x0 - e, ys), (dam.x0 + e, ys)), ((dam.x1 + e, ys), (dam.x1 - e, ys)),
+             ((xs, dam.y0 - e), (xs, dam.y0 + e)), ((xs, dam.y1 + e), (xs, dam.y1 - e))]
+    worst = max(float(np.abs(lv.height_at(*a) - lv.height_at(*b)).max()) for a, b in pairs)
+    assert worst < 0.1  # decimetre rounding of the eased edge posts; the skirt hangs 6 m
+
+
+def test_the_patch_shows_the_canyon(lv):
+    # across Black Canyon under the bypass bridge: a flat river floor about 220 m up between walls that rise
+    # over 200 m within 300 m of it, where the wide grid's posts give a shallow vee
+    dam, wide = lv.grid("dam"), lv.grid("wide")
+    xs = np.arange(38300.0, 39400.0, 20.0)
+    ys = np.full_like(xs, -11300.0)
+    d, w = dam.sample(xs, ys), wide.sample(xs, ys)
+    k = int(np.argmin(d))
+    assert d.min() < 222
+    assert float(np.mean(w[k - 7:k + 8] - d[k - 7:k + 8])) > 30  # the 300 m about the river: the wide vee stands well above
+    assert d[max(k - 15, 0)] - d.min() > 200 and d[min(k + 15, len(d) - 1)] - d.min() > 200
+    floor = np.sum(d < d.min() + 3) * 20.0
+    assert floor >= 60  # the river is a floor, not a vee
+
+
+def test_drawn_surface_cuts_the_wide_grid_under_the_patch(lv):
+    from lib.ground import _DrawnGrid, cut_cells, drawn_surface
+
+    dam, wide = lv.grid("dam"), lv.grid("wide")
+    cut = cut_cells(wide, dam)
+    assert cut.sum() == ((dam.x1 - dam.x0) // wide.step) * ((dam.y1 - dam.y0) // wide.step)
+    top = drawn_surface(lv)
+    rng = np.random.default_rng(9)
+    x = rng.uniform(dam.x0 + 1, dam.x1 - 1, 3000)
+    y = rng.uniform(dam.y0 + 1, dam.y1 - 1, 3000)
+    patch_tris = _DrawnGrid(dam, None).sample(x, y)
+    assert np.array_equal(top(x, y), patch_tris)  # inside the patch only the patch is drawn
+    # outside it, the same as without the patch
+    plain = drawn_surface(load_heights("lv", patches=False))
+    x = rng.uniform(dam.x0 - 4000, dam.x0 - 1, 1000)
+    y = rng.uniform(dam.y0, dam.y1, 1000)
+    assert np.array_equal(top(x, y), plain(x, y))
+
+
+def test_patch_water(lv):
+    meta = lv.meta["patches"]["dam"]
+    doc = json.loads((ROOT / "public" / "data" / "lv" / meta["water"]).read_text())
+    by = {b["name"]: b for b in doc["bodies"]}
+    assert 330 < by["Lake Mead"]["level"] < 380 and 185 < by["Lake Mohave"]["level"] < 210
+    dam = lv.grid("dam")
+    for b in doc["bodies"]:
+        pts = np.array([p for r in b["rings"] for p in r])
+        assert (pts[:, 0] >= dam.x0 - 0.1).all() and (pts[:, 0] <= dam.x1 + 0.1).all()
+        assert (pts[:, 1] >= dam.y0 - 0.1).all() and (pts[:, 1] <= dam.y1 + 0.1).all()

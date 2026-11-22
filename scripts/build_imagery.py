@@ -2,13 +2,13 @@
 # requires-python = ">=3.11"
 # dependencies = ["numpy", "pillow", "pyproj", "requests"]
 # ///
-"""Usage: build_imagery.py <city> [grid ...]
+"""Usage: build_imagery.py <city> [grid-or-patch ...]
 
 Drape imagery for the terrain: USGS NAIP aerial photography (public domain),
-resampled onto the same local-metre extents as the terrain grids. Every grid in
-terrain.json gets its image unless grid names are given.
+resampled onto the same local-metre extents as the terrain grids. Every grid and
+patch in terrain.json gets its image unless names are given.
 
-Output: public/data/<city>/ground-<grid>.jpg  (row 0 = north)
+Output: public/data/<city>/ground-<grid>.jpg, ground-<patch>.jpg  (row 0 = north)
 """
 import io
 import json
@@ -33,10 +33,14 @@ URL = "https://imagery.nationalmap.gov/arcgis/rest/services/USGSNAIPPlus/ImageSe
 
 meta = json.loads((OUT / "terrain.json").read_text())
 to_merc = Transformer.from_crs(meta["projection"], "EPSG:3857", always_xy=True)
-MPP = {k: g["mpp"] for k, g in CFG["terrain"].items()}  # output metres per pixel
-# JPEG quality per grid; the wide grid is squeezed to keep the drive's download small
-QUALITY = {k: g.get("quality", 84) for k, g in CFG["terrain"].items()}
-if unknown := set(ONLY) - set(meta["grids"]):
+# the grids and the drive's patches (build_terrain.py), by name
+CFG_GRIDS = {**{k: g for k, g in CFG["terrain"].items() if k != "patches"},
+             **{p["id"]: p for p in CFG["terrain"].get("patches", [])}}
+GRIDS = {**meta["grids"], **meta.get("patches", {})}
+MPP = {k: g["mpp"] for k, g in CFG_GRIDS.items()}  # output metres per pixel
+# JPEG quality per grid; the wide grid and the patches are squeezed to keep the drive's download small
+QUALITY = {k: g.get("quality", 84) for k, g in CFG_GRIDS.items()}
+if unknown := set(ONLY) - set(GRIDS):
     sys.exit(f"terrain.json for {CITY} has no grid {', '.join(sorted(unknown))}; build it with build_terrain.py first")
 TILE = 2000
 
@@ -44,7 +48,7 @@ TILE = 2000
 def chunk(name, bbox, w, h):
     p = CACHE / f"{CITY}_{name}_{'_'.join(str(round(v)) for v in bbox)}.jpg"
     if not p.exists():
-        r = requests.get(URL, timeout=180, params={
+        r = requests.get(URL, timeout=180, headers={"User-Agent": "road-pipeline/0.1"}, params={
             "bbox": ",".join(map(str, bbox)), "bboxSR": 3857, "imageSR": 3857,
             "size": f"{w},{h}", "format": "jpg", "f": "image"})
         r.raise_for_status()
@@ -54,7 +58,7 @@ def chunk(name, bbox, w, h):
     return np.asarray(Image.open(io.BytesIO(p.read_bytes())).convert("RGB"))
 
 
-for name, g in meta["grids"].items():
+for name, g in GRIDS.items():
     if ONLY and name not in ONLY:
         continue
     mpp = MPP[name]

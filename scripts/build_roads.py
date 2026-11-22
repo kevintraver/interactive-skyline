@@ -2,7 +2,7 @@
 # requires-python = ">=3.11"
 # dependencies = ["numpy", "scipy"]
 # ///
-"""Usage: build_roads.py <city> [--route <id> ...] [--out <dir>]
+"""Usage: build_roads.py <city> [--route <id> ...] [--out <dir>] [--heights-moved]
 
 Build the drive's roads from OpenStreetMap (fetched by fetch_osm.py) and the terrain the app
 draws. For each route in the city's "routes" (data/cities.json): stitch the directional route
@@ -27,6 +27,12 @@ structures), loaded only when that route is chosen: the city's first route keeps
 roadnet.bin (which must come out as committed), every other route R writes roadnet-R.json and
 roadnet-R.bin. routes.json lists every route with the files it uses ("files": roadnet, signs,
 traffic). --route builds only the routes named and keeps the others' entries in routes.json.
+
+--heights-moved: the terrain under a route changed (a terrain patch, build_terrain.py), so its
+carriageways' heights may differ from the committed ones. The main-line check then still requires
+every station's s, x, y, heading, curvature and crossfall byte for byte and the road JSON equal,
+but lets the heights, which bridges hold a deck, the embankments and the routes.json entries'
+reveal follow the new ground; the report lists what moved.
 
 Output: public/data/<city>/roadnet.json, roadnet.bin, roadnet-<route>.json, .bin, routes.json
         data/derived/<city>/roads_report.json (first route), roads_report-<route>.json
@@ -557,11 +563,12 @@ def committed(path):
 LATER_ROUTE_KEYS = ("files", "outline")
 
 
-def check_main_line(city, doc, blob, routes_doc, main_ids, files=("roadnet.json", "roadnet.bin")):
+def check_main_line(city, doc, blob, routes_doc, main_ids, files=("roadnet.json", "roadnet.bin"), heights_moved=False):
     """The carriageways and routes must come out as committed: station records byte for byte,
     road JSON equal but for the keys the interchanges add (embankment, and `to` on links), and
     this RoadNet's routes in routes.json equal but for the keys that came later (LATER_ROUTE_KEYS). Returns a report entry;
-    raises SystemExit on a difference."""
+    raises SystemExit on a difference. heights_moved (the terrain under the route changed): the stations' heights,
+    the bridges' deck flags and the routes' reveal and starts.reveal may differ; everything else may not."""
     ref_json = committed(f"public/data/{city}/{files[0]}")
     ref_bin = committed(f"public/data/{city}/{files[1]}")
     ref_routes = committed(f"public/data/{city}/routes.json")
@@ -570,7 +577,7 @@ def check_main_line(city, doc, blob, routes_doc, main_ids, files=("roadnet.json"
         return {"checked": False}
     rdoc = json.loads(ref_json)
     got = {r["id"]: r for r in doc["roads"]}
-    diffs = []
+    diffs, moved = [], []
     for r in rdoc["roads"]:
         if r["id"] not in main_ids:
             continue
@@ -580,21 +587,41 @@ def check_main_line(city, doc, blob, routes_doc, main_ids, files=("roadnet.json"
             continue
         a = ref_bin[r["stations"]["offset"] * 28:(r["stations"]["offset"] + r["stations"]["count"]) * 28]
         b = blob[g["stations"]["offset"] * 28:(g["stations"]["offset"] + g["stations"]["count"]) * 28]
-        if a != b:
+        if heights_moved and len(a) == len(b):
+            ia = np.frombuffer(a, dtype="<i4").reshape(-1, 7)
+            ib = np.frombuffer(b, dtype="<i4").reshape(-1, 7)
+            plan = [k for k in range(7) if k != 3]  # every field but h
+            if not np.array_equal(ia[:, plan], ib[:, plan]):
+                diffs.append(f"{r['id']} station plan (s, x, y, heading, curvature, crossfall) differs")
+            dh = np.abs(ia[:, 3] - ib[:, 3]) / 1000
+            moved.append({"road": r["id"], "heights_changed": int((dh > 0).sum()), "max_change_m": round(float(dh.max()), 2),
+                          "changed_s": [float(np.flatnonzero(dh)[0] * 4.0), float(np.flatnonzero(dh)[-1] * 4.0)]
+                          if dh.any() else None})
+        elif a != b:
             diffs.append(f"{r['id']} station records differ")
         if r["stations"] != g["stations"]:
             diffs.append(f"{r['id']} stations header differs")
-        strip = lambda x: {k: ([{kk: vv for kk, vv in e.items() if kk != "to"} for e in v] if k == "links" else v)  # noqa: E731
+        strip = lambda x: {k: ([{kk: vv for kk, vv in e.items() if kk != "to"} for e in v] if k == "links"  # noqa: E731
+                               else [{kk: vv for kk, vv in e.items() if kk != "deck"} for e in v]
+                               if k == "bridges" and heights_moved else v)
                            for k, v in x.items() if k != "embankment"}
         if strip(r) != strip(g):
             diffs.append(f"{r['id']} JSON differs")
-    plain = lambda r: {k: v for k, v in r.items() if k not in LATER_ROUTE_KEYS}  # noqa: E731
+    def plain(r):
+        out = {k: v for k, v in r.items() if k not in LATER_ROUTE_KEYS}
+        if heights_moved:
+            out.pop("reveal", None)
+            out["starts"] = {k: v for k, v in out.get("starts", {}).items() if k != "reveal"}
+            out["markers"] = [m for m in out.get("markers", []) if m.get("kind") != "reveal"]
+        return out
     was = {r["id"]: plain(r) for r in json.loads(ref_routes)["routes"]}
     for r in routes_doc["routes"]:
         if r["id"] in was and was[r["id"]] != plain(r):
             diffs.append(f"routes.json entry {r['id']} differs")
     if diffs:
         sys.exit("the main line moved: " + "; ".join(diffs))
+    if heights_moved:
+        return {"checked": True, "roads": sorted(main_ids), "identical": False, "plan_identical": True, "heights": moved}
     return {"checked": True, "roads": sorted(main_ids), "identical": True}
 
 
@@ -931,6 +958,9 @@ def main():
     args = [a for a in sys.argv[1:]]
     out_override = None
     only = []
+    heights_moved = "--heights-moved" in args
+    if heights_moved:
+        args.remove("--heights-moved")
     if "--out" in args:
         k = args.index("--out")
         out_override = Path(args[k + 1]).resolve()
@@ -971,7 +1001,7 @@ def main():
         bin_name = files["roadnet"][:-len(".json")] + ".bin"
         routes_doc = routes_doc_of(g["routes"], g["source"])
         report["main_line"] = check_main_line(city, json.loads(g["text"]), g["blob"], routes_doc, g["main_ids"],
-                                              (files["roadnet"], bin_name))
+                                              (files["roadnet"], bin_name), heights_moved=heights_moved)
         (out_dir / files["roadnet"]).write_text(g["text"])
         (out_dir / bin_name).write_bytes(g["blob"])
         size = len(g["text"].encode()) + len(g["blob"])

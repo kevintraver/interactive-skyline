@@ -32,6 +32,7 @@ import * as THREE from 'three';
 import { createFrame, EARTH_R, localUp } from '../world/frame.js';
 import { buildWideMesh } from '../world/terrain/widemesh.js';
 import { buildSkirt } from '../world/terrain/skirt.js';
+import { buildPatches, NO_PATCHES } from '../world/terrain/patches.js';
 import { loadRoutes } from './routes.js';
 import { createRoadMaterials } from './roadnet/material.js';
 import { createRoadChunks } from './roadnet/chunks.js';
@@ -83,11 +84,17 @@ export async function createSession(ctx, terrain, hooks, { route: firstRoute, ro
   // the signs, barriers and roadside buildings are dressing: a city or a build without them still drives
   const optional = (name) => get(name).then((r) => r.json()).catch(() => null);
   const fetchJson = (n) => (n === 'routes.json' && routesDoc ? Promise.resolve(routesDoc) : get(n).then((r) => r.json()));
-  const [net, wide, bitmap, corridorIndex] = await Promise.all([
+  // the terrain's patches (finer ground where the wide grid loses the land's shape: Black Canyon) come with the wide
+  // grid; their meshes go into the part context's `ground`, so the lamps, headlights and wet road reach them too
+  const [net, wide, bitmap, corridorIndex, patches] = await Promise.all([
     loadRoutes({ fetchJson, fetchBinary: (n) => get(n).then((r) => r.arrayBuffer()) }, { route: firstRoute }),
     terrain.loadWide(),
     terrain.hasWide ? get('ground-wide.jpg').then((r) => r.blob()).then(bitmapOf) : null,
     optional('corridor/index.json'),
+    buildPatches({
+      terrain, base: city.base, renderer, json: optional,
+      image: (f) => get(f).then((r) => r.blob()).then(bitmapOf),
+    }).catch((e) => { console.warn(`terrain patches left out: ${e && e.message ? e.message : e}`); return NO_PATCHES; }),
   ]);
 
   const group = new THREE.Group();
@@ -102,11 +109,14 @@ export async function createSession(ctx, terrain, hooks, { route: firstRoute, ro
       wideMap.anisotropy = renderer.capabilities.getMaxAnisotropy();
       wideMap.needsUpdate = true;
     }
-    wideMesh = buildWideMesh({ wide, hole: terrain.grid('far'), base: city.base, map: wideMap });
+    wideMesh = buildWideMesh({ wide, hole: terrain.grid('far'), cuts: patches.grids, base: city.base, map: wideMap });
     group.add(wideMesh);
   }
   // ground[i] is drawn from the grid named alongside it; a skirt fills the ledge at each one's edge
   for (const [mesh, name] of ground) group.add(buildSkirt(mesh, terrain.grid(name), SKIRT_DEPTH));
+  // the patches bring their own skirts and water
+  if (wide) for (const o of patches.objects) group.add(o);
+  const groundMeshes = wide ? [...ground, ...patches.ground] : ground;
   const roads = new THREE.Group();
   roads.name = 'roads';
   group.add(roads);
@@ -177,7 +187,7 @@ export async function createSession(ctx, terrain, hooks, { route: firstRoute, ro
   let partsReady = Promise.resolve();
   function loadParts() {
     const ctx = {
-      app: ctx0, session, get, optional, group, roads, terrain, wideMesh, ground, net, env, clock, rig, frameOf,
+      app: ctx0, session, get, optional, group, roads, terrain, wideMesh, ground: groundMeshes, net, env, clock, rig, frameOf,
       earthR: EARTH_R, base: city.base, materials,
       get chunks() { return routes.kit?.chunks ?? null; },
       get roadside() { return routes.kit?.roadside ?? null; },
@@ -379,6 +389,7 @@ export async function createSession(ctx, terrain, hooks, { route: firstRoute, ro
           wideMesh.material.map = settings.imagery ? wideMap : null;
           wideMesh.material.color.set(settings.imagery ? 0xffffff : 0xbdb9ad);
           wideMesh.material.needsUpdate = true;
+          patches.setImagery(settings.imagery);
         }
         needPose = true;
         update();

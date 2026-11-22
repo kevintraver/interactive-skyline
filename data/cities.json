@@ -135,7 +135,22 @@
         "step": 160,
         "mpp": 32,
         "quality": 78
-      }
+      },
+      "patches": [
+        {
+          "id": "dam",
+          "label": "Black Canyon: the Hoover Dam bypass bridge and US-93's climb to Boulder City",
+          "zoom": 14,
+          "x0": 31520,
+          "y0": -16800,
+          "x1": 41760,
+          "y1": -8160,
+          "step": 20,
+          "mpp": 6,
+          "quality": 70,
+          "carve": ["us93"]
+        }
+      ]
     },
     "shadow": {
       "x": 500,

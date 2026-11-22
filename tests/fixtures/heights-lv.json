@@ -86,9 +86,9 @@
    "label": "Hoover Dam",
    "x": 39222.412,
    "y": -10864.202,
-   "grid": "wide",
-   "height": 336.2095927730644,
-   "groundY": -395.2168588847521
+   "grid": "dam",
+   "height": 349.02596992599945,
+   "groundY": -382.4004817318171
   },
   {
    "label": "Boulder City",
@@ -497,6 +497,502 @@
    "grid": "wide",
    "height": 511.2927000000002,
    "groundY": -438.3258842097
+  },
+  {
+   "label": "random patch dam",
+   "x": 38411.131,
+   "y": -10485.608,
+   "grid": "dam",
+   "height": 438.69907844999983,
+   "groundY": -287.9468591576077
+  },
+  {
+   "label": "random patch dam",
+   "x": 34223.282,
+   "y": -15385.693,
+   "grid": "dam",
+   "height": 669.0595727455002,
+   "groundY": -45.65212848609204
+  },
+  {
+   "label": "random patch dam",
+   "x": 37472.923,
+   "y": -12833.478,
+   "grid": "dam",
+   "height": 454.82357645500065,
+   "groundY": -270.7161313105719
+  },
+  {
+   "label": "random patch dam",
+   "x": 38942.169,
+   "y": -10370.907,
+   "grid": "dam",
+   "height": 449.56253222649946,
+   "groundY": -279.68572920995655
+  },
+  {
+   "label": "random patch dam",
+   "x": 31717.658,
+   "y": -14981.484,
+   "grid": "dam",
+   "height": 768.984058882,
+   "groundY": 66.21248062468091
+  },
+  {
+   "label": "random patch dam",
+   "x": 40393.007,
+   "y": -10991.107,
+   "grid": "dam",
+   "height": 396.46992843825024,
+   "groundY": -341.41240317065825
+  },
+  {
+   "label": "random patch dam",
+   "x": 39610.239,
+   "y": -10369.787,
+   "grid": "dam",
+   "height": 366.70000000000005,
+   "groundY": -366.0768806912453
+  },
+  {
+   "label": "random patch dam",
+   "x": 37602.601,
+   "y": -14004.606,
+   "grid": "dam",
+   "height": 648.5010755664983,
+   "groundY": -79.80786390345055
+  },
+  {
+   "label": "random patch dam",
+   "x": 34446.242,
+   "y": -11435.838,
+   "grid": "dam",
+   "height": 488.271742388,
+   "groundY": -220.34331997167493
+  },
+  {
+   "label": "random patch dam",
+   "x": 37846.49,
+   "y": -8863.726,
+   "grid": "dam",
+   "height": 366.8,
+   "groundY": -354.83839118706476
+  },
+  {
+   "label": "random patch dam",
+   "x": 37926.652,
+   "y": -11904.472,
+   "grid": "dam",
+   "height": 533.7090569999997,
+   "groundY": -192.58603362456392
+  },
+  {
+   "label": "random patch dam",
+   "x": 31692.359,
+   "y": -11095.57,
+   "grid": "dam",
+   "height": 572.24483,
+   "groundY": -123.6022421759164
+  },
+  {
+   "label": "random patch dam",
+   "x": 40520.209,
+   "y": -11266.378,
+   "grid": "dam",
+   "height": 437.00516024849907,
+   "groundY": -301.9816736624747
+  },
+  {
+   "label": "random patch dam",
+   "x": 36841.148,
+   "y": -13877.522,
+   "grid": "dam",
+   "height": 586.5037288139997,
+   "groundY": -137.75367433991568
+  },
+  {
+   "label": "patch dam west edge -0.5",
+   "x": 31519.5,
+   "y": -15676.8,
+   "grid": "wide",
+   "height": 750.1235687500002,
+   "groundY": 46.760947599025954
+  },
+  {
+   "label": "patch dam south edge -0.5",
+   "x": 32851.2,
+   "y": -16800.5,
+   "grid": "wide",
+   "height": 718.6796250000002,
+   "groundY": 7.095562729668146
+  },
+  {
+   "label": "patch dam east edge -0.5",
+   "x": 41760.5,
+   "y": -15676.8,
+   "grid": "wide",
+   "height": 453.7507312500018,
+   "groundY": -300.0946900893259
+  },
+  {
+   "label": "patch dam north edge -0.5",
+   "x": 32851.2,
+   "y": -8159.5,
+   "grid": "wide",
+   "height": 391.34838750000046,
+   "groundY": -305.72711858942256
+  },
+  {
+   "label": "patch dam west edge +0.0",
+   "x": 31520.0,
+   "y": -15676.8,
+   "grid": "wide",
+   "height": 750.14,
+   "groundY": 46.77525854384824
+  },
+  {
+   "label": "patch dam south edge +0.0",
+   "x": 32851.2,
+   "y": -16800.0,
+   "grid": "wide",
+   "height": 718.6960000000003,
+   "groundY": 7.113067867345606
+  },
+  {
+   "label": "patch dam east edge +0.0",
+   "x": 41760.0,
+   "y": -15676.8,
+   "grid": "wide",
+   "height": 453.8120000000009,
+   "groundY": -300.0306121649429
+  },
+  {
+   "label": "patch dam north edge +0.0",
+   "x": 32851.2,
+   "y": -8160.0,
+   "grid": "wide",
+   "height": 391.36000000000047,
+   "groundY": -305.7160549884517
+  },
+  {
+   "label": "patch dam west edge +0.5",
+   "x": 31520.5,
+   "y": -15676.8,
+   "grid": "dam",
+   "height": 750.1430000000001,
+   "groundY": 46.77613820503636
+  },
+  {
+   "label": "patch dam south edge +0.5",
+   "x": 32851.2,
+   "y": -16799.5,
+   "grid": "dam",
+   "height": 718.7445000000002,
+   "groundY": 7.162697971388468
+  },
+  {
+   "label": "patch dam east edge +0.5",
+   "x": 41759.5,
+   "y": -15676.8,
+   "grid": "dam",
+   "height": 453.76629999999983,
+   "groundY": -300.0735030241946
+  },
+  {
+   "label": "patch dam north edge +0.5",
+   "x": 32851.2,
+   "y": -8160.5,
+   "grid": "dam",
+   "height": 391.3670000000001,
+   "groundY": -305.7096039211157
+  },
+  {
+   "label": "patch dam west edge +30.0",
+   "x": 31550.0,
+   "y": -15676.8,
+   "grid": "dam",
+   "height": 749.8980000000001,
+   "groundY": 46.405978681974275
+  },
+  {
+   "label": "patch dam south edge +30.0",
+   "x": 32851.2,
+   "y": -16770.0,
+   "grid": "dam",
+   "height": 719.51,
+   "groundY": 7.994814576765265
+  },
+  {
+   "label": "patch dam east edge +30.0",
+   "x": 41730.0,
+   "y": -15676.8,
+   "grid": "dam",
+   "height": 451.3979999999998,
+   "groundY": -302.27612325313385
+  },
+  {
+   "label": "patch dam north edge +30.0",
+   "x": 32851.2,
+   "y": -8190.0,
+   "grid": "dam",
+   "height": 392.22400000000016,
+   "groundY": -304.88505048142235
+  },
+  {
+   "label": "patch dam west edge -0.5",
+   "x": 31519.5,
+   "y": -12480.0,
+   "grid": "wide",
+   "height": 597.9340624999994,
+   "groundY": -99.3735555180287
+  },
+  {
+   "label": "patch dam south edge -0.5",
+   "x": 36640.0,
+   "y": -16800.5,
+   "grid": "wide",
+   "height": 670.495625,
+   "groundY": -58.79960115310445
+  },
+  {
+   "label": "patch dam east edge -0.5",
+   "x": 41760.5,
+   "y": -12480.0,
+   "grid": "wide",
+   "height": 496.01062499999983,
+   "groundY": -251.77979320638175
+  },
+  {
+   "label": "patch dam north edge -0.5",
+   "x": 36640.0,
+   "y": -8159.5,
+   "grid": "wide",
+   "height": 366.70031250000005,
+   "groundY": -348.08635747219535
+  },
+  {
+   "label": "patch dam west edge +0.0",
+   "x": 31520.0,
+   "y": -12480.0,
+   "grid": "wide",
+   "height": 597.9,
+   "groundY": -99.40973832320562
+  },
+  {
+   "label": "patch dam south edge +0.0",
+   "x": 36640.0,
+   "y": -16800.0,
+   "grid": "wide",
+   "height": 670.5,
+   "groundY": -58.794096015427044
+  },
+  {
+   "label": "patch dam east edge +0.0",
+   "x": 41760.0,
+   "y": -12480.0,
+   "grid": "wide",
+   "height": 496.0,
+   "groundY": -251.78760903199765
+  },
+  {
+   "label": "patch dam north edge +0.0",
+   "x": 36640.0,
+   "y": -8160.0,
+   "grid": "wide",
+   "height": 366.70000000000005,
+   "groundY": -348.0872188712245
+  },
+  {
+   "label": "patch dam west edge +0.5",
+   "x": 31520.5,
+   "y": -12480.0,
+   "grid": "dam",
+   "height": 597.8874999999999,
+   "groundY": -99.42435866201768
+  },
+  {
+   "label": "patch dam south edge +0.5",
+   "x": 36640.0,
+   "y": -16799.5,
+   "grid": "dam",
+   "height": 670.4975,
+   "groundY": -58.79546591138421
+  },
+  {
+   "label": "patch dam east edge +0.5",
+   "x": 41759.5,
+   "y": -12480.0,
+   "grid": "dam",
+   "height": 495.95500000000004,
+   "groundY": -251.82979989124823
+  },
+  {
+   "label": "patch dam north edge +0.5",
+   "x": 36640.0,
+   "y": -8160.5,
+   "grid": "dam",
+   "height": 366.70000000000005,
+   "groundY": -348.0877678038881
+  },
+  {
+   "label": "patch dam west edge +30.0",
+   "x": 31550.0,
+   "y": -12480.0,
+   "grid": "dam",
+   "height": 597.15,
+   "groundY": -100.28701818507973
+  },
+  {
+   "label": "patch dam south edge +30.0",
+   "x": 36640.0,
+   "y": -16770.0,
+   "grid": "dam",
+   "height": 670.3500000000001,
+   "groundY": -58.876349306006986
+  },
+  {
+   "label": "patch dam east edge +30.0",
+   "x": 41730.0,
+   "y": -12480.0,
+   "grid": "dam",
+   "height": 493.30000000000007,
+   "groundY": -254.3191201201874
+  },
+  {
+   "label": "patch dam north edge +30.0",
+   "x": 36640.0,
+   "y": -8190.0,
+   "grid": "dam",
+   "height": 366.75,
+   "groundY": -348.0702143641949
+  },
+  {
+   "label": "patch dam west edge -0.5",
+   "x": 31519.5,
+   "y": -9283.2,
+   "grid": "wide",
+   "height": 598.9085749999985,
+   "groundY": -93.71895706426595
+  },
+  {
+   "label": "patch dam south edge -0.5",
+   "x": 40428.8,
+   "y": -16800.5,
+   "grid": "wide",
+   "height": 293.6110125000011,
+   "groundY": -455.32667409483713
+  },
+  {
+   "label": "patch dam east edge -0.5",
+   "x": 41760.5,
+   "y": -9283.2,
+   "grid": "wide",
+   "height": 405.28839999999974,
+   "groundY": -337.8219322526181
+  },
+  {
+   "label": "patch dam north edge -0.5",
+   "x": 40428.8,
+   "y": -8159.5,
+   "grid": "wide",
+   "height": 366.70000000000005,
+   "groundY": -367.72913041392917
+  },
+  {
+   "label": "patch dam west edge +0.0",
+   "x": 31520.0,
+   "y": -9283.2,
+   "grid": "wide",
+   "height": 598.804,
+   "groundY": -93.82565236944191
+  },
+  {
+   "label": "patch dam south edge +0.0",
+   "x": 40428.8,
+   "y": -16800.0,
+   "grid": "wide",
+   "height": 293.70400000000143,
+   "groundY": -455.2325564571594
+  },
+  {
+   "label": "patch dam east edge +0.0",
+   "x": 41760.0,
+   "y": -9283.2,
+   "grid": "wide",
+   "height": 405.2839999999998,
+   "groundY": -337.82352307823413
+  },
+  {
+   "label": "patch dam north edge +0.0",
+   "x": 40428.8,
+   "y": -8160.0,
+   "grid": "wide",
+   "height": 366.70000000000005,
+   "groundY": -367.72967931295824
+  },
+  {
+   "label": "patch dam west edge +0.5",
+   "x": 31520.5,
+   "y": -9283.2,
+   "grid": "dam",
+   "height": 598.6611000000001,
+   "groundY": -93.97067270825377
+  },
+  {
+   "label": "patch dam south edge +0.5",
+   "x": 40428.8,
+   "y": -16799.5,
+   "grid": "dam",
+   "height": 293.7041000000005,
+   "groundY": -455.2313263531174
+  },
+  {
+   "label": "patch dam east edge +0.5",
+   "x": 41759.5,
+   "y": -9283.2,
+   "grid": "dam",
+   "height": 405.3961999999999,
+   "groundY": -337.70851393748467
+  },
+  {
+   "label": "patch dam north edge +0.5",
+   "x": 40428.8,
+   "y": -8160.5,
+   "grid": "dam",
+   "height": 366.70000000000005,
+   "groundY": -367.7302282456219
+  },
+  {
+   "label": "patch dam west edge +30.0",
+   "x": 31550.0,
+   "y": -9283.2,
+   "grid": "dam",
+   "height": 589.774,
+   "groundY": -102.982932231316
+  },
+  {
+   "label": "patch dam south edge +30.0",
+   "x": 40428.8,
+   "y": -16770.0,
+   "grid": "dam",
+   "height": 295.5120000000004,
+   "groundY": -453.3568097477405
+  },
+  {
+   "label": "patch dam east edge +30.0",
+   "x": 41730.0,
+   "y": -9283.2,
+   "grid": "dam",
+   "height": 411.536,
+   "groundY": -331.4030341664237
+  },
+  {
+   "label": "patch dam north edge +30.0",
+   "x": 40428.8,
+   "y": -8190.0,
+   "grid": "dam",
+   "height": 366.70000000000005,
+   "groundY": -367.7626748059286
   }
  ]
 }

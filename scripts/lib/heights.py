@@ -1,5 +1,6 @@
 """The ground the browser draws, for the data pipeline. Twin of src/world/terrain (heightfield.js
-and index.js) with every grid loaded: near where it contains the point, else far, else wide.
+and index.js) with every grid and patch loaded: the finest one that contains the point (near, a
+patch such as the dam's, far), else wide.
 
 The arithmetic follows heightField() in main.js step for step, in float64, so a height from here
 equals the browser's to the last bit and a road set against it sits where it was put.
@@ -63,23 +64,27 @@ class Grid:
 
 
 class Heights:
-    def __init__(self, meta, grids, base):
+    def __init__(self, meta, grids, base, patches=None):
         self.meta = meta
         self.base = base
-        self.grids = grids  # name -> Grid, finest first
+        self.grids = grids  # name -> Grid, finest first: near, far, wide
+        self.patches = patches or {}  # id -> Grid: the drive's finer patches inside the wide grid
+        # every grid and patch, finest first (a stable sort: equal steps keep near, far, wide, then patches)
+        self.layers = sorted([*grids.values(), *self.patches.values()], key=lambda g: g.step)
 
     @property
     def extents(self):
-        """Each grid's (x0, y0, x1, y1) in map metres."""
-        return {n: g.extents for n, g in self.grids.items()}
+        """Each grid's and patch's (x0, y0, x1, y1) in map metres."""
+        return {n: g.extents for n, g in {**self.grids, **self.patches}.items()}
 
     def grid(self, name):
-        return self.grids.get(name)
+        """A grid (near, far, wide) or a patch by its id."""
+        return self.grids.get(name) or self.patches.get(name)
 
     def height_at(self, x, y):
-        """Metres above sea level: the finest grid that contains the point, else the coarsest one's clamped edge."""
+        """Metres above sea level: the finest grid or patch that contains the point, else the coarsest one's clamped edge."""
         x, y = np.broadcast_arrays(np.asarray(x, dtype=np.float64), np.asarray(y, dtype=np.float64))
-        grids = list(self.grids.values())
+        grids = self.layers
         out = grids[-1].sample(x, y)
         taken = np.zeros(x.shape, dtype=bool)
         for g in grids[:-1]:
@@ -96,8 +101,9 @@ class Heights:
         return self.height_at(x, y) - self.base - curve_drop(x, y)
 
 
-def load_heights(city, root=ROOT):
-    """Every grid of a city from public/data/<city>/, with its base from data/cities.json."""
+def load_heights(city, root=ROOT, patches=True):
+    """Every grid of a city from public/data/<city>/, with its base from data/cities.json, and its
+    patches (terrain.json's "patches") unless patches is False."""
     root = Path(root)
     base = json.loads((root / "data" / "cities.json").read_text())[city]["base"]
     folder = root / "public" / "data" / city
@@ -106,4 +112,6 @@ def load_heights(city, root=ROOT):
     for name in ORDER:
         if g := meta["grids"].get(name):
             grids[name] = Grid(name, g, np.fromfile(folder / g["file"], dtype="<u2"))
-    return Heights(meta, grids, base)
+    found = {pid: Grid(pid, g, np.fromfile(folder / g["file"], dtype="<u2"))
+             for pid, g in (meta.get("patches") or {}).items()} if patches else {}
+    return Heights(meta, grids, base, found)

@@ -2,17 +2,19 @@
 // A copy of drive-shots.mjs with a route option, the cabin by default, phone sizes and the route picker's states.
 // Serve the repo first:   pnpm exec vite --port 5302 --strictPort
 // then:   node tests/manual/routes-app-shots.mjs <out-dir> <port> '<shots>'   (keep the out dir outside the repo)
-// <shots> is JSON: [{ name, route, s?, when?: "day" | "night", view?: "cabin" | "clean", look?: { yaw, pitch, lens },
-//                     size?: [w, h], picker?: "open" | "collapsed" }, ...]
+// <shots> is JSON: [{ name, route, s?, when?: "day" | "dusk" | "night", view?: "cabin" | "clean", look?: { yaw, pitch, lens },
+//                     size?: [w, h], picker?: "open" | "collapsed", above?: { x, y, h, tx, ty, th, fov? } }, ...]
 // Each shot opens the route cold from its address (?city=lv&mode=drive&route=...), so a shot never depends on the one
 // before it; `s` defaults to the route's reveal start, `when` to day. Prints the pose and the drive's stats per shot.
+// `above` draws the drive's scene once more from a free eye instead of the car's: eye at map (x, y) metres and h metres
+// above sea level, looking at (tx, ty, th); the interface is left out of that picture (the canvas only).
 import { chromium } from '@playwright/test';
-import { mkdirSync } from 'node:fs';
+import { mkdirSync, writeFileSync } from 'node:fs';
 
 const out = process.argv[2]; const port = process.argv[3] || 5302;
 const shots = JSON.parse(process.argv[4]);
 mkdirSync(out, { recursive: true });
-const DAY = '2026-11-21T20:30:00Z', NIGHT = '2026-11-22T04:30:00Z';
+const DAY = '2026-11-21T20:30:00Z', DUSK = '2026-11-22T00:45:00Z', NIGHT = '2026-11-22T04:30:00Z';
 const browser = await chromium.launch({ channel: 'chromium', headless: true, args: ['--use-angle=metal', '--ignore-gpu-blocklist', '--enable-gpu'] });
 
 for (const shot of shots) {
@@ -34,7 +36,7 @@ async function take(shot) {
   page.on('response', (r) => { if (r.status() >= 400) problems.push(`[http ${r.status()}] ${r.url().replace(/^https?:\/\/[^/]+/, '')}`); });
   page.on('pageerror', (e) => problems.push(`[pageerror] ${e.message}`));
   await page.addInitScript(() => { try { localStorage.clear(); localStorage.setItem('slc-skyline-hinted', '1'); } catch { /* defaults */ } });
-  const q = new URLSearchParams({ city: 'lv', mode: 'drive', route: shot.route, view: shot.view || 'cabin', t: shot.when === 'night' ? NIGHT : DAY });
+  const q = new URLSearchParams({ city: 'lv', mode: 'drive', route: shot.route, view: shot.view || 'cabin', t: { night: NIGHT, dusk: DUSK }[shot.when] || DAY });
   if (Number.isFinite(shot.s)) q.set('s', String(shot.s));
   await page.goto(`http://localhost:${port}/?${q}`);
   await page.waitForFunction(() => window.__skyline?.attractions && window.__skyline?.drive?.active?.() && window.__skyline.drive.pose()
@@ -55,7 +57,20 @@ async function take(shot) {
     return { route: p.route, s: Math.round(p.s), night: p.night, sun: +p.sunElevation.toFixed(1), calls: st.render.calls,
       parts: Object.keys(st).filter((k) => !['render', 'js', 'active', 'signs'].includes(k)).join(','), picker: d.pickerState?.() };
   }, shot);
-  await page.screenshot({ path: `${out}/${shot.name}.png` });
+  if (shot.above) {
+    const png = await page.evaluate((a) => {
+      const s = window.__skyline, cam = s.camera.clone();
+      const base = 620, drop = (x, y) => (x * x + y * y) / (2 * 6371000 * (7 / 6)); // the lv base and frame.js curveDrop
+      cam.near = 5; cam.far = 80000; cam.fov = a.fov || 50; cam.aspect = innerWidth / innerHeight;
+      cam.position.set(a.x, a.h - base - drop(a.x, a.y), -a.y);
+      cam.up.set(0, 1, 0);
+      cam.lookAt(a.tx, a.th - base - drop(a.tx, a.ty), -a.ty);
+      cam.updateProjectionMatrix(); cam.updateMatrixWorld();
+      s.renderer.render(s.scene, cam);
+      return s.renderer.domElement.toDataURL('image/png');
+    }, shot.above);
+    writeFileSync(`${out}/${shot.name}.png`, Buffer.from(png.split(',')[1], 'base64'));
+  } else await page.screenshot({ path: `${out}/${shot.name}.png` });
   console.log('shot', shot.name, JSON.stringify(info), problems.length ? `\n  ${problems.join('\n  ')}` : '');
   await page.close();
 }

@@ -5,7 +5,7 @@
 """Usage: uv run tests/fixtures/make_heights_fixture.py
 
 Write tests/fixtures/heights-lv.json: heights from scripts/lib/heights.py at points spread over the
-near, far and wide grids and along I-15 from Primm. tests/unit/terrain.test.js checks that the
+near, far and wide grids, the patches and their edges, and along I-15 from Primm. tests/unit/terrain.test.js checks that the
 browser's terrain provider gives the same numbers.
 """
 import json
@@ -59,14 +59,26 @@ add("just inside far", -12000, far.y0 + 0.001)
 add("wide corner", wide.x0, wide.y0)
 add("beyond wide, south", -20000, -80000)
 add("beyond wide, east", 70000, 0)
+# the drive's patches: random points inside, and along and either side of each edge
+for pid, pg in hs.patches.items():
+    for k in range(14):
+        add(f"random patch {pid}", rng.uniform(pg.x0, pg.x1), rng.uniform(pg.y0, pg.y1))
+    for k, f in enumerate((0.13, 0.5, 0.87)):
+        x = pg.x0 + f * (pg.x1 - pg.x0)
+        y = pg.y0 + f * (pg.y1 - pg.y0)
+        for d in (-0.5, 0.0, 0.5, 30.0):
+            add(f"patch {pid} west edge {d:+}", pg.x0 + d, y)
+            add(f"patch {pid} south edge {d:+}", x, pg.y0 + d)
+            add(f"patch {pid} east edge {d:+}", pg.x1 - d, y)
+            add(f"patch {pid} north edge {d:+}", x, pg.y1 - d)
 
 xs = np.array([p["x"] for p in points])
 ys = np.array([p["y"] for p in points])
 h, gy = hs.height_at(xs, ys), hs.ground_y(xs, ys)
 for p, a, b, x, y in zip(points, h, gy, xs, ys):
-    p["grid"] = next((n for n in ("near", "far") if hs.grid(n).contains(x, y)), "wide")
+    p["grid"] = next((n for n in ("near", *hs.patches, "far") if hs.grid(n).contains(x, y)), "wide")
     p["height"], p["groundY"] = float(a), float(b)
 
 out = {"city": "lv", "base": hs.base, "points": points}
 (Path(__file__).parent / "heights-lv.json").write_text(json.dumps(out, indent=1) + "\n")
-print(f"{len(points)} points: " + ", ".join(f"{n} {sum(p['grid'] == n for p in points)}" for n in ("near", "far", "wide")))
+print(f"{len(points)} points: " + ", ".join(f"{n} {sum(p['grid'] == n for p in points)}" for n in ("near", "far", "wide", *hs.patches)))

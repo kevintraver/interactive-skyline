@@ -656,24 +656,24 @@
     "stations_test": 1979,
     "threshold": 3.0,
     "fitted": false,
-    "best_fit": 2.95,
+    "best_fit": 1.82,
     "train_at_best_fit": {
-     "precision": 0.115,
-     "recall": 0.926,
-     "f1": 0.205,
-     "tp": 578,
-     "fp": 4448,
-     "fn": 46,
+     "precision": 0.13,
+     "recall": 0.704,
+     "f1": 0.219,
+     "tp": 439,
+     "fp": 2945,
+     "fn": 185,
      "stations": 11107
     },
-    "why": "the best threshold scores F1 0.205 on the training share (< 0.3): the feature does not explain where OSM maps this barrier; design value kept",
+    "why": "the best threshold scores F1 0.219 on the training share (< 0.3): the feature does not explain where OSM maps this barrier; design value kept",
     "holdout": {
-     "precision": 0.348,
-     "recall": 1.0,
-     "f1": 0.517,
-     "tp": 254,
-     "fp": 475,
-     "fn": 0,
+     "precision": 0.372,
+     "recall": 0.866,
+     "f1": 0.52,
+     "tp": 220,
+     "fp": 372,
+     "fn": 34,
      "stations": 1979
     }
    },
@@ -690,19 +690,19 @@
   },
   "placed_m": {
    "concrete mapped": 6944,
-   "concrete rule": 26232,
-   "guardrail mapped": 3116,
-   "guardrail rule": 32216,
+   "concrete rule": 26460,
+   "guardrail mapped": 3104,
+   "guardrail rule": 19452,
    "wall mapped": 692
   },
   "roads": {
    "us93.main": {
-    "runs": 355,
-    "delineators": 577
+    "runs": 331,
+    "delineators": 657
    },
    "us93s.opp": {
-    "runs": 178,
-    "delineators": 386
+    "runs": 150,
+    "delineators": 444
    },
    "us93.x14.off": {
     "runs": 0,
@@ -821,15 +821,15 @@
     "delineators": 62
    },
    "us93s.xkm53.off": {
-    "runs": 2,
-    "delineators": 0
+    "runs": 1,
+    "delineators": 3
    },
    "us93s.x2.off": {
-    "runs": 10,
-    "delineators": 0
+    "runs": 9,
+    "delineators": 2
    },
    "us93.x2.on": {
-    "runs": 10,
+    "runs": 8,
     "delineators": 0
    },
    "us93.x14.on": {
@@ -962,15 +962,15 @@
    },
    "us93s.xkm53.on": {
     "runs": 3,
-    "delineators": 0
+    "delineators": 9
    },
    "us93s.x2.on": {
     "runs": 6,
-    "delineators": 0
+    "delineators": 9
    },
    "us93.x2.off": {
-    "runs": 19,
-    "delineators": 1
+    "runs": 10,
+    "delineators": 9
    },
    "us93.x23.off": {
     "runs": 10,
@@ -1064,7 +1064,7 @@
      "agrees": null
     },
     "right": {
-     "placed": "guardrail",
+     "placed": "none",
      "osm": null,
      "basis": "rule only",
      "agrees": null
@@ -1080,7 +1080,7 @@
      "agrees": null
     },
     "right": {
-     "placed": "guardrail",
+     "placed": "none",
      "osm": null,
      "basis": "rule only",
      "agrees": null
@@ -1090,7 +1090,7 @@
     "s": 8918.4,
     "km": 8.92,
     "left": {
-     "placed": "guardrail",
+     "placed": "none",
      "osm": null,
      "basis": "rule only",
      "agrees": null
@@ -1516,7 +1516,7 @@
  "files": {
   "signs-us93.json": 33901,
   "limit": 150000,
-  "barriers-us93.json": 44691,
+  "barriers-us93.json": 44099,
   "barrier_limit": 100000,
   "ok": true
  },

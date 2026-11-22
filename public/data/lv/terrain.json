@@ -33,5 +33,19 @@
    "step": 160,
    "scale": 0.1
   }
+ },
+ "patches": {
+  "dam": {
+   "file": "terrain-dam.bin",
+   "nx": 513,
+   "ny": 433,
+   "x0": 31520,
+   "y0": -16800,
+   "step": 20,
+   "scale": 0.1,
+   "blend": 480.0,
+   "image": "ground-dam.jpg",
+   "water": "water-dam.json"
+  }
  }
 }

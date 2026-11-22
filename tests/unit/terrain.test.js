@@ -130,8 +130,9 @@ describe('createTerrain', () => {
   it('matches the Python sampler to the millimetre', async () => {
     const { terrain } = makeTerrain();
     await terrain.loadWide();
+    await terrain.loadPatches();
     expect(fixture.points.length).toBeGreaterThanOrEqual(50);
-    for (const grid of ['near', 'far', 'wide']) expect(fixture.points.some((p) => p.grid === grid)).toBe(true);
+    for (const grid of ['near', 'far', 'wide', 'dam']) expect(fixture.points.some((p) => p.grid === grid)).toBe(true);
     for (const p of fixture.points) {
       expect(Math.abs(terrain.heightAt(p.x, p.y) - p.height), p.label).toBeLessThan(0.001);
       expect(Math.abs(terrain.groundY(p.x, p.y) - p.groundY), p.label).toBeLessThan(0.001);
