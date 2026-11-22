@@ -58,7 +58,8 @@ test('lv drive controls: starts, route bar, rate, lock, time of day, address, ph
       const p = await untilPlayingThenPause(page);
       expect(p.s, key).toBeGreaterThanOrEqual(route.starts[key] - 0.5);
       expect(p.s, key).toBeLessThan(route.starts[key] + 300);
-      await expect(chipButton).toHaveAttribute('aria-pressed', 'true');
+      // the picker has folded, and role queries leave hidden elements out unless asked
+      await expect(page.locator('.route-card.current').getByRole('button', { name, exact: true, includeHidden: true })).toHaveAttribute('aria-pressed', 'true');
     }
     // Escape folds an open picker
     await page.locator('.route-chip').click();
