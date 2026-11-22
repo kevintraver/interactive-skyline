@@ -752,8 +752,8 @@ What the hourly data shows at the station south of Jean in 2025, which is the pa
 
 | Inventory | Service | Points | Useful fields | Updated | Terms |
 | --- | --- | --- | --- | --- | --- |
-| Clark County Public Works, "LIGHT FIXTURES" [L2] | `services2.arcgis.com/MLoS3Qx4BXmDoTIY/…/Fixtures_View/FeatureServer/0` | 76,565 | `LAMP`, `FIXTURE` (wattage and technology), `SUPP_TYPE`, `ROW`, `LIGHT_SHIELD`, `MODERNIZATION` | November 2026 | No licence text |
-| Clark County, supports [L2] | `…/Streetlight_Supports_View/FeatureServer/0` | 73,247 | `POLE_HEIGHT`, `SLP_ARMLEN`, material | live | No licence text |
+| Clark County Public Works, "LIGHT FIXTURES" [L2] | `services2.arcgis.com/MLoS3Qx4BXmDoTIY/…/Fixtures_View/FeatureServer/0` | 76,595 (22 Nov 2026; 76,565 when planned) | `LAMP`, `FIXTURE` (wattage and technology), `SUPP_TYPE`, `ROW`, `LIGHT_SHIELD`, `MODERNIZATION` | November 2026 | No licence text |
+| Clark County, supports [L2] | `…/Streetlight_Supports_View/FeatureServer/0` | 73,240 (22 Nov 2026) | `POLE_HEIGHT`, `SLP_ARMLEN`, material | live | No licence text |
 | City of Las Vegas, `stlights` [L1] | `services1.arcgis.com/F1v0ufATbBQScMtY/…/stlights/FeatureServer/0` | 54,460 | `TYPE`, `WATT`, `MASTLENGTH`, `ARM_COUNT`, `JDICTION`, `ROT_ANG` | December 2024 | "For reference only", no warranty, no licence named |
 | Boulder City [L4] | `services6.arcgis.com/ENlYDFfLXlpg7FOQ/…/Dark_Skies_Light_Replacement_view/FeatureServer` | 2,275 + 443 | `LAMP_TYPE`, `WATTAGE` | October 2026 | No licence text |
 | OpenStreetMap | `highway=street_lamp` | 6,656 in the valley, 827 in the core | `lamp_type` on 1,434; `lamp_mount` on 1,901 (814 high masts) | live | ODbL |
@@ -764,6 +764,7 @@ What the inventories say:
 
 - **Clark County:** by fixture, about 71% LED, 24% high-pressure sodium, 4.5% induction. Poles are 30 ft for 66,566 supports, 70 ft for 323 and 100 ft for 110. All 1,698 high-mast fixtures are LED. The county's LED specification fixes 4000 K ± 300 K, 32 ft mounting height on an 8 ft arm, zero uplight (BUG rating U0), and a maximum of 105, 139 and 161 W for 60, 80 and 100 ft rights-of-way [L2].
 - **City of Las Vegas:** `TYPE` reads sodium for 34,454 lamps and LED for 17,094. That conflicts with the 2011–2013 programme, reported at the time as converting more than 80% of about 50,000 lights to LED [L6]. The field is treated as unreliable until checked against night photographs (section 8.1).
+- **Clark County's `LAMP` reads `LAMP2LED` once a fixture has been converted; `FIXTURE` holds the luminaire fitted** (for example `160WLED`, `100WHPS`, `IND 89 W`). 1,038 fixtures are mounted under bridges (`SUPP_TYPE` `UBL`), among them 367 tunnel "day luminaires" of 300 W near 36.131° N, 115.167° W: they light a road below ground and send nothing to the sky (found while building T4.0, 22 Nov 2026).
 - **None of them records colour temperature or lumens.** Both are assigned from lamp type and wattage (section 7.8).
 
 Gaps, and how each is filled:
@@ -772,7 +773,7 @@ Gaps, and how each is filled:
 | --- | --- |
 | NDOT freeway lighting: no inventory is published | Rule along stretches tagged or observed lit, plus an experiment detecting poles in the LiDAR. Known fact to match: NDOT replaced 550 sodium fixtures with LED along 35 miles of I-15 from Jean to the Spaghetti Bowl in 2016 [L5] |
 | North Las Vegas: no layer found; a ten-year sodium-to-LED retrofit is funded through 2029 | Rule by road class, half sodium and half LED (**assumed**), reported as such |
-| Henderson: only a contractor's public copy exists (31,491 points, 30,023 LED, frozen 2023), not a city publication and without a licence [L3] | Used to tune and test the rule. Not shipped unless the city confirms |
+| Henderson: only a contractor's public copy exists (31,491 points, 30,023 LED, frozen 2023), not a city publication and without a licence [L3] | Shipped: the owner's decision of 10 November 2026 (top of this plan) covers Henderson. Also the rule's hold-out test (D5.3) |
 | Everything outside the valley | OSM where mapped, else rule at interchanges only |
 
 **Terms are the weak point of this section.** The county and city layers are public but carry no open licence. Before the derived `lamps` layer is deployed, the two agencies are asked to confirm reuse with attribution (section 12.2). If either declines, its area falls back to OSM plus the rule, tuned on the inventory's statistics.

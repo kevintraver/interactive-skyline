@@ -1,0 +1,31 @@
+{
+ "_note": "Street-lamp types for plan 02 (D5.3, section 7.8) and plan 01 (T4.0). Read by scripts/lib/lamps.py. `status` says which numbers come from a source and which are assumed. lmPerW may be a table by wattage (interpolated in log watts). class is the sky-glow class of plan 01, section 7.8: sodium, led or other.",
+ "mountDefaultM": 9.14,
+ "mountDefaultNote": "30 ft pole: 66,572 of Clark County's 73,240 supports (POLE_HEIGHT, read 22 Nov 2026); the county LED specification gives 32 ft on an 8 ft arm",
+ "types": [
+  {"id": 0, "key": "hps", "name": "High-pressure sodium", "class": "sodium", "cctK": 2100, "cri": 22,
+   "lmPerW": {"70": 90, "100": 95, "150": 107, "250": 110, "400": 125, "1000": 140}, "defaultWatts": 150, "uplight": 0.03,
+   "status": {"cctK": "verified: lamp data sheet (plan 02, L12)", "lmPerW": "assumed: 9,500 / 27,500 / 50,000 lm at 100 / 250 / 400 W (plan 02, 7.8); 70, 150 and 1000 W interpolated from typical lamp catalogues", "uplight": "assumed: a few percent from drop-lens heads"}},
+  {"id": 1, "key": "led_street", "name": "LED street light", "class": "led", "cctK": 4000,
+   "lmPerW": 90, "defaultWatts": 100, "uplight": 0.0,
+   "status": {"cctK": "verified for Clark County: 4,000 K +/- 300 K (county LED specification, plan 02 L2); assumed for the other jurisdictions", "lmPerW": "derived: wattage x 90 lm/W (plan 02, 7.8)", "uplight": "verified for Clark County: BUG U0; assumed elsewhere"}},
+  {"id": 2, "key": "led_highmast", "name": "LED high mast", "class": "led", "cctK": 4000,
+   "lmPerW": 90, "defaultWatts": 302, "uplight": 0.0, "mountM": 21.3,
+   "status": {"cctK": "assumed from the county roadway specification", "lmPerW": "derived: wattage x 90 lm/W", "mountM": "Clark County supports: 70 ft for 323 and 100 ft for 110 poles; 70 ft is used when a fixture's support is not found"}},
+  {"id": 3, "key": "induction", "name": "Induction", "class": "other", "cctK": 4000,
+   "lmPerW": 67, "defaultWatts": 89, "uplight": 0.02,
+   "status": {"all": "assumed: about 6,000 lm at 89 W (plan 02, 7.8)"}},
+  {"id": 4, "key": "metal_halide", "name": "Metal halide (and floodlights of unrecorded type)", "class": "other", "cctK": 4000,
+   "lmPerW": 80, "defaultWatts": 250, "uplight": 0.05,
+   "status": {"all": "assumed"}},
+  {"id": 5, "key": "mercury_vapor", "name": "Mercury vapour", "class": "other", "cctK": 5000,
+   "lmPerW": 50, "defaultWatts": 175, "uplight": 0.05,
+   "status": {"all": "assumed"}},
+  {"id": 6, "key": "fluorescent", "name": "Fluorescent", "class": "other", "cctK": 4000,
+   "lmPerW": 65, "defaultWatts": 55, "uplight": 0.05,
+   "status": {"all": "assumed"}},
+  {"id": 7, "key": "unknown", "name": "Unknown lamp", "class": "other", "cctK": 3000,
+   "lmPerW": 80, "defaultWatts": 100, "uplight": 0.03,
+   "status": {"all": "assumed: between sodium and LED"}}
+ ]
+}

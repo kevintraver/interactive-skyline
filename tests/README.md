@@ -2,7 +2,8 @@
 
 | Command | What | Where it runs |
 |---|---|---|
-| `pnpm test:unit` | Vitest: `src/core`, extrusion, cities.json shape, source hygiene, the landmark tool, upper bounds on hot code | CI and locally |
+| `pnpm test:unit` | Vitest: `src/core`, extrusion, the sky data readers and their committed files, cities.json shape, source hygiene, the landmark tool, upper bounds on hot code | CI and locally |
+| `pnpm test:py` | pytest on the data pipelines in `scripts/` (`tests/python/`): parsers, encoders and the committed outputs against their sidecars, never the network; needs [uv](https://docs.astral.sh/uv/) | CI and locally |
 | `pnpm test:e2e` | Playwright on SwiftShader (`webgl2-software`): goldens, the `window.__skyline` contract, the buildless boot, the deterministic performance budgets | CI and locally |
 | `pnpm test` | both of the above | |
 | `pnpm test:perf` | timing on this machine's GPU (`gpu` project, one worker) against `tests/reference/perf/timing/<machine id>.json` | locally only |
@@ -68,3 +69,10 @@ Two tiers.
 
 `perf.budgets.spec.js` also counts the frame loop's tiers in the app (paused: no frame; 1x: two a second), and
 `perf.timing.spec.js` times a scrub of the time of day (CPU per step, frame rate against the scene's own).
+
+## Data pipelines (plan 01, phase 4 data)
+
+`pnpm test:py` reads the committed outputs of `scripts/build_stars.py`, `build_sky_textures.py` and
+`build_lights.py` and checks them against their sidecars and known sky and street facts. `build_nightlights.py` is
+tested on small synthetic VNP46A4 tiles written by the test itself; `tests/unit/sky/nightlights.test.js` checks the
+real Las Vegas grid against its landmarks once `public/data/lv/nightlights.json` exists, and skips until then.
