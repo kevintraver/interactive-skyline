@@ -256,3 +256,12 @@ button { font: inherit; color: inherit; background: none; border: 0; padding: 0;
 @media (prefers-reduced-motion: reduce) {
   #loading { transition: none; }
 }
+/* ---- the weather rows of #sky (plan 01, phase 5): the chip, its source line, Back to real */
+#sky { max-height: calc(100vh - 28px - 2 * var(--gap)); overflow-y: auto; scrollbar-width: thin; scrollbar-color: var(--fill-strong) transparent; }
+.sky-weather { margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--line); }
+.sky-chip { display: flex; align-items: center; gap: 8px; }
+.sky-chip output { flex: 1; min-width: 0; font-size: 13.5px; font-weight: 600; font-variant-numeric: tabular-nums; }
+#sky-real { padding: 4px 10px; border-radius: 7px; background: var(--fill); color: var(--blue); font-weight: 600; font-size: 12.5px; white-space: nowrap; }
+#sky-real:hover { background: var(--fill-strong); }
+#sky-source { margin: 2px 0 0; color: var(--muted); font-size: 12px; line-height: 1.4; }
+#sky-source a { color: inherit; }

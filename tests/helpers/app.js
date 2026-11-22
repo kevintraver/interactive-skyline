@@ -9,8 +9,15 @@ export const sceneName = ({ city, view, look }) => `${city}-${view}-${look}`;
 /** Seconds into the fountain, LED and wheel loops at which the goldens are held (the landmark checker's default). */
 export const SHOW_TIME = 47;
 
-/** Open a city and wait until the app, its extras and its fountain shows are loaded. */
-export async function boot(page, city) {
+/** Every weather request the app can make (plan 01, phase 5): the function, and the upstreams it falls back to. */
+export const WEATHER_URLS = /\/api\/weather|open-meteo\.com|aviationweather\.gov|api\.weather\.gov|mesonet\.agron\.iastate\.edu/;
+
+/**
+ * Open a city and wait until the app, its extras and its fountain shows are loaded. Weather requests are blocked
+ * unless a spec routes them itself (`weather: false`): no e2e test reaches a real weather service.
+ */
+export async function boot(page, city, { weather = true } = {}) {
+  if (weather) await page.route(WEATHER_URLS, (route) => route.abort());
   await page.goto(`/?city=${city}`);
   await page.waitForFunction(() => window.__skyline && window.__skyline.attractions, null, { timeout: 90_000 });
   await page.evaluate(() => window.__skyline.attractions.ready);

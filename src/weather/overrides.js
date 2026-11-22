@@ -2,7 +2,7 @@
 // never written into the data. `applyOverrides` returns a new sample (or the same one when there are none), so
 // clearing an override gives back the data value exactly.
 import { dewPointFrom } from './schema.js';
-import { visibilityFromAerosol } from './derive.js';
+import { visibilityFromAerosol } from './medium.js';
 
 /** The ten sliders of section 4.2, in their order: key, label, range, step and display unit kind. */
 export const OVERRIDES = [

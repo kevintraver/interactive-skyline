@@ -25,6 +25,7 @@ import { initSettingsPanel } from './ui/settingsPanel.js';
 import { initCityMenu } from './ui/cityMenu.js';
 import { initSkyPopover } from './ui/skyPopover.js';
 import { initTransport } from './ui/transport.js';
+import { initWeather } from './weather/index.js';
 import { initAttractions } from './attractions.js';
 import cities from '../data/cities.json';
 
@@ -59,6 +60,7 @@ initHint(app);
 initCityMenu(app);
 initSkyPopover(app);
 initTransport(app);
+initWeather(app);
 
 // ------------------------------------------------------------------ go
 app.views.resize();

@@ -153,6 +153,7 @@ export function initSkyPopover(app) {
     form.hidden = !open;
     toggle.setAttribute('aria-expanded', String(open));
     if (open) render();
+    app.events.emit('sky:open', open); // the weather rows (src/weather/index.js) load and render on this
   }
   toggle.addEventListener('click', () => openSky(form.hidden));
 

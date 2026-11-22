@@ -3,6 +3,10 @@
 // stubs with the values of section 11.1 until their phases land; the light values are rough clear-sky estimates
 // (phase 3 replaces them with the atmosphere's).
 //
+// Weather (phase 5): src/weather/ loads on demand and hands the facade a provider (setWeather). In the clock state the
+// weather is the provider's sample at the clock's time (the clear preset until data arrives); the pinned looks stay
+// clear. `state.medium` is the atmosphere's medium derived from it (section 7.5), which phase 3 writes into its uniforms.
+//
 // Two states (sections 4.2 and 5.6, decision 3 after review):
 //   pinned  the default: today's two looks. `settings.night` is the persisted boolean; the state is the classic
 //           afternoon (the Sun at azimuth 245, altitude 32, as the app has always drawn it) or the reference night.
@@ -14,6 +18,7 @@ import { colorTemperatureToLinearSrgb, luxFromMagnitude, cdM2FromMagArcsec2, mag
 import { PINNED_NIGHT } from '../app/settings.js';
 import { parseTimeParam } from '../sim/clock.js';
 import { createEnvNodes } from './nodes.js';
+import { atmosphereMedium } from '../weather/medium.js';
 
 /** 23 March 2026 23:08 UTC: astronomy-engine puts the Sun at azimuth 245.00, altitude 32.05 over Las Vegas. */
 export const CLASSIC_AFTERNOON = Date.UTC(2026, 2, 23, 23, 8);
@@ -98,6 +103,7 @@ const dateSeed = (ms) => { const d = new Date(ms); return d.getUTCFullYear() * 1
  */
 export function createEnvironment({ city, clock, ephemeris, settings, seed = null }) {
   let mode = 'pinned', frozen = {}, derivedNight = null;
+  const wx = { provider: null, request: null };
   const listeners = new Map();
   const emit = (type, payload) => { for (const fn of [...(listeners.get(type) || [])]) fn(payload); };
 
@@ -107,7 +113,7 @@ export function createEnvironment({ city, clock, ephemeris, settings, seed = nul
   }
 
   /** Build a state from celestial positions. `sunAzAlt` overrides the Sun (pinned day, freeze). */
-  function build(timeMs, { sunAzAlt = null, standInMoon = false } = {}) {
+  function build(timeMs, { sunAzAlt = null, standInMoon = false, pinned = false } = {}) {
     const cel = ephemeris.at(timeMs);
     const s = cel.sun, m = cel.moon;
     const [sAz, sAlt] = sunAzAlt || [s.azDeg, s.altDeg];
@@ -133,21 +139,29 @@ export function createEnvironment({ city, clock, ephemeris, settings, seed = nul
     const zenithCdM2 = Math.max(ambientLux / (2 * Math.PI), cdM2FromMagArcsec2(21.6));
     const mag = magArcsec2FromCdM2(zenithCdM2);
     const switchOn = smoothstep(2, -6, sAlt); // the night uniform's own ramp (T1.4)
-    const weather = frozen.weather && typeof frozen.weather === 'object' ? frozen.weather : clearWeather(timeMs);
+    let weather = frozen.weather && typeof frozen.weather === 'object' ? frozen.weather : null;
+    if (!weather && !pinned) {
+      // a preset id from freeze(), else the provider's sample; ask for the provider if it has not loaded yet
+      if (wx.provider) weather = typeof frozen.weather === 'string' ? wx.provider.preset(frozen.weather, timeMs) : wx.provider.sample(timeMs);
+      else if (wx.request) wx.request();
+    }
+    if (!weather) weather = clearWeather(timeMs);
+    const wind = weather.wind, toward = (wind.dirDeg + 180) * DEG; // world axes: +x east, -z north
     return {
       timeMs, seed: frozen.seed ?? seed ?? dateSeed(timeMs),
       sun, moon, key,
       sky: { ambientLux, horizontalLux, zenithCdM2, magArcsec2: mag, bortle: bortle(mag), limitingMag: limitingMag(mag), phase: phaseOf(sTrue) },
       exposure: { ev100: frozen.ev100 ?? ev100FromIlluminance(Math.max(horizontalLux, 1e-4)), scale: 1 },
       lights: { cityFactor: frozen.lights ?? 1, windows: switchOn, street: switchOn, signs: switchOn },
-      weather, wind: new Vector3(), visibilityM: weather.visibilityM,
+      weather, wind: new Vector3(Math.sin(toward) * wind.speedMs, 0, -Math.cos(toward) * wind.speedMs), visibilityM: weather.visibilityM,
+      medium: atmosphereMedium(weather, { elevationM: city.base }),
       rain: { rateMmH: 0, fallSpeedMs: 0, streakM: 0 }, wetness: { film: 0, puddles: 0 }, lightning: { flash: 0, last: null },
     };
   }
 
   const pinnedState = (night) => (night
-    ? build(REFERENCE_NIGHT, { standInMoon: true })
-    : build(CLASSIC_AFTERNOON, { sunAzAlt: PINNED_SUN }));
+    ? build(REFERENCE_NIGHT, { standInMoon: true, pinned: true })
+    : build(CLASSIC_AFTERNOON, { sunAzAlt: PINNED_SUN, pinned: true }));
 
   const frozenTime = () => {
     if (frozen.time === undefined) return null;
@@ -219,6 +233,12 @@ export function createEnvironment({ city, clock, ephemeris, settings, seed = nul
       else env.update();
     },
     unfreeze() { frozen = {}; if (mode === 'clock') env.update(); },
+
+    /** Phase 5: the weather provider ({ sample(t), preset(id, t) }, src/weather/client.js) and how to ask for it. */
+    setWeather(provider) { wx.provider = provider; env.weatherChanged(); },
+    setWeatherRequest(fn) { wx.request = fn; },
+    /** The provider's data or settings changed: rebuild the state in the clock state, and tell 'weather' listeners. */
+    weatherChanged() { if (mode === 'clock' && env.state) env.update(); emit('weather'); },
     get frozen() { return { ...frozen }; },
 
     lights: createLightRegistry(),
