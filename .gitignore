@@ -17,3 +17,8 @@ landmarks/**/backups/
 landmarks/**/refs/*.jpg
 landmarks/**/refs/*.jpeg
 landmarks/**/refs/*.png
+
+# test output
+test-results/
+playwright-report/
+tests/reference/perf/runs/

@@ -1,0 +1,66 @@
+# Unit tests, the deterministic performance budgets, and the app in software WebGL2 (plan 01, T0.1 and T0.8).
+# Golden images are compared only where a snapshot for the runner's platform is committed; until Linux goldens
+# exist (run the "linux-goldens" job by hand and commit its artifact, see tests/README.md) the baseline spec
+# renders every scene and checks for errors but compares nothing.
+name: ci
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+    inputs:
+      linux_goldens:
+        description: Generate Linux golden images and upload them as an artifact
+        type: boolean
+        default: false
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm test:unit
+      - run: pnpm exec playwright install --with-deps chromium
+      - run: pnpm test:e2e
+        env:
+          CI: '1'
+      - if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: playwright-report
+          path: |
+            playwright-report/
+            test-results/
+          retention-days: 14
+
+  linux-goldens:
+    if: ${{ github.event_name == 'workflow_dispatch' && inputs.linux_goldens }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm exec playwright install --with-deps chromium
+      - run: pnpm test:goldens:update
+        env:
+          CI: '1'
+      - uses: actions/upload-artifact@v7
+        with:
+          name: linux-goldens
+          path: tests/reference/baseline/linux/
