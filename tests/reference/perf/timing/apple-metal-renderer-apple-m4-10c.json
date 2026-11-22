@@ -1,0 +1,83 @@
+{
+  "city": {
+    "lv": {
+      "edits": {
+        "hide": 27.95,
+        "move": 18.72,
+        "rebuild": 596.72,
+        "undo": 22.31
+      },
+      "firstFrameMs": 2164,
+      "readyMs": 1457.8
+    },
+    "slc": {
+      "edits": {
+        "hide": 25.3,
+        "move": 19.23,
+        "rebuild": 200.72,
+        "undo": 18.86
+      },
+      "firstFrameMs": 1114.8,
+      "readyMs": 669.3
+    }
+  },
+  "frame": {
+    "lv-aerial-day": {
+      "median": 22.443,
+      "method": "gpu-timer",
+      "p95": 43.224
+    },
+    "lv-aerial-night": {
+      "median": 22.261,
+      "method": "gpu-timer",
+      "p95": 38.986
+    },
+    "lv-east-day": {
+      "median": 17.265,
+      "method": "gpu-timer",
+      "p95": 22.245
+    },
+    "lv-east-night": {
+      "median": 15.014,
+      "method": "gpu-timer",
+      "p95": 18.42
+    },
+    "lv-strat-day": {
+      "median": 17.377,
+      "method": "gpu-timer",
+      "p95": 21.887
+    },
+    "lv-strat-night": {
+      "median": 17.497,
+      "method": "gpu-timer",
+      "p95": 22.149
+    },
+    "slc-aerial-day": {
+      "median": 13.751,
+      "method": "gpu-timer",
+      "p95": 26.853
+    },
+    "slc-aerial-night": {
+      "median": 15.324,
+      "method": "gpu-timer",
+      "p95": 21.95
+    },
+    "slc-ensign-day": {
+      "median": 19.389,
+      "method": "gpu-timer",
+      "p95": 27.472
+    },
+    "slc-ensign-night": {
+      "median": 19.144,
+      "method": "gpu-timer",
+      "p95": 29.194
+    }
+  },
+  "machine": {
+    "cores": 10,
+    "os": "darwin arm64",
+    "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M4, Unspecified Version)",
+    "software": false
+  },
+  "recorded": "2026-11-22"
+}

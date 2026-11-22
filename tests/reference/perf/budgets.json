@@ -3,10 +3,10 @@
     "chunks": {
       "generateMeshBVH.worker.js": 47185,
       "index.css": 3013,
-      "index.js": 204266
+      "index.js": 204530
     },
     "cssGzip": 3013,
-    "jsGzip": 251451
+    "jsGzip": 251715
   },
   "bytes": {
     "lv": {
