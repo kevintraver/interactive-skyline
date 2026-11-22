@@ -28,8 +28,23 @@ export type DayEvents = { astronomicalDawn: number | null; nauticalDawn: number 
   noon: number | null; sunset: number | null; civilDusk: number | null; nauticalDusk: number | null; astronomicalDusk: number | null;
   moonrise: number | null; moonset: number | null };
 export type AtmosphereUniforms = Record<string, unknown>;
-export type OverrideKey = string;
-export type WeatherSample = Record<string, unknown>;
+export type OverrideKey = 'lowCloud' | 'highCloud' | 'cloudBase' | 'haze' | 'dust' | 'humidity' | 'windSpeed' | 'windDir' | 'rain' | 'lightning';
+// section 6.4 (src/weather/schema.js): one instant after fusion and overrides; SI units, UTC ms, heights above sea level
+export interface CloudLayer { genus: 'cu' | 'tcu' | 'cb' | 'sc' | 'st' | 'ac' | 'as' | 'ci' | 'cs'; baseM: number; topM: number; cover: number }
+export interface WeatherSample {
+  t: number;
+  source: { surface: 'metar' | 'model' | 'preset'; clouds: 'metar' | 'model' | 'preset'; aerosol: 'cams' | 'climatology' | 'preset' };
+  tempC: number; dewPointC: number; rh: number; pressureHPa: number;   // pressure at the ground
+  wind: { dirDeg: number; speedMs: number; gustMs: number };
+  windAloft: { level: 850 | 700 | 500 | 300; dirDeg: number; speedMs: number }[];
+  visibilityM: number; visibilityCensored: boolean;
+  aerosol: { aod550: number; angstrom: number; dustUgM3: number; pm25UgM3: number; layerHeightM: number };
+  clouds: CloudLayer[];
+  precip: { rateMmH: number; kind: 'none' | 'drizzle' | 'rain' | 'snow' | 'virga' | 'hail'; convective: boolean; virgaBaseM: number | null };
+  storm: { thunder: boolean; flashRatePerMin: number; cells: number; capeJKg: number | null };
+  dustWall: { active: boolean; bearingDeg: number; distanceM: number; speedMs: number; heightM: number } | null;
+  wxCodes: string[];
+}
 
 // ---- section 5.4: internal interfaces
 // src/app/context.js
