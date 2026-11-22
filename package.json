@@ -10,6 +10,7 @@
     "test": "pnpm test:unit && pnpm test:e2e",
     "test:unit": "vitest run",
     "test:e2e": "playwright test --project=webgl2-software",
+    "test:data": "uv run --with-requirements tests/data/requirements.txt pytest tests/data -q",
     "test:goldens:update": "playwright test --project=webgl2-software baseline --update-snapshots=all",
     "test:perf": "playwright test --project=gpu --workers=1",
     "bench": "vitest bench --run --reporter=verbose",
