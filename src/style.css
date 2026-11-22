@@ -50,7 +50,7 @@ button { font: inherit; color: inherit; background: none; border: 0; padding: 0;
 #scene.grabbing { cursor: grabbing; }
 
 /* every floating surface shares one skin */
-#bar, .views button, #results, #card, .pop, #tools > button, .zoom, #hint, #changes, #menu {
+#bar, .views button, #results, #card, .pop, #tools > button, .zoom, #hint, #changes, #menu, #modes, #drivebar {
   background: var(--surface);
   border: 1px solid var(--line);
   border-radius: 12px;
@@ -70,6 +70,12 @@ button { font: inherit; color: inherit; background: none; border: 0; padding: 0;
 #search { flex: 1; min-width: 0; height: 100%; padding: 0; font: inherit; color: var(--ink); background: none; border: 0; outline: none; }
 #search::placeholder { color: var(--muted); opacity: 1; }
 #bar:focus-within { outline: 2px solid var(--blue); outline-offset: 1px; }
+
+/* ---- Map | Drive, beside the search bar */
+#modes { display: flex; gap: 3px; height: 46px; padding: 4px; flex: none; }
+#modes button { padding: 0 14px; border-radius: 8px; color: var(--muted); font-weight: 600; }
+#modes button:hover { color: var(--ink); background: var(--fill); }
+#modes button[aria-pressed="true"] { color: var(--ink); background: var(--fill-strong); }
 
 .pop { position: fixed; z-index: 6; }
 #city-menu { top: calc(var(--gap) + 52px); left: var(--gap); min-width: 190px; padding: 5px; }
@@ -189,6 +195,17 @@ button { font: inherit; color: inherit; background: none; border: 0; padding: 0;
 #changes button { padding: 5px 12px; border-radius: 7px; background: var(--fill); font-weight: 600; }
 #changes button:hover { background: var(--fill-strong); }
 
+/* ---- the drive's transport: play, local time, speed */
+#drivebar { display: flex; align-items: center; gap: 12px; height: 44px; padding: 0 16px 0 4px; font-variant-numeric: tabular-nums; white-space: nowrap; }
+#drivebar .play { display: grid; place-items: center; width: 36px; height: 36px; border-radius: 9px; }
+#drivebar .play:hover { background: var(--fill); }
+#drivebar .play .icon { fill: currentColor; }
+#drivebar .time { font-weight: 650; }
+#drivebar .speed { color: var(--muted); }
+#drivebar .status { color: var(--muted); font-size: 12.5px; }
+#drivebar .status:empty { display: none; }
+#drivebar.busy .time, #drivebar.busy .speed { display: none; }
+
 #credit { position: fixed; z-index: 2; left: var(--gap); bottom: 8px; font-size: 11.5px; color: #fff; text-shadow: 0 0 3px rgba(0, 0, 0, 0.75), 0 1px 2px rgba(0, 0, 0, 0.5); pointer-events: none; }
 
 #loading { position: fixed; z-index: 9; inset: 0; display: grid; place-items: center; background: #cfd9e3; color: #4b5560; font-size: 15px; transition: opacity 0.4s; }
@@ -205,6 +222,8 @@ button { font: inherit; color: inherit; background: none; border: 0; padding: 0;
   .selecting #tools, .selecting #dock { bottom: 190px; }
   #settings { right: var(--gap); bottom: 240px; }
   #dock { left: var(--gap); transform: none; align-items: flex-start; max-width: calc(100vw - 72px); bottom: 120px; }
+  #modes { height: 40px; align-self: flex-start; }
+  .driving #dock { bottom: 28px; }
 }
 
 @media (prefers-reduced-motion: reduce) {

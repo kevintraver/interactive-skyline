@@ -18,6 +18,8 @@
         <g id="i-sun"><circle cx="10" cy="10" r="3.2" /><path d="M10 2.5v2M10 15.5v2M2.5 10h2M15.5 10h2M4.7 4.7l1.4 1.4M13.9 13.9l1.4 1.4M4.7 15.3l1.4-1.4M13.9 6.1l1.4-1.4" /></g>
         <g id="i-layers"><path d="m10 3 7 4-7 4-7-4 7-4z" /><path d="m3 11 7 4 7-4" /></g>
         <g id="i-eye"><path d="M2 10s3-5.5 8-5.5S18 10 18 10s-3 5.5-8 5.5S2 10 2 10z" /><circle cx="10" cy="10" r="2.3" /></g>
+        <g id="i-play"><path d="M6.5 4.5v11l9-5.5z" /></g>
+        <g id="i-pause"><path d="M7 4.5v11M13 4.5v11" /></g>
         <g id="i-eye-off"><path d="M2 10s3-5.5 8-5.5S18 10 18 10s-3 5.5-8 5.5S2 10 2 10z" /><path d="M4 16 16 4" /></g>
       </defs>
     </svg>
@@ -34,6 +36,10 @@
           <svg class="icon" viewBox="0 0 20 20" aria-hidden="true"><use href="#i-search" /></svg>
           <input id="search" type="search" placeholder="Search buildings" aria-label="Search buildings" aria-controls="results" autocomplete="off" spellcheck="false" />
         </label>
+      </div>
+      <div id="modes" role="group" aria-label="Mode" hidden>
+        <button type="button" data-mode="map" aria-pressed="true">Map</button>
+        <button type="button" data-mode="drive" aria-pressed="false" title="Drive into the city">Drive</button>
       </div>
     </div>
     <div class="views" role="group" aria-label="Viewpoints"></div>
