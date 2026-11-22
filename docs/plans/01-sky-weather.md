@@ -4,13 +4,47 @@ Status: plan only, no code. Written 10 November 2026 against the working tree as
 
 How to read it: sections 1–4 say what will be built and what the user sees; 5–7 say how; 8–9 say how it is proven and what it may cost; 10 is the work, phase by phase; 11 is the contract with the other two plans; 12–13 are risks, licences and sources. Claims about three.js were checked in the installed r187 source; claims about data services were checked by calling them; anything not checked is marked as such in section 13.
 
+Revised 21 November 2026 after review: the decisions below were applied in place, and phase 0 was implemented the same day (section 10, "Phase 0 outcome").
+
+## Decisions after review (21 November 2026)
+
+Made by the owner after reviewing this plan. They override anything below that conflicts with them; the sections each one names have been edited to match. Section 2.3's decisions of 10 November stand.
+
+1. **Naming.** The future renderer-migration integration of the landmark skill is **v7**. Integration v6 already exists: the four integration files (`src/night.js`, `customModels.js`, `attractions.js`, `fountain.js`) and `skyline_tool.py` (`INTEGRATION = 6`) were at v6 by 21 November. Every "integration v6" in this plan that meant the WebGPU/TSL port now reads v7 (D2, A6, 3.3, 5.6, 7.12, T2.9 to T2.11, R2, Q1).
+2. **Skill ownership (Q1, resolved).** The repo owns the four integration files. The skill lives in the repo (`.claude/skills/blender-landmark-model/` and `blender-landmark-refine/`; there is no copy in `~/.claude/skills/`), and its copies under `assets/skyline/` are updated in the same commit whenever those files change. T2.10 is no longer "outside the repo".
+3. **Interface (4.2, 4.3, 4.5).** New controls follow the map-style interface that replaced the side panel (commit 27915a0) and reuse only what exists: `.pop` popovers, the `#tools` column and its grouped-button pattern (`.zoom`), the `.field`, `.row`, `.seg` and `.check` rows, the theme tokens in `:root` and `[data-theme="dark"]`, the `#i-…` icon sprite, `#dock` for transient messages, and the existing `@media (max-width: 720px)` rules. No new visual language.
+   - `#night` stays a one-click day/night button. Grouped directly under it, like the two `.zoom` buttons, a new `#sky-toggle` (a clock icon added to the sprite, `aria-expanded`, `aria-controls="sky"`) opens `#sky`, a `<form class="pop">` placed like `#settings`. Only one of `#settings`, `#sky` and `#city-menu` is open at a time, with `#settings`'s dismissal rules.
+   - Phase 1 puts in `#sky`: play/pause, a readout in the city's local time with its zone abbreviation, and Now; a 24-hour range scrubber whose track is shaded by twilight phase, with sunrise and sunset ticks; quick jumps Sunrise, Noon, Sunset and Night as a segmented row; a date input and a speed choice. Phase 4 adds the City lights slider and the sky-brightness readout, phase 5 the weather chip, source and presets, all as rows of the same popover. Quality, exposure and "Reduce flashes" (phase 2) go into `#settings` under a divider.
+   - Two states. **Pinned** (the default): pinned day and pinned night are exactly today's two looks, `#night` switches between them, and `settings.night` stays a persisted boolean, so the landmark checker and the screenshots are unaffected. **Clock**: any time control in `#sky`, or a `?t=` link, enters it; Sun and Moon come from the ephemeris, `settings.night` reads as "Sun more than 6° below the horizon" and is not persisted, `#night` shows the icon for the current Sun, and clicking it returns to the opposite pinned look. From phase 3, when the legacy sky is deleted, the pinned looks become frozen environment states (day: `sunAzAlt [245, 32]`, clear; night: the reference night of 5.6).
+   - The transport bar (4.3) is the last child of `#dock`, styled like `#changes`, hidden outside journeys. In explore mode the `T` key toggles `#sky`.
+4. **Opening view (Q3, resolved).** The app keeps opening on today's daylight look; real time is one click away (Now). Revisit the default after phase 4 ships the honest night.
+5. **Weather cache (6.3).** A response in which any source failed is cached briefly (`s-maxage=300, stale-while-revalidate=3600`) whatever the month's age, and carries `meta.partial: true`. Only complete responses for closed months get the year-long cache.
+6. **WebGPU test coverage (8.1, T0.1, T2.0).** T2.0 tries a third Playwright project, `webgpu-software`, on Chromium's software WebGPU adapter with the app forced to `?backend=webgpu`; its browser flags are established by that spike, not assumed here. If it is reliable in CI it becomes a required job from phase 2. If not, a local run on a real GPU, with its report committed, is required before merging any change under `src/render`, `src/sky`, `src/weather` or the materials.
+7. **If the T2.0 spike says no (7.1, T2.0, R1).** Phases 0, 1 and 5 stand. The app stays on `WebGLRenderer`; phases 3 and 4 are built on `@takram/three-atmosphere`'s WebGL path with pmndrs `postprocessing`, behind the same `env` and `createAtmosphere` contracts; WebGPU-only features are dropped; clouds are re-planned; the spike is re-run on each new three release. This is the named **WebGL fallback**, and it gets its own planning pass if triggered. The two speed gates: frame time within **25 %** of the classic renderer at the spike (unoptimised), and within **15 %** to ship phase 2.
+8. **Toast precision (4.4, T4.8).** The hide-a-building toast never shows more than one significant figure and says "about". Under 1 % it says "less than 1 %"; under 0.1 %, "no measurable change". The reason: calibration constrains the city's total emission, not one building's share of it.
+9. **Street-lamp data.** The inventory ingest (plan 02, task D5.3, without its VIIRS fit stage) is pulled forward as a shared data task, **T4.0** in this plan, before T4.5 and T4.7. It writes `lamp-cells.bin`. Plan 02 points to it at D5.3.
+10. **Checkpoints (R7).** One phase per branch and pull request. Review checkpoints at the end of phase 1 and at the end of phase 4.
+11. **Small fixes.** T3.0 is size M (up to three days). Weather fixtures are recorded on or after 1 December 2026, with the recording date in the file name, because Open-Meteo retires HRRR and NAM at the end of November.
+12. **Performance tests.** Section 8.7 is rewritten and phase 0 gains T0.8, a performance suite with a deterministic tier (CI) and a timing tier (a real GPU, locally). Section 9's budgets become the suite's budget file as they are measured, and every later task whose acceptance line gives a time or a size gets a test in this suite.
+13. **Resolved items.** A5 (the tree is committed), R10 (Node 24.10 is installed), and Salt Lake City is a first-class city: baselines and tests cover both cities from phase 0, and T8.2 shrinks to running the sky data pipelines for `slc`.
+
+### What changed in the tree between 10 and 21 November
+
+Section 3 describes the tree of 10 November and is kept as that snapshot; its line numbers have all moved (`src/main.js` was 1,118 lines before phase 0). These were checked on 21 November:
+
+- The four integration files and `skyline_tool.py` are at integration v6 (see decision 1). The skill and the refine skill live in the repo under `.claude/skills/`.
+- The side panel is gone (commit 27915a0). There is no `#panel`, `#browse` or Settings header. The interface is map-style: `#top` and `#bar` (city button and search), `.views` thumbnails bottom left, a `#tools` column bottom right (`#night`, `#options-toggle`, `#compass`, a `.zoom` group), `.pop` popovers (`#settings`, `#city-menu`), `#results`, `#card`, and `#dock` (`#hint`, `#toast`, `#changes`). `resize()` no longer applies a view offset.
+- `cities.json` is at `data/cities.json`, imported by the app as a JSON module and read by the Python scripts there. `skyline_tool.py` still read `public/data/cities.json` in three places, and `find`, `locate` and `install --extra` failed with a missing-file error; phase 0 fixed it.
+- Models are per city (`public/models/<city>/`, manifest `public/models/models.json`): 131 Las Vegas building models and 76 for Salt Lake City, plus three Las Vegas extras and the Bellagio fountain show.
+- `vercel.json` exists and only limits deployments to `main`; it stays. The tree is committed (A5).
+
 ---
 
 ## 1. Executive summary
 
 ### 1.1 What the user will see
 
-- **The real sky, now.** The app opens on Las Vegas as it is at this minute: the Sun or Moon where they really are, the weather from the airport's current observation, the clock running. One bar scrubs through the day; a date field reaches back to 1940.
+- **The real sky, now.** One click (Now) shows Las Vegas as it is at this minute: the Sun or Moon where they really are, the weather from the airport's current observation, the clock running. The app itself still opens on today's daylight look (decision 4 after review). One bar scrubs through the day; a date field reaches back to 1940.
 - **A day that behaves like a day.** Shadows sweep, the Spring Mountains throw theirs across the valley before sunset, the sky reddens and darkens through twilight, windows and signs come on one by one, the Moon rises with the right phase and tilt.
 - **An honest night.** On the Strip: a glowing dome, the planets, a few dozen stars. Drive toward Primm or climb, and the sky deepens. A **City lights** slider dims the city and the desert sky comes back: thousands of stars, the Milky Way, zodiacal light. A readout states the sky brightness it is showing.
 - **Glow that is made of the city.** Sky glow is computed from satellite-measured ground emission plus each tower's own light. Hide Luxor and its beam and its share of the glow go with it; the toast says how much, even when the honest answer is "no measurable change".
@@ -22,7 +56,7 @@ How to read it: sections 1–4 say what will be built and what the user sees; 5�
 | # | Decision | One-line reason |
 |---|---|---|
 | D1 | One renderer for everyone: three's `WebGPURenderer`, which runs on WebGPU or on its own WebGL2 backend. All shading in TSL. | It is the only route in r187 that gives WebGPU with a WebGL2 fallback from one code base; two renderers would mean writing every effect twice. |
-| D2 | `night.js` and the fountain's `ShaderMaterial` are ported to TSL node materials; `_GLOW`, `_WINDOWS` and LED surfaces keep their meaning. This is integration v6, shipped together with the landmark skill. | `onBeforeCompile` and `ShaderMaterial` do not run under `WebGPURenderer`; the landmark models and the Blender skills must keep working. |
+| D2 | `night.js` and the fountain's `ShaderMaterial` are ported to TSL node materials; `_GLOW`, `_WINDOWS` and LED surfaces keep their meaning. This is integration v7, shipped together with the landmark skill. | `onBeforeCompile` and `ShaderMaterial` do not run under `WebGPURenderer`; the landmark models and the Blender skills must keep working. |
 | D3 | Photometric units end to end, pre-exposure into a 16-bit float target, auto-exposure with a physically predicted prior, AgX tone mapping, bloom. | Day and night differ by more than ten million times in luminance; nothing hand-tuned survives that range. |
 | D4 | The atmosphere is our own TSL implementation of Hillaire 2020, adapted from two MIT code bases (`@pmndrs/sky` and Hillaire's reference), with every parameter a uniform and every table filled by a fragment pass. takram's three-geospatial and `@pmndrs/sky` serve as test oracles, not as runtime dependencies. | Moonlight, city glow, airglow, clouds and data-driven aerosols all have to enter the scattering integrals, on both backends. takram compiles its parameters into the shaders and its clouds are WebGL-only; `@pmndrs/sky` needs true WebGPU compute for aerial perspective. |
 | D5 | The whole world, terrain, clouds and atmosphere, sits on the one refraction-adjusted sphere the app already uses for terrain. | The haze band, cloud decks and terrain horizon stay aligned from a car and from a window seat. |
@@ -67,14 +101,16 @@ Relayed by the planning coordinator while this plan was being written; the drive
 | A2 | `three` stays on r187 for the duration of phases 2–4, then moves forward one release at a time. | `WebGPURenderer`, TSL and the addons used here change between releases; r187 is what is installed, is the newest release on npm, and is what every API in this plan was checked against (`node_modules/three`, version 0.187.0). | Re-verify the APIs listed in section 7.1 before upgrading. |
 | A3 | One observer for celestial positions: the city origin in `cities.json`. | Lunar parallax changes by 0.045° over 300 km; the Sun's by nothing visible. | Per-camera observer is a one-line change in `sky/ephemeris.js`. |
 | A4 | The whole world, geometry and atmosphere, lives on one sphere of radius `EFFECTIVE_RADIUS = 6371 km × 7/6` (the value `main.js:25` already uses for terrain). | A single radius keeps the haze band, the cloud decks and the terrain horizon parallel at any distance from the origin (section 7.4). | The radius is one constant in `src/core/earth.js`. |
-| A5 | The uncommitted work in the tree is committed before phase 0 starts: integration v5 (`src/night.js`, `src/customModels.js`, `src/attractions.js`, `src/fountain.js`), `public/models/`, and the edits to `index.html` and `src/main.js`. | Phase 0 moves that code into modules; doing it on a dirty, still-changing tree invites lost work. | Phase 0 cannot start. |
-| A6 | From the renderer migration on (integration v6), the repo owns its four integration files, and the landmark skill is updated in the same change (T2.10). | The skill copies its own versions of those files into `src/` and its checker's import map knows only `three`, `three/addons/` and `three-mesh-bvh` (section 3.3). A build that imports `three/webgpu` cannot load in the checker until the skill learns that specifier. | Phase 2 cannot merge without breaking `skyline_tool.py check`. Phases 0 and 1 are unaffected. |
+| A5 | *Resolved 21 November 2026: the tree was committed (`003b788`, integration v6) before phase 0 started.* The uncommitted work in the tree is committed before phase 0 starts. | Phase 0 moves that code into modules; doing it on a dirty, still-changing tree invites lost work. | Phase 0 cannot start. |
+| A6 | The repo owns its four integration files (decision 2 after review); from the renderer migration on (integration v7) the landmark skill is updated in the same change (T2.10). | The skill copies its own versions of those files into `src/` and its checker's import map knows only `three`, `three/addons/` and `three-mesh-bvh` (section 3.3). A build that imports `three/webgpu` cannot load in the checker until the skill learns that specifier. | Phase 2 cannot merge without breaking `skyline_tool.py check`. Phases 0 and 1 are unaffected. |
 
 ---
 
 ## 3. Current state
 
 The tree was changing while this plan was written. Everything below describes the working tree as of 10 November 2026, 00:35 local time: `HEAD` is `c725477`, with integration v5 of the landmark skill applied but uncommitted. Line numbers are from that snapshot; each is given with the symbol it points to, so a moved line can be found again by name.
+
+> **This section is the 10 November snapshot.** What changed by 21 November (integration v6, the map-style interface, `data/cities.json`, per-city models) is listed under "What changed in the tree between 10 and 21 November" at the top of the plan, and phase 0 has since split `main.js` into the modules of section 5.2. The line numbers below are not re-derived.
 
 ### 3.1 What exists
 
@@ -96,7 +132,7 @@ The tree was changing while this plan was written. Everything below describes th
 | Night switch | `src/main.js:37`, `:868-886`; `index.html:70` | Boolean `settings.night`, applied by `applyNight()`; a checkbox in Settings. `paint()` reads `NIGHT.tint`/`DAY.tint` (`:468`); `attractions.js` reads it for night-only extras. |
 | Frame loops | `src/main.js:79-81`, `:957-963`; `src/attractions.js:175-190` | The app renders only when `dirty` is set. A second `requestAnimationFrame` loop in `attractions.js` advances `clock` from the page-load time and calls `invalidate()` up to 30 times a second while a fountain is within 4 km, or an LED surface within 3 km, and in view. |
 | Test hooks | `src/main.js:966-983`; `src/attractions.js:202-224` | `window.__skyline` exposes `tall, renderer, scene, camera, controls, sun, invalidate, settings, setSetting, …`, plus `attractions` (`ready`, `find`, `freeze(seconds)`, `animating`, `summary`). |
-| Data pipeline | `scripts/*.py` | Four uv scripts with PEP 723 inline metadata; each takes a city id and reads `public/data/cities.json`. |
+| Data pipeline | `scripts/*.py` | Four uv scripts with PEP 723 inline metadata; each takes a city id and reads `data/cities.json`. |
 | Deployment | — | Static Vite build on Vercel. No `vite.config.js`, no `vercel.json`, no `api/`, no test runner, no CI. |
 
 Measured from the checked-in data: Las Vegas has 17,861 buildings, 182 of them at or above the 35 m cutoff (the removable set), covering 14.2 km² of footprint. The two ground textures decode to 3,283 × 5,040 and 3,900 × 3,600 pixels (read from the files), 163 MB of GPU memory with mipmaps, before anything in this plan is added.
@@ -120,19 +156,19 @@ Measured from the checked-in data: Las Vegas has 17,861 buildings, 182 of them a
 
 ### 3.3 A constraint found while reading: the landmark skill owns part of `src/`
 
-`~/.claude/skills/blender-landmark-model/scripts/skyline_tool.py` (integration 5, updated the same night) builds, installs and checks landmark models, extras and fountain shows against this app. Four of its behaviours constrain phases 0 and 2:
+`skyline_tool.py` (integration 5 then, read from `~/.claude/skills/`; now integration 6 and in the repo at `.claude/skills/blender-landmark-model/scripts/`) builds, installs and checks landmark models, extras and fountain shows against this app. Four of its behaviours constrain phases 0 and 2:
 
 1. **It owns four source files.** `ensure_integration` (`:340-383`) copies `night.js`, `attractions.js` and `fountain.js` from the skill's `assets/skyline/` into `src/` whenever a file is missing or its `// skyline-integration: vN` marker is lower than the tool's (`:372-377`); `customModels.js` likewise (`:392-394`). A file whose marker is *higher* than the tool's is left alone.
 2. **It reads and edits `src/main.js` by text.** If `main.js` contains `loadCustomModels`, `upgrade_main` (`:239-291`) looks for a line containing `setAttribute('windows'`, a line containing `setAttribute('led'`, a line containing `from './attractions.js'`, and a line that starts with `initAttractions(`. When all are present it changes nothing. When some are missing it inserts them, anchored on the `from './night.js'` import, the `toGeometry` lines and `const DEFAULTS = {`, and it stops with an error if those anchors or top-level declarations of `cityId, scene, camera, renderer, settings, invalidate, groundY, tall` are not found.
 3. **Its checker serves `src/` with no bundler.** `check` injects an import map that knows only `three`, `three/addons/` and `three-mesh-bvh` (`:606-618`), from `node_modules` or from jsDelivr. A source file that imports `three/webgpu`, `three/tsl` or any new package, or uses a Vite-only import (`?raw`, `?url`, `import.meta.env`), stops the app from loading there.
-4. **It drives `window.__skyline`.** The probe (`:499-590`) uses `settings` (and `'night' in settings`), `setSetting('night' | 'highlight', bool)`, `tall[].data`, `tall[].mesh.geometry` (bounding box, `position.count`, presence of `glow`), `scene.traverse`, `controls`, `camera`, `invalidate()`, and `attractions.freeze(seconds)`, `.ready`, `.summary()`, `.find(name)`; it hides the elements `loading, panel, tip, menu, card, toast`. It screenshots with headless Chrome or Edge under `--enable-unsafe-swiftshader --virtual-time-budget=45000` (`:684-687`).
+4. **It drives `window.__skyline`.** The probe (`:499-590`) uses `settings` (and `'night' in settings`), `setSetting('night' | 'highlight', bool)`, `tall[].data`, `tall[].mesh.geometry` (bounding box, `position.count`, presence of `glow`), `scene.traverse`, `controls`, `camera`, `invalidate()`, and `attractions.freeze(seconds)`, `.ready`, `.summary()`, `.find(name)`; it hides the elements `loading, panel, tip, menu, card, toast` (at integration 6: also `top, tools, dock, hint, changes`; `panel` no longer exists). It screenshots with headless Chrome or Edge under `--enable-unsafe-swiftshader --virtual-time-budget=45000` (`:684-687`).
 
 Consequences, each turned into a task:
 
-- **Phase 0** keeps `main.js` recognisable to the tool: the real `import { initAttractions } from './attractions.js'` and the real `initAttractions({...})` call stay in `main.js`, and one comment line carries the other three strings, so `upgrade_main` finds everything and edits nothing (T0.3). The four skill-owned files are not moved or edited in phases 0 and 1.
+- **Phase 0** keeps the tool working on the split layout: the real `import { initAttractions } from './attractions.js'` and the real `initAttractions({...})` call stay in `main.js`, and, because the skill is now in the repo, the tool was taught to find the other hooks across `src/` instead of relying on a marker comment, so `upgrade` checks everything and edits nothing (T0.3, done). The four integration files are not moved or edited in phases 0 and 1.
 - Source stays buildless-clean, with a test (T0.6); the hooks, `attractions` included, are a tested contract (T0.5).
-- New on-canvas UI lives inside `#panel` by default, so the checker's screenshots stay clean (section 4.2).
-- **Phase 2 is integration v6.** The four files are rewritten for the new renderer in the repo and marked v6, which the v5 tool will not overwrite; but its checker cannot load `three/webgpu`, so the skill's import map, probe and assets move to v6 in the same change (T2.9, T2.10). The renderer must also come up correctly on software WebGL2 under a virtual-time budget (T2.9).
+- New on-canvas UI goes into the map-style elements the checker already hides (`#top`, `#tools`, `#dock`) or into `.pop` popovers, which are closed by default, so its screenshots stay clean (section 4.2).
+- **Phase 2 is integration v7.** The four files are rewritten for the new renderer in the repo and marked v7, which the v6 tool will not overwrite; but its checker cannot load `three/webgpu`, so the skill's import map, probe and assets move to v7 in the same change (T2.9, T2.10). The renderer must also come up correctly on software WebGL2 under a virtual-time budget (T2.9).
 
 ---
 
@@ -140,66 +176,72 @@ Consequences, each turned into a task:
 
 ### 4.1 What a visitor sees on opening the app
 
-- **The live sky.** The clock follows wall time and the weather is the current KLAS observation fused with the Open-Meteo model. Until the weather request returns (target under one second from the CDN) the scene uses the clear-sky preset, then cross-fades over two seconds so nothing pops.
-- **If it is night in Las Vegas, the app opens at night**, honestly dark, with the city lit. A one-time toast says: "This is the Las Vegas sky right now. Drag the time bar to change it." A "Noon" quick jump is one click away.
-- **Offline or API failure:** the weather chip reads "Preset: clear (no live data)". Sun, moon and stars are unaffected because they are computed in the browser.
-- **Deep links** reproduce a scene exactly: `?t=2025-07-14T19:42-07:00&wx=live&lights=1&q=auto&seed=1`. `t=now` (default) follows the wall clock. Section 8.6 lists every parameter.
+- **Today's daylight look, pinned.** The app opens as it does now: the pinned day of section 4.2, with `#night` switching to the pinned night (decision 4 after review). Nothing about the first view depends on the visitor's clock.
+- **The live sky is one click away.** Now in `#sky` (or a `?t=now` link) enters the clock state: the clock follows wall time and the weather is the current KLAS observation fused with the Open-Meteo model. Until the weather request returns (target under one second from the CDN) the scene uses the clear-sky preset, then cross-fades over two seconds so nothing pops. If it is night in Las Vegas, that is an honestly dark sky with the city lit. Whether the app should open on the live sky instead is to be decided again after phase 4.
+- **Offline or API failure** (from phase 5): the weather chip reads "Preset: clear (no live data)". Sun, moon and stars are unaffected because they are computed in the browser.
+- **Deep links** reproduce a scene exactly: `?t=2025-07-14T19:42-07:00&wx=live&lights=1&q=auto&seed=1`. Any `t` enters the clock state; `t=now` follows the wall clock; with no `t` the app opens pinned. Section 8.6 lists every parameter.
 - **`prefers-reduced-motion`:** the clock never runs faster than real time on its own, star twinkle is off, and lightning is drawn as a soft glow with no full-screen flash. Independently of that preference, lightning flashes are capped at three per second and at a bounded screen-luminance step (WCAG 2.3.1).
 
-### 4.2 Controls in the existing panel
+### 4.2 Controls in the map-style interface
 
-Everything new sits inside `#panel` by default. That keeps the canvas clean, matches the brief ("UI placement in the existing panel"), and keeps the landmark checker's screenshots unchanged because it hides `#panel` (section 3.3).
+New controls follow the interface that replaced the side panel (decision 3 after review) and reuse only what it has: `.pop` popovers, the `#tools` column and its grouped-button pattern (`.zoom`), the `.field`, `.row`, `.seg` and `.check` rows, the theme tokens in `:root` and `[data-theme="dark"]`, the `#i-…` icon sprite, `#dock` for transient messages, and the existing `@media (max-width: 720px)` rules. No new visual language. The landmark checker hides `#top`, `#tools` and `#dock`, and every popover is closed by default, so its screenshots are unaffected.
 
-**A compact Sky block** goes into `#browse`, between `.views` (`index.html:24`) and `.bar` (`index.html:26`). Five rows at most, about 120 px tall:
+**In `#tools`.** `#night` stays a one-click day/night button. Grouped directly under it, as the two `.zoom` buttons are grouped, a new `#sky-toggle` (a clock icon added to the sprite as `#i-clock`; `aria-expanded`, `aria-controls="sky"`) opens `#sky`.
+
+**`#sky`** is a `<form class="pop">` placed like `#settings`. Only one of `#settings`, `#sky` and `#city-menu` is open at a time; a press outside it or `Esc` closes it, as for `#settings`. Its rows, by the phase that adds them:
 
 ```
-+----------------------------------------------+
-| [play] Live . Mon 9 Nov, 9:42 PM PST   [Now] |  1  play/pause, readout (click to type a date and time), Now
-| ####======----........----======####  s  m   |  2  24-hour scrubber; the track is shaded day / civil /
-|                                              |     nautical / astronomical / night; ticks at sunrise,
-|                                              |     sunset, moonrise, moonset
-| Clear . 10 mi . 61 F . NW 5 mph      [Sky >] |  3  weather chip with its source; opens the Sky sheet
-| City lights  =====================o  100 %   |  4  lights-out slider (shown when the Sun is below -6 deg)
-| Zenith 16.7 mag/arcsec2 . Bortle 9 . 60 stars|  5  honest-sky readout, computed, not hard-coded
-+----------------------------------------------+
++--------------------------------------+
+| [>] 9:42 PM PST . Mon 9 Nov    [Now] |  phase 1   play/pause, the city's local time and zone, Now
+| ####=====---.....---=====####        |  phase 1   24-hour range scrubber; track shaded day / civil /
+|        ^sunrise         ^sunset      |            nautical / astronomical / night, sunrise and sunset ticks
+| [Sunrise][ Noon ][Sunset][ Night ]   |  phase 1   quick jumps, a .seg row
+| Date [2026-11-09]   Speed [1x    v]  |  phase 1   date input; speed: paused, 1x, 1 min/s, 10 min/s, 1 h/s
+| Clear . 10 mi . 61 F . NW 5 mph      |  phase 5   weather chip with its source; any override shows here
+| Source [Live|History|Preset]  [v]    |  phase 5   source .seg and preset choice, sliders below it
+| City lights  ==============o 100 %   |  phase 4   lights-out slider (.field), shown when the Sun is below -6 deg
+| Zenith 16.7 mag/arcsec2 . Bortle 9   |  phase 4   honest-sky readout, computed, not hard-coded
++--------------------------------------+
 ```
 
-**A Sky sheet** opens from a "Sky" button beside "Settings" in the header (`index.html:17`). It reuses the existing pattern (`.settings-open`, `style.css:57-59`) with a `.sky-open` class and replaces the building list while open:
-
-| Group | Controls |
+| Phase | Rows in `#sky` |
 |---|---|
-| Time | Date (1 Jan 1940 to seven days ahead), time, speed (paused, 1×, 1 min/s, 10 min/s, 1 h/s), quick jumps: Now, Sunrise, Noon, Sunset, Dusk, Midnight, Next full moon, Next new moon, "Classic afternoon" (see section 5.6). |
-| Weather | Source: Live, This date in history, Preset. Presets: Clear, Hazy, Dusty, Fair-weather cumulus, High cirrus, Overcast, Rain, Monsoon storm, Haboob, Virga at sunset. Sliders, each with a "follow data" reset: low cloud, high cloud, cloud base, haze, dust, humidity, wind speed, wind direction, rain, lightning. |
-| Night sky | City lights slider and the readout from row 5. |
-| Display | Quality: Auto (shows the detected tier), Low, High, Ultra. Exposure: Eye or Camera, with ±3 EV compensation. Reduce flashes. |
+| 1 | Play/pause, readout, Now; the scrubber; Sunrise, Noon, Sunset, Night; date (1 Jan 1940 to seven days ahead) and speed. |
+| 4 | City lights slider and the sky-brightness readout (zenith mag/arcsec², Bortle class, stars visible). |
+| 5 | Weather chip; source (Live, This date in history, Preset); presets Clear, Hazy, Dusty, Fair-weather cumulus, High cirrus, Overcast, Rain, Monsoon storm, Haboob, Virga at sunset; sliders, each with a "follow data" reset: low cloud, high cloud, cloud base, haze, dust, humidity, wind speed, wind direction, rain, lightning. |
 
-The Night checkbox in Settings (`index.html:70`) is removed; time replaces it. The "Fountain show" checkbox that `attractions.js` adds beside it stays.
+**In `#settings`, under a divider (phase 2):** Quality (Auto, showing the detected tier; Low, High, Ultra), Exposure (Eye or Camera, with ±3 EV compensation) and Reduce flashes.
 
-**Every override is visible.** When a slider or preset departs from data, a chip appears in row 3 ("Preset: Monsoon storm", "City lights 20 %") with a one-click "Back to real". Screenshots therefore describe themselves, and the default state is always the honest one.
+**Two states.**
+
+- **Pinned** (the default). Pinned day and pinned night are exactly today's two looks; `#night` switches between them and `settings.night` stays a persisted boolean, so the landmark checker (`setSetting('night', …)`) and the goldens are unaffected. From phase 3, when the legacy sky is deleted, the pinned looks become frozen environment states: day is `env.freeze({ sunAzAlt: [245, 32], weather: 'clear' })`, night is the reference night of section 5.6.
+- **Clock.** Any time control in `#sky`, or a `?t=` link, enters it. The Sun and Moon come from the ephemeris; `settings.night` then reads as "the Sun is more than 6° below the horizon" and is not persisted; `#night` shows the icon for the current Sun, and clicking it returns to the opposite pinned look (from a clock night to pinned day, from a clock day to pinned night).
+
+**Every override is visible.** When a slider or preset departs from data, the weather chip says so ("Preset: Monsoon storm", "City lights 20 %") with a one-click "Back to real". Screenshots therefore describe themselves.
 
 ### 4.3 The shared transport bar
 
-`#transport` is a bottom-centre bar to the right of the panel, above `#dock` (which moves up by the bar's height when it is shown; `style.css:137`). It is hidden in the default explore mode and appears when a journey is active (drive or flight), or when the user presses `T` or the expand button on row 1.
+`#transport` is the last child of `#dock`, styled like `#changes`, and hidden outside journeys: it appears when a journey is active (drive or flight) and nowhere else. In explore mode the time controls live in `#sky` (4.2), and `T` toggles `#sky`.
 
 | Element | Behaviour |
 |---|---|
 | Journey scrubber | Present only while a journey is active. 0 to the journey's duration, with the journey's own markers ("Primm", "Jean", "Top of descent"). Dragging it moves the simulation clock (section 5.4). |
-| Play / pause, speed | The same clock controls as row 1. Journeys add 2×, 4× and 8×. |
+| Play / pause, speed | The same clock controls as the first row of `#sky`. Journeys add 2×, 4× and 8×. |
 | Depart at | Date and time-of-day for the start of the journey. Changing it keeps the current position along the journey and moves the sky. A recorded flight shows "Real date and time" as the default choice. |
 | Now | Returns to the live clock (in a journey: sets the departure so that the current position is "now"). |
-| Slot above | An empty container directly above the bar, where a mode mounts its own controls (the drive plan's route bar). |
+| Slot above | An empty container directly above the bar inside `#dock`, where a mode mounts its own controls (the drive plan's route bar). |
 
 ### 4.4 The lights-out slider
 
 - **What it is:** a single factor from 0 to 1 on every artificial light in the model: windows, façade and sign glow, the ground's emission, the Luxor beam, the lights the drive plan adds. Sky glow and the glow under clouds are computed from those sources, so they follow without a separate control.
 - **Default 100 %, labelled "Real".** It is not persisted; a reload is always honest. Double-click resets it.
-- **Readout (row 5), recomputed as the slider moves:** zenith sky brightness in mag/arcsec² at the camera (for scale: readings taken a mile east of the Strip on a clear night in 2011 were 16.6 to 17.0), the approximate Bortle class, the number of catalogue stars currently above the horizon and brighter than the local limiting magnitude, and "Milky Way visible" once the criterion in section 7.7 is met.
+- **Readout (the last row of `#sky`), recomputed as the slider moves:** zenith sky brightness in mag/arcsec² at the camera (for scale: readings taken a mile east of the Strip on a clear night in 2011 were 16.6 to 17.0), the approximate Bortle class, the number of catalogue stars currently above the horizon and brighter than the local limiting magnitude, and "Milky Way visible" once the criterion in section 7.7 is met.
 - **What the user sees while dragging down:** signs and windows dim, the dome over the Strip sinks, the exposure adapts over three to five seconds, and stars appear in order of brightness. At 0 % the scene is lit by the moon if it is up, otherwise by starlight and airglow, and the Milky Way is visible on a moonless night.
-- **Hide and move stay honest too.** Hiding a tower removes its light from the model and the toast reports the computed change: "Hidden: Luxor Las Vegas. Sky glow overhead −0.4 %". For most single buildings the true answer is "no measurable change", and the toast says so.
+- **Hide and move stay honest too.** Hiding a tower removes its light from the model and the toast reports the computed change, to one significant figure at most and always with "about": "Hidden: Luxor Las Vegas. Sky glow overhead about −0.4 %". Under 1 % it says "less than 1 %"; under 0.1 %, "no measurable change", which is the true answer for most single buildings. More precision would be false: the calibration (T4.7) constrains the city's total emission, not one building's share of it (decision 8 after review).
 
 ### 4.5 Keyboard
 
-`Space` play or pause; `,` and `.` step ten minutes back or forward (`Shift`: one hour, `Alt`: one day); `[` and `]` slower or faster; `N` now; `T` transport bar. All are ignored while typing in an input, and none collides with the existing `Esc`, `Cmd/Ctrl+Z`, `Delete` and `Backspace` handlers (`main.js:723-728`).
+`Space` play or pause; `,` and `.` step ten minutes back or forward (`Shift`: one hour, `Alt`: one day); `[` and `]` slower or faster; `N` now; `T` opens or closes `#sky` in explore mode. Any of the time keys enters the clock state. All are ignored while typing in an input, and none collides with the existing `Esc`, `/`, `Cmd/Ctrl+Z`, `Delete` and `Backspace` handlers (`src/ui/popovers.js` since phase 0).
 
 ### 4.6 What each preset shows
 
@@ -220,7 +262,7 @@ Section 7.14 has the full matrix. In one line each: **Low** shows the same sky, 
 
 ### 5.2 Module map
 
-`(move)` = code extracted from `main.js` in phase 0 with no behaviour change. Everything else is new.
+`(move)` = code extracted from `main.js` in phase 0 with no behaviour change; phase 0 built these on 21 November, and the line ranges are the 10 November ones. Everything else is new. `app/context.js` holds the city, downloads, settings, renderer, scene, camera, controls, frame loop and event bus today; `clock`, `timeline`, `env`, `quality` and `modes` join it in later phases.
 
 ```
 api/
@@ -229,8 +271,8 @@ src/
   main.js                  bootstrap only: pick city, build AppContext, start the loop, call initAttractions (< 150 lines)
   contracts.d.ts           the types in section 11, shared by all three plans (types only, no build step)
   night.js  customModels.js  attractions.js  fountain.js
-                           the four integration files the landmark skill installs (section 3.3). Not moved or edited
-                           in phases 0-1; rewritten for the new renderer as integration v6 in phase 2
+                           the four integration files, owned by the repo and mirrored in the skill's assets (section 3.3).
+                           Not moved or edited in phases 0-1; rewritten for the new renderer as integration v7 in phase 2
   app/
     context.js             createApp(): { city, renderer, scene, camera, controls, events, settings, clock, timeline, env, quality, loop, modes }
     settings.js    (move)  DEFAULTS, load/save, setSetting, change events            main.js:36-46, 915-931
@@ -247,19 +289,20 @@ src/
     extrude.js     (move)  ring, extrude, toGeometry                                 main.js:167-258
     buildings.js   (move)  buildCity, groundMarker, tall[] entries                   main.js:287-374
     views.js       (move)  viewpoints, setView, resize                               main.js:376-439
-  interaction/     (move)  edits.js (hide/move/undo), picking.js, focus.js           main.js:441-642, 730-840
-  ui/              (move)  list.js, menu.js, card.js, toast.js, settingsPanel.js     main.js:644-728, 842-936
-    skyBlock.js            the compact Sky block (section 4.2)
-    skySheet.js            the Sky sheet
-    transport.js           the shared transport bar and its slot for a mode's own bar (section 4.3)
+    data.js        (move)  every download for a city, started at once
+  interaction/     (move)  edits.js (hide/move/undo, buildings:changed), selection.js, picking.js, focus.js
+  ui/              (move)  format.js, list.js, menu.js, card.js, toast.js, popovers.js, settingsPanel.js, cityMenu.js
+    skyPopover.js          the #sky popover (section 4.2)
+    transport.js           the shared transport bar in #dock and its slot for a mode's own bar (section 4.3)
   sim/
     clock.js               SimClock
     timeline.js            journeys bound to the clock
   render/
     renderer.js            createRenderer(): WebGPURenderer, backend choice, capabilities
     quality.js             presets, auto-detection, dynamic resolution, governor
-    frameLoop.js           idle / ambient / animated / continuous scheduler
+    frameLoop.js           idle / ambient / animated / continuous scheduler (phase 0: render on demand only)
                            (replaces main.js:79-81, 957-963 and the tick in attractions.js)
+    perf.js                window.__skyline.perf, the measuring hook of the performance suite (T0.8)
     pipeline.js            RenderPipeline graph and its stages (section 5.7)
     exposure.js            metering, eye adaptation, prior
     shadows.js             cascades, far terrain shadow, cloud shadow, local cascades
@@ -307,7 +350,7 @@ scripts/
   build_aerosol_climatology.py   monthly aerosol optical depth -> public/data/<city>/aerosol.json
   fetch_test_fixtures.py   JPL Horizons, METAR, IEM and Open-Meteo samples -> tests/fixtures/
 tests/
-  unit/  e2e/  fixtures/  reference/
+  unit/  e2e/  bench/  helpers/  fixtures/  reference/  (README.md says what runs where)
 ```
 
 ### 5.3 Data flow
@@ -474,7 +517,7 @@ Per rendered frame, in this order (the numbers are the `order` argument of `loop
 | 60 | `pipeline.render()` | render |
 | 70 | queue async readbacks (exposure meter, sky-view LUT) | render, env |
 
-`FrameLoop` replaces both of today's loops, the `dirty` flag (`main.js:79-81`, `:957-963`) and, from integration v6, the tick in `attractions.js` (`:175-190`), with four tiers. Each subsystem votes; the loop uses the highest vote.
+`FrameLoop` replaces both of today's loops, the `dirty` flag (`main.js:79-81`, `:957-963`) and, from integration v7, the tick in `attractions.js` (`:175-190`), with four tiers. Each subsystem votes; the loop uses the highest vote.
 
 | Tier | Meaning | Who asks for it |
 |---|---|---|
@@ -492,18 +535,20 @@ The loop stops completely while `document.hidden`. `loop.settle()` returns a pro
 1. `interaction/edits.js` emits `buildings:changed` from the two places that change what stands where: `apply()` (`main.js:533-548`) and `place()` (`main.js:552-559`), plus `buildings:rebuilt` from `rebuild()` (`main.js:850-860`). The light registry and the shadow system subscribe. The drive plan calls the same seam `whatif.on('change')`; it is one emitter.
 2. `sky/legacySky.js` holds today's dome, fog, lights and `applyNight()` behind a three-function interface (`init`, `apply(state)`, `dispose`), so phase 1 can drive it from the clock and phase 3 can delete it in one commit.
 3. `app/hooks.js` builds `window.__skyline` from the context and is covered by a Playwright contract test (T0.5).
-4. `main.js` keeps what the landmark tool looks for (section 3.3): the real `initAttractions` import and call, and one marker comment. `attractions.js` keeps its own animation tick, which only calls `invalidate()`, until integration v6 folds it into the scheduler (T2.11).
+4. `main.js` keeps the real `initAttractions` import and call; the landmark tool finds the other hooks across `src/` (taught in phase 0, so no marker comment is needed). `attractions.js` keeps its own animation tick, which only calls `invalidate()`, until integration v7 folds it into the scheduler (T2.11).
 
-**Compatibility that is kept on purpose:**
+**Compatibility that is kept on purpose** (rewritten after review, decision 3):
 
 | Kept | How |
 |---|---|
-| `settings.night` and `setSetting('night', bool)` | An alias. Writing `true` pins the scene to a reference night (19 March 2026 05:00 UTC, 10 pm PDT on the 18th: new Moon, Sun 37° below the horizon, clear, seed 1); `false` pins it to the "Classic afternoon". Both pause the clock. Reading it returns whether the Sun is more than 6° below the horizon, which is what `attractions.js` (night-only extras) and `paint()` use it for. The alias is what the landmark checker calls. |
-| "Classic afternoon" | 23 March 2026 23:08 UTC (4:08 pm PDT). astronomy-engine puts the Sun at azimuth 245.00°, altitude 32.05° then, within 0.05° of today's hard-coded light (`main.js:99`); 19 September at 22:56 UTC is the other solution. Day screenshots stay comparable across the migration. |
+| `settings.night` and `setSetting('night', bool)` | **Pinned state** (the default): exactly today's persisted boolean. `false` is pinned day and `true` pinned night, today's two looks through phase 2; from phase 3, frozen environment states (day: `sunAzAlt [245, 32]`, clear; night: the reference night below). Writing it always selects a pinned look and pauses the clock. **Clock state** (entered from `#sky`, the time keys or `?t=`): reading it returns whether the Sun is more than 6° below the horizon, which is what `attractions.js` (night-only extras) and `paint()` use it for, and it is not persisted. The landmark checker writes it, so its shots are always pinned. |
+| The reference night | 19 March 2026 05:00 UTC (10 pm PDT on the 18th): new Moon, Sun 37° below the horizon, clear, seed 1. The pinned night from phase 3. |
+| "Classic afternoon" | 23 March 2026 23:08 UTC (4:08 pm PDT). astronomy-engine puts the Sun at azimuth 245.00°, altitude 32.05° then, within 0.05° of today's hard-coded light (`main.js:99` then, `src/sky/legacySky.js` now); 19 September at 22:56 UTC is the other solution. A clock-state instant whose frame can be compared with the pinned day (T1.3). |
 | `__skyline.sun` | Still the key `DirectionalLight` (in phase 3 the atmosphere-aware light, same class). |
-| `__skyline.attractions`, `attractions.freeze(seconds)` | Unchanged. From integration v6 (T2.11) the shared `clock` uniform (`night.js:17`) is computed from the simulation clock (seconds into the show's loop) while time runs at up to real speed, and from wall time above that, so a given instant always shows the same jets and the same LED frame. |
+| `__skyline.attractions`, `attractions.freeze(seconds)` | Unchanged. From integration v7 (T2.11) the shared `clock` uniform (`night.js:17`) is computed from the simulation clock (seconds into the show's loop) while time runs at up to real speed, and from wall time above that, so a given instant always shows the same jets and the same LED frame. |
+| Every other `__skyline` member | Unchanged; `perf` was added in phase 0. The contract test (T0.5) lists them. |
 | `geometry.attributes.glow`, `.windows`, `.led` | Unchanged names and meaning; the TSL materials read the same attributes. |
-| The four integration files | Stay at their paths. Their markers stay at v5 through phases 0 and 1 and move to v6 together with the skill (T2.10). |
+| The four integration files | Stay at their paths. Their markers stay at v6 through phases 0 and 1 and move to v7 together with the skill (T2.10); the skill's `assets/skyline/` copies change in the same commit as the files. |
 
 ### 5.7 Render pipeline
 
@@ -545,7 +590,7 @@ flowchart TD
 
 Two rules for anyone writing a pass in this graph:
 
-- **Reconstruct view rays from the camera's inverse projection matrix, never from `fov` and `aspect`.** `resize()` applies a view offset (`main.js:435`), so the frustum is not symmetric.
+- **Reconstruct view rays from the camera's inverse projection matrix, never from `fov` and `aspect`.** `resize()` applied a view offset for the side panel on 10 November; it no longer does, but a mode (the window seat, a mirror) may set one, and the inverse projection is right either way.
 - **Everything written to the HDR target is luminance in cd/m² multiplied by the current exposure** (pre-exposure, section 7.2). A pass that adds light multiplies by `env.nodes.exposure`; a pass that only attenuates does not.
 
 ---
@@ -578,7 +623,7 @@ Seven findings shape the design:
 
 ### 6.2 Build-time data (checked in, like today's terrain)
 
-All scripts follow the existing convention: PEP 723 inline dependencies, run with `uv run scripts/<name>.py <city>`, read `public/data/cities.json`, cache downloads under `data/raw/` (git-ignored), write small binary grids with a JSON sidecar.
+All scripts follow the existing convention: PEP 723 inline dependencies, run with `uv run scripts/<name>.py <city>`, read `data/cities.json`, cache downloads under `data/raw/` (git-ignored), write small binary grids with a JSON sidecar.
 
 | Product | Source and licence | Script → output | Size |
 |---|---|---|---|
@@ -612,7 +657,8 @@ All scripts follow the existing convention: PEP 723 inline dependencies, run wit
 | Request | Returns | CDN cache |
 |---|---|---|
 | `GET /api/weather?city=lv&live=1` | Observations for the last 6 hours, model hours from −24 h to +48 h, aerosols | `Cache-Control: public, max-age=60, s-maxage=300, stale-while-revalidate=900, stale-if-error=86400` |
-| `GET /api/weather?city=lv&month=1975-07` | One calendar month (UTC) of hourly model data and every archived observation | Month closed more than 90 days ago: `s-maxage=31536000`. Otherwise `s-maxage=86400` (reanalysis is revised for a few months). |
+| `GET /api/weather?city=lv&month=1975-07` | One calendar month (UTC) of hourly model data and every archived observation | Complete, and the month closed more than 90 days ago: `s-maxage=31536000`. Complete otherwise: `s-maxage=86400` (reanalysis is revised for a few months). |
+| Any response in which a source failed | Whatever was fetched, with `meta.partial: true` | `s-maxage=300, stale-while-revalidate=3600`, whatever the month's age (decision 5 after review), so a gap is retried within minutes instead of being cached for a year. |
 
 History is served **by month**, not by day: a visitor scrubbing through a year costs twelve upstream requests, each cached for every later visitor, instead of 365. A month of the fields in 6.4 is an estimated 100 to 150 kB gzipped; the client keeps it in memory. For months from July 2021 the function also asks the Historical Forecast API for what the archive lacks (winds aloft, freezing level, convective indices).
 
@@ -629,13 +675,13 @@ interface WeatherResponse {
   data: { city: string; fromMs: number; toMs: number; model: ModelHour[]; observations: Observation[]; aerosol: AerosolHour[] } | null;
   error: string | null;
   meta: { sources: { id: 'open-meteo' | 'open-meteo-air' | 'aviationweather' | 'nws' | 'iem'; ok: boolean; reason?: string; fetchedAtMs: number }[];
-          attribution: string[]; generatedAtMs: number };
+          attribution: string[]; generatedAtMs: number; partial: boolean };   // partial: some source failed (short cache)
 }
 ```
 
 **Failure and rate-limit behaviour.**
 
-- Each source fails alone: a missing source sets `ok: false` and the rest is still returned with `success: true`. All sources failing returns 502 with `success: false`, which the CDN does not cache; `stale-if-error` keeps serving the last good answer for a day.
+- Each source fails alone: a missing source sets `ok: false` and `meta.partial: true`, and the rest is still returned with `success: true` under the short cache of the table above. All sources failing returns 502 with `success: false`, which the CDN does not cache; `stale-if-error` keeps serving the last good answer for a day.
 - If Open-Meteo answers 429 to the function (the shared-address case its terms warn about), the response says so in `meta`, and **the browser then asks Open-Meteo directly**. That path is open (`access-control-allow-origin: *`), is counted against the visitor's own address, which is the use the free tier is meant for, and runs through the same normalizer. The function remains the first choice because a CDN hit is one fast request that gives all visitors identical data, which shared links and tests need.
 - Upstream volume from Vercel, worst case per region with traffic: live, 12 requests per hour per city (weighted cost about 5 each against 5,000 per hour); history, one per city-month ever requested per deployment. The CDN cache is keyed by the request URL within one deployment, and is regional and best-effort ("it may be evicted"), and is cleared by a new deployment, so these are upper bounds per region, not global.
 - Secrets: none today. If the project ever becomes commercial, `OPEN_METEO_API_KEY` in Vercel's environment switches the function to the paid host and the browser fallback is disabled so the key never reaches the client.
@@ -714,6 +760,10 @@ Checked in the installed r187 source and examples:
 **Who gets which backend.** WebGPU is on by default in Chrome and Edge since 113 (Windows, macOS, ChromeOS; Android 12+ since 121; Linux only on Intel Gen12+ since 144 and NVIDIA on Wayland since 147), in Safari since 26.0 (macOS 26 and iOS 26), in Firefox on Windows since 141 and on Apple-silicon Macs since 147. Firefox on Linux, Android and Intel Macs has not shipped it. caniuse counts 86.8 % of global use with full support. Everyone else, roughly one visitor in eight, runs the WebGL2 backend, so it is a first-class target and not an afterthought.
 
 **What three itself says.** The r187 manual still describes `WebGPURenderer` as "in an experimental state although its maturity level has been greatly improved", adds that with it "you will encounter missing features or a better performance with `WebGLRenderer`", and calls `WebGLRenderer` "the recommended choice for pure WebGL 2 applications" with "no plans to add larger new features". That is the honest price of the locked decision, and why phase 2 starts with a measured spike (T2.0) and keeps the classic renderer reachable until phase 3.
+
+**Two speed gates.** At the spike, unoptimised, frame time on the WebGL2 backend must be within **25 %** of the classic renderer's on the same machine; to ship phase 2 it must be within **15 %**. Both are measured with the performance suite (8.7) against its committed baselines.
+
+**If the spike says no: the WebGL fallback** (decision 7 after review). Phases 0, 1 and 5 stand unchanged. The app stays on `WebGLRenderer`; phases 3 and 4 are built on `@takram/three-atmosphere`'s WebGL path with pmndrs `postprocessing`, behind the same `env` and `createAtmosphere` contracts (section 5.4), so the other plans see no difference in interface; WebGPU-only features (the compute fast paths, timestamp queries) are dropped; clouds are re-planned; the spike is re-run on each new three release. This fallback is named here and not planned in detail: if it is triggered, it gets its own planning pass before phase 3 starts.
 
 **Rejected.**
 
@@ -940,7 +990,7 @@ The readout says "about". The in-city values are citizen-science readings from 2
 
 **Reflections.** Wet asphalt mirroring the Strip is a reflection of bright, small, on-screen things, which is what screen-space reflection is good at: `SSRNode` (in three r187) at half resolution with `reflectNonMetals`, only on wet, near-horizontal pixels, with normals rebuilt from depth and roughness from the wetness, so High needs no extra scene targets. Rays that leave the screen fall back to `skyReflection`. Low mirrors a vertically blurred copy of the bloom buffer below the horizon line, which gives the streaked look at grazing angles for almost nothing. Planar reflection was rejected (the ground is not a plane and it would double the scene cost); a full environment-probe grid was rejected (the lights that matter are local and move).
 
-### 7.12 Building, show and terrain materials (integration v6)
+### 7.12 Building, show and terrain materials (integration v7)
 
 **Chosen.** Port the skill's GLSL to TSL node materials with the same inputs and the same look.
 
@@ -1007,9 +1057,9 @@ The hardware class decides the preset, not the API: a strong GPU on the WebGL2 b
 
 | Tool | Version checked | Used for |
 |---|---|---|
-| Vitest | 5.1.0 (needs Node 22.12+, 24 or 26+; works with Vite 8) | Pure code: clock, ephemeris, units, atmosphere CPU reference, sky-glow CPU model, weather normalization and derivation, wetness, strike schedule, the function's handlers. Target 80 % line coverage on `src/core`, `src/sim`, `src/weather`, `src/sky/*.cpu.js`, `api/`. |
-| Playwright | 1.65.0 | The running app, driven through `window.__skyline`. Two projects: `webgl2-software` (SwiftShader; deterministic; runs in CI and owns the golden images) and `gpu` (a real GPU, local, for WebGPU and for timing). |
-| pixelmatch | 8.0.0 | Golden-image comparison, used sparingly. |
+| Vitest | 5.1.1, installed in phase 0 (needs Node 22.12+, 24 or 26+; works with Vite 8). Its benchmarks are a test-context `bench` fixture run by `vitest bench`, not a top-level export as in Vitest 4. | Pure code: clock, ephemeris, units, atmosphere CPU reference, sky-glow CPU model, weather normalization and derivation, wetness, strike schedule, the function's handlers. Target 80 % line coverage on `src/core`, `src/sim`, `src/weather`, `src/sky/*.cpu.js`, `api/`. |
+| Playwright | 1.65.1, installed in phase 0 | The running app, driven through `window.__skyline`. Projects: `webgl2-software` (SwiftShader; runs in CI and owns the golden images, which are per platform), `gpu` (this machine's GPU, headless, local; timing) and `software-timing` (the timing suite on SwiftShader). From T2.0, a third rendering project, `webgpu-software`, on Chromium's software WebGPU adapter with `?backend=webgpu`, its flags established by the spike (decision 6 after review): a required CI job from phase 2 if it proves reliable; otherwise a committed local report from a real GPU is required before merging changes under `src/render`, `src/sky`, `src/weather` or the materials. |
+| pixelmatch | not installed | Playwright's `toHaveScreenshot` does the golden comparison (with pixelmatch inside). Add it when a test needs its own measure, such as T2.2's mean absolute difference. |
 
 **Numbers before pictures.** Golden images break on driver changes and say nothing about physics. Most tests therefore read physical quantities: `pipeline.probe(x, y)` returns scene-referred luminance in cd/m² before exposure; `env.state` and `env.at()` return the CPU values; `__skyline.report()` returns both as JSON. Golden images are kept for layout and for "nothing changed" checks, rendered with `env.freeze(...)` and compared after `loop.settle()`.
 
@@ -1101,17 +1151,36 @@ For each quantity with a CPU twin (key-light illuminance and colour, zenith lumi
 | `view`, `journey` | a viewpoint id; a journey id |
 | `bench` | run the benchmark script |
 
-`window.__skyline` gains `clock`, `timeline`, `env` (with `freeze`, `unfreeze`, `at`, `state`), `loop` (with `settle`), `pipeline` (with `probe`), `quality`, `capture()` and `report()`. Everything it has today stays (T0.5).
+`window.__skyline` gains `clock`, `timeline`, `env` (with `freeze`, `unfreeze`, `at`, `state`), `loop` (with `settle`), `pipeline` (with `probe`), `quality`, `capture()` and `report()`. Everything it has today stays, `perf` (phase 0) included (T0.5).
 
 ### 8.7 Performance
 
-`?bench=1` plays a fixed 20-second script (a pan on the Strip at night in rain, a climb to 2,300 m at sunset through cumulus, a noon overview) and reports median and 95th-percentile frame time per pass (GPU timestamp queries on WebGPU; frame deltas elsewhere) and peak texture memory. Results per reference device are committed under `tests/reference/bench/` and compared by hand at the end of each phase against section 9. CI has no GPU, so performance is a release checklist item, not a CI gate.
+A performance suite, built in phase 0 (T0.8) so that every later phase is measured against today's app. Rewritten after review (decision 12).
+
+**The hook.** `window.__skyline.perf`, additive to the hooks contract: `renderFrames(n)` draws the current view `n` times in a synchronous loop and returns each frame's time, not capped by vsync; `info()` returns one frame's `renderer.info` counts (draw calls, triangles, lines, points, geometries, textures, programs); `frames()` counts the frames the app's own loop has rendered; `gpu()` names the GPU and says whether it is a software rasterizer. Frame times are GPU time from `EXT_disjoint_timer_query_webgl2` where the browser has it, otherwise wall time with `gl.finish()` after each frame. (Measured in phase 0: on ANGLE Metal `gl.finish()` does not wait for the GPU, see the phase 0 outcome.)
+
+**Scenes.** The baseline matrix: each city, each view, pinned day and pinned night, with the show clocks held.
+
+**Metrics.** Time to ready (navigation start to the `skyline-ready` mark, when the app is interactive) and to the first frame; frame time median and 95th percentile over 120 frames; the `renderer.info` counts; bytes downloaded per city, before the app is ready and in all; gzipped JS and CSS from `vite build`, in total and per chunk; time from an edit to the frame that shows it, for hide, undo, move and a cutoff rebuild; and render on demand itself: a scene held still renders zero frames in five seconds, and with the show clocks running a scene renders only while something animates in view, at most 30 frames a second.
+
+**Two tiers.**
+
+| Tier | What | Where | Rule |
+|---|---|---|---|
+| Deterministic | Bundle size, bytes downloaded, `renderer.info` counts, idle-render counts | CI and locally (`pnpm test:e2e`), against `tests/reference/perf/budgets.json` | Counts must match exactly unless the file changes in the same commit; sizes may grow 3 %. |
+| Timing | Frame time, time to ready, edit-to-frame latency | A real GPU, locally (`pnpm test:perf`), against a committed per-machine baseline in `tests/reference/perf/timing/`, keyed by a machine id with nothing personal in it (the GPU renderer string and the core count) | Fail if a median is more than 15 % slower or a 95th percentile more than 25 %. On software rendering, recorded and gated only at 2×. `pnpm test:perf:update` rewrites the baseline. |
+
+**Micro-benchmarks** with `vitest bench` for hot pure functions (`extrude`/`toGeometry`, terrain height lookups, `curveDrop`), reported; and unit tests with generous upper bounds (about ten times today's time) that catch an algorithmic blow-up on any machine.
+
+**Rules for later tasks.** Section 9's budgets become entries of the budget file as they are measured, and every task whose acceptance line gives a time or a size adds a test to this suite. `?bench=1` (T2.8) remains the per-pass profiler on the reference devices, with GPU timestamp queries on WebGPU; its results go under `tests/reference/bench/`.
 
 ---
 
 ## 9. Performance and data budgets
 
-These are budgets to design against. None is a measurement of code that does not exist yet; task T2.8 measures the renderer on the reference devices and adjusts the table once, with the reasons recorded.
+These are budgets to design against. None is a measurement of code that does not exist yet; task T2.8 measures the renderer on the reference devices and adjusts the table once, with the reasons recorded. Each row becomes an entry of the performance suite's budget file (8.7) once it is measured.
+
+**Today's app, measured in phase 0** (21 November 2026; `tests/reference/perf/budgets.json`): JavaScript 204.3 kB gzip in the entry chunk plus 47.2 kB for the BVH worker (201.8 kB before `main.js` was split), CSS 3.0 kB; Las Vegas downloads 29.2 MB before the app is ready and 31.2 MB in all (147 requests, most of them building models), Salt Lake City 21.9 and 22.0 MB; a frame draws 273 to 336 calls and 3.80 to 3.85 million triangles in Las Vegas, 140 to 144 calls and 3.33 to 3.34 million triangles in Salt Lake City, depending on the view. GPU frame times on the reference Apple M4 are in the phase 0 outcome (section 10).
 
 ### 9.1 Frame time
 
@@ -1137,7 +1206,7 @@ P = render pixels at the typical internal resolution: 1600 × 900 on Low, 1920 �
 
 | Megabytes | Low (P = 1.44 M) | High (P = 2.07 M) | Ultra (P = 3.69 M) |
 |---|---|---|---|
-| Already there today: two ground photos with mipmaps (163, measured from the files) and city geometry (roughly 70, to be measured in T0.2) | 233 | 233 | 233 |
+| Already there today: two ground photos with mipmaps (163, measured from the files) and city geometry (roughly 70; not measured in phase 0) | 233 | 233 | 233 |
 | Scene targets | MSAA 2×: 35, resolve 17 | MSAA 4×: 99, resolve 25 | colour, depth, normal+roughness, velocity: 74 |
 | Temporal history, reflections, bloom, cloud buffers | 8 | 30 | 95 |
 | Shadow maps (32-bit depth) | 2 × 1024²: 8 | 3 × 2048²: 50 | 4 × 2048² + one local 2048²: 84 |
@@ -1154,7 +1223,7 @@ The ground photos are half of the Low total. Compressing them to a GPU format (K
 
 | Asset | When it loads | Budget (transfer size) |
 |---|---|---|
-| JavaScript | First paint | Measure today's bundle in T0.2 and the `three/webgpu` + TSL bundle in T2.1; the increase must stay under 350 kB gzip, or the night and storm modules move behind dynamic imports until it does. For scale, the unminified sources in `node_modules/three/build` are 0.66 MB (`three.module.js`), 1.35 MB (`three.webgpu.js`) and 1.47 MB (`three.core.js`, shared by both). |
+| JavaScript | First paint | Today's bundle: 204.3 kB gzip plus a 47.2 kB worker (measured in T0.8). Measure the `three/webgpu` + TSL bundle in T2.1; the increase must stay under 350 kB gzip, or the night and storm modules move behind dynamic imports until it does. For scale, the unminified sources in `node_modules/three/build` are 0.66 MB (`three.module.js`), 1.35 MB (`three.webgpu.js`) and 1.47 MB (`three.core.js`, shared by both). |
 | `astronomy-engine` | First paint | 116 kB minified, 47 kB gzipped (`astronomy.browser.min.js` 2.1.19, measured). |
 | `stars.bin` | First night frame | 9,110 stars × 12 bytes = 109 kB; budget 80 kB gzip. |
 | Moon map 1024 × 512 | First frame with the Moon up | 150 kB |
@@ -1163,7 +1232,7 @@ The ground photos are half of the Low total. Compressing them to a GPU format (K
 | 3D cloud noise | — | 0: generated on the GPU, sliced over about 30 frames, High and Ultra only |
 | Weather | Start, then every five minutes while live; one request per month of history visited | live window under 30 kB gzip; a month of history under 150 kB gzip |
 | **Added to first paint** | | **under 400 kB** |
-| **Added in total over a session** | | **under 4 MB** (today's Las Vegas data is about 17 MB) |
+| **Added in total over a session** | | **under 4 MB** (a Las Vegas session downloads 31.2 MB today, measured in T0.8: terrain, imagery, buildings and 131 building models; the plan's earlier "about 17 MB" counted only `public/data/lv/`) |
 
 ---
 
@@ -1183,13 +1252,15 @@ flowchart LR
   P6 --> P7["7 Rain, wet, storms"]
   P4 --> P8["8 Stretch"]
   P7 --> P8
-  P0 -.-> D["Data pipelines T4.1, T4.3, T4.4 (any time after phase 0)"]
+  P0 -.-> D["Data pipelines T4.0, T4.1, T4.3, T4.4 (any time after phase 0)"]
   D -.-> P4
 ```
 
 The drive and flight plans can start against stubs after phase 1 and get real light after phase 3 (section 11.1).
 
-### Phase 0 — Foundations (no visible change; about one week)
+One phase per branch and pull request. Review checkpoints at the end of phase 1 and at the end of phase 4 (decision 10 after review).
+
+### Phase 0 — Foundations (no visible change; about one week; done 21 November 2026)
 
 | ID | Task | Size | After | ∥ |
 |---|---|---|---|---|
@@ -1200,24 +1271,29 @@ The drive and flight plans can start against stubs after phase 1 and get real li
 | T0.5 | `window.__skyline` contract test | S | T0.3 | T0.6 |
 | T0.6 | Buildless-ESM guard | S | T0.3 | T0.5 |
 | T0.7 | `cities.json`: `tz`, `icao`, `iemStation`, `stationElevationM` | S | T0.1 | any |
+| T0.8 | Performance suite: measuring hook, budgets, per-machine timing baseline | M | T0.2 | T0.3 |
 
-**T0.1 Toolchain.** *Goal:* tests can run locally and in CI. *Files:* `package.json`, `.nvmrc`, `vite.config.js` (new), `playwright.config.js`, `.github/workflows/ci.yml`. *Steps:* require Node `>=22.12` in `engines` and `.nvmrc` (this machine has 21.7.3; Vite 8 and Vitest 5 both refuse it); add `vitest@^5`, `@playwright/test@^1.65`, `pixelmatch@^8` as dev dependencies; scripts `test`, `test:unit`, `test:e2e`, `test:live`, `bench`; Playwright projects `webgl2-software` (Chromium with `--enable-unsafe-swiftshader --ignore-gpu-blocklist`, the deterministic one, used for goldens) and `gpu` (headed, local only); CI runs unit and `webgl2-software`. *Accept:* `pnpm test` passes with one placeholder test of each kind on a clean checkout. *Tests:* the placeholders.
+**T0.1 Toolchain.** *Goal:* tests can run locally and in CI. *Files:* `package.json`, `.nvmrc`, `vitest.config.js`, `playwright.config.js`, `.github/workflows/ci.yml`. *Steps:* pnpm; require Node `>=22.12` in `engines` and `.nvmrc` (24; this machine has 24.10); add the current stable `vitest` and `@playwright/test` as dev dependencies (5.1.1 and 1.65.1 on 21 November); scripts `test`, `test:unit`, `test:e2e`, `test:goldens:update`, `test:perf`, `test:perf:software`, `test:perf:update`, `test:perf:budgets:update`, `bench` (`test:live` arrives with the weather tests in phase 5); Playwright projects `webgl2-software` (Chromium with `--enable-unsafe-swiftshader --ignore-gpu-blocklist --use-angle=swiftshader`, used for goldens), `gpu` and `software-timing` (T0.8); CI runs unit and `webgl2-software`. *Accept:* `pnpm test` passes on a clean checkout. *Tests:* the suites of T0.2 to T0.8.
 
-**T0.2 Baseline.** *Goal:* a fixed reference for "no behaviour change". *Files:* `tests/e2e/baseline.spec.js`, `tests/reference/baseline/`, `tests/reference/baseline.json`. *Steps:* for `lv` and `slc`, each view in `cities.json`, day and night: wait for `window.__skyline`, screenshot at 1280 × 800; record frame time over 120 forced frames, JS bundle size from `vite build`, `renderer.info` geometry and texture counts. *Accept:* twelve-plus goldens committed; numbers in `baseline.json`. *Tests:* the spec itself, with a 0.1 % pixel tolerance.
+**T0.2 Baseline.** *Goal:* a fixed reference for "no behaviour change". *Files:* `tests/e2e/baseline.spec.js`, `tests/helpers/app.js`, `tests/reference/baseline/<platform>/`. *Steps:* for `lv` and `slc`, each view in `cities.json`, pinned day and pinned night: wait for `window.__skyline` and `attractions.ready`, hold the fountain, LED and wheel clocks (`attractions.freeze(47)`), redraw the shadow map, isolate storage (a fresh browser context per test), screenshot at 1280 × 800. Goldens are per platform; a platform with none renders and checks for errors but skips the comparison, and a CI job generates Linux goldens on request. The numbers (bundle size, `renderer.info`, frame time) moved to T0.8. *Accept:* ten goldens committed (about 10 MB). *Tests:* the spec itself, with a 0.1 % pixel tolerance; `SKYLINE_GOLDEN_STRICT=1` compares every pixel.
 
-**T0.3 Extract `main.js`.** *Goal:* the module map of section 5.2, moving code without changing it. *Files:* everything marked `(move)` in 5.2; `src/app/context.js`, `src/app/events.js`. *Steps:* one commit per module, in dependency order (`core` → `city` → `interaction` → `ui` → `app`); replace the module-level `dirty` flag with `loop.invalidate()` behind the same name; add the `buildings:changed` and `buildings:rebuilt` events at `apply()`, `place()` and `rebuild()`; wrap dome, fog, lights and `applyNight()` as `sky/legacySky.js`. Keep in `main.js` the `initAttractions` import and call and one marker comment carrying `loadCustomModels`, `setAttribute('windows'` and `setAttribute('led'` (section 3.3); do not move or edit the four integration files. *Accept:* T0.2 goldens unchanged; `skyline_tool.py upgrade` reports nothing to do and `check` passes for one model; `main.js` under 150 lines; no new file over 400 lines; undo, drag, search, context menu and city switch work (manual checklist in the PR). *Tests:* T0.2 suite; unit tests for `extrude()` vertex counts on three recorded buildings (flat, pyramid, leaning).
+**T0.3 Extract `main.js`.** *Goal:* the module map of section 5.2, moving code without changing it. *Files:* everything marked `(move)` in 5.2; `src/app/context.js`, `src/app/events.js`; the skill's `skyline_tool.py`. *Steps:* move the code module by module, keeping the order in which objects and materials are created (it decides draw order); replace the module-level `dirty` flag with `loop.invalidate()` behind the same name; add the `buildings:changed` and `buildings:rebuilt` events at `apply()`, `place()` and `rebuild()`; wrap dome, fog, lights and `applyNight()` as `sky/legacySky.js`. Keep in `main.js` the `initAttractions` import and call, and teach `skyline_tool.py` to find the other hooks across `src/` (the skill is in the repo, so this replaces the marker comment once planned); do not move or edit the four integration files. *Accept:* T0.2 goldens unchanged; `skyline_tool.py upgrade` reports nothing to do and `check` passes for one building model in each city, one extra and the fountain; `main.js` under 150 lines; no new file over 400 lines; undo, drag, search, context menu and city switch work. *Tests:* T0.2 suite; unit tests for `extrude()` vertex counts on recorded buildings (flat, courtyard, pyramid, dome, leaning); a unit test that runs `skyline_tool.py upgrade`.
 
-**T0.4 `core/` and contracts.** *Files:* `src/core/earth.js`, `units.js`, `rng.js`, `time.js`, `src/contracts.d.ts`, `tests/unit/core/*.test.js`. *Steps:* `earth.js`: `EARTH_RADIUS`, `REFRACTION_K = 1/7`, `EFFECTIVE_RADIUS`, `curveDrop`, `planetCenter(city)`, `altitudeOf(pos)`, `horizonDistance(h)`, `toGeodetic(x, z)` and `toLocal(lat, lon)` (transverse Mercator about the origin, matching the `+proj=tmerc` string in `terrain.json`); `units.js`: EV100, magnitude ↔ lux, mag/arcsec² ↔ cd/m² (`L = 10.8 × 10⁴ × 10^(−0.4 m)`), colour temperature → linear sRGB and spectrum → linear sRGB (CIE 1931 observer; the drive plan's lamp colours use both); `rng.js`: `rand(seed, ...keys)` returning a float in [0, 1) from a 32-bit integer hash, stateless; `time.js`: zoned conversions through `Intl`. *Accept:* `curveDrop` equals today's to the last bit; `horizonDistance(10668)` = 398.2 km ± 0.1; `toLocal(35.6106, −115.3883)` (Primm) = (−19.4 km, −56.1 km) ± 0.2 km; 22.0 mag/arcsec² ↔ 1.71 × 10⁻⁴ cd/m²; `rand` is uniform (chi-square over 10⁵ draws) and identical across runs. *Tests:* as listed.
+**T0.4 `core/` and contracts.** *Files:* `src/core/earth.js`, `units.js`, `rng.js`, `time.js`, `src/contracts.d.ts`, `tests/unit/core/*.test.js`. *Steps:* `earth.js`: `EARTH_RADIUS`, `REFRACTION_K = 1/7`, `EFFECTIVE_RADIUS`, `curveDrop`, `planetCenter(city)`, `altitudeOf(pos)`, `horizonDistance(h)`, `toGeodetic(x, z)` and `toLocal(lat, lon)` (transverse Mercator about the origin, matching the `+proj=tmerc` string in `terrain.json`); `units.js`: EV100, magnitude ↔ lux, mag/arcsec² ↔ cd/m² (`L = 10.8 × 10⁴ × 10^(−0.4 m)`), colour temperature → linear sRGB and spectrum → linear sRGB (CIE 1931 observer; the drive plan's lamp colours use both); `rng.js`: `rand(seed, ...keys)` returning a float in [0, 1) from a 32-bit integer hash, stateless; `time.js`: zoned conversions through `Intl`. *Accept:* `curveDrop` equals today's to the last bit; `horizonDistance(10668)` = 398.2 km ± 0.1; `toLocal(35.6106, −115.3883)` (Primm) = (−19.525 km, −55.912 km), PROJ's answer for the `+proj=tmerc` of `terrain.json`, to 1 cm (the (−19.4, −56.1) first written here was 0.13 and 0.19 km off); 22.0 mag/arcsec² ↔ 1.71 × 10⁻⁴ cd/m²; `rand` is uniform (chi-square over 10⁵ draws) and identical across runs. *Tests:* as listed.
 
-**T0.5 Hooks contract test.** *Files:* `tests/e2e/hooks.spec.js`. *Steps:* assert every member the landmark checker uses (section 3.3, point 3) exists and behaves: `settings`, `setSetting('night' | 'highlight')`, `tall[i].data`, `tall[i].mesh.geometry.attributes.position` and `.glow`, `scene.traverse`, `controls`, `camera`, `invalidate`, and `attractions.ready`, `.freeze`, `.summary`, `.find`; assert the element ids `loading, panel, tip, menu, card, toast` exist. *Accept and tests:* the spec passes now and is required to pass in every later phase.
+**T0.5 Hooks contract test.** *Files:* `tests/e2e/hooks.spec.js`. *Steps:* for both cities, assert every member `window.__skyline` has (`tall, renderer, scene, camera, controls, sun, invalidate, settings, setSetting, focusOn, flying, setView, select, selectedId, screen, place, movedIds, hiddenIds, perf, attractions`) exists and behaves, and the `attractions` members the checker's probe uses (`ready, extras, fountains, find, freeze, summary`, plus `animating`); assert the element ids the app and the checker use exist: `scene, top, bar, city, search, city-menu, results, count, toggle-all, list, empty, card, tools, night, options-toggle, compass, zoom-in, zoom-out, settings, cutoff-out, settings-reset, about, tip, menu, dock, hint, toast, changes, reset-all, credit, loading` (the probe also asks for `panel`, which no longer exists). *Accept and tests:* the spec passes now and is required to pass in every later phase; members are added, never removed.
 
-**T0.6 Buildless guard.** *Files:* `tests/e2e/buildless.spec.js`, `tests/helpers/staticServer.js`, `tests/unit/sourceHygiene.test.js`. *Steps:* a static server serves `src/`, `public/` and `node_modules/` with an import map generated from `package.json` (`three`, `three/addons/`, `three/webgpu`, `three/tsl`, and each dependency's ESM entry); the spec boots the app from it. The hygiene test greps `src/` for `?raw`, `?url`, `?worker`, `import.meta.env` and bare imports not in the map. *Accept:* the app boots without Vite. *Tests:* both.
+**T0.6 Buildless guard.** *Files:* `tests/e2e/buildless.spec.js`, `tests/helpers/staticServer.js`, `tests/unit/sourceHygiene.test.js`. *Steps:* a static server serves `src/` and `node_modules/` from the repo and everything else from `public/`, with an import map generated from `package.json` (`three`, `three/addons/`, `three/webgpu`, `three/tsl`, and each dependency's ESM entries); JSON imports in app source (`../data/cities.json`) resolve against the repo and are served as `export default …` modules, as the landmark tool's server does; bare imports are rewritten in the served files too, for the BVH worker; the spec boots both cities from it. The hygiene test checks `src/` for `?raw`, `?url`, `?worker`, `import.meta.env` and bare imports not in the map, and allows relative JSON imports. *Accept:* the app boots without Vite. *Tests:* both.
 
-**T0.7 City configuration.** *Files:* `public/data/cities.json`, the four Python scripts (read-only use), `tests/unit/cities.test.js`. *Steps:* add `"tz": "America/Los_Angeles"`, `"icao": "KLAS"`, `"iemStation": "LAS"`, `"iemNetwork": "NV_ASOS"`, `"stationElevationM"` for `lv`; `America/Denver`, `KSLC`, `SLC`, `UT_ASOS` for `slc`. *Accept:* schema test passes for every city; the pipeline scripts still run (they ignore unknown keys). *Tests:* a JSON-shape test that fails if a city lacks any field this plan reads.
+**T0.7 City configuration.** *Files:* `data/cities.json`, the four Python scripts (read-only use), `tests/unit/cities.test.js`. *Steps:* add `"tz": "America/Los_Angeles"`, `"icao": "KLAS"`, `"iemStation": "LAS"`, `"iemNetwork": "NV_ASOS"`, `"stationElevationM": 664.5` for `lv`; `America/Denver`, `KSLC`, `SLC`, `UT_ASOS`, 1288.1 for `slc`; elevations from NOAA's station metadata (`api.weather.gov/stations/<icao>`: 2,180 ft and 4,226 ft), recorded in a `stationNote` beside them. *Accept:* schema test passes for every city; the pipeline scripts still run (they read only the keys they name). *Tests:* a JSON-shape test that fails if a city lacks any field this plan reads.
+
+**T0.8 Performance suite.** *Files:* `src/render/perf.js`, `src/app/hooks.js`, `tests/e2e/perf.budgets.spec.js`, `tests/e2e/perf.timing.spec.js`, `tests/helpers/perf.js`, `tests/reference/perf/budgets.json`, `tests/reference/perf/timing/<machine id>.json`, `tests/bench/hot.bench.js`, `tests/unit/perf/bounds.test.js`. *Steps:* section 8.7: the `window.__skyline.perf` hook; the deterministic tier over the baseline scenes (bundle, bytes per city, `renderer.info`, render on demand) against a committed budget file; the timing tier against a per-machine baseline; micro-benchmarks and upper-bound unit tests; record this machine's baseline. *Accept:* the deterministic tier passes in CI and locally; the timing tier passes against its own baseline on the reference machine; budgets and baseline committed. *Tests:* the suite.
+
+**Phase 0 outcome (21 November 2026).** Done on one branch, one commit per task. Verified: the ten goldens match the refactored app pixel for pixel in a strict run (one earlier strict run showed 7 and 11 differing pixels in two night scenes, and the untouched app also shows a few such pixels now and then on SwiftShader, so a strict run can flake); `upgrade` has nothing to do and `check` passes for the Stratosphere and Astra Tower models, the High Roller and the Bellagio fountain; the hooks, buildless and budget suites pass for both cities. `main.js` is 80 lines; the largest new module is 133. Corrections found on the way: the Primm coordinates (T0.4); `skyline_tool.py` could not find `cities.json` (fixed); a Las Vegas session downloads 31.2 MB, not about 17 (section 9.3); `gl.finish()` does not wait for the GPU on ANGLE Metal, so frame times come from GPU timer queries (8.7); and the 15 % timing gate is narrower than this machine's run-to-run spread, see below. Timing baseline on the reference machine (Apple M4, 10 cores, headless Chromium on ANGLE Metal, 1280 × 800, committed in `tests/reference/perf/timing/apple-metal-renderer-apple-m4-10c.json`): GPU frame-time medians 15.0 to 22.4 ms in Las Vegas and 13.8 to 19.4 ms in Salt Lake City (95th percentiles 18 to 43 ms); ready in 1.46 s (lv) and 0.67 s (slc), first frame at 2.16 s and 1.11 s; hide-to-frame 28 and 25 ms, undo 22 and 19 ms, move 19 ms, a cutoff rebuild 597 and 201 ms. The spread is the caveat: the same build measured 13 to 66 ms for one scene across runs that evening while other sessions shared the machine, and on a quiet run one median in twelve still exceeded the 15 % gate (26.0 ms against 22.3). The gates are kept as decided; R12 records the risk.
 
 ### Phase 1 — Real Sun, Moon and time, on today's renderer (about one week)
 
-Visible result: the app opens on the live Sun or Moon, shadows fall where they really fall, a time bar scrubs the day, building lights fade in through dusk. The hand-tuned look of today is kept and interpolated; phase 3 replaces it.
+Visible result: Now (or a `?t=` link) shows the live Sun or Moon, while the app still opens on the pinned day (decision 4 after review); in the clock state shadows fall where they really fall, a time bar scrubs the day, building lights fade in through dusk. The hand-tuned look of today is kept and interpolated; phase 3 replaces it.
 
 | ID | Task | Size | After | ∥ |
 |---|---|---|---|---|
@@ -1225,9 +1301,9 @@ Visible result: the app opens on the live Sun or Moon, shadows fall where they r
 | T1.2 | Ephemeris wrapper and JPL fixtures | M | T0.4 | T1.1 |
 | T1.3 | Key light and shadow follow the ephemeris | S | T1.1, T1.2, T0.3 | T1.5 |
 | T1.4 | Continuous day–night look; continuous `night` uniform | S | T1.3 | T1.5 |
-| T1.5 | Sky block rows 1–2, quick jumps, keyboard, `?t=` | M | T1.1 | T1.3 |
+| T1.5 | `#sky-toggle` and the `#sky` popover's phase 1 rows, quick jumps, keyboard, `?t=` | M | T1.1 | T1.3 |
 | T1.6 | Sun and Moon discs on the legacy dome | S | T1.3 | |
-| T1.7 | `env` facade with stubs, `night` alias, settings migration | S | T1.1, T1.2 | |
+| T1.7 | `env` facade with stubs, pinned and clock states | S | T1.1, T1.2 | |
 | T1.8 | `Timeline`, transport bar, a built-in test journey | M | T1.1, T1.5 | T1.6 |
 | T1.9 | `FrameLoop` tiers | S | T1.1 | |
 
@@ -1239,11 +1315,11 @@ Visible result: the app opens on the live Sun or Moon, shadows fall where they r
 
 **T1.4 Continuous look.** *Files:* `src/sky/legacySky.js` (it sets the shared `night` uniform; `src/night.js` itself is not edited). *Steps:* replace the two tables at `main.js:59-60` with five keyframes by solar altitude (+10°, 0°, −6°, −12°, −18°) interpolated smoothly; the `night` uniform becomes `smoothstep(+2°, −6°)` of solar altitude. Marked in code as interim. *Accept:* no visible step anywhere in a dusk scrub; at the reference night the T0.2 night goldens match within 2 %. *Tests:* e2e: frame-to-frame mean luminance change under 3 % across a 400-frame dusk scrub.
 
-**T1.5 Sky block.** *Files:* `index.html`, `src/style.css`, `src/ui/skyBlock.js`, `tests/e2e/skyBlock.spec.js`. *Steps:* rows 1 and 2 of section 4.2 (the scrubber track is a CSS gradient built from `ephemeris.events()`); quick jumps; keys of section 4.5; `?t=` round-trips to the address bar on pause. *Accept:* keyboard-operable with visible focus; scrubbing is 60 fps on the reference High device; the readout shows the city's local time and zone abbreviation, not the visitor's. *Tests:* drag to sunset → clock within one minute of `events().sunset`; `N` returns to live; typing in the search box does not trigger shortcuts.
+**T1.5 The `#sky` popover.** *Files:* `index.html` (`#sky-toggle` in `#tools`, the `#i-clock` icon, `#sky`), `src/style.css`, `src/ui/skyPopover.js`, `src/ui/popovers.js`, `tests/e2e/skyPopover.spec.js`. *Steps:* the phase 1 rows of section 4.2 with the existing `.pop`, `.field`, `.row` and `.seg` styles (the scrubber track is a CSS gradient built from `ephemeris.events()`); `#sky` joins the popover list so only one of `#settings`, `#sky` and `#city-menu` is open; quick jumps; keys of section 4.5, `T` toggling `#sky`; any time control enters the clock state; `?t=` round-trips to the address bar on pause. *Accept:* keyboard-operable with visible focus; works at 720 px and below with the existing media rules; scrubbing is 60 fps on the reference High device; the readout shows the city's local time and zone abbreviation, not the visitor's; with `#sky` closed and the app pinned, the T0.2 goldens are unchanged. *Tests:* drag to sunset → clock within one minute of `events().sunset`; `N` returns to live; typing in the search box does not trigger shortcuts; opening `#sky` closes `#settings` and the reverse.
 
 **T1.6 Sun and Moon discs.** *Files:* `src/sky/legacySky.js`. *Steps:* two camera-facing quads at 110 km with correct angular size; the Moon quad's fragment shades a sphere lit from the Sun's direction, so its phase and tilt are right. Interim; replaced in T3.3. *Accept:* the Moon's lit fraction on screen matches `phaseFraction` within 5 % at four phases. *Tests:* e2e pixel-count of lit Moon pixels at four pinned dates.
 
-**T1.7 `env` facade and compatibility.** *Files:* `src/env/environment.js`, `src/env/nodes.js` (stubs), `src/app/settings.js`, `src/app/hooks.js`. *Steps:* build `env.state` from clock and ephemeris; every other field of section 11.4 present with the stub values of 11.1; `freeze` and `unfreeze`; `settings.night` becomes an alias (section 5.6); remove the Night checkbox; `__skyline` gains `clock`, `env`, `loop`. *Accept:* T0.5 passes; `setSetting('night', true)` gives the reference night, `false` the Classic afternoon. *Tests:* contract test asserting every key of `EnvState` exists and has the right type.
+**T1.7 `env` facade and compatibility.** *Files:* `src/env/environment.js`, `src/env/nodes.js` (stubs), `src/app/settings.js`, `src/app/hooks.js`, `src/ui/settingsPanel.js`. *Steps:* build `env.state` from clock and ephemeris; every other field of section 11.4 present with the stub values of 11.1; `freeze` and `unfreeze`; the pinned and clock states of sections 4.2 and 5.6 (`settings.night` persisted in the pinned state, derived and not persisted in the clock state; `#night` stays a one-click button and returns to the opposite pinned look); `__skyline` gains `clock`, `env`, `loop`. *Accept:* T0.5 passes; `setSetting('night', true | false)` gives today's pinned night and day, goldens unchanged; entering the clock state from `#sky` and leaving it with `#night` works. *Tests:* contract test asserting every key of `EnvState` exists and has the right type; the two-state transitions.
 
 **T1.8 Timeline and transport bar.** *Files:* `src/sim/timeline.js`, `src/ui/transport.js`, `tests/unit/sim/timeline.test.js`, `tests/e2e/transport.spec.js`. *Steps:* section 11.3; the bar of section 4.3; a 120-second test journey (`?journey=test`, a straight camera track across the valley) that exists only to exercise the contract. *Accept:* scrubbing the journey moves the clock and the Sun; "Depart at" moves the Sun and not the camera; `frozen-sky` holds the clock. *Tests:* unit: progress ↔ time mapping, `setStart`, `setTimeOfDay`, end behaviours; e2e: the three acceptance statements.
 
@@ -1255,20 +1331,20 @@ Visible result: the same scene on WebGPU where the browser has it, with real HDR
 
 | ID | Task | Size | After | ∥ |
 |---|---|---|---|---|
-| T2.0 | Spike and go/no-go | S | phase 1 | |
+| T2.0 | Spike and go/no-go; the `webgpu-software` test project | S | phase 1 | |
 | T2.1 | `createRenderer`, async boot, backend choice, capture | M | T2.0 | T2.2 |
 | T2.2 | TSL building material (port of `night.js`) | M | T2.0 | T2.1, T2.3 |
 | T2.3 | TSL terrain material, legacy dome and fog in TSL, material audit | S | T2.0 | T2.2 |
 | T2.4 | `RenderPipeline`: scene pass, bloom, tone map, stages, `probe` | M | T2.1 | T2.5 |
 | T2.5 | Photometric units and pre-exposure; `emissive()`, `pointSource()` | M | T2.1 | T2.4 |
 | T2.6 | Auto-exposure: meter, prior, adaptation, Eye and Camera | M | T2.4, T2.5 | T2.7 |
-| T2.7 | Quality presets, auto-detection, governor, Display controls | M | T2.4 | T2.6 |
+| T2.7 | Quality presets, auto-detection, governor, display controls in `#settings` | M | T2.4 | T2.6 |
 | T2.8 | Bench mode, performance HUD, budget review | S | T2.7 | |
 | T2.9 | Landmark-checker compatibility test | S | T2.2 | T2.10 |
-| T2.10 | Skill integration v6 (outside the repo) | S | T2.9 | T2.11 |
+| T2.10 | Skill integration v7 (in the repo) | S | T2.9 | T2.11 |
 | T2.11 | Fountain and extras on the new renderer; the show joins the scheduler and the simulation clock | M | T2.2 | T2.9 |
 
-**T2.0 Spike.** *Goal:* know the cost before paying it. *Steps:* on a branch, boot the phase-1 app with `WebGPURenderer` (both `forceWebGL: true` and WebGPU), buildings in plain Lambert; list everything that breaks; measure frame time and load time against `baseline.json` on the same machine; run the landmark checker's browser flags. *Accept:* a short decision note in the PR: proceed if frame time on the WebGL2 backend is within 25 % of the classic renderer at this stage and no blocker is found; otherwise stop and report. *Tests:* none (throwaway).
+**T2.0 Spike.** *Goal:* know the cost before paying it. *Steps:* on a branch, boot the phase-1 app with `WebGPURenderer` (both `forceWebGL: true` and WebGPU), buildings in plain Lambert; list everything that breaks; measure frame time and load time with the performance suite (8.7) against the committed baselines on the same machine; run the landmark checker's browser flags; try a third Playwright project, `webgpu-software`, on Chromium's software WebGPU adapter with `?backend=webgpu`, and establish its flags (decision 6 after review). *Accept:* a short decision note in the PR: proceed if frame time on the WebGL2 backend is within 25 % of the classic renderer at this stage (unoptimised; phase 2 ships only within 15 %) and no blocker is found; otherwise stop, report, and take the WebGL fallback of section 7.1, which then gets its own planning pass. The note also says whether `webgpu-software` is reliable enough to be a required CI job from phase 2; if not, a committed local report from a real GPU is required before merging changes under `src/render`, `src/sky`, `src/weather` or the materials. *Tests:* none for the spike (throwaway); the `webgpu-software` project if adopted.
 
 **T2.1 Renderer.** *Files:* `src/render/renderer.js`, `src/render/capture.js`, `src/main.js`, `index.html` (loading text). *Steps:* options `{ antialias, reversedDepthBuffer: true, forceWebGL }`, `logarithmicDepthBuffer` when reversed depth is refused; `await renderer.init()`; backend choice of 7.1; `renderer.highPrecision = true`; replace `renderer.capabilities.getMaxAnisotropy()` (`main.js:280`) with `renderer.getMaxAnisotropy()`; per-light `shadow.autoUpdate = false`; `capture()` renders one frame to a target and returns a PNG blob (the classic renderer's `preserveDrawingBuffer` has no WebGPU equivalent); `?renderer=legacy` keeps the classic path until phase 3. *Accept:* boots on Chrome (WebGPU), on Chrome with `?backend=webgl`, on Firefox and on Safari; T0.5 and T0.6 pass; picking, drag and undo work. *Tests:* e2e per backend: boot, hide a building, undo.
 
@@ -1282,13 +1358,13 @@ Visible result: the same scene on WebGPU where the browser has it, with real HDR
 
 **T2.6 Auto-exposure.** *Files:* `src/render/exposure.js`, `tests/unit/render/exposure.test.js`, `tests/e2e/exposure.spec.js`. *Steps:* section 7.2: meter, prior, clamp, adaptation, the two modes, compensation. *Accept:* scrubbing noon → midnight → noon shows no frame brighter than 1.5× or darker than 0.67× its neighbours' mean luminance; a seek lands within 0.3 EV of the settled exposure on the first frame; panning from the Strip to the dark west settles in under four seconds. *Tests:* unit tests of the prior against the ANSI table (sunlit 15 ± 1, overcast 12 ± 1, full-moon landscape −2.5 ± 1); the three e2e statements.
 
-**T2.7 Quality.** *Files:* `src/render/quality.js`, `src/ui/skySheet.js` (Display group), `tests/unit/render/quality.test.js`. *Steps:* profiles of 7.14; detection: backend, adapter info, `deviceMemory`, `hardwareConcurrency`, canvas pixels, then a 30-frame fill-rate micro-benchmark (a full-screen 32-step ray-march into a half-float target); governor: if the 95th-percentile frame time exceeds budget for two seconds, lower render scale in steps of 0.1 to 0.6, then drop one tier; never raise a tier automatically; the user's choice is stored. *Accept:* the detected tier is shown in the UI; forcing each tier works on both backends; Ultra on the WebGL2 backend is refused with an explanation. *Tests:* unit tests of the decision table with recorded adapter-info samples; governor hysteresis with synthetic frame times.
+**T2.7 Quality.** *Files:* `src/render/quality.js`, `src/ui/settingsPanel.js` and `index.html` (Quality, Exposure and Reduce flashes in `#settings`, under a divider), `tests/unit/render/quality.test.js`. *Steps:* profiles of 7.14; detection: backend, adapter info, `deviceMemory`, `hardwareConcurrency`, canvas pixels, then a 30-frame fill-rate micro-benchmark (a full-screen 32-step ray-march into a half-float target); governor: if the 95th-percentile frame time exceeds budget for two seconds, lower render scale in steps of 0.1 to 0.6, then drop one tier; never raise a tier automatically; the user's choice is stored. *Accept:* the detected tier is shown in the UI; forcing each tier works on both backends; Ultra on the WebGL2 backend is refused with an explanation. *Tests:* unit tests of the decision table with recorded adapter-info samples; governor hysteresis with synthetic frame times.
 
 **T2.8 Bench and review.** *Files:* `src/render/bench.js`, `tests/reference/bench/*.json`. *Steps:* `?bench=1` plays a fixed 20-second camera and clock script and prints per-pass GPU times (timestamp queries on WebGPU, frame deltas elsewhere) and peak texture memory. *Accept:* results for the three reference devices are committed, and section 9 is revised once against them. *Tests:* the bench runs headless without error.
 
-**T2.9 Checker compatibility.** *Files:* `tests/e2e/landmarkChecker.spec.js`. *Steps:* reproduce the landmark checker in a test: serve `src/` without a bundler through an import map, run Chromium with `--headless=new --enable-unsafe-swiftshader --ignore-gpu-blocklist --virtual-time-budget=45000 --screenshot`, and make the probe's exact calls (section 3.3, point 4), by day and by night, for one building model, one extra and the fountain. The test's import map includes `three/webgpu` and `three/tsl`, the one thing the v5 tool lacks. *Accept:* a non-blank image with the model loaded in every case; the backend is chosen synchronously as WebGL2 and the app is ready inside the virtual-time budget. *Tests:* the spec.
+**T2.9 Checker compatibility.** *Files:* `tests/e2e/landmarkChecker.spec.js`. *Steps:* reproduce the landmark checker in a test: serve `src/` without a bundler through an import map, run Chromium with `--headless=new --enable-unsafe-swiftshader --ignore-gpu-blocklist --virtual-time-budget=45000 --screenshot`, and make the probe's exact calls (section 3.3, point 4), by day and by night, for one building model, one extra and the fountain. The test's import map includes `three/webgpu` and `three/tsl`, the one thing the v6 tool lacks. *Accept:* a non-blank image with the model loaded in every case; the backend is chosen synchronously as WebGL2 and the app is ready inside the virtual-time budget. *Tests:* the spec.
 
-**T2.10 Skill integration v6 (outside the repo; same change as T2.1, T2.2 and T2.11).** *Files:* `~/.claude/skills/blender-landmark-model/scripts/skyline_tool.py`, `assets/skyline/{night,customModels,attractions,fountain}.js`, `assets/skyline/skyline-main.patch`, `references/interactive-skyline.md`; the refine skill's notes. *Steps:* `INTEGRATION = 6`; the import map gains `three/webgpu` and `three/tsl` and is otherwise built from `package.json`; either the assets become the repo's v6 files, or the installer stops copying source into a repo already at v6 and manages only `public/models/` (the owner's choice, open question Q1); `upgrade_main` recognises the extracted layout by the marker comment instead of by `toGeometry` lines; the probe adds `backend=webgl&q=low` and uses `env.freeze` for day and night when present, keeping `setSetting('night')` for older checkouts. *Accept:* `install`, `upgrade` and `check` pass on this repo and still pass on a checkout at integration v5. *Tests:* the skill's own evals.
+**T2.10 Skill integration v7 (in the repo; same change as T2.1, T2.2 and T2.11).** *Files:* `.claude/skills/blender-landmark-model/scripts/skyline_tool.py`, `assets/skyline/{night,customModels,attractions,fountain}.js`, `assets/skyline/skyline-main.patch`, `references/interactive-skyline.md`; the refine skill's notes. *Steps:* `INTEGRATION = 7`; the import map gains `three/webgpu` and `three/tsl` and is otherwise built from `package.json`; the assets become the repo's v7 files, copied in the same commit (the repo owns them, decision 2 after review; note that on 21 November the assets still differed from `src/` in `customModels.placeModel` and in the Settings checkboxes `attractions.js` adds, because `skyline-main.patch` targets the older API, so the patch moves too); the tool already reads the split layout (phase 0); the probe adds `backend=webgl&q=low` and uses `env.freeze` for day and night when present, keeping `setSetting('night')` for older checkouts. *Accept:* `install`, `upgrade` and `check` pass on this repo and still pass on a checkout at integration v6. *Tests:* the skill's own evals; `tests/unit/landmarkTool.test.js`.
 
 **T2.11 Fountain, extras and the scheduler.** *Files:* `src/render/materials/fountainMaterial.js`, `src/fountain.js`, `src/attractions.js`, `tests/e2e/attractions.spec.js`. *Steps:* 7.12: port the fountain's `ShaderMaterial` to a node material on the same `InstancedMesh`; extras on the landmark variant, additive extras as emissive-only; replace the private `requestAnimationFrame` tick with a subsystem that votes `animated` under today's distance and frustum rule; compute the shared `clock` from the simulation clock at rates up to 1× and from wall time above; replace `renderer.shadowMap.needsUpdate` with the shadow system's invalidation; keep `__skyline.attractions` as it is. *Accept:* at `attractions.freeze(47)` the fountain matches the classic renderer's image within 5 % mean absolute difference on the WebGL2 backend; with the clock paused nothing animates and zero frames are rendered; the same instant gives the same jets after any scrub. *Tests:* the image comparison; render counters; a scrub-and-return determinism check.
 
@@ -1298,7 +1374,7 @@ Visible result: a physically based sky from dawn to deep night, haze that thicke
 
 | ID | Task | Size | After | ∥ |
 |---|---|---|---|---|
-| T3.0 | Bake-off: in-house sky-view LUT against takram's atmosphere | S | phase 2 | |
+| T3.0 | Bake-off: in-house sky-view LUT against takram's atmosphere | M | phase 2 | |
 | T3.1 | Atmosphere parameters and CPU reference | S | T3.0 | T3.6 |
 | T3.2 | Transmittance and multiple-scattering LUTs | M | T3.1 | T3.6 |
 | T3.3 | Sky-view LUT, sky node, Sun, Moon, planets | M | T3.2 | T3.6 |
@@ -1335,32 +1411,35 @@ Visible result: on the Strip, a handful of stars and the planets; at Primm or wi
 
 | ID | Task | Size | After | ∥ |
 |---|---|---|---|---|
+| T4.0 | Street-lamp inventory ingest (plan 02's D5.3 without its VIIRS fit), `lamp-cells.bin` | M | phase 0 | T4.1, T4.3, T4.4 |
 | T4.1 | `build_stars.py` and the star renderer | M | phase 0 (data), T3.3 (render) | T4.3, T4.4 |
 | T4.2 | Limiting magnitude and the readout | S | T4.1, T4.6 | |
 | T4.3 | Milky Way texture and renderer | S | phase 0 (data), T3.3 | T4.1, T4.4 |
 | T4.4 | `build_nightlights.py`, `NightLights`, terrain emission | M | phase 0 (data), T2.3 | T4.1, T4.3 |
-| T4.5 | `LightRegistry`, per-building emission, hide/move wiring | M | T4.4 | T4.6 |
+| T4.5 | `LightRegistry`, per-building emission, hide/move wiring | M | T4.0, T4.4 | T4.6 |
 | T4.6 | Sky-glow fluence volume, CPU twin, coupling to sky and froxels | L | T3.4, T4.4 | T4.5 |
-| T4.7 | `calibrate_skyglow.py`, reference sites, report | M | T4.6 | T4.8 |
+| T4.7 | `calibrate_skyglow.py`, reference sites, report | M | T4.0, T4.6 | T4.8 |
 | T4.8 | Lights-out slider, readout row, toast delta | S | T4.6 | T4.7 |
 | T4.9 | Luxor beam | S | T4.5, T3.4 | T4.8 |
 | T4.10 | Star twinkle (High, Ultra) | S | T4.1 | any |
 
 **T4.1 Stars.** *Files:* `scripts/build_stars.py`, `public/data/sky/stars.bin`, `stars.json`, `src/sky/stars.js`, `tests/unit/sky/stars.test.js`. *Steps:* parse the Yale Bright Star Catalogue (9,110 entries, 9,096 of them stars; the others are dropped); per star 12 bytes: J2000 unit vector (3 × int16), V magnitude (int16, millimagnitudes), linear-sRGB colour from B−V through Ballesteros' formula (3 × uint8), flags; render as instanced points through `pointSource()` rotated by `eqjToScene`, lifted by refraction and dimmed and reddened by the transmittance LUT in the vertex stage. *Accept:* Polaris stands within 0.8° of the celestial pole; Sirius, Vega and Betelgeuse land within 0.02° of their astronomy-engine `DefineStar` positions at three dates; one draw call; under 0.2 ms on Low. *Tests:* positions; colour of Betelgeuse redder than Rigel; point flux equals magnitude within 2 %.
 
-**T4.2 Visibility.** *Files:* `src/sky/visibility.js`, `src/ui/skyBlock.js`. *Steps:* 7.7: `limitingMagnitude(backgroundCdM2, adaptationCdM2)` (the Schaefer-based fit, with Crumey's relation as a unit-test cross-check); the Bortle class from Bortle's own table; per-star background from the sky-view LUT in the vertex stage; fade over 0.8 magnitude around the limit; readout row 5. *Accept:* at the reference night on the Strip the limit is 2.0 to 3.5 and 20 to 150 stars are drawn; with `lights: 0` the limit is 6.0 to 6.8 and more than 2,000 are drawn. *Tests:* unit tests of the function at 16, 18, 20, 22 mag/arcsec²; e2e star counts.
+**T4.0 Street-lamp inventories.** *Goal:* one shared lamp dataset for this plan's sky glow and the drive plan's lamps (decision 9 after review). *Files:* `scripts/build_lights.py`, `scripts/lib/lamps.py`, `data/lamp_types.json`, `public/data/<city>/lamp-cells.bin` and its JSON sidecar, `data/derived/<city>/lights_report.json`. *Steps:* plan 02's task D5.3 as written there (collect every inventory and OSM, de-duplicate within 5 m, assign lamp types, fill gaps by rule, write the `lamps` layer and the report), without the VIIRS fit, which stays in plan 02 (D7.1); then sum lumens per 500 m cell by class (sodium, LED, other) into `lamp-cells.bin` in the `LampCells` layout of section 11.7. *Accept:* plan 02's D5.3 acceptance; cell totals equal the sum of the lamps to 0.1 %. *Tests:* plan 02's D5.3 tests; a unit test of the cell sums.
+
+**T4.2 Visibility.** *Files:* `src/sky/visibility.js`, `src/ui/skyPopover.js`. *Steps:* 7.7: `limitingMagnitude(backgroundCdM2, adaptationCdM2)` (the Schaefer-based fit, with Crumey's relation as a unit-test cross-check); the Bortle class from Bortle's own table; per-star background from the sky-view LUT in the vertex stage; fade over 0.8 magnitude around the limit; readout row 5. *Accept:* at the reference night on the Strip the limit is 2.0 to 3.5 and 20 to 150 stars are drawn; with `lights: 0` the limit is 6.0 to 6.8 and more than 2,000 are drawn. *Tests:* unit tests of the function at 16, 18, 20, 22 mag/arcsec²; e2e star counts.
 
 **T4.3 Milky Way.** *Files:* `scripts/build_sky_textures.py`, `public/data/sky/milkyway-{2k,4k}.jpg`, `src/sky/milkyWay.js`. *Steps:* compose the faint-sky texture of 7.7 from NASA's Milky Way layer and its bright-star layer with the catalogue stars masked out (the maps are centred on 0 h right ascension, which increases to the left), encode with a square-root curve, and record the scale that reproduces the published starlight near the north galactic pole; draw additively behind stars, extinguished by the transmittance LUT; lazy-load when the zenith is darker than 19 mag/arcsec². *Accept:* invisible on the Strip (contrast under 2 % of the background), plainly visible at `lights: 0` on a moonless night, with Sagittarius in the south in July. *Tests:* contrast probes in both states; orientation by the pixel position of the galactic centre.
 
 **T4.4 Night lights.** *Files:* `scripts/build_nightlights.py`, `public/data/<city>/nightlights-*.bin`, `nightlights.json`, `src/sky/nightlights.js`, `terrainMaterial.js`, `cities.json` (`nightlights` block), `tests/unit/sky/nightlights.test.js`. *Steps:* section 6.2; the `NightLights` interface of 11.7; terrain emission per 7.12, replacing the photo-as-emissive glow. *Accept:* the grids load; the brightest cells are on the Strip; from the Aerial view at night, the mean luminance of the ground over a cell (by probe) equals `upwardLuminance` within 20 %; the desert outside the city is dark. *Tests:* grid orientation against three known landmarks (the Strip, downtown, the airport apron); the probe comparison.
 
-**T4.5 Light registry.** *Files:* `src/sky/lightRegistry.js`, `public/data/<city>/lights.json`, `src/city/buildings.js`, `tests/unit/sky/lightRegistry.test.js`. *Steps:* at city build, compute each tall building's emitters from its geometry: façade area × lit fraction × window luminance, plus the area integrals of `glow` and of `led` surfaces; the same for extras and the fountain's lighting; read the drive plan's street-lamp cells when present (section 11.7) and split the base into street lamps and the rest, with an hour-of-night curve on the rest (its source recorded here); special emitters from `lights.json` (the Luxor beam, the Sphere); subscribe to `buildings:changed`; `baseRadiance = radiance − Σ inSatellite shares`, each share spread with a 350 m Gaussian and capped at 80 % of the local value. *Accept:* with nothing hidden, base plus emitters reproduces the satellite's grid within 1 %; hiding every tall building lowers total modelled emission by the registry's sum and nothing else; a moved building's emitter moves with it. *Tests:* conservation; hide and move; determinism of emission across reloads.
+**T4.5 Light registry.** *Files:* `src/sky/lightRegistry.js`, `public/data/<city>/lights.json`, `src/city/buildings.js`, `tests/unit/sky/lightRegistry.test.js`. *Steps:* at city build, compute each tall building's emitters from its geometry: façade area × lit fraction × window luminance, plus the area integrals of `glow` and of `led` surfaces; the same for extras and the fountain's lighting; read the street-lamp cells T4.0 writes (section 11.7) and split the base into street lamps and the rest, with an hour-of-night curve on the rest (its source recorded here); special emitters from `lights.json` (the Luxor beam, the Sphere); subscribe to `buildings:changed`; `baseRadiance = radiance − Σ inSatellite shares`, each share spread with a 350 m Gaussian and capped at 80 % of the local value. *Accept:* with nothing hidden, base plus emitters reproduces the satellite's grid within 1 %; hiding every tall building lowers total modelled emission by the registry's sum and nothing else; a moved building's emitter moves with it. *Tests:* conservation; hide and move; determinism of emission across reloads.
 
 **T4.6 Sky glow.** *Files:* `src/sky/skyglow.js`, `src/sky/skyglow.cpu.js`, `skyViewLut.js`, `froxels.js`, `tests/unit/sky/skyglow.test.js`, `tests/e2e/skyglow.spec.js`. *Steps:* 7.8: emission mip pyramid from `baseRadiance` and the registry; the fluence volume (128 × 128 × 16 as an atlas) by a ring gather over the pyramid with the Garstang emission function, extinction, and Earth-curvature cut-off; a source term in the sky-view LUT and froxel marches; the same model on the CPU for `zenith()` and tests; recompute on registry change, aerosol change, or camera movement beyond a quarter of a cell, at most once per 150 ms. *Accept:* GPU and CPU zenith luminance agree within 10 % at five positions; doubling all emission doubles the artificial part exactly; the dome is visibly anchored over the city as the test journey approaches from 60 km (parallax, not a painted backdrop), and is seen from above as a pool of lit haze from 10,668 m; rebuild under 4 ms. *Tests:* linearity; GPU/CPU agreement; hide-all changes the Strip zenith by the amount the CPU model predicts.
 
 **T4.7 Calibration.** *Files:* `scripts/calibrate_skyglow.py`, `data/skyglow_report-<city>.json`, `tests/reference/sky_brightness_sites.json`. *Steps:* a NumPy port of the model; the reference sites and shape checks of section 8.3, each with coordinates taken from its paper; fit `k`, the multiple-scattering factor and the LED correction by least squares in magnitudes; compute Duriscoe's distance-kernel model on the same grid as a second opinion; write the constants to `lights.json` and the residuals to the report (as `build_buildings.py` writes its height report). The world atlas raster is an optional extra check if its data request is granted. *Accept:* the sky-glow rows of section 8.2. *Tests:* a unit test loads the report and fails if any residual exceeds tolerance.
 
-**T4.8 Lights-out.** *Files:* `src/ui/skyBlock.js`, `src/interaction/edits.js` (toast text), `src/env/environment.js`. *Steps:* section 4.4; `cityFactor` uniform; the toast's sky-glow delta from `skyglow.cpu.zenith` before and after. *Accept:* dragging the slider never recompiles or rebuilds a volume (it is a multiply); the readout moves smoothly from the city value to 21.6–22.0; a reload returns to 100 %. *Tests:* e2e: slider to 0 → star count over 2,000 within five seconds; hide Luxor → toast contains a percentage.
+**T4.8 Lights-out.** *Files:* `src/ui/skyPopover.js`, `src/interaction/edits.js` (toast text), `src/env/environment.js`. *Steps:* section 4.4; `cityFactor` uniform; the toast's sky-glow delta from `skyglow.cpu.zenith` before and after, written to at most one significant figure with "about", "less than 1 %" under 1 % and "no measurable change" under 0.1 % (decision 8 after review). *Accept:* dragging the slider never recompiles or rebuilds a volume (it is a multiply); the readout moves smoothly from the city value to 21.6–22.0; a reload returns to 100 %; no toast ever shows two significant figures. *Tests:* e2e: slider to 0 → star count over 2,000 within five seconds; hide Luxor → the toast says "about" with one significant figure, or one of the two fixed phrases; unit tests of the wording at 2.4 %, 0.6 % and 0.04 %.
 
 **T4.9 Luxor beam.** *Files:* `src/sky/beam.js`, `lights.json`, `src/attractions.js`. *Steps:* today the beam is a static additive mesh (`luxor_beam.glb`, a night-only extra) that stays when Luxor is hidden. Replace it with an analytic integral of in-scattering along the view ray through a narrow vertical cone with a Gaussian profile, using the atmosphere's scattering coefficients at each height, so the beam brightens in haze, fades with altitude and lights cloud above it; intensity from section 7.8; tie it to Luxor's building id so it hides and moves with the pyramid (the drive plan plans the same link for extras; whichever lands first provides it); keep the mesh as the Low preset's stand-in, tinted by the same scattering. *Accept:* visible from the Strat deck on a clear night, brighter in haze, absent when Luxor is hidden, standing on the pyramid's apex when Luxor is dragged; drawn correctly from 10,668 m at 100 km. *Tests:* probe on and off the beam; hide; move.
 
@@ -1376,18 +1455,18 @@ Visible result: the chip shows the real weather; haze, visibility and wind follo
 | T5.2 | `api/weather.js`, normalizers, cache headers, dev middleware | M | T0.7 | T5.1 |
 | T5.3 | Client service, fallback chain, status chip | S | T5.1, T5.2 | T5.4 |
 | T5.4 | `derive.js`: aerosols, visibility, cloud layers, storm parameters | M | T5.1; atmosphere coupling needs T3.2 | T5.3 |
-| T5.5 | Sky sheet: source, date, presets, sliders, chips | M | T5.3 | T5.4 |
+| T5.5 | `#sky` weather rows: chip, source, presets, sliders | M | T5.3 | T5.4 |
 | T5.6 | Attribution, terms, daily live contract test | S | T5.2 | any |
 
 **T5.1 Schema and state.** *Files:* `src/weather/schema.js`, `presets.js`, `interpolate.js`, `tests/unit/weather/*.test.js`. *Steps:* section 6.4; a hand-written validator (no dependency) that rejects out-of-range or missing fields; presets as complete samples; overrides as a sparse layer; interpolation: linear for scalars, shortest-arc for directions, cross-fade for cloud layers matched by level, step for present-weather codes. *Accept:* every preset validates; interpolation is continuous across hour boundaries; applying then clearing an override returns the data value exactly. *Tests:* validator fuzz; continuity; wind 350° → 10° passes through 0°.
 
-**T5.2 The function.** *Files:* `api/weather.js`, `api/_lib/*.js`, `vite.config.js` (dev middleware), `tests/unit/api/*.test.js`, `tests/fixtures/weather/*`. *Steps:* section 6.3. *Accept:* fixtures normalize to the expected series; a failing upstream yields a partial, labelled result, not an error; cache headers match 6.3; `pnpm dev` serves `/api/weather` without the Vercel CLI; no request parameter reaches an upstream URL unvalidated. *Tests:* normalizers on twelve recorded days (section 8.2); header assertions; upstream-failure matrix with mocked `fetch`.
+**T5.2 The function.** *Files:* `api/weather.js`, `api/_lib/*.js`, `vite.config.js` (dev middleware), `tests/unit/api/*.test.js`, `tests/fixtures/weather/*`. *Steps:* section 6.3. *Accept:* fixtures normalize to the expected series; a failing upstream yields a partial, labelled result, not an error; cache headers match 6.3; `pnpm dev` serves `/api/weather` without the Vercel CLI; no request parameter reaches an upstream URL unvalidated. *Tests:* normalizers on twelve recorded days (section 8.2); header assertions, a partial response included (short cache, `meta.partial`); upstream-failure matrix with mocked `fetch`. Fixtures are recorded on or after 1 December 2026, once Open-Meteo has retired HRRR and NAM, with the recording date in each file name (decision 11 after review).
 
-**T5.3 Client service.** *Files:* `src/weather/service.js`, `src/ui/skyBlock.js` (row 3). *Steps:* request the UTC days around the clock; keep an in-memory series; refresh live data every five minutes while the tab is visible; fallback chain function → Open-Meteo direct → preset; `status` for the chip. *Accept:* scrubbing across midnight UTC loads the next day without a visible jump; with the network blocked the app still starts within two seconds on the preset. *Tests:* e2e with request interception for each link of the chain.
+**T5.3 Client service.** *Files:* `src/weather/service.js`, `src/ui/skyPopover.js` (the weather chip). *Steps:* request the UTC days around the clock; keep an in-memory series; refresh live data every five minutes while the tab is visible; fallback chain function → Open-Meteo direct → preset; `status` for the chip. *Accept:* scrubbing across midnight UTC loads the next day without a visible jump; with the network blocked the app still starts within two seconds on the preset. *Tests:* e2e with request interception for each link of the chain.
 
 **T5.4 Derivations.** *Files:* `src/weather/derive.js`, `scripts/build_aerosol_climatology.py`, `public/data/<city>/aerosol.json`, `tests/unit/weather/derive.test.js`. *Steps:* build the monthly aerosol climatology (section 6.1, finding 2) and check it against the AERONET seasonal means quoted there; section 7.5: optical depth, boundary-layer height and visibility → aerosol coefficients, scale height, Ångström exponent, phase asymmetry; METAR layers and model cloud cover → cloud layers; present weather and convective indices → rain, storm and dust parameters; set the atmosphere uniforms. *Accept:* optical depth 0.05 with a 2.5 km layer gives a visual range of 150 to 220 km; a METAR of `HZ` with 5 SM gives 8 km ± 25 %; the derived state for each fixture day matches the expected sample. *Tests:* those; property tests that more optical depth never increases visibility.
 
-**T5.5 Weather UI.** *Files:* `src/ui/skySheet.js`, `index.html`, `src/style.css`. *Steps:* section 4.2 Weather group; date picker bounded to 1 January 1940 through today plus seven days; override chips. *Accept:* choosing 14 July 1975 loads that day's reanalysis and observations and says which sources answered; every slider has a visible "follow data" state. *Tests:* e2e: load a historical day from fixtures; override and reset.
+**T5.5 Weather UI.** *Files:* `src/ui/skyPopover.js`, `index.html`, `src/style.css`. *Steps:* the phase 5 rows of `#sky` (section 4.2); date picker bounded to 1 January 1940 through today plus seven days; override chips. *Accept:* choosing 14 July 1975 loads that day's reanalysis and observations and says which sources answered; every slider has a visible "follow data" state. *Tests:* e2e: load a historical day from fixtures; override and reset.
 
 **T5.6 Compliance.** *Files:* `index.html` (About footer), `README.md` (credits), `tests/live/weatherContract.test.js`, `.github/workflows/live.yml`. *Steps:* attribution strings of section 12.2; the daily job calls the deployed function and the upstreams and validates shapes. *Accept:* credits visible in the app; the job runs daily and opens an issue on failure. *Tests:* the live test (not part of the PR gate).
 
@@ -1464,7 +1543,7 @@ Visible result: rain shafts and virga under cells, streaks at the camera, the St
 
 **T8.1 Eclipses.** *Files:* `src/sky/ephemeris.js`, `sun.js`, `moon.js`, `tests/unit/sky/eclipse.test.js`. *Steps:* `eclipsedFraction` from the overlap of the two discs (already drawn at true size and position), multiplying the Sun's illuminance; for the Moon, a per-pixel umbra and penumbra factor from angular distance to the anti-solar point, with a red tint; timings checked with `SearchLocalSolarEclipse` and `SearchLunarEclipse`. *Accept:* the 8.2 eclipse row; at 16:26 UTC on 14 October 2023 the ground illuminance is 18 % ± 3 of its uneclipsed value and the Sun shows the Moon's bite on the correct side. *Tests:* unit tests of the overlap function at 0, 0.5 and 1; an e2e probe at the 2023 maximum.
 
-**T8.2 Salt Lake City.** *Files:* `public/data/cities.json`, `public/data/slc/*`. *Steps:* run `build_nightlights.py`, `build_aerosol_climatology.py` and `calibrate_skyglow.py` for `slc`; search `src/` and `api/` for `lv`, `KLAS`, `Los_Angeles` and any Las Vegas coordinate. *Accept:* the full e2e suite passes with `?city=slc`; nothing in `src/` or `api/` names a city. *Tests:* the suite, parameterized by city.
+**T8.2 Salt Lake City.** *Files:* `public/data/slc/*`. *Steps:* run `build_nightlights.py`, `build_aerosol_climatology.py` and `calibrate_skyglow.py` for `slc`. Salt Lake City is already a first-class city (decision 13 after review): its `cities.json` fields arrived in T0.7 and every suite covers it from phase 0. *Accept:* the sky data and calibration report for `slc` exist and pass their tests. *Tests:* the calibration report test for `slc`.
 
 **T8.3 Ground-texture compression** and **T8.4 Labels** are described by their table rows; each gets a short plan of its own when scheduled.
 
@@ -1671,7 +1750,7 @@ Built by `scripts/build_nightlights.py` (section 6.2). The drive plan calibrates
 | `public/data/<city>/nightlights-region.bin` | Same encoding, 1 km over ±420 km, for the flight plan and for distant glow. |
 | `public/data/<city>/nightlights.json` | Grid origins and steps, product id and years, overpass time, band, the calibration constants `k`, `F`, `G` (section 7.8), citation. |
 | `data/derived/<city>/nightlights.npy`, `nightlights.json` | The metro grid again for build-time use by the drive plan's lamp fit, in the form that plan specifies: float32, rows south to north, with the keys `product, year, units, x0, y0, cell, nx, ny, frame, overpassLocal, band`. |
-| `public/data/<city>/lamp-cells.bin` (an input, from the drive plan) | Street-lamp lumens per 500 m cell by lamp class, from the public inventories (section 2.3). Written by the drive plan's `build_lights.py`; loaded by the sky-glow model when present. The same data may arrive at runtime through `setLampCells()` from that plan's emission inventory. |
+| `public/data/<city>/lamp-cells.bin` (an input, from T4.0) | Street-lamp lumens per 500 m cell by lamp class, from the public inventories (section 2.3). Written by T4.0 (the drive plan's `build_lights.py`, pulled forward); loaded by the sky-glow model. The same data may arrive at runtime through `setLampCells()` from that plan's emission inventory. |
 
 ```ts
 interface NightLights {
@@ -1782,17 +1861,18 @@ The flight plan (`docs/plans/03-window-seat-flight.md`, section 11.1) was writte
 
 | # | Risk | Likelihood / impact | Mitigation |
 |---|---|---|---|
-| R1 | **The renderer migration regresses the app.** three's own r187 manual still calls `WebGPURenderer` experimental and says some things are faster or more complete on `WebGLRenderer`; anything written with `onBeforeCompile` or `ShaderMaterial` stops working; initialization becomes asynchronous. | Medium / high | A one-day spike (T2.0) before any commitment, with a written go/no-go. Phase 2 ships visual parity first and is gated on golden screenshots and on frame times within 15 % of today's on the same machine. The classic renderer stays reachable behind `?renderer=legacy` until phase 3 merges, then is deleted. |
-| R2 | **The landmark skill and the app drift apart.** The skill copies four files into `src/`, edits `main.js` by text, and its checker serves `src/` without a bundler through an import map that knows only `three` (section 3.3). | Certain if ignored / medium | Phases 0 and 1 leave the four files alone and keep `main.js` recognisable, with a test (T0.3, T0.5, T0.6). Phase 2 is integration v6: repo and skill change together (T2.9, T2.10, T2.11). The renderer picks WebGL2 synchronously when `navigator.gpu` is missing, the adapter is a software fallback, or `?backend=webgl` is given, and T2.9 reproduces the checker's exact browser flags, virtual-time budget included. |
+| R1 | **The renderer migration regresses the app.** three's own r187 manual still calls `WebGPURenderer` experimental and says some things are faster or more complete on `WebGLRenderer`; anything written with `onBeforeCompile` or `ShaderMaterial` stops working; initialization becomes asynchronous. | Medium / high | A one-day spike (T2.0) before any commitment, with a written go/no-go at 25 % (unoptimised). Phase 2 ships visual parity first and is gated on golden screenshots and on frame times within 15 % of today's on the same machine, measured by the performance suite. The classic renderer stays reachable behind `?renderer=legacy` until phase 3 merges, then is deleted. If the spike says no, the named WebGL fallback of section 7.1 applies (phases 0, 1 and 5 stand; phases 3 and 4 on takram's WebGL atmosphere and pmndrs `postprocessing` behind the same contracts) and gets its own planning pass. |
+| R2 | **The landmark skill and the app drift apart.** The skill copies four files into `src/`, edits `main.js` by text, and its checker serves `src/` without a bundler through an import map that knows only `three` (section 3.3). | Certain if ignored / medium | The repo owns the four files and the skill lives in the repo; its asset copies change in the same commit as the files (decision 2 after review). Phases 0 and 1 leave the four files alone; phase 0 taught the tool the split layout, with tests (T0.3, T0.5, T0.6). Phase 2 is integration v7: repo and skill change together (T2.9, T2.10, T2.11). The renderer picks WebGL2 synchronously when `navigator.gpu` is missing, the adapter is a software fallback, or `?backend=webgl` is given, and T2.9 reproduces the checker's exact browser flags, virtual-time budget included. |
 | R3 | **An atmosphere and three cloud renderers are a lot of graphics code to get right.** | Medium / high | The atmosphere is adapted from two working MIT implementations of the same paper, not written from the paper alone; two libraries serve as numerical oracles (T3.0, T3.8); published tables check twilight. If the port is behind after five working days, T3.0's fallback applies: fork `@pmndrs/sky`'s core or adopt takram's atmosphere for clear sky; the `createAtmosphere` interface (section 5.4) fits either. Clouds ship in order of cost: shells, slabs, volumetric, each usable alone. |
 | R4 | **"Honest" sky glow is only as good as its calibration.** The satellite does not see light below 500 nm, sees façades poorly from above, passes at 01:30 rather than in the evening, and the radiance-to-lumen factor spans 260 to 714 in the literature. | High / medium | Calibrate end to end against measured sky brightness at nine sites, a published distance profile, the published city total and a second model (section 7.8, T4.7). The lamp inventories supply the LED share and the dusk-to-dawn part directly. Every constant lives in `lights.json`; the readout says "about"; the About text states the method and that the in-city anchors are citizen-science readings. Acceptance is ±0.5 mag/arcsec², the honest size of the error bar. |
 | R5 | **Memory and fill rate on Low.** The app already holds about 230 MB on the GPU before this plan; HDR targets and post-processing add to it. | Medium / medium | Budgets in section 9.2; dynamic resolution; Low keeps MSAA at 2× and skips every optional buffer; ground-texture compression is flagged as the big win (T8.3). A device that cannot hold 30 fps at 0.6 scale gets a "Lite" switch that turns off bloom and clouds. |
 | R6 | **Upstream data services change or throttle.** Open-Meteo's terms warn that requests from Vercel's shared addresses are rate-limited early, and its "best match" forecast changes model at the end of November 2026. | Medium / low | CDN caching bounds upstream calls to one per city per five minutes for live data and one per city-month for history, whatever the traffic; on a 429 the browser asks Open-Meteo directly (section 6.3). Every source fails independently; the last resort is a preset. A daily contract test (`test:live`) catches schema drift. |
-| R7 | **Scope.** Eight phases is three to four months for one engineer. | High / medium | Every phase ships on its own and leaves the app better than before; phase 5 and the data pipelines of phase 4 run in parallel with the rendering track; the contract stubs (section 11.1) keep the drive and flight plans unblocked whatever the order. |
+| R7 | **Scope.** Eight phases is three to four months for one engineer. | High / medium | Every phase ships on its own and leaves the app better than before, one phase per branch and pull request, with review checkpoints at the end of phase 1 and of phase 4 (decision 10 after review); phase 5 and the data pipelines of phase 4 run in parallel with the rendering track; the contract stubs (section 11.1) keep the drive and flight plans unblocked whatever the order. |
+| R12 | **Timing gates narrower than the machine's own noise.** On the reference Apple M4, GPU frame-time medians varied by up to about 30 % between runs of the same build in phase 0, more with other work on the machine, so the 15 % median gate can fail with nothing changed. | Medium / low | Measure on a quiet machine; the timing tier is local only and records its spread; see the phase 0 outcome. If a gate keeps failing spuriously, revisit the statistic (more batches, a longer warm-up) before the threshold. |
 | R8 | **three.js moves.** TSL and the addons used here (`CSMShadowNode`, `BloomNode`, `TRAANode`, `TAAUNode`, `SSRNode`, `GodraysNode`) have changed between recent releases. | Medium / medium | Pin `three` exactly (`0.187.0`, not `^0.187.0`) during phases 2 to 4; wrap each addon in one module of ours; upgrade one release at a time with the golden suite. |
 | R9 | **Photosensitivity.** Lightning is a full-screen flash. | Low / high | A hard cap of three flashes per second and a bounded luminance step, enforced in `lightning.js` and tested (T7.5); `prefers-reduced-motion` and a "Reduce flashes" setting replace flashes with a soft glow. |
-| R10 | **This machine cannot run the toolchain yet.** Node here is 21.7.3; Vite 8 needs Node 20.19+ or 22.12+ and Vitest 5 needs 22.12+, 24 or 26+ (npm registry, checked 10 November 2026). | Certain / low | T0.1 pins Node in `.nvmrc` and `package.json` `engines`. Upgrading Node is the first step of phase 0. |
-| R11 | **The tree is moving under the plan.** While this was written, the model count went from 72 to 100 and integration v5 added two source files. Line numbers and the "current state" will be stale again by the time phase 0 starts. | Certain / low | Section 3 names every symbol beside its line number. Phase 0 begins by committing the tree (A5) and re-running the anchor search; nothing in the plan depends on a line number being right. |
+| R10 | *Resolved 21 November 2026: Node 24.10 is installed and phase 0 pinned it.* This machine could not run the toolchain on 10 November (Node 21.7.3; Vite 8 needs 20.19+ or 22.12+, Vitest 5 needs 22.12+, 24 or 26+). | Resolved | T0.1 pins Node in `.nvmrc` (24) and `package.json` `engines` (`>=22.12`). |
+| R11 | **The tree is moving under the plan.** While this was written, the model count went from 72 to 100 and integration v5 added two source files. Line numbers and the "current state" will be stale again by the time phase 0 starts. | Certain / low | Section 3 names every symbol beside its line number and is kept as the 10 November snapshot; the changes up to 21 November are listed at the top of the plan. The tree was committed before phase 0 (A5); nothing in the plan depends on a line number being right. |
 
 ### 12.2 Licensing and attribution
 
@@ -1819,7 +1899,7 @@ The flight plan (`docs/plans/03-window-seat-flight.md`, section 11.1) was writte
 | JPL Horizons, US Naval Observatory APIs | Free; Horizons asks for one request at a time and forbids embedding in a website | Build-time fixtures only, never called from the app. |
 | Reference photographs | Per photo | Record author, licence and source next to each file, as the README does for the Ensign Peak photo. |
 
-The README's "Credits" section and the in-app About footer (`#about`, filled at `main.js:940-942`) gain these lines in T5.6 and T4.4.
+The README's "Credits" section and the in-app About footer (`#about`, filled in `src/ui/settingsPanel.js` since phase 0) gain these lines in T5.6 and T4.4.
 
 ### 12.3 Open questions
 
@@ -1827,9 +1907,9 @@ None of these blocks phase 0 or 1. Each has a recommended answer that the plan a
 
 | # | Question | Recommended answer | Needed by |
 |---|---|---|---|
-| Q1 | At integration v6, who owns `night.js`, `customModels.js`, `attractions.js` and `fountain.js`: the skill's assets (copied into the repo, as today) or the repo (with the skill managing only `public/models/`)? | The repo, because those files become renderer code that three plans build on. Either way the skill's import map and probe must change in the same release as the renderer (T2.10). | Phase 2 |
+| Q1 | At integration v7, who owns `night.js`, `customModels.js`, `attractions.js` and `fountain.js`? | *Resolved 21 November 2026 (decision 2):* the repo. The skill lives in the repo and its `assets/skyline/` copies are updated in the same commit whenever the files change; its import map and probe change in the same release as the renderer (T2.10). | Resolved |
 | Q2 | Is the app non-commercial for the purposes of Open-Meteo's free tier (no advertising, no subscription)? | Yes (A1). | Phase 5 |
-| Q3 | Should a first-time visitor at night see the honest night, or daylight with an invitation to switch? | The honest live sky, with the one-time toast and a "Noon" jump. It is the plan's premise; a single default in `settings.js` reverses it. | Phase 1 |
+| Q3 | Should a first-time visitor at night see the honest night, or daylight with an invitation to switch? | *Resolved 21 November 2026 (decision 4):* the app keeps opening on today's daylight look, with real time one click away (Now). Revisit after phase 4 ships the honest night; a single default in `settings.js` changes it. | Resolved; revisit after phase 4 |
 | Q4 | Can a few sky-quality-meter readings be taken on and near the Strip? | Worth doing but not blocking: the in-city anchors are citizen-science readings from 2011, and no peer-reviewed measurement of the core was found. | T4.7 |
 | Q5 | Which machines are the three reference devices for section 9? | The development PC for High or Ultra, one integrated-GPU laptop, one recent phone. | T2.8 |
 
@@ -1920,7 +2000,7 @@ All URLs were requested on 9 or 10 November 2026. **Read** means the content was
 ### This project
 
 - The drive plan, `docs/plans/02-vegas-drive.md`: its "Decisions after planning", section 9.1 and section 11 were read to align contracts and budgets.
-- The landmark skill, `~/.claude/skills/blender-landmark-model/scripts/skyline_tool.py` (integration 5) and `references/interactive-skyline.md` (read).
+- The landmark skill, `skyline_tool.py` (integration 5 in `~/.claude/skills/` on 10 November; integration 6 in the repo at `.claude/skills/blender-landmark-model/` on 21 November) and `references/interactive-skyline.md` (read).
 
 ### Research left for the tasks that need it
 

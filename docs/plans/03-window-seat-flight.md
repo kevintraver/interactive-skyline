@@ -130,7 +130,7 @@ Read at the working tree of 2026-11-09 (uncommitted night mode and GLB landmarks
 
 | Area | Where | What it does today | What it means for the flight |
 | --- | --- | --- | --- |
-| Entry, city | `src/main.js:11-20` | One module with top-level `await`; `?city=` picks a city from `public/data/cities.json`; each city is a full page load. | Flight mode is per city and must load lazily (dynamic `import()`), so the map view pays nothing for it. |
+| Entry, city | `src/main.js:11-20` | One module with top-level `await`; `?city=` picks a city from `data/cities.json`; each city is a full page load. | Flight mode is per city and must load lazily (dynamic `import()`), so the map view pays nothing for it. |
 | Frame | `src/main.js:22-26`, `:111`, `scripts/build_terrain.py:35` | 1 unit = 1 m; +x east, +y up, -z north; `BASE = city.base` (LV 620 m); `EARTH_R = 6371000 * 7/6`; `curveDrop(x, z) = (x² + z²) / (2·EARTH_R)`; horizontal coordinates are a transverse Mercator centred on the city origin (`+proj=tmerc +lat_0 +lon_0 +k=1`). | Reused unchanged. Section 7.1 shows it is accurate enough at 370 km. "Level" for the aircraft is the local tangent of this curved surface, not the XZ plane. |
 | Renderer | `src/main.js:47-54` | `WebGLRenderer`, MSAA, `preserveDrawingBuffer`, ACES, exposure 1.0, PCF shadows 4096² updated on demand. | Plan 1 replaces it. Phase 1 here uses only built-in materials so nothing is thrown away. |
 | Sky, light | `src/main.js:56-63`, `:83-108`, `:866-883` | `DAY`/`NIGHT` look tables, `FogExp2(0.000014)`, a gradient sky sphere of radius 120 km centred on the world origin, one fixed sun (azimuth 245°, elevation 32°), `night` is a boolean setting. | Good enough below about 5 km altitude and within about 40 km of the origin. Useless at cruise: the sky sphere and the 150 km far plane are smaller than the view. |
@@ -247,7 +247,7 @@ A top-down SVG of the cabin with the wing drawn to scale beneath it.
 - **Centre:** the Strip by default; "Orbit this" on any building in the list re-centres on it.
 - **Direction:** chosen so the selected seat looks into the turn. A switch looks outward instead, at the mountains.
 - **Speed:** set from the altitude (section 7.12); not a control.
-- **Time and weather:** plan 1's Sky block, as on the map. No journey is active in Orbit, so the day scrubber changes the hour and leaves the aircraft where it is (section 7.12).
+- **Time and weather:** plan 1's `#sky` popover (formerly its Sky block), as on the map. No journey is active in Orbit, so the day scrubber changes the hour and leaves the aircraft where it is (section 7.12).
 - **Presets:** Overhead at 35,000 ft; The valley at 12,000 ft; The Strip at 6,500 ft.
 
 ### 4.7 Defaults
@@ -270,13 +270,13 @@ A top-down SVG of the cabin with the wing drawn to scale beneath it.
 ### 4.9 Where the UI goes
 
 ```
-#panel
+#panel                      (gone since commit 27915a0; new controls follow the map-style interface: plan 1, "Decisions after review", item 3)
   nav#cities                (as today)
   nav#modes                 plan 2's switch, plus Fly
   header                    (as today; the hint line changes with the mode)
   #browse
     .views                  map mode only
-    plan 1's Sky block      every mode
+    plan 1's #sky popover   every mode (formerly its Sky block)
     #fly                    NEW, fly mode only
       tabs                  Fly in | Orbit
       #flight-picker        cards (4.2)            #orbit-controls (4.6)
@@ -1389,7 +1389,7 @@ Dependencies on the sibling plans are by capability. The ids in brackets are tho
 | `P1:clouds` | Clouds seen from above and flown through [its Phase 6] | F6.2 (cloud passage) | Clear sky |
 | `P1:rain` | Rain rate and wetness at the camera [its Phase 7] | F5.4 (real input) | A debug slider |
 | `P2:terrain` | The terrain interface over today's grids: `heightAt`, `groundY`, `inBuildArea` [D0.6] | F4.7 (extends it) | The same three functions written in F4.7 |
-| `P2:lamps` | The processed street-lamp inventory [D5.3] | F6.4 (optional) | `build_farlights.py` reads the public inventories itself |
+| `P2:lamps` | The processed street-lamp inventory [D5.3, built as plan 1's T4.0] | F6.4 (optional) | `build_farlights.py` reads the public inventories itself |
 
 Plan 2's tile pyramid is deferred (section 2.3). Nothing below waits for it; Phase 9 says what changes when it exists.
 
@@ -1422,7 +1422,7 @@ Phases 2 and 4 are mostly data and geometry and can run in parallel with Phase 3
 
 **F0.1 · Airport block in `cities.json`** · S · ∥ everything
 - *Goal.* One place that says which airport a city has and where its detailed areas are.
-- *Files.* `public/data/cities.json`, `tests/unit/cities.test.js` (plan 1's shape test, extended).
+- *Files.* `data/cities.json`, `tests/unit/cities.test.js` (plan 1's shape test, extended).
 - *Steps.* Add `"airport": { "faa": "LAS", "box": [x0, y0, x1, y1], "arrivals": ["19L", "19R", "26L", "26R"] }` for `lv` (the ICAO code is plan 1's `icao` field); nothing for `slc` yet. The strips under the finals are derived from the selected flights, not listed here.
 - *Accept.* The shape test passes; the four existing scripts still run.
 
@@ -1618,7 +1618,7 @@ Phases 2 and 4 are mostly data and geometry and can run in parallel with Phase 3
 - *Note.* Plan 2's drives need the same thing beyond today's far grid (Primm is 22 km outside it). This is one implementation for both; whichever plan reaches it first builds it to this specification.
 
 **F4.8 · Inset grids: the airport and the two finals** · M · after F4.1; drawn by F4.7
-- *Files.* `public/data/cities.json` (three `terrain` entries), `scripts/build_terrain.py`, `scripts/build_imagery.py`, `public/data/lv/terrain-{airport,final26,final19}.bin.gz`, `ground-{airport,final26,final19}.webp`.
+- *Files.* `data/cities.json` (three `terrain` entries), `scripts/build_terrain.py`, `scripts/build_imagery.py`, `public/data/lv/terrain-{airport,final26,final19}.bin.gz`, `ground-{airport,final26,final19}.webp`.
 - *Steps.* Section 7.9: gzip-difference heights; stitching of each grid's border to its parent; the airport's pavement burnt into its grid on the FAA's elevation profile; the two strips placed around the selected flights' last 15 km; WebP; colour matching to `near` and `far`; feathered edges. The existing `far` and `near` files are not rebuilt.
 - *Accept.* All four runways and every terminal lie inside the `airport` grid; the pavement mesh and the terrain agree within 5 cm; sizes within section 9.2.
 
@@ -1660,7 +1660,7 @@ Phases 2 and 4 are mostly data and geometry and can run in parallel with Phase 3
 
 **F6.1 · Regional grids** · M · after F4.8's script changes; ∥ everything else
 - *Goal.* Ground from the valley to the horizon, in the repository.
-- *Files.* `public/data/cities.json` (three more `terrain` entries), `scripts/build_terrain.py`, `scripts/build_imagery.py`, `public/data/lv/terrain-{region,approaches,valley}.bin.gz`, `ground-{region,approaches,valley}.webp`, `tests/data/flight/test_grids.py`.
+- *Files.* `data/cities.json` (three more `terrain` entries), `scripts/build_terrain.py`, `scripts/build_imagery.py`, `public/data/lv/terrain-{region,approaches,valley}.bin.gz`, `ground-{region,approaches,valley}.webp`, `tests/data/flight/test_grids.py`.
 - *Steps.* Section 7.9: a maximum-preserving downsample for `region` and `approaches`; the Blue Marble and Sentinel-2 cloudless 2016 imagery sources; colour matching down the chain from `far`; loading by height band in the provider; the mean colour of `region`'s edge written to `terrain.json` for plan 1's virtual ground; the three grids registered with plan 1's `Shadows.registerHeightField`, so that the ranges shade the ground beyond today's far grid at a low sun.
 - *Accept.* Sizes within section 9.2; heights of neighbouring grids agree within 0.5 m along every shared border; mean colour agrees within 3% per channel over each overlap; Charleston Peak stands within 30 m of its surveyed height in `approaches`; from 35,000 ft the terrain reaches the horizon in every direction inside the region.
 - *Tests.* Border agreement, summit heights and sizes on the built files; a golden frame at cruise.
@@ -1829,7 +1829,7 @@ By the decision of 2026-11-10 plan 2's tile pyramid is deferred, and the terrain
 | 1 | **The archive is thinner than a flight recorder.** A point every 6 to 8 s on final, 30 s in cruise, 25 ft altitude steps | Measured (section 7.2) | The smoother uses the recorded velocities, not just positions. Touchdown time is recorded exactly. The flare is a model and is labelled as one. Quality gates fail the bake rather than ship a bad track |
 | 2 | **Altitude is wrong by a datum.** Ellipsoid against sea level is 28 m here; some avionics report the other one | Documented ambiguity | Calibration on the runway removes it whatever it is, and the QA report says which it was. The glide path and crossing-height gates would catch a miss: 28 m is 90 ft at the threshold |
 | 3 | **Inferred motion looks wrong.** Pitch, flaps, gear, spoilers and lights are not in the data | A wrong flap at the wrong time is obvious to anyone who flies | Conservative rules from limits and standard practice; reference attitudes fitted to published ones; checked against the dated video log; disclosed in the app |
-| 4 | **Three plans change the same files at once** | `main.js`, `index.html`, `cities.json`, the panel | One adapter file per sibling plan; this plan touches `main.js` in 20 lines or not at all; names follow plan 1 where they exist and plan 2 for terrain; contracts reconciled in section 11.3 |
+| 4 | **Three plans change the same files at once** | `main.js`, `index.html`, `cities.json`, the interface (the panel is gone) | One adapter file per sibling plan; this plan touches `main.js` in 20 lines or not at all; names follow plan 1 where they exist and plan 2 for terrain; contracts reconciled in section 11.3 |
 | 5 | **The cabin layer is the first user of an unbuilt stage.** It is composed after plan 1's anti-aliasing, samples that stage's input with mips and brings its own edge smoothing; exposure must meter the view, not the dark cabin | Plan 1's draft grants both requests (an `afterAA` stage and a metering mask, its section 11.11), but neither exists yet | F3.9 proves the stage on all three presets before Phase 5 depends on it. In reserve: plan 1's `afterWorld` route with zero motion and near depth; a fixed exposure bias while the frame is visible; and the three-call path of section 7.6, which needs none of it |
 | 6 | **The ground at cruise is coarse** | By decision there are no streamed tiles; the region is 128 to 512 m per pixel | Live relief shading, plan 1's haze, detail synthesis, and clouds do most of the work (7.9); the table there says plainly what resolution is where; "Final approach" remains the sharpest way in; Phase 9 fixes it properly |
 | 7 | **The repository fills up** | This plan adds about 26 MB, taking it to about 83 MB against a 100 MB deploy limit | Sizes are budgeted per file and tested (9.4); regional images can drop one step in resolution for 6 MB; a second city reopens the hosting question |

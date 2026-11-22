@@ -129,7 +129,7 @@ Line numbers are from the working tree on 2026-11-10, uncommitted changes includ
 | Landmark models | `src/customModels.js:38-62`, `public/models/models.json` | 95 GLBs listed for Las Vegas at the time of writing. `flatten()` keeps position, normal, base colour, `_GLOW`, `_WINDOWS`, and sets `led = 1` on faces whose material name starts with `Led`; UVs are dropped. `sphere.glb`: 4,856 triangles, materials `LedSkin`, `LedSkinB` and others, no UVs, no textures (**measured**). |
 | Attractions | `src/attractions.js`, `src/fountain.js`, `src/main.js:985-986` | Added while this plan was being written. Non-building "extras" from the manifest (optionally night-only, optionally additive), the Bellagio fountain show, and the clock for LED faces. It runs its own `requestAnimationFrame` tick on wall time and asks for frames at up to 30 a second while a show or an LED face is in view within 3–4 km. |
 | Panel | `index.html:12-75`, `:80-90` | City tabs, title, viewpoint bar (`.views`), list, settings form with a Night checkbox (`:70`), dock with selection card and toast. |
-| City config | `public/data/cities.json:79-168` | Origin, building bbox (36.085–36.178 N, −115.200 to −115.135 W), `base` 620, LiDAR dataset `NV_ClarkCo_2_B22`, terrain extents, shadow box, viewpoints. No time zone, no routes. |
+| City config | `data/cities.json` (then `public/data/cities.json:79-168`) | Origin, building bbox (36.085–36.178 N, −115.200 to −115.135 W), `base` 620, LiDAR dataset `NV_ClarkCo_2_B22`, terrain extents, shadow box, viewpoints. No time zone, no routes. |
 | Pipeline | `scripts/build_terrain.py`, `build_imagery.py`, `fetch_lidar.py`, `build_buildings.py` | uv scripts with inline dependencies. Terrain from AWS Terrarium tiles at zoom 11 and 14 (`build_terrain.py:47`); imagery from the USGS NAIPPlus image service (`build_imagery.py:31`); LiDAR from the public EPT bucket, rasterised over the building bbox only (`fetch_lidar.py:38`); buildings from a hand-supplied OSM extract, with a measured terrain-to-LiDAR datum shift (`build_buildings.py:84-92`). |
 | Tooling | `package.json` | `three ^0.187.0`, `three-mesh-bvh ^0.9.18`, `vite ^8.3.6`. No test runner, no lint, no CI. |
 
@@ -216,7 +216,7 @@ Released, the head stays where it was put; it does not spring back. In the cabin
 ### 4.8 Where the UI goes
 
 ```
-#panel
+#panel                    (gone since commit 27915a0; new controls follow the map-style interface: plan 1, "Decisions after review", item 3)
   nav#cities              (as today)
   nav#modes               NEW  Map | Drive (| plan 3)
   header                  (as today; the hint line changes with the mode)
@@ -1392,7 +1392,7 @@ Every phase ends in something that can be deployed. Task ids are `D<phase>.<n>`;
 
 **D1.2 · `build_tiles.py` v1** · L · after D1.1; ∥ D1.3, D1.4
 - *Goal.* A tileset from the sources the app already uses.
-- *Files.* `scripts/build_tiles.py`, `scripts/lib/tilecodec.py`, `public/data/cities.json` (`tiles`), `data/raw/tiles/` (cache, git-ignored).
+- *Files.* `scripts/build_tiles.py`, `scripts/lib/tilecodec.py`, `data/cities.json` (`tiles`), `data/raw/tiles/` (cache, git-ignored).
 - *Steps.* (1) Heights: Terrarium tiles at the zoom matching each level (as `build_terrain.py` does), resampled to the level's lattice so shared edges are bit-identical. (2) Imagery: NAIP at the finest level present per area, coarser levels by 2 × 2 averaging of children so colours agree across levels. (3) Write one bundle per tile as specified in section 6.9: header with min, scale and `err_m`; heights left-up predicted and deflated; imagery as WebP at quality 82. (4) Write `tileset.json`: pyramid constants, coverage rows, attribution, source vintages, a content version used in URLs. (5) Retries with backoff and an on-disk cache; a rerun is a no-op.
 - *Coverage.* Levels 5–6 for the drive region, 7–9 buffered around `i15n`, 10–11 along it.
 - *Accept.* Every tile decodes; shared edges identical; height error against the source ≤ 0.05 m RMS; a size report within 20% of section 9.4's Phase 1 estimate.
@@ -1423,7 +1423,7 @@ Every phase ends in something that can be deployed. Task ids are `D<phase>.<n>`;
 - *Tests.* Unit: journey monotonic and invertible; rebase keeps *s*; URL round trip. e2e: (a)–(e).
 
 **D1.7 · Tile hosting** · S · ∥ D1.6
-- *Files.* `scripts/upload_tiles.py`, `public/data/cities.json` (`tiles.url`), `.gitignore`.
+- *Files.* `scripts/upload_tiles.py`, `data/cities.json` (`tiles.url`), `.gitignore`.
 - *Steps.* Section 6.9. Upload with immutable cache headers and CORS for the site's origins; `pnpm tiles:pull` for developers. Until open question 1 is answered, build the capped set (to level 10, about 40 MB) and deploy it with the site.
 - *Accept.* A production build streams tiles from the store; a second visit serves them from the browser cache.
 
@@ -1569,6 +1569,7 @@ Every phase ends in something that can be deployed. Task ids are `D<phase>.<n>`;
 - *Tests.* Vitest: table interpolation and the worked figure of section 7.4. e2e: luminance probes on a test sign at 150, 80 and 50 m, lamps on and off.
 
 **D5.3 · Lamp inventory pipeline** · L · ∥ D5.1, D5.2
+- *Moved.* Built earlier as plan 1's task T4.0 (everything below except the VIIRS fit, which stays in D7.1); it also writes `public/data/<city>/lamp-cells.bin` for plan 1's sky glow.
 - *Files.* `scripts/build_lights.py`, `scripts/lib/lamps.py`, `data/lamp_types.json`, `data/derived/lv/lights_report.json`.
 - *Steps.* (0) Act on the answer to open question 2: a jurisdiction without permission uses OSM and the rule. (1) Collect lamps from every inventory in section 6.6 and from OSM; de-duplicate within 5 m. (2) Assign a lamp type from inventory fields; else by owner and road class. (3) Fill gaps by rule along roads marked or inferred lit: spacing, mount height and arrangement by road class; high masts at system interchanges. (4) Write the `lamps` layer and a report: counts by source, type and jurisdiction, and the share placed by rule.
 - *Accept.* In an area that has an inventory, hiding it and running the rule reproduces the lamp count within 20% and the median spacing within 15%; the report exists and the About text quotes it.
@@ -1705,7 +1706,7 @@ Every phase ends in something that can be deployed. Task ids are `D<phase>.<n>`;
 *Ships:* all three cards in the picker.
 
 **D9.1 · `i15s`** · M · after Phase 3 (and each later phase it should match); ∥ D9.2
-- *Files.* `public/data/cities.json` (`routes`), every build output for the route.
+- *Files.* `data/cities.json` (`routes`), every build output for the route.
 - *Steps.* Run every build script for the southbound relation from Exit 64; tiles for the 34.7 km north of the Spaghetti Bowl; QA by hand at the Apex summit, the northern beltway interchange, the Speedway and the Spaghetti Bowl.
 - *Accept.* The same checks as `i15n` (D1.4, Phase 3, D5.3, D6.1); reveal at the summit ± 0.7 km.
 - *Tests.* The per-route suite of D9.4.
