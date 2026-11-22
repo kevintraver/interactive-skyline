@@ -6,7 +6,9 @@
 import { test, expect } from '@playwright/test';
 import { openCity, watchConsole, DRIVE_TIMEOUT } from '../helpers/drive.js';
 
-test.describe.configure({ timeout: DRIVE_TIMEOUT });
+// one long test walks every control and then the phone layout: about 12 minutes alone on the software renderer,
+// and past 15 when other software renderers share the machine
+test.describe.configure({ timeout: DRIVE_TIMEOUT * 2 });
 
 const run = (page, fn, arg) => page.evaluate(fn, arg);
 const pose = (page) => run(page, () => window.__skyline.drive.pose());
