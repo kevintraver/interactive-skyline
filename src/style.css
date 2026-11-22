@@ -241,7 +241,7 @@ button { font: inherit; color: inherit; background: none; border: 0; padding: 0;
 #drivebar .lock[aria-pressed="true"] { color: var(--blue); background: var(--blue-wash); }
 #drivebar .status { padding-right: 10px; color: var(--muted); font-size: 12.5px; }
 #drivebar .status:empty { display: none; }
-#drivebar.busy .route, #drivebar.busy .lock, #drivebar.busy .ctl > :not(.play) { display: none; }
+#drivebar.busy .route, #drivebar.busy .lock, #drivebar.busy .view, #drivebar.busy .ctl > :not(.play) { display: none; }
 
 .track { position: relative; height: 26px; margin: 0 9px; cursor: pointer; touch-action: none; }
 .track .rail { position: absolute; left: -2px; right: -2px; top: 50%; height: 4px; margin-top: -2px; border-radius: 2px; background: var(--fill-strong); overflow: hidden; }
@@ -267,6 +267,16 @@ button { font: inherit; color: inherit; background: none; border: 0; padding: 0;
 #drive-time .jumps button { flex: 1; padding: 7px 8px; border-radius: 8px; background: var(--fill); font-weight: 600; }
 #drive-time .jumps button:hover { background: var(--fill-strong); }
 #drive-time .note { margin: 10px 0 0; color: var(--muted); font-size: 12px; }
+/* ---- Drive: the view popover (cabin or clean, glances, reduce motion), opened from the route bar's wheel */
+#drivebar .view { flex: none; color: var(--muted); }
+#drivebar .view[aria-expanded="true"] { background: var(--fill-strong); color: var(--ink); }
+#drive-view { width: 272px; padding: 10px 14px 12px; }
+#drive-view .note { margin: 8px 0 0; color: var(--muted); font-size: 12px; }
+#drive-view .glances { display: flex; gap: 6px; margin-top: 10px; }
+#drive-view .glances[hidden] { display: none; }
+#drive-view .glances button { flex: 1; padding: 7px 4px; border-radius: 8px; background: var(--fill); font-weight: 600; font-size: 12.5px; }
+#drive-view .glances button:hover { background: var(--fill-strong); }
+#drive-view .check { margin-top: 4px; }
 
 /* while driving the hint says how to drive; main.js's bold line is about picking buildings */
 .driving #hint b { display: none; }
@@ -321,7 +331,8 @@ button { font: inherit; color: inherit; background: none; border: 0; padding: 0;
   .route-card:not(.open) .starts { display: none; }
   .starts { margin: 6px 2px 4px; }
   .starts button { flex: 1 1 auto; min-height: 40px; }
-  #drive-time { width: auto; left: var(--gap) !important; right: var(--gap); }
+  #drive-time, #drive-view { width: auto; left: var(--gap) !important; right: var(--gap); }
+  #drive-view .glances button { min-height: 40px; }
 }
 
 /* side by side, the card and the bar need about 1100 px; narrower, the card sits above the bar */

@@ -1,7 +1,8 @@
 // Drive mode on real data: I-15 north from Primm (route i15n). Each test shares one page, because a
 // SwiftShader load takes over half a minute and a drive frame several seconds; see tests/helpers/drive.js
 // for how frames are made deterministic. Goldens are the canvas only. The default moment (moment.js) changes its
-// clock time from day to day, but the canvas depends only on the look it picks, which it keeps.
+// clock time from day to day, but the canvas depends only on the look it picks, which it keeps. These tests judge
+// the road and the sight lines, so they ask for the clean camera (no car); the cabin has drive-cabin.spec.js.
 import { test, expect } from '@playwright/test';
 import { openCity, openAt, captureCanvas, expectGolden, watchConsole, keepPixels, pixelsDiffer, DRIVE_TIMEOUT } from '../helpers/drive.js';
 
@@ -26,7 +27,7 @@ test('lv drive: motion, seeking and the reveal', async ({ page }) => {
   await openCity(page, 'lv');
   const route = await drive(page, async (id) => {
     const d = window.__skyline.drive;
-    await d.start(id, { s: 5000 });
+    await d.start(id, { s: 5000, view: 'clean' });
     d.pause();
     return d.route();
   }, ROUTE);
@@ -81,7 +82,7 @@ test('lv drive: motion, seeking and the reveal', async ({ page }) => {
 
 test('lv drive: opened from an address, goldens, and hiding the Sphere', async ({ page }) => {
   const problems = watchConsole(page);
-  await openAt(page, `city=lv&mode=drive&route=${ROUTE}&s=5000`);
+  await openAt(page, `city=lv&mode=drive&route=${ROUTE}&s=5000&view=clean`);
   await drive(page, async () => {
     const d = window.__skyline.drive;
     // entering ends by starting the clock once the first frame is in; pause after that
@@ -114,7 +115,7 @@ test('lv drive: opened from an address, goldens, and hiding the Sphere', async (
     expect(await page.evaluate(() => window.__skyline.hiddenIds())).toEqual([SPHERE]);
     const look = await drive(page, async (id) => {
       const s = window.__skyline;
-      await s.drive.start('i15n', { s: 63000 });
+      await s.drive.start('i15n', { s: 63000, view: 'clean' });
       s.drive.pause();
       // "Zoom to" turns the head towards the building while driving: east of the road, to the right
       s.focusOn(s.tall.find((e) => e.data.id === id));

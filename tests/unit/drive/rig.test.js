@@ -13,22 +13,24 @@ const camOf = (rig, pose = level, view = VIEW) => rig.apply(new PerspectiveCamer
 const dir = (cam) => new Vector3(0, 0, -1).applyQuaternion(cam.quaternion);
 const camRight = (cam) => new Vector3(1, 0, 0).applyQuaternion(cam.quaternion);
 const RAD = Math.PI / 180;
+/** These tests are about the clean camera; the cabin's are in rig-cabin.test.js. */
+const clean = () => createRig({ view: 'clean' });
 
-describe('rig', () => {
+describe('rig, clean camera', () => {
   it('puts the eye 1.2 m above the road surface', () => {
-    const cam = camOf(createRig());
+    const cam = camOf(clean());
     const off = cam.position.clone().sub(level.position);
     expect(off.length()).toBeCloseTo(1.2, 9);
     expect(off.dot(level.up)).toBeCloseTo(1.2, 9);
   });
 
   it('looks along the road by default', () => {
-    const cam = camOf(createRig());
+    const cam = camOf(clean());
     expect(dir(cam).dot(level.forward)).toBeCloseTo(1, 6);
   });
 
   it('clamps yaw, pitch and lens, and keeps the head where it is put', () => {
-    const rig = createRig();
+    const rig = clean();
     rig.look({ yaw: 400, pitch: -90, lens: 5 });
     expect(rig.state).toEqual({ yaw: 150, pitch: -40, lens: 24 });
     rig.look({ yaw: -400, pitch: 90, lens: 1000 });
@@ -46,7 +48,7 @@ describe('rig', () => {
   });
 
   it('turns left for positive yaw and up for positive pitch', () => {
-    const rig = createRig().look({ yaw: 90 });
+    const rig = clean().look({ yaw: 90 });
     expect(dir(camOf(rig)).dot(level.right)).toBeCloseTo(-1, 2);
     rig.look({ yaw: 0, pitch: 30 });
     const up = localUp(level.position.x, level.position.z, new Vector3());
@@ -55,16 +57,16 @@ describe('rig', () => {
 
   it('derives the field of view from the lens like main.js', () => {
     expect(lensToHfov(50)).toBeCloseTo(39.6, 1);
-    const cam = camOf(createRig());
+    const cam = camOf(clean());
     expect(cam.aspect).toBeCloseTo(16 / 9, 9);
     expect(cam.fov).toBeCloseTo(2 * Math.atan(18 / (50 * 16 / 9)) / RAD, 9);
     expect(verticalFov(50, 0.5)).toBe(60); // main.js's cap in a tall window
     expect(verticalFov(24, 0.5)).toBeCloseTo(lensToHfov(24), 9); // wider lens, wider cap
-    expect(camOf(createRig(), level, { aspect: 2 }).aspect).toBe(2);
+    expect(camOf(clean(), level, { aspect: 2 }).aspect).toBe(2);
   });
 
   it('sets the near plane from where the lowest ray meets the road', () => {
-    const near = (look) => camOf(createRig().look(look)).near;
+    const near = (look) => camOf(clean().look(look)).near;
     // level, 50 mm, 16:9: the bottom ray dips by half the vertical field
     const half = verticalFov(50, 16 / 9) / 2 * RAD;
     expect(near({})).toBeCloseTo(NEAR_FRACTION * 1.2 / Math.tan(half), 1);
@@ -77,11 +79,11 @@ describe('rig', () => {
     expect(wide).toBeLessThan(near({}));
     expect(near({ pitch: 30 })).toBe(5); // the lowest ray never meets the road
     expect(near({ lens: 200 })).toBe(5);
-    expect(camOf(createRig()).far).toBe(150000);
+    expect(camOf(clean()).far).toBe(150000);
   });
 
   it('is a pure function of pose, look and viewport', () => {
-    const rig = createRig().look({ yaw: -12, pitch: 2, lens: 28 });
+    const rig = clean().look({ yaw: -12, pitch: 2, lens: 28 });
     const cam = new PerspectiveCamera();
     rig.apply(cam, level, VIEW);
     const a = [cam.matrixWorld.clone(), cam.projectionMatrix.clone()];
@@ -96,7 +98,7 @@ describe('rig', () => {
     const up = localUp(banked.position.x, banked.position.z, new Vector3());
     expect(Math.abs(banked.right.dot(up))).toBeGreaterThan(0.02); // the road is tilted
     for (const yaw of [0, 45, -120]) {
-      const cam = camOf(createRig().look({ yaw, pitch: 10 }), banked);
+      const cam = camOf(clean().look({ yaw, pitch: 10 }), banked);
       expect(camRight(cam).dot(up)).toBeCloseTo(0, 7);
     }
   });

@@ -15,6 +15,7 @@ import { decodeDriveState, encodeDriveState, clearDriveState } from './url.js';
 import { createRouteBar } from './ui/routebar.js';
 import { createRouteCards } from './ui/routecard.js';
 import { createTimePop } from './ui/timepop.js';
+import { createViewPop } from './ui/viewpop.js';
 import { stepRate, atLocalMinutes } from './ui/format.js';
 import { attachInput } from './input.js';
 
@@ -22,6 +23,8 @@ import { attachInput } from './input.js';
 const DRIVE_HINT = 'Drag to look around. Scroll to zoom. Space to pause.';
 /** At most one address write a second while the clock plays. */
 const WRITE_EVERY_MS = 1000;
+/** The drive's own options (Reduce motion), kept per browser. */
+const OPTIONS_KEY = 'slc-skyline-drive';
 /** Local minutes past midnight of the time-of-day jumps. */
 const NOON = 12 * 60, NIGHT = 3 * 60;
 
@@ -92,10 +95,31 @@ export function initDrive(app, loaded) {
   });
   let session = null, loadingSession = null, mapState = null, wasPlaying = true, entering = 0, shownRoute = null, lastWrite = 0;
   let routeId = routes[0].id; // the route the drive remembers for this visit
+  let view = 'cabin'; // cabin (the default) or clean, kept across sessions of this visit
+
+  // Reduce motion: the system's setting, unless the visitor chose otherwise in the drive's view popover
+  const systemReduce = typeof matchMedia === 'function' ? matchMedia('(prefers-reduced-motion: reduce)') : null;
+  const readOptions = () => { try { return JSON.parse(localStorage.getItem(OPTIONS_KEY)) || {}; } catch { return {}; } };
+  const reduceMotion = () => {
+    const o = readOptions();
+    return typeof o.reduceMotion === 'boolean' ? o.reduceMotion : !!systemReduce?.matches;
+  };
+  function setReduceMotion(on) {
+    try { localStorage.setItem(OPTIONS_KEY, JSON.stringify({ ...readOptions(), reduceMotion: !!on })); } catch { /* this visit only */ }
+    session?.rig.setReduceMotion(!!on);
+    invalidate();
+  }
+  systemReduce?.addEventListener?.('change', () => { session?.rig.setReduceMotion(reduceMotion()); invalidate(); });
+  const viewPop = createViewPop({
+    button: bar.view, onView: setView, onReduceMotion: setReduceMotion,
+    onGlance: (name) => { if (session) { session.rig.glance(name); invalidate(); } },
+    state: () => ({ view, reduceMotion: session ? session.rig.reduceMotion : reduceMotion() }),
+  });
 
   attachInput({
     canvas, controls, tools: el.tools, invalidate, onToggle: toggle, active: () => seam.active, session: () => session,
     onLook: writeAddress, onSeekBy: (sec) => { session.seekBy(sec); writeAddress(); }, onRate: rate,
+    onView: () => setView(view === 'cabin' ? 'clean' : 'cabin'),
   });
 
   // ---------------------------------------------------------------- mode switch
@@ -110,6 +134,15 @@ export function initDrive(app, loaded) {
   }
 
   // ---------------------------------------------------------------- the controls
+  /** Cabin or clean. Neither the pose nor the simulation time changes: only the camera does. */
+  function setView(v) {
+    if (v !== 'cabin' && v !== 'clean') return;
+    view = v;
+    session?.rig.setView(v);
+    viewPop.update({ view, reduceMotion: session ? session.rig.reduceMotion : reduceMotion() });
+    writeAddress();
+    invalidate();
+  }
   function toggle() {
     if (!session?.journey) return;
     // from the end of the route, play drives it again from the chosen start
@@ -185,7 +218,7 @@ export function initDrive(app, loaded) {
     if (!session?.journey) return;
     const { rig } = session;
     const p = seam.active
-      ? encodeDriveState({ route: routeId, s: session.pose?.s, t: session.clock.now(), view: 'clean', yaw: rig.yaw, pitch: rig.pitch, lens: rig.lens }, location.search)
+      ? encodeDriveState({ route: routeId, s: session.pose?.s, t: session.clock.now(), view: rig.view, yaw: rig.yaw, pitch: rig.pitch, lens: rig.lens }, location.search)
       : clearDriveState(location.search);
     const q = p.toString();
     lastWrite = performance.now();
@@ -264,6 +297,8 @@ export function initDrive(app, loaded) {
     routeId = id;
     if (fresh) session.configure(id, at);
     showRoute();
+    if (at.view === 'cabin' || at.view === 'clean') view = at.view;
+    session.rig.setView(view).setReduceMotion(reduceMotion());
     session.rig.look({ yaw: at.yaw, pitch: at.pitch, lens: at.lens });
     if (!seam.active) activate();
     session.clock.pause();
@@ -308,6 +343,7 @@ export function initDrive(app, loaded) {
     cards.show(false);
     cards.setLoading(false);
     timePop.open(false);
+    viewPop.open(false);
     if (!seam.active) return;
     wasPlaying = session.clock.playing;
     session.clock.pause();
@@ -346,7 +382,23 @@ export function initDrive(app, loaded) {
   const need = () => { if (!session || !seam.active) throw new Error('Drive is not active'); return session; };
   hooks.drive = {
     /** Enter Drive on a route; resolves when the first frame is settled. */
-    start: (id = routeId, { s, t, view } = {}) => enter(id, { s, t, view }),
+    start: (id = routeId, { s, t, view: v } = {}) => enter(id, { s, t, view: v }),
+    /** 'cabin' or 'clean'; changes neither the pose nor the simulation time. */
+    setView(v) { need(); if (v !== 'cabin' && v !== 'clean') throw new Error(`no view "${v}" (cabin, clean)`); setView(v); },
+    view: () => view,
+    /** Reduce motion on or off (stored as the drive's own option, as the view popover does). */
+    setReduceMotion(on) { need(); setReduceMotion(on); viewPop.update({ view, reduceMotion: !!on }); },
+    /** A glance: 'ahead', 'left', 'right' or 'center' (the keys 1 to 4). */
+    glance(name) { need().rig.glance(name); invalidate(); },
+    /** The cabin part: { model, readout, mirrors, windshield, cabinScene, cabinCamera, ... }, or null without it. */
+    cabin: () => (session ? session.part('cabin') : null),
+    /** The camera's offset from the path, in the path's frame (right, up, forward), metres. */
+    eyeOffset() {
+      const sn = need(), p = sn.pose, e = sn.poseNumbers().eye; // the eye for this pose and moment, as the next frame draws it
+      const d = { x: e.x - p.position.x, y: e.y - p.position.y, z: e.z - p.position.z };
+      const dot = (v) => d.x * v.x + d.y * v.y + d.z * v.z;
+      return { right: dot(p.right), up: dot(p.up), forward: dot(p.forward) };
+    },
     exit,
     seek(at) { need().seek(at); writeAddress(); },
     play() { need().clock.play(); invalidate(); },

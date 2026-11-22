@@ -16,4 +16,10 @@
 
 /** @type {Array<(ctx: object) => (object | null | undefined | Promise<object | null | undefined>)>} */
 export const PART_FACTORIES = [
+  (ctx) => import('./lights/index.js').then((m) => m.createLampsPart(ctx)), // street lamps: sprites, pools, poles, switching (D5.4, D5.5)
+  (ctx) => import('./lights/headlights.js').then((m) => m.createHeadlightsPart(ctx)), // the visitor's headlamps and what signs and markings return (D5.1, D5.2)
+  (ctx) => import('./traffic/index.js').then((m) => m.createTrafficPart(ctx)), // vehicles on both carriageways, placed by the demand model (D6.4)
+  (ctx) => import('./vehicle/cabin.js').then((m) => m.createCabin(ctx)), // the cabin, its displays and the steering wheel (D4.2, D4.5)
+  (ctx) => import('./traffic/valley.js').then((m) => m.createValleyPart(ctx)), // light ribbons on the rest of the valley's roads (D6.6)
+  (ctx) => import('./lights/obstruction.js').then((m) => m.createObstructionPart(ctx)), // red obstruction lights on buildings above 61 m, hidden and moved with them (D5.6)
 ];

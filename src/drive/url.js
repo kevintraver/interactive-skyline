@@ -1,9 +1,11 @@
 // The drive's state in the address bar (plan 02, section 4.9):
-// ?city=lv&mode=drive&route=i15n&s=42150&t=2026-11-14T01:07:30Z&view=clean&yaw=-12&pitch=2&lens=28
+// ?city=lv&mode=drive&route=i15n&s=42150&t=2026-11-14T01:07:30Z&view=cabin&yaw=-12&pitch=2&lens=28
 // s is metres along the road the route drives; t is simulation time in UTC. Other parameters
 // (city, and anything else) are left alone.
 
 export const DRIVE_KEYS = ['mode', 'route', 's', 't', 'view', 'yaw', 'pitch', 'lens'];
+/** The views: the car's cabin (the default) and the clean camera. */
+export const VIEW_NAMES = ['cabin', 'clean'];
 
 const num = (v) => {
   if (v == null || v.trim() === '') return undefined;
@@ -30,7 +32,7 @@ const round1 = (v) => String(Math.round(v * 10) / 10);
  * Read the drive state. Missing or malformed values are undefined; `drive` says whether
  * mode=drive. Nothing is clamped here: the rig and the journey clamp what they are given.
  * @param {URLSearchParams|string} searchParams
- * @returns {{ drive: boolean, route?: string, s?: number, t?: number, view?: string, yaw?: number, pitch?: number, lens?: number }}
+ * @returns {{ drive: boolean, route?: string, s?: number, t?: number, view?: 'cabin'|'clean', yaw?: number, pitch?: number, lens?: number }}
  */
 export function decodeDriveState(searchParams) {
   const p = searchParams instanceof URLSearchParams ? searchParams : new URLSearchParams(searchParams || '');
@@ -43,8 +45,7 @@ export function decodeDriveState(searchParams) {
     route: route && /^[\w.-]{1,64}$/.test(route) ? route : undefined,
     s: s != null && s >= 0 ? s : undefined,
     t: parseTime(p.get('t')),
-    // only 'clean' exists in this phase; other names are kept so a cabin link survives a round trip
-    view: view && /^[a-z]{1,16}$/.test(view) ? view : undefined,
+    view: VIEW_NAMES.includes(view) ? view : undefined,
     yaw: num(p.get('yaw')),
     pitch: num(p.get('pitch')),
     lens: lens != null && lens > 0 ? lens : undefined,

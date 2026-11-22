@@ -1,6 +1,7 @@
 // The route bar in #dock: play or pause, the playback rate, the city's local time (which opens the
 // time-of-day popover), the speed, the track with the thumb that moves the car, the next exit ahead,
-// and the hold-position lock. It keeps the id the first transport pill had (#drivebar).
+// the hold-position lock, and the view button (which opens the view popover: cabin or clean, glances,
+// reduce motion). It keeps the id the first transport pill had (#drivebar).
 
 import { createTrack } from './slider.js';
 import { aheadText } from './track.js';
@@ -33,6 +34,7 @@ export function createRouteBar({ dock, tz, units, onToggle, onRate, onLock, onSe
       <p class="ahead"><span class="name"></span><span class="dist"></span></p>
     </div>
     <button class="lock" type="button" aria-pressed="false">${icon('i-unlock')}</button>
+    <button class="view" type="button" aria-haspopup="dialog" aria-expanded="false" aria-controls="drive-view" aria-label="View" title="View: cabin or clean (C)">${icon('i-wheel')}</button>
     <span class="status"></span>`;
   dock.append(el);
   const $ = (sel) => el.querySelector(sel);
@@ -41,6 +43,7 @@ export function createRouteBar({ dock, tz, units, onToggle, onRate, onLock, onSe
   const time = $('.time'), speed = $('.speed'), status = $('.status');
   const ahead = $('.ahead'), aheadName = $('.ahead .name'), aheadDist = $('.ahead .dist');
   const lock = $('.lock'), lockUse = lock.querySelector('use');
+  const view = $('.view');
   const track = createTrack({ units, onSeek });
   $('.route').prepend(track.el);
 
@@ -55,6 +58,7 @@ export function createRouteBar({ dock, tz, units, onToggle, onRate, onLock, onSe
   return {
     el,
     time,
+    view,
     track,
     show(on) { el.hidden = !on; },
     /** Loading text in place of the readings, or null for the readings. */

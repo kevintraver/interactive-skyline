@@ -11,7 +11,9 @@
 // later one) is registered with addPart(part), where a part is
 //   { name, update?(frame), setLook?(look), whenSettled?(), stats?(), beforeRender?(frame), afterRender?(frame), dispose?() }
 //   frame = { simMs, dtSimMs, pose, camera, viewport, night, sun: { elevation, azimuth }, rate, playing }
-//   look  = { night: boolean, dusk: number }   dusk 0 by day .. 1 by night (0 or 1 until the looks blend)
+//   look  = look.js lookAt(): { night: boolean, dusk: number, lights: number, beams: number, sun, ambientLux, sky, light, street }
+//           dusk 0 by day .. 1 by night, in steps of 1 / LOOK_STEPS; lights 0..1, how far the city's lights are on;
+//           beams 0..1, how far the drive's headlight stand-ins (road and sign glow) are on
 // update runs when the pose moved (every frame while the clock plays), setLook when the look changes
 // (and once on registering, if there is a look already), whenSettled and stats over all parts.
 
@@ -29,7 +31,8 @@ import { createEnv } from './env.js';
 import { createJourney } from './journey.js';
 import { defaultDeparture } from './moment.js';
 import { createRig } from './vehicle/rig.js';
-import { isNightAt } from './look.js';
+import { isNightAt, lookAt } from './look.js';
+import { createSkyBlend, SUN_STEP_MS } from './skyblend.js';
 import { sightOverGround } from './sightline.js';
 import { createTimings } from './timing.js';
 
@@ -38,6 +41,12 @@ const MAX_STEP_MS = 250;
 /** Metres the skirts hang below the edges of the finer terrain meshes: more than the 8 m sink and the grids' disagreement. */
 const SKIRT_DEPTH = 20;
 const RAD = Math.PI / 180;
+/**
+ * The look's dusk is rounded to 1/512, and parts get setLook when that changes. A step moves the drive's glows by
+ * under 1% of their night strength (the windows by under one 8-bit level), too little to see; across the whole of
+ * dusk (sun +6 to -9 degrees, about an hour) it is 512 setLook calls, about two a second at 16x.
+ */
+const LOOK_STEPS = 512;
 
 const bitmapOf = (blob) => createImageBitmap(blob, { imageOrientation: 'flipY', premultiplyAlpha: 'none', colorSpaceConversion: 'none' });
 
@@ -110,12 +119,12 @@ export async function createSession(ctx, terrain, hooks) {
   // the road chunks, the signs and the terrain as parts, through thin adapters over their own APIs
   const car = (f) => ({ x: f.pose.position.x, y: -f.pose.position.z });
   addPart({
-    name: 'roads', update: (f) => chunks.update(car(f)), setLook: (l) => chunks.setNight(l.night),
+    name: 'roads', update: (f) => chunks.update(car(f)), setLook: (l) => materials.setLook(l),
     whenSettled: () => chunks.whenSettled(), stats: () => chunks.stats(), dispose: () => chunks.dispose(),
   });
   if (roadside) {
     addPart({
-      name: 'signs', update: (f) => roadside.update(car(f)), setLook: (l) => roadside.setNight(l.night),
+      name: 'signs', update: (f) => roadside.update(car(f)), setLook: (l) => roadside.setLook(l),
       whenSettled: () => roadside.whenSettled(), stats: () => roadside.stats(), dispose: () => roadside.dispose(),
     });
   }
@@ -145,6 +154,8 @@ export async function createSession(ctx, terrain, hooks) {
   }
 
   let journey = null, pose = null, needPose = true, lastNow = null, loading = false, updateId = 0;
+  // the rig's body and head layers read the journey and the simulation time (vehicle/motion.js)
+  rig.bind({ journey: () => journey, now: () => clock.now() });
   // the hold-position lock (plan 02, section 4.3) and the start chip the visitor last chose
   let locked = false, startKey = 'reveal';
   const timings = { total: createTimings(), journey: createTimings(), chunks: createTimings(), rig: createTimings(), ui: createTimings() };
@@ -159,15 +170,32 @@ export async function createSession(ctx, terrain, hooks) {
     return journeys.get(route.id);
   }
 
-  /** The look for the sun's elevation; switches the app's look and the parts', not the saved setting. */
-  function updateLook(sun) {
-    const night = isNightAt(sun.elevation);
-    if (seam.night === night) return;
-    seam.night = night;
-    look = { night, dusk: night ? 1 : 0 };
-    applyNight();
+  // The look (look.js) for the sun: blended on the app's sky (skyblend.js), the parts told when dusk moves a step,
+  // and the boolean night (the interface theme, the app's night-only extras) switched once at its threshold. The sun is
+  // rounded (elevation to 0.02 degree, azimuth to 0.1) so the sky is repainted only when something visible changes.
+  const skyBlend = createSkyBlend({
+    dome: ctx.sky, renderer, invalidate, ephemeris: env.ephemeris, ground, imagery: () => settings.imagery,
+  });
+  let skyKey = null;
+  function updateLook(sun, simMs) {
+    const elevation = Math.round(sun.elevation * 50) / 50, azimuth = Math.round(sun.azimuth * 10) / 10;
+    const next = lookAt({ elevation, azimuth }, { steps: LOOK_STEPS });
+    const key = `${elevation} ${azimuth} ${Math.round(simMs / SUN_STEP_MS)}`;
+    if (key !== skyKey) { skyKey = key; skyBlend?.set(next, simMs); }
+    if (seam.night !== next.night) {
+      seam.night = next.night;
+      applyNight(); // the legacy sky hands this to the blend; another sky gets the boolean look
+      document.documentElement.dataset.theme = next.night ? 'dark' : 'light';
+    }
+    if (look && look.dusk === next.dusk && look.night === next.night) return;
+    look = next;
     for (const p of parts) p.setLook?.(look);
-    document.documentElement.dataset.theme = night ? 'dark' : 'light';
+  }
+  /** Leaving Drive: the map's sun and dome come back (index.js then applies the visitor's own look). */
+  function releaseLook() {
+    skyBlend?.release();
+    skyKey = null;
+    look = null;
   }
 
   /** Bring the pose, the parts and the look up to date with the clock. */
@@ -190,7 +218,7 @@ export async function createSession(ctx, terrain, hooks) {
     // mesher is quick, and on a slow GPU (or a software one) frames in between starve it of CPU.
     // Playing, the clock asks for every frame anyway.
     settledParts().then(() => { if (id === updateId) loading = false; invalidate(); });
-    updateLook(sun);
+    updateLook(sun, simMs);
     lap('chunks');
   }
   const settledParts = () => partsReady.then(() => Promise.all(parts.map((p) => p.whenSettled?.())));
@@ -198,6 +226,8 @@ export async function createSession(ctx, terrain, hooks) {
   const session = {
     net, env, clock, rig, chunks, group, terrain, timings, addPart,
     get parts() { return parts.map((p) => p.name); },
+    /** A registered part by name, or null. */
+    part: (name) => parts.find((p) => p.name === name) || null,
     get journey() { return journey; },
     get pose() { return pose; },
     get loading() { return loading; },
@@ -272,6 +302,7 @@ export async function createSession(ctx, terrain, hooks) {
     show(on) {
       group.visible = on;
       lastNow = null;
+      if (!on) releaseLook();
       if (on) {
         if (wideMesh) {
           wideMesh.material.map = settings.imagery ? wideMap : null;
@@ -308,7 +339,7 @@ export async function createSession(ctx, terrain, hooks) {
         timings.ui.add(performance.now() - t);
         timings.total.add(performance.now() - t0);
       }
-      if (clock.playing) invalidate();
+      if (clock.playing || rig.glancing) invalidate(); // a glance eases over real time
     },
 
     /** Draw the frame (app.drive.render, while driving): parts' beforeRender, the scene, parts' afterRender. */
@@ -322,6 +353,8 @@ export async function createSession(ctx, terrain, hooks) {
     dispose() {
       for (const p of [...parts].reverse()) p.dispose?.();
       parts.length = 0;
+      releaseLook();
+      skyBlend?.dispose();
       scene.remove(group);
     },
 
@@ -371,7 +404,8 @@ export async function createSession(ctx, terrain, hooks) {
         speed: pose.speed, mph: pose.speed / 0.44704, accel: pose.accel, grade: pose.grade, curvature: pose.curvature,
         position: v(pose.position), forward: v(pose.forward), up: v(pose.up), eye: v(rig.apply(scratch, pose, viewport()).position),
         t: clock.now(), iso: new Date(clock.now()).toISOString(), playing: clock.playing,
-        yaw: rig.yaw, pitch: rig.pitch, lens: rig.lens, night: !!seam.night, rate: clock.rate, locked, arrived: session.arrived,
+        yaw: rig.yaw, pitch: rig.pitch, lens: rig.lens, view: rig.view, reduceMotion: rig.reduceMotion, glance: rig.glancing,
+        night: !!seam.night, rate: clock.rate, locked, arrived: session.arrived,
         sunElevation: env.ephemeris.sun(clock.now()).elevation,
       };
     },

@@ -173,7 +173,7 @@ test('lv drive controls: starts, route bar, rate, lock, time of day, address, ph
     }, moment);
     await settled(page);
     const q = await params(page);
-    expect(q).toMatchObject({ city: 'lv', mode: 'drive', route: 'i15n', s: '33333', t: '2026-11-22T03:04:05Z', view: 'clean', yaw: '21.5', pitch: '4.5', lens: '85' });
+    expect(q).toMatchObject({ city: 'lv', mode: 'drive', route: 'i15n', s: '33333', t: '2026-11-22T03:04:05Z', view: 'cabin', yaw: '21.5', pitch: '4.5', lens: '85' });
     address = await run(page, () => location.href);
 
     await page.getByRole('button', { name: 'Map', exact: true }).click();

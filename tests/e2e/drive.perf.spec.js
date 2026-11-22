@@ -1,5 +1,6 @@
-// Timing of the drive's own per-frame JavaScript (journey, rig, road chunks, signs, controls). Frame time as
-// a whole means nothing under the software renderer, so this is the number the drive is held to.
+// Timing of the drive's own per-frame JavaScript (journey, rig with the body and head layers, road chunks, signs,
+// controls, and the cabin pass's own JavaScript). Frame time as a whole means nothing under the software renderer,
+// so this is the number the drive is held to. It runs in the default view, the cabin.
 //
 // It runs in the `drive-timing` project, alone and after everything else (see playwright.config.js): with
 // several software renderers busy on every core the page being timed is starved, and the same code that
@@ -26,10 +27,14 @@ test('lv drive: its own JavaScript stays within the per-frame budget', async ({ 
       await d.whenSettled();
     }
     const st = d.stats();
-    return { ...st.js, frames: st.js.total.count - before };
+    return { ...st.js, frames: st.js.total.count - before, view: d.pose().view, cabin: st.cabin?.js ?? null };
   }, ROUTE);
   console.log('drive per-frame JS (ms):', JSON.stringify(js));
+  expect(js.view).toBe('cabin');
   expect(js.total.count).toBeGreaterThanOrEqual(60);
   expect(js.total.p95).toBeLessThan(4);
   expect(js.total.max).toBeLessThan(16);
+  // the cabin pass, drawn after the world, counts against the same budget
+  expect(js.cabin?.count).toBeGreaterThan(0);
+  expect(js.total.p95 + js.cabin.p95).toBeLessThan(4);
 });
