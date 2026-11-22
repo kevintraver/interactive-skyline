@@ -12,7 +12,7 @@ const DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 /**
  * @param {{ zone: string, now?: () => number, timeMs?: number }} o
  *   zone: the city's IANA zone (cities.json `tz`); now: the wall clock (injected in tests); timeMs: where to start.
- * @returns {import('../contracts').SimClock & { advance(dtWallMs: number): void }}
+ * @returns {import('../contracts.d.ts').SimClock & { advance(dtWallMs: number): void }}
  */
 export function createSimClock({ zone, now = () => Date.now(), timeMs = now() }) {
   // The time is an anchor (whole ms) plus a small offset, so that many small steps add up exactly: at epoch scale

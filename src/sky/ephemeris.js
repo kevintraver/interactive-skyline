@@ -56,7 +56,7 @@ function rotationToScene(rotation, out = new Matrix3()) {
 
 /**
  * @param {{ lat: number, lon: number, elevationM: number }} observer the city origin
- * @returns {{ at(timeMs: number): import('../contracts').CelestialState, events(dayStartMs: number): import('../contracts').DayEvents,
+ * @returns {{ at(timeMs: number): import('../contracts.d.ts').CelestialState, events(dayStartMs: number): import('../contracts.d.ts').DayEvents,
  *   eqjToScene(timeMs: number): Matrix3, timeOfSunAltitude(altDeg: number, dayMs: number, which: 'rising' | 'setting'): number | null }}
  */
 export function createEphemeris({ lat, lon, elevationM }) {

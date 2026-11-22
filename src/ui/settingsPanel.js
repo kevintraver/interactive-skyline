@@ -45,6 +45,7 @@ export function initSettingsPanel(app) {
     // the interface goes dark with the sky
     document.documentElement.dataset.theme = settings.night ? 'dark' : 'light';
     nightBtn.setAttribute('aria-pressed', String(settings.night));
+    // pinned: switch between the two looks; in the clock state the button pins the look opposite the real sky
     nightBtn.title = settings.night ? 'Switch to day' : 'Switch to night';
     nightBtn.setAttribute('aria-label', nightBtn.title);
     nightBtn.querySelector('use').setAttribute('href', settings.night ? '#i-sun' : '#i-moon');
@@ -59,6 +60,13 @@ export function initSettingsPanel(app) {
   }
 
   function setSetting(key, value) {
+    // in the clock state `night` is derived from the Sun; writing it always selects a pinned look (plan 01, 5.6)
+    if (key === 'night' && app.env && app.env.mode === 'clock') {
+      app.env.pin(!!value);
+      saveSettings(settings);
+      applySettings('night');
+      return;
+    }
     if (settings[key] === value) return;
     settings[key] = value;
     saveSettings(settings);

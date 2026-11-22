@@ -18,7 +18,11 @@ export type Emitter<Events> = { on<K extends keyof Events>(type: K, fn: (e: Even
 export type FrameInfo = { nowMs: number; dtWallMs: number; simMs: number; dtSimMs: number; frame: number };
 export type QualityProfile = Record<string, unknown>;
 export type ModeRegistry = unknown;
-export type FrameLoop = { invalidate(): void; settle(): Promise<void> };
+export type FrameLoop = {
+  invalidate(): void; settle(): Promise<void>;
+  add(sub: Partial<Pick<Subsystem, 'update' | 'demand'>>, order?: number): () => void;   // section 5.5 frame order; 20-29 for modes
+  readonly tier: Demand; readonly frames: number;
+};
 /** UTC ms of each event in [dayStartMs, dayStartMs + 24 h), or null when it does not happen that day (src/sky/ephemeris.js). */
 export type DayEvents = { astronomicalDawn: number | null; nauticalDawn: number | null; civilDawn: number | null; sunrise: number | null;
   noon: number | null; sunset: number | null; civilDusk: number | null; nauticalDusk: number | null; astronomicalDusk: number | null;
@@ -186,7 +190,11 @@ export interface Environment {
   freeze(o: { time?: string | number; weather?: string | WeatherSample; seed?: number; ev100?: number;
               lights?: number; sunAzAlt?: [number, number] }): void;       // pin anything for tests and screenshots
   unfreeze(): void;
-  on(type: 'weather' | 'lights' | 'quality', fn: () => void): () => void;
+  on(type: 'weather' | 'lights' | 'quality' | 'mode' | 'night', fn: (payload?: unknown) => void): () => void;
+  // phase 1 additions: the two states of section 4.2 ('pinned' is today's app; 'clock' follows the SimClock)
+  readonly mode: 'pinned' | 'clock';
+  enterClock(): void;                   // what any time control does
+  pin(night: boolean): void;            // back to a pinned look; pauses the clock
 }
 
 export interface EnvState {

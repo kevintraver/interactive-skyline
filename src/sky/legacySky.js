@@ -14,10 +14,13 @@ export function createLegacySky() {
   const HAZE = new THREE.Color(DAY.haze), ZENITH = new THREE.Color(DAY.zenith);
   const sky = {
     sun: null, hemi: null, dome: null, scene: null, invalidate: null,
+    /** 'pinned' (today's two looks) or 'clock' (follows env.state; plan 01, sections 4.2 and 5.6). */
+    mode: 'pinned', state: null, imagery: true, terrain: [],
     /** Add fog, dome and lights to the scene. */
-    init({ scene, city, invalidate }) {
+    init({ scene, city, invalidate, renderer }) {
       sky.scene = scene;
       sky.invalidate = invalidate;
+      sky.renderer = renderer;
       scene.fog = new THREE.FogExp2(HAZE, 0.000014);
       sky.dome = new THREE.Mesh(
         new THREE.SphereGeometry(120000, 32, 16),
@@ -37,7 +40,7 @@ export function createLegacySky() {
       // afternoon sun in the west-southwest, 32 degrees up
       const az = THREE.MathUtils.degToRad(245), el = THREE.MathUtils.degToRad(32);
       // the shadow map covers a square around the towers, sized per city
-      const shade = city.shadow;
+      const shade = sky.shade = city.shadow;
       sun.target.position.set(shade.x, 0, -shade.y);
       sun.position.set(Math.sin(az) * Math.cos(el), Math.sin(el), -Math.cos(az) * Math.cos(el)).multiplyScalar(shade.half * 2.5).add(sun.target.position);
       sun.castShadow = true;
@@ -53,8 +56,16 @@ export function createLegacySky() {
      * `terrain` is [{ mesh }] for the far and near ground; `imagery` whether the aerial photo is shown.
      */
     apply({ night: isNight, imagery, terrain }) {
-      const look = isNight ? NIGHT : DAY;
-      night.value = isNight ? 1 : 0;
+      sky.imagery = imagery;
+      sky.terrain = terrain;
+      if (sky.mode === 'clock' && sky.state) { sky.update(sky.state); sky.invalidate(); return; }
+      sky.look(isNight ? NIGHT : DAY, isNight ? 1 : 0);
+      sky.invalidate();
+    },
+    /** Set sky, haze, light and street glow to one look; `nightValue` drives the buildings' night uniform. */
+    look(look, nightValue) {
+      const { imagery, terrain } = sky;
+      night.value = nightValue;
       HAZE.set(look.haze);
       sky.scene.fog.color.copy(HAZE); // the fog keeps its own copy of the haze color
       ZENITH.set(look.zenith);
@@ -68,7 +79,25 @@ export function createLegacySky() {
         // without the photo there is no street pattern to light, so keep the plain ground dim
         t.mesh.material.emissiveIntensity = look.street[i] * (imagery ? 1 : 0.3);
       });
-      sky.invalidate();
+    },
+    /** Clock state: follow the environment's state (frame step 40). Interim, until phase 3 deletes this sky. */
+    update(state) {
+      sky.state = state;
+      if (sky.mode !== 'clock') return;
+      const isNight = state.sun.trueAltDeg < -6;
+      sky.look(isNight ? NIGHT : DAY, isNight ? 1 : 0);
+    },
+    /** Switch between the pinned looks and the clock; back to pinned restores today's fixed light. */
+    setMode(mode, state) {
+      sky.mode = mode;
+      if (state) sky.state = state;
+      if (mode === 'pinned') sky.aimPinned();
+    },
+    aimPinned() {
+      const shade = sky.shade;
+      const az = THREE.MathUtils.degToRad(245), el = THREE.MathUtils.degToRad(32);
+      sky.sun.position.set(Math.sin(az) * Math.cos(el), Math.sin(el), -Math.cos(az) * Math.cos(el)).multiplyScalar(shade.half * 2.5).add(sky.sun.target.position);
+      if (sky.renderer) sky.renderer.shadowMap.needsUpdate = true;
     },
     /** How strongly removable towers glow blue in this look. */
     tint: (isNight) => (isNight ? NIGHT : DAY).tint,

@@ -7,6 +7,7 @@
 import { createApp } from './app/context.js';
 import { installHooks } from './app/hooks.js';
 import { createLegacySky } from './sky/legacySky.js';
+import { initSim, applyTimeParams } from './app/sim.js';
 import { loadTerrain } from './city/terrain.js';
 import { createBuildings } from './city/buildings.js';
 import { createViews } from './city/views.js';
@@ -29,6 +30,7 @@ const app = createApp(cities);
 const { cityId, city, pending, settings, scene, camera, renderer, controls, loop, invalidate } = app;
 app.format = createFormat(settings, city);
 app.sky = createLegacySky().init(app);
+initSim(app);
 
 // ------------------------------------------------------------------ load
 const model = await pending.model;
@@ -58,6 +60,7 @@ initCityMenu(app);
 app.views.resize();
 app.views.set(city.views[0].id);
 app.applySettings();
+applyTimeParams(app);
 document.getElementById('loading').classList.add('done');
 performance.mark('skyline-ready');
 
