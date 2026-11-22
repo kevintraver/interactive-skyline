@@ -40,6 +40,9 @@ export default defineConfig({
     {
       name: 'webgl2-software',
       testIgnore: /perf\.timing\.spec\.js/,
+      // software frames take seconds, and under load from other work a test can run out of time: one more try, and
+      // the report then lists it as flaky. A wrong image or count fails both tries.
+      retries: 1,
       use: { ...devices['Desktop Chrome'], viewport: { width: 1280, height: 800 }, deviceScaleFactor: 1,
         launchOptions: { args: SOFTWARE } },
     },
