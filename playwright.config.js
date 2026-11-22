@@ -3,6 +3,7 @@
 // Projects
 //   webgl2-software  Chromium on SwiftShader (software WebGL2). Deterministic enough for goldens; the one CI runs.
 //   gpu              Chromium on this machine's GPU. Local only: timing budgets (pnpm test:perf).
+//   software-timing  The timing suite on SwiftShader, gated at 2x (pnpm test:perf:software).
 //
 // Golden images are per platform (Chromium's text and SwiftShader output differ between macOS and Linux), so
 // the snapshot path carries {platform}. A spec compares only when a snapshot for the running platform exists;
@@ -11,6 +12,7 @@ import { defineConfig, devices } from '@playwright/test';
 
 const PORT = Number(process.env.SKYLINE_PORT || 4791);
 const SOFTWARE = ['--enable-unsafe-swiftshader', '--ignore-gpu-blocklist', '--use-angle=swiftshader', '--use-gl=angle'];
+const GPU = ['--ignore-gpu-blocklist', '--enable-gpu', ...(process.platform === 'darwin' ? ['--use-angle=metal'] : [])];
 
 export default defineConfig({
   testDir: 'tests/e2e',
@@ -42,10 +44,18 @@ export default defineConfig({
         launchOptions: { args: SOFTWARE } },
     },
     {
+      // this machine's GPU, headless (on macOS through Metal); timing only, one worker
       name: 'gpu',
       testMatch: /perf\.timing\.spec\.js/,
-      use: { ...devices['Desktop Chrome'], viewport: { width: 1280, height: 800 }, deviceScaleFactor: 1, headless: false,
-        launchOptions: { args: ['--ignore-gpu-blocklist', '--disable-gpu-vsync', '--disable-frame-rate-limit'] } },
+      use: { ...devices['Desktop Chrome'], viewport: { width: 1280, height: 800 }, deviceScaleFactor: 1,
+        launchOptions: { args: GPU } },
+    },
+    {
+      // the timing suite on SwiftShader: recorded, and gated only at 2x
+      name: 'software-timing',
+      testMatch: /perf\.timing\.spec\.js/,
+      use: { ...devices['Desktop Chrome'], viewport: { width: 1280, height: 800 }, deviceScaleFactor: 1,
+        launchOptions: { args: SOFTWARE } },
     },
   ],
 });

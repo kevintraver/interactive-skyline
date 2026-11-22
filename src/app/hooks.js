@@ -2,6 +2,7 @@
 // skill's checker and the test suites drive the app through it. Members may be added, never removed or changed.
 import * as THREE from 'three';
 import { isHidden, isMoved } from '../interaction/edits.js';
+import { createPerf } from '../render/perf.js';
 
 const lerp = THREE.MathUtils.lerp;
 
@@ -24,6 +25,7 @@ export function installHooks(app) {
     },
     place: app.place, movedIds: () => tall.filter(isMoved).map((t) => t.data.id),
     hiddenIds: () => tall.filter((t) => !t.mesh.visible).map((t) => t.data.id),
+    perf: createPerf(app),
   };
   return window.__skyline;
 }

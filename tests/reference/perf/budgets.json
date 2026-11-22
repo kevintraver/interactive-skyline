@@ -1,0 +1,155 @@
+{
+  "bundle": {
+    "chunks": {
+      "generateMeshBVH.worker.js": 47185,
+      "index.css": 3013,
+      "index.js": 204266
+    },
+    "cssGzip": 3013,
+    "jsGzip": 251451
+  },
+  "bytes": {
+    "lv": {
+      "beforeReady": 29220088,
+      "requests": 147,
+      "total": 31215807
+    },
+    "slc": {
+      "beforeReady": 21906969,
+      "requests": 88,
+      "total": 21959925
+    }
+  },
+  "scenes": {
+    "lv-aerial-day": {
+      "animatingInView": false,
+      "idleFrozen": 0,
+      "info": {
+        "calls": 291,
+        "geometries": 369,
+        "lines": 98160,
+        "points": 0,
+        "programs": 6,
+        "textures": 4,
+        "triangles": 3797873
+      }
+    },
+    "lv-aerial-night": {
+      "animatingInView": false,
+      "idleFrozen": 0,
+      "info": {
+        "calls": 292,
+        "geometries": 370,
+        "lines": 98160,
+        "points": 0,
+        "programs": 7,
+        "textures": 4,
+        "triangles": 3798245
+      }
+    },
+    "lv-east-day": {
+      "animatingInView": false,
+      "idleFrozen": 0,
+      "info": {
+        "calls": 335,
+        "geometries": 369,
+        "lines": 137340,
+        "points": 0,
+        "programs": 6,
+        "textures": 4,
+        "triangles": 3851293
+      }
+    },
+    "lv-east-night": {
+      "animatingInView": false,
+      "idleFrozen": 0,
+      "info": {
+        "calls": 336,
+        "geometries": 370,
+        "lines": 137340,
+        "points": 0,
+        "programs": 7,
+        "textures": 4,
+        "triangles": 3851665
+      }
+    },
+    "lv-strat-day": {
+      "animatingInView": true,
+      "idleFrozen": 0,
+      "info": {
+        "calls": 273,
+        "geometries": 369,
+        "lines": 123099,
+        "points": 0,
+        "programs": 6,
+        "textures": 4,
+        "triangles": 3830083
+      }
+    },
+    "lv-strat-night": {
+      "animatingInView": true,
+      "idleFrozen": 0,
+      "info": {
+        "calls": 274,
+        "geometries": 370,
+        "lines": 123099,
+        "points": 0,
+        "programs": 7,
+        "textures": 4,
+        "triangles": 3830455
+      }
+    },
+    "slc-aerial-day": {
+      "animatingInView": false,
+      "idleFrozen": 0,
+      "info": {
+        "calls": 140,
+        "geometries": 150,
+        "lines": 47304,
+        "points": 0,
+        "programs": 5,
+        "textures": 4,
+        "triangles": 3333451
+      }
+    },
+    "slc-aerial-night": {
+      "animatingInView": false,
+      "idleFrozen": 0,
+      "info": {
+        "calls": 140,
+        "geometries": 150,
+        "lines": 47304,
+        "points": 0,
+        "programs": 5,
+        "textures": 4,
+        "triangles": 3333451
+      }
+    },
+    "slc-ensign-day": {
+      "animatingInView": false,
+      "idleFrozen": 0,
+      "info": {
+        "calls": 144,
+        "geometries": 150,
+        "lines": 51096,
+        "points": 0,
+        "programs": 5,
+        "textures": 4,
+        "triangles": 3338833
+      }
+    },
+    "slc-ensign-night": {
+      "animatingInView": false,
+      "idleFrozen": 0,
+      "info": {
+        "calls": 144,
+        "geometries": 150,
+        "lines": 51096,
+        "points": 0,
+        "programs": 5,
+        "textures": 4,
+        "triangles": 3338833
+      }
+    }
+  }
+}

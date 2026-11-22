@@ -5,7 +5,7 @@ import { CITIES, boot, frames, views } from '../helpers/app.js';
 
 // Every member window.__skyline has at the end of phase 0. Later phases may add members, never remove these.
 const MEMBERS = ['tall', 'renderer', 'scene', 'camera', 'controls', 'sun', 'invalidate', 'settings', 'setSetting', 'focusOn',
-  'flying', 'setView', 'select', 'selectedId', 'screen', 'place', 'movedIds', 'hiddenIds', 'attractions'];
+  'flying', 'setView', 'select', 'selectedId', 'screen', 'place', 'movedIds', 'hiddenIds', 'perf', 'attractions'];
 // What attractions.js exposes; the checker's probe uses ready, freeze, summary, find, extras and fountains.
 const ATTRACTIONS = ['ready', 'extras', 'fountains', 'find', 'freeze', 'animating', 'summary'];
 // Element ids the app and the checker rely on (the checker hides loading, tip, menu, card, toast, top, tools,
