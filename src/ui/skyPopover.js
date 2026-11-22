@@ -123,12 +123,13 @@ export function initSkyPopover(app) {
   liveBtn.addEventListener('click', goLive);
   speedSel.addEventListener('change', () => setSpeed(Number(speedSel.value)));
   for (const r of jumps) r.addEventListener('change', () => { if (r.checked) jumpTo(r.value); });
-  dateIn.addEventListener('change', control(() => {
-    const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(dateIn.value);
+  const setDate = control((value) => {
+    const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value);
     if (!m) return;
     const p = clock.local();
     clock.setLocal({ year: +m[1], month: +m[2], day: +m[3], hour: p.hour, minute: p.minute, second: p.second });
-  }));
+  });
+  dateIn.addEventListener('change', () => setDate(dateIn.value));
 
   // the scrubber: every input moves the clock; a drag snaps to sunrise and sunset
   let pointer = false;
@@ -137,13 +138,15 @@ export function initSkyPopover(app) {
   scrub.addEventListener('pointerup', release);
   scrub.addEventListener('pointercancel', release);
   scrub.addEventListener('lostpointercapture', release);
-  scrub.addEventListener('input', control(() => {
-    let t = dayStart + Number(scrub.value) * MIN;
+  // (read the control before entering the clock state: entering it re-renders the popover from the clock)
+  const scrubTo = control((value) => {
+    let t = dayStart + value * MIN;
     if (pointer) {
       for (const k of ['sunrise', 'sunset']) if (events[k] !== null && Math.abs(t - events[k]) <= SNAP_MIN * MIN) t = events[k];
     }
     clock.set(t);
-  }));
+  });
+  scrub.addEventListener('input', () => scrubTo(Number(scrub.value)));
 
   function openSky(open) {
     if (open) app.closePopovers('sky');
