@@ -1,0 +1,944 @@
+{
+ "i15n": {
+  "road": "i15n.main",
+  "length_m": 68352.0,
+  "checks": {
+   "exits": {
+    "numbered": 15,
+    "with_guide_signs": 15,
+    "numbered_without_legend": [],
+    "fewer_than_three": [
+     {
+      "exit": "1",
+      "signs": 2,
+      "why": [
+       {
+        "advance": 1,
+        "why": "before the route starts",
+        "room_m": 202.3
+       },
+       {
+        "advance": 0.5,
+        "why": "before the route starts",
+        "room_m": 202.3
+       }
+      ]
+     },
+     {
+      "exit": "n137167665",
+      "signs": 1,
+      "why": [
+       {
+        "advance": 1,
+        "why": "median too narrow; overhead on the real road"
+       },
+       {
+        "advance": 0.5,
+        "why": "median too narrow; overhead on the real road"
+       },
+       {
+        "exit": true,
+        "why": "median too narrow; overhead on the real road"
+       }
+      ]
+     },
+     {
+      "exit": "n6487298253",
+      "signs": 2,
+      "why": [
+       {
+        "advance": 1,
+        "why": "median too narrow; overhead on the real road"
+       },
+       {
+        "advance": 0.5,
+        "why": "median too narrow; overhead on the real road"
+       }
+      ]
+     },
+     {
+      "exit": "n6487298203",
+      "signs": 2,
+      "why": [
+       {
+        "advance": 2,
+        "why": "closely spaced: no room after the previous interchange",
+        "room_m": 1392.4
+       },
+       {
+        "advance": 1,
+        "why": "closely spaced: no room after the previous interchange",
+        "room_m": 1392.4
+       },
+       {
+        "sequence": true,
+        "why": "no second interchange within reach"
+       },
+       {
+        "exit": true,
+        "why": "median too narrow; overhead on the real road"
+       }
+      ]
+     }
+    ],
+    "ok": true
+   },
+   "legends": {
+    "mismatches": [],
+    "denylist_hits": [],
+    "ok": true
+   },
+   "spacing": {
+    "min_m": 60.0,
+    "violations": [],
+    "ok": true
+   },
+   "dimensions": {
+    "problems": [],
+    "ok": true
+   }
+  },
+  "counts": {
+   "by_kind": {
+    "mile": 43,
+    "exit": 17,
+    "gore": 19,
+    "route": 9,
+    "speed": 9,
+    "advance": 24,
+    "sequence": 5
+   },
+   "by_provenance": {
+    "rule": 43,
+    "osm": 83
+   },
+   "total": 126
+  },
+  "exits": [
+   {
+    "exit": "1",
+    "osm": "n1887629846",
+    "s": 202.3,
+    "side": "right",
+    "kinds": [
+     "exit direction",
+     "gore"
+    ],
+    "omitted": [
+     {
+      "advance": 1,
+      "why": "before the route starts",
+      "room_m": 202.3
+     },
+     {
+      "advance": 0.5,
+      "why": "before the route starts",
+      "room_m": 202.3
+     }
+    ]
+   },
+   {
+    "exit": "12",
+    "osm": "n137180237",
+    "s": 19681.3,
+    "side": "right",
+    "kinds": [
+     "advance 1 mi",
+     "advance 0.5 mi",
+     "exit direction",
+     "gore"
+    ],
+    "omitted": []
+   },
+   {
+    "exit": "n3790463310",
+    "osm": "n3790463310",
+    "s": 39922.6,
+    "side": "right",
+    "kinds": [
+     "advance 1 mi",
+     "advance 0.5 mi",
+     "exit direction",
+     "gore"
+    ],
+    "omitted": []
+   },
+   {
+    "exit": "25",
+    "osm": "n137188049",
+    "s": 41047.8,
+    "side": "right",
+    "kinds": [
+     "advance 0.5 mi",
+     "interchange sequence",
+     "exit direction",
+     "gore"
+    ],
+    "omitted": [
+     {
+      "advance": 1,
+      "why": "closely spaced: no room after the previous interchange",
+      "room_m": 875.2
+     }
+    ]
+   },
+   {
+    "exit": "27",
+    "osm": "n137100427",
+    "s": 43903.9,
+    "side": "right",
+    "kinds": [
+     "advance 1 mi",
+     "advance 0.5 mi",
+     "exit direction",
+     "gore"
+    ],
+    "omitted": []
+   },
+   {
+    "exit": "29",
+    "osm": "n4737413799",
+    "s": 46620.3,
+    "side": "right",
+    "kinds": [
+     "advance 1 mi",
+     "advance 0.5 mi",
+     "exit direction",
+     "gore"
+    ],
+    "omitted": []
+   },
+   {
+    "exit": "30",
+    "osm": "n1577812154",
+    "s": 48279.2,
+    "side": "right",
+    "kinds": [
+     "advance 0.5 mi",
+     "interchange sequence",
+     "exit direction",
+     "gore"
+    ],
+    "omitted": [
+     {
+      "advance": 1,
+      "why": "closely spaced: no room after the previous interchange",
+      "room_m": 1408.9
+     }
+    ]
+   },
+   {
+    "exit": "31",
+    "osm": "n137642583",
+    "s": 49877.9,
+    "side": "right",
+    "kinds": [
+     "advance 0.5 mi",
+     "interchange sequence",
+     "exit direction",
+     "gore"
+    ],
+    "omitted": [
+     {
+      "advance": 1,
+      "why": "closely spaced: no room after the previous interchange",
+      "room_m": 1348.7
+     }
+    ]
+   },
+   {
+    "exit": "33",
+    "osm": "n1430595983",
+    "s": 52814.8,
+    "side": "right",
+    "kinds": [
+     "advance 1 mi",
+     "advance 0.5 mi",
+     "exit direction",
+     "gore"
+    ],
+    "omitted": [
+     {
+      "advance": 2,
+      "why": "closely spaced: no room after the previous interchange",
+      "room_m": 2686.9
+     }
+    ]
+   },
+   {
+    "exit": "35",
+    "osm": "n1961530800",
+    "s": 55892,
+    "side": "right",
+    "kinds": [
+     "advance 1 mi",
+     "advance 0.5 mi",
+     "exit direction",
+     "gore"
+    ],
+    "omitted": []
+   },
+   {
+    "exit": "36",
+    "osm": "n137208674",
+    "s": 57874.8,
+    "side": "right",
+    "kinds": [
+     "advance 1 mi",
+     "advance 0.5 mi",
+     "exit direction",
+     "gore"
+    ],
+    "omitted": []
+   },
+   {
+    "exit": "n137167665",
+    "osm": "n137167665",
+    "s": 60714.9,
+    "side": "left",
+    "kinds": [
+     "gore"
+    ],
+    "omitted": [
+     {
+      "advance": 1,
+      "why": "median too narrow; overhead on the real road"
+     },
+     {
+      "advance": 0.5,
+      "why": "median too narrow; overhead on the real road"
+     },
+     {
+      "exit": true,
+      "why": "median too narrow; overhead on the real road"
+     }
+    ]
+   },
+   {
+    "exit": "38",
+    "osm": "n137095034",
+    "s": 61249.4,
+    "side": "right",
+    "kinds": [
+     "advance 1 mi",
+     "advance 0.5 mi",
+     "exit direction",
+     "gore"
+    ],
+    "omitted": []
+   },
+   {
+    "exit": "39",
+    "osm": "n967222906",
+    "s": 61661.8,
+    "side": "right",
+    "kinds": [
+     "interchange sequence",
+     "exit direction",
+     "gore"
+    ],
+    "omitted": [
+     {
+      "advance": 1,
+      "why": "closely spaced: no room after the previous interchange",
+      "room_m": 162.4
+     },
+     {
+      "advance": 0.5,
+      "why": "closely spaced: no room after the previous interchange",
+      "room_m": 162.4
+     }
+    ]
+   },
+   {
+    "exit": "40",
+    "osm": "n137043163",
+    "s": 64924.1,
+    "side": "right",
+    "kinds": [
+     "advance 1 mi",
+     "advance 0.5 mi",
+     "exit direction",
+     "gore"
+    ],
+    "omitted": []
+   },
+   {
+    "exit": "n6487298253",
+    "osm": "n6487298253",
+    "s": 66324,
+    "side": "left",
+    "kinds": [
+     "exit direction",
+     "gore"
+    ],
+    "omitted": [
+     {
+      "advance": 1,
+      "why": "median too narrow; overhead on the real road"
+     },
+     {
+      "advance": 0.5,
+      "why": "median too narrow; overhead on the real road"
+     }
+    ]
+   },
+   {
+    "exit": "41",
+    "osm": "n7242902670",
+    "s": 66542.5,
+    "side": "right",
+    "kinds": [
+     "advance 0.5 mi",
+     "interchange sequence",
+     "exit direction",
+     "gore"
+    ],
+    "omitted": [
+     {
+      "advance": 1,
+      "why": "closely spaced: no room after the previous interchange",
+      "room_m": 1368.4
+     }
+    ]
+   },
+   {
+    "exit": "n6487298203",
+    "osm": "n6487298203",
+    "s": 67966.4,
+    "side": "left",
+    "kinds": [
+     "advance 0.5 mi",
+     "gore"
+    ],
+    "omitted": [
+     {
+      "advance": 2,
+      "why": "closely spaced: no room after the previous interchange",
+      "room_m": 1392.4
+     },
+     {
+      "advance": 1,
+      "why": "closely spaced: no room after the previous interchange",
+      "room_m": 1392.4
+     },
+     {
+      "sequence": true,
+      "why": "no second interchange within reach"
+     },
+     {
+      "exit": true,
+      "why": "median too narrow; overhead on the real road"
+     }
+    ]
+   },
+   {
+    "exit": "42A",
+    "osm": "n137641097",
+    "s": 68279,
+    "side": "right",
+    "kinds": [
+     "advance 0.5 mi",
+     "exit direction",
+     "gore"
+    ],
+    "omitted": [
+     {
+      "advance": 2,
+      "why": "closely spaced: no room after the previous interchange",
+      "room_m": 1486.5
+     },
+     {
+      "advance": 1,
+      "why": "closely spaced: no room after the previous interchange",
+      "room_m": 1486.5
+     },
+     {
+      "sequence": true,
+      "why": "no second interchange within reach"
+     }
+    ]
+   }
+  ],
+  "unsigned_exits": [
+   {
+    "osm": "n9569586804",
+    "s": 8117.5,
+    "why": "no ramp destination, exit number or label in OSM"
+   },
+   {
+    "osm": "n13717662519",
+    "s": 13637.1,
+    "why": "no ramp destination, exit number or label in OSM"
+   }
+  ],
+  "closely_spaced": [
+   {
+    "exit": "25",
+    "s": 41047.8,
+    "kinds": [
+     "advance 0.5 mi",
+     "interchange sequence",
+     "exit direction",
+     "gore"
+    ],
+    "omitted": [
+     {
+      "advance": 1,
+      "why": "closely spaced: no room after the previous interchange",
+      "room_m": 875.2
+     }
+    ]
+   },
+   {
+    "exit": "30",
+    "s": 48279.2,
+    "kinds": [
+     "advance 0.5 mi",
+     "interchange sequence",
+     "exit direction",
+     "gore"
+    ],
+    "omitted": [
+     {
+      "advance": 1,
+      "why": "closely spaced: no room after the previous interchange",
+      "room_m": 1408.9
+     }
+    ]
+   },
+   {
+    "exit": "31",
+    "s": 49877.9,
+    "kinds": [
+     "advance 0.5 mi",
+     "interchange sequence",
+     "exit direction",
+     "gore"
+    ],
+    "omitted": [
+     {
+      "advance": 1,
+      "why": "closely spaced: no room after the previous interchange",
+      "room_m": 1348.7
+     }
+    ]
+   },
+   {
+    "exit": "33",
+    "s": 52814.8,
+    "kinds": [
+     "advance 1 mi",
+     "advance 0.5 mi",
+     "exit direction",
+     "gore"
+    ],
+    "omitted": [
+     {
+      "advance": 2,
+      "why": "closely spaced: no room after the previous interchange",
+      "room_m": 2686.9
+     }
+    ]
+   },
+   {
+    "exit": "39",
+    "s": 61661.8,
+    "kinds": [
+     "interchange sequence",
+     "exit direction",
+     "gore"
+    ],
+    "omitted": [
+     {
+      "advance": 1,
+      "why": "closely spaced: no room after the previous interchange",
+      "room_m": 162.4
+     },
+     {
+      "advance": 0.5,
+      "why": "closely spaced: no room after the previous interchange",
+      "room_m": 162.4
+     }
+    ]
+   },
+   {
+    "exit": "41",
+    "s": 66542.5,
+    "kinds": [
+     "advance 0.5 mi",
+     "interchange sequence",
+     "exit direction",
+     "gore"
+    ],
+    "omitted": [
+     {
+      "advance": 1,
+      "why": "closely spaced: no room after the previous interchange",
+      "room_m": 1368.4
+     }
+    ]
+   },
+   {
+    "exit": "n6487298203",
+    "s": 67966.4,
+    "kinds": [
+     "advance 0.5 mi",
+     "gore"
+    ],
+    "omitted": [
+     {
+      "advance": 2,
+      "why": "closely spaced: no room after the previous interchange",
+      "room_m": 1392.4
+     },
+     {
+      "advance": 1,
+      "why": "closely spaced: no room after the previous interchange",
+      "room_m": 1392.4
+     },
+     {
+      "sequence": true,
+      "why": "no second interchange within reach"
+     },
+     {
+      "exit": true,
+      "why": "median too narrow; overhead on the real road"
+     }
+    ]
+   },
+   {
+    "exit": "42A",
+    "s": 68279,
+    "kinds": [
+     "advance 0.5 mi",
+     "exit direction",
+     "gore"
+    ],
+    "omitted": [
+     {
+      "advance": 2,
+      "why": "closely spaced: no room after the previous interchange",
+      "room_m": 1486.5
+     },
+     {
+      "advance": 1,
+      "why": "closely spaced: no room after the previous interchange",
+      "room_m": 1486.5
+     },
+     {
+      "sequence": true,
+      "why": "no second interchange within reach"
+     }
+    ]
+   }
+  ],
+  "denylist_changes": [],
+  "median_too_narrow": [
+   {
+    "kind": "advance",
+    "s": 59105.6,
+    "exit": "n137167665",
+    "median_clear_m": 6.5,
+    "needs_m": 7.9,
+    "action": "dropped"
+   },
+   {
+    "kind": "advance",
+    "s": 59910.2,
+    "exit": "n137167665",
+    "median_clear_m": 4.9,
+    "needs_m": 7.9,
+    "action": "dropped"
+   },
+   {
+    "kind": "exit",
+    "s": 60564.9,
+    "exit": "n137167665",
+    "median_clear_m": 2.6,
+    "needs_m": 7.9,
+    "action": "dropped"
+   },
+   {
+    "kind": "advance",
+    "s": 64714.7,
+    "exit": "n6487298253",
+    "median_clear_m": 6.8,
+    "needs_m": 8.4,
+    "action": "dropped"
+   },
+   {
+    "kind": "advance",
+    "s": 65519.3,
+    "exit": "n6487298253",
+    "median_clear_m": 6.5,
+    "needs_m": 8.4,
+    "action": "dropped"
+   },
+   {
+    "kind": "exit",
+    "s": 67816.4,
+    "exit": "n6487298203",
+    "median_clear_m": 6.6,
+    "needs_m": 11.7,
+    "action": "dropped"
+   }
+  ],
+  "dropped_by_spacing": [],
+  "ground_fixes": [],
+  "would_be_overhead": [
+   {
+    "kind": "advance",
+    "s": 42294.6,
+    "exit": "27",
+    "why": "4 lanes"
+   },
+   {
+    "kind": "advance",
+    "s": 43099.2,
+    "exit": "27",
+    "why": "4 lanes"
+   },
+   {
+    "kind": "exit",
+    "s": 43753.9,
+    "exit": "27",
+    "why": "4 lanes"
+   },
+   {
+    "kind": "advance",
+    "s": 44996.0,
+    "exit": "29",
+    "why": "5 lanes"
+   },
+   {
+    "kind": "advance",
+    "s": 45815.6,
+    "exit": "29",
+    "why": "6 lanes"
+   },
+   {
+    "kind": "exit",
+    "s": 46470.3,
+    "exit": "29",
+    "why": "6 lanes"
+   },
+   {
+    "kind": "sequence",
+    "s": 47410.3,
+    "exit": "30",
+    "why": "5 lanes"
+   },
+   {
+    "kind": "advance",
+    "s": 47474.5,
+    "exit": "30",
+    "why": "5 lanes"
+   },
+   {
+    "kind": "exit",
+    "s": 48129.2,
+    "exit": "30",
+    "why": "6 lanes"
+   },
+   {
+    "kind": "advance",
+    "s": 49073.2,
+    "exit": "31",
+    "why": "5 lanes"
+   },
+   {
+    "kind": "sequence",
+    "s": 49139.2,
+    "exit": "31",
+    "why": "5 lanes"
+   },
+   {
+    "kind": "exit",
+    "s": 49727.9,
+    "exit": "31",
+    "why": "6 lanes"
+   },
+   {
+    "kind": "advance",
+    "s": 51205.5,
+    "exit": "33",
+    "why": "6 lanes"
+   },
+   {
+    "kind": "advance",
+    "s": 52010.1,
+    "exit": "33",
+    "why": "6 lanes"
+   },
+   {
+    "kind": "exit",
+    "s": 52664.8,
+    "exit": "33",
+    "why": "6 lanes"
+   },
+   {
+    "kind": "advance",
+    "s": 54282.7,
+    "exit": "35",
+    "why": "5 lanes"
+   },
+   {
+    "kind": "advance",
+    "s": 55087.3,
+    "exit": "35",
+    "why": "5 lanes"
+   },
+   {
+    "kind": "exit",
+    "s": 55742.0,
+    "exit": "35",
+    "why": "6 lanes"
+   },
+   {
+    "kind": "advance",
+    "s": 56260.5,
+    "exit": "36",
+    "why": "5 lanes"
+   },
+   {
+    "kind": "advance",
+    "s": 57070.1,
+    "exit": "36",
+    "why": "6 lanes"
+   },
+   {
+    "kind": "exit",
+    "s": 57724.8,
+    "exit": "36",
+    "why": "6 lanes"
+   },
+   {
+    "kind": "advance",
+    "s": 59640.1,
+    "exit": "38",
+    "why": "5 lanes"
+   },
+   {
+    "kind": "advance",
+    "s": 60444.7,
+    "exit": "38",
+    "why": "5 lanes"
+   },
+   {
+    "kind": "exit",
+    "s": 61099.4,
+    "exit": "38",
+    "why": "7 lanes"
+   },
+   {
+    "kind": "sequence",
+    "s": 61380.6,
+    "exit": "39",
+    "why": "6 lanes"
+   },
+   {
+    "kind": "exit",
+    "s": 61511.8,
+    "exit": "39",
+    "why": "6 lanes"
+   },
+   {
+    "kind": "advance",
+    "s": 63314.8,
+    "exit": "40",
+    "why": "6 lanes"
+   },
+   {
+    "kind": "advance",
+    "s": 64119.4,
+    "exit": "40",
+    "why": "6 lanes"
+   },
+   {
+    "kind": "exit",
+    "s": 64774.1,
+    "exit": "40",
+    "why": "6 lanes"
+   },
+   {
+    "kind": "sequence",
+    "s": 65674.1,
+    "exit": "41",
+    "why": "6 lanes"
+   },
+   {
+    "kind": "advance",
+    "s": 65737.8,
+    "exit": "41",
+    "why": "7 lanes"
+   },
+   {
+    "kind": "exit",
+    "s": 66174.0,
+    "exit": "n6487298253",
+    "why": "left exit"
+   },
+   {
+    "kind": "exit",
+    "s": 66392.5,
+    "exit": "41",
+    "why": "6 lanes"
+   },
+   {
+    "kind": "advance",
+    "s": 67161.7,
+    "exit": "n6487298203",
+    "why": "left exit"
+   },
+   {
+    "kind": "advance",
+    "s": 67474.3,
+    "exit": "42A",
+    "why": "7 lanes"
+   },
+   {
+    "kind": "exit",
+    "s": 68129.0,
+    "exit": "42A",
+    "why": "6 lanes"
+   }
+  ],
+  "left_offsets": [
+   {
+    "kind": "gore",
+    "s": 60744.9,
+    "offset": 2.55
+   },
+   {
+    "kind": "exit",
+    "s": 66174.0,
+    "offset": 6.0
+   },
+   {
+    "kind": "gore",
+    "s": 66354.0,
+    "offset": 3.0
+   },
+   {
+    "kind": "advance",
+    "s": 67161.7,
+    "offset": 4.26
+   },
+   {
+    "kind": "gore",
+    "s": 67996.4,
+    "offset": 3.0
+   }
+  ]
+ },
+ "files": {
+  "signs.json": 25911,
+  "limit": 150000,
+  "ok": true
+ },
+ "denylist": {
+  "file": "data/sign_denylist.txt",
+  "terms": 76
+ }
+}
