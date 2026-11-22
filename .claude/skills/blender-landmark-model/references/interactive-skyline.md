@@ -17,7 +17,7 @@ volumes for a GLB model and adds a night mode, extras, a fountain show and LED s
 | `id` | OSM id with a type letter: `w135457469` is way 135457469 |
 | `name`, `h`, `src` | name, height in m, where the height came from (`osm-height`, `lidar`, `osm-levels`, `guess`) |
 | `ground` | ground elevation in m above sea level |
-| `c` | footprint center, [east, north] in m from the city origin (`public/data/cities.json`) |
+| `c` | footprint center, [east, north] in m from the city origin (`data/cities.json`) |
 | `v[]` | volumes: `o` outline (flat x,y list), `h` holes, `b`/`t` bottom/top elevation, `u` top outline of a leaning piece, `r` roof `[kind, height]` |
 
 `data/overrides.json` holds hand corrections. Its `model` entries (the Strat `w135457469`, the Paris Las Vegas

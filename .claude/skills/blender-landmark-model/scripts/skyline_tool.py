@@ -107,6 +107,15 @@ def load_json(path: str):
         return json.load(fh)
 
 
+def cities_path(repo: str) -> str:
+    """cities.json: data/cities.json (imported by the app as a JSON module), or public/data/ in older clones."""
+    for rel in (("data", "cities.json"), ("public", "data", "cities.json")):
+        path = os.path.join(repo, *rel)
+        if os.path.exists(path):
+            return path
+    raise SystemExit(f"{repo} has no data/cities.json (nor public/data/cities.json); check --repo")
+
+
 def check_repo(repo: str, city: str) -> None:
     for rel in ("src/main.js", "index.html", f"public/data/{city}/buildings.json"):
         if not os.path.exists(os.path.join(repo, rel)):
@@ -134,7 +143,7 @@ def footprint_facts(volumes: list[dict], c: list[float]) -> dict:
 def find(repo: str, city: str, name: str | None, bid: str | None, limit: int) -> int:
     check_repo(repo, city)
     data = load_json(os.path.join(repo, "public", "data", city, "buildings.json"))
-    cities = load_json(os.path.join(repo, "public", "data", "cities.json"))
+    cities = load_json(cities_path(repo))
     overrides_path = os.path.join(repo, "data", "overrides.json")
     overrides = load_json(overrides_path) if os.path.exists(overrides_path) else {}
     manifest_path = os.path.join(repo, "public", "models", "models.json")
@@ -177,7 +186,7 @@ def find(repo: str, city: str, name: str | None, bid: str | None, limit: int) ->
 def locate(repo: str, city: str, lat: float, lon: float) -> int:
     """Latitude/longitude to the app's local meters (east, north of the city origin). The app uses a transverse
     Mercator centered on the origin; within a few km this ellipsoidal approximation is good to well under 1 m."""
-    origin = load_json(os.path.join(repo, "public", "data", "cities.json"))[city]["origin"]
+    origin = load_json(cities_path(repo))[city]["origin"]
     a, e2 = 6378137.0, 6.69437999014e-3  # WGS84
     phi = math.radians(origin["lat"])
     w = math.sqrt(1 - e2 * math.sin(phi) ** 2)
@@ -313,6 +322,50 @@ def upgrade_main(text: str) -> tuple[str, list[str]]:
     return (nl.join(lines) if notes else text), notes
 
 
+# Files in src/ that are not app modules: the integration files the tool installs.
+INTEGRATION_FILE_SET = set(INTEGRATION_FILES) | {"customModels.js"}
+
+
+def app_sources(repo: str) -> str:
+    """Every app module under src/ (main.js included, the integration files not), concatenated in path order."""
+    src = os.path.join(repo, "src")
+    parts: list[str] = []
+    for root, dirs, files in os.walk(src):
+        dirs.sort()
+        for name in sorted(files):
+            if name.endswith(".js") and not (root == src and name in INTEGRATION_FILE_SET):
+                with open(os.path.join(root, name), encoding="utf-8") as fh:
+                    parts.append(fh.read())
+    return "\n".join(parts)
+
+
+def is_split(repo: str, main_js: str) -> bool:
+    """Has src/main.js been split into modules (plan 01, phase 0)? Then the model loader is imported elsewhere
+    in src/ and main.js is only the bootstrap."""
+    return "loadCustomModels" not in main_js and "loadCustomModels" in app_sources(repo)
+
+
+def check_split(repo: str, main_js: str) -> None:
+    """In the split layout the hooks live in several modules and are not edited by text: confirm every one is
+    there, or stop (writing nothing) with what to add by hand."""
+    text = app_sources(repo)
+    lines = main_js.replace("\r\n", "\n").split("\n")
+    defaults = re.search(r"^(?:export\s+)?const DEFAULTS = \{[^\n]*\}", text, re.M)
+    need = [
+        ("src/main.js imports initAttractions", any("from './attractions.js'" in l for l in lines)),
+        ("src/main.js calls initAttractions(...) at the top level", any(l.startswith("initAttractions(") for l in lines)),
+        ("a module calls loadCustomModels", "loadCustomModels(" in text),
+        ("toGeometry sets the 'windows' attribute", "setAttribute('windows'" in text),
+        ("toGeometry sets the 'led' attribute", "setAttribute('led'" in text),
+        (f"buildCity tests `{CUTOFF_TEST_V6}`", CUTOFF_TEST_V6 in text),
+        ("DEFAULTS has `fountain: true, wheel: true`", bool(defaults) and "fountain:" in defaults[0] and "wheel:" in defaults[0]),
+    ]
+    missing = [what for what, ok in need if not ok]
+    if missing:
+        raise SystemExit("src/main.js is split into modules, which this tool checks but does not edit; missing:\n  - "
+                         + "\n  - ".join(missing) + "\nAdd them by hand (see the v6 hooks in skyline-main.patch), then rerun.")
+
+
 def ensure_fountains(repo: str, city: str | None) -> list[str]:
     """Copy the fountain shows that ship with the skill for this city and list them in models.json, unless
     the manifest already has a "fountains" entry for the city (an empty list there means none, by choice)."""
@@ -374,7 +427,10 @@ def ensure_integration(repo: str, force: bool, city: str | None = None) -> list[
         if "models.json" not in cm_text and "const MODELS = {" not in cm_text:
             raise SystemExit("src/customModels.js is not a version this tool knows; rerun with --force to replace "
                              "it (a backup is kept in the system temp folder)")
-    if "loadCustomModels" in main_js:
+    split = is_split(repo, main_js)
+    if split:
+        check_split(repo, main_js)  # raises when a hook is missing
+    elif "loadCustomModels" in main_js:
         upgrade_main(main_js)  # raises when the anchors are missing
     else:
         patch = os.path.join(ASSETS, "skyline-main.patch")
@@ -385,7 +441,7 @@ def ensure_integration(repo: str, force: bool, city: str | None = None) -> list[
         git(repo, "apply", patch)
         done.append("applied skyline-main.patch (src/main.js, index.html: model loader hooks, night mode, extras)")
         main_js = open(main_path, encoding="utf-8", newline="").read()
-    upgraded, notes = upgrade_main(main_js)  # nothing to do after the current patch; upgrades older ones
+    upgraded, notes = (main_js, []) if split else upgrade_main(main_js)  # upgrades older monolithic ones
     if upgraded != main_js:
         with open(main_path, "w", encoding="utf-8", newline="") as fh:
             fh.write(upgraded)
@@ -566,7 +622,7 @@ def install_extra(repo: str, city: str, name: str, glb: str, east: float, north:
         else:
             cabins = [c for c in children.get(spin["node"], []) if c.startswith("Cabin_")]
             spin_notes.append(f"{spin['node']} turns once every {spin['period_s']:g} s with {len(cabins)} level cabins")
-    near = load_json(os.path.join(repo, "public", "data", "cities.json")).get(city, {}).get("terrain", {}).get("near")
+    near = load_json(cities_path(repo)).get(city, {}).get("terrain", {}).get("near")
     done = ensure_integration(repo, force, city)
     url = copy_glb(repo, glb, city)
     done.append(f"copied {os.path.basename(glb)} to public/models/{city}/")
@@ -1086,7 +1142,7 @@ def main() -> int:
     for cmd in ("find", "footprint", "install", "upgrade", "check", "locate"):
         p = sub.add_parser(cmd)
         p.add_argument("--repo", required=True)
-        p.add_argument("--city", required=True, help="city id from public/data/cities.json, e.g. lv or slc")
+        p.add_argument("--city", required=True, help="city id from data/cities.json, e.g. lv or slc")
         if cmd == "upgrade":
             p.add_argument("--force", action="store_true", help="replace an unknown src/customModels.js (backed up)")
         if cmd == "locate":
