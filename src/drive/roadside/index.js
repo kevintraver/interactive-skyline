@@ -109,7 +109,7 @@ export function createRoadside({ signs, roadnet, base, earthR, parent, anisotrop
   };
 
   const delineators = barriers ? createDelineators({ barriers, roadnet, base, earthR, parent: group }) : null;
-  let night = false, disposed = false, car = null, origin = null;
+  let night = false, disposed = false, car = null, origin = null, headlights = false, lastNight = 0;
   let shown = new Set(), bands = new Map(), wanted = [], dirty = false, timer = null;
   let waiters = [];
 
@@ -187,7 +187,8 @@ export function createRoadside({ signs, roadnet, base, earthR, parent, anisotrop
     update,
     /** true/false, or how far the night glow is on (0..1): the glow scales with it. */
     setNight(on) {
-      const w = nightWeight(on), was = night;
+      lastNight = on;
+      const w = headlights ? 0 : nightWeight(on), was = night;
       night = w > 0;
       faceMats.forEach((mats) => mats.forEach((m, band) => { m.emissiveIntensity = NIGHT_GLOW[band] * w; }));
       delineators?.setNight(w);
@@ -196,6 +197,8 @@ export function createRoadside({ signs, roadnet, base, earthR, parent, anisotrop
     },
     /** The drive's look (look.js): its `beams` (the headlight stand-in's share), or its boolean `night`. */
     setLook(look) { api.setNight(look.beams ?? look.night); },
+    /** true while real headlights light the signs and delineators (lights/headlights.js): the stand-in glow is then off. */
+    setHeadlights(on) { headlights = !!on; api.setNight(lastNight); },
     /** Resolves when every sign wanted for the last update is built and on screen. */
     whenSettled: () => (isSettled() ? Promise.resolve() : new Promise((resolve) => waiters.push(resolve))),
     stats() {
