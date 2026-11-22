@@ -160,6 +160,23 @@ button { font: inherit; color: inherit; background: none; border: 0; padding: 0;
 #settings-reset { margin-top: 12px; color: var(--blue); font-weight: 600; }
 #settings-reset:hover { text-decoration: underline; }
 #about { margin: 12px 0 0; padding-top: 10px; border-top: 1px solid var(--line); color: var(--muted); font-size: 11.5px; line-height: 1.45; }
+#credits-open { margin-top: 6px; color: var(--blue); font-size: 12px; font-weight: 600; }
+#credits-open:hover { text-decoration: underline; }
+
+/* ---- About the data: opened from the options and from the corner label (ui/credits.js) */
+#credits { right: calc(var(--gap) + 48px); bottom: 28px; width: 360px; max-height: calc(100vh - 2 * var(--gap) - 64px); display: flex; flex-direction: column; overflow: hidden; }
+#credits .head { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 8px 8px 6px 14px; border-bottom: 1px solid var(--line); }
+#credits h2 { margin: 0; font-size: 14px; font-weight: 650; }
+#credits .body { overflow-y: auto; padding: 2px 14px 12px; scrollbar-width: thin; scrollbar-color: var(--fill-strong) transparent; }
+#credits h3 { margin: 10px 0 4px; color: var(--muted); font-size: 11.5px; font-weight: 650; text-transform: uppercase; letter-spacing: 0.04em; }
+#credits ul { margin: 0; padding: 0; list-style: none; }
+#credits li { padding: 4px 0; font-size: 12.5px; line-height: 1.35; }
+#credits li + li { border-top: 1px solid var(--line); }
+#credits a { color: var(--ink); text-decoration: none; font-weight: 600; }
+#credits a:hover { color: var(--blue); text-decoration: underline; }
+#credits .use { display: block; color: var(--muted); font-size: 12px; }
+#credits .use a { color: var(--blue); font-weight: 500; }
+#credits .note { margin: 10px 0 0; color: var(--muted); font-size: 11.5px; line-height: 1.45; }
 
 /* ---- hover label and right-click menu */
 #tip {
@@ -295,6 +312,8 @@ button { font: inherit; color: inherit; background: none; border: 0; padding: 0;
 .driving #dock { max-width: none; }
 
 #credit { position: fixed; z-index: 2; left: var(--gap); bottom: 8px; font-size: 11.5px; color: #fff; text-shadow: 0 0 3px rgba(0, 0, 0, 0.75), 0 1px 2px rgba(0, 0, 0, 0.5); pointer-events: none; }
+#credit button { font-size: inherit; pointer-events: auto; opacity: 0.85; }
+#credit button:hover { opacity: 1; text-decoration: underline; }
 
 #loading { position: fixed; z-index: 9; inset: 0; display: grid; place-items: center; background: #cfd9e3; color: #4b5560; font-size: 15px; transition: opacity 0.4s; }
 #loading.done { opacity: 0; pointer-events: none; }
@@ -349,6 +368,8 @@ button { font: inherit; color: inherit; background: none; border: 0; padding: 0;
   .starts { margin: 6px 2px 4px; }
   .starts button { flex: 1 1 auto; min-height: 40px; }
   #drive-time, #drive-view { width: auto; left: var(--gap) !important; right: var(--gap); }
+  #credits { left: var(--gap); right: var(--gap); bottom: var(--gap); width: auto; max-height: calc(100vh - 2 * var(--gap) - 102px); }
+  #credits li { padding: 6px 0; }
   #drive-view .glances button { min-height: 40px; }
 }
 

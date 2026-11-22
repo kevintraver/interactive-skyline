@@ -91,32 +91,77 @@ The user asked for the build to be driven to the end. These are the assumptions 
 - **Lamp inventory.** D5.3 is built once, as plan 01's T4.0 (`scripts/build_lights.py`), and used here.
 - **Terrain.** Still deferred with the tile pyramid: Phase 2, D3.2 and D3.3. Ramps and overpasses take their heights by rule over the coarse ground, as the main line does.
 
-**State of the second stretch** (kept current as work lands; the table above is the state on 2026-11-22 before it).
+**State of the second stretch** (kept current as work lands; the table above is the state on 2026-11-22 before it). One row per task of section 10 that this branch touched; tasks not listed were not started.
 
 | Task | State |
 | --- | --- |
+| D0.1 goldens, D0.2 test runners, D0.3 split `main.js` | Plan 01's phase 0, taken in the rebase. The drive adds its own Playwright projects (`drive-software`, `drive-timing`) and five provisional canvas goldens on `i15n`. |
+| D0.4 frame, D0.7 `env.js` | Done (first stretch). `env.js` has since gained the weather stand-in. |
+| D0.5 mode manager, D0.6 terrain provider | Done differently: no mode manager; `src/drive/index.js` and the `// drive seam` lines switch the app between Map and Drive. The terrain provider is `src/world/terrain/` over fixed grids, not tiles. |
+| D1.1, D1.2, D1.3 streaming, D1.7; Phase 2 (D2.1 to D2.6) | Deferred by the user's decision 1: no tile pyramid, no hosting. The wide grid stands in, with one finer patch (below). `terrain@1` keeps its interface. |
+| D1.4, D1.5, D1.6 | Done (first stretch), for all three routes since D9.1 and D9.2. |
+| D3.1 lanes and tapers | Done from OSM tags. HOV lanes are still not told apart from other lanes. |
+| D3.2 vertical truth from LiDAR | Deferred with the terrain: profiles are set by rule over the coarse ground. |
+| D3.3 carve and aprons | Deferred, with one exception: the Hoover Dam patch (20 m posts, 6 m imagery) is carved along US-93's design profile, because the elevation predates the highway's cuts (`scripts/lib/carve.py`, `data/derived/lv/terrain_patch-dam.json`). Elsewhere the road rides on the coarse ground with a fixed embankment. |
 | D3.4 interchanges | Done by rule: 68 ramps with gores, 17 crossings with decks, piers and abutments on `i15n`. Five small flyovers and a few ramps that would not fit are left out and listed in `roads_report.json`. |
-| D3.6 barriers, D3.7 leftovers | Done: concrete, guardrail and walls (OSM where mapped, fitted rules elsewhere), delineators, 42 overhead signs on cantilevers and spans. |
+| D3.5 road material | Done as a baked canvas atlas, not a node material: wheel-path wear, oil, a lighter crown, worn paint, rumble strips, concrete decks with slab and expansion joints; the texture repeats every 48.8 m. Lane lines 3.048 m on, 9.144 m off. |
+| D3.6 barriers, D3.7 signs | Done: concrete, guardrail and walls (OSM where mapped, fitted rules elsewhere), delineators, overhead signs on cantilevers and spans; legends from OSM, checked against the trade-name deny-list. |
+| D3.8 lane journey | Done (first stretch). |
 | D4.1 cabin model, D6.3 vehicle models | Done in headless Blender (`models/drive/`). |
-| D5.3 lamp inventory | From plan 01's T4.0 (commit 6520fa5 on its data branch); the product files are copied here. |
-| D5.1, D5.2, D5.4, D5.5 photometric models | Done as pure functions with the plan's acceptance numbers as unit tests. The headlamp maps are hand-shaped lobes inside the FMVSS 108 test points, because the UMTRI survey could not be fetched. |
-| D5.4, D5.5 lamps runtime | Done: sprites for every lamp in view, pools near the car, poles, switching and sodium warm-up. 80,000 sprites cost about 1.7 ms, so far districts are thinned with their summed light kept. |
-| D6.1 traffic data, D6.2 demand surface | Done from 2025 counts (FHWA's files as republished in the national atlas, NDOT annual figures). |
-| D6.4 traffic renderer | Bodies done on both carriageways. |
-| D7.6 buildings beyond the core | Done from OSM footprints and Overture heights, in 2 km cells, for all three routes. The 20 m and taller ones do not join the removable list. |
-| D9.1, D9.2 route data | Done: a RoadNet, signs, barriers and traffic per route. |
-| Dusk | Done as a stand-in: `src/drive/look.js` and `skyblend.js`. |
+| D4.2 cabin pass, D4.5 instruments, D4.6 controls and `C` | Done. The cabin is the default view; body and head motion are pure functions of simulation time; Reduce motion holds the eye still. |
+| D4.3 mirrors | Done. They cost about 2.5 ms of GPU a frame on the test machine, against the plan's 2 ms. |
+| D4.4 windshield I | Done: dirt and wiper-arc mask, veil around a low sun and oncoming lamps, the dashboard's reflection by day. Its luminance acceptance waits for plan 01's exposure (below). |
+| D5.1 headlights, D5.2 retroreflection | Done: beam maps as a surface term, on under 1,000 lx of ambient light, `H` for high beam. The candela maps are hand-shaped lobes inside the FMVSS 108 test points (`scripts/make_beam.py`), because the UMTRI survey could not be fetched. |
+| D5.3 lamp inventory | From plan 01's T4.0 (`scripts/build_lights.py`, commit 6520fa5 on its data branch); the product files are copied here and packed by `scripts/pack_lamps.py`. Credited in About the data, by the user's decision 2. |
+| D5.4 light field, D5.5 switching | Done: sprites for every lamp in view, pools near the car, poles (moved off modelled pavement), switching and sodium warm-up, the displays' glow in the cabin. 80,000 sprites cost about 1.7 ms, so far districts are thinned with their summed light kept. |
+| D5.6 obstruction lights | Done: red lights on every building above 61 m, attached to their buildings. The Sphere's light is D7.5. |
+| D6.1 traffic data, D6.2 demand surface | Done from 2025 counts (FHWA TMAS as republished in the national transportation atlas, NDOT TRINA annual figures, NDOT 2023 truck shares). |
+| D6.4 traffic renderer | Done: bodies, lamps as sprites in candela, a ribbon per lane beyond 4 km, headlamp pools of nearby vehicles. |
+| D6.5 the visitor's car in traffic | Done differently: the car rides a slot of its lane, and the slot is never drawn. The journey does not slow in a queue; the 2025 counts show none on these routes. |
+| D6.6 valley ribbons | Done for the valley's freeways and arterials, and for the routes not being driven. |
 | D7.1, D7.2 fit to VIIRS | Blocked: the Black Marble grid needs a NASA Earthdata login, which this build does not have. Plan 01's `build_nightlights.py` exists and is tested on synthetic tiles only. |
+| D7.3 screens, D7.4 billboards, D7.5 screen light | Done: the extras run on simulation time while driving; 408 billboards from OSM and the city's and county's layers, with generated abstract faces; the Sphere lights its surroundings and the light follows a hide or a move. |
+| D7.6 buildings beyond the core | Done from OSM footprints and Overture heights, in 2 km cells, for all three routes (49,859 buildings, 1.6 MB). The 20 m and taller ones do not join the removable list. The Overture release was not recorded (`overtureRelease` is null in `corridor_report.json`). |
+| D7.7 city level of detail | Not done; it waits for plan 01's quality presets. |
+| D8.1 wet road, D8.3 spray | Done against a weather stand-in (`env.weather`, four presets): wet asphalt, reflected streaks of lamps, falling rain, spray. Dry, every added term is zero. |
+| D8.2 windshield II | Not done: no drops; the wipers exist only as the dirt mask's arcs. |
+| D9.1, D9.2 route data | Done: a RoadNet, signs, barriers, traffic and roadside buildings per route; the dam patch for US-93. |
+| D9.3 route landmarks | Done differently: no new models. Height overrides (`data/corridor_overrides.json`: 13 buildings, 24 outlines in `corridor_report.json`) stand the resort towers and grandstands that OSM and Overture leave low or without a height. |
+| D9.4 picker and per-route tests | Done: three cards that fold to a chip while driving; route switching with GPU memory flat after six switches; `routes.spec.js`. |
+| Dusk | Done as a stand-in: `src/drive/look.js` and `skyblend.js`. |
+| Section 8.3 luminance probes | Not done: probes of rendered frames wait for plan 01's exposure. The photometric acceptance numbers are unit tests on the pure functions. |
+| Section 12.2 attribution | Done: About the data (`src/ui/credits.js`), from Settings and the corner label, in Map and Drive. |
 
-**Custom shaders to port when plan 01 changes the renderer** (each in a file of its own):
+**Custom shaders to port when plan 01 changes the renderer** (each in a file of its own; found by `onBeforeCompile`, `ShaderMaterial` and `addSurfaceTerm`):
 
 | File | What |
 | --- | --- |
-| `src/drive/roadnet/material.js` | Pavement pulled forward in depth. |
-| `src/drive/skyblend.js` | The drive's sky dome with a warm band on the sun's side. |
-| `src/drive/lights/sprites.glsl.js` | Flux-conserving light sprites (mirrored in `spriteMirror.js`). |
-| `src/drive/lights/surfaceLight.js`, `pools.js` | Extra light terms on existing materials; lamp pools. |
-| `src/drive/traffic/material.js` | Vehicle paint, lamp faces, dissolve; contact shadows. |
+| `src/drive/roadnet/material.js` | `onBeforeCompile`: pavement pulled forward in depth. |
+| `src/drive/skyblend.js` | `ShaderMaterial`: the drive's sky dome with a warm band on the sun's side. |
+| `src/drive/lights/surfaceLight.js` | `onBeforeCompile` on Lambert and standard materials: the helper every surface term goes through (`addSurfaceTerm`). |
+| `src/drive/lights/pools.js` | Surface term: the lamp pool map around the car. |
+| `src/drive/lights/sprites.glsl.js`, `sprites.js` | `ShaderMaterial`: flux-conserving light sprites (mirrored in `spriteMirror.js`), for street, vehicle and obstruction lamps. |
+| `src/drive/lights/headlamps.glsl.js`, `headlights.js` | Surface terms: the beam and the retroreflected return (mirrored in `headlampMirror.js`); `headlights.js` also chains an `onBeforeCompile` that adds the varyings the retro term reads. |
+| `src/drive/roadside/billboardsFace.js`, `billboards.js` | `onBeforeCompile` on the billboard faces' Lambert material; `billboards.js` adds surface terms. |
+| `src/drive/screens/light.glsl.js`, `index.js` | Surface term: the screens' light on their surroundings. |
+| `src/drive/traffic/material.js` | `onBeforeCompile` and `ShaderMaterial`: vehicle paint, lamp faces, dissolve; contact shadows. |
+| `src/drive/traffic/pools.glsl.js`, `pools.js` | `ShaderMaterial`: other vehicles' headlamp pools. |
+| `src/drive/traffic/ribbon.glsl.js`, `ribbon.js` | `ShaderMaterial`: a ribbon of light per lane. |
+| `src/drive/traffic/valley.glsl.js`, `valley.js` | `ShaderMaterial`: the valley's ribbons. |
+| `src/drive/vehicle/mirrors.glsl.js`, `mirrors.js` | `ShaderMaterial`: the mirror faces. |
+| `src/drive/vehicle/windshield.glsl.js`, `windshield.js` | `ShaderMaterial`: the windshield layer. |
+| `src/drive/weather/wet.glsl.js`, `wetRoad.js` | Surface term: the wet road (mirrored in `wetMirror.js`). |
+| `src/drive/weather/rain.glsl.js`, `rain.js` | `ShaderMaterial`: falling rain (mirrored in `rainMirror.js`). |
+| `src/drive/weather/spray.glsl.js`, `spray.js` | `ShaderMaterial`: spray behind vehicles. |
+| `src/night.js`, `src/fountain.js`, `src/sky/legacySky.js` | The map's own (`onBeforeCompile` for the lit windows, `ShaderMaterial` for the fountain and the sky). Plan 01 ports them anyway; listed because the drive draws them too. |
+
+**Stand-ins that plan 01 replaces:**
+
+- `src/drive/env.js`: the clock, the ephemeris (NOAA solar position), the ambient light table (`ambientLux`), the light units at a fixed exposure (`LIGHTING_UNITS`) and the weather (`RAIN_PRESETS`, `weatherFor`, `createWeather`).
+- `src/drive/look.js`: the look blended between the app's day and night by the sun's elevation, and the lamp and beam switching curves read from it.
+- `src/drive/skyblend.js`: the blend put on the legacy sky.
+- `src/sky/legacySky.js`: the seam lines (`sky.hold`, the dome's `userData.sky`).
+- The other `// drive seam` lines: `src/main.js`, `src/ui/settingsPanel.js`, `src/interaction/edits.js`, `src/interaction/focus.js`, `src/drive/index.js`.
 
 ---
 

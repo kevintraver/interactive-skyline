@@ -2,15 +2,26 @@
 
 | Command | What | Where it runs |
 |---|---|---|
-| `pnpm test:unit` | Vitest: `src/core`, extrusion, cities.json shape, source hygiene, the landmark tool, upper bounds on hot code; the drive's frame, terrain, road net, journey, rig, signs and UI formatting | CI and locally |
-| `pnpm test:data` | pytest (through `uv`): the data pipeline's Python twins (frame, heights, roads, roadside) | CI and locally |
-| `pnpm test:e2e` | Playwright on SwiftShader (`webgl2-software`): goldens, the `window.__skyline` contract, the buildless boot, the deterministic performance budgets, then Drive mode (`drive-software`: `drive.spec.js`, `drive-ui.spec.js`), then the drive's per-frame JavaScript alone (`drive-timing`, `drive.perf.spec.js`) | CI and locally |
-| `pnpm test` | both of the above | |
+| `pnpm test:unit` | Vitest: `src/core`, extrusion, cities.json shape, source hygiene, the landmark tool, upper bounds on hot code; the drive's frame, terrain and patches, road net, routes, journey, rig and cabin, signs, corridor, traffic, lights (beam, retroreflection, lamps, pools), screens, weather and UI formatting; the data credits (`credits.test.js`) | CI and locally |
+| `pnpm test:data` | pytest (through `uv`): the data pipeline's Python twins (frame, heights, roads, interchanges, roadside, barriers, routes, terrain patch, traffic, valley traffic, corridor and its overrides, billboards, lamp packing, beam maps) | CI and locally |
+| `pnpm test:e2e` | Playwright, three projects in turn (below) | CI and locally |
+| `pnpm test` | `test:unit`, then `test:e2e` | |
+| `pnpm test:goldens:update` | rewrites the map goldens of this platform (`baseline.spec.js`) | locally |
+| `pnpm test:goldens:drive:update` | writes the drive goldens (`drive-*.png`) that differ or are missing, for this platform; never the map's | locally |
 | `pnpm test:perf` | timing on this machine's GPU (`gpu` project, one worker) against `tests/reference/perf/timing/<machine id>.json` | locally only |
 | `pnpm test:perf:software` | the same timing suite on SwiftShader, gated at 2x | locally |
+| `pnpm test:perf:update` | rewrites this machine's timing baseline | locally |
+| `pnpm test:perf:budgets:update` | rewrites `tests/reference/perf/budgets.json` | locally |
 | `pnpm bench` | micro-benchmarks (`vitest bench`), reported, not gated | locally |
-| `pnpm test:goldens:drive:update` | writes the drive goldens (`drive-*.png`) that differ or are missing, for this platform | locally |
-| `node tests/manual/drive-shots.mjs` | GPU screenshots of the drive for review (usage in its header) | locally |
+
+The Playwright projects (`playwright.config.js`; every one serves the production build, `pnpm build && pnpm preview`):
+
+| Project | Specs | Notes |
+|---|---|---|
+| `webgl2-software` | `baseline`, `hooks`, `interactions`, `buildless`, `perf.budgets` | the map on SwiftShader, 1280 x 800 |
+| `drive-software` | `drive.spec.js` (goldens), `drive-ui.spec.js` (route bar, picker, popovers, links), `drive-cabin.spec.js` (the cabin view, its instruments and inputs), `routes.spec.js` (each route and route switching) | after `webgl2-software` |
+| `drive-timing` | `drive.perf.spec.js` (the drive's own per-frame JavaScript) | last and alone |
+| `gpu`, `software-timing` | `perf.timing.spec.js` | only through `pnpm test:perf` and `test:perf:software` |
 
 ## Golden images
 
@@ -28,6 +39,9 @@ golden coverage until Linux goldens are committed.** To make them:
   artifact and commit it under `tests/reference/baseline/linux/`; or
 - locally, in the Playwright image that matches `@playwright/test` (1.65.1):
   `docker run --rm -v "$PWD":/w -w /w mcr.microsoft.com/playwright:v1.65.1-noble sh -c "corepack enable && pnpm install --frozen-lockfile && pnpm test:goldens:update"`
+
+Page screenshots apply `tests/reference/screenshot.css`, which hides what was added to the map's default state after
+the goldens were made (the Map/Drive switch, the data credit in the corner label).
 
 `pnpm test:goldens:update` rewrites the goldens of the platform it runs on. Do it only when a change is meant to
 change the picture, and say so in the commit.
@@ -63,3 +77,24 @@ Two tiers.
   machine: other GPU or CPU load moves these numbers by more than the gates.
 
 `window.__skyline.perf` is the hook behind both: `renderFrames(n)`, `info()`, `frames()`, `gpu()`.
+
+## Manual GPU scripts (`tests/manual/`)
+
+Not part of any suite: they render on this machine's GPU (about a second a frame) for looking at frames and measuring
+cost while building. Each serves from a running server (`pnpm exec vite --port <port> --strictPort`, or the production
+build with `pnpm preview`), takes an output directory outside the repository, and gives its usage in its header.
+
+| Script | For |
+|---|---|
+| `drive-shots.mjs` | screenshots of the drive at chosen places and times; the model for the others |
+| `cabin-shots.mjs`, `cabin-phone-shots.mjs` | the same from the cabin, on desktop and on a phone |
+| `drive-ui-shots.mjs`, `routes-app-shots.mjs` | the drive's controls, and any route in the app with its interface |
+| `dusk-shots.mjs`, `dusk-scrub.mjs` | the look through dusk by sun elevation; scrubbing across sunset at 16x for jumps |
+| `headlights-shots.mjs`, `lamps-shots.mjs`, `polish-shots.mjs` | headlamps and retroreflection; street lamps; general review |
+| `traffic-shots.mjs`, `traffic-budget.mjs`, `traffic-lamps-budget.mjs`, `traffic-lamps-check.mjs` | traffic frames, the GPU cost of bodies and of lamps, ribbons and pools, and the lamps and ribbons drawn apart |
+| `valley-shots.mjs`, `valley-routes-shots.mjs` | the valley's ribbons and their frame budget; the routes' own carriageways in them |
+| `screens-shots.mjs`, `screens-probe.mjs` | screens and billboards; the Sphere's lit patch measured |
+| `rain-shots.mjs`, `rain-probe.mjs`, `rain-budget.mjs` | rain frames; road crops dry and wet; the weather part's GPU and JavaScript cost |
+| `roadnet.html`, `roadnet-lv.html`, `routes-lv.html`, `signs.html`, `corridor.html`, `vehicles-instancing.html` with their `*-shots.mjs` | dev pages for one layer alone: the road net, each route, the signs, the corridor's buildings, the instanced vehicle bodies |
+| `corridor-budget.mjs`, `cabin-check.mjs`, `vehicles-load.mjs` | in Node, no browser: the corridor's meshing budget over the real terrain; the cabin and vehicle GLBs checked against their sidecars |
+

@@ -98,6 +98,7 @@
       </div>
       <button type="button" id="settings-reset">Reset options</button>
       <p id="about"></p>
+      <button type="button" id="credits-open" data-credits>About the data</button>
     </form>
 
     <div id="tip" hidden></div>
@@ -111,9 +112,10 @@
       <div id="toast" role="status" hidden><span></span><button>Undo</button></div>
       <div id="changes" hidden><span></span><button id="reset-all">Reset</button></div>
     </div>
-    <div id="credit">Interactive Skyline</div>
+    <div id="credit">Interactive Skyline<span class="data"> · <button type="button" data-credits title="About the data">© OpenStreetMap contributors</button></span></div>
     <div id="loading">Loading the city…</div>
 
     <script type="module" src="/src/main.js"></script>
+    <script type="module" src="/src/ui/credits.js"></script>
   </body>
 </html>
