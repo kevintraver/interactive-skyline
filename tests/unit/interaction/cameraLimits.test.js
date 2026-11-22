@@ -178,7 +178,7 @@ describe('the limits on the controls', () => {
     const { controls, camera, limits } = rig({ cam: v(0, 100, 1000), tgt: v(0, 0, 0) });
     controls._sphericalDelta.phi = 0.3;
     gesture(controls, (p) => { p.y = -100; p.z = Math.sqrt(1000 ** 2 + 100 ** 2 - 100 ** 2); });
-    expect(camera.position.y).toBeCloseTo(clearanceFor(Math.hypot(1000, 100)), 6);
+    expect(camera.position.y).toBeCloseTo(clearanceFor(Math.hypot(1000, 100)) + 0.01, 6);
     expect(len(camera.position, controls.target)).toBeCloseTo(Math.hypot(1000, 100), 6);
     expect(controls._sphericalDelta.phi).toBe(0);
     expect(limits.stats.lifted).toBe(1);
@@ -257,5 +257,15 @@ describe('the limits on the controls', () => {
     calls = 0;
     for (let i = 0; i < 10; i++) { controls.queued = (p, t) => { t.x += 10; p.x += 10; }; controls.update(); }
     expect(calls / 10).toBeLessThanOrEqual(7); // five for the pivot, two for the camera
+  });
+
+  it('keep a fully zoomed camera a hair inside the distance limits, so the controls do not report a zoom every frame', () => {
+    // level with a pivot 1 km above flat ground, so the clearance plays no part
+    const { controls, camera } = rig({ cam: v(0, 1000, 200), tgt: v(0, 1000, 0) });
+    controls.minDistance = 150; controls.maxDistance = 30000;
+    gesture(controls, (p) => { p.z = 149.999999999; });
+    expect(len(camera.position, controls.target)).toBeCloseTo(150 * (1 + 1e-7), 9);
+    gesture(controls, (p) => { p.z = 30000.0000001; });
+    expect(len(camera.position, controls.target)).toBeCloseTo(30000 * (1 - 1e-7), 6);
   });
 });

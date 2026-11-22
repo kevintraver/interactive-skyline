@@ -141,8 +141,26 @@ export function createCameraLimits({ camera, controls, ground, pivotGround, boun
       invalidate();
       changed = true;
     }
+    if (limits.armed) holdInsideDistances();
     copy(lastCam, pos); copy(lastTgt, tgt);
     return changed;
+  }
+
+  /**
+   * Zoomed fully in or out, the controls' spherical round trip can land the distance a hair outside minDistance or
+   * maxDistance; clamping it back then counts as a zoom, and 'change' fires on every frame for ever (the loop never
+   * goes idle). Keep the distance a ten-millionth inside: 15 micrometres at 150 m.
+   */
+  function holdInsideDistances() {
+    const lo = controls.minDistance, hi = controls.maxDistance;
+    if (!(lo > 0) && !Number.isFinite(hi)) return;
+    const r = dist3(pos, tgt);
+    let want = 0;
+    if (lo > 0 && r < lo * (1 + 1e-9)) want = lo * (1 + 1e-7);
+    else if (Number.isFinite(hi) && r > hi * (1 - 1e-9)) want = hi * (1 - 1e-7);
+    if (!want || r === 0) return;
+    const k = want / r;
+    pos.x = tgt.x + (pos.x - tgt.x) * k; pos.y = tgt.y + (pos.y - tgt.y) * k; pos.z = tgt.z + (pos.z - tgt.z) * k;
   }
 
   /** After an armed update: bounds, the terrain shift, the clearance. True if it moved anything. */
@@ -189,8 +207,9 @@ export function createCameraLimits({ camera, controls, ground, pivotGround, boun
     }
     // a tilt or a turn (or what the zoom left): limit the polar angle by lifting the camera along its orbit
     // (lifted straight up, the distance grows and so does its 1 %: lift once more for that)
-    const lifted = liftAlongOrbit(pos, tgt, ground, agl);
-    if (lifted) liftAlongOrbit(pos, tgt, ground, Math.max(agl, allowedHeight(clearanceFor(dist3(pos, tgt)), before, clearanceFor(r0))));
+    // (1 cm above the line, so the controls' own round trip of the position next frame cannot dip under it)
+    const lifted = liftAlongOrbit(pos, tgt, ground, agl + 0.01);
+    if (lifted) liftAlongOrbit(pos, tgt, ground, 0.01 + Math.max(agl, allowedHeight(clearanceFor(dist3(pos, tgt)), before, clearanceFor(r0))));
     if (lifted) {
       const spin = controls._sphericalDelta;
       if (spin && spin.phi > 0) spin.phi = 0; // stop the tilt here rather than push against it each frame
