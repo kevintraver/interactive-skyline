@@ -26,6 +26,10 @@ golden coverage until Linux goldens are committed.** To make them:
 - locally, in the Playwright image that matches `@playwright/test` (1.65.1):
   `docker run --rm -v "$PWD":/w -w /w mcr.microsoft.com/playwright:v1.65.1-noble sh -c "corepack enable && pnpm install --frozen-lockfile && pnpm test:goldens:update"`
 
+Since phase 1 the pinned app has one thing the goldens do not: `#sky-toggle` under `#night`, which the full-page
+goldens include. `SKYLINE_GOLDEN_WITHOUT_SKY_TOGGLE=1` hides that button before comparing, to check that nothing
+else moved; without it the ten goldens differ only in the tools column, until they are regenerated on purpose.
+
 `pnpm test:goldens:update` rewrites the goldens of the platform it runs on. Do it only when a change is meant to
 change the picture, and say so in the commit.
 
@@ -49,3 +53,18 @@ Two tiers.
   machine: other GPU or CPU load moves these numbers by more than the gates.
 
 `window.__skyline.perf` is the hook behind both: `renderFrames(n)`, `info()`, `frames()`, `gpu()`.
+
+## Phase 1 (plan 01): the clock, the sky and the journeys
+
+| Spec | What |
+|---|---|
+| `tests/unit/sim/clock.test.js`, `timeline.test.js` | `SimClock` and `Timeline` against sections 11.2 and 11.3 |
+| `tests/unit/sky/ephemeris.test.js` | the ephemeris against the committed JPL Horizons and Naval Observatory fixtures (`tests/fixtures/`, recorded by `scripts/fetch_test_fixtures.py`; no test touches the network) |
+| `tests/unit/env/environment.test.js` | every `EnvState` key and type, the stubs, the pinned and clock states |
+| `tests/unit/render/frameLoop.test.js` | the four tiers on a fake scheduler |
+| `tests/e2e/skyState.spec.js` | the two states in the app, `?t=` |
+| `tests/e2e/skyLight.spec.js` | key light against the ephemeris, shadow redraws per 0.1 degree, the dusk scrub, the Moon's phase on screen, the classic afternoon and the reference night against the goldens (slow on SwiftShader: up to 30 minutes for the dusk scrub on a busy machine) |
+| `tests/e2e/skyPopover.spec.js`, `transport.spec.js` | `#sky` and the transport bar by real input |
+
+`perf.budgets.spec.js` also counts the frame loop's tiers in the app (paused: no frame; 1x: two a second), and
+`perf.timing.spec.js` times a scrub of the time of day (CPU per step, frame rate against the scene's own).

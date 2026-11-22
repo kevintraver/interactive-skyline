@@ -72,3 +72,36 @@ for (const scene of SCENES) {
     else expect(live).toBeLessThanOrEqual(Math.ceil((IDLE_MS / 1000) * 30) + 2);
   });
 }
+
+// T1.9 (plan 01, phase 1): the frame loop's tiers, counted in the app. The clock state paused renders nothing;
+// the clock at 1x renders twice a second (ambient), not every frame. A small window, so a software frame is quick.
+test('frame loop tiers: clock paused renders nothing, the clock at 1x twice a second', async ({ page }) => {
+  await page.setViewportSize({ width: 320, height: 200 });
+  await boot(page, 'slc');
+  await page.evaluate(() => {
+    const s = window.__skyline;
+    s.attractions.freeze(47);
+    s.setView('aerial');
+    s.env.enterClock();
+    s.clock.setLocal({ year: 2026, month: 6, day: 21, hour: 12, minute: 0 });
+  });
+  await sleep(1500);
+  // frames rendered, and animation-frame ticks, over `ms` (on a loaded machine a software frame can take longer
+  // than the 500 ms between ambient frames; then every tick renders, and the count says nothing about the tier)
+  const count = (ms) => page.evaluate((ms) => new Promise((done) => {
+    const s = window.__skyline, f0 = s.perf.frames(), t0 = performance.now();
+    let ticks = 0;
+    const tick = () => { ticks++; if (performance.now() - t0 < ms) requestAnimationFrame(tick); else done({ frames: s.perf.frames() - f0, ticks }); };
+    requestAnimationFrame(tick);
+  }), ms);
+  const paused = await count(IDLE_MS);
+  await page.evaluate(() => { window.__skyline.clock.setRate(1); window.__skyline.clock.play(); });
+  await sleep(600);
+  const playing = await count(IDLE_MS);
+  const tier = await page.evaluate(() => window.__skyline.loop.tier);
+  test.info().annotations.push({ type: 'tiers', description: JSON.stringify({ paused, playing, tier }) });
+  expect(paused.frames).toBe(0);
+  expect(tier).toBe('ambient');
+  expect(playing.frames).toBeLessThanOrEqual(12); // at most 2 a second over 5 s, give or take one at each end
+  expect(playing.frames).toBeGreaterThanOrEqual(Math.min(8, playing.ticks - 1)); // and one whenever one is due
+});
