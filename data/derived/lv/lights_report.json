@@ -1,0 +1,387 @@
+{
+ "city": "lv",
+ "built": "2026-11-22",
+ "credit": "Street lights: Clark County Public Works, City of Las Vegas, City of Henderson (via its lighting contractor's public layer), Boulder City; OpenStreetMap contributors (ODbL).",
+ "licence": "Inventories treated as public domain by the owner's decision of 10 November 2026 (plan 01, 2.3; plan 02, decisions after planning); none of the layers names a licence. OpenStreetMap data: ODbL 1.0, (c) OpenStreetMap contributors.",
+ "grid": {
+  "x0": -60000,
+  "y0": -65000,
+  "x1": 50000,
+  "y1": 50000,
+  "cell": 500,
+  "nx": 220,
+  "ny": 230
+ },
+ "builtUpCells": 4341,
+ "builtUpThresholdKmPerKm2": 6.0,
+ "ruleSelfConsistency": [
+  {
+   "ruleLamps": 115211,
+   "inventoryLamps": 126223,
+   "ruleSpacingM": 44.23938943682575,
+   "inventorySpacingM": 34.19224462584278
+  },
+  {
+   "ruleLamps": 130384,
+   "inventoryLamps": 126223,
+   "ruleSpacingM": 37.03882752821378,
+   "inventorySpacingM": 34.19224462584278
+  },
+  {
+   "ruleLamps": 127405,
+   "inventoryLamps": 126223,
+   "ruleSpacingM": 35.04611525698048,
+   "inventorySpacingM": 34.19224462584278
+  },
+  {
+   "ruleLamps": 126604,
+   "inventoryLamps": 126223,
+   "ruleSpacingM": 34.47264870025503,
+   "inventorySpacingM": 34.19224462584278
+  }
+ ],
+ "lamps": 196300,
+ "bySource": {
+  "clark_county": 76594,
+  "las_vegas": 54121,
+  "henderson": 31388,
+  "rule": 26029,
+  "osm": 5450,
+  "boulder_city": 2718
+ },
+ "byType": {
+  "led_street": 119795,
+  "hps": 63507,
+  "unknown": 4813,
+  "induction": 3891,
+  "led_highmast": 2363,
+  "metal_halide": 1893,
+  "mercury_vapor": 38
+ },
+ "byClass": {
+  "led": 122158,
+  "sodium": 63507,
+  "other": 10635
+ },
+ "lumensByClass": {
+  "sodium": 1170322840.0,
+  "led": 1262325060.0,
+  "other": 77968460.0
+ },
+ "bySourceAndClass": {
+  "clark_county": {
+   "led": 54656,
+   "sodium": 18419,
+   "other": 3519
+  },
+  "las_vegas": {
+   "sodium": 34925,
+   "led": 17072,
+   "other": 2124
+  },
+  "henderson": {
+   "led": 30928,
+   "other": 435,
+   "sodium": 25
+  },
+  "boulder_city": {
+   "led": 2616,
+   "sodium": 67,
+   "other": 35
+  },
+  "osm": {
+   "other": 4522,
+   "led": 810,
+   "sodium": 118
+  },
+  "rule": {
+   "led": 16076,
+   "sodium": 9953
+  }
+ },
+ "ruleShare": 0.13259806418746817,
+ "enclosed": {
+  "lamps": 1147,
+  "lumens": 19236650.0
+ },
+ "ruleByRoadClass": {
+  "local": 9591,
+  "collector": 7533,
+  "ramp": 3532,
+  "major": 2822,
+  "freeway": 2459,
+  "highmast": 92
+ },
+ "dedupe": {
+  "radiusM": 5.0,
+  "droppedBySource": {
+   "clark_county": 0,
+   "las_vegas": 338,
+   "henderson": 103,
+   "boulder_city": 0,
+   "osm": 1822
+  },
+  "note": "across sources only; inventories outrank OSM in the order clark_county, las_vegas, henderson, boulder_city, osm",
+  "sameSourcePairsWithin5m": {
+   "clark_county": 7808,
+   "las_vegas": 4081,
+   "henderson": 6,
+   "boulder_city": 4,
+   "osm": 53
+  }
+ },
+ "sources": {
+  "clark_county": {
+   "jurisdiction": "unincorporated Clark County (the Strip included)",
+   "lamps": 76594,
+   "kept": 76594,
+   "byType": {
+    "led_street": 52958,
+    "hps": 18419,
+    "induction": 3456,
+    "led_highmast": 1698,
+    "metal_halide": 58,
+    "unknown": 5
+   },
+   "provenance": [
+    {
+     "name": "Clark County Public Works, LIGHT FIXTURES",
+     "url": "https://services2.arcgis.com/MLoS3Qx4BXmDoTIY/arcgis/rest/services/Fixtures_View/FeatureServer/0",
+     "records": 76595,
+     "withGeometry": 76594,
+     "lastEdit": "2026-11-21",
+     "copyrightText": "",
+     "retrieved": "2026-11-22"
+    },
+    {
+     "name": "Clark County Public Works, LIGHT FIXTURES",
+     "url": "https://services2.arcgis.com/MLoS3Qx4BXmDoTIY/arcgis/rest/services/Streetlight_Supports_View/FeatureServer/0",
+     "records": 73240,
+     "withGeometry": 73238,
+     "lastEdit": "2026-11-21",
+     "copyrightText": "",
+     "retrieved": "2026-11-22"
+    }
+   ],
+   "mountFromSupports": 73456
+  },
+  "las_vegas": {
+   "jurisdiction": "Las Vegas",
+   "lamps": 54459,
+   "kept": 54121,
+   "byType": {
+    "hps": 35237,
+    "led_street": 17094,
+    "metal_halide": 1835,
+    "unknown": 251,
+    "mercury_vapor": 42
+   },
+   "provenance": [
+    {
+     "name": "City of Las Vegas, stlights",
+     "url": "https://services1.arcgis.com/F1v0ufATbBQScMtY/arcgis/rest/services/stlights/FeatureServer/0",
+     "records": 54460,
+     "withGeometry": 54459,
+     "lastEdit": "2024-12-31",
+     "copyrightText": "TEFO",
+     "retrieved": "2026-11-22"
+    }
+   ]
+  },
+  "henderson": {
+   "jurisdiction": "Henderson",
+   "lamps": 31491,
+   "kept": 31388,
+   "byType": {
+    "led_street": 31031,
+    "induction": 435,
+    "hps": 25
+   },
+   "provenance": [
+    {
+     "name": "Henderson street lights (contractor's public layer, HendersonPublish/125)",
+     "url": "https://services6.arcgis.com/clPWQMwZfdWn4MQZ/arcgis/rest/services/HendersonPublish/FeatureServer/125",
+     "records": 31491,
+     "withGeometry": 31491,
+     "lastEdit": "2023-11-03",
+     "copyrightText": "",
+     "retrieved": "2026-11-22"
+    }
+   ]
+  },
+  "boulder_city": {
+   "jurisdiction": "Boulder City",
+   "lamps": 2718,
+   "kept": 2718,
+   "byType": {
+    "led_street": 2616,
+    "hps": 67,
+    "unknown": 35
+   },
+   "provenance": [
+    {
+     "name": "Boulder City, Dark Skies Light Replacement (city-owned and not city-owned layers)",
+     "url": "https://services6.arcgis.com/ENlYDFfLXlpg7FOQ/arcgis/rest/services/Dark_Skies_Light_Replacement_view/FeatureServer/0",
+     "records": 2275,
+     "withGeometry": 2275,
+     "lastEdit": "2026-10-16",
+     "copyrightText": "",
+     "retrieved": "2026-11-22"
+    },
+    {
+     "name": "Boulder City, Dark Skies Light Replacement (city-owned and not city-owned layers)",
+     "url": "https://services6.arcgis.com/ENlYDFfLXlpg7FOQ/arcgis/rest/services/Dark_Skies_Light_Replacement_view/FeatureServer/1",
+     "records": 443,
+     "withGeometry": 443,
+     "lastEdit": "2026-10-16",
+     "copyrightText": "",
+     "retrieved": "2026-11-22"
+    }
+   ]
+  },
+  "osm": {
+   "jurisdiction": "any",
+   "lamps": 7272,
+   "kept": 5450,
+   "byType": {
+    "unknown": 6060,
+    "led_highmast": 814,
+    "led_street": 280,
+    "hps": 118
+   },
+   "provenance": null,
+   "tagged": {
+    "lamp_type": 1875,
+    "lamp_mount": 2303
+   }
+  }
+ },
+ "osm": {
+  "timestampRoads": null,
+  "roadWays": 91834,
+  "timestamp": "2026-11-22T09:00:21Z",
+  "endpoint": "https://overpass-api.de/api/interpreter",
+  "retrieved": "2026-11-22",
+  "boundaries": [
+   "Boulder City",
+   "Charleston View",
+   "Henderson",
+   "Las Vegas",
+   "North Las Vegas"
+  ]
+ },
+ "rule": {
+  "tunedFrom": "lv",
+  "surface": {
+   "local": {
+    "spacing": 42.064231382320536,
+    "litFraction": 0.38519028075804784,
+    "lamps": 55868,
+    "litKm": 3375.977054714518,
+    "totalKm": 6410.789797450016,
+    "medianWatts": {
+     "hps": 100.0,
+     "led_street": 72.0
+    },
+    "offset": 7.0,
+    "stagger": false,
+    "mountM": 9.14
+   },
+   "collector": {
+    "spacing": 28.077811674189007,
+    "litFraction": 0.6359610995418187,
+    "lamps": 43540,
+    "litKm": 1756.204499630951,
+    "totalKm": 2019.9094695096292,
+    "medianWatts": {
+     "hps": 250.0,
+     "led_street": 106.0
+    },
+    "offset": 10.0,
+    "stagger": true,
+    "mountM": 9.14
+   },
+   "major": {
+    "spacing": 26.884792223815143,
+    "litFraction": 0.6768981580409822,
+    "lamps": 22528,
+    "litKm": 870.0670580032349,
+    "totalKm": 940.1924618744066,
+    "medianWatts": {
+     "hps": 250.0,
+     "led_street": 160.0
+    },
+    "offset": 15.0,
+    "stagger": true,
+    "mountM": 10.7
+   }
+  },
+  "freeway": {
+   "freeway": {
+    "spacing": 60.0,
+    "litFraction": 1.0,
+    "offset": 0.0,
+    "stagger": false,
+    "mountM": 12.2,
+    "type": "led_street",
+    "watts": 210
+   },
+   "ramp": {
+    "spacing": 45.0,
+    "litFraction": 1.0,
+    "offset": 5.0,
+    "stagger": false,
+    "mountM": 12.2,
+    "type": "led_street",
+    "watts": 160
+   }
+  },
+  "mix": {
+   "hps": 0.5,
+   "led_street": 0.5
+  },
+  "gapJurisdictions": [
+   "North Las Vegas"
+  ],
+  "highMasts": {
+   "perInterchange": 4,
+   "radiusM": 150.0,
+   "skipIfMastWithinM": 600.0,
+   "watts": 302,
+   "mountM": 30.5,
+   "systemInterchanges": 34,
+   "placed": 92
+  },
+  "assignM": 30.0,
+  "litM": 40.0,
+  "avoidM": {
+   "surface": 25.0,
+   "freeway": 40.0
+  },
+  "assumed": [
+   "freeway and ramp spacing, mount height and wattage",
+   "the sodium/LED mix of rule lamps",
+   "high masts: four per system interchange that has none in an inventory"
+  ]
+ },
+ "holdout": {
+  "inventory": "henderson",
+  "jurisdiction": "Henderson",
+  "inventoryLamps": 31275,
+  "ruleLamps": 29867,
+  "countRatio": 0.9549800159872103,
+  "inventoryMedianSpacingM": 35.56808652376029,
+  "ruleMedianSpacingM": 34.472648700254986,
+  "spacingMetric": "median distance from each pole to its nearest neighbour; lamps within 5 m of each other (heads on one pole) counted as one pole",
+  "spacingRatio": 0.969201665578115,
+  "pass": true,
+  "acceptance": "count within 20 % and median nearest-neighbour spacing within 15 % (plan 02, D5.3)"
+ },
+ "assumptions": [
+  "City of Las Vegas TYPE is used as recorded (34,454 sodium against 17,094 LED), although a 2011-2013 programme reported converting most of the city's lights to LED (plan 02, 6.6); to be checked against night photographs (plan 02, 8.1)",
+  "City of Las Vegas STATUS codes (X, N, OUT, D, AR) are undocumented; every record is kept",
+  "Henderson's decorative fixture styles (ANTHEM, INSPIRADA, SEVEN HILLS, LANDWELL, WATER STREET) are taken as LED",
+  "Boulder City records with a blank LAMP_TYPE are taken as LED (the layer is the city's dark-sky LED replacement)",
+  "two lamps from the same inventory within 5 m are kept: they are usually two heads on one pole"
+ ]
+}

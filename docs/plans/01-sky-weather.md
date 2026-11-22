@@ -1750,7 +1750,7 @@ Built by `scripts/build_nightlights.py` (section 6.2). The drive plan calibrates
 | `public/data/<city>/nightlights-region.bin` | Same encoding, 1 km over ±420 km, for the flight plan and for distant glow. |
 | `public/data/<city>/nightlights.json` | Grid origins and steps, product id and years, overpass time, band, the calibration constants `k`, `F`, `G` (section 7.8), citation. |
 | `data/derived/<city>/nightlights.npy`, `nightlights.json` | The metro grid again for build-time use by the drive plan's lamp fit, in the form that plan specifies: float32, rows south to north, with the keys `product, year, units, x0, y0, cell, nx, ny, frame, overpassLocal, band`. |
-| `public/data/<city>/lamp-cells.bin` (an input, from T4.0) | Street-lamp lumens per 500 m cell by lamp class, from the public inventories (section 2.3). Written by T4.0 (the drive plan's `build_lights.py`, pulled forward); loaded by the sky-glow model. The same data may arrive at runtime through `setLampCells()` from that plan's emission inventory. |
+| `public/data/<city>/lamp-cells.bin` (an input, from T4.0) | Street-lamp lumens per 500 m cell by lamp class, from the public inventories (section 2.3): three float32 planes (sodium, LED, other), row 0 = south, on the metro grid of `cities.json` `nightlights.metro`, with `lamp-cells.json` beside it; lamps under bridges and in tunnels are left out. Written by T4.0 (the drive plan's `build_lights.py`, pulled forward); loaded by the sky-glow model. The same data may arrive at runtime through `setLampCells()` from that plan's emission inventory. |
 
 ```ts
 interface NightLights {
