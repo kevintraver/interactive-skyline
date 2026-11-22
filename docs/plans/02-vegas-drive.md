@@ -51,6 +51,34 @@ The build started on branch `feat/vegas-drive` on 2026-11-21. These are the assu
 - The existing day and night looks. While driving, the look follows the sun's elevation at the clock's time; the visitor's own setting comes back on leaving Drive. A continuous dusk needs plan 01's sky.
 - No headlights, traffic, lamps, signs or screens. The road must stay readable in the night look without them.
 
+**State of the build on 2026-11-22.**
+
+| Task | State |
+| --- | --- |
+| D0.4 frame, D0.7 `env.js` | Done. |
+| D0.1 goldens | Done as a map smoke suite (`tests/e2e/map.spec.js`, twelve canvas goldens). Plan 01's baseline replaces it at rebase. |
+| D0.3, D0.5, D0.6 | Not done here; plan 01 splits `main.js`. The seam in `main.js` is 25 added lines marked `// drive seam`. |
+| D1.1, D1.2, D1.3 streaming, D1.7 | Deferred with the tile pyramid. |
+| D1.4 RoadNet from OSM | Done for `i15n`, with the southbound carriageway as scenery (`i15s.opp`). |
+| D1.5 road ribbon | Done. |
+| D1.6 journey, rig, UI | Done, clean camera only. |
+| D3.1 lanes and tapers | Done from OSM tags. HOV lanes are not told apart from other lanes. |
+| D3.5 road material | The canvas atlas of D1.5 only: no wear, joints or rumble strips. |
+| D3.7 signs by day | Done for guide signs, speed limits, route confirmation and mile markers, all ground-mounted. No overhead structures, no delineators. |
+| D3.8 lane journey | Done. |
+| D3.2, D3.3 | Not done; they need LiDAR strips and carved tiles. |
+| D3.4 interchanges, D3.6 barriers | Not started. Exits have signs but no ramps, and nothing crosses over the road. |
+
+What the build found that differs from the text below:
+
+- The route is 68.35 km and the reveal falls at km 42.66 (section 1 says 68.4 and 42.8).
+- In today's OSM, Russell Road is Exit 35, not 36. `starts.city` is km 55.9.
+- Lane 2 from the left is never dropped between Primm and the Spaghetti Bowl, so the lane plan has no lane change.
+- D3.8's 4-second lane change cannot hold its own 1.0 m/s² limit across a 3.66 m lane (a quintic peaks at 1.32 m/s²). The limit was kept and a full lane change takes 4.7 s.
+- The road material carries one `onBeforeCompile` hook (it pulls pavement forward in depth so distant embankments do not show through the ground). It must be ported with `night.js` when plan 01 changes the renderer.
+- The default drive opens in the night look, because the default moment is mid civil twilight and the app has only a day and a night look until plan 01's sky.
+- The software renderer used for goldens takes seconds per frame. Timing checks bound the drive's own per-frame JavaScript and run in their own Playwright project after the other tests.
+
 ---
 
 ## 1. Executive summary
