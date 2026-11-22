@@ -28,6 +28,8 @@ export function installHooks(app) {
     perf: createPerf(app),
     // plan 01, phase 1 (section 8.6): the simulation clock, the environment and the frame loop
     clock: app.clock, env: app.env, loop: app.loop, timeline: app.timeline, transport: app.transport,
+    // the explore camera's limits (src/interaction/cameraLimits.js): `enabled` off stands them down for other modes
+    cameraLimits: app.cameraLimits,
   };
   return window.__skyline;
 }

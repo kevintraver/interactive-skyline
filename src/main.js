@@ -15,6 +15,7 @@ import { initEdits } from './interaction/edits.js';
 import { initSelection } from './interaction/selection.js';
 import { initFocus } from './interaction/focus.js';
 import { initPicking } from './interaction/picking.js';
+import { initCameraLimits } from './interaction/cameraLimits.js';
 import { createFormat } from './ui/format.js';
 import { initCard } from './ui/card.js';
 import { initToast, initHint } from './ui/toast.js';
@@ -44,6 +45,7 @@ const buildings = createBuildings(app, model, customModels);
 const { tall } = buildings;
 Object.assign(app, { model, near, far, terrain, groundY, buildings, tall });
 app.views = createViews(app, { near, groundY });
+initCameraLimits(app); // the explore camera stays over the terrain and above the ground
 
 // ------------------------------------------------------------------ interface
 initToast(app);

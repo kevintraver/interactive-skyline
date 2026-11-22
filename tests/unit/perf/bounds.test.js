@@ -5,6 +5,7 @@ import fs from 'node:fs';
 import { describe, it, expect } from 'vitest';
 import { extrude, toGeometry, fresh } from '../../../src/city/extrude.js';
 import { heightField, makeGroundY, terrainMesh } from '../../../src/city/terrain.js';
+import { createCameraLimits, makePivotGround, boundsFromGrid } from '../../../src/interaction/cameraLimits.js';
 import cities from '../../../data/cities.json' with { type: 'json' };
 
 const time = (fn) => { const t0 = performance.now(); fn(); return performance.now() - t0; };
@@ -35,5 +36,25 @@ describe.each(Object.keys(cities))('%s', (id) => {
     const sample = time(() => { for (let i = 0; i < 100000; i++) s += groundY((i % 317) * 50 - 8000, Math.floor(i / 317) * 40 - 6000); });
     expect(Number.isFinite(s)).toBe(true);
     expect(sample).toBeLessThan(500); // M4: about 10 ms
+  });
+
+  it('limits 100,000 drag updates of the explore camera in under 1 s', () => {
+    const near = heightField(read(id, meta.grids.near.file), meta.grids.near);
+    const far = heightField(read(id, meta.grids.far.file), meta.grids.far);
+    const groundY = makeGroundY(near, far, cities[id].base);
+    const camera = { position: { x: 0, y: 900, z: 1200 } };
+    const listeners = [];
+    const controls = { target: { x: 0, y: groundY(0, 0), z: 0 }, update: () => true, addEventListener: (t, f) => listeners.push(f) };
+    createCameraLimits({ camera, controls, ground: (x, z) => groundY(x, -z), pivotGround: makePivotGround(near, far, cities[id].base), bounds: boundsFromGrid(far) });
+    for (const f of listeners) f();
+    const ms = time(() => {
+      for (let i = 0; i < 100000; i++) {
+        const dx = i % 2000 < 1000 ? 7 : -7; // back and forth across the city and beyond
+        camera.position.x += dx; controls.target.x += dx;
+        controls.update();
+      }
+    });
+    expect(Number.isFinite(camera.position.y)).toBe(true);
+    expect(ms).toBeLessThan(1000); // M4: about 40 ms
   });
 });
