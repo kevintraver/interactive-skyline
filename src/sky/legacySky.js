@@ -3,12 +3,45 @@
 // phase 3 can delete it in one commit (plan 01, section 5.6).
 import * as THREE from 'three';
 import { night } from '../night.js';
+import { createKeyLight } from './lighting.js';
+import { createDiscs } from './discs.js';
 
 // Sky, haze and light, by day and by night. `street` is how strongly the ground glows from street lighting
 // (near grid, far grid); the moon stands in for the sun so shadows stay where they are.
 export const DAY = { haze: 0xd3dee8, zenith: 0x4f86c9, skyLight: 0xdbe8ff, groundLight: 0x8d8371, hemi: 0.8, sun: 0xfff0dc, sunPower: 2.7, tint: 0.45, street: [0, 0] };
 export const NIGHT = { haze: 0x3b3850, zenith: 0x05070f, skyLight: 0x33426e, groundLight: 0x4a3a2a, hemi: 0.38, sun: 0x93a8d9, sunPower: 0.2, tint: 0.16, street: [0.07, 0.26] };
 const STREET_GLOW = 0xffa858;
+
+// Interim (T1.4, replaced by the atmosphere in phase 3): in the clock state the two looks above become the ends
+// of five keyframes by the Sun's altitude, blended smoothly, so a dusk scrub has no visible step.
+const SUNSET = { haze: 0xe0b89c, zenith: 0x4870ad, skyLight: 0xe6caa8, groundLight: 0x7f705c, hemi: 0.62, sun: 0xffb36b, sunPower: 1.6, tint: 0.36, street: [0.01, 0.05] };
+const CIVIL = { haze: 0x8a7089, zenith: 0x1f2c57, skyLight: 0x6b6d98, groundLight: 0x5a4836, hemi: 0.46, sun: 0x93a8d9, sunPower: 0.2, tint: 0.22, street: [0.05, 0.18] };
+const NAUTICAL = { haze: 0x4c4662, zenith: 0x0b1225, skyLight: 0x3c4874, groundLight: 0x4c3b2b, hemi: 0.39, sun: 0x93a8d9, sunPower: 0.2, tint: 0.17, street: [0.07, 0.26] };
+export const KEYFRAMES = [[10, DAY], [0, SUNSET], [-6, CIVIL], [-12, NAUTICAL], [-18, NIGHT]];
+const COLORS = ['haze', 'zenith', 'skyLight', 'groundLight', 'sun'];
+const NUMBERS = ['hemi', 'sunPower', 'tint'];
+const smooth = (t) => t * t * (3 - 2 * t);
+export const smoothstep = (e0, e1, x) => smooth(Math.min(1, Math.max(0, (x - e0) / (e1 - e0))));
+const toColors = (look) => ({ ...look, ...Object.fromEntries(COLORS.map((k) => [k, new THREE.Color(look[k])])) });
+const FRAMES = KEYFRAMES.map(([alt, look]) => [alt, toColors(look)]);
+
+/** The look for a solar altitude: the keyframes on either side, blended with a smoothstep. */
+export function lookAt(altDeg, out = toColors(DAY)) {
+  let i = FRAMES.findIndex(([alt]) => altDeg >= alt);
+  if (i === 0 || i === -1) {
+    const [, end] = FRAMES[i === 0 ? 0 : FRAMES.length - 1];
+    for (const k of COLORS) out[k].copy(end[k]);
+    for (const k of NUMBERS) out[k] = end[k];
+    out.street = [...end.street];
+    return out;
+  }
+  const [a0, l0] = FRAMES[i - 1], [a1, l1] = FRAMES[i];
+  const t = smooth((a0 - altDeg) / (a0 - a1));
+  for (const k of COLORS) out[k].lerpColors(l0[k], l1[k], t);
+  for (const k of NUMBERS) out[k] = l0[k] + (l1[k] - l0[k]) * t;
+  out.street = l0.street.map((v, j) => v + (l1.street[j] - v) * t);
+  return out;
+}
 
 export function createLegacySky() {
   const HAZE = new THREE.Color(DAY.haze), ZENITH = new THREE.Color(DAY.zenith);
@@ -49,6 +82,8 @@ export function createLegacySky() {
       sun.shadow.bias = -0.0004;
       sun.shadow.normalBias = 1.2;
       scene.add(sun, sun.target);
+      sky.key = createKeyLight({ sun, renderer, shade });
+      sky.discs = createDiscs(scene);
       return sky;
     },
     /**
@@ -84,14 +119,28 @@ export function createLegacySky() {
     update(state) {
       sky.state = state;
       if (sky.mode !== 'clock') return;
-      const isNight = state.sun.trueAltDeg < -6;
-      sky.look(isNight ? NIGHT : DAY, isNight ? 1 : 0);
+      const alt = state.sun.altDeg;
+      sky.current = lookAt(alt, sky.current || undefined);
+      // the buildings' shared night uniform: smoothstep from +2 to -6 degrees (T1.4)
+      const nightValue = smoothstep(2, -6, alt);
+      sky.look(sky.current, nightValue);
+      sky.light(state);
+      sky.discs.update(state, true, nightValue);
+      if (Math.abs(sky.current.tint - sky.paintedTint) > 0.004) { sky.paintedTint = sky.current.tint; sky.onTint(); }
+    },
+    /** The key light from env.state.key: the Sun by day, the Moon at night, nothing in between (T1.3). */
+    light(state) {
+      const { key } = state;
+      if (key.body !== 'none') sky.key.aim(key.dir);
+      const sunPower = sky.current ? sky.current.sunPower : DAY.sunPower;
+      sky.sun.intensity = key.body === 'sun' ? sunPower * key.weight : key.body === 'moon' ? NIGHT.sunPower * key.weight : 0;
     },
     /** Switch between the pinned looks and the clock; back to pinned restores today's fixed light. */
     setMode(mode, state) {
       sky.mode = mode;
       if (state) sky.state = state;
-      if (mode === 'pinned') sky.aimPinned();
+      if (mode === 'pinned') { sky.aimPinned(); sky.key.reset(); sky.discs.update(null, false); sky.current = null; }
+      else sky.paintedTint = NaN;
     },
     aimPinned() {
       const shade = sky.shade;
@@ -99,9 +148,13 @@ export function createLegacySky() {
       sky.sun.position.set(Math.sin(az) * Math.cos(el), Math.sin(el), -Math.cos(az) * Math.cos(el)).multiplyScalar(shade.half * 2.5).add(sky.sun.target.position);
       if (sky.renderer) sky.renderer.shadowMap.needsUpdate = true;
     },
-    /** How strongly removable towers glow blue in this look. */
-    tint: (isNight) => (isNight ? NIGHT : DAY).tint,
+    /** How strongly removable towers glow blue in this look (in the clock state, the blended look's). */
+    tint: (isNight) => (sky.mode === 'clock' && sky.current ? sky.current.tint : (isNight ? NIGHT : DAY).tint),
+    current: null, paintedTint: NaN,
+    /** Called when the clock state's tint has moved enough to repaint the towers (set by the app). */
+    onTint: () => {},
     dispose() {
+      sky.discs.dispose();
       sky.scene.remove(sky.dome, sky.hemi, sky.sun, sky.sun.target);
       sky.dome.geometry.dispose();
       sky.dome.material.dispose();

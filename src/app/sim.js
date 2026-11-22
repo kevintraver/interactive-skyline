@@ -34,6 +34,8 @@ export function initSim(app) {
     invalidate();
   });
   env.on('night', () => app.applySettings('night'));
+  // the blue of removable towers follows the blended look (T1.4)
+  app.sky.onTint = () => { if (app.tall) app.tall.forEach(app.paint); };
 
   // the view tiles follow the sky once it settles (not on every frame of a scrub)
   let tiles = null;

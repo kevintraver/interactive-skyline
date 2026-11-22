@@ -10,6 +10,13 @@ export function createPerf({ renderer, scene, camera, loop }) {
       geometries: memory.geometries, textures: memory.textures, programs: programs ? programs.length : 0 };
   }
   const nextTask = () => new Promise((done) => setTimeout(done, 0));
+  // count shadow-map redraws (T1.3: at most one per 0.1 degree of solar motion)
+  const shadowMap = renderer.shadowMap, drawShadows = shadowMap.render;
+  let shadowRenders = 0;
+  shadowMap.render = function render(...args) {
+    if (shadowMap.enabled && (shadowMap.autoUpdate || shadowMap.needsUpdate)) shadowRenders++;
+    return drawShadows.apply(this, args);
+  };
   return {
     /**
      * Draw the current view `n` times in a synchronous loop (after `warm` uncounted frames) and resolve to each
@@ -48,6 +55,8 @@ export function createPerf({ renderer, scene, camera, loop }) {
     info,
     /** Frames the app's own loop has rendered since the page loaded. */
     frames: () => loop.frames,
+    /** Shadow-map redraws since the hook was installed. */
+    shadowRenders: () => shadowRenders,
     /** The GPU as WebGL reports it, and whether it is a software rasterizer. */
     gpu() {
       const ext = gl.getExtension('WEBGL_debug_renderer_info');
