@@ -91,6 +91,33 @@ The user asked for the build to be driven to the end. These are the assumptions 
 - **Lamp inventory.** D5.3 is built once, as plan 01's T4.0 (`scripts/build_lights.py`), and used here.
 - **Terrain.** Still deferred with the tile pyramid: Phase 2, D3.2 and D3.3. Ramps and overpasses take their heights by rule over the coarse ground, as the main line does.
 
+**State of the second stretch** (kept current as work lands; the table above is the state on 2026-11-22 before it).
+
+| Task | State |
+| --- | --- |
+| D3.4 interchanges | Done by rule: 68 ramps with gores, 17 crossings with decks, piers and abutments on `i15n`. Five small flyovers and a few ramps that would not fit are left out and listed in `roads_report.json`. |
+| D3.6 barriers, D3.7 leftovers | Done: concrete, guardrail and walls (OSM where mapped, fitted rules elsewhere), delineators, 42 overhead signs on cantilevers and spans. |
+| D4.1 cabin model, D6.3 vehicle models | Done in headless Blender (`models/drive/`). |
+| D5.3 lamp inventory | From plan 01's T4.0 (commit 6520fa5 on its data branch); the product files are copied here. |
+| D5.1, D5.2, D5.4, D5.5 photometric models | Done as pure functions with the plan's acceptance numbers as unit tests. The headlamp maps are hand-shaped lobes inside the FMVSS 108 test points, because the UMTRI survey could not be fetched. |
+| D5.4, D5.5 lamps runtime | Done: sprites for every lamp in view, pools near the car, poles, switching and sodium warm-up. 80,000 sprites cost about 1.7 ms, so far districts are thinned with their summed light kept. |
+| D6.1 traffic data, D6.2 demand surface | Done from 2025 counts (FHWA's files as republished in the national atlas, NDOT annual figures). |
+| D6.4 traffic renderer | Bodies done on both carriageways. |
+| D7.6 buildings beyond the core | Done from OSM footprints and Overture heights, in 2 km cells, for all three routes. The 20 m and taller ones do not join the removable list. |
+| D9.1, D9.2 route data | Done: a RoadNet, signs, barriers and traffic per route. |
+| Dusk | Done as a stand-in: `src/drive/look.js` and `skyblend.js`. |
+| D7.1, D7.2 fit to VIIRS | Blocked: the Black Marble grid needs a NASA Earthdata login, which this build does not have. Plan 01's `build_nightlights.py` exists and is tested on synthetic tiles only. |
+
+**Custom shaders to port when plan 01 changes the renderer** (each in a file of its own):
+
+| File | What |
+| --- | --- |
+| `src/drive/roadnet/material.js` | Pavement pulled forward in depth. |
+| `src/drive/skyblend.js` | The drive's sky dome with a warm band on the sun's side. |
+| `src/drive/lights/sprites.glsl.js` | Flux-conserving light sprites (mirrored in `spriteMirror.js`). |
+| `src/drive/lights/surfaceLight.js`, `pools.js` | Extra light terms on existing materials; lamp pools. |
+| `src/drive/traffic/material.js` | Vehicle paint, lamp faces, dissolve; contact shadows. |
+
 ---
 
 ## 1. Executive summary
