@@ -162,11 +162,15 @@ export interface JourneyHandle {
   setTimeOfDay(hour: number, minute?: number): void;   // setStart so that the present moment has that local time
   useRecordedStart(): void;
   end(): void;
+  readonly journey: Journey;  readonly coupling: 'clock' | 'frozen-sky';   // phase 1 additions, read by the transport bar
 }
 export interface Timeline {
   begin(j: Journey, o?: { startMs?: number; coupling?: 'clock' | 'frozen-sky' }): JourneyHandle;
   readonly active: JourneyHandle | null;
   on(type: 'begin' | 'end', fn: (h: JourneyHandle) => void): () => void;
+  // phase 1: the timeline is the frame loop's step 10 (loop.add(timeline, 10)); a journey playing asks for every frame
+  update(f: { dtWallMs: number }): void;
+  demand(): Demand;
 }
 export interface Transport {
   attachJourney(j: Journey | null): JourneyHandle | null;   // the same as timeline.begin(j) and handle.end()

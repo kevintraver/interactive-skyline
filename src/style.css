@@ -50,7 +50,7 @@ button { font: inherit; color: inherit; background: none; border: 0; padding: 0;
 #scene.grabbing { cursor: grabbing; }
 
 /* every floating surface shares one skin */
-#bar, .views button, #results, #card, .pop, #tools > button, .zoom, #hint, #changes, #menu {
+#bar, .views button, #results, #card, .pop, #tools > button, .zoom, #hint, #changes, #transport, #menu {
   background: var(--surface);
   border: 1px solid var(--line);
   border-radius: 12px;
@@ -176,10 +176,10 @@ button { font: inherit; color: inherit; background: none; border: 0; padding: 0;
 #sky .seg span { padding: 5px 4px; font-size: 13px; }
 .sky-more { display: flex; justify-content: space-between; gap: 10px; color: var(--muted); font-size: 12.5px; }
 .sky-more label { display: flex; align-items: center; gap: 6px; }
-#sky input[type="date"], #sky select {
+#sky input[type="date"], #sky select, #transport select, #transport input[type="datetime-local"] {
   font: inherit; font-size: 12.5px; color: var(--ink); background: var(--fill); border: 0; border-radius: 7px; padding: 4px 6px; color-scheme: light dark;
 }
-:root[data-theme="dark"] #sky input[type="date"] { color-scheme: dark; }
+:root[data-theme="dark"] #sky input[type="date"], :root[data-theme="dark"] #transport input { color-scheme: dark; }
 
 #about { margin: 12px 0 0; padding-top: 10px; border-top: 1px solid var(--line); color: var(--muted); font-size: 11.5px; line-height: 1.45; }
 
@@ -216,6 +216,21 @@ button { font: inherit; color: inherit; background: none; border: 0; padding: 0;
 #toast:has(button[hidden]) { padding: 10px 16px; }
 #changes button { padding: 5px 12px; border-radius: 7px; background: var(--fill); font-weight: 600; }
 #changes button:hover { background: var(--fill-strong); }
+/* ---- the journey transport, last in the dock, styled like #changes */
+#transport { display: flex; align-items: center; gap: 10px; padding: 7px 10px 7px 7px; max-width: 100%; flex-wrap: wrap; }
+#transport button { padding: 5px 12px; border-radius: 7px; background: var(--fill); font-weight: 600; }
+#transport button:hover { background: var(--fill-strong); }
+#transport .play { display: grid; place-items: center; width: 32px; height: 30px; padding: 0; }
+#transport .play .icon { width: 18px; height: 18px; }
+#transport .play use[href="#i-play"] { fill: currentColor; }
+#transport .label { font-weight: 600; white-space: nowrap; }
+#transport .track { position: relative; display: block; width: 220px; }
+#transport .scrub { display: block; width: 100%; margin: 0; }
+#transport .marks { position: absolute; left: 0; right: 0; top: 100%; height: 0; }
+#transport .marks span { position: absolute; transform: translateX(-50%); margin-top: 1px; font-size: 10.5px; color: var(--muted); white-space: nowrap; }
+#transport .pos { color: var(--muted); font-size: 12.5px; font-variant-numeric: tabular-nums; white-space: nowrap; }
+#transport .depart { display: flex; align-items: center; gap: 6px; color: var(--muted); font-size: 12.5px; }
+#transport:has(.marks span) { padding-bottom: 18px; }
 
 #credit { position: fixed; z-index: 2; left: var(--gap); bottom: 8px; font-size: 11.5px; color: #fff; text-shadow: 0 0 3px rgba(0, 0, 0, 0.75), 0 1px 2px rgba(0, 0, 0, 0.5); pointer-events: none; }
 
@@ -234,6 +249,7 @@ button { font: inherit; color: inherit; background: none; border: 0; padding: 0;
   /* beside the tools column, which #sky-toggle made taller than the old 240 px offset */
   #settings, #sky { right: calc(var(--gap) + 48px); bottom: 28px; max-width: calc(100vw - 2 * var(--gap) - 48px); }
   .selecting #settings, .selecting #sky { bottom: 190px; }
+  #transport .track { width: 140px; }
   #dock { left: var(--gap); transform: none; align-items: flex-start; max-width: calc(100vw - 72px); bottom: 120px; }
 }
 

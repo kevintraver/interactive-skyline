@@ -132,6 +132,18 @@
       </div>
       <div id="toast" role="status" hidden><span></span><button>Undo</button></div>
       <div id="changes" hidden><span></span><button id="reset-all">Reset</button></div>
+      <div id="transport-slot" hidden></div>
+      <div id="transport" role="group" aria-label="Journey" hidden>
+        <button type="button" class="play" aria-label="Play" title="Play (Space)"><svg class="icon" viewBox="0 0 20 20" aria-hidden="true"><use href="#i-play" /></svg></button>
+        <span class="label"></span>
+        <span class="track"><input type="range" class="scrub" min="0" max="1" step="0.1" aria-label="Position along the journey" /><span class="marks" aria-hidden="true"></span></span>
+        <output class="pos"></output>
+        <select class="speed" aria-label="Speed">
+          <option value="1">1×</option><option value="2">2×</option><option value="4">4×</option><option value="8">8×</option>
+        </select>
+        <label class="depart">Depart <input type="datetime-local" step="60" aria-label="Depart at" /></label>
+        <button type="button" class="now" title="Now (N)">Now</button>
+      </div>
     </div>
     <div id="credit">Interactive Skyline</div>
     <div id="loading">Loading the city…</div>

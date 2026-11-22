@@ -27,7 +27,7 @@ export function installHooks(app) {
     hiddenIds: () => tall.filter((t) => !t.mesh.visible).map((t) => t.data.id),
     perf: createPerf(app),
     // plan 01, phase 1 (section 8.6): the simulation clock, the environment and the frame loop
-    clock: app.clock, env: app.env, loop: app.loop,
+    clock: app.clock, env: app.env, loop: app.loop, timeline: app.timeline, transport: app.transport,
   };
   return window.__skyline;
 }

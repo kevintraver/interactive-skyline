@@ -6,7 +6,9 @@
 import { createSimClock, parseTimeParam, formatTimeParam } from '../sim/clock.js';
 import { createEphemeris } from '../sky/ephemeris.js';
 import { createEnvironment } from '../env/environment.js';
+import { createTimeline } from '../sim/timeline.js';
 import { clockDemand } from '../render/frameLoop.js';
+import { testJourney } from '../sim/testJourney.js';
 
 export function initSim(app) {
   const { city, settings, loop, invalidate } = app;
@@ -18,7 +20,9 @@ export function initSim(app) {
   env.update();
 
   for (const type of ['seek', 'state', 'rate']) clock.on(type, () => invalidate());
+  const timeline = createTimeline({ clock });
   loop.add({ update: (f) => clock.advance(f.dtWallMs), demand: () => (env.mode === 'clock' ? clockDemand(clock) : 'idle') }, 0);
+  loop.add(timeline, 10);
   loop.add({
     update: () => {
       if (env.mode !== 'clock') return;
@@ -62,15 +66,19 @@ export function initSim(app) {
 
   /** Enter the clock state (any time control does). */
   app.enterClock = () => env.enterClock();
-  Object.assign(app, { clock, ephemeris, env, syncAddress });
+  Object.assign(app, { clock, ephemeris, env, timeline, syncAddress });
 }
 
 /** Apply ?t= (and ?rate=) once the interface is up: any t enters the clock state (section 4.1). */
 export function applyTimeParams(app) {
   const params = new URLSearchParams(location.search);
   const t = parseTimeParam(params.get('t'), app.clock.zone);
-  if (!t) return;
   const { clock, env } = app;
+  if (params.get('journey') === 'test') {
+    clock.set(Date.now());
+    app.transport.attachJourney(testJourney(app));
+  }
+  if (!t) return;
   if (t.live) clock.goLive(); else clock.set(t.timeMs);
   const rate = params.has('rate') ? Number(params.get('rate')) : null;
   if (rate !== null && Number.isFinite(rate)) {

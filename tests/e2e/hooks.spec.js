@@ -7,7 +7,7 @@ import { CITIES, boot, frames, views } from '../helpers/app.js';
 const MEMBERS = ['tall', 'renderer', 'scene', 'camera', 'controls', 'sun', 'invalidate', 'settings', 'setSetting', 'focusOn',
   'flying', 'setView', 'select', 'selectedId', 'screen', 'place', 'movedIds', 'hiddenIds', 'perf', 'attractions'];
 // Added in phase 1 (plan 01, section 8.6): never removed from here on either.
-const PHASE1 = ['clock', 'env', 'loop'];
+const PHASE1 = ['clock', 'env', 'loop', 'timeline', 'transport'];
 // What attractions.js exposes; the checker's probe uses ready, freeze, summary, find, extras and fountains.
 const ATTRACTIONS = ['ready', 'extras', 'fountains', 'find', 'freeze', 'animating', 'summary'];
 // Element ids the app and the checker rely on (the checker hides loading, tip, menu, card, toast, top, tools,
@@ -39,7 +39,7 @@ for (const city of CITIES) {
       expect(got.types).toEqual({ tall: true, renderer: true, scene: 'function', camera: true, controls: true, sun: true, nightKey: true, ready: 'function' });
     });
 
-    test('phase 1 members: clock, env, loop', async ({ page }) => {
+    test('phase 1 members: clock, env, loop, timeline, transport', async ({ page }) => {
       const r = await page.evaluate((members) => {
         const s = window.__skyline, st = s.env.state;
         return {
