@@ -141,7 +141,9 @@ export function modePieces(cs, mode) {
     // hemisphere light alone (its ground colour) leaves near black
     out = [...parapet(edgeL, 'left', DECK), ...pave, ...parapet(edgeR, 'right', DECK), { ...S(edgeR, edgeL, -DECK, -DECK), soffit: true }];
   } else if (mode.parapet) {
-    out = [...embL, ...parapet(edgeL, 'left', 0), ...pave, ...parapet(edgeR, 'right', 0), ...embR];
+    // no parapet on a side whose shoulder a gore hides: the pavement runs on there to the ramp beside it, and a wall
+    // would stand in the middle of the gore (I-15 north's short bridge over a wash at Exit 25)
+    out = [...embL, ...(mode.hideL ? [] : parapet(edgeL, 'left', 0)), ...pave, ...(mode.hideR ? [] : parapet(edgeR, 'right', 0)), ...embR];
   } else {
     out = [...embL, ...pave, ...embR];
   }

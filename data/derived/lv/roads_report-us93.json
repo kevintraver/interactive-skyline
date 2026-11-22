@@ -4285,13 +4285,73 @@
      "note": "drawn ground at most worst_m above any ramp's or crossing's pavement; stations within 0.1 m counted"
     }
    },
+   "leads": {
+    "us93.main.in": {
+     "built": true,
+     "road": "us93.main.in",
+     "length_m": 1536.0,
+     "osm_beyond_m": 2162.0,
+     "eased_m": 0.008,
+     "fit_p95_m": 0.173,
+     "bridges": 2,
+     "held_decks": 2,
+     "max_grade": 0.0595,
+     "buried_below_envelope_m": 0.0
+    },
+    "us93.main.out": {
+     "built": true,
+     "road": "us93.main.out",
+     "length_m": 1536.0,
+     "osm_beyond_m": 4163.0,
+     "eased_m": 0.03,
+     "fit_p95_m": 0.321,
+     "bridges": 2,
+     "held_decks": 0,
+     "max_grade": 0.023,
+     "buried_below_envelope_m": 0.0
+    },
+    "us93s.opp.in": {
+     "built": true,
+     "road": "us93s.opp.in",
+     "length_m": 1536.0,
+     "osm_beyond_m": 3646.0,
+     "eased_m": 0.125,
+     "fit_p95_m": 0.315,
+     "bridges": 1,
+     "held_decks": 0,
+     "max_grade": 0.023,
+     "buried_below_envelope_m": 0.0
+    },
+    "us93s.opp.out": {
+     "built": true,
+     "road": "us93s.opp.out",
+     "length_m": 1536.0,
+     "osm_beyond_m": 2154.0,
+     "eased_m": 0.206,
+     "fit_p95_m": 0.395,
+     "bridges": 2,
+     "held_decks": 2,
+     "max_grade": 0.0595,
+     "buried_below_envelope_m": 0.0
+    }
+   },
+   "leads_narrowed": [
+    {
+     "pair": [
+      "us93.main.out",
+      "us93s.opp.in"
+     ],
+     "stations_tight": 152,
+     "min_gap_after_m": 1.61
+    }
+   ],
    "interchanges": {
     "counts": {
      "ramps": 79,
      "gores": 79,
      "diverge": 38,
      "merge": 41,
-     "connects": 16,
+     "connects": 22,
      "crossings": 10,
      "decks": 21,
      "piers": 44,
@@ -5637,33 +5697,12 @@
    "us93.main",
    "us93s.opp"
   ],
-  "identical": false,
-  "plan_identical": true,
-  "heights": [
-   {
-    "road": "us93.main",
-    "heights_changed": 7415,
-    "max_change_m": 9.69,
-    "changed_s": [
-     0.0,
-     59228.0
-    ]
-   },
-   {
-    "road": "us93s.opp",
-    "heights_changed": 7489,
-    "max_change_m": 1.85,
-    "changed_s": [
-     72.0,
-     59520.0
-    ]
-   }
-  ]
+  "identical": true
  },
  "files": {
-  "roadnet-us93.json": 242146,
-  "roadnet-us93.bin": 1297240,
-  "total": 1539386,
+  "roadnet-us93.json": 252110,
+  "roadnet-us93.bin": 1340360,
+  "total": 1592470,
   "ok": true
  }
 }

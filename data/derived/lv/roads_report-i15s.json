@@ -4294,13 +4294,65 @@
      "note": "drawn ground at most worst_m above any ramp's or crossing's pavement; stations within 0.1 m counted"
     }
    },
+   "leads": {
+    "i15s.main.in": {
+     "built": true,
+     "road": "i15s.main.in",
+     "length_m": 1536.0,
+     "osm_beyond_m": 7133.0,
+     "eased_m": 0.086,
+     "fit_p95_m": 0.299,
+     "bridges": 0,
+     "held_decks": 0,
+     "max_grade": 0.0515,
+     "buried_below_envelope_m": 0.0
+    },
+    "i15s.main.out": {
+     "built": true,
+     "road": "i15s.main.out",
+     "length_m": 1536.0,
+     "osm_beyond_m": 3435.0,
+     "eased_m": 0.012,
+     "fit_p95_m": 0.258,
+     "bridges": 0,
+     "held_decks": 0,
+     "max_grade": 0.0326,
+     "buried_below_envelope_m": 0.0,
+     "under_crossing": "SEPARATE under the crossing cannot be kept: the carriageway's end is too close to it and the ground beyond rises"
+    },
+    "i15n.opp.in": {
+     "built": true,
+     "road": "i15n.opp.in",
+     "length_m": 1536.0,
+     "osm_beyond_m": 3161.0,
+     "eased_m": 0.018,
+     "fit_p95_m": 0.311,
+     "bridges": 0,
+     "held_decks": 0,
+     "max_grade": 0.0354,
+     "buried_below_envelope_m": 0.0
+    },
+    "i15n.opp.out": {
+     "built": true,
+     "road": "i15n.opp.out",
+     "length_m": 1536.0,
+     "osm_beyond_m": 10035.0,
+     "eased_m": 0.104,
+     "fit_p95_m": 0.203,
+     "bridges": 0,
+     "held_decks": 0,
+     "max_grade": 0.0564,
+     "buried_below_envelope_m": 0.0
+    }
+   },
+   "leads_narrowed": [],
    "interchanges": {
     "counts": {
      "ramps": 69,
      "gores": 69,
      "diverge": 32,
      "merge": 37,
-     "connects": 14,
+     "connects": 18,
      "crossings": 15,
      "decks": 29,
      "piers": 105,
@@ -5825,33 +5877,12 @@
    "i15n.opp",
    "i15s.main"
   ],
-  "identical": false,
-  "plan_identical": true,
-  "heights": [
-   {
-    "road": "i15s.main",
-    "heights_changed": 5284,
-    "max_change_m": 0.6,
-    "changed_s": [
-     256.0,
-     45040.0
-    ]
-   },
-   {
-    "road": "i15n.opp",
-    "heights_changed": 4792,
-    "max_change_m": 1.72,
-    "changed_s": [
-     32.0,
-     45064.0
-    ]
-   }
-  ]
+  "identical": true
  },
  "files": {
-  "roadnet-i15s.json": 234269,
-  "roadnet-i15s.bin": 1106084,
-  "total": 1340353,
+  "roadnet-i15s.json": 239000,
+  "roadnet-i15s.bin": 1149204,
+  "total": 1388204,
   "ok": true
  }
 }

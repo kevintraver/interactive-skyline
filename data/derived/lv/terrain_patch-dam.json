@@ -39,6 +39,40 @@
    "posts_lowered": 501,
    "deepest_post_cut_m": 33.8,
    "stations_paired": 2570
+  },
+  "us93.main.in": {
+   "stations": [
+    0.0,
+    1536.0
+   ],
+   "design_fill_m": {
+    "mean": 2.23,
+    "max": 20.3
+   },
+   "design_cut_m": {
+    "mean": 12.89,
+    "max": 31.3
+   },
+   "posts_lowered": 179,
+   "deepest_post_cut_m": 39.4,
+   "stations_paired": 15
+  },
+  "us93s.opp.out": {
+   "stations": [
+    0.0,
+    1536.0
+   ],
+   "design_fill_m": {
+    "mean": 2.78,
+    "max": 22.2
+   },
+   "design_cut_m": {
+    "mean": 14.06,
+    "max": 34.6
+   },
+   "posts_lowered": 109,
+   "deepest_post_cut_m": 20.4,
+   "stations_paired": 385
   }
  },
  "blend": {

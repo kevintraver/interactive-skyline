@@ -177,6 +177,40 @@ def test_us93_starts_on_the_bridge_at_55_mph():
     assert np.ptp(road["h"][:k]) < 20
 
 
+@pytest.mark.parametrize("rid", ["i15n", *NEW])
+def test_each_carriageway_runs_on_beyond_both_ends_as_scenery(rid):
+    # build_roads.py build_lead: LEAD_M of the same road before the first station and after the last of both
+    # carriageways, separate roads joined end to end (the route's chainage still starts at 0 where it did)
+    r = route(rid)
+    doc = json.loads((DATA / r["files"]["roadnet"]).read_text())
+    roads = {x["id"]: x for x in decode_roadnet(doc, (DATA / r["files"]["roadnet"].replace(".json", ".bin")).read_bytes())}
+    for cw in (r["road"], r["opposite"]):
+        c = roads[cw]
+        for which, j, k in (("in", 0, -1), ("out", -1, 0)):
+            lead = roads[f"{cw}.{which}"]
+            assert lead["lead"] == {"of": cw, "end": "start" if which == "in" else "end"}
+            assert lead.get("role", "main") == "main" and lead["length"] == build_roads.LEAD_M
+            # it meets the carriageway's end station exactly: position, heading, height
+            assert (lead["x"][k], lead["y"][k], lead["h"][k]) == (c["x"][j], c["y"][j], c["h"][j]), (cw, which)
+            assert lead["heading"][k] == c["heading"][j]
+            # with the carriageway's own end section there (lanes from OSM beyond it), and within the grade limit
+            at = lead["sections"][k]
+            assert at["provenance"]["lanes"].startswith("as ") and len(at["lanes"]) == len(c["sections"][j]["lanes"])
+            assert [ln["w"] for ln in at["lanes"]] == [ln["w"] for ln in c["sections"][j]["lanes"]]
+            assert (at["s1"] - at["s0"]) >= build_roads.LEAD_SAME_M - 1e-6 or len(lead["sections"]) == 1
+            assert np.abs(np.diff(lead["h"])).max() / lead["spacing"] <= build_roads.GRADE + 1e-3
+        leads = report(rid)["routes"][rid]["leads"]
+        for which in ("in", "out"):
+            info = leads[f"{cw}.{which}"]
+            assert info["built"] and info["buried_below_envelope_m"] == 0 and info["eased_m"] < 0.5, info
+            # one known shortfall: I-15 south's lead-out starts under Russell Road's deck, 4.62 m below it (not 4.9)
+            assert "under_crossing" not in info or f"{cw}.{which}" == "i15s.main.out", info
+    # the US-93 deck runs on to the Arizona side: the lead-in starts on land and is a held deck where it meets the route
+    if rid == "us93":
+        lead = next(x for x in doc["roads"] if x["id"] == "us93.main.in")
+        assert lead["bridges"][-1]["s1"] == build_roads.LEAD_M and lead["bridges"][-1].get("deck")
+
+
 # ------------------------------------------------------------------ the rules
 
 def test_hold_decks_lifts_a_canyon_and_leaves_a_street_underpass():

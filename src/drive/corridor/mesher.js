@@ -9,8 +9,13 @@
  * gets the scene's curvature (y = h - base - curveDrop(x, y)).
  *
  * Canopies (fuel-station roofs, carports) are a slab of CANOPY_M under their height, with nothing below.
+ *
+ * Windows at night: each wall carries `winLit` (0..1, read by ./material.js), the share of the app's lit windows lit
+ * on it, by the building's type (windowShare): none on canopies and sheds, on walls under WINDOW_MIN_M or on a
+ * building that low, and none on a share of the walls of warehouses, stores and big untyped boxes (blank walls, by a
+ * hash of the wall); fewer lit in warehouses and stores than in hotels and apartments.
  */
-import { decodeCell, TYPE } from './format.js';
+import { decodeCell, TYPE, TYPES } from './format.js';
 import { triangulate } from './earcut.js';
 
 export const SINK = 1;
@@ -18,6 +23,26 @@ export const CANOPY_M = 0.8;
 // src/city/buildings.js GRAY, written out so the worker needs no three.js
 export const GRAY = [0.80, 0.775, 0.74];
 const ROOF_SHADE = 0.86;
+/** No windows on a wall lower than this (a canopy's edge, a low wall). */
+export const WINDOW_MIN_M = 3;
+// per type (format.js TYPES): the share of the app's lit windows that are lit, and the share of walls left blank
+const LIT = { other: 0.6, house: 0.5, apartments: 1, retail: 0.3, warehouse: 0.15, hotel: 1, office: 0.8, civic: 0.5, canopy: 0, shed: 0 };
+const BLANK = { other: 0.15, house: 0.2, apartments: 0.05, retail: 0.5, warehouse: 0.7, hotel: 0.05, office: 0.1, civic: 0.3, canopy: 1, shed: 1 };
+const BIG_BOX_M2 = 2500; // an untyped low building this large is a store or a warehouse: lit and blank as a store
+const BIG_BOX_H = 14;
+const TOWER_M = 20;
+
+/**
+ * The window share of one wall (0 = no windows): `type` a format.js TYPES name, `height` the building's height above
+ * the ground and `wallH` this wall's (both metres), `area` the footprint's m^2, `h` a hash in [0, 1) of the wall.
+ */
+export function windowShare(type, height, wallH, area, h) {
+  if (wallH < WINDOW_MIN_M || height < WINDOW_MIN_M) return 0;
+  const t = type === 'other' && area >= BIG_BOX_M2 && height < BIG_BOX_H ? 'retail' : type;
+  // a tower's faces all have windows (only a warehouse that tall keeps blank walls)
+  if (h < (height >= TOWER_M && t !== 'warehouse' ? 0 : BLANK[t] ?? BLANK.other)) return 0;
+  return LIT[t] ?? LIT.other;
+}
 
 /** A hash in [0, 1) of a map position: the same one buildings.js uses for its per-building variation. */
 export const hash01 = (x, y) => {
@@ -31,7 +56,7 @@ const smooth = (a, b, v) => { const t = Math.min(1, Math.max(0, (v - a) / (b - a
  * @param {{ buf: ArrayBuffer, groundMin: Float32Array, groundMean: Float32Array, base: number, earthR: number,
  *   origin?: [number, number], only?: number }} opts  origin: map metres the vertices are relative to (default the
  *   cell's); only: mesh just the first `only` buildings
- * @returns {{ positions: Float32Array, normals: Float32Array, colors: Float32Array, indices: Uint32Array,
+ * @returns {{ positions: Float32Array, normals: Float32Array, colors: Float32Array, winLit: Uint8Array, indices: Uint32Array,
  *   origin: [number, number, number], sphere: [number, number, number, number], buildings: number, triangles: number }}
  *   origin is the scene position of the vertices' zero; sphere is in the mesh's own coordinates.
  */
@@ -53,6 +78,7 @@ export function meshCell({ buf, groundMin, groundMean, base, earthR, origin, onl
     ni += 3 * (pts + 2 * holes) * (canopy ? 2 : 1);
   }
   const pos = new Float32Array(nv * 3), nor = new Float32Array(nv * 3), col = new Float32Array(nv * 3);
+  const win = new Uint8Array(nv); // winLit * 255 (a normalised attribute); roofs and undersides 0
   let idx = new Uint32Array(ni);
   let v = 0, t = 0;
   let minX = Infinity, minY = Infinity, minZ = Infinity, maxX = -Infinity, maxY = -Infinity, maxZ = -Infinity;
@@ -106,6 +132,9 @@ export function meshCell({ buf, groundMin, groundMean, base, earthR, origin, onl
         const nx = dy / l, nz = dx / l;
         const i0 = put(px, py, bot, nx, 0, nz, ...wall), i1 = put(qx, qy, bot, nx, 0, nz, ...wall);
         const i2 = put(qx, qy, top, nx, 0, nz, ...wall), i3 = put(px, py, top, nx, 0, nz, ...wall);
+        // the wall's height as drawn above the lowest ground under the building (its base is sunk SINK below that)
+        const lit = windowShare(TYPES[cell.type[k]], cell.height[k] / 10, top - bot - SINK, area, hash01((px + qx) / 2 + 0.5, (py + qy) / 2 - 0.5));
+        win[i0] = win[i1] = win[i2] = win[i3] = Math.round(lit * 255);
         idx[t++] = i0; idx[t++] = i1; idx[t++] = i2; idx[t++] = i0; idx[t++] = i2; idx[t++] = i3;
       }
     }
@@ -143,7 +172,7 @@ export function meshCell({ buf, groundMin, groundMean, base, earthR, origin, onl
   const mx = (minX + maxX) / 2, my = (minY + maxY) / 2, mz = (minZ + maxZ) / 2;
   const radius = v ? Math.hypot(maxX - mx, maxY - my, maxZ - mz) : 0;
   return {
-    positions: pos.subarray(0, v * 3), normals: nor.subarray(0, v * 3), colors: col.subarray(0, v * 3), indices,
+    positions: pos.subarray(0, v * 3), normals: nor.subarray(0, v * 3), colors: col.subarray(0, v * 3), winLit: win.subarray(0, v), indices,
     origin: [ox, 0, -oy], sphere: [v ? mx : 0, v ? my : 0, v ? mz : 0, radius], buildings: B, triangles: t / 3,
   };
 }
@@ -155,7 +184,7 @@ function grow(a) {
 }
 
 /** The buffers of a meshCell result, to transfer from the worker. */
-export const transferablesOf = (m) => [m.positions.buffer, m.normals.buffer, m.colors.buffer, m.indices.buffer];
+export const transferablesOf = (m) => [m.positions.buffer, m.normals.buffer, m.colors.buffer, m.winLit.buffer, m.indices.buffer];
 
 /**
  * The ground under each building, from a height function: the lowest height at its outer ring's points and the

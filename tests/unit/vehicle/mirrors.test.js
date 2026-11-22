@@ -3,7 +3,7 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import * as THREE from 'three';
-import { mirrorView, projectToMirror, reflectPoint, coarseGridIndex } from '../../../src/drive/vehicle/mirrors.js';
+import { mirrorView, projectToMirror, reflectPoint, coarseGridIndex, coarseGridSteps, gridCells } from '../../../src/drive/vehicle/mirrors.js';
 import { GLASS_PRESETS, mirrorsDue, mirrorPixels, MIRROR_NAMES, glassPresetFor } from '../../../src/drive/vehicle/glassPresets.js';
 
 const meta = JSON.parse(readFileSync(new URL('../../../public/models/drive/cabin.json', import.meta.url), 'utf8'));
@@ -176,6 +176,19 @@ describe('refresh schedule', () => {
     const tris = new Set();
     for (let t = 0; t < near.length; t += 3) tris.add([near[t], near[t + 1], near[t + 2]].join());
     for (const [i, j] of [[2, 2], [3, 2], [2, 3], [3, 3]]) { const a = j * nx + i; expect(tris.has([a, a + 1, a + nx].join())).toBe(true); }
+  });
+  it('the near-ground rebuild can be spread over frames: the steps give the same index as one go', () => {
+    const nx = 41, ny = 23, full = [];
+    for (let j = 0; j < ny - 1; j++) for (let i = 0; i < nx - 1; i++) {
+      if (i > 30 && j > 10) continue; // a hole, as a patch cuts
+      const a = j * nx + i; full.push(a, a + 1, a + nx, a + 1, a + nx + 1, a + nx);
+    }
+    const fine = [5, 12, 3, 9];
+    const it = coarseGridSteps(full, nx, ny, 3, fine, gridCells(full, nx, ny));
+    let r, steps = 0;
+    do { r = it.next(); steps++; } while (!r.done);
+    expect(steps).toBe(Math.ceil((ny - 1) / 3) + 1); // a yield after each row of blocks, then the result
+    expect(Array.from(r.value)).toEqual(Array.from(coarseGridIndex(full, nx, ny, 3, fine)));
   });
   it('targets keep each face\'s aspect within 10%', () => {
     for (const opts of Object.values(GLASS_PRESETS)) {

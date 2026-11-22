@@ -1,6 +1,7 @@
 // Screenshots of the drive from the cabin on the GPU (the copy of drive-shots.mjs with the cabin's options).
 // Serve the repo first:   pnpm exec vite --port 5281 --strictPort
-// then: node tests/manual/cabin-shots.mjs <out-dir> <port> '<shots>' [width] [height]   (keep the out dir outside the repo)
+// then: node tests/manual/cabin-shots.mjs <out-dir> <port> '<shots>' [width] [height] [route]   (keep the out dir outside the repo;
+//   route defaults to i15n)
 // <shots> is JSON: [[name, s in metres, "day" | "night" | ISO time, { view, yaw, pitch, lens, reduceMotion, glance,
 //   veil, mirrors, clip }?], ...]
 //   view 'cabin' (default) or 'clean'; lens defaults to the view's own (28 mm cabin, 50 mm clean); glance
@@ -12,6 +13,7 @@ import { mkdirSync } from 'node:fs';
 const out = process.argv[2]; const port = process.argv[3] || 5281;
 const shots = JSON.parse(process.argv[4]);
 const width = +(process.argv[5] || 1280), height = +(process.argv[6] || 720);
+const route = process.argv[7] || 'i15n';
 mkdirSync(out, { recursive: true });
 const browser = await chromium.launch({ channel: 'chromium', headless: true, args: ['--use-angle=metal', '--ignore-gpu-blocklist', '--enable-gpu'] });
 const page = await browser.newPage({ viewport: { width, height } });
@@ -27,7 +29,7 @@ async function setup() {
   await page.waitForFunction(() => performance.getEntriesByName('skyline-ready').length > 0 && window.__skyline?.attractions && window.__skyline?.drive, null, { timeout: 120000 });
   const gl = await page.evaluate(() => { const g = window.__skyline.renderer.getContext(); const e = g.getExtension('WEBGL_debug_renderer_info'); return e ? g.getParameter(e.UNMASKED_RENDERER_WEBGL) : 'n/a'; });
   console.log('renderer:', gl);
-  await page.evaluate(async () => { const s = window.__skyline; s.attractions.freeze(20); await s.attractions.ready; await s.drive.start('i15n', {}); s.drive.pause(); });
+  await page.evaluate(async (route) => { const s = window.__skyline; s.attractions.freeze(20); await s.attractions.ready; await s.drive.start(route, {}); s.drive.pause(); }, route);
   // wait for the cabin part (it loads after the drive starts)
   await page.waitForFunction(() => window.__skyline.drive.cabin(), null, { timeout: 60000 }).catch(() => console.log('no cabin part'));
 }

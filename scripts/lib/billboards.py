@@ -209,6 +209,12 @@ def dedupe(recs, merge_m=MERGE_M):
     return boards, list(groups.values())
 
 
+def is_carriageway(r):
+    """A route's main or opposite carriageway, or one of their lead-ins and lead-outs (build_roads.py: the same road on
+    beyond the route's ends, as scenery): what a billboard faces and stands clear of as the freeway."""
+    return r["id"].endswith((".main", ".opp")) or bool(r.get("lead"))
+
+
 class RoadIndex:
     """Every station of every road with its pavement edges, for nearest-road queries (scipy cKDTree)."""
 
@@ -222,7 +228,7 @@ class RoadIndex:
             le, ri = edges_fn(r, s)
             xs.append(r["x"][idx]); ys.append(r["y"][idx]); hd.append(r["heading"][idx])
             left.append(le); right.append(ri); h.append(r["h"][idx])
-            kind.append(np.full(len(idx), 0 if r["id"].endswith((".main", ".opp")) else 1))
+            kind.append(np.full(len(idx), 0 if is_carriageway(r) else 1))
             rid.append(np.full(len(idx), k))
         self.x, self.y, self.heading = np.concatenate(xs), np.concatenate(ys), np.concatenate(hd)
         self.left, self.right = np.concatenate(left), np.concatenate(right)

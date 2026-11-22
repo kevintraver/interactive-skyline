@@ -35,6 +35,7 @@ export const CREDITS = [
       { name: 'City of Henderson, via its lighting contractor’s public layer', use: 'Street lights', url: 'https://services6.arcgis.com/clPWQMwZfdWn4MQZ/arcgis/rest/services/HendersonPublish/FeatureServer/125', licence: 'No licence stated; used with this credit' },
       { name: 'Boulder City', use: 'Street lights', url: 'https://services6.arcgis.com/ENlYDFfLXlpg7FOQ/arcgis/rest/services/Dark_Skies_Light_Replacement_view/FeatureServer/0', licence: 'No licence stated; used with this credit' },
       { name: 'City of Las Vegas; Clark County, Nevada', use: 'Billboard positions', url: 'https://services1.arcgis.com/F1v0ufATbBQScMtY/arcgis/rest/services/CLV_Billboards/FeatureServer', licence: null },
+      { name: 'Billboard advertisements, made for this project', use: 'The forty advertisements on the billboards: pictures generated with an image model through OpenAI’s Codex, lettering set in code; every business is fictional, and any resemblance to a real business is unintended', url: 'https://openai.com/codex/', licence: null },
     ],
   },
 ];

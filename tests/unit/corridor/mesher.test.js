@@ -108,7 +108,7 @@ describe('corridor mesher', () => {
     handle({ type: 'mesh', id: 7, buf, groundMin: new Float32Array([700]), groundMean: new Float32Array([700]), base: BASE, earthR: R });
     expect(posts[0].data.id).toBe(7);
     expect(posts[0].data.mesh.triangles).toBe(10);
-    expect(posts[0].transfer.length).toBe(4);
+    expect(posts[0].transfer.length).toBe(5);
     handle({ type: 'mesh', id: 8, buf: new ArrayBuffer(4) });
     expect(posts[1].data.error).toMatch(/corridor/);
   });

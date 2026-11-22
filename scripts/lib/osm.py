@@ -233,3 +233,67 @@ def ramps(osm, node_ids, mainline_ways):
         if ns[-1] in where:
             out.append((where[ns[-1]], "entrance", wid))
     return sorted(out)
+
+
+def follow(osm, node_ids, metres, to_local, backward=False, refs=(), classes=("motorway", "trunk")):
+    """The road on beyond one end of a stitched line, through any way of `classes` (not only the
+    relation's members: a route relation stops at a state line, the road does not). From the last
+    node (the first, backward), take the way that carries on in the direction of travel, against
+    no oneway tag, turning by less than 60 degrees, preferring a way that shares a reference in
+    `refs`; stop after `metres` or where nothing carries on. Returns ([(node id, way id)], metres):
+    each node with the way of the segment that reaches it, in the order walked (backward: going
+    back against the direction of travel)."""
+    def xy(n):
+        la, lo, _ = osm.nodes[n]
+        x, y = to_local(la, lo)
+        return float(x), float(y)
+
+    by_node = {}
+    for wid, w in osm.ways.items():
+        if w["tags"].get("highway") in classes:
+            for n in w["nodes"]:
+                by_node.setdefault(n, []).append(wid)
+    line = list(node_ids[::-1] if backward else node_ids)
+    out, used, total = [], set(), 0.0
+    cur = line[-1]
+    hx, hy = np.subtract(xy(line[-1]), xy(line[-2]))
+    want = {r.strip() for ref in refs for r in ref.split(";")}
+    while total < metres:
+        best = None
+        for wid in by_node.get(cur, []):
+            if wid in used or not all(n in osm.nodes for n in osm.ways[wid]["nodes"]):
+                continue
+            ns = _oriented(osm, wid)
+            tags = osm.ways[wid]["tags"]
+            # OSM: a motorway is one way unless tagged otherwise
+            oneway = tags.get("oneway") in ("yes", "1", "true", "-1") or (tags.get("highway") == "motorway" and tags.get("oneway") != "no")
+            k = ns.index(cur)
+            cands = []
+            if backward:
+                if k > 0:
+                    cands.append(ns[:k + 1][::-1])
+                if not oneway and k < len(ns) - 1:
+                    cands.append(ns[k:])
+            else:
+                if k < len(ns) - 1:
+                    cands.append(ns[k:])
+                if not oneway and k > 0:
+                    cands.append(ns[:k + 1][::-1])
+            for c in cands:
+                d = np.subtract(xy(c[1]), xy(c[0]))
+                cos = float(np.dot(d, (hx, hy)) / (np.hypot(*d) * np.hypot(hx, hy) + 1e-9))
+                shares = bool({r.strip() for r in (osm.ways[wid]["tags"].get("ref") or "").split(";")} & want)
+                score = cos + (0.5 if shares else 0.0)
+                if cos > 0.5 and (best is None or score > best[0]):
+                    best = (score, wid, c)
+        if best is None:
+            break
+        _, wid, c = best
+        used.add(wid)
+        P = np.array([xy(n) for n in c])
+        for n, seg in zip(c[1:], np.hypot(*np.diff(P, axis=0).T)):
+            out.append((n, wid))
+            total += float(seg)
+        hx, hy = P[-1] - P[-2]
+        cur = c[-1]
+    return out, total

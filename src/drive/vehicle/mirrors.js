@@ -44,6 +44,8 @@ import { createTimings } from '../timing.js';
 /** Metres around the car within which the mirrors draw each ground grid at its full resolution, and how far the car
  * moves before that ring is moved with it. */
 export const FINE_M = 1200, FINE_STEP_M = 400;
+/** Milliseconds of a mirror frame the near-ground rebuild may take (it is spread over frames: swapGround). */
+export const GROUND_BUDGET_MS = 2;
 export const MIRROR_FAR = 150000; // the main camera's far plane (rig.js FAR): the sky dome is 120 km out
 /** The share of the traffic part's body range kept behind the car when it looks ahead (traffic/index.js BEHIND_SHARE). */
 const TRAFFIC_BEHIND_SHARE = 0.35;
@@ -183,33 +185,57 @@ export function projectToMirror(view, P) {
  * @returns {Uint32Array}
  */
 export function coarseGridIndex(index, nx, ny, stride, fine = null) {
+  const it = coarseGridSteps(index, nx, ny, stride, fine);
+  let r;
+  do r = it.next(); while (!r.done);
+  return r.value;
+}
+
+/** The cells (nx - 1) x (ny - 1) a full grid index draws: 1 where it has a cell's two triangles. */
+export function gridCells(index, nx, ny) {
   const cells = new Uint8Array((nx - 1) * (ny - 1));
   for (let t = 0; t < index.length; t += 6) {
     const a = index[t], i = a % nx, j = (a - i) / nx;
     if (i < nx - 1 && j < ny - 1) cells[j * (nx - 1) + i] = 1;
   }
-  const out = [];
+  return cells;
+}
+
+/**
+ * coarseGridIndex as a generator that yields after each row of blocks (and every 1024 blocks) and returns the index, so that the work can be
+ * spread over frames (the mirrors' near-ground rebuild); `cells` (gridCells of `index`) may be passed in when known.
+ */
+export function* coarseGridSteps(index, nx, ny, stride, fine = null, cells = null) {
+  cells ||= gridCells(index, nx, ny);
+  let out = new Uint32Array(Math.max(64, Math.ceil(index.length / (stride * stride)) + 6 * 1024)), n = 0;
+  const push6 = (a, b, c, d, e, f) => {
+    if (n + 6 > out.length) { const o = new Uint32Array(out.length * 2); o.set(out); out = o; }
+    out[n++] = a; out[n++] = b; out[n++] = c; out[n++] = d; out[n++] = e; out[n++] = f;
+  };
+  let blocks = 0;
   for (let j = 0; j < ny - 1; j += stride) {
     const j1 = Math.min(j + stride, ny - 1);
     for (let i = 0; i < nx - 1; i += stride) {
+      if (++blocks % 1024 === 0) yield j; // and within a long row
       const i1 = Math.min(i + stride, nx - 1);
       let all = !(fine && i1 > fine[0] && i <= fine[1] && j1 > fine[2] && j <= fine[3]);
       for (let jj = j; jj < j1 && all; jj++) for (let ii = i; ii < i1; ii++) if (!cells[jj * (nx - 1) + ii]) { all = false; break; }
       if (all) {
         const a = j * nx + i, b = j * nx + i1, d = j1 * nx + i, e = j1 * nx + i1;
-        out.push(a, b, d, b, e, d);
+        push6(a, b, d, b, e, d);
         continue;
       }
       for (let jj = j; jj < j1; jj++) {
         for (let ii = i; ii < i1; ii++) {
           if (!cells[jj * (nx - 1) + ii]) continue;
           const a = jj * nx + ii;
-          out.push(a, a + 1, a + nx, a + 1, a + nx + 1, a + nx);
+          push6(a, a + 1, a + nx, a + 1, a + nx + 1, a + nx);
         }
       }
     }
+    yield j;
   }
-  return Uint32Array.from(out);
+  return out.slice(0, n);
 }
 
 /**
@@ -283,14 +309,53 @@ export function createMirrors({ renderer, scene, session, cabinScene, faces, opt
     const fi = (x - c.x0) / c.step, fj = (y - c.y0) / c.step;
     return [Math.floor(fi - r), Math.ceil(fi + r), Math.floor(fj - r), Math.ceil(fj + r)];
   };
+  // The near-ground rebuild when the car has moved is spread over the frames (GROUND_BUDGET_MS of each mirror frame,
+  // about 25 frames for the three grids; measured at 10 to 35 ms a grid in one go, a 60 to 100 ms frame): the old
+  // index, fine within FINE_M of where it was built, serves meanwhile, since the car is at most FINE_STEP_M plus a
+  // second's travel from there. A grid whose full index was replaced (a patch cut out of it) is rebuilt at once.
+  // Its cost: stats().ground, and a user-timing measure 'drive:mirror-ground' around each frame's share of the work.
+  const rebuilt = { count: 0, lastMs: 0, maxMs: 0, maxStepMs: 0, totalMs: 0, indices: 0, pending: 0 };
+  let job = null; // { c, it, at, ms }
+  const measure = (t0) => { const ms = performance.now() - t0; performance.measure?.('drive:mirror-ground', { start: t0, end: t0 + ms }); return ms; };
+  const done = (c, index, ms) => {
+    c.index = new THREE.BufferAttribute(index, 1);
+    rebuilt.count++; rebuilt.lastMs = ms; rebuilt.maxMs = Math.max(rebuilt.maxMs, ms); rebuilt.totalMs += ms; rebuilt.indices = c.index.count;
+  };
   const swapGround = (on, x, y) => {
-    for (const c of coarse) {
-      const moved = on && Number.isFinite(x) && (!c.at || Math.hypot(x - c.at[0], y - c.at[1]) > FINE_STEP_M);
-      if (on && (c.geometry.index !== c.full || moved)) {
-        if (c.geometry.index !== c.full) c.full = c.geometry.index;
-        if (Number.isFinite(x)) c.at = [x, y];
-        c.index = new THREE.BufferAttribute(coarseGridIndex(c.full.array, c.nx, c.ny, c.stride, c.at && fineOf(c, ...c.at)), 1);
+    if (on && Number.isFinite(x)) {
+      const t0 = performance.now();
+      const end = t0 + GROUND_BUDGET_MS;
+      for (const c of coarse) {
+        if (c.geometry.index === c.full) continue;
+        // a new full index: at once, and a pending rebuild of the old one is dropped
+        if (job?.c === c) job = null;
+        c.full = c.geometry.index;
+        c.cells = gridCells(c.full.array, c.nx, c.ny);
+        c.at = [x, y];
+        done(c, coarseGridIndex(c.full.array, c.nx, c.ny, c.stride, fineOf(c, x, y)), 0);
       }
+      if (!job) {
+        const c = coarse.find((g) => !g.at || Math.hypot(x - g.at[0], y - g.at[1]) > FINE_STEP_M);
+        if (c) {
+          c.cells ||= gridCells(c.full.array, c.nx, c.ny);
+          job = { c, at: [x, y], ms: 0, it: coarseGridSteps(c.full.array, c.nx, c.ny, c.stride, fineOf(c, x, y), c.cells) };
+          if (!c.at) { // the first: at once
+            let r; do r = job.it.next(); while (!r.done);
+            c.at = job.at; done(c, r.value, 0); job = null;
+          }
+        }
+      }
+      if (job) {
+        let r;
+        do r = job.it.next(); while (!r.done && performance.now() < end);
+        const ms = measure(t0);
+        job.ms += ms;
+        rebuilt.maxStepMs = Math.max(rebuilt.maxStepMs, ms);
+        if (r.done) { job.c.at = job.at; done(job.c, r.value, job.ms); job = null; }
+      }
+      rebuilt.pending = job ? 1 : 0;
+    }
+    for (const c of coarse) {
       // a geometry's index can be swapped between draws: the renderer binds whichever it finds
       c.geometry.index = on ? c.index : c.full;
     }
@@ -484,6 +549,7 @@ export function createMirrors({ renderer, scene, session, cabinScene, faces, opt
     },
     stats: () => ({
       enabled, renders, frame: frameNo, pixels: lastPixels, calls: lastCalls, js: timing.summary(), submit: submits.summary(),
+      ground: { ...rebuilt, lastMs: +rebuilt.lastMs.toFixed(2), maxMs: +rebuilt.maxMs.toFixed(2), maxStepMs: +rebuilt.maxStepMs.toFixed(2), totalMs: +rebuilt.totalMs.toFixed(2) },
       sizes: Object.fromEntries(Object.values(mirrors).map((m) => [m.name, [...m.opt.size, m.opt.every]])),
     }),
     dispose() {

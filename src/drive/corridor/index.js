@@ -10,13 +10,14 @@
  *
  * The material is the app's own for its low buildings (lightAtNight over a vertex-coloured Lambert, as
  * src/city/buildings.js makes it), so by day they are the same grey and at night they get the same lit
- * windows, following the shared `night` uniform the app's look sets. While driving that uniform is the look's
+ * windows, following the shared `night` uniform the app's look sets; ./material.js adds a share per wall (none on
+ * canopies, sheds, blank and low walls; fewer lit in warehouses and stores). While driving that uniform is the look's
  * `lights` (0..1, src/drive/look.js), so the windows here fade in through dusk with the city's, with no work here.
  *
  * Part interface (src/drive/session.js): { name, update(frame), setLook(look), whenSettled(), stats(), dispose() }.
  */
 import * as THREE from 'three';
-import { lightAtNight } from '../../night.js';
+import { corridorMaterial } from './material.js';
 import { decodeCell } from './format.js';
 import { groundUnder } from './mesher.js';
 
@@ -40,7 +41,7 @@ export function createCorridor({
   const group = new THREE.Group();
   group.name = 'corridor';
   parent.add(group);
-  const mat = material || lightAtNight(new THREE.MeshLambertMaterial({ vertexColors: true }));
+  const mat = material || corridorMaterial();
   const worker = createWorker();
   const cells = index.cells.map((c) => ({ ...c, want: false, state: 'none', mesh: null, retryAt: 0, dist: Infinity, load: 0 }));
   const tall = index.tall ? { ...index.tall, want: true, state: 'none', mesh: null, retryAt: 0, dist: 0, load: 0, isTall: true } : null;
@@ -60,6 +61,7 @@ export function createCorridor({
     g.setAttribute('position', new THREE.BufferAttribute(m.positions, 3));
     g.setAttribute('normal', new THREE.BufferAttribute(m.normals, 3));
     g.setAttribute('color', new THREE.BufferAttribute(m.colors, 3));
+    if (m.winLit) g.setAttribute('winLit', new THREE.BufferAttribute(m.winLit, 1, true)); // the walls' window share (material.js)
     g.setIndex(new THREE.BufferAttribute(m.indices, 1));
     const [sx, sy, sz, r] = m.sphere;
     g.boundingSphere = new THREE.Sphere(new THREE.Vector3(sx, sy, sz), r);

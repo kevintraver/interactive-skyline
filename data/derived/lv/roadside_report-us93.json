@@ -651,20 +651,20 @@
     "unit": "m of fill",
     "rule": "barrier where fill > threshold",
     "positives_train": 583,
-    "stations_train": 10623,
+    "stations_train": 11292,
     "positives_test": 254,
     "stations_test": 1979,
     "threshold": 3.0,
     "fitted": false,
-    "best_fit": 1.76,
+    "best_fit": 1.81,
     "train_at_best_fit": {
-     "precision": 0.124,
-     "recall": 0.674,
+     "precision": 0.125,
+     "recall": 0.671,
      "f1": 0.21,
-     "tp": 393,
-     "fp": 2771,
-     "fn": 190,
-     "stations": 10623
+     "tp": 391,
+     "fp": 2747,
+     "fn": 192,
+     "stations": 11292
     },
     "why": "the best threshold scores F1 0.21 on the training share (< 0.3): the feature does not explain where OSM maps this barrier; design value kept",
     "holdout": {
@@ -683,21 +683,21 @@
    }
   },
   "osm_mapped_m": {
-   "concrete": 10100,
-   "wall": 792,
+   "concrete": 10612,
+   "wall": 684,
    "guardrail": 3348,
    "fence": 1352
   },
   "placed_m": {
-   "concrete mapped": 6944,
+   "concrete mapped": 7384,
    "concrete rule": 26452,
    "guardrail mapped": 2940,
-   "guardrail rule": 20072,
-   "wall mapped": 692
+   "guardrail rule": 23216,
+   "wall mapped": 568
   },
   "roads": {
    "us93.main": {
-    "runs": 337,
+    "runs": 333,
     "delineators": 649
    },
    "us93s.opp": {
@@ -989,8 +989,8 @@
     "delineators": 22
    },
    "us93.x76A.off": {
-    "runs": 25,
-    "delineators": 58
+    "runs": 18,
+    "delineators": 54
    },
    "us93s.x23.off": {
     "runs": 9,
@@ -1019,6 +1019,22 @@
    "us93s.x20.on": {
     "runs": 6,
     "delineators": 26
+   },
+   "us93.main.in": {
+    "runs": 9,
+    "delineators": 13
+   },
+   "us93.main.out": {
+    "runs": 5,
+    "delineators": 17
+   },
+   "us93s.opp.in": {
+    "runs": 3,
+    "delineators": 19
+   },
+   "us93s.opp.out": {
+    "runs": 10,
+    "delineators": 11
    }
   },
   "check_points": [
@@ -1516,7 +1532,7 @@
  "files": {
   "signs-us93.json": 33901,
   "limit": 150000,
-  "barriers-us93.json": 43652,
+  "barriers-us93.json": 44552,
   "barrier_limit": 100000,
   "ok": true
  },

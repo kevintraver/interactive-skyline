@@ -135,3 +135,34 @@ def test_product_is_small_and_textless():
     assert doc["fields"][:2] == ["x", "y"]
     for row in doc["boards"]:
         assert all(v is None or isinstance(v, (int, float)) for v in row)  # numbers only: nothing to read on a face
+
+
+def test_product_bottoms_follow_the_rule_over_the_drawn_ground():
+    # the runtime stands each board on the drawn ground (src/drive/roadside/billboards.js: groundY = terrain.surfaceY) and
+    # lifts its panel by `bottom`; the build sets `bottom` by the same ground (lib.billboards place: at least 4.5 m over a
+    # carriageway within 80 m, at most 20 m). A product built before that rule (on the bilinear height) fails here.
+    from lib.billboards import BOTTOM, is_carriageway
+    from lib.crosssection import normalise_sections, pavement_edges
+    from lib.heights import load_heights
+    from lib.roadnet import decode_roadnet
+    p = ROOT / "public" / "data" / "lv" / "billboards.json"
+    doc = json.loads(p.read_text())
+    k = {f: i for i, f in enumerate(doc["fields"])}
+    roads = []
+    for f in sorted((ROOT / "public" / "data" / "lv").glob("roadnet*.json")):
+        for r in decode_roadnet(json.loads(f.read_text()), f.with_suffix(".bin").read_bytes()):
+            r["secs"] = normalise_sections(r["sections"])
+            roads.append(r)
+    mains = RoadIndex([r for r in roads if is_carriageway(r)], lambda r, s: pavement_edges(r["secs"], s))
+    ground = load_heights("lv").drawn_at
+    lifted = 0
+    for row in doc["boards"]:
+        x, y, bottom = row[k["x"]], row[k["y"]], row[k["bottom"]]
+        assert bottom >= min(BOTTOM.values()) - 0.01
+        j = mains.nearest_main(x, y, 80.0)
+        if j is None:
+            continue
+        need = min(20.0, float(mains.h[j]) - float(ground(x, y)) + 4.5)
+        assert bottom >= need - 0.011, (x, y, bottom, need)
+        lifted += need > max(BOTTOM.values()) + 0.01
+    assert lifted > 0  # the rule does lift some (boards beside raised roads)

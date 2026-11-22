@@ -53,6 +53,18 @@ describe('credits', () => {
     }
   });
 
+  it('credits the billboard advertisements made for this project, as fictional', () => {
+    const { images } = json('public/textures/billboards/manifest.json');
+    expect(images.length).toBe(40);
+    const c = drive.find((i) => /advertisements/i.test(i.name));
+    expect(c, 'a line for the billboard artwork').toBeTruthy();
+    expect(c.use).toMatch(/forty/);
+    expect(c.use).toMatch(/image model.*Codex/);
+    expect(c.use).toMatch(/lettering set in code/);
+    expect(c.use).toMatch(/fictional/);
+    expect(c.use).toMatch(/resemblance to a real business is unintended/);
+  });
+
   it('renders every source, escaped', () => {
     const html = creditsHtml([{ title: 'T <x>', items: [{ name: 'A & B', use: 'u', url: 'https://e.org/?a=1&b=2', licence: null }] }]);
     expect(html).toContain('T &lt;x&gt;');

@@ -877,7 +877,7 @@
     "unit": "m of fill",
     "rule": "barrier where fill > threshold",
     "positives_train": 44,
-    "stations_train": 6577,
+    "stations_train": 6498,
     "positives_test": 0,
     "stations_test": 750,
     "threshold": 3.0,
@@ -899,25 +899,25 @@
    }
   },
   "osm_mapped_m": {
-   "concrete": 9852,
+   "concrete": 11248,
    "wall": 1188,
    "fence": 972,
    "guardrail": 176
   },
   "placed_m": {
-   "concrete mapped": 8268,
+   "concrete mapped": 9544,
    "concrete rule": 9736,
-   "guardrail rule": 16744,
+   "guardrail rule": 17036,
    "wall mapped": 1084
   },
   "roads": {
    "i15s.main": {
     "runs": 191,
-    "delineators": 530
+    "delineators": 527
    },
    "i15n.opp": {
-    "runs": 79,
-    "delineators": 296
+    "runs": 78,
+    "delineators": 295
    },
    "i15s.xkm6.off": {
     "runs": 0,
@@ -1084,8 +1084,8 @@
     "delineators": 0
    },
    "i15n.xkm1.on": {
-    "runs": 2,
-    "delineators": 88
+    "runs": 1,
+    "delineators": 92
    },
    "i15n.x39.on": {
     "runs": 3,
@@ -1194,6 +1194,22 @@
    "i15n.x39.off": {
     "runs": 10,
     "delineators": 44
+   },
+   "i15s.main.in": {
+    "runs": 0,
+    "delineators": 13
+   },
+   "i15s.main.out": {
+    "runs": 2,
+    "delineators": 14
+   },
+   "i15n.opp.in": {
+    "runs": 8,
+    "delineators": 13
+   },
+   "i15n.opp.out": {
+    "runs": 0,
+    "delineators": 13
    }
   },
   "check_points": [
@@ -1691,7 +1707,7 @@
  "files": {
   "signs-i15s.json": 32366,
   "limit": 150000,
-  "barriers-i15s.json": 33915,
+  "barriers-i15s.json": 34699,
   "barrier_limit": 100000,
   "ok": true
  },

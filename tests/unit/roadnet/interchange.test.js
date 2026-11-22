@@ -115,6 +115,15 @@ describe('structure mesher', () => {
     }
   });
 
+  it('a carriageway that is itself a bridge has parapets on both edges, but none on a side a gore hides', () => {
+    const cs = edgesAt(cross, 150);
+    expect(modePieces(cs, { parapet: true }).filter((p) => p.kind === KIND.structure)).toHaveLength(6);
+    const right = modePieces(cs, { parapet: true, hideR: true }).filter((p) => p.kind === KIND.structure);
+    expect(right).toHaveLength(3);
+    expect(Math.max(...right.map((p) => p.dl))).toBeGreaterThan(0); // the left one stays
+    expect(modePieces(cs, { parapet: true, hideL: true }).filter((p) => p.kind === KIND.structure && p.dl > 0)).toHaveLength(0);
+  });
+
   it('meshes the pier as a box from h0 to h1, squared to the road, and the abutments as slopes', () => {
     const m = meshChunk({ road: cross, s0: 0, s1: 300, lod: 1, ...opts });
     const pier = cross.structures.find((s) => s.kind === 'pier');

@@ -36,7 +36,7 @@ import requests
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from lib.billboards import (DIGITAL_SHARE, PANEL_CLEAR, POLE_CLEAR, TWO_SIDED_SHARE, RoadIndex, clark_records,  # noqa: E402
-                            clv_records, dedupe, encode, osm_records, place)
+                            clv_records, dedupe, encode, is_carriageway, osm_records, place)
 from lib.crosssection import normalise_sections, pavement_edges  # noqa: E402
 from lib.frame import create_frame  # noqa: E402
 from lib.heights import load_heights  # noqa: E402
@@ -107,7 +107,7 @@ def main():
     roads = load_roads(data)
     edges = lambda r, s: pavement_edges(r["secs"], s)  # noqa: E731
     index = RoadIndex(roads, edges)
-    mains = [r for r in roads if r["id"].endswith((".main", ".opp"))]
+    mains = [r for r in roads if is_carriageway(r)]
     route_index = RoadIndex(mains, edges)
 
     # the routes' box, for the requests

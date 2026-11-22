@@ -4442,13 +4442,73 @@
      "note": "drawn ground at most worst_m above any ramp's or crossing's pavement; stations within 0.1 m counted"
     }
    },
+   "leads": {
+    "i15n.main.in": {
+     "built": true,
+     "road": "i15n.main.in",
+     "length_m": 1536.0,
+     "osm_beyond_m": 3974.0,
+     "eased_m": 0.082,
+     "fit_p95_m": 0.186,
+     "bridges": 0,
+     "held_decks": 0,
+     "max_grade": 0.0026,
+     "buried_below_envelope_m": 0.0
+    },
+    "i15n.main.out": {
+     "built": true,
+     "road": "i15n.main.out",
+     "length_m": 1536.0,
+     "osm_beyond_m": 4714.0,
+     "eased_m": 0.336,
+     "fit_p95_m": 0.411,
+     "bridges": 7,
+     "held_decks": 0,
+     "max_grade": 0.0156,
+     "buried_below_envelope_m": 0.0
+    },
+    "i15s.opp.in": {
+     "built": true,
+     "road": "i15s.opp.in",
+     "length_m": 1536.0,
+     "osm_beyond_m": 3332.0,
+     "eased_m": 0.003,
+     "fit_p95_m": 0.307,
+     "bridges": 8,
+     "held_decks": 0,
+     "max_grade": 0.0179,
+     "buried_below_envelope_m": 0.0
+    },
+    "i15s.opp.out": {
+     "built": true,
+     "road": "i15s.opp.out",
+     "length_m": 1536.0,
+     "osm_beyond_m": 3390.0,
+     "eased_m": 0.058,
+     "fit_p95_m": 0.371,
+     "bridges": 0,
+     "held_decks": 0,
+     "max_grade": 0.0015,
+     "buried_below_envelope_m": 0.0
+    }
+   },
+   "leads_narrowed": [
+    {
+     "pair": [
+      "i15n.main.out",
+      "i15s.opp.in"
+     ],
+     "stations_tight": 19,
+     "min_gap_after_m": 2.11
+    }
+   ],
    "interchanges": {
     "counts": {
      "ramps": 68,
      "gores": 68,
      "diverge": 35,
      "merge": 33,
-     "connects": 22,
+     "connects": 30,
      "crossings": 14,
      "decks": 31,
      "piers": 108,
@@ -5811,33 +5871,12 @@
    "i15n.main",
    "i15s.opp"
   ],
-  "identical": false,
-  "plan_identical": true,
-  "heights": [
-   {
-    "road": "i15n.main",
-    "heights_changed": 7078,
-    "max_change_m": 1.72,
-    "changed_s": [
-     0.0,
-     68340.0
-    ]
-   },
-   {
-    "road": "i15s.opp",
-    "heights_changed": 7674,
-    "max_change_m": 0.53,
-    "changed_s": [
-     140.0,
-     68352.0
-    ]
-   }
-  ]
+  "identical": true
  },
  "files": {
-  "roadnet.json": 234198,
-  "roadnet.bin": 1431248,
-  "total": 1665446,
+  "roadnet.json": 240709,
+  "roadnet.bin": 1474368,
+  "total": 1715077,
   "ok": true
  }
 }

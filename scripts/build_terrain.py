@@ -25,7 +25,8 @@ inside it: build_terrain.py fetches the outlines once from Overpass and writes
 them with the level the patch's own heights give each body of water. A patch
 may name routes to "carve": the elevation source predates part of the road, so
 the road's cuts are carved into the patch along each carriageway's design
-profile (scripts/lib/carve.py) from the plan of the route's RoadNet, before
+profile (scripts/lib/carve.py) from the plan of the route's RoadNet (its
+carriageways and their lead-ins and lead-outs), before
 the patch is eased into the wide grid; build the routes' roads after.
 
 Output: public/data/<city>/terrain-<grid>.bin (uint16 decimetres, row 0 = south)
@@ -148,7 +149,10 @@ def build_patch(p, wide_meta):
             f = rt["files"]["roadnet"]
             doc = json.loads((OUT / f).read_text())
             blob = (OUT / (f[:-len(".json")] + ".bin")).read_bytes()
-            roads += carriageways(doc, blob, [rt["road"], *([rt["opposite"]] if rt.get("opposite") else [])])
+            cws = [rt["road"], *([rt["opposite"]] if rt.get("opposite") else [])]
+            # and their lead-ins and lead-outs (build_roads.py: the same road on beyond the route's ends, as scenery)
+            leads = [r["id"] for r in doc["roads"] if (r.get("lead") or {}).get("of") in cws]
+            roads += carriageways(doc, blob, cws + leads)
         g = {"x0": p["x0"], "y0": p["y0"], "step": step, "nx": h.shape[1], "ny": h.shape[0]}
         h, report["carve"] = carve(h, g, roads)
         for rid, c in report["carve"].items():
