@@ -1,12 +1,13 @@
 {
   "bundle": {
     "chunks": {
+      "client.js": 12415,
       "generateMeshBVH.worker.js": 47185,
-      "index.css": 3651,
-      "index.js": 244332
+      "index.css": 3918,
+      "index.js": 245446
     },
-    "cssGzip": 3651,
-    "jsGzip": 291517
+    "cssGzip": 3918,
+    "jsGzip": 305046
   },
   "bytes": {
     "lv": {
