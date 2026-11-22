@@ -104,18 +104,19 @@ function createMeter(renderer, colorTexture) {
     clampLog, exposureAt,
     /** Run the passes for the frame just drawn and start a readback if none is in flight. */
     measure(exposure, gen = 0) {
-      if (pending) return;
+      if (pending) return null;
       const previous = renderer.getRenderTarget();
       for (const [quad, t] of quads) { renderer.setRenderTarget(t); quad.render(renderer); }
       renderer.setRenderTarget(previous);
-      const k = exposure;
+      const k = exposure, askedAt = performance.now(); // the time of the frame measured, not of the readback
       pending = renderer.readRenderTargetPixelsAsync(t1, 0, 0, 1, 1).then((px) => {
         pending = null;
         const meanLog = px[0] / Math.max(px[1], 1e-6);
         // back to scene luminance: the buffer held cd/m2 x exposure
-        latest = { luminanceCdM2: 2 ** meanLog / k, at: performance.now(), gen };
+        latest = { luminanceCdM2: 2 ** meanLog / k, at: askedAt, gen };
         return latest;
       }, () => { pending = null; return null; });
+      return pending;
     },
     get latest() { return latest; },
     reset() { latest = null; },
@@ -131,10 +132,10 @@ function createMeter(renderer, colorTexture) {
  * time seek in the same view is right on its first frame; the first meter reading taken after the seek is then
  * applied at once. Continuous change (a pan, the clock playing) adapts with the time constants above.
  */
-export function createExposure({ renderer, pipeline, prior, uniform: exposureUniform, settings = {}, clock = null, offsetEv = 0 }) {
+export function createExposure({ renderer, pipeline, prior, uniform: exposureUniform, settings = {}, clock = null, offsetEv = 0, invalidate = () => {} }) {
   const meter = pipeline && pipeline.scenePass ? createMeter(renderer, pipeline.scenePass.getTexture('output')) : null;
   const state = { mode: settings.exposureMode || 'eye', compensation: settings.exposureComp || 0, enabled: true,
-    ev: NaN, target: NaN, prior: NaN, bias: 0, biases: [], metered: null, settled: false, snapRequested: true, awaiting: !!meter, lastMs: null, gen: 0 };
+    ev: NaN, target: NaN, prior: NaN, bias: 0, biases: [], metered: null, meteredAt: -Infinity, settled: false, snapRequested: true, awaiting: !!meter, lastMs: null, gen: 0 };
   if (clock) {
     clock.on('seek', () => { state.snapRequested = true; });
     clock.on('rate', () => { if (Math.abs(clock.rate) > 60) state.snapRequested = true; });
@@ -169,6 +170,7 @@ export function createExposure({ renderer, pipeline, prior, uniform: exposureUni
       const reading = meter && meter.latest && meter.latest.gen === state.gen ? meter.latest : null;
       const metered = reading ? ev100FromLuminance(reading.luminanceCdM2) : null;
       state.metered = metered;
+      state.meteredAt = reading ? reading.at : state.meteredAt; // when the reading in use was taken (ms)
       if (metered !== null) {
         state.bias = Math.min(CLAMP_ABOVE_EV, Math.max(-CLAMP_BELOW_EV, metered - state.prior));
         const i = state.biases.findIndex(([p]) => Math.abs(p - state.prior) < 0.25);
@@ -187,7 +189,16 @@ export function createExposure({ renderer, pipeline, prior, uniform: exposureUni
       if (meter) meter.clampLog.value = Math.log2(Math.max(2 ** state.prior * 12.5 / 100, 1e-9) * exposureUniform.value) + METER_CLAMP_STOPS;
     },
     /** After the frame is drawn: meter it. */
-    afterRender() { if (state.enabled && meter) meter.measure(exposureUniform.value, state.gen); },
+    afterRender() {
+      if (!state.enabled || !meter) return;
+      const p = meter.measure(exposureUniform.value, state.gen);
+      // a reading that moves the target asks for frames (the scene may be idle by then: a pan draws one frame)
+      if (p) p.then((r) => {
+        if (!r || r.gen !== state.gen || !state.enabled) return;
+        const t = targetEv(ev100FromLuminance(r.luminanceCdM2), state.prior);
+        if (state.awaiting || Math.abs(t - state.ev) >= SETTLED_EV) { state.settled = false; invalidate(); }
+      });
+    },
     /** Continuous until the eye has adapted (section 5.5); idle once settled. */
     demand() { return state.enabled && !state.settled ? 'continuous' : 'idle'; },
     get ev100() { return state.ev; },

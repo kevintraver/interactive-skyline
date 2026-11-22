@@ -35,7 +35,7 @@ export function createLook(app, { display = displayFromSearch(globalThis.locatio
   physical.value = classicDisplay ? 0 : 1;
 
   const current = { keyLux: 0, ambientLux: 0, cityLux: 0, priorEv: 15, keyAltDeg: 32 };
-  const exposure = createExposure({ renderer, pipeline, uniform: exposureUniform, clock, settings, offsetEv: SHIPPED_OFFSET_EV,
+  const exposure = createExposure({ renderer, pipeline, uniform: exposureUniform, clock, settings, offsetEv: SHIPPED_OFFSET_EV, invalidate: app.invalidate,
     prior: () => current.priorEv });
   if (classicDisplay) {
     exposure.hold(1);

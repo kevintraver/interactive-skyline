@@ -40,7 +40,10 @@ test.beforeAll(async ({ browser }) => {
   baseline = readJson(file, null);
   recording = UPDATING || !baseline;
   if (recording) {
-    if (fs.existsSync(file)) fs.rmSync(file);
+    // start a fresh file once per day's recording: a retried test restarts the worker and runs this again, and must
+    // not delete what the run has already written (it did in phase 1 and 2's first attempt)
+    const today = new Date().toISOString().slice(0, 10);
+    if (fs.existsSync(file) && readJson(file, {}).recorded !== today) fs.rmSync(file);
     writeJsonAt(file, ['machine'], { renderer: gpu.renderer, cores, software, os: `${os.platform()} ${os.arch()}` });
     writeJsonAt(file, ['recorded'], new Date().toISOString().slice(0, 10));
   }
@@ -60,17 +63,18 @@ for (const scene of SCENES) {
   test(`frame time ${sceneName(scene)}`, async ({ page }) => {
     await boot(page, scene.city, Q);
     await stage(page, scene);
-    // five batches of 120 frames; the batch whose median is the median of the five gives both numbers (GPU clocks
-    // vary between batches, measured up to 30 % on an M4)
-    const { batches, isolated } = await page.evaluate(async () => {
+    // Phase 2: throughput, 20 batches of 12 frames submitted back to back (perf.throughput()): GPU timer queries
+    // around a frame timed alone follow the GPU's clock on ANGLE Metal, and on the new renderer they read about four
+    // times its throughput (68 against 16 ms, measured 22 November 2026; docs/plans/notes/01-phase2-spike.md).
+    // The median and the 95th percentile are over the batches' mean frame times.
+    const { times, isolated } = await page.evaluate(async () => {
       const out = [];
-      for (let i = 0; i < 5; i++) out.push(await window.__skyline.perf.renderFrames(120));
-      return { batches: out, isolated: crossOriginIsolated };
+      await window.__skyline.perf.throughput(30, 10);
+      for (let i = 0; i < 20; i++) out.push((await window.__skyline.perf.throughput(12, 0)).msPerFrame);
+      return { times: out, isolated: crossOriginIsolated };
     });
     expect(isolated, 'the page is cross-origin isolated (fine timers)').toBe(true);
-    expect(batches[0].ms.length, 'most frames timed').toBeGreaterThan(100);
-    const times = batches.map((b) => b.ms).sort((a, b) => median(a) - median(b))[2];
-    const m = { median: round(median(times), 3), p95: round(quantile(times, 0.95), 3), method: batches[0].method };
+    const m = { median: round(median(times), 3), p95: round(quantile(times, 0.95), 3), method: 'throughput' };
     test.info().annotations.push({ type: 'frame', description: JSON.stringify(m) });
     if (recording) return writeJsonAt(file, ['frame', sceneName(scene)], m);
     const base = baseline.frame?.[sceneName(scene)] || {};
@@ -169,7 +173,7 @@ test('exposure settles after a pan from the Strip to the dark west', async ({ pa
   await page.evaluate(() => { const s = window.__skyline; s.attractions.freeze(47); s.setSetting('night', true); s.setView('strat'); });
   await page.waitForFunction(() => window.__skyline.look.exposure.state.settled, null, { timeout: 60_000 });
   const r = await page.evaluate(() => new Promise((done) => {
-    const s = window.__skyline, c = s.controls, t0 = performance.now(), before = s.look.exposure.state.ev;
+    const s = window.__skyline, c = s.controls, t0 = performance.now(), before = s.look.exposure.state.ev, at0 = s.look.exposure.state.meteredAt;
     // turn the view to the west, away from the lit towers, as one drag would
     const d = s.camera.position.clone().sub(c.target);
     c.target.set(s.camera.position.x - 3000, s.camera.position.y - 400, s.camera.position.z);
@@ -177,7 +181,8 @@ test('exposure settles after a pan from the Strip to the dark west', async ({ pa
     s.invalidate();
     const check = () => {
       const st = s.look.exposure.state, el = performance.now() - t0;
-      if (st.metered !== null && Math.abs(st.ev - st.target) < 0.5 && el > 50) done({ ms: el, before, ev: st.ev, target: st.target });
+      // a reading of a frame drawn after the pan, and the exposure within 0.5 EV of where that reading sends it
+      if (st.meteredAt > at0 && st.meteredAt > t0 && Math.abs(st.ev - st.target) < 0.5) done({ ms: el, before, ev: st.ev, target: st.target, metered: st.metered });
       else if (el > 10000) done({ ms: el, before, ev: st.ev, target: st.target, timeout: true });
       else requestAnimationFrame(check);
     };
