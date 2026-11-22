@@ -88,6 +88,25 @@
         <label><input type="radio" name="units" value="ft" /><span>Feet</span></label>
         <label><input type="radio" name="units" value="m" /><span>Meters</span></label>
       </div>
+      <div class="sep" role="separator"></div>
+      <div class="field">
+        <span class="row"><span>Quality</span><output id="quality-out"></output></span>
+        <div class="seg" role="group" aria-label="Quality">
+          <label><input type="radio" name="quality" value="auto" /><span>Auto</span></label>
+          <label><input type="radio" name="quality" value="low" /><span>Low</span></label>
+          <label><input type="radio" name="quality" value="high" /><span>High</span></label>
+          <label><input type="radio" name="quality" value="ultra" /><span>Ultra</span></label>
+        </div>
+      </div>
+      <label class="field">
+        <span class="row"><span>Exposure</span><output id="exposure-out"></output></span>
+        <input type="range" name="exposureComp" min="-2" max="2" step="0.5" aria-label="Exposure compensation" />
+      </label>
+      <div class="seg" role="group" aria-label="Exposure mode">
+        <label><input type="radio" name="exposureMode" value="eye" /><span>As the eye sees</span></label>
+        <label><input type="radio" name="exposureMode" value="camera" /><span>As a camera</span></label>
+      </div>
+      <label class="check"><input type="checkbox" name="reduceFlashes" /><span>Reduce flashes</span></label>
       <button type="button" id="settings-reset">Reset options</button>
       <p id="about"></p>
     </form>
