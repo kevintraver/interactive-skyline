@@ -26,13 +26,23 @@ import { initCityMenu } from './ui/cityMenu.js';
 import { initSkyPopover } from './ui/skyPopover.js';
 import { initTransport } from './ui/transport.js';
 import { initAttractions } from './attractions.js';
+import { createPipeline } from './render/pipeline.js';
+import { createLook } from './render/look.js';
+import { initQuality } from './render/setupQuality.js';
+import { createBench } from './render/bench.js';
 import cities from '../data/cities.json';
 
-const app = createApp(cities);
+const app = await createApp(cities);
 const { cityId, city, pending, settings, scene, camera, renderer, controls, loop, invalidate } = app;
 app.format = createFormat(settings, city);
 app.sky = createLegacySky().init(app);
 initSim(app);
+// plan 01, phase 2: the render pipeline and the shipped look (physical light, automatic exposure) on the new
+// renderer; the classic renderer (?renderer=legacy) draws the scene directly, as before
+const pipeline = app.pipeline = createPipeline({ renderer, scene, camera, legacy: app.rendererKind === 'legacy', exposure: app.env.nodes.exposure });
+app.draw = () => pipeline.render();
+if (!pipeline.legacy) loop.add(app.look = createLook(app), 44);
+initQuality(app);
 
 // ------------------------------------------------------------------ load
 const model = await pending.model;
@@ -68,20 +78,31 @@ applyTimeParams(app);
 document.getElementById('loading').classList.add('done');
 performance.mark('skyline-ready');
 
+let lastFrame = null;
 loop.start(renderer, {
   before(now) {
     app.stepFlight(now);
     controls.update();
   },
-  render() {
+  render(now) {
     // while the camera is still, so the extra frames cost nothing during a drag
     if (app.views.stale && !app.flying() && !app.dragging()) { app.views.stale = false; app.views.snap(); }
-    renderer.render(scene, camera);
+    pipeline.render();
+    if (app.look) app.look.afterRender();
+    // the quality governor sees the interval between frames drawn back to back (section 7.14, T2.7)
+    if (loop.tier === 'continuous' && lastFrame !== null && now - lastFrame < 250) app.quality.frame(now, now - lastFrame);
+    lastFrame = now;
     if (!performance.getEntriesByName('skyline-frame').length) performance.mark('skyline-frame');
   },
 });
 
 installHooks(app);
+// ?bench=1: the per-pass benchmark (plan 01, T2.8)
+if (new URLSearchParams(location.search).get('bench') === '1') {
+  window.__skyline.bench = app.bench = createBench(app);
+  setTimeout(() => app.bench.run(), 1000);
+}
 
-// extras, the fountain show and animated LED surfaces (skyline-integration v5, src/attractions.js)
-initAttractions({ cityId, scene, camera, renderer, settings, invalidate, groundY, tall });
+// extras, the fountain show and animated LED surfaces (skyline-integration v7, src/attractions.js): a subsystem of
+// the frame loop, its show time from the simulation clock (plan 01, T2.11)
+initAttractions({ cityId, scene, camera, renderer, settings, invalidate, groundY, tall, loop, clock: app.clock, env: app.env });
