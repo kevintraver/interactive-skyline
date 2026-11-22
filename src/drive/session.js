@@ -78,6 +78,8 @@ export async function createSession(ctx, terrain, hooks) {
   const journeys = new Map();
 
   let journey = null, pose = null, needPose = true, lastNow = null, loading = false, updateId = 0;
+  // the hold-position lock (plan 02, section 4.3) and the start chip the visitor last chose
+  let locked = false, startKey = 'reveal';
   const timings = { total: createTimings(), journey: createTimings(), chunks: createTimings(), rig: createTimings(), ui: createTimings() };
   const viewport = () => ({ width: innerWidth, height: innerHeight });
 
@@ -122,6 +124,10 @@ export async function createSession(ctx, terrain, hooks) {
     get journey() { return journey; },
     get pose() { return pose; },
     get loading() { return loading; },
+    get locked() { return locked; },
+    get startKey() { return startKey; },
+    /** The car is at the end of the route, holding there. */
+    get arrived() { return !!(pose && journey && pose.s >= journey.s1 - 1); },
 
     /**
      * Put the car on a route. With no time, the default moment (moment.js): today, timed so the reveal
@@ -151,7 +157,39 @@ export async function createSession(ctx, terrain, hooks) {
       if (group.visible) update();
       needPose = true;
     },
-    seekBy(seconds) { session.seek({ t: clock.now() + seconds * 1000 }); },
+    seekBy(seconds) { session.setTime(clock.now() + seconds * 1000); },
+
+    /** Change the time. Unlocked the car drives along the journey to where it is then; locked it stays. */
+    setTime(t) {
+      if (!Number.isFinite(t)) return;
+      if (locked && pose) session.keepPlace(t); else session.seek({ t });
+    },
+    /** Change the time and keep the car where it is, lock or no lock (the time-of-day jumps). */
+    keepPlace(t) {
+      if (!Number.isFinite(t) || !pose) return;
+      session.seek({ s: pose.s, t });
+    },
+    /** Locked, the journey is re-based every frame so the car holds its place while the clock runs. */
+    setLocked(on) { locked = !!on; },
+    setRate(rate) { clock.setRate(rate); },
+    /** The default moment (moment.js) for where the car is, on the clock's own day. */
+    duskAt() {
+      if (!pose) return NaN;
+      return defaultDeparture({ journey, env, startS: pose.s, nowMs: clock.now() }).startMs;
+    },
+    /** A start chip: the car goes to that start at the default moment for it. */
+    startFrom(key) {
+      const s = journey?.route.starts?.[key];
+      if (!Number.isFinite(s)) return;
+      startKey = key;
+      session.configure(journey.route.id, { s });
+      if (group.visible) update();
+    },
+    /** From the end of the route: drive it again from the chosen start, on the same timing. */
+    restart() {
+      const s = journey?.route.starts?.[startKey] ?? journey?.startS;
+      if (Number.isFinite(s)) session.seek({ s });
+    },
 
     /** Show or hide the drive's scene objects. */
     show(on) {
@@ -176,6 +214,7 @@ export async function createSession(ctx, terrain, hooks) {
       lastNow = now;
       const before = clock.now();
       clock.advance(dt);
+      if (locked && pose && clock.now() !== before) journey.rebase(pose.s, clock.now());
       const moved = needPose || clock.now() !== before;
       if (moved) {
         needPose = false;
@@ -241,7 +280,7 @@ export async function createSession(ctx, terrain, hooks) {
         speed: pose.speed, mph: pose.speed / 0.44704, accel: pose.accel, grade: pose.grade, curvature: pose.curvature,
         position: v(pose.position), forward: v(pose.forward), up: v(pose.up), eye: v(rig.apply(scratch, pose, viewport()).position),
         t: clock.now(), iso: new Date(clock.now()).toISOString(), playing: clock.playing,
-        yaw: rig.yaw, pitch: rig.pitch, lens: rig.lens, night: !!seam.night,
+        yaw: rig.yaw, pitch: rig.pitch, lens: rig.lens, night: !!seam.night, rate: clock.rate, locked, arrived: session.arrived,
         sunElevation: env.ephemeris.sun(clock.now()).elevation,
       };
     },

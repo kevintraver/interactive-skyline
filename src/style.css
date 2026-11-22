@@ -50,7 +50,7 @@ button { font: inherit; color: inherit; background: none; border: 0; padding: 0;
 #scene.grabbing { cursor: grabbing; }
 
 /* every floating surface shares one skin */
-#bar, .views button, #results, #card, .pop, #tools > button, .zoom, #hint, #changes, #menu, #modes, #drivebar {
+#bar, .views button, #results, #card, .pop, #tools > button, .zoom, #hint, #changes, #menu, #modes, #drivebar, .route-card {
   background: var(--surface);
   border: 1px solid var(--line);
   border-radius: 12px;
@@ -195,16 +195,82 @@ button { font: inherit; color: inherit; background: none; border: 0; padding: 0;
 #changes button { padding: 5px 12px; border-radius: 7px; background: var(--fill); font-weight: 600; }
 #changes button:hover { background: var(--fill-strong); }
 
-/* ---- the drive's transport: play, local time, speed */
-#drivebar { display: flex; align-items: center; gap: 12px; height: 44px; padding: 0 16px 0 4px; font-variant-numeric: tabular-nums; white-space: nowrap; }
-#drivebar .play { display: grid; place-items: center; width: 36px; height: 36px; border-radius: 9px; }
-#drivebar .play:hover { background: var(--fill); }
+/* ---- Drive: the route cards, where the viewpoints are in Map */
+:root { --drive-card: 300px; --drivebar-w: min(760px, calc(100vw - 2 * (var(--drive-card) + var(--gap) + 16px))); }
+.routes { position: fixed; z-index: 3; left: var(--gap); bottom: 28px; display: flex; flex-direction: column; gap: 8px; width: var(--drive-card); }
+.route-card { position: relative; padding: 10px 12px 12px; overflow: hidden; }
+.route-card .head { display: flex; align-items: center; gap: 8px; }
+.route-card .pick { flex: 1; min-width: 0; display: flex; align-items: center; gap: 12px; text-align: left; border-radius: 8px; }
+.route-card button.pick:hover { background: var(--fill); }
+.route-card .map { width: 56px; height: 56px; flex: none; border-radius: 8px; background: var(--fill); }
+.route-card .map .line { fill: none; stroke: var(--muted); stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+.route-card .map .city { fill: var(--faint); }
+.route-card .map .reveal { fill: none; stroke: var(--accent); stroke-width: 1.3; }
+.route-card .map .car { fill: var(--accent); stroke: var(--surface); stroke-width: 1.4; }
+.route-card .what { min-width: 0; }
+.route-card .what b { display: block; font-weight: 650; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.route-card .facts { display: block; color: var(--muted); font-size: 12.5px; font-variant-numeric: tabular-nums; }
+.route-card .more { display: none; }
+.route-card:not(.current) .starts { display: none; }
+.starts { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+.starts button { padding: 6px 10px; border-radius: 8px; background: var(--fill); font-size: 12.5px; font-weight: 600; }
+.starts button:hover { background: var(--fill-strong); }
+.starts button[aria-pressed="true"] { background: var(--blue); color: var(--surface); }
+.route-card .progress { position: absolute; left: 0; right: 0; bottom: 0; height: 2px; overflow: hidden; background: var(--fill); }
+.route-card .progress i { display: block; width: 35%; height: 100%; background: var(--blue); animation: drive-loading 1.3s ease-in-out infinite; }
+@keyframes drive-loading { from { transform: translateX(-100%); } to { transform: translateX(290%); } }
+
+/* ---- Drive: the route bar in #dock */
+#drivebar { display: flex; align-items: center; gap: 8px; width: var(--drivebar-w); padding: 6px 6px 6px 4px; font-variant-numeric: tabular-nums; white-space: nowrap; }
+#drivebar .ctl { display: flex; align-items: center; gap: 2px; flex: none; }
+#drivebar button { display: grid; place-items: center; min-width: 36px; height: 36px; border-radius: 9px; }
+#drivebar button:hover:not(:disabled) { background: var(--fill); }
+#drivebar button:disabled { color: var(--faint); opacity: 0.6; cursor: default; }
 #drivebar .play .icon { fill: currentColor; }
-#drivebar .time { font-weight: 650; }
-#drivebar .speed { color: var(--muted); }
-#drivebar .status { color: var(--muted); font-size: 12.5px; }
+#drivebar.arrived .play .icon { fill: none; }
+#drivebar .rate { display: flex; align-items: center; }
+#drivebar .rate button { min-width: 26px; color: var(--muted); }
+#drivebar .rate button:hover:not(:disabled) { color: var(--ink); }
+#drivebar .rate .icon { width: 16px; height: 16px; }
+#drivebar .rate output { min-width: 36px; text-align: center; font-size: 12.5px; font-weight: 600; }
+#drivebar .time { padding: 0 8px; font-weight: 650; }
+#drivebar .time[aria-expanded="true"] { background: var(--fill-strong); }
+#drivebar .speed { min-width: 52px; color: var(--muted); }
+#drivebar .route { flex: 1; min-width: 120px; display: flex; flex-direction: column; }
+#drivebar .lock { flex: none; color: var(--muted); }
+#drivebar .lock[aria-pressed="true"] { color: var(--blue); background: var(--blue-wash); }
+#drivebar .status { padding-right: 10px; color: var(--muted); font-size: 12.5px; }
 #drivebar .status:empty { display: none; }
-#drivebar.busy .time, #drivebar.busy .speed { display: none; }
+#drivebar.busy .route, #drivebar.busy .lock, #drivebar.busy .ctl > :not(.play) { display: none; }
+
+.track { position: relative; height: 26px; margin: 0 9px; cursor: pointer; touch-action: none; }
+.track .rail { position: absolute; left: -2px; right: -2px; top: 50%; height: 4px; margin-top: -2px; border-radius: 2px; background: var(--fill-strong); overflow: hidden; }
+.track .done { height: 100%; background: color-mix(in srgb, var(--blue) 70%, transparent); }
+.track .ticks i { position: absolute; top: 50%; width: 1px; height: 10px; margin: -5px 0 0 -0.5px; background: var(--muted); pointer-events: none; }
+.track .ticks i.place { width: 2px; height: 16px; margin: -8px 0 0 -1px; background: var(--ink); }
+.track .ticks i.reveal { width: 9px; height: 9px; margin: -4.5px 0 0 -4.5px; border: 1.5px solid var(--surface); border-radius: 1px; background: var(--accent); transform: rotate(45deg); }
+.track .thumb { position: absolute; top: 50%; width: 18px; height: 18px; margin: -9px 0 0 -9px; border-radius: 50%; background: var(--surface); border: 2px solid var(--blue); box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3); }
+.track.dragging, .track.dragging .thumb { cursor: grabbing; }
+.track .ticktip {
+  position: absolute; bottom: calc(100% + 4px); transform: translateX(-50%); z-index: 1; pointer-events: none;
+  padding: 4px 9px; border-radius: 7px; background: rgba(24, 27, 31, 0.92); color: #fff; font-size: 12px;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
+}
+.ahead { display: flex; gap: 6px; margin: 1px 9px 0; font-size: 12px; color: var(--muted); }
+.ahead .name { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+.ahead .dist { flex: none; color: var(--ink); }
+.ahead.done .name { color: var(--ink); font-weight: 600; }
+
+/* ---- Drive: the time-of-day popover, opened from the route bar's clock */
+#drive-time { width: 272px; padding: 8px 14px 12px; }
+#drive-time .jumps { display: flex; gap: 6px; }
+#drive-time .jumps button { flex: 1; padding: 7px 8px; border-radius: 8px; background: var(--fill); font-weight: 600; }
+#drive-time .jumps button:hover { background: var(--fill-strong); }
+#drive-time .note { margin: 10px 0 0; color: var(--muted); font-size: 12px; }
+
+/* while driving the hint says how to drive; main.js's bold line is about picking buildings */
+.driving #hint b { display: none; }
+.driving #dock { max-width: none; }
 
 #credit { position: fixed; z-index: 2; left: var(--gap); bottom: 8px; font-size: 11.5px; color: #fff; text-shadow: 0 0 3px rgba(0, 0, 0, 0.75), 0 1px 2px rgba(0, 0, 0, 0.5); pointer-events: none; }
 
@@ -223,9 +289,52 @@ button { font: inherit; color: inherit; background: none; border: 0; padding: 0;
   #settings { right: var(--gap); bottom: 240px; }
   #dock { left: var(--gap); transform: none; align-items: flex-start; max-width: calc(100vw - 72px); bottom: 120px; }
   #modes { height: 40px; align-self: flex-start; }
-  .driving #dock { bottom: 28px; }
+
+  /* Drive on a phone: the route bar spans the width above the bottom edge, the map's buttons sit above
+     it, and the route card folds to one row under the mode switch */
+  :root { --drivebar-h: 98px; }
+  .driving #dock { left: var(--gap); right: var(--gap); bottom: 28px; transform: none; width: auto; align-items: stretch; }
+  .driving #dock > :not(#drivebar) { align-self: flex-start; max-width: calc(100vw - 2 * var(--gap) - 48px); }
+  .driving #tools { bottom: calc(28px + var(--drivebar-h) + 8px); }
+  .driving.selecting #dock { bottom: 190px; }
+  .driving.selecting #tools { bottom: calc(190px + var(--drivebar-h) + 8px); }
+  .driving.selecting #dock > :not(#drivebar) { display: none; }
+  #drivebar { width: auto; height: var(--drivebar-h); flex-wrap: wrap; align-content: center; gap: 0 4px; padding: 2px 6px 4px; }
+  #drivebar.busy { height: auto; }
+  #drivebar button { min-width: 40px; height: 40px; }
+  #drivebar .rate button { min-width: 40px; }
+  #drivebar .route { order: -1; flex-basis: 100%; }
+  #drivebar .ctl { flex: 1; min-width: 0; }
+  #drivebar .speed { min-width: 0; }
+  .track { height: 32px; }
+  .routes { top: calc(var(--gap) + 102px); bottom: auto; right: var(--gap); width: auto; }
+  .browsing .routes { display: none; }
+  .route-card { padding: 4px 4px 4px 6px; }
+  .route-card .map { width: 36px; height: 36px; }
+  .route-card .pick { gap: 10px; }
+  .route-card .what b { font-size: 13px; }
+  .route-card .facts { font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .route-card .more { display: grid; place-items: center; width: 40px; height: 40px; flex: none; border-radius: 8px; color: var(--muted); }
+  .route-card .more:hover { background: var(--fill); }
+  .route-card .more .icon { transition: rotate 0.15s; }
+  .route-card.open .more .icon { rotate: 180deg; }
+  .route-card:not(.open) .starts { display: none; }
+  .starts { margin: 6px 2px 4px; }
+  .starts button { flex: 1 1 auto; min-height: 40px; }
+  #drive-time { width: auto; left: var(--gap) !important; right: var(--gap); }
+}
+
+/* side by side, the card and the bar need about 1100 px; narrower, the card sits above the bar */
+@media (min-width: 721px) and (max-width: 1100px) {
+  :root { --drivebar-w: calc(100vw - 2 * var(--gap) - 96px); }
+  .routes { bottom: calc(28px + 60px + 8px); }
+  /* the hint and the toast keep to the right of the card */
+  .driving #dock { align-items: flex-end; }
+  .driving #dock > :not(#drivebar) { max-width: calc(100vw - 2 * var(--gap) - 96px - var(--drive-card) - 16px); }
 }
 
 @media (prefers-reduced-motion: reduce) {
   #loading { transition: none; }
+  .route-card .progress i { width: 100%; opacity: 0.5; animation: none; }
+  .route-card .more .icon { transition: none; }
 }

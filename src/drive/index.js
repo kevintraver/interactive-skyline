@@ -10,8 +10,18 @@
 
 import { createTerrain } from '../world/terrain/index.js';
 import { decodeDriveState, encodeDriveState, clearDriveState } from './url.js';
-import { createTransport } from './ui/transport.js';
+import { createRouteBar } from './ui/routebar.js';
+import { createRouteCards } from './ui/routecard.js';
+import { createTimePop } from './ui/timepop.js';
+import { stepRate, atLocalMinutes } from './ui/format.js';
 import { attachInput } from './input.js';
+
+/** The first-visit hint while driving (main.js keeps its own text for the map). */
+const DRIVE_HINT = 'Drag to look around. Scroll to zoom. Space to pause.';
+/** At most one address write a second while the clock plays. */
+const WRITE_EVERY_MS = 1000;
+/** Local minutes past midnight of the time-of-day jumps. */
+const NOON = 12 * 60, NIGHT = 3 * 60;
 
 /**
  * @param {object} ctx
@@ -53,11 +63,23 @@ export function initDrive(ctx) {
     views: document.querySelector('.views'), night: document.getElementById('night'), hint: document.getElementById('hint'),
     compass: document.getElementById('compass'), tools: document.getElementById('tools'),
   };
-  const transport = createTransport({ dock: document.getElementById('dock'), tz: city.tz || 'UTC', units: () => settings.units, onToggle: toggle });
-  let session = null, loadingSession = null, mapState = null, wasPlaying = true, entering = 0;
+  const tz = city.tz || 'UTC';
+  const units = () => settings.units;
+  const hintText = el.hint.querySelector('span');
+  const mapHint = hintText.textContent;
+  const bar = createRouteBar({ dock: document.getElementById('dock'), tz, units, onToggle: toggle, onRate: rate, onLock: lock, onSeek: seekS });
+  const cards = createRouteCards({ after: el.views, routes, units, onStart: chooseStart, onRoute: (id) => enter(id).catch(() => {}) });
+  const timePop = createTimePop({
+    button: bar.time, tz, onTime, onJump,
+    state: () => ({ simMs: session ? session.clock.now() : Date.now(), locked: !!session?.locked }),
+  });
+  let session = null, loadingSession = null, mapState = null, wasPlaying = true, entering = 0, shownRoute = null, lastWrite = 0;
   let routeId = routes[0].id; // the route the drive remembers for this visit
 
-  attachInput({ canvas, controls, tools: el.tools, invalidate, onToggle: toggle, active: () => seam.active, session: () => session });
+  attachInput({
+    canvas, controls, tools: el.tools, invalidate, onToggle: toggle, active: () => seam.active, session: () => session,
+    onLook: writeAddress, onSeekBy: (sec) => { session.seekBy(sec); writeAddress(); }, onRate: rate,
+  });
 
   // ---------------------------------------------------------------- mode switch
   modes.hidden = false;
@@ -70,21 +92,88 @@ export function initDrive(ctx) {
     });
   }
 
+  // ---------------------------------------------------------------- the controls
   function toggle() {
-    if (!session) return;
-    if (session.clock.playing) session.clock.pause(); else session.clock.play();
+    if (!session?.journey) return;
+    // from the end of the route, play drives it again from the chosen start
+    if (session.arrived) { session.restart(); session.clock.play(); }
+    else if (session.clock.playing) session.clock.pause();
+    else session.clock.play();
     writeAddress();
     invalidate();
+  }
+  function rate(dir) {
+    if (!session) return;
+    session.setRate(stepRate(session.clock.rate, dir));
+    invalidate();
+  }
+  function lock() {
+    if (!session) return;
+    session.setLocked(!session.locked);
+    writeAddress();
+    invalidate();
+  }
+  /** The thumb moved the car; the clock follows by the journey's time-distance function. */
+  function seekS(s, done) {
+    if (!session?.journey) return;
+    session.seek({ s }); // asks for a frame once the road there is in
+    if (done) writeAddress();
+  }
+  /** The time-of-day slider: obeys the lock. */
+  function onTime(minutes, done) {
+    if (!session?.journey) return;
+    session.setTime(atLocalMinutes(session.clock.now(), tz, minutes));
+    if (done) writeAddress();
+  }
+  /** Dusk, Noon and Night keep the car where it is, lock or no lock. */
+  function onJump(which) {
+    if (!session?.pose) return;
+    const now = session.clock.now();
+    const t = which === 'dusk' ? session.duskAt() : atLocalMinutes(now, tz, which === 'noon' ? NOON : NIGHT);
+    session.keepPlace(t);
+    writeAddress();
+  }
+  /** A start chip: the car goes there at that start's default moment, then plays once the road is in. */
+  async function chooseStart(key) {
+    if (!session?.journey || !seam.active) return;
+    const token = ++entering;
+    session.clock.pause();
+    session.startFrom(key);
+    writeAddress();
+    invalidate();
+    cards.setLoading(true);
+    try {
+      await session.whenSettled();
+    } finally {
+      if (token === entering) cards.setLoading(false);
+    }
+    if (token !== entering || !seam.active) return;
+    session.clock.play();
+    writeAddress();
+  }
+  /** Give the bar and the card the route the journey drives, once per route. */
+  function showRoute() {
+    const j = session.journey;
+    if (shownRoute === j.route.id) return;
+    shownRoute = j.route.id;
+    let road = null;
+    try { road = session.net.roadOf(j.route); } catch { /* no map, the rest still works */ }
+    const r = { s0: j.s0, s1: j.s1, markers: j.markers, reveal: j.reveal, to: j.route.to };
+    bar.setRoute(r);
+    cards.setRoute(j.route.id, { ...r, road, length: j.length, postedSeconds: j.route.postedSeconds ?? j.duration / 1000 });
   }
 
   // ---------------------------------------------------------------- the address
   function writeAddress() {
     if (!session?.journey) return;
+    const { rig } = session;
     const p = seam.active
-      ? encodeDriveState({ route: routeId, s: session.pose?.s, t: session.clock.now() }, location.search)
+      ? encodeDriveState({ route: routeId, s: session.pose?.s, t: session.clock.now(), view: 'clean', yaw: rig.yaw, pitch: rig.pitch, lens: rig.lens }, location.search)
       : clearDriveState(location.search);
     const q = p.toString();
-    history.replaceState(history.state, '', q ? `?${q}` : location.pathname);
+    lastWrite = performance.now();
+    const next = q ? `?${q}` : location.pathname;
+    if (next !== location.search) history.replaceState(history.state, '', next);
   }
 
   // ---------------------------------------------------------------- the camera, handed between map and drive
@@ -94,7 +183,7 @@ export function initDrive(ctx) {
       fov: camera.fov, near: camera.near, far: camera.far, aspect: camera.aspect, zoom: camera.zoom,
       target: controls.target.clone(), enabled: controls.enabled, width: innerWidth, height: innerHeight,
       skyPosition: ctx.sky.position.clone(), compass: el.compass.firstElementChild.style.rotate,
-      compassTitle: el.compass.title, hint: el.hint.hidden,
+      compassTitle: el.compass.title,
     };
   }
   function restoreMap() {
@@ -108,7 +197,7 @@ export function initDrive(ctx) {
     ctx.sky.position.copy(m.skyPosition);
     el.compass.firstElementChild.style.rotate = m.compass;
     setCompassTitle(m.compassTitle);
-    el.hint.hidden = m.hint;
+    hintText.textContent = mapHint;
     // the window changed shape while driving: let the map fit its lens to it, as it always does
     if (innerWidth !== m.width || innerHeight !== m.height) ctx.resize();
   }
@@ -128,20 +217,25 @@ export function initDrive(ctx) {
   }
 
   /**
-   * Enter Drive on a route. Resolves once the first frame is settled; the clock then plays (unless
-   * it was paused when the visitor last left Drive).
+   * Enter Drive on a route. Resolves once the first frame is settled; the clock then plays, unless
+   * it was paused when the visitor last left Drive or the address named a moment (a shared link
+   * opens paused on it).
    * @param {string} id  @param {{ s?: number, t?: number, view?: string, yaw?: number, pitch?: number, lens?: number }} [at]
    */
   async function enter(id, at = {}) {
     const token = ++entering;
     showMode('drive');
-    transport.show(true);
-    transport.setStatus(session ? null : 'Loading the drive…');
+    bar.show(true);
+    cards.show(true);
+    cards.setLoading(true);
+    bar.setStatus(session ? null : 'Loading the drive…');
     try {
       await load();
     } catch (err) {
       if (token === entering) {
-        transport.show(false);
+        bar.show(false);
+        cards.show(false);
+        cards.setLoading(false);
         showMode('map');
         ctx.showToast('The drive could not be loaded.', false);
       }
@@ -152,15 +246,20 @@ export function initDrive(ctx) {
     const fresh = !session.journey || id !== routeId || Number.isFinite(at.s) || Number.isFinite(at.t);
     routeId = id;
     if (fresh) session.configure(id, at);
+    showRoute();
     session.rig.look({ yaw: at.yaw, pitch: at.pitch, lens: at.lens });
     if (!seam.active) activate();
     session.clock.pause();
     writeAddress();
-    transport.setStatus('Loading the road…');
-    await session.whenSettled();
+    bar.setStatus('Loading the road…');
+    try {
+      await session.whenSettled();
+    } finally {
+      if (token === entering) cards.setLoading(false);
+    }
     if (token !== entering || !seam.active) return;
-    transport.setStatus(null);
-    if (fresh || wasPlaying) session.clock.play();
+    bar.setStatus(null);
+    if (!Number.isFinite(at.t) && (fresh || wasPlaying)) session.clock.play();
     writeAddress();
   }
 
@@ -176,7 +275,7 @@ export function initDrive(ctx) {
     seam.active = true;
     el.views.hidden = true;
     el.night.hidden = true;
-    el.hint.hidden = true;
+    hintText.textContent = DRIVE_HINT;
     setCompassTitle('Look ahead');
     document.body.classList.add('driving');
     ctx.repaint();
@@ -187,7 +286,10 @@ export function initDrive(ctx) {
   function exit() {
     entering++;
     showMode('map');
-    transport.show(false);
+    bar.show(false);
+    cards.show(false);
+    cards.setLoading(false);
+    timePop.open(false);
     if (!seam.active) return;
     wasPlaying = session.clock.playing;
     session.clock.pause();
@@ -208,7 +310,14 @@ export function initDrive(ctx) {
 
   let compassDeg = null;
   function onFrame(s) {
-    transport.update({ playing: s.clock.playing, simMs: s.clock.now(), speed: s.pose ? s.pose.speed : 0 });
+    const st = {
+      playing: s.clock.playing, simMs: s.clock.now(), speed: s.pose ? s.pose.speed : 0, s: s.pose?.s,
+      rate: s.clock.rate, locked: s.locked, arrived: s.arrived, startKey: s.startKey,
+    };
+    bar.update(st);
+    cards.update(st);
+    timePop.update(st);
+    if (st.playing && performance.now() - lastWrite > WRITE_EVERY_MS) writeAddress();
     // the compass needle shows north for the way the eye looks, as it does for the map camera
     const e = camera.matrixWorld.elements; // column 2 is the camera's backward axis
     const deg = Math.round((Math.atan2(e[8], e[10]) * 180) / Math.PI);
@@ -223,8 +332,8 @@ export function initDrive(ctx) {
     exit,
     seek(at) { need().seek(at); writeAddress(); },
     play() { need().clock.play(); invalidate(); },
-    pause() { need().clock.pause(); invalidate(); },
-    look(l) { need().rig.look(l || {}); invalidate(); },
+    pause() { need().clock.pause(); writeAddress(); invalidate(); },
+    look(l) { need().rig.look(l || {}); writeAddress(); invalidate(); },
     pose: () => (session && seam.active ? session.poseNumbers() : null),
     whenSettled: () => need().whenSettled(),
     visible: (targetId) => need().visible(targetId),

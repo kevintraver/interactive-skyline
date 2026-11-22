@@ -5,11 +5,24 @@
 
 const DRAG_PX = 5; // main.js's rule for telling a drag from a click
 
+/** Keys never act while focus is in a text field, a select or a slider: those keys are theirs. */
+export function ownsKeys(el) {
+  if (!el || !(el instanceof Element)) return false;
+  return el instanceof HTMLInputElement || el instanceof HTMLTextAreaElement || el instanceof HTMLSelectElement
+    || el.isContentEditable || el.getAttribute('role') === 'slider';
+}
+
+/** Quiet time after the last wheel step before a zoom counts as finished, ms. */
+const WHEEL_DONE_MS = 400;
+
 /**
  * @param {{ canvas: HTMLCanvasElement, controls: object, active: () => boolean, session: () => object|null,
- *           invalidate: () => void, onToggle: () => void, tools: HTMLElement }} opts
+ *           invalidate: () => void, onToggle: () => void, tools: HTMLElement, onLook?: () => void,
+ *           onSeekBy?: (seconds: number) => void, onRate?: (dir: 1|-1) => void }} opts
+ *   onLook runs when a look or zoom gesture finishes (the address is written then); onSeekBy and onRate
+ *   carry the transport keys to the controller, which applies the hold-position lock and the address
  */
-export function attachInput({ canvas, controls, active, session, invalidate, onToggle, tools }) {
+export function attachInput({ canvas, controls, active, session, invalidate, onToggle, tools, onLook = () => {}, onSeekBy, onRate }) {
   const pointers = new Map(); // pointerId -> { x, y }
   let look = null; // a look-drag: { id, x, y, moved }
   let pinch = null; // { dist, lens }
@@ -64,8 +77,8 @@ export function attachInput({ canvas, controls, active, session, invalidate, onT
 
   const release = (ev) => {
     pointers.delete(ev.pointerId);
-    if (pointers.size < 2) pinch = null;
-    if (look && look.id === ev.pointerId) look = null;
+    if (pinch && pointers.size < 2) { pinch = null; if (active()) onLook(); }
+    if (look && look.id === ev.pointerId) { if (look.moved && active()) onLook(); look = null; }
     if (!active()) return;
     // main.js turns the map controls back on after a building drag; the drive keeps them off
     controls.enabled = false;
@@ -80,25 +93,34 @@ export function attachInput({ canvas, controls, active, session, invalidate, onT
     ev.preventDefault();
     sn.rig.zoomBy(Math.exp(-ev.deltaY * 0.0015));
     invalidate();
+    clearTimeout(wheelDone);
+    wheelDone = setTimeout(() => { if (active()) onLook(); }, WHEEL_DONE_MS);
   }, { passive: false });
+  let wheelDone = 0;
 
   canvas.addEventListener('dblclick', () => {
     const sn = s();
     if (!sn) return;
     sn.rig.reset();
     invalidate();
+    onLook();
   });
 
   addEventListener('keydown', (ev) => {
     const sn = s();
     if (!sn || ev.metaKey || ev.ctrlKey || ev.altKey) return;
-    if (ev.target instanceof HTMLInputElement || ev.target instanceof HTMLTextAreaElement) return;
+    if (ownsKeys(ev.target)) return;
     if (ev.key === ' ') { ev.preventDefault(); if (!ev.repeat) onToggle(); }
-    else if (ev.key === 'ArrowLeft' || ev.key === 'ArrowRight') { ev.preventDefault(); sn.seekBy(ev.key === 'ArrowLeft' ? -10 : 10); }
-    else if (ev.key === 'r' || ev.key === 'R') { sn.rig.reset(); invalidate(); }
+    else if (ev.key === 'ArrowLeft' || ev.key === 'ArrowRight') {
+      ev.preventDefault();
+      const step = (ev.shiftKey ? 60 : 10) * (ev.key === 'ArrowLeft' ? -1 : 1);
+      if (onSeekBy) onSeekBy(step); else sn.seekBy(step);
+    } else if (ev.key === ',' || ev.key === '<') onRate?.(-1);
+    else if (ev.key === '.' || ev.key === '>') onRate?.(1);
+    else if (ev.key === 'r' || ev.key === 'R') { sn.rig.reset(); invalidate(); onLook(); }
   });
   // a focused button would also take Space as a click on its release
-  addEventListener('keyup', (ev) => { if (s() && ev.key === ' ' && !(ev.target instanceof HTMLInputElement)) ev.preventDefault(); });
+  addEventListener('keyup', (ev) => { if (s() && ev.key === ' ' && !ownsKeys(ev.target)) ev.preventDefault(); });
 
   // The map's compass and zoom buttons fly the orbit camera; while driving they look ahead and change the
   // lens instead. Caught on the way down, before the buttons' own listeners.
@@ -111,5 +133,6 @@ export function attachInput({ canvas, controls, active, session, invalidate, onT
     ev.stopPropagation();
     act();
     invalidate();
+    onLook();
   }, true);
 }
