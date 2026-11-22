@@ -39,7 +39,9 @@ describe('the real Las Vegas roadnet', () => {
 
   it('decodes without a validation error', () => {
     expect(net.roads.map((r) => r.id)).toEqual(expect.arrayContaining(['i15n.main']));
-    for (const r of net.roads) expect((r.count - 1) % 16).toBe(0);
+    // carriageways end on a whole level-2 row; ramps and crossing roads end where the data says
+    for (const r of net.roads) if (r.role === 'main') expect((r.count - 1) % 16).toBe(0);
+    for (const r of net.roads) expect(['main', 'ramp', 'crossing']).toContain(r.role);
   });
 
   it('is the road the fixture was made from', () => {

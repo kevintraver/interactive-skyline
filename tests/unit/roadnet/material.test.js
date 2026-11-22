@@ -34,7 +34,7 @@ describe('road atlas and materials', () => {
   it('draws the night emissive map with dark dirt', () => {
     const ctx = recorder();
     drawRoadAtlas(ctx, { night: true });
-    const dirt = ctx.fills.filter((f) => f.x >= REGIONS.dirt[0]);
+    const dirt = ctx.fills.filter((f) => f.x >= REGIONS.dirt[0] && f.x < REGIONS.dirt[1]);
     expect(dirt.every((f) => f.color === '#000000')).toBe(true);
   });
 

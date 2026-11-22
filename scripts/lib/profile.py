@@ -61,3 +61,25 @@ def smooth_from_above(env, spacing, grade=0.06, radius=3000.0):
     z = res.x + base
     # the solver works to a tolerance; never hand back a station below its envelope
     return np.maximum(z, env)
+
+
+def smooth_between(lower, upper, spacing, grade=0.06, radius=3000.0):
+    """As smooth_from_above, with an upper bound too: the lowest profile with lower <= z <= upper
+    (upper may be +inf; equal bounds pin a station), |grade| <= `grade` and vertical curves no
+    tighter than `radius`. Returns z, or None when no profile meets every bound."""
+    lower = np.asarray(lower, dtype=np.float64)
+    upper = np.asarray(upper, dtype=np.float64)
+    n = len(lower)
+    radius = np.broadcast_to(np.asarray(radius, dtype=np.float64), (n,))
+    d1 = diags([-np.ones(n - 1), np.ones(n - 1)], [0, 1], shape=(n - 1, n))
+    d2 = diags([np.ones(n - 2), -2 * np.ones(n - 2), np.ones(n - 2)], [0, 1, 2], shape=(n - 2, n))
+    g = grade * spacing
+    c = spacing**2 / radius[1:-1]
+    a_ub = vstack([d1, -d1, d2, -d2]).tocsr()
+    b_ub = np.concatenate([np.full(n - 1, g), np.full(n - 1, g), c, c])
+    base = lower.min()
+    hi = [None if not np.isfinite(u) else u - base for u in upper]
+    res = linprog(np.ones(n), A_ub=a_ub, b_ub=b_ub, bounds=list(zip(lower - base, hi)), method="highs")
+    if res.status != 0:
+        return None
+    return np.clip(res.x + base, lower, upper)

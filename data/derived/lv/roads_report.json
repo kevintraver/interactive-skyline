@@ -4332,14 +4332,1411 @@
      "max_lateral_accel": 0.631,
      "at_s": 68200.0,
      "max_lateral_jerk": 1.497
+    },
+    "interchanges_exit_ramps": {
+     "ok": true,
+     "exits": 21,
+     "with_ramp_300m": 18,
+     "no_link_mapped": [
+      {
+       "s": 8117.5,
+       "ref": "",
+       "label": "",
+       "ramp": null,
+       "ramp_m": 0.0,
+       "ok": true,
+       "no_link": true,
+       "why": "a junction node with no motorway_link mapped at it: nothing to build"
+      },
+      {
+       "s": 13637.1,
+       "ref": "",
+       "label": "",
+       "ramp": null,
+       "ramp_m": 0.0,
+       "ok": true,
+       "no_link": true,
+       "why": "a junction node with no motorway_link mapped at it: nothing to build"
+      }
+     ],
+     "simplified": [
+      {
+       "s": 60714.9,
+       "ref": "",
+       "label": "Harmon Avenue",
+       "ramp": null,
+       "ramp_m": 0.0,
+       "ok": true,
+       "simplified": "geometry: its gore would lie on i15s.opp (a median ramp with no room)"
+      }
+     ],
+     "missing": []
+    },
+    "interchanges_overpasses": {
+     "ok": true,
+     "count": 17,
+     "min_clearance_m": 5.43,
+     "dropped": [
+      {
+       "road": "x.road.3",
+       "name": "",
+       "why": "a branch of a ramp, too tangled to build by rule (no profile clears the route with both ends on the ground: over another road at s 144-224; over another road at s 144-412)",
+       "branch": true
+      },
+      {
+       "road": "x.road.5",
+       "name": "",
+       "why": "a branch of a ramp, too tangled to build by rule (no profile clears the route with both ends on the ground: under ['x.road.4', 'x.saint-rose-parkway'] at s 684-948; over another road at s 684-976)",
+       "branch": true
+      },
+      {
+       "road": "x.road.6",
+       "name": "",
+       "why": "a branch of a ramp, too tangled to build by rule (no profile clears the route with both ends on the ground: over another road at s 0-64; over another road at s 0-256)",
+       "branch": true
+      },
+      {
+       "road": "x.road.8",
+       "name": "",
+       "why": "a branch of a ramp, too tangled to build by rule (no profile clears the route with both ends on the ground: ends; ends)",
+       "branch": true
+      },
+      {
+       "road": "x.road",
+       "name": "",
+       "why": "a branch of a ramp, too tangled to build by rule (no profile clears the route with both ends on the ground: over another road at s 0-444; over another road at s 0-444)",
+       "branch": true
+      }
+     ],
+     "note": "branches of ramps that are too tangled to build by rule are left out and listed (simplified)"
+    },
+    "interchanges_no_ramp_through_main": {
+     "ok": true,
+     "violations": []
+    },
+    "interchanges_plan_overlap_rule": {
+     "ok": true,
+     "violations": 0,
+     "overlapping_pairs": 134,
+     "min_separation_m": 6.38
+    }
+   },
+   "interchanges": {
+    "counts": {
+     "ramps": 68,
+     "gores": 68,
+     "diverge": 35,
+     "merge": 33,
+     "connects": 22,
+     "crossings": 17,
+     "decks": 39,
+     "piers": 126,
+     "abutments": 68,
+     "roads": 85
+    },
+    "extract": {
+     "osm": "2026-11-22T09:28:51Z",
+     "elements": 36580
+    },
+    "exits": [
+     {
+      "s": 202.3,
+      "ref": "1",
+      "label": "Primm",
+      "ramp": "i15n.x1.off",
+      "ramp_m": 644.0,
+      "ok": true
+     },
+     {
+      "s": 8117.5,
+      "ref": "",
+      "label": "",
+      "ramp": null,
+      "ramp_m": 0.0,
+      "ok": true,
+      "no_link": true,
+      "why": "a junction node with no motorway_link mapped at it: nothing to build"
+     },
+     {
+      "s": 13637.1,
+      "ref": "",
+      "label": "",
+      "ramp": null,
+      "ramp_m": 0.0,
+      "ok": true,
+      "no_link": true,
+      "why": "a junction node with no motorway_link mapped at it: nothing to build"
+     },
+     {
+      "s": 19681.3,
+      "ref": "12",
+      "label": "Jean / Goodsprings",
+      "ramp": "i15n.x12.off",
+      "ramp_m": 916.0,
+      "ok": true
+     },
+     {
+      "s": 39922.6,
+      "ref": "",
+      "label": "Check Station",
+      "ramp": "i15n.xkm40.off",
+      "ramp_m": 852.0,
+      "ok": true
+     },
+     {
+      "s": 41047.8,
+      "ref": "25",
+      "label": "Sloan",
+      "ramp": "i15n.x25.off",
+      "ramp_m": 532.0,
+      "ok": true
+     },
+     {
+      "s": 43903.9,
+      "ref": "27",
+      "label": "Southern Highlands Parkway / Saint Rose Parkway",
+      "ramp": "i15n.x27.off",
+      "ramp_m": 1272.0,
+      "ok": true
+     },
+     {
+      "s": 46620.3,
+      "ref": "29",
+      "label": "Starr Avenue",
+      "ramp": "i15n.x29.off",
+      "ramp_m": 884.0,
+      "ok": true
+     },
+     {
+      "s": 48279.2,
+      "ref": "30",
+      "label": "Cactus Avenue",
+      "ramp": "i15n.x30.off",
+      "ramp_m": 856.0,
+      "ok": true
+     },
+     {
+      "s": 49877.9,
+      "ref": "31",
+      "label": "Silverado Ranch Boulevard",
+      "ramp": "i15n.x31.off",
+      "ramp_m": 776.0,
+      "ok": true
+     },
+     {
+      "s": 52814.8,
+      "ref": "33",
+      "label": "Blue Diamond Road",
+      "ramp": "i15n.x33.off",
+      "ramp_m": 3416.0,
+      "ok": true
+     },
+     {
+      "s": 55892,
+      "ref": "35",
+      "label": "Russell Road / Frank Sinatra Drive",
+      "ramp": "i15n.x35.off",
+      "ramp_m": 3308.0,
+      "ok": true
+     },
+     {
+      "s": 57874.8,
+      "ref": "36",
+      "label": "Tropicana Avenue / Frank Sinatra Drive",
+      "ramp": "i15n.x36.off",
+      "ramp_m": 684.0,
+      "ok": true
+     },
+     {
+      "s": 60714.9,
+      "ref": "",
+      "label": "Harmon Avenue",
+      "ramp": null,
+      "ramp_m": 0.0,
+      "ok": true,
+      "simplified": "geometry: its gore would lie on i15s.opp (a median ramp with no room)"
+     },
+     {
+      "s": 61249.4,
+      "ref": "38",
+      "label": "Flamingo Road",
+      "ramp": "i15n.x38.off",
+      "ramp_m": 776.0,
+      "ok": true
+     },
+     {
+      "s": 61661.8,
+      "ref": "39",
+      "label": "Spring Mountain Road",
+      "ramp": "i15n.x39.off",
+      "ramp_m": 1796.0,
+      "ok": true
+     },
+     {
+      "s": 64924.1,
+      "ref": "40",
+      "label": "Sahara Avenue",
+      "ramp": "i15n.x40.off",
+      "ramp_m": 584.0,
+      "ok": true
+     },
+     {
+      "s": 66324,
+      "ref": "",
+      "label": "Neon Gateway",
+      "ramp": "i15n.xkm66.off",
+      "ramp_m": 876.0,
+      "ok": true
+     },
+     {
+      "s": 66542.5,
+      "ref": "41",
+      "label": "Charleston Boulevard / Grand Central Parkway",
+      "ramp": "i15n.xkm66.off",
+      "ramp_m": 876.0,
+      "ok": true
+     },
+     {
+      "s": 67966.4,
+      "ref": "",
+      "label": "I 11 North / US 95 North",
+      "ramp": "i15n.xkm68.off",
+      "ramp_m": 1288.0,
+      "ok": true
+     },
+     {
+      "s": 68279,
+      "ref": "42A",
+      "label": "Reno / Martin L King",
+      "ramp": "i15n.xkm68.off",
+      "ramp_m": 1288.0,
+      "ok": true
+     }
+    ],
+    "crossings": [
+     {
+      "road": "x.west-silverado-ranch-bou",
+      "name": "West Silverado Ranch Boulevard",
+      "clearance_m": 5.5
+     },
+     {
+      "road": "x.wilbur-clark-d-i-road",
+      "name": "Wilbur Clark D.I. Road",
+      "clearance_m": 5.49
+     },
+     {
+      "road": "x.blue-diamond-road",
+      "name": "Blue Diamond Road",
+      "clearance_m": 5.5
+     },
+     {
+      "road": "x.west-warm-springs-road",
+      "name": "West Warm Springs Road",
+      "clearance_m": 5.45
+     },
+     {
+      "road": "x.west-hacienda-avenue",
+      "name": "West Hacienda Avenue",
+      "clearance_m": 5.46
+     },
+     {
+      "road": "x.west-harmon-avenue",
+      "name": "West Harmon Avenue",
+      "clearance_m": 5.43
+     },
+     {
+      "road": "x.saint-rose-parkway",
+      "name": "Saint Rose Parkway",
+      "clearance_m": 5.5
+     },
+     {
+      "road": "x.west-cactus-avenue",
+      "name": "West Cactus Avenue",
+      "clearance_m": 5.5
+     },
+     {
+      "road": "x.west-russell-road",
+      "name": "West Russell Road",
+      "clearance_m": 5.53
+     },
+     {
+      "road": "x.west-sunset-road",
+      "name": "West Sunset Road",
+      "clearance_m": 5.51
+     },
+     {
+      "road": "x.west-tropicana-avenue",
+      "name": "West Tropicana Avenue",
+      "clearance_m": 5.47
+     },
+     {
+      "road": "x.road.2",
+      "name": "",
+      "clearance_m": 5.5
+     },
+     {
+      "road": "x.road.4",
+      "name": "",
+      "clearance_m": 11.52
+     },
+     {
+      "road": "x.road.7",
+      "name": "",
+      "clearance_m": 5.5
+     },
+     {
+      "road": "x.road.9",
+      "name": "",
+      "clearance_m": 11.46
+     },
+     {
+      "road": "x.road.10",
+      "name": "",
+      "clearance_m": 12.11
+     },
+     {
+      "road": "x.west-flamingo-road",
+      "name": "West Flamingo Road",
+      "clearance_m": 5.5
+     }
+    ],
+    "ramps": [
+     {
+      "road": "i15n.x1.off",
+      "length_m": 644.0,
+      "lanes": 1,
+      "decks": 0,
+      "max_layer": 0,
+      "side": "right",
+      "gore_start": true,
+      "gore_end": false,
+      "fit_max_m": 0.553
+     },
+     {
+      "road": "i15n.x12.off",
+      "length_m": 916.0,
+      "lanes": 1,
+      "decks": 0,
+      "max_layer": 0,
+      "side": "right",
+      "gore_start": true,
+      "gore_end": false,
+      "fit_max_m": 2.033
+     },
+     {
+      "road": "i15n.xkm40.off",
+      "length_m": 852.0,
+      "lanes": 1,
+      "decks": 0,
+      "max_layer": 0,
+      "side": "right",
+      "gore_start": true,
+      "gore_end": false,
+      "fit_max_m": 0.092
+     },
+     {
+      "road": "i15n.x25.off",
+      "length_m": 532.0,
+      "lanes": 1,
+      "decks": 0,
+      "max_layer": 0,
+      "side": "right",
+      "gore_start": true,
+      "gore_end": false,
+      "fit_max_m": 2.296
+     },
+     {
+      "road": "i15n.x27.off",
+      "length_m": 1272.0,
+      "lanes": 1,
+      "decks": 0,
+      "max_layer": 0,
+      "side": "right",
+      "gore_start": true,
+      "gore_end": false,
+      "fit_max_m": 0.212
+     },
+     {
+      "road": "i15n.x29.off",
+      "length_m": 884.0,
+      "lanes": 1,
+      "decks": 0,
+      "max_layer": 0,
+      "side": "right",
+      "gore_start": true,
+      "gore_end": false,
+      "fit_max_m": 0.206
+     },
+     {
+      "road": "i15n.x30.off",
+      "length_m": 856.0,
+      "lanes": 1,
+      "decks": 0,
+      "max_layer": 0,
+      "side": "right",
+      "gore_start": true,
+      "gore_end": false,
+      "fit_max_m": 0.389
+     },
+     {
+      "road": "i15n.x31.off",
+      "length_m": 776.0,
+      "lanes": 1,
+      "decks": 0,
+      "max_layer": 0,
+      "side": "right",
+      "gore_start": true,
+      "gore_end": false,
+      "fit_max_m": 0.239
+     },
+     {
+      "road": "i15n.x36.off",
+      "length_m": 684.0,
+      "lanes": 1,
+      "decks": 0,
+      "max_layer": 0,
+      "side": "right",
+      "gore_start": true,
+      "gore_end": false,
+      "fit_max_m": 0.521
+     },
+     {
+      "road": "i15n.x40.off",
+      "length_m": 584.0,
+      "lanes": 2,
+      "decks": 0,
+      "max_layer": 0,
+      "side": "right",
+      "gore_start": true,
+      "gore_end": false,
+      "fit_max_m": 0.361
+     },
+     {
+      "road": "i15n.xkm66.off",
+      "length_m": 320.0,
+      "lanes": 1,
+      "decks": 0,
+      "max_layer": 0,
+      "side": "left",
+      "gore_start": true,
+      "gore_end": false,
+      "fit_max_m": 0.088
+     },
+     {
+      "road": "i15n.x41.off",
+      "length_m": 876.0,
+      "lanes": 2,
+      "decks": 0,
+      "max_layer": 0,
+      "side": "right",
+      "gore_start": true,
+      "gore_end": false,
+      "fit_max_m": 0.204
+     },
+     {
+      "road": "i15s.x41.off",
+      "length_m": 732.0,
+      "lanes": 2,
+      "decks": 0,
+      "max_layer": 0,
+      "side": "right",
+      "gore_start": true,
+      "gore_end": false,
+      "fit_max_m": 0.322
+     },
+     {
+      "road": "i15s.xkm1.off",
+      "length_m": 604.0,
+      "lanes": 1,
+      "decks": 0,
+      "max_layer": 0,
+      "side": "left",
+      "gore_start": true,
+      "gore_end": false,
+      "fit_max_m": 0.086
+     },
+     {
+      "road": "i15s.x39.off",
+      "length_m": 388.0,
+      "lanes": 2,
+      "decks": 0,
+      "max_layer": 0,
+      "side": "right",
+      "gore_start": true,
+      "gore_end": false,
+      "fit_max_m": 0.38
+     },
+     {
+      "road": "i15s.x38A.off",
+      "length_m": 876.0,
+      "lanes": 1,
+      "decks": 0,
+      "max_layer": 0,
+      "side": "right",
+      "gore_start": true,
+      "gore_end": false,
+      "fit_max_m": 0.294
+     },
+     {
+      "road": "i15s.x38B.off",
+      "length_m": 232.0,
+      "lanes": 1,
+      "decks": 0,
+      "max_layer": 0,
+      "side": "right",
+      "gore_start": true,
+      "gore_end": false,
+      "fit_max_m": 2.094
+     },
+     {
+      "road": "i15s.x33.off",
+      "length_m": 896.0,
+      "lanes": 2,
+      "decks": 0,
+      "max_layer": 0,
+      "side": "right",
+      "gore_start": true,
+      "gore_end": false,
+      "fit_max_m": 0.649
+     },
+     {
+      "road": "i15s.x31.off",
+      "length_m": 1036.0,
+      "lanes": 2,
+      "decks": 0,
+      "max_layer": 0,
+      "side": "right",
+      "gore_start": true,
+      "gore_end": false,
+      "fit_max_m": 0.291
+     },
+     {
+      "road": "i15s.x30.off",
+      "length_m": 744.0,
+      "lanes": 2,
+      "decks": 0,
+      "max_layer": 0,
+      "side": "right",
+      "gore_start": true,
+      "gore_end": false,
+      "fit_max_m": 0.636
+     },
+     {
+      "road": "i15s.x29.off",
+      "length_m": 700.0,
+      "lanes": 2,
+      "decks": 0,
+      "max_layer": 0,
+      "side": "right",
+      "gore_start": true,
+      "gore_end": false,
+      "fit_max_m": 0.238
+     },
+     {
+      "road": "i15s.x25.off",
+      "length_m": 736.0,
+      "lanes": 1,
+      "decks": 0,
+      "max_layer": 0,
+      "side": "right",
+      "gore_start": true,
+      "gore_end": false,
+      "fit_max_m": 0.336
+     },
+     {
+      "road": "i15s.x12.off",
+      "length_m": 740.0,
+      "lanes": 1,
+      "decks": 0,
+      "max_layer": 0,
+      "side": "right",
+      "gore_start": true,
+      "gore_end": false,
+      "fit_max_m": 1.272
+     },
+     {
+      "road": "i15s.x1.off",
+      "length_m": 760.0,
+      "lanes": 1,
+      "decks": 0,
+      "max_layer": 0,
+      "side": "right",
+      "gore_start": true,
+      "gore_end": false,
+      "fit_max_m": 0.448
+     },
+     {
+      "road": "i15n.x1.on",
+      "length_m": 904.0,
+      "lanes": 1,
+      "decks": 0,
+      "max_layer": 0,
+      "side": "right",
+      "gore_start": false,
+      "gore_end": true,
+      "fit_max_m": 0.686
+     },
+     {
+      "road": "i15n.x12.on",
+      "length_m": 820.0,
+      "lanes": 1,
+      "decks": 0,
+      "max_layer": 0,
+      "side": "right",
+      "gore_start": false,
+      "gore_end": true,
+      "fit_max_m": 1.773
+     },
+     {
+      "road": "i15n.x25.on",
+      "length_m": 324.0,
+      "lanes": 1,
+      "decks": 0,
+      "max_layer": 0,
+      "side": "right",
+      "gore_start": false,
+      "gore_end": true,
+      "fit_max_m": 3.821
+     },
+     {
+      "road": "i15n.x30.on",
+      "length_m": 716.0,
+      "lanes": 1,
+      "decks": 0,
+      "max_layer": 0,
+      "side": "right",
+      "gore_start": false,
+      "gore_end": true,
+      "fit_max_m": 0.522
+     },
+     {
+      "road": "i15n.x31.on",
+      "length_m": 752.0,
+      "lanes": 2,
+      "decks": 0,
+      "max_layer": 0,
+      "side": "right",
+      "gore_start": false,
+      "gore_end": true,
+      "fit_max_m": 0.36
+     },
+     {
+      "road": "i15n.x31.on2",
+      "length_m": 764.0,
+      "lanes": 2,
+      "decks": 0,
+      "max_layer": 0,
+      "side": "right",
+      "gore_start": false,
+      "gore_end": true,
+      "fit_max_m": 0.275
+     },
+     {
+      "road": "i15n.x35.on2",
+      "length_m": 388.0,
+      "lanes": 1,
+      "decks": 0,
+      "max_layer": 0,
+      "side": "right",
+      "gore_start": false,
+      "gore_end": true,
+      "fit_max_m": 0.127
+     },
+     {
+      "road": "i15n.x36.on",
+      "length_m": 1488.0,
+      "lanes": 2,
+      "decks": 0,
+      "max_layer": 0,
+      "side": "right",
+      "gore_start": false,
+      "gore_end": true,
+      "fit_max_m": 0.576
+     },
+     {
+      "road": "i15n.xkm60.on",
+      "length_m": 1408.0,
+      "lanes": 2,
+      "decks": 0,
+      "max_layer": 0,
+      "side": "right",
+      "gore_start": false,
+      "gore_end": true,
+      "fit_max_m": 0.644
+     },
+     {
+      "road": "i15n.x39.on",
+      "length_m": 416.0,
+      "lanes": 2,
+      "decks": 0,
+      "max_layer": 0,
+      "side": "right",
+      "gore_start": false,
+      "gore_end": true,
+      "fit_max_m": 1.069
+     },
+     {
+      "road": "i15n.x39.on2",
+      "length_m": 668.0,
+      "lanes": 1,
+      "decks": 1,
+      "max_layer": 9,
+      "side": "right",
+      "gore_start": false,
+      "gore_end": true,
+      "fit_max_m": 1.883
+     },
+     {
+      "road": "i15n.xkm66.on",
+      "length_m": 664.0,
+      "lanes": 3,
+      "decks": 0,
+      "max_layer": 0,
+      "side": "right",
+      "gore_start": false,
+      "gore_end": true,
+      "fit_max_m": 0.243
+     },
+     {
+      "road": "i15n.x41.on",
+      "length_m": 608.0,
+      "lanes": 1,
+      "decks": 0,
+      "max_layer": 0,
+      "side": "left",
+      "gore_start": false,
+      "gore_end": true,
+      "fit_max_m": 0.114
+     },
+     {
+      "road": "i15n.xkm68.on",
+      "length_m": 600.0,
+      "lanes": 3,
+      "decks": 0,
+      "max_layer": 0,
+      "side": "right",
+      "gore_start": false,
+      "gore_end": true,
+      "fit_max_m": 0.06
+     },
+     {
+      "road": "i15s.xkm2.on",
+      "length_m": 652.0,
+      "lanes": 3,
+      "decks": 0,
+      "max_layer": 0,
+      "side": "right",
+      "gore_start": false,
+      "gore_end": true,
+      "fit_max_m": 0.534
+     },
+     {
+      "road": "i15s.x39.on",
+      "length_m": 524.0,
+      "lanes": 2,
+      "decks": 0,
+      "max_layer": 0,
+      "side": "right",
+      "gore_start": false,
+      "gore_end": true,
+      "fit_max_m": 3.09
+     },
+     {
+      "road": "i15s.x38A.on",
+      "length_m": 476.0,
+      "lanes": 2,
+      "decks": 0,
+      "max_layer": 0,
+      "side": "right",
+      "gore_start": false,
+      "gore_end": true,
+      "fit_max_m": 1.199
+     },
+     {
+      "road": "i15s.x37.on",
+      "length_m": 640.0,
+      "lanes": 2,
+      "decks": 0,
+      "max_layer": 0,
+      "side": "right",
+      "gore_start": false,
+      "gore_end": true,
+      "fit_max_m": 2.357
+     },
+     {
+      "road": "i15s.x37.on2",
+      "length_m": 204.0,
+      "lanes": 1,
+      "decks": 0,
+      "max_layer": 0,
+      "side": "right",
+      "gore_start": false,
+      "gore_end": true,
+      "fit_max_m": 0.119
+     },
+     {
+      "road": "i15s.x34.on",
+      "length_m": 280.0,
+      "lanes": 2,
+      "decks": 0,
+      "max_layer": 0,
+      "side": "right",
+      "gore_start": false,
+      "gore_end": true,
+      "fit_max_m": 0.111
+     },
+     {
+      "road": "i15s.x33.on2",
+      "length_m": 500.0,
+      "lanes": 2,
+      "decks": 0,
+      "max_layer": 0,
+      "side": "right",
+      "gore_start": false,
+      "gore_end": true,
+      "fit_max_m": 0.198
+     },
+     {
+      "road": "i15s.x30.on",
+      "length_m": 772.0,
+      "lanes": 2,
+      "decks": 0,
+      "max_layer": 0,
+      "side": "right",
+      "gore_start": false,
+      "gore_end": true,
+      "fit_max_m": 0.262
+     },
+     {
+      "road": "i15s.x29.on",
+      "length_m": 852.0,
+      "lanes": 2,
+      "decks": 0,
+      "max_layer": 0,
+      "side": "right",
+      "gore_start": false,
+      "gore_end": true,
+      "fit_max_m": 0.669
+     },
+     {
+      "road": "i15s.x29.on2",
+      "length_m": 612.0,
+      "lanes": 1,
+      "decks": 0,
+      "max_layer": 0,
+      "side": "right",
+      "gore_start": false,
+      "gore_end": true,
+      "fit_max_m": 0.329
+     },
+     {
+      "road": "i15s.x27.on",
+      "length_m": 1192.0,
+      "lanes": 1,
+      "decks": 0,
+      "max_layer": 0,
+      "side": "right",
+      "gore_start": false,
+      "gore_end": true,
+      "fit_max_m": 0.207
+     },
+     {
+      "road": "i15s.x25.on",
+      "length_m": 1012.0,
+      "lanes": 1,
+      "decks": 0,
+      "max_layer": 0,
+      "side": "right",
+      "gore_start": false,
+      "gore_end": true,
+      "fit_max_m": 1.754
+     },
+     {
+      "road": "i15s.x12.on",
+      "length_m": 812.0,
+      "lanes": 1,
+      "decks": 0,
+      "max_layer": 0,
+      "side": "right",
+      "gore_start": false,
+      "gore_end": true,
+      "fit_max_m": 1.863
+     },
+     {
+      "road": "i15n.x33.off",
+      "length_m": 3416.0,
+      "lanes": 2,
+      "decks": 3,
+      "max_layer": 9,
+      "side": "right",
+      "gore_start": true,
+      "gore_end": false,
+      "fit_max_m": 0.77
+     },
+     {
+      "road": "i15n.x35.off",
+      "length_m": 3308.0,
+      "lanes": 2,
+      "decks": 7,
+      "max_layer": 9,
+      "side": "right",
+      "gore_start": true,
+      "gore_end": false,
+      "fit_max_m": 0.187
+     },
+     {
+      "road": "i15n.xkm68.off",
+      "length_m": 1288.0,
+      "lanes": 1,
+      "decks": 0,
+      "max_layer": 1,
+      "side": "left",
+      "gore_start": true,
+      "gore_end": false,
+      "fit_max_m": 0.11
+     },
+     {
+      "road": "i15s.x36.off",
+      "length_m": 512.0,
+      "lanes": 2,
+      "decks": 0,
+      "max_layer": 0,
+      "side": "right",
+      "gore_start": true,
+      "gore_end": false,
+      "fit_max_m": 0.282
+     },
+     {
+      "road": "i15s.x34.off",
+      "length_m": 1240.0,
+      "lanes": 2,
+      "decks": 0,
+      "max_layer": 1,
+      "side": "right",
+      "gore_start": true,
+      "gore_end": false,
+      "fit_max_m": 1.511
+     },
+     {
+      "road": "i15s.x27.off",
+      "length_m": 1088.0,
+      "lanes": 1,
+      "decks": 1,
+      "max_layer": 1,
+      "side": "right",
+      "gore_start": true,
+      "gore_end": false,
+      "fit_max_m": 0.157
+     },
+     {
+      "road": "i15n.x29.on",
+      "length_m": 920.0,
+      "lanes": 2,
+      "decks": 0,
+      "max_layer": 0,
+      "side": "right",
+      "gore_start": false,
+      "gore_end": true,
+      "fit_max_m": 0.238
+     },
+     {
+      "road": "i15n.x35.on",
+      "length_m": 836.0,
+      "lanes": 2,
+      "decks": 2,
+      "max_layer": 9,
+      "side": "right",
+      "gore_start": false,
+      "gore_end": true,
+      "fit_max_m": 1.888
+     },
+     {
+      "road": "i15n.xkm61.on",
+      "length_m": 632.0,
+      "lanes": 2,
+      "decks": 0,
+      "max_layer": 1,
+      "side": "right",
+      "gore_start": false,
+      "gore_end": true,
+      "fit_max_m": 0.253
+     },
+     {
+      "road": "i15n.x40.on",
+      "length_m": 712.0,
+      "lanes": 2,
+      "decks": 0,
+      "max_layer": 1,
+      "side": "right",
+      "gore_start": false,
+      "gore_end": true,
+      "fit_max_m": 1.715
+     },
+     {
+      "road": "i15s.x41.on",
+      "length_m": 1252.0,
+      "lanes": 1,
+      "decks": 1,
+      "max_layer": 9,
+      "side": "left",
+      "gore_start": false,
+      "gore_end": true,
+      "fit_max_m": 0.096
+     },
+     {
+      "road": "i15s.xkm2.on3",
+      "length_m": 3408.0,
+      "lanes": 2,
+      "decks": 1,
+      "max_layer": 9,
+      "side": "right",
+      "gore_start": false,
+      "gore_end": true,
+      "fit_max_m": 0.273
+     },
+     {
+      "road": "i15n.x38.off",
+      "length_m": 776.0,
+      "lanes": 1,
+      "decks": 1,
+      "max_layer": 2,
+      "side": "right",
+      "gore_start": true,
+      "gore_end": false,
+      "fit_max_m": 0.584
+     },
+     {
+      "road": "i15n.x39.off",
+      "length_m": 1796.0,
+      "lanes": 2,
+      "decks": 2,
+      "max_layer": 9,
+      "side": "right",
+      "gore_start": true,
+      "gore_end": false,
+      "fit_max_m": 0.667
+     },
+     {
+      "road": "i15n.x42A.off",
+      "length_m": 1100.0,
+      "lanes": 2,
+      "decks": 0,
+      "max_layer": 2,
+      "side": "right",
+      "gore_start": true,
+      "gore_end": false,
+      "fit_max_m": 0.344
+     },
+     {
+      "road": "i15s.x40.off",
+      "length_m": 2228.0,
+      "lanes": 2,
+      "decks": 2,
+      "max_layer": 9,
+      "side": "right",
+      "gore_start": true,
+      "gore_end": false,
+      "fit_max_m": 0.225
+     },
+     {
+      "road": "i15s.x37.off",
+      "length_m": 504.0,
+      "lanes": 2,
+      "decks": 1,
+      "max_layer": 2,
+      "side": "right",
+      "gore_start": true,
+      "gore_end": false,
+      "fit_max_m": 0.404
+     }
+    ],
+    "dropped": [
+     {
+      "road": "i15n.xkm61.off",
+      "why": "geometry: its gore would lie on i15s.opp (a median ramp with no room)",
+      "node": "n137167665"
+     },
+     {
+      "road": "i15s.xkm2.on2",
+      "why": "geometry: its gore would lie on i15n.main (a median ramp with no room)"
+     },
+     {
+      "road": "x.road.3",
+      "name": "",
+      "why": "a branch of a ramp, too tangled to build by rule (no profile clears the route with both ends on the ground: over another road at s 144-224; over another road at s 144-412)",
+      "branch": true
+     },
+     {
+      "road": "x.road.5",
+      "name": "",
+      "why": "a branch of a ramp, too tangled to build by rule (no profile clears the route with both ends on the ground: under ['x.road.4', 'x.saint-rose-parkway'] at s 684-948; over another road at s 684-976)",
+      "branch": true
+     },
+     {
+      "road": "x.road.6",
+      "name": "",
+      "why": "a branch of a ramp, too tangled to build by rule (no profile clears the route with both ends on the ground: over another road at s 0-64; over another road at s 0-256)",
+      "branch": true
+     },
+     {
+      "road": "x.road.8",
+      "name": "",
+      "why": "a branch of a ramp, too tangled to build by rule (no profile clears the route with both ends on the ground: ends; ends)",
+      "branch": true
+     },
+     {
+      "road": "x.road",
+      "name": "",
+      "why": "a branch of a ramp, too tangled to build by rule (no profile clears the route with both ends on the ground: over another road at s 0-444; over another road at s 0-444)",
+      "branch": true
+     },
+     {
+      "road": "i15s.x33.on",
+      "why": "no profile: under ['i15n.main', 'i15n.x35.off', 'i15s.opp', 'i15s.x33.off', 'i15s.x34.on', 'x.blue-diamond-road', 'x.west-warm-springs-road'] at s 28-1568; under ['i15n.main', 'i15n.x35.off', 'i15s.opp', 'i15s.x33.off', 'i15s.x34.on', 'x.blue-diamond-road', 'x.west-warm-springs-road'] at s 388-1152"
+     }
+    ],
+    "simplified": [
+     {
+      "road": "x.road.4",
+      "why": "over everything it meets (its mapped level does not fit)"
+     },
+     {
+      "road": "x.road.10",
+      "why": "approach 520.0 m, grade 0.06"
+     },
+     {
+      "road": "i15n.xkm66.off",
+      "why": "ends before a road it would have to pass under",
+      "length_m": 564.0
+     },
+     {
+      "road": "i15n.xkm66.off",
+      "why": "shortened until a profile fits: pins",
+      "length_m": 424.0
+     },
+     {
+      "road": "i15n.xkm66.off",
+      "why": "shortened until a profile fits: pins",
+      "length_m": 320.0
+     },
+     {
+      "road": "i15s.xkm1.off",
+      "why": "ends before a road it would have to pass under",
+      "length_m": 604.0
+     },
+     {
+      "road": "i15s.x39.off",
+      "why": "shortened until a profile fits: over another road at s 452-472",
+      "length_m": 684.0
+     },
+     {
+      "road": "i15s.x39.off",
+      "why": "shortened until a profile fits: under ['x.wilbur-clark-d-i-road'] at s 432-472",
+      "length_m": 516.0
+     },
+     {
+      "road": "i15s.x39.off",
+      "why": "shortened until a profile fits: under ['x.wilbur-clark-d-i-road'] at s 432-472",
+      "length_m": 388.0
+     },
+     {
+      "road": "i15s.x38B.off",
+      "why": "shortened until a profile fits: pins",
+      "length_m": 232.0
+     },
+     {
+      "road": "i15n.x25.on",
+      "why": "shortened until a profile fits: over another road at s 4-12",
+      "length_m": 324.0
+     },
+     {
+      "road": "i15n.x39.on2",
+      "why": "over everything it meets (its mapped level does not fit)"
+     },
+     {
+      "road": "i15n.x41.on",
+      "why": "ends before a road it would have to pass under",
+      "length_m": 608.0
+     },
+     {
+      "road": "i15s.x37.on2",
+      "why": "shortened until a profile fits: pins",
+      "length_m": 204.0
+     },
+     {
+      "road": "i15n.x33.off",
+      "why": "over everything it meets (its mapped level does not fit)"
+     },
+     {
+      "road": "i15n.x35.off",
+      "why": "over everything it meets (its mapped level does not fit)"
+     },
+     {
+      "road": "i15s.x36.off",
+      "why": "ends before a road it would have to pass under",
+      "length_m": 512.0
+     },
+     {
+      "road": "i15s.x34.off",
+      "why": "ends before a road it would have to pass under",
+      "length_m": 1240.0
+     },
+     {
+      "road": "i15n.x29.on",
+      "why": "shortened until a profile fits: over another road at s 0-68",
+      "length_m": 920.0
+     },
+     {
+      "road": "i15n.x35.on",
+      "why": "over everything it meets (its mapped level does not fit)"
+     },
+     {
+      "road": "i15s.x41.on",
+      "why": "over everything it meets (its mapped level does not fit)"
+     },
+     {
+      "road": "i15s.xkm2.on3",
+      "why": "over everything it meets (its mapped level does not fit)"
+     },
+     {
+      "road": "i15s.x33.on",
+      "why": "ends before a road it would have to pass under",
+      "length_m": 2940.0
+     },
+     {
+      "road": "i15s.x33.on",
+      "why": "shortened until a profile fits: under ['i15n.main', 'i15n.x35.off', 'i15s.opp', 'i15s.x33.off', 'i15s.x34.on', 'x.blue-diamond-road', 'x.west-warm-springs-road'] at s 476-2856",
+      "length_m": 2204.0
+     },
+     {
+      "road": "i15s.x33.on",
+      "why": "shortened until a profile fits: under ['i15n.main', 'i15n.x35.off', 'i15s.opp', 'i15s.x33.off', 'i15s.x34.on', 'x.blue-diamond-road', 'x.west-warm-springs-road'] at s 580-2120",
+      "length_m": 1652.0
+     },
+     {
+      "road": "i15s.x33.on",
+      "why": "shortened until a profile fits: under ['i15n.main', 'i15n.x35.off', 'i15s.opp', 'i15s.x33.off', 'i15s.x34.on', 'x.blue-diamond-road', 'x.west-warm-springs-road'] at s 28-1568",
+      "length_m": 1236.0
+     },
+     {
+      "road": "i15s.x33.on",
+      "why": "shortened until a profile fits: under ['i15n.main', 'i15n.x35.off', 'i15s.opp', 'i15s.x33.off', 'i15s.x34.on', 'x.blue-diamond-road', 'x.west-warm-springs-road'] at s 388-1152",
+      "length_m": 924.0
+     },
+     {
+      "road": "i15n.x39.off",
+      "why": "over everything it meets (its mapped level does not fit)"
+     },
+     {
+      "road": "i15s.x40.off",
+      "why": "over everything it meets (its mapped level does not fit)"
+     }
+    ],
+    "overlaps": [],
+    "acceptance": {
+     "exit_ramps": {
+      "ok": true,
+      "exits": 21,
+      "with_ramp_300m": 18,
+      "no_link_mapped": [
+       {
+        "s": 8117.5,
+        "ref": "",
+        "label": "",
+        "ramp": null,
+        "ramp_m": 0.0,
+        "ok": true,
+        "no_link": true,
+        "why": "a junction node with no motorway_link mapped at it: nothing to build"
+       },
+       {
+        "s": 13637.1,
+        "ref": "",
+        "label": "",
+        "ramp": null,
+        "ramp_m": 0.0,
+        "ok": true,
+        "no_link": true,
+        "why": "a junction node with no motorway_link mapped at it: nothing to build"
+       }
+      ],
+      "simplified": [
+       {
+        "s": 60714.9,
+        "ref": "",
+        "label": "Harmon Avenue",
+        "ramp": null,
+        "ramp_m": 0.0,
+        "ok": true,
+        "simplified": "geometry: its gore would lie on i15s.opp (a median ramp with no room)"
+       }
+      ],
+      "missing": []
+     },
+     "overpasses": {
+      "ok": true,
+      "count": 17,
+      "min_clearance_m": 5.43,
+      "dropped": [
+       {
+        "road": "x.road.3",
+        "name": "",
+        "why": "a branch of a ramp, too tangled to build by rule (no profile clears the route with both ends on the ground: over another road at s 144-224; over another road at s 144-412)",
+        "branch": true
+       },
+       {
+        "road": "x.road.5",
+        "name": "",
+        "why": "a branch of a ramp, too tangled to build by rule (no profile clears the route with both ends on the ground: under ['x.road.4', 'x.saint-rose-parkway'] at s 684-948; over another road at s 684-976)",
+        "branch": true
+       },
+       {
+        "road": "x.road.6",
+        "name": "",
+        "why": "a branch of a ramp, too tangled to build by rule (no profile clears the route with both ends on the ground: over another road at s 0-64; over another road at s 0-256)",
+        "branch": true
+       },
+       {
+        "road": "x.road.8",
+        "name": "",
+        "why": "a branch of a ramp, too tangled to build by rule (no profile clears the route with both ends on the ground: ends; ends)",
+        "branch": true
+       },
+       {
+        "road": "x.road",
+        "name": "",
+        "why": "a branch of a ramp, too tangled to build by rule (no profile clears the route with both ends on the ground: over another road at s 0-444; over another road at s 0-444)",
+        "branch": true
+       }
+      ],
+      "note": "branches of ramps that are too tangled to build by rule are left out and listed (simplified)"
+     },
+     "no_ramp_through_main": {
+      "ok": true,
+      "violations": []
+     },
+     "plan_overlap_rule": {
+      "ok": true,
+      "violations": 0,
+      "overlapping_pairs": 134,
+      "min_separation_m": 6.38
+     }
     }
    }
   }
  },
+ "main_line": {
+  "checked": true,
+  "roads": [
+   "i15n.main",
+   "i15s.opp"
+  ],
+  "identical": true
+ },
  "files": {
-  "roadnet.json": 47598,
-  "roadnet.bin": 956984,
-  "total": 1004582,
+  "roadnet.json": 239605,
+  "roadnet.bin": 1448580,
+  "total": 1688185,
   "ok": true
  },
  "source": {

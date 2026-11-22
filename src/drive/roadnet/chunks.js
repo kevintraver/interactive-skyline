@@ -10,12 +10,19 @@
  *
  * For a 70 km road: 5 batches, plus about 16 level-1 and 4 level-0 chunks around the car, plus one
  * extra group for the batch with the hole: about 26 draw calls.
+ *
+ * The small roads of the interchanges (ramps and crossing roads, role !== 'main') are not chunked
+ * road by road, which would cost a draw call per road: they are cut into pieces of at most 256 m,
+ * and the pieces are gathered by where they lie, on a CLUSTER-metre grid, into one chunk per
+ * cell. Those chunks work as the main road's do, in batches of their own.
  */
 import * as THREE from 'three';
 import { CHUNK_STATIONS } from './mesher.js';
 import { createRefline } from './refline.js';
 
 const BATCH_CHUNKS = 64;
+const CLUSTER = 768; // m: grid cell that gathers the pieces of the small roads into one chunk
+const CLUSTER_BATCH = 32; // cluster chunks per batch (one draw call each at level 2)
 const HYSTERESIS = 1.1; // a chunk drawn finer stays finer until 10% past the threshold
 const NEAR_LIT = 150; // m: chunks this close get the material that glows more at night
 
@@ -35,7 +42,7 @@ function toMesh(m, material) {
   mesh.position.set(m.origin[0], m.origin[1], m.origin[2]); // doubles; the GPU only sees the local part
   mesh.matrixAutoUpdate = false;
   mesh.updateMatrix();
-  mesh.name = `road L${m.lod} ${m.s0}-${m.s1}`;
+  mesh.name = m.s1 > m.s0 ? `road L${m.lod} ${m.s0}-${m.s1}` : `interchange L${m.lod}`;
   return mesh;
 }
 
@@ -55,8 +62,26 @@ export function createRoadChunks({ roadnet, base, earthR, parent, materials, cre
   let waiters = [];
   const p = {};
 
+  const cells = new Map(); // grid cell -> cluster chunk
   roadnet.roads.forEach((road, ri) => {
     const ref = createRefline(road);
+    if ((road.role ?? 'main') !== 'main') {
+      const step = CHUNK_STATIONS * road.spacing;
+      const halfW = Math.max(...road.sections.map((s) => Math.max(s.left.shoulder, s.right.shoulder) + s.lanes.reduce((a, l) => a + l.w, 0))) + 50;
+      for (let a = 0; a < ref.length - 1e-6; a += step) {
+        const b = Math.min(ref.length, a + step);
+        ref.at((a + b) / 2, p);
+        const key = `${Math.floor(p.x / CLUSTER)},${Math.floor(p.y / CLUSTER)}`;
+        let c = cells.get(key);
+        if (!c) {
+          c = { road: -1, cluster: key, parts: [], index: cells.size, s0: 0, s1: 0, cx: 0, cy: 0, radius: 0, want: 2, have: null, pending: null, dist: Infinity, batch: null, mids: [] };
+          cells.set(key, c);
+        }
+        c.parts.push({ road: ri, s0: a, s1: b });
+        c.mids.push([p.x, p.y, (b - a) / 2 + halfW]);
+      }
+      return;
+    }
     const step = CHUNK_STATIONS * road.spacing;
     const n = Math.ceil(ref.length / step - 1e-9);
     const halfWidth = Math.max(...road.sections.map((s) => Math.max(s.left.shoulder, s.right.shoulder) + s.lanes.reduce((a, l) => a + l.w, 0))) + 50;
@@ -73,6 +98,23 @@ export function createRoadChunks({ roadnet, base, earthR, parent, materials, cre
       batches.push(batch);
     }
   });
+
+  // cluster chunks: centre and reach from their pieces, then batches of them
+  const clusters = [...cells.values()].sort((a, b) => (a.cluster < b.cluster ? -1 : 1));
+  for (const c of clusters) {
+    c.cx = c.mids.reduce((a, m) => a + m[0], 0) / c.mids.length;
+    c.cy = c.mids.reduce((a, m) => a + m[1], 0) / c.mids.length;
+    c.radius = Math.max(...c.mids.map((m) => Math.hypot(m[0] - c.cx, m[1] - c.cy) + m[2]));
+    delete c.mids;
+  }
+  for (let b = 0; b * CLUSTER_BATCH < clusters.length; b++) {
+    const lo = chunks.length;
+    const group = clusters.slice(b * CLUSTER_BATCH, (b + 1) * CLUSTER_BATCH);
+    chunks.push(...group);
+    const batch = { isBatch: true, road: -1, s0: 0, s1: 0, first: lo, count: group.length, mesh: null, ranges: null, pending: null, clusters: group };
+    for (const c of group) c.batch = batch;
+    batches.push(batch);
+  }
 
   worker.onmessage = (e) => receive(e.data);
   worker.postMessage({ type: 'init', roads: roadnet.roads, base, earthR });
@@ -133,13 +175,18 @@ export function createRoadChunks({ roadnet, base, earthR, parent, materials, cre
 
   /** Send the nearest outstanding requests, batches first, up to maxInFlight. */
   function dispatch() {
-    for (const b of batches) if (!b.mesh && !b.pending && inFlight < maxInFlight) send(b, { road: b.road, s0: b.s0, s1: b.s1, lod: 2, split: b.step });
+    for (const b of batches) {
+      if (b.mesh || b.pending || inFlight >= maxInFlight) continue;
+      if (b.clusters) send(b, { parts: b.clusters.flatMap((c, g) => c.parts.map((pt) => ({ ...pt, group: g }))), groups: b.count, lod: 2 });
+      else send(b, { road: b.road, s0: b.s0, s1: b.s1, lod: 2, split: b.step });
+    }
     if (inFlight >= maxInFlight) return;
     const todo = chunks.filter((c) => c.want < 2 && c.have?.lod !== c.want && c.pending?.lod !== c.want).sort((a, b) => a.dist - b.dist);
     for (const c of todo) {
       if (inFlight >= maxInFlight) break;
       if (c.have?.lod === c.want || c.pending?.lod === c.want) continue; // a synchronous reply got there first
-      send(c, { road: c.road, s0: c.s0, s1: c.s1, lod: c.want });
+      if (c.cluster) send(c, { parts: c.parts.map((pt) => ({ ...pt, group: 0 })), groups: 1, lod: c.want });
+      else send(c, { road: c.road, s0: c.s0, s1: c.s1, lod: c.want });
     }
   }
 
@@ -190,7 +237,7 @@ export function createRoadChunks({ roadnet, base, earthR, parent, materials, cre
       return out;
     },
     /** Chunk states, for tests and debugging. */
-    chunks: () => chunks.map((c) => ({ road: c.road, index: c.index, s0: c.s0, s1: c.s1, want: c.want, have: c.have?.lod ?? null, pending: c.pending?.lod ?? null })),
+    chunks: () => chunks.map((c) => ({ road: c.road, index: c.index, s0: c.s0, s1: c.s1, want: c.want, have: c.have?.lod ?? null, pending: c.pending?.lod ?? null, ...(c.cluster ? { cluster: c.cluster, parts: c.parts.length } : {}) })),
     dispose() {
       disposed = true;
       worker.terminate?.();

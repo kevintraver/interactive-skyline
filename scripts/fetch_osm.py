@@ -15,7 +15,15 @@ within 2 km of each route end.
 One request per road reference. The answer is cached under data/raw/<city>/ with Overpass's
 snapshot timestamp inside, and a rerun with a warm cache makes no request (--refresh forces one).
 
-Output: data/raw/<city>/osm-<ref>.json   the Overpass JSON as received
+A second request per road fetches what the interchanges are built from (plan 02, D3.4): every
+motorway or motorway_link way within 800 m of the road's nodes, and every road way (motorway
+down to service, with their links) tagged `bridge` within 300 m, with the ways two hops along
+from it, so that the bridges that cross the road come with their approaches and their `bridge`
+and `layer` tags, and the streets within 800 m (to tell where a ramp meets one). It is cached apart, so the
+main line keeps being built from the first answer's snapshot.
+
+Output: data/raw/<city>/osm-<ref>.json     the Overpass JSON as received
+        data/raw/<city>/osm-<ref>-x.json   the interchange extract
 """
 import json
 import sys
@@ -40,8 +48,8 @@ def ref_slug(ref):
     return ref.lower().replace(" ", "")
 
 
-def cache_path(city, ref, root=ROOT):
-    return Path(root) / "data" / "raw" / city / f"osm-{ref_slug(ref)}.json"
+def cache_path(city, ref, root=ROOT, extract=""):
+    return Path(root) / "data" / "raw" / city / f"osm-{ref_slug(ref)}{'-' + extract if extract else ''}.json"
 
 
 def region_bbox(cfg, margin=0.02):
@@ -76,6 +84,40 @@ way(bn.j)["highway"="motorway_link"]->.l;
 .l out body;
 .x out body;
 .xn out skel;
+"""
+
+
+ROAD_CLASSES = "motorway|trunk|primary|secondary|tertiary|unclassified|residential|service|living_street|" \
+               "motorway_link|trunk_link|primary_link|secondary_link|tertiary_link"
+
+
+STREET_CLASSES = "trunk|primary|secondary|tertiary|unclassified|residential|trunk_link|primary_link|secondary_link|tertiary_link"
+
+
+def interchange_query(ref, bbox, links_m=800, bridges_m=300):
+    """Overpass QL for the interchange extract: the road's ways (by their route relations, as
+    in query()), then every motorway and link way within links_m of their nodes, every road
+    way with a `bridge` tag within bridges_m, the road ways two hops along from each bridge (its
+    approaches), and the streets within links_m (where a ramp ends), all with their nodes. Tags only, never ids. (around.w on this
+    set answers nothing on the public instance, so distances are measured from the nodes.)"""
+    prefix, num = ref.split()
+    s, w, n, e = (f"{v:.5f}" for v in bbox)
+    hw = f'["highway"~"^({ROAD_CLASSES})$"]'
+    return f"""[out:json][timeout:600];
+rel["type"="route"]["route"="road"]["network"="{NETWORKS[prefix]}"]["ref"="{num}"]({s},{w},{n},{e})->.r;
+way(r.r)({s},{w},{n},{e})->.w;
+node(w.w)->.n;
+way(around.n:{links_m})["highway"~"^(motorway|motorway_link)$"]->.l;
+way(around.n:{bridges_m}){hw}["bridge"]["bridge"!="no"]->.b;
+node(w.b)->.bn;
+way(bn.bn){hw}->.b1;
+node(w.b1)->.b1n;
+way(bn.b1n){hw}->.b2;
+way(around.n:{links_m})["highway"~"^({STREET_CLASSES})$"]->.s;
+(.l; .b; .b1; .b2; .s;)->.a;
+node(w.a)->.an;
+.a out body;
+.an out skel;
 """
 
 
@@ -120,6 +162,25 @@ def fetch(city, ref, cfg, refresh=False, root=ROOT):
     return doc
 
 
+def fetch_interchanges(city, ref, cfg, refresh=False, root=ROOT):
+    path = cache_path(city, ref, root, "x")
+    if path.exists() and not refresh:
+        doc = json.loads(path.read_text())
+        print(f"{ref} interchanges: cached, snapshot {doc['osm3s']['timestamp_osm_base']} ({path.relative_to(root)})")
+        return doc
+    path.parent.mkdir(parents=True, exist_ok=True)
+    bbox = region_bbox(cfg)
+    print(f"{ref} interchanges: querying Overpass")
+    doc = overpass(interchange_query(ref, bbox))
+    if not any(el["type"] == "way" for el in doc["elements"]):
+        sys.exit(f"{ref} interchanges: the answer has no ways; not cached")
+    doc["query"] = {"ref": ref, "bbox": bbox, "extract": "interchanges"}
+    path.write_text(json.dumps(doc))
+    print(f"{ref} interchanges: snapshot {doc['osm3s']['timestamp_osm_base']}, {len(doc['elements'])} elements, "
+          f"{path.stat().st_size / 1e6:.1f} MB")
+    return doc
+
+
 def main():
     args = [a for a in sys.argv[1:] if not a.startswith("--")]
     if len(args) != 1:
@@ -129,6 +190,7 @@ def main():
     refs = sorted({r["ref"] for r in cfg.get("routes", [])}) or sys.exit(f"{city} has no routes in data/cities.json")
     for ref in refs:
         fetch(city, ref, cfg, refresh="--refresh" in sys.argv)
+        fetch_interchanges(city, ref, cfg, refresh="--refresh" in sys.argv)
 
 
 if __name__ == "__main__":

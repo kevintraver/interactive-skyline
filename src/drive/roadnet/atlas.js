@@ -15,7 +15,7 @@ export const CYCLE = 12.192; // m: a 10 ft line and a 30 ft gap (MUTCD)
 export const DASH = 3.048; // m
 export const LINE_W = 0.15; // m: 6 in normal line
 export const MARK_W = 1.0; // m: width of a marking strip, centred on its boundary
-export const ATLAS_W = 512;
+export const ATLAS_W = 640;
 export const ATLAS_H = 512;
 
 /** Regions in atlas pixels [u0, u1). Marking regions span MARK_W metres. */
@@ -27,27 +27,32 @@ export const REGIONS = {
   white: [288, 352], // likewise
   shoulder: [352, 448],
   dirt: [448, 512],
+  concrete: [512, 576], // decks, parapets, piers, abutments
+  gore: [576, 640], // the painted area between a carriageway and a ramp: shoulder asphalt, white chevrons
 };
 
 /** Kinds written to the mesh's `kind` attribute. */
-export const KIND = { lane: 0, marking: 1, shoulder: 2, embankment: 3 };
+export const KIND = { lane: 0, marking: 1, shoulder: 2, embankment: 3, structure: 4 };
 
 /** u for a fraction t (0..1) across region `name`; plain regions are inset so mips never reach a neighbour. */
 export function regionU(name, t) {
   const [a, b] = REGIONS[name];
-  const inset = name === 'lane' || name === 'shoulder' || name === 'dirt' ? 6 : 0;
+  const inset = name === 'lane' || name === 'shoulder' || name === 'dirt' || name === 'concrete' || name === 'gore' ? 6 : 0;
   return (a + inset + t * (b - a - 2 * inset)) / ATLAS_W;
 }
 
 // sun-faded desert asphalt; specks kept low in contrast so they read as texture, not blotches.
 // The dirt is the average of the aerial photo within 200 m of I-15 (about #969593), so an embankment
 // reads as graded ground and not as a painted strip beside it.
+// Concrete is a weathered light grey a little warmer and lighter than the shoulder, so decks and
+// piers read as structure beside the asphalt without glaring in the desert sun.
 const DAY = { lane: '#6a6863', laneSpeck: ['#64625d', '#706e69', '#5f5d58'], shoulder: '#7b766d', shoulderSpeck: ['#747067', '#827d73'],
-  dirt: '#989692', dirtSpeck: ['#908e8a', '#a09e99', '#8c8a86'], white: '#e9e8e2', yellow: '#e3b42c' };
+  dirt: '#989692', dirtSpeck: ['#908e8a', '#a09e99', '#8c8a86'], white: '#e9e8e2', yellow: '#e3b42c',
+  concrete: '#aaa59b', concreteSpeck: ['#a29d93', '#b1aca2', '#9c978e'] };
 // Emissive map for the night look: markings stand out (they are retroreflective; this stands in
 // for headlights until they exist), asphalt barely, dirt not at all.
 const NIGHT = { lane: '#3a3a3a', laneSpeck: ['#363636', '#3e3e3e'], shoulder: '#323231', shoulderSpeck: ['#2e2e2e', '#363635'],
-  dirt: '#000000', dirtSpeck: [], white: '#f0f0ea', yellow: '#f0c040' };
+  dirt: '#000000', dirtSpeck: [], white: '#f0f0ea', yellow: '#f0c040', concrete: '#1c1c1b', concreteSpeck: [] };
 
 /** Small deterministic generator, so the texture is the same every load. */
 function rng(seed) {
@@ -90,6 +95,22 @@ export function drawRoadAtlas(ctx, { night = false, seed = 7 } = {}) {
   specks(ctx, [0, REGIONS.yellow[0]], p.laneSpeck, area([0, REGIONS.yellow[0]]), rand, H);
   specks(ctx, REGIONS.shoulder, p.shoulderSpeck, area(REGIONS.shoulder), rand, H);
   specks(ctx, REGIONS.dirt, p.dirtSpeck, area(REGIONS.dirt) * 3, rand, H);
+
+  fill(p.concrete, REGIONS.concrete[0], 0, REGIONS.concrete[1] - REGIONS.concrete[0], H);
+  specks(ctx, REGIONS.concrete, p.concreteSpeck, area(REGIONS.concrete), rand, H);
+  fill(p.shoulder, REGIONS.gore[0], 0, REGIONS.gore[1] - REGIONS.gore[0], H);
+  specks(ctx, REGIONS.gore, p.shoulderSpeck, area(REGIONS.gore), rand, H);
+  // chevrons: a white band slanting across the gore once per cycle, 0.6 m wide along the road
+  {
+    const [g0, g1] = REGIONS.gore;
+    const band = (0.6 / CYCLE) * H;
+    const rows = 64;
+    for (let r = 0; r < rows; r++) {
+      const u0 = g0 + 6 + ((g1 - g0 - 12) * r) / rows, w = (g1 - g0 - 12) / rows + 0.5;
+      const v0 = (H * 0.25 + (r / rows) * H * 0.35) % H;
+      fill(p.white, u0, v0, w, band);
+    }
+  }
 
   // lines last, over the specks
   const lw = LINE_W * pxM('broken');

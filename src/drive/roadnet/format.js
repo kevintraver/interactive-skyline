@@ -63,6 +63,8 @@
  *   "version": 1,                         required, must be 1
  *   "source": { ... },                    optional, free-form provenance (default {})
  *   "roads": [ road, ... ]                required, at least one
+ *   "junctions": [ junction, ... ],       optional (default []); see "junctions and gores"
+ *   "structures": [ structure, ... ]      optional (default []); see "structures"
  * }
  * road = {
  *   "id": "i15n.main",                    required, unique string
@@ -76,9 +78,22 @@
  *                                         the last s1 = length; each s1 > s0. Metres.
  *   "speed":   [{ "s0": 0, "mph": 70 }],  optional (default []); each entry runs to the next s0
  *   "surface": [{ "s0": 0, "kind": "asphalt" }],  optional (default [{ s0: 0, kind: "asphalt" }])
- *   "bridges": [{ "s0": 30120, "s1": 30210, "kind": "viaduct" }],  optional (default [])
+ *   "bridges": [{ "s0": 30120, "s1": 30210, "kind": "viaduct", "deck": false }],  optional (default []);
+ *                                         s0 < s1 inside the road. "deck" (default false): true draws
+ *                                         a deck slab with parapets over [s0, s1] and no embankment
+ *                                         (the road is on a bridge of its own, with piers among the
+ *                                         structures); false keeps the road as it is and adds parapets
+ *                                         on both pavement edges (a carriageway that is itself the bridge)
  *   "links":   [{ "s": 41020, "side": "right", "kind": "exit", "ref": "25", "to": "i15n.x25.off" }]
- *                                         optional (default []); passed through untouched
+ *                                         optional (default []); passed through untouched ("to" names
+ *                                         the ramp that leaves there, when there is one)
+ *   "role": "main",                       optional (default "main"): "main" (a carriageway), "ramp"
+ *                                         or "crossing" (a road that crosses on a bridge)
+ *   "embankment": [{ "s0": 0, "s1": 40, "side": "right", "w": 6.5 }]
+ *                                         optional (default []): over [s0, s1] the embankment on that
+ *                                         side reaches at most w metres out from the pavement edge
+ *                                         (so it never buries another road); entries of one side do
+ *                                         not overlap
  * }
  * section = {
  *   "s0": 0, "s1": 12850,                 required, metres
@@ -164,6 +179,40 @@
  * Writers choose taper lengths so that no lane edge moves sideways faster than 1 m per 20 m;
  * the smootherstep's steepest slope is 1.875 times the average, so a taper of length L with a
  * largest edge movement W keeps to that when L >= 37.5 W.
+ *
+ * ---------------------------------------------------------------- junctions and gores
+ * A junction ties two roads together where their pavements meet or overlap in plan. Wherever two
+ * road surfaces overlap in plan they are more than 4.9 m apart vertically, or the overlap lies
+ * inside a junction between them (on both roads' ranges).
+ * junction = {
+ *   "id": "i15n.x25.off.g0",              required, unique string
+ *   "kind": "diverge" | "merge" | "connect",  required: a ramp leaving road a, joining it, or two
+ *                                         roads meeting end to side (a ramp at a street, a branch)
+ *   "side": "right" | "left" | "",        the side of road a the other road is on (diverge, merge)
+ *   "a": { "road": id, "s0", "s1" },      required, a range of road a (metres, s0 <= s1)
+ *   "b": { "road": id, "s0", "s1" },      required, a range of road b
+ *   "gore": { "a": [s, ...], "b": [s, ...] }   diverge and merge only, optional: matching
+ *                                         chainages along the gore, increasing, as long as each
+ *                                         other (at least two): the point of road b at b[k] lies
+ *                                         beside the point of road a at a[k]
+ * }
+ * With a gore, the reader hides road a's shoulder on `side` over a.s0..a.s1 (its edge line stays;
+ * the embankment starts at the outer edge of that line's marking strip, MARK_W / 2 into the
+ * shoulder), and fills the gore: the strip from that edge to road b's pavement edge on the side
+ * facing road a, at road a's chainages from a[0] to a[last], with b's chainage interpolated
+ * linearly in a. Writers put road b's pavement there in the plane of road a's, so the two meet.
+ *
+ * ---------------------------------------------------------------- structures
+ * structure = {                            positions are along a road: s and d on its reference line
+ *   "kind": "pier",                       a box: "t" metres along the road, "w" across, centred
+ *   "road": id, "s", "d", "w", "t",       on (s, d), squared to the road's heading at s, from
+ *   "h0", "h1"                            h0 (bottom) to h1 (top), metres above sea level
+ * } | {
+ *   "kind": "abutment",                   a slope under the end of a deck: its top edge "w" wide
+ *   "road": id, "s", "d", "w",            across, centred on (s, d), at h1; it falls to h0 at
+ *   "dir": 1 | -1, "len", "h0", "h1"      s + dir * len (dir points into the span)
+ * }
+ * Unknown kinds are kept and ignored.
  */
 
 export const RECORD_INTS = 7;
@@ -314,19 +363,70 @@ export function decodeRoadNet(json, arrayBuffer) {
     if (Math.abs(sections[sections.length - 1].s1 - length) > 1e-3) fail(`road ${r.id} sections end at ${sections[sections.length - 1].s1}, the road at ${length}`);
     checkLanesAndTapers(r.id, r.sections, sections);
 
+    const bridges = (r.bridges ?? []).map((b, i) => {
+      if (!b || !isNum(b.s0) || !isNum(b.s1) || !(b.s1 > b.s0)) fail(`road ${r.id} bridge ${i} needs s0 < s1`);
+      return { ...b, deck: b.deck ?? false };
+    });
+    const embankment = (r.embankment ?? []).map((e, i) => {
+      if (!e || !isNum(e.s0) || !isNum(e.s1) || !(e.s1 >= e.s0) || !isNum(e.w) || e.w < 0) fail(`road ${r.id} embankment ${i} needs s0 <= s1 and w >= 0`);
+      if (e.side !== 'left' && e.side !== 'right') fail(`road ${r.id} embankment ${i} side must be left or right`);
+      return e;
+    });
+    const role = r.role ?? 'main';
+    if (!['main', 'ramp', 'crossing'].includes(role)) fail(`road ${r.id} role "${role}" is not understood`);
+
     return {
       ...r,
-      ref: r.ref ?? '', dir: r.dir ?? '', class: r.class ?? 'motorway',
+      ref: r.ref ?? '', dir: r.dir ?? '', class: r.class ?? 'motorway', role,
       stations: { ...st, offset, count, spacing },
       sections,
-      speed: r.speed ?? [], surface: r.surface ?? [{ s0: 0, kind: 'asphalt' }], bridges: r.bridges ?? [], links: r.links ?? [],
+      speed: r.speed ?? [], surface: r.surface ?? [{ s0: 0, kind: 'asphalt' }], bridges, links: r.links ?? [], embankment,
       spacing, count, length, x, y, h, heading, curvature, crossfall,
+      hides: [], gores: [], structures: [],
     };
   });
-  return { ...doc, source: doc.source ?? {}, roads };
+  const index = new Map(roads.map((r, i) => [r.id, i]));
+  const range = (v, where) => {
+    if (!v || !index.has(v.road)) fail(`${where} names a road that is not in the roadnet`);
+    if (!isNum(v.s0) || !isNum(v.s1) || v.s1 < v.s0) fail(`${where} needs s0 <= s1`);
+    return { ...v, index: index.get(v.road) };
+  };
+  const jids = new Set();
+  const junctions = (doc.junctions ?? []).map((j, i) => {
+    const where = `junction ${j?.id ?? i}`;
+    if (!j || typeof j.id !== 'string' || !j.id) fail(`junction ${i} has no id`);
+    if (jids.has(j.id)) fail(`junction id "${j.id}" is repeated`);
+    jids.add(j.id);
+    if (!['diverge', 'merge', 'connect'].includes(j.kind)) fail(`${where} kind must be diverge, merge or connect`);
+    const a = range(j.a, `${where} a`), b = range(j.b, `${where} b`);
+    const out = { ...j, a, b, side: j.side ?? '' };
+    if (j.gore) {
+      const { a: ga, b: gb } = j.gore;
+      if (!Array.isArray(ga) || !Array.isArray(gb) || ga.length < 2 || ga.length !== gb.length) fail(`${where} gore needs two lists of chainages of the same length (at least two)`);
+      for (let k = 1; k < ga.length; k++) if (!(ga[k] > ga[k - 1]) || !(gb[k] > gb[k - 1])) fail(`${where} gore chainages must increase`);
+      if (out.side !== 'left' && out.side !== 'right') fail(`${where} with a gore needs side left or right`);
+      roads[a.index].hides.push({ side: out.side, s0: a.s0, s1: a.s1 });
+      roads[a.index].gores.push(out);
+    }
+    return out;
+  });
+  const structures = (doc.structures ?? []).map((st, i) => {
+    if (!st || typeof st.kind !== 'string') fail(`structure ${i} has no kind`);
+    if (st.kind !== 'pier' && st.kind !== 'abutment') return st;
+    if (!index.has(st.road)) fail(`structure ${i} names a road that is not in the roadnet`);
+    const keys = st.kind === 'pier' ? ['s', 'd', 'w', 't', 'h0', 'h1'] : ['s', 'd', 'w', 'len', 'h0', 'h1'];
+    for (const k of keys) if (!isNum(st[k])) fail(`structure ${i} (${st.kind}) needs a number ${k}`);
+    if (st.kind === 'abutment' && st.dir !== 1 && st.dir !== -1) fail(`structure ${i} (abutment) dir must be 1 or -1`);
+    roads[index.get(st.road)].structures.push(st);
+    return st;
+  });
+  for (const r of roads) r.structures.sort((p, q) => p.s - q.s);
+  return { ...doc, source: doc.source ?? {}, roads, junctions, structures };
 }
 
-const RUNTIME_KEYS = new Set(['spacing', 'count', 'length', 'x', 'y', 'h', 'heading', 'curvature', 'crossfall', 's']);
+const RUNTIME_KEYS = new Set(['spacing', 'count', 'length', 'x', 'y', 'h', 'heading', 'curvature', 'crossfall', 's', 'hides', 'gores', 'structures']);
+
+const stripIndex = (v) => { if (!v || typeof v !== 'object') return v; const { index, ...rest } = v; return rest; };
 
 /**
  * Write a RoadNet. Takes the decoded shape: { version?, source?, roads[] } where each road has its
@@ -363,5 +463,8 @@ export function encodeRoadNet(roadnet) {
     offset += count;
     return json;
   });
-  return { json: { ...roadnet, version: 1, source: roadnet.source ?? {}, roads: outRoads }, bin };
+  const json = { ...roadnet, version: 1, source: roadnet.source ?? {}, roads: outRoads };
+  // decoded junctions carry road indices for the reader: write them as the file had them
+  if (Array.isArray(roadnet.junctions)) json.junctions = roadnet.junctions.map(({ a, b, ...j }) => ({ ...j, a: stripIndex(a), b: stripIndex(b) }));
+  return { json, bin };
 }

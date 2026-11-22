@@ -2,7 +2,7 @@
 # requires-python = ">=3.11"
 # dependencies = ["numpy", "scipy"]
 # ///
-"""Usage: build_roads.py <city>
+"""Usage: build_roads.py <city> [--out <dir>]
 
 Build the drive's roads from OpenStreetMap (fetched by fetch_osm.py) and the terrain the app
 draws. For each route in the city's "routes" (data/cities.json): stitch the directional route
@@ -17,11 +17,18 @@ The format of roadnet.json and roadnet.bin is specified at the top of
 src/drive/roadnet/format.js. The script checks its acceptance numbers, writes them to the
 report and exits non-zero when one is missed (the outputs are still written, to look at).
 
+Then the interchanges (plan 02, D3.4; lib/interchanges.py): ramps with gores, the roads that
+cross the route on bridges, junction records and structures, from the interchange extract
+(fetch_osm.py). The main line does not move for them: the build compares the carriageways'
+stations and JSON and the routes with the committed files and stops if anything differs.
+
 Output: public/data/<city>/roadnet.json, roadnet.bin, routes.json
         data/derived/<city>/roads_report.json
+        (all four into <dir> instead with --out)
 """
 import json
 import re
+import subprocess
 import sys
 from pathlib import Path
 
@@ -42,6 +49,9 @@ from lib.refline import Refline  # noqa: E402
 from lib.roadchecks import carriageways, check_clearance, edge_rates, lane_counts_match, plan_overlap  # noqa: E402
 from lib.roadnet import decode_roadnet, encode_roadnet  # noqa: E402
 from lib.sightline import building_top, eye_scene_y, visible  # noqa: E402
+from lib.interchanges import build_interchanges  # noqa: E402
+from lib.roadframe import RoadFrame  # noqa: E402
+from lib.structures import plan_overlaps  # noqa: E402
 
 ROOT = Path(__file__).resolve().parent.parent
 SPACING = 4.0
@@ -65,7 +75,8 @@ LENGTH_TOL = 0.005
 EXPECT_EXITS = {"i15n": ["1", "12", "25", "27", "33", "36", "38", "39", "40", "41", "42"]}
 EXPECT_REVEAL = {"i15n": (42800, 1500)}
 NODE_TOL, NODE_SHARE = 0.5, 0.95
-MAX_BYTES = 1.5e6
+MAX_BYTES = 2.0e6  # plan 02, section 9.4: about 2 MB with ramps
+MIN_RAMP_M = 300.0  # D3.4: every exit has a visible ramp at least this long
 
 
 def rnd(v, nd=1):
@@ -372,6 +383,84 @@ def finish_road(state):
     return road, info
 
 
+def routes_doc_of(routes, source):
+    return {"version": 1, "source": {"osm": source["osm"]}, "routes": routes}
+
+
+def interchange_report(ic, cws, decoded, junctions, xdoc, osm_all=None):
+    """Counts and the acceptance of D3.4 for one route's interchanges."""
+    rep = ic["report"]
+    frames = ic["frames"]
+    main_id = cws[0]["frame"].id
+    ov = plan_overlaps(frames, junctions)
+    ramps = {r["road"]: r for r in rep["ramps"]}
+    exits = [ln for ln in decoded[main_id]["links"] if ln.get("kind") == "exit"]
+    diverge = {}
+    for j in junctions:
+        if j["kind"] == "diverge" and j["a"]["road"] == main_id:
+            diverge.setdefault(round(j["a"]["s1"]), []).append(j)
+    per_exit = []
+    for e in exits:
+        cand = [j for j in junctions if j["kind"] == "diverge" and j["a"]["road"] == main_id
+                and j["a"]["s0"] - 50 <= e["s"] <= j["a"]["s1"] + 150]
+        best = max((ramps[j["b"]["road"]]["length_m"] for j in cand if j["b"]["road"] in ramps), default=0.0)
+        entry = {"s": e["s"], "ref": e.get("ref", ""), "label": e.get("label", ""),
+                 "ramp": next((j["b"]["road"] for j in cand), None), "ramp_m": best, "ok": best >= MIN_RAMP_M}
+        gone = [d for d in rep["dropped"] if d.get("node") == e.get("osm") and "median ramp" in d["why"]]
+        if not cand and gone:
+            entry.update(ok=True, simplified=gone[0]["why"])
+        if not cand and not gone and osm_all is not None and e.get("osm", "").startswith("n"):
+            nid = int(e["osm"][1:])
+            links = [w for w in osm_all.ways.values() if w["tags"].get("highway") == "motorway_link" and nid in w["nodes"]]
+            if not links:
+                entry.update(ok=True, no_link=True, why="a junction node with no motorway_link mapped at it: nothing to build")
+        per_exit.append(entry)
+    # clearance of every crossing road over each carriageway
+    cross = []
+    for F in frames:
+        dr = getattr(F, "draft", None)
+        if dr is None or dr.role != "crossing":
+            continue
+        pts = F.pavement_points(step=2.0, across=1.0)
+        worst = np.inf
+        for cw in cws:
+            m, sb, db = cw["frame"].inside(pts["x"], pts["y"], grow=0.0)
+            if m.any():
+                worst = min(worst, float((pts["z"][m] - 1.2 - cw["frame"].surface(sb[m], db[m])).min()))
+        cross.append({"road": F.id, "name": getattr(dr, "name", ""), "clearance_m": round(worst, 2) if np.isfinite(worst) else None})
+    min_clear = min((c["clearance_m"] for c in cross if c["clearance_m"] is not None), default=None)
+    main_ids = {cw["frame"].id for cw in cws}
+    main_viol = [v for v in ov["violations"] if v["a"] in main_ids or v["b"] in main_ids]
+    gores = [j for j in junctions if j["kind"] in ("diverge", "merge")]
+    acc = {
+        "exit_ramps": {"ok": all(p["ok"] for p in per_exit), "exits": len(per_exit),
+                       "with_ramp_300m": sum(p["ok"] and not p.get("no_link") and not p.get("simplified") for p in per_exit),
+                       "no_link_mapped": [p for p in per_exit if p.get("no_link")],
+                       "simplified": [p for p in per_exit if p.get("simplified")],
+                       "missing": [p for p in per_exit if not p["ok"]]},
+        "overpasses": {"ok": bool(cross) and all(c["clearance_m"] is not None and c["clearance_m"] >= 4.9 for c in cross)
+                       and not [d for d in rep["dropped"] if d["road"].startswith("x.") and not d.get("branch")],
+                       "count": len(cross), "min_clearance_m": min_clear,
+                       "dropped": [d for d in rep["dropped"] if d["road"].startswith("x.")],
+                       "note": "branches of ramps that are too tangled to build by rule are left out and listed (simplified)"},
+        "no_ramp_through_main": {"ok": not main_viol, "violations": main_viol},
+        "plan_overlap_rule": {"ok": not ov["violations"], "violations": len(ov["violations"]),
+                              "overlapping_pairs": ov["pairs"], "min_separation_m": ov["min_separation_m"]},
+    }
+    return {
+        "counts": {"ramps": len(rep["ramps"]), "gores": len(gores),
+                   "diverge": sum(j["kind"] == "diverge" for j in gores), "merge": sum(j["kind"] == "merge" for j in gores),
+                   "connects": sum(j["kind"] == "connect" for j in junctions),
+                   "crossings": len(cross), "decks": sum(len(r.get("bridges", [])) for r in ic["roads"]),
+                   "piers": sum(s["kind"] == "pier" for s in ic["structures"]),
+                   "abutments": sum(s["kind"] == "abutment" for s in ic["structures"]),
+                   "roads": len(ic["roads"])},
+        "extract": {"osm": xdoc.get("osm3s", {}).get("timestamp_osm_base", ""), "elements": len(xdoc["elements"])},
+        "exits": per_exit, "crossings": cross, "ramps": rep["ramps"], "dropped": rep["dropped"],
+        "simplified": rep["simplified"], "overlaps": ov["violations"], "acceptance": acc,
+    }
+
+
 def posted_seconds(speed_list, s0, s1):
     t = 0.0
     for k, z in enumerate(speed_list):
@@ -397,20 +486,74 @@ def s_before(speed_list, s_target, seconds):
     return 0.0
 
 
+def committed(path):
+    """A file as committed at HEAD, or None (no git, or not committed)."""
+    try:
+        return subprocess.run(["git", "show", f"HEAD:{path}"], cwd=ROOT, capture_output=True, check=True).stdout
+    except (OSError, subprocess.CalledProcessError):
+        return None
+
+
+def check_main_line(city, doc, blob, routes_doc, main_ids):
+    """The carriageways and routes must come out as committed: station records byte for byte,
+    road JSON equal but for the keys the interchanges add (embankment, and `to` on links), and
+    routes.json equal. Returns a report entry; raises SystemExit on a difference."""
+    ref_json = committed(f"public/data/{city}/roadnet.json")
+    ref_bin = committed(f"public/data/{city}/roadnet.bin")
+    ref_routes = committed(f"public/data/{city}/routes.json")
+    if ref_json is None or ref_bin is None or ref_routes is None:
+        print("  (no committed roadnet to compare the main line with)")
+        return {"checked": False}
+    rdoc = json.loads(ref_json)
+    got = {r["id"]: r for r in doc["roads"]}
+    diffs = []
+    for r in rdoc["roads"]:
+        if r["id"] not in main_ids:
+            continue
+        g = got.get(r["id"])
+        if g is None:
+            diffs.append(f"{r['id']} missing")
+            continue
+        a = ref_bin[r["stations"]["offset"] * 28:(r["stations"]["offset"] + r["stations"]["count"]) * 28]
+        b = blob[g["stations"]["offset"] * 28:(g["stations"]["offset"] + g["stations"]["count"]) * 28]
+        if a != b:
+            diffs.append(f"{r['id']} station records differ")
+        if r["stations"] != g["stations"]:
+            diffs.append(f"{r['id']} stations header differs")
+        strip = lambda x: {k: ([{kk: vv for kk, vv in e.items() if kk != "to"} for e in v] if k == "links" else v)  # noqa: E731
+                           for k, v in x.items() if k != "embankment"}
+        if strip(r) != strip(g):
+            diffs.append(f"{r['id']} JSON differs")
+    if json.loads(ref_routes) != routes_doc:
+        diffs.append("routes.json differs")
+    if diffs:
+        sys.exit("the main line moved: " + "; ".join(diffs))
+    return {"checked": True, "roads": sorted(main_ids), "identical": True}
+
+
 def main():
-    if len(sys.argv) != 2:
+    args = [a for a in sys.argv[1:]]
+    out_override = None
+    if "--out" in args:
+        k = args.index("--out")
+        out_override = Path(args[k + 1]).resolve()
+        del args[k:k + 2]
+    if len(args) != 1:
         sys.exit(__doc__)
-    city = sys.argv[1]
+    city = args[0]
     cfg = json.loads((ROOT / "data" / "cities.json").read_text())[city]
     routes_cfg = cfg.get("routes") or sys.exit(f"{city} has no routes in data/cities.json")
     frame = create_frame(cfg)
     hs = load_heights(city)
     top = drawn_surface(hs)
-    out_dir = ROOT / "public" / "data" / city
-    rep_dir = ROOT / "data" / "derived" / city
+    out_dir = out_override or ROOT / "public" / "data" / city
+    rep_dir = out_override or ROOT / "data" / "derived" / city
+    out_dir.mkdir(parents=True, exist_ok=True)
     rep_dir.mkdir(parents=True, exist_ok=True)
+    extracts = {}
 
     roads, routes, report, failures = [], [], {"routes": {}}, []
+    plans = {}
     snapshots = set()
     for rc in routes_cfg:
         osm_path = ROOT / "data" / "raw" / city / f"osm-{rc['ref'].lower().replace(' ', '')}.json"
@@ -418,6 +561,10 @@ def main():
             sys.exit(f"{osm_path.relative_to(ROOT)} is missing: run  uv run scripts/fetch_osm.py {city}")
         osm = load_osm(json.loads(osm_path.read_text()))
         snapshots.add(osm.timestamp)
+        x_path = osm_path.with_name(osm_path.stem + "-x.json")
+        if not x_path.exists():
+            sys.exit(f"{x_path.relative_to(ROOT)} is missing: run  uv run scripts/fetch_osm.py {city}")
+        extracts[rc["id"]] = x_path
         rid = rc["id"]
         print(f"{rid}: stitching and fitting {rc['ref']} {rc['direction']}")
         pm = plan_road(osm, frame, hs, top, f"{rid}.main", rc["ref"], rc["direction"], rc["start"], rc["end"])
@@ -438,6 +585,7 @@ def main():
         main_road, mi = finish_road(pm)
         roads.append(main_road)
         opp_road, oi = finish_road(po) if po is not None else (None, None)
+        plans[rid] = (pm, po)
         if opp_road is not None:
             roads.append(opp_road)
         report["routes"][rid] = rr
@@ -447,9 +595,8 @@ def main():
               "dem": "AWS Terrain Tiles (Terrarium), USGS 3DEP; the app's near, far and wide grids",
               "method": "scripts/build_roads.py"}
     doc, blob = encode_roadnet({"version": 1, "source": source, "roads": roads})
-    (out_dir / "roadnet.json").write_text(json.dumps(doc, separators=(",", ":")) + "\n")
-    (out_dir / "roadnet.bin").write_bytes(blob)
-    decoded = {r["id"]: r for r in decode_roadnet(json.loads((out_dir / "roadnet.json").read_text()), blob)}
+    decoded = {r["id"]: r for r in decode_roadnet(json.loads(json.dumps(doc, separators=(",", ":"))), blob)}
+    main_ids = {r["id"] for r in roads}
 
     for rc in routes_cfg:
         rid = rc["id"]
@@ -646,10 +793,51 @@ def main():
         rr["places"] = places
         rr["acceptance"] = acc
 
+    # interchanges, against the decoded carriageways (the runtime's own numbers)
+    extra_roads, junction_recs, structure_recs = [], [], []
+    for rc in routes_cfg:
+        rid = rc["id"]
+        rr = report["routes"][rid]
+        print(f"{rid}: interchanges")
+        xdoc = json.loads(extracts[rid].read_text())
+        base = json.loads((ROOT / "data" / "raw" / city / f"osm-{rc['ref'].lower().replace(' ', '')}.json").read_text())
+        osm_all = load_osm({"elements": xdoc["elements"] + base["elements"], "osm3s": base.get("osm3s", {})})
+        cws = []
+        for key, st_ in (("main", plans[rid][0]), ("opposite", plans[rid][1])):
+            if st_ is None:
+                continue
+            road_id = st_["road_id"]
+            cws.append({"frame": RoadFrame(decoded[road_id]), "ids": list(st_["ids"]), "ways": set(st_["chain"].ways),
+                        "prefix": road_id.split(".")[0], "links": decoded[road_id]["links"]})
+        ic = build_interchanges(osm_all, cws, frame.to_local, lambda px, py: np.maximum(hs.height_at(px, py), top(px, py)))
+        extra_roads += ic["roads"]
+        junction_recs += ic["junctions"]
+        structure_recs += ic["structures"]
+        rr["interchanges"] = interchange_report(ic, cws, decoded, junction_recs, xdoc, osm_all)
+        for r in roads:
+            if r["id"] in ic["main_embankment"] and ic["main_embankment"][r["id"]]:
+                r["embankment"] = ic["main_embankment"][r["id"]]
+            starts = {j["b"]["road"]: j for j in ic["junctions"] if j["kind"] == "diverge" and j["a"]["road"] == r["id"]}
+            for ln in r.get("links", []):
+                for rr_id, j in starts.items():
+                    ramp = next(x for x in ic["roads"] if x["id"] == rr_id)
+                    if ramp.get("_start_node") == ln.get("osm"):
+                        ln["to"] = rr_id
+        for name, a in rr["interchanges"]["acceptance"].items():
+            rr["acceptance"][f"interchanges_{name}"] = a
+    for r in extra_roads:
+        r.pop("_start_node", None)
+    doc, blob = encode_roadnet({"version": 1, "source": source, "roads": roads + extra_roads,
+                                "junctions": junction_recs, "structures": structure_recs})
+    text = json.dumps(doc, separators=(",", ":")) + "\n"
+    decode_roadnet(json.loads(text), blob)
+    report["main_line"] = check_main_line(city, json.loads(text), blob, routes_doc_of(routes, source), main_ids)
+    (out_dir / "roadnet.json").write_text(text)
+    (out_dir / "roadnet.bin").write_bytes(blob)
     size = (out_dir / "roadnet.json").stat().st_size + (out_dir / "roadnet.bin").stat().st_size
     report["files"] = {"roadnet.json": (out_dir / "roadnet.json").stat().st_size,
                        "roadnet.bin": len(blob), "total": size, "ok": size < MAX_BYTES}
-    routes_doc = {"version": 1, "source": {"osm": source["osm"]}, "routes": routes}
+    routes_doc = routes_doc_of(routes, source)
     (out_dir / "routes.json").write_text(json.dumps(routes_doc, indent=1) + "\n")
     report["source"] = source
     (rep_dir / "roads_report.json").write_text(json.dumps(report, indent=1, default=float) + "\n")
@@ -663,8 +851,7 @@ def main():
     print(f"  {'ok  ' if report['files']['ok'] else 'MISS'} files: {size / 1e6:.2f} MB")
     if not report["files"]["ok"]:
         failures.append("files")
-    print(f"wrote {out_dir.relative_to(ROOT)}/roadnet.json, roadnet.bin, routes.json and "
-          f"{(rep_dir / 'roads_report.json').relative_to(ROOT)}")
+    print(f"wrote {out_dir}/roadnet.json, roadnet.bin, routes.json and {rep_dir / 'roads_report.json'}")
     if failures:
         sys.exit(f"acceptance missed: {', '.join(failures)}")
 
