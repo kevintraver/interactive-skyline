@@ -165,6 +165,18 @@ describe('refresh schedule', () => {
     const c3 = coarseGridIndex(full, nx, ny, 3);
     expect(Math.max(...c3) % nx).toBe(nx - 1);
   });
+  it('the coarse ground keeps its own cells near the car, so it cannot rise through the road behind it', () => {
+    const nx = 9, ny = 7, full = [];
+    for (let j = 0; j < ny - 1; j++) for (let i = 0; i < nx - 1; i++) { const a = j * nx + i; full.push(a, a + 1, a + nx, a + 1, a + nx + 1, a + nx); }
+    const coarse = coarseGridIndex(full, nx, ny, 2);
+    expect(coarse.length / 6).toBe(4 * 3); // six indices (two triangles) a block
+    // cells 2..3 x 2..3 near the car: the one block over them is drawn from its four fine cells
+    const near = coarseGridIndex(full, nx, ny, 2, [2, 3, 2, 3]);
+    expect(near.length / 6).toBe(11 + 4);
+    const tris = new Set();
+    for (let t = 0; t < near.length; t += 3) tris.add([near[t], near[t + 1], near[t + 2]].join());
+    for (const [i, j] of [[2, 2], [3, 2], [2, 3], [3, 3]]) { const a = j * nx + i; expect(tris.has([a, a + 1, a + nx].join())).toBe(true); }
+  });
   it('targets keep each face\'s aspect within 10%', () => {
     for (const opts of Object.values(GLASS_PRESETS)) {
       for (const n of MIRROR_NAMES) {

@@ -1,5 +1,5 @@
 """The three routes (plan 02, D9.1, D9.2): one RoadNet per route, routes.json naming every route's
-files, i15n's files untouched, each route's acceptance in its report; and the pipeline rules the
+files, the plan view of every road as committed, each route's acceptance in its report; and the pipeline rules the
 other two routes needed (a bridge's deck over a canyon, a mistagged relation role, comfortable
 tapers on the driven carriageway, a carriageway on a shared deck is not a crossing)."""
 import json
@@ -52,19 +52,56 @@ def test_routes_json_lists_every_route_of_cities_json_with_its_files():
         assert (DATA / f["traffic"]).exists()
 
 
-def test_i15n_is_byte_for_byte_as_committed():
-    for name in ("roadnet.json", "roadnet.bin"):
-        ref = committed(f"public/data/lv/{name}")
-        if ref is None:
-            pytest.skip("no committed RoadNet")
-        assert (DATA / name).read_bytes() == ref
+PLAN = (0, 1, 2, 4, 5, 6)  # roadnet.bin's s, x, y, heading, curvature and crossfall: everything but h (field 3)
+# what may follow the ground when the ground under a road is redefined: the heights, which bridges hold a deck (a
+# deck is where the ground falls away under the road), the embankments' reach and the reveal's chainage
+HEIGHT_KEYS = {"bridges", "embankment"}
+ROUTE_HEIGHT_KEYS = {"reveal", "starts"}
+
+
+@pytest.mark.parametrize("rid", ["i15n", *NEW])
+def test_the_plan_view_is_as_committed(rid):
+    # The RoadNets were pinned byte for byte until the drive's ground was redefined as the ground as drawn (the meshes'
+    # triangles, lib.heights drawn_at, not the bilinear query): the profiles were then set again over it, so the
+    # heights moved. The plan must not: every station's s, x, y, heading, curvature and crossfall of every road that
+    # was there stays byte for byte, and the roads' JSON stays the same but for what follows the heights.
+    name = route(rid)["files"]["roadnet"]
+    ref_doc, ref_bin = committed(f"public/data/lv/{name}"), committed(f"public/data/lv/{name.replace('.json', '.bin')}")
+    if ref_doc is None or ref_bin is None:
+        pytest.skip("no committed RoadNet")
+    was_doc, now_doc = json.loads(ref_doc), json.loads((DATA / name).read_text())
+    was_ints = np.frombuffer(ref_bin, dtype="<i4").reshape(-1, 7)
+    now_ints = np.frombuffer((DATA / name.replace(".json", ".bin")).read_bytes(), dtype="<i4").reshape(-1, 7)
+    was = {r["id"]: r for r in was_doc["roads"]}
+    now = {r["id"]: r for r in now_doc["roads"]}
+    mains = [k for k, r in was.items() if r.get("role", "main") == "main"]
+    assert set(mains) <= set(now)
+    for k in was:
+        if k not in now:
+            continue  # a ramp or crossing left out (its open end could not come down to the ground): in the report
+        a, b = was[k]["stations"], now[k]["stations"]
+        A = was_ints[a["offset"]:a["offset"] + a["count"]]
+        B = now_ints[b["offset"]:b["offset"] + b["count"]]
+        if k in mains or a["count"] == b["count"]:
+            assert a["count"] == b["count"], k
+            assert np.array_equal(A[:, PLAN], B[:, PLAN]), k
+            strip = lambda r: {kk: v for kk, v in r.items() if kk not in HEIGHT_KEYS and kk != "stations"}  # noqa: E731
+            assert strip(now[k]) == strip(was[k]), k
+            if k in mains:  # a ramp's or crossing's deck is where it stands over 3 m up (structures.deck_spans): it follows its heights
+                assert [(x["s0"], x["s1"]) for x in now[k].get("bridges", [])] == [(x["s0"], x["s1"]) for x in was[k].get("bridges", [])], k
+        else:
+            # a ramp or crossing cut back at an open end that hung in the air, or one that was cut short to fit and fits
+            # further now: the shorter is a run of the longer's stations, unmoved (x, y, heading, curvature; s counts
+            # from its own start)
+            long_, short = (A, B) if len(A) > len(B) else (B, A)
+            xy = long_[:, [1, 2, 4, 5]]
+            starts = [i for i in range(len(long_) - len(short) + 1) if np.array_equal(xy[i], short[0, [1, 2, 4, 5]])]
+            assert any(np.array_equal(xy[i:i + len(short)], short[:, [1, 2, 4, 5]]) for i in starts), k
     ref = committed("public/data/lv/routes.json")
-    # keys that came later and are not part of the route itself: `files` names a route's own files (it came with
-    # the other routes), `outline` is the route picker's small map (build_roads.LATER_ROUTE_KEYS)
-    later = ("files", "outline")
-    was = {k: v for k, v in next(r for r in json.loads(ref)["routes"] if r["id"] == "i15n").items() if k not in later}
-    now = {k: v for k, v in route("i15n").items() if k not in later}
-    assert now == was
+    later = ("files", "outline", *ROUTE_HEIGHT_KEYS)
+    plain = lambda r: {k: ([m for m in v if m["kind"] != "reveal"] if k == "markers" else v)  # noqa: E731
+                       for k, v in r.items() if k not in later}
+    assert plain(route(rid)) == plain(next(r for r in json.loads(ref)["routes"] if r["id"] == rid))
 
 
 @pytest.mark.parametrize("rid", ["i15n", *NEW])

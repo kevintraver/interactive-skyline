@@ -33,24 +33,24 @@
      "max_grade": 0.0599,
      "min_vertical_radius_m": 2015.0,
      "lift_over_terrain_m": {
-      "max": 235.76,
+      "max": 235.72,
       "max_at_s": 52.0,
-      "median": 0.64,
-      "p95": 5.59
+      "median": 0.62,
+      "p95": 8.42
      },
      "pavement_clearance": {
       "drawn": {
        "min_m": 0.302,
-       "at_s": 46394.0
+       "at_s": 51973.0
       },
       "query": {
-       "min_m": 0.301,
-       "at_s": 51955.0
+       "min_m": -0.062,
+       "at_s": 14626.0
       }
      },
      "summit": {
-      "h": 733.0,
-      "s": 25544.0
+      "h": 733.1,
+      "s": 25548.0
      }
     },
     "sections": [
@@ -1538,24 +1538,24 @@
      "max_grade": 0.0599,
      "min_vertical_radius_m": 1500.0,
      "lift_over_terrain_m": {
-      "max": 231.87,
+      "max": 231.86,
       "max_at_s": 59468.0,
       "median": 0.69,
-      "p95": 5.58
+      "p95": 5.63
      },
      "pavement_clearance": {
       "drawn": {
        "min_m": 0.302,
-       "at_s": 33824.0
+       "at_s": 44788.0
       },
       "query": {
-       "min_m": 0.302,
-       "at_s": 33824.0
+       "min_m": -0.069,
+       "at_s": 44891.0
       }
      },
      "summit": {
-      "h": 732.7,
-      "s": 33924.0
+      "h": 732.9,
+      "s": 33920.0
      }
     },
     "sections": [
@@ -3364,8 +3364,12 @@
       "s1": 200.0
      },
      {
+      "s0": 6000.0,
+      "s1": 6300.0
+     },
+     {
       "s0": 23000.0,
-      "s1": 23700.0
+      "s1": 23900.0
      }
     ],
     "per_km": [
@@ -3376,7 +3380,7 @@
        12.0
       ],
       "opp_higher_m": [
-       -4.03,
+       -4.0,
        0.07
       ]
      },
@@ -3399,7 +3403,7 @@
       ],
       "opp_higher_m": [
        -1.0,
-       -0.06
+       -0.07
       ]
      },
      {
@@ -3410,7 +3414,7 @@
       ],
       "opp_higher_m": [
        -1.66,
-       -0.61
+       -0.6
       ]
      },
      {
@@ -3421,7 +3425,7 @@
       ],
       "opp_higher_m": [
        -1.32,
-       -0.06
+       0.49
       ]
      },
      {
@@ -3431,8 +3435,8 @@
        16.2
       ],
       "opp_higher_m": [
-       0.08,
-       1.29
+       0.73,
+       2.87
       ]
      },
      {
@@ -3442,8 +3446,8 @@
        19.6
       ],
       "opp_higher_m": [
-       0.04,
-       1.34
+       0.03,
+       3.15
       ]
      },
      {
@@ -3453,8 +3457,8 @@
        15.8
       ],
       "opp_higher_m": [
-       -0.26,
-       0.18
+       -0.25,
+       0.16
       ]
      },
      {
@@ -3497,8 +3501,8 @@
        32.3
       ],
       "opp_higher_m": [
-       -1.77,
-       -0.72
+       -1.75,
+       -0.73
       ]
      },
      {
@@ -3509,7 +3513,7 @@
       ],
       "opp_higher_m": [
        -0.64,
-       -0.17
+       -0.15
       ]
      },
      {
@@ -3520,7 +3524,7 @@
       ],
       "opp_higher_m": [
        -0.85,
-       -0.21
+       -0.24
       ]
      },
      {
@@ -3530,7 +3534,7 @@
        26.0
       ],
       "opp_higher_m": [
-       -1.44,
+       -1.46,
        -0.73
       ]
      },
@@ -3563,8 +3567,8 @@
        26.2
       ],
       "opp_higher_m": [
-       -1.05,
-       -0.64
+       -1.04,
+       -0.67
       ]
      },
      {
@@ -3574,7 +3578,7 @@
        26.1
       ],
       "opp_higher_m": [
-       -1.2,
+       -1.21,
        -0.74
       ]
      },
@@ -3585,8 +3589,8 @@
        23.5
       ],
       "opp_higher_m": [
-       -1.21,
-       -0.86
+       -1.28,
+       -0.83
       ]
      },
      {
@@ -3607,8 +3611,8 @@
        25.6
       ],
       "opp_higher_m": [
-       -1.45,
-       -1.26
+       -2.12,
+       -1.28
       ]
      },
      {
@@ -3619,7 +3623,7 @@
       ],
       "opp_higher_m": [
        -2.38,
-       -0.36
+       -0.49
       ]
      },
      {
@@ -3629,8 +3633,8 @@
        31.1
       ],
       "opp_higher_m": [
-       -5.68,
-       0.55
+       -15.2,
+       -3.38
       ]
      },
      {
@@ -3640,8 +3644,8 @@
        25.2
       ],
       "opp_higher_m": [
-       -1.19,
-       2.02
+       -1.25,
+       2.19
       ]
      },
      {
@@ -3651,8 +3655,8 @@
        25.2
       ],
       "opp_higher_m": [
-       -1.29,
-       -0.07
+       -1.31,
+       -0.1
       ]
      },
      {
@@ -3663,7 +3667,7 @@
       ],
       "opp_higher_m": [
        -1.15,
-       -0.5
+       -0.49
       ]
      },
      {
@@ -3673,7 +3677,7 @@
        27.9
       ],
       "opp_higher_m": [
-       -0.4,
+       -0.48,
        1.0
       ]
      },
@@ -3684,7 +3688,7 @@
        23.4
       ],
       "opp_higher_m": [
-       0.71,
+       0.72,
        1.19
       ]
      },
@@ -3696,7 +3700,7 @@
       ],
       "opp_higher_m": [
        0.44,
-       1.17
+       1.19
       ]
      },
      {
@@ -3707,7 +3711,7 @@
       ],
       "opp_higher_m": [
        0.58,
-       0.87
+       0.96
       ]
      },
      {
@@ -3717,7 +3721,7 @@
        19.3
       ],
       "opp_higher_m": [
-       0.55,
+       0.56,
        0.88
       ]
      },
@@ -3729,7 +3733,7 @@
       ],
       "opp_higher_m": [
        0.43,
-       0.9
+       0.94
       ]
      },
      {
@@ -3739,8 +3743,8 @@
        18.2
       ],
       "opp_higher_m": [
-       0.34,
-       0.88
+       0.35,
+       0.82
       ]
      },
      {
@@ -3751,7 +3755,7 @@
       ],
       "opp_higher_m": [
        -0.24,
-       1.23
+       1.34
       ]
      },
      {
@@ -3772,8 +3776,8 @@
        19.8
       ],
       "opp_higher_m": [
-       -0.19,
-       1.15
+       -0.47,
+       1.21
       ]
      },
      {
@@ -3784,7 +3788,7 @@
       ],
       "opp_higher_m": [
        -0.13,
-       1.14
+       1.44
       ]
      },
      {
@@ -3795,7 +3799,7 @@
       ],
       "opp_higher_m": [
        0.39,
-       0.67
+       0.69
       ]
      },
      {
@@ -3805,7 +3809,7 @@
        19.5
       ],
       "opp_higher_m": [
-       0.4,
+       0.41,
        0.84
       ]
      },
@@ -3816,8 +3820,8 @@
        20.4
       ],
       "opp_higher_m": [
-       0.34,
-       0.62
+       0.33,
+       0.71
       ]
      },
      {
@@ -3838,7 +3842,7 @@
        21.4
       ],
       "opp_higher_m": [
-       0.17,
+       0.13,
        0.5
       ]
      },
@@ -3849,7 +3853,7 @@
        20.0
       ],
       "opp_higher_m": [
-       0.33,
+       0.32,
        0.54
       ]
      },
@@ -3861,7 +3865,7 @@
       ],
       "opp_higher_m": [
        0.37,
-       1.78
+       1.76
       ]
      },
      {
@@ -3872,7 +3876,7 @@
       ],
       "opp_higher_m": [
        0.56,
-       1.23
+       1.52
       ]
      },
      {
@@ -3883,7 +3887,7 @@
       ],
       "opp_higher_m": [
        0.46,
-       1.12
+       1.13
       ]
      },
      {
@@ -3893,7 +3897,7 @@
        17.9
       ],
       "opp_higher_m": [
-       0.72,
+       0.73,
        2.1
       ]
      },
@@ -3904,8 +3908,8 @@
        18.0
       ],
       "opp_higher_m": [
-       0.69,
-       1.96
+       0.88,
+       1.99
       ]
      },
      {
@@ -3916,7 +3920,7 @@
       ],
       "opp_higher_m": [
        0.17,
-       0.67
+       0.69
       ]
      },
      {
@@ -3937,8 +3941,8 @@
        23.3
       ],
       "opp_higher_m": [
-       0.02,
-       1.0
+       -0.0,
+       1.01
       ]
      },
      {
@@ -3948,8 +3952,8 @@
        18.7
       ],
       "opp_higher_m": [
-       0.22,
-       0.76
+       0.29,
+       0.74
       ]
      },
      {
@@ -3960,7 +3964,7 @@
       ],
       "opp_higher_m": [
        0.2,
-       0.34
+       0.45
       ]
      },
      {
@@ -3981,8 +3985,8 @@
        20.2
       ],
       "opp_higher_m": [
-       -0.01,
-       0.27
+       0.0,
+       0.23
       ]
      },
      {
@@ -4003,7 +4007,7 @@
        21.5
       ],
       "opp_higher_m": [
-       0.03,
+       0.02,
        0.96
       ]
      },
@@ -4014,8 +4018,8 @@
        21.0
       ],
       "opp_higher_m": [
-       -0.03,
-       0.46
+       -0.31,
+       0.61
       ]
      },
      {
@@ -4026,7 +4030,7 @@
       ],
       "opp_higher_m": [
        0.06,
-       0.4
+       0.65
       ]
      }
     ]
@@ -4086,11 +4090,11 @@
     "target_how": "model /models/lv/strat.glb, top 350.2 m above its origin at ground 621.0 m",
     "eye_m": 1.2,
     "lane": 2,
-    "first_visible_s": 25408.0,
-    "stays_visible_from_s": 25408.0,
-    "first_visible_s_drawn_surface": 25400.0,
-    "range_m": 28430.0,
-    "road_h_m": 729.8,
+    "first_visible_s": 25404.0,
+    "stays_visible_from_s": 25404.0,
+    "first_visible_s_bilinear_query": 25412.0,
+    "range_m": 28434.0,
+    "road_h_m": 729.6,
     "visible_share_after": 1.0
    },
    "places": {
@@ -4118,17 +4122,17 @@
      "ok": true,
      "drawn": {
       "min_m": 0.302,
-      "at_s": 46394.0
+      "at_s": 51973.0
      },
      "query": {
-      "min_m": 0.301,
-      "at_s": 51955.0
+      "min_m": -0.062,
+      "at_s": 14626.0
      },
      "lift_on_centre_line_m": {
-      "max": 235.76,
+      "max": 235.72,
       "max_at_s": 52.0,
-      "median": 0.64,
-      "p95": 5.59
+      "median": 0.62,
+      "p95": 8.42
      }
     },
     "opposite_above_terrain": {
@@ -4136,11 +4140,11 @@
      "max_grade": 0.0599,
      "drawn": {
       "min_m": 0.302,
-      "at_s": 33824.0
+      "at_s": 44788.0
      },
      "query": {
-      "min_m": 0.302,
-      "at_s": 33824.0
+      "min_m": -0.069,
+      "at_s": 44891.0
      }
     },
     "speed": {
@@ -4194,7 +4198,7 @@
     },
     "reveal": {
      "ok": true,
-     "measured_s": 25408.0,
+     "measured_s": 25404.0,
      "expected_s": 25200,
      "tolerance_m": 1500
     },
@@ -4260,7 +4264,7 @@
     "interchanges_overpasses": {
      "ok": true,
      "count": 10,
-     "min_clearance_m": 5.45,
+     "min_clearance_m": 5.46,
      "dropped": [],
      "note": "branches of ramps that are too tangled to build by rule are left out and listed (simplified)"
     },
@@ -4271,8 +4275,14 @@
     "interchanges_plan_overlap_rule": {
      "ok": true,
      "violations": 0,
-     "overlapping_pairs": 120,
+     "overlapping_pairs": 122,
      "min_separation_m": 6.59
+    },
+    "ramps_over_ground": {
+     "ok": true,
+     "ramp_stations_within_clearance": 0,
+     "worst_m": -0.106,
+     "note": "drawn ground at most worst_m above any ramp's or crossing's pavement; stations within 0.1 m counted"
     }
    },
    "interchanges": {
@@ -4283,8 +4293,8 @@
      "merge": 41,
      "connects": 16,
      "crossings": 10,
-     "decks": 23,
-     "piers": 42,
+     "decks": 21,
+     "piers": 44,
      "abutments": 41,
      "roads": 89
     },
@@ -4314,7 +4324,7 @@
       "ref": "15A",
       "label": "Railroad Pass Casino Road",
       "ramp": "us93.x15A.off",
-      "ramp_m": 588.0,
+      "ramp_m": 444.0,
       "ok": true
      },
      {
@@ -4378,7 +4388,7 @@
       "ref": "64B",
       "label": "Galleria Drive",
       "ramp": "us93.x64B.off",
-      "ramp_m": 1336.0,
+      "ramp_m": 1004.0,
       "ok": true
      },
      {
@@ -4460,7 +4470,7 @@
      {
       "road": "x.north-stephanie-street",
       "name": "North Stephanie Street",
-      "clearance_m": 5.51
+      "clearance_m": 5.56
      },
      {
       "road": "x.west-russell-road",
@@ -4495,7 +4505,7 @@
      {
       "road": "x.railroad-pass-casino-roa",
       "name": "Railroad Pass Casino Road",
-      "clearance_m": 5.45
+      "clearance_m": 5.46
      }
     ],
     "ramps": [
@@ -4512,7 +4522,7 @@
      },
      {
       "road": "us93.x15A.off",
-      "length_m": 588.0,
+      "length_m": 444.0,
       "lanes": 1,
       "decks": 0,
       "max_layer": 0,
@@ -4732,10 +4742,10 @@
      },
      {
       "road": "us93s.x64B.off",
-      "length_m": 824.0,
+      "length_m": 620.0,
       "lanes": 1,
       "decks": 0,
-      "max_layer": 9,
+      "max_layer": 0,
       "side": "right",
       "gore_start": true,
       "gore_end": false,
@@ -4765,9 +4775,9 @@
      },
      {
       "road": "us93s.x20.off",
-      "length_m": 796.0,
+      "length_m": 588.0,
       "lanes": 1,
-      "decks": 1,
+      "decks": 0,
       "max_layer": 9,
       "side": "right",
       "gore_start": true,
@@ -4831,7 +4841,7 @@
      },
      {
       "road": "us93s.x2.off",
-      "length_m": 804.0,
+      "length_m": 260.0,
       "lanes": 1,
       "decks": 0,
       "max_layer": 0,
@@ -4853,10 +4863,10 @@
      },
      {
       "road": "us93.x14.on",
-      "length_m": 772.0,
+      "length_m": 736.0,
       "lanes": 2,
-      "decks": 1,
-      "max_layer": 9,
+      "decks": 0,
+      "max_layer": 0,
       "side": "right",
       "gore_start": false,
       "gore_end": true,
@@ -5128,10 +5138,10 @@
      },
      {
       "road": "us93s.x23.on2",
-      "length_m": 808.0,
+      "length_m": 700.0,
       "lanes": 1,
-      "decks": 1,
-      "max_layer": 9,
+      "decks": 0,
+      "max_layer": 0,
       "side": "right",
       "gore_start": false,
       "gore_end": true,
@@ -5207,7 +5217,7 @@
       "road": "us93s.xkm53.on",
       "length_m": 356.0,
       "lanes": 1,
-      "decks": 1,
+      "decks": 0,
       "max_layer": 0,
       "side": "right",
       "gore_start": false,
@@ -5216,7 +5226,7 @@
      },
      {
       "road": "us93s.x2.on",
-      "length_m": 628.0,
+      "length_m": 468.0,
       "lanes": 1,
       "decks": 0,
       "max_layer": 0,
@@ -5241,7 +5251,7 @@
       "length_m": 1628.0,
       "lanes": 2,
       "decks": 1,
-      "max_layer": 9,
+      "max_layer": 1,
       "side": "right",
       "gore_start": true,
       "gore_end": false,
@@ -5260,10 +5270,10 @@
      },
      {
       "road": "us93.x64B.off",
-      "length_m": 1336.0,
+      "length_m": 1004.0,
       "lanes": 1,
       "decks": 1,
-      "max_layer": 9,
+      "max_layer": 1,
       "side": "right",
       "gore_start": true,
       "gore_end": false,
@@ -5293,10 +5303,10 @@
      },
      {
       "road": "us93s.x23.off",
-      "length_m": 1456.0,
+      "length_m": 2164.0,
       "lanes": 2,
-      "decks": 0,
-      "max_layer": 1,
+      "decks": 2,
+      "max_layer": 9,
       "side": "right",
       "gore_start": true,
       "gore_end": false,
@@ -5351,7 +5361,7 @@
       "length_m": 808.0,
       "lanes": 1,
       "decks": 1,
-      "max_layer": 1,
+      "max_layer": 9,
       "side": "right",
       "gore_start": false,
       "gore_end": true,
@@ -5361,8 +5371,8 @@
       "road": "us93s.x20.on",
       "length_m": 992.0,
       "lanes": 2,
-      "decks": 0,
-      "max_layer": 1,
+      "decks": 1,
+      "max_layer": 9,
       "side": "right",
       "gore_start": false,
       "gore_end": true,
@@ -5372,7 +5382,7 @@
     "dropped": [
      {
       "road": "us93.x62.on2",
-      "why": "no profile: under ['us93.x23.off', 'us93.x62.off', 'us93.x64A.on', 'us93s.x23.on2', 'x.auto-show-drive'] at s 340-952; under ['us93.x23.off', 'us93.x62.off', 'us93.x64A.on', 'us93s.x23.on2', 'x.auto-show-drive'] at s 88-700"
+      "why": "no profile: under ['us93.x62.off', 'us93.x64A.on', 'us93s.x20.on', 'us93s.x23.off', 'x.auto-show-drive'] at s 340-952; under ['us93.x62.off', 'us93.x64A.on', 'us93s.x20.on', 'us93s.x23.off', 'x.auto-show-drive'] at s 88-700"
      }
     ],
     "simplified": [
@@ -5385,21 +5395,52 @@
       "why": "approach 520.0 m, grade 0.06"
      },
      {
+      "road": "x.railroad-pass-casino-roa",
+      "why": "approach 520.0 m, grade 0.07"
+     },
+     {
       "road": "us93.x15A.off",
       "why": "shortened until a profile fits: ground",
       "length_m": 588.0
      },
      {
+      "road": "us93.x15A.off",
+      "why": "shortened until a profile fits: ends",
+      "length_m": 444.0
+     },
+     {
       "road": "us93s.x64B.off",
-      "why": "over everything it meets (its mapped level does not fit)"
+      "why": "shortened until a profile fits: ends",
+      "length_m": 620.0
      },
      {
       "road": "us93s.x20.off",
       "why": "over everything it meets (its mapped level does not fit)"
      },
      {
+      "road": "us93s.x2.off",
+      "why": "shortened until a profile fits: ends",
+      "length_m": 604.0
+     },
+     {
+      "road": "us93s.x2.off",
+      "why": "shortened until a profile fits: ends",
+      "length_m": 456.0
+     },
+     {
+      "road": "us93s.x2.off",
+      "why": "shortened until a profile fits: ends",
+      "length_m": 344.0
+     },
+     {
+      "road": "us93s.x2.off",
+      "why": "shortened until a profile fits: ends",
+      "length_m": 260.0
+     },
+     {
       "road": "us93.x14.on",
-      "why": "over everything it meets (its mapped level does not fit)"
+      "why": "ends before a road it would have to pass under",
+      "length_m": 736.0
      },
      {
       "road": "us93.x15A.on2",
@@ -5443,7 +5484,8 @@
      },
      {
       "road": "us93s.x23.on2",
-      "why": "over everything it meets (its mapped level does not fit)"
+      "why": "ends before a road it would have to pass under",
+      "length_m": 700.0
      },
      {
       "road": "us93s.x17.on2",
@@ -5456,25 +5498,29 @@
       "length_m": 708.0
      },
      {
-      "road": "us93.x23.off",
-      "why": "over everything it meets (its mapped level does not fit)"
+      "road": "us93s.x2.on",
+      "why": "shortened until a profile fits: ends",
+      "length_m": 468.0
      },
      {
       "road": "us93.x64B.off",
+      "why": "shortened until a profile fits: ends",
+      "length_m": 1004.0
+     },
+     {
+      "road": "us93s.x23.off",
       "why": "over everything it meets (its mapped level does not fit)"
      },
      {
-      "road": "us93s.x23.off",
-      "why": "ends before a road it would have to pass under",
-      "length_m": 1940.0
-     },
-     {
-      "road": "us93s.x23.off",
-      "why": "shortened until a profile fits: under ['us93.main', 'us93.x23.off', 'us93s.opp', 'us93s.x23.on2', 'x.auto-show-drive'] at s 200-1684",
-      "length_m": 1456.0
-     },
-     {
       "road": "us93.x69.on2",
+      "why": "over everything it meets (its mapped level does not fit)"
+     },
+     {
+      "road": "us93s.x23.on",
+      "why": "over everything it meets (its mapped level does not fit)"
+     },
+     {
+      "road": "us93s.x20.on",
       "why": "over everything it meets (its mapped level does not fit)"
      },
      {
@@ -5484,22 +5530,22 @@
      },
      {
       "road": "us93.x62.on2",
-      "why": "shortened until a profile fits: under ['us93.x23.off', 'us93.x62.off', 'us93.x64A.on', 'us93s.x23.on2', 'x.auto-show-drive'] at s 1124-1736",
+      "why": "shortened until a profile fits: under ['us93.x62.off', 'us93.x64A.on', 'us93s.x20.on', 'us93s.x23.off', 'x.auto-show-drive'] at s 1124-1736",
       "length_m": 1336.0
      },
      {
       "road": "us93.x62.on2",
-      "why": "shortened until a profile fits: under ['us93.x23.off', 'us93.x62.off', 'us93.x64A.on', 'us93s.x23.on2', 'x.auto-show-drive'] at s 676-1288",
+      "why": "shortened until a profile fits: under ['us93.x62.off', 'us93.x64A.on', 'us93s.x20.on', 'us93s.x23.off', 'x.auto-show-drive'] at s 676-1288",
       "length_m": 1000.0
      },
      {
       "road": "us93.x62.on2",
-      "why": "shortened until a profile fits: under ['us93.x23.off', 'us93.x62.off', 'us93.x64A.on', 'us93s.x23.on2', 'x.auto-show-drive'] at s 340-952",
+      "why": "shortened until a profile fits: under ['us93.x62.off', 'us93.x64A.on', 'us93s.x20.on', 'us93s.x23.off', 'x.auto-show-drive'] at s 340-952",
       "length_m": 748.0
      },
      {
       "road": "us93.x62.on2",
-      "why": "shortened until a profile fits: under ['us93.x23.off', 'us93.x62.off', 'us93.x64A.on', 'us93s.x23.on2', 'x.auto-show-drive'] at s 88-700",
+      "why": "shortened until a profile fits: under ['us93.x62.off', 'us93.x64A.on', 'us93s.x20.on', 'us93s.x23.off', 'x.auto-show-drive'] at s 88-700",
       "length_m": 560.0
      },
      {
@@ -5511,6 +5557,16 @@
       "road": "us93s.x68.on2",
       "why": "starts clear of us93s.x68.on",
       "length_m": 248.0
+     },
+     {
+      "road": "x.boulder-city-parkway",
+      "why": "open end cut back to where it meets the ground",
+      "length_m": 572.0
+     },
+     {
+      "road": "us93s.x20.off",
+      "why": "open end cut back to where it meets the ground",
+      "length_m": 588.0
      },
      {
       "road": "us93.x69.off",
@@ -5534,7 +5590,7 @@
      "overpasses": {
       "ok": true,
       "count": 10,
-      "min_clearance_m": 5.45,
+      "min_clearance_m": 5.46,
       "dropped": [],
       "note": "branches of ramps that are too tangled to build by rule are left out and listed (simplified)"
      },
@@ -5545,10 +5601,27 @@
      "plan_overlap_rule": {
       "ok": true,
       "violations": 0,
-      "overlapping_pairs": 120,
+      "overlapping_pairs": 122,
       "min_separation_m": 6.59
      }
     }
+   },
+   "ramps_over_ground": {
+    "passes": [
+     {
+      "pass": 1,
+      "ramp_stations_under_ground": 1165,
+      "worst_m": 9.53
+     },
+     {
+      "pass": 2,
+      "ramp_stations_under_ground": 0,
+      "worst_m": -0.11
+     },
+     {
+      "kept": 2
+     }
+    ]
    }
   }
  },
@@ -5569,28 +5642,28 @@
   "heights": [
    {
     "road": "us93.main",
-    "heights_changed": 2617,
-    "max_change_m": 56.18,
+    "heights_changed": 7415,
+    "max_change_m": 9.69,
     "changed_s": [
      0.0,
-     10464.0
+     59228.0
     ]
    },
    {
     "road": "us93s.opp",
-    "heights_changed": 2608,
-    "max_change_m": 52.91,
+    "heights_changed": 7489,
+    "max_change_m": 1.85,
     "changed_s": [
-     49092.0,
+     72.0,
      59520.0
     ]
    }
   ]
  },
  "files": {
-  "roadnet-us93.json": 244491,
-  "roadnet-us93.bin": 1305836,
-  "total": 1550327,
+  "roadnet-us93.json": 242146,
+  "roadnet-us93.bin": 1297240,
+  "total": 1539386,
   "ok": true
  }
 }

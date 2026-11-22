@@ -60,7 +60,7 @@ export async function createLampsPart(ctx) {
   for (let i0 = 0; i0 < n; i0 += HEIGHT_SLICE) {
     for (let i = i0; i < Math.min(n, i0 + HEIGHT_SLICE); i++) {
       const x = pack.x[i], y = pack.y[i];
-      headAlt[i] = terrain.heightAt(x, y) - base + pack.mount[i];
+      headAlt[i] = terrain.surfaceAt(x, y) - base + pack.mount[i];
       headY[i] = headAlt[i] - curveDrop(x, y);
     }
     await new Promise((r) => setTimeout(r, 0));
@@ -105,7 +105,7 @@ export async function createLampsPart(ctx) {
 
   // the poles stand near the roads of the route's RoadNet: rebuilt when the route changes (setRoute)
   let poleRoads = ctx.net?.roadnet || null;
-  let poles = createPoles({ pack, types, roads: poleRoads?.roads || [], groundY: terrain.groundY, parent: ctx.group });
+  let poles = createPoles({ pack, types, roads: poleRoads?.roads || [], groundY: terrain.surfaceY, parent: ctx.group });
 
   const onTable = createOnTable(env.ephemeris);
   const table = new Float32Array(37);
@@ -278,7 +278,7 @@ export async function createLampsPart(ctx) {
       if (!roadnet || roadnet === poleRoads) return;
       poleRoads = roadnet;
       poles.dispose();
-      poles = createPoles({ pack, types, roads: roadnet.roads, groundY: terrain.groundY, parent: ctx.group });
+      poles = createPoles({ pack, types, roads: roadnet.roads, groundY: terrain.surfaceY, parent: ctx.group });
       poles.setVisible(enabled);
     },
     whenSettled: () => pools.whenSettled(),

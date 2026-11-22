@@ -39,11 +39,12 @@ function makeCanvas(w, h) {
 /**
  * @param {{ signs: object, roadnet: object, base: number, earthR: number, parent: THREE.Object3D, anisotropy?: number, barriers?: object|null }} opts
  *   signs: signs.json; roadnet: the decoded RoadNet; base and earthR: as for the road chunks;
- *   barriers: barriers.json (for its delineators), optional
+ *   barriers: barriers.json (for its delineators), optional; ground: metres above sea level of the ground as drawn
+ *   (terrain.surfaceAt), for what posts and delineators stand on where the embankment does not reach (optional)
  * @returns {{ update(car: { x: number, y: number }): void, setNight(on: boolean): void,
  *   whenSettled(): Promise<void>, stats(): object, dispose(): void }}
  */
-export function createRoadside({ signs, roadnet, base, earthR, parent, anisotropy = 1, barriers = null }) {
+export function createRoadside({ signs, roadnet, base, earthR, parent, anisotropy = 1, barriers = null, ground = null }) {
   const roadsById = new Map(roadnet.roads.map((r) => [r.id, r]));
   const all = []; // { rec, tab, faces, road, map, built }
   const faceByKey = new Map();
@@ -51,7 +52,7 @@ export function createRoadside({ signs, roadnet, base, earthR, parent, anisotrop
     const road = roadsById.get(r.id);
     if (!road) continue;
     const ref = createRefline(road);
-    const ctx = { at: (s) => ref.at(s), edges: (s) => edgesAt(road, s), base, earthR };
+    const ctx = { at: (s) => ref.at(s), edges: (s) => edgesAt(road, s), base, earthR, raw: road, ground };
     for (const rec of r.signs) {
       const fs = facesOf(rec, r.exits);
       for (const f of fs) faceByKey.set(f.key, f.face);
@@ -108,7 +109,7 @@ export function createRoadside({ signs, roadnet, base, earthR, parent, anisotrop
     return { page: r.page, u0: r.x / pg.w, v0: r.y / pg.h, u1: (r.x + r.w) / pg.w, v1: (r.y + r.h) / pg.h };
   };
 
-  const delineators = barriers ? createDelineators({ barriers, roadnet, base, earthR, parent: group }) : null;
+  const delineators = barriers ? createDelineators({ barriers, roadnet, base, earthR, parent: group, ground }) : null;
   let night = false, disposed = false, car = null, origin = null, headlights = false, lastNight = 0;
   let shown = new Set(), bands = new Map(), wanted = [], dirty = false, timer = null;
   let waiters = [];

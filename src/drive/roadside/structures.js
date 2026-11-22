@@ -11,7 +11,7 @@
  * to just over the top chord. Built in the frame of its first sign (localUp, level), so it is true
  * vertical wherever it stands.
  */
-import { signFrame, embankmentDrop, POST_COLOUR } from './geometry.js';
+import { signFrame, standY, POST_COLOUR } from './geometry.js';
 
 export const TRUSS = { below: 0.35, depth: 1.3, along: 1.0, chord: 0.14, web: 0.07, panel: 1.6, gap: 0.12 };
 export const COLUMN = { w: 0.45, bury: 0.8, over: 0.25 };
@@ -113,7 +113,11 @@ export function buildStructure(st, recs, road, thick = 0.06) {
     const x = xOf(d);
     const out = d < e.right ? e.right - d : d > e.left ? d - e.left : 0;
     const dEdge = d < e.right ? e.right : d > e.left ? e.left : d;
-    const yFoot = f.p.crossfall * (dEdge - f.d) - embankmentDrop(out) - COLUMN.bury;
+    const hEdge = f.edgeH + f.p.crossfall * (dEdge - f.d); // the pavement's edge (or the pavement) beside the column
+    const c = at(x, 0, (z0 + z1) / 2);
+    const yFoot = f.p.crossfall * (dEdge - f.d) - COLUMN.bury
+      + (out > 0 ? standY(road, st.s, f.p, e, d > e.left ? 'left' : 'right', out, c[0], -c[2], hEdge)
+        : road.ground ? Math.min(0, road.ground(c[0], -c[2]) - hEdge) : 0);
     const zc = (z0 + z1) / 2;
     tris += column(at, sup, f, x, zc, COLUMN.w, yFoot, top + COLUMN.over);
     columns.push({ d, out, foot: at(x, yFoot, zc), top: at(x, top + COLUMN.over, zc) });

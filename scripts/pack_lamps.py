@@ -328,10 +328,10 @@ def main(argv=None):
     report = None
     if not args.no_clear and not args.inventory:  # another inventory is not this city's: pack it as it is
         sys.path.insert(0, str(Path(__file__).resolve().parent))
-        from lib.heights import load_heights
+        from lib.heights import ground_of, load_heights
         heights = load_heights(args.city)
         mast = next((t["id"] for t in types_json.get("types", []) if t.get("key") == HIGHMAST_TYPE_KEY), None)
-        lamps, report = clear_pavement(lamps, pavement_model(load_roads(args.city)), heights.height_at, mast)
+        lamps, report = clear_pavement(lamps, pavement_model(load_roads(args.city)), ground_of(heights), mast)
     data, meta = pack(lamps, region_of(terrain), types_json)
     if report:
         meta["cleared"] = {"moved": report["moved"], "onDecks": report["onDecks"], "clearM": CLEAR_M}

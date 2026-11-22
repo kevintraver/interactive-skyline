@@ -493,12 +493,12 @@
    "lane": 2,
    "postedSeconds": 2084,
    "reveal": {
-    "s": 25408,
+    "s": 25404,
     "target": "w135457469",
     "label": "The Strip comes into view"
    },
    "starts": {
-    "reveal": 23374,
+    "reveal": 23370,
     "start": 0,
     "city": 55872.6
    },
@@ -539,7 +539,7 @@
      "label": "Railroad Pass"
     },
     {
-     "s": 25408,
+     "s": 25404,
      "kind": "reveal",
      "label": "First view of the Strip"
     },

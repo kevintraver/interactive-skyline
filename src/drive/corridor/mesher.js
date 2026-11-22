@@ -158,8 +158,8 @@ function grow(a) {
 export const transferablesOf = (m) => [m.positions.buffer, m.normals.buffer, m.colors.buffer, m.indices.buffer];
 
 /**
- * The ground under each building, from a height function: the lowest and the mean height at its outer
- * ring's points (metres above sea level). Runs on the main thread, where the terrain lives.
+ * The ground under each building, from a height function: the lowest height at its outer ring's points and the
+ * middles of its sides, and the mean at its points (metres above sea level). Runs on the main thread, where the terrain lives.
  * @param {ReturnType<typeof decodeCell>} cell  @param {(x: number, y: number) => number} heightAt
  */
 export function groundUnder(cell, heightAt, only = cell.count) {
@@ -170,9 +170,14 @@ export function groundUnder(cell, heightAt, only = cell.count) {
     const r = cell.ringStart[k], a = cell.pointStart[r], e = cell.pointStart[r + 1];
     let lo = Infinity, sum = 0;
     for (let p = a; p < e; p++) {
-      const h = heightAt(cx + P[2 * p] / u, cy + P[2 * p + 1] / u);
+      const x = cx + P[2 * p] / u, y = cy + P[2 * p + 1] / u;
+      const h = heightAt(x, y);
       if (h < lo) lo = h;
       sum += h;
+      // the drawn ground is triangles: between two corners it can dip below both, so the side's middle counts too
+      const q = p + 1 < e ? p + 1 : a;
+      const hm = heightAt((x + cx + P[2 * q] / u) / 2, (y + cy + P[2 * q + 1] / u) / 2);
+      if (hm < lo) lo = hm;
     }
     groundMin[k] = lo; groundMean[k] = sum / (e - a);
   }

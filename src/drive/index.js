@@ -69,7 +69,7 @@ export function initDrive(app, loaded) {
     },
   });
   const hooks = window.__skyline || (window.__skyline = {});
-  hooks.terrain = { whenSettled: terrain.whenSettled, stats: terrain.stats, heightAt: terrain.heightAt, groundY: terrain.groundY };
+  hooks.terrain = { whenSettled: terrain.whenSettled, stats: terrain.stats, heightAt: terrain.heightAt, groundY: terrain.groundY, surfaceAt: terrain.surfaceAt, surfaceY: terrain.surfaceY };
 
   const routes = city.routes || [];
   const modes = document.getElementById('modes');

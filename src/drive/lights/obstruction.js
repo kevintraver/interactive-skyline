@@ -152,7 +152,7 @@ export async function createObstructionPart(ctx) {
     const index = await ctx.optional('corridor/index.json');
     if (index?.tall?.file) {
       const buf = await ctx.get(`corridor/${index.tall.file}`).then((r) => r.arrayBuffer());
-      corridor = corridorLights(decodeCell(buf), ctx.terrain.heightAt, base);
+      corridor = corridorLights(decodeCell(buf), ctx.terrain.surfaceAt, base);
     }
   } catch (err) {
     console.warn('obstruction: no corridor lights', err);

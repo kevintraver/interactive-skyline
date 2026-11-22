@@ -39,7 +39,7 @@
       "max": 7.12,
       "max_at_s": 41992.0,
       "median": 0.64,
-      "p95": 2.25
+      "p95": 2.31
      },
      "pavement_clearance": {
       "drawn": {
@@ -47,8 +47,8 @@
        "at_s": 41296.0
       },
       "query": {
-       "min_m": 0.28,
-       "at_s": 41296.0
+       "min_m": 0.215,
+       "at_s": 5590.0
       }
      },
      "summit": {
@@ -1673,8 +1673,8 @@
      "lift_over_terrain_m": {
       "max": 9.12,
       "max_at_s": 36464.0,
-      "median": 0.53,
-      "p95": 2.21
+      "median": 0.52,
+      "p95": 2.25
      },
      "pavement_clearance": {
       "drawn": {
@@ -1682,8 +1682,8 @@
        "at_s": 3896.0
       },
       "query": {
-       "min_m": 0.295,
-       "at_s": 3897.0
+       "min_m": 0.181,
+       "at_s": 13395.0
       }
      },
      "summit": {
@@ -3474,8 +3474,12 @@
       "s1": 10000.0
      },
      {
+      "s0": 10700.0,
+      "s1": 10700.0
+     },
+     {
       "s0": 42000.0,
-      "s1": 42200.0
+      "s1": 42100.0
      }
     ],
     "per_km": [
@@ -3486,8 +3490,8 @@
        34.7
       ],
       "opp_higher_m": [
-       0.68,
-       1.49
+       0.7,
+       2.26
       ]
      },
      {
@@ -3497,8 +3501,8 @@
        28.6
       ],
       "opp_higher_m": [
-       0.25,
-       1.41
+       0.26,
+       1.4
       ]
      },
      {
@@ -3519,8 +3523,8 @@
        24.2
       ],
       "opp_higher_m": [
-       0.22,
-       1.02
+       0.26,
+       1.0
       ]
      },
      {
@@ -3541,7 +3545,7 @@
        26.4
       ],
       "opp_higher_m": [
-       0.79,
+       0.77,
        1.76
       ]
      },
@@ -3585,8 +3589,8 @@
        42.4
       ],
       "opp_higher_m": [
-       -4.76,
-       -2.06
+       -4.83,
+       -2.12
       ]
      },
      {
@@ -3596,8 +3600,8 @@
        42.9
       ],
       "opp_higher_m": [
-       -4.32,
-       0.1
+       -4.66,
+       -0.05
       ]
      },
      {
@@ -3608,7 +3612,7 @@
       ],
       "opp_higher_m": [
        -1.4,
-       0.09
+       0.14
       ]
      },
      {
@@ -3618,7 +3622,7 @@
        41.0
       ],
       "opp_higher_m": [
-       -1.33,
+       -1.37,
        -0.33
       ]
      },
@@ -3630,7 +3634,7 @@
       ],
       "opp_higher_m": [
        -1.25,
-       -0.69
+       -0.62
       ]
      },
      {
@@ -3641,7 +3645,7 @@
       ],
       "opp_higher_m": [
        -1.32,
-       -0.59
+       -0.66
       ]
      },
      {
@@ -3651,8 +3655,8 @@
        41.9
       ],
       "opp_higher_m": [
-       -1.13,
-       -0.21
+       -1.14,
+       -0.2
       ]
      },
      {
@@ -3662,8 +3666,8 @@
        43.1
       ],
       "opp_higher_m": [
-       -1.09,
-       -0.55
+       -1.1,
+       -0.52
       ]
      },
      {
@@ -3673,8 +3677,8 @@
        44.0
       ],
       "opp_higher_m": [
-       -1.31,
-       0.54
+       -1.41,
+       0.55
       ]
      },
      {
@@ -3684,8 +3688,8 @@
        39.6
       ],
       "opp_higher_m": [
-       -1.14,
-       -0.32
+       -1.23,
+       -0.39
       ]
      },
      {
@@ -3695,7 +3699,7 @@
        35.7
       ],
       "opp_higher_m": [
-       -0.96,
+       -1.03,
        0.0
       ]
      },
@@ -3706,7 +3710,7 @@
        36.6
       ],
       "opp_higher_m": [
-       -1.73,
+       -1.74,
        -0.16
       ]
      },
@@ -3717,7 +3721,7 @@
        36.8
       ],
       "opp_higher_m": [
-       -1.47,
+       -1.56,
        1.37
       ]
      },
@@ -3739,7 +3743,7 @@
        35.9
       ],
       "opp_higher_m": [
-       -0.95,
+       -0.88,
        -0.24
       ]
      },
@@ -3751,7 +3755,7 @@
       ],
       "opp_higher_m": [
        -1.05,
-       -0.17
+       -0.12
       ]
      },
      {
@@ -3761,8 +3765,8 @@
        37.1
       ],
       "opp_higher_m": [
-       -0.59,
-       -0.06
+       -0.63,
+       -0.08
       ]
      },
      {
@@ -3773,7 +3777,7 @@
       ],
       "opp_higher_m": [
        -0.51,
-       -0.19
+       -0.26
       ]
      },
      {
@@ -3784,7 +3788,7 @@
       ],
       "opp_higher_m": [
        -0.61,
-       -0.04
+       -0.03
       ]
      },
      {
@@ -3805,8 +3809,8 @@
        27.5
       ],
       "opp_higher_m": [
-       -1.08,
-       0.29
+       -1.06,
+       0.3
       ]
      },
      {
@@ -3817,7 +3821,7 @@
       ],
       "opp_higher_m": [
        -1.47,
-       -0.93
+       -0.96
       ]
      },
      {
@@ -3838,8 +3842,8 @@
        23.7
       ],
       "opp_higher_m": [
-       -2.08,
-       -0.2
+       -2.05,
+       -0.19
       ]
      },
      {
@@ -3860,7 +3864,7 @@
        21.6
       ],
       "opp_higher_m": [
-       -0.23,
+       -0.29,
        0.14
       ]
      },
@@ -3872,7 +3876,7 @@
       ],
       "opp_higher_m": [
        -0.62,
-       0.09
+       0.1
       ]
      },
      {
@@ -3883,7 +3887,7 @@
       ],
       "opp_higher_m": [
        -0.62,
-       1.71
+       1.72
       ]
      },
      {
@@ -3893,8 +3897,8 @@
        62.2
       ],
       "opp_higher_m": [
-       -1.55,
-       0.11
+       -1.74,
+       0.05
       ]
      },
      {
@@ -3904,7 +3908,7 @@
        32.7
       ],
       "opp_higher_m": [
-       -0.88,
+       -0.87,
        0.05
       ]
      },
@@ -3937,8 +3941,8 @@
        35.4
       ],
       "opp_higher_m": [
-       -1.83,
-       0.8
+       -1.91,
+       0.79
       ]
      },
      {
@@ -3948,7 +3952,7 @@
        32.2
       ],
       "opp_higher_m": [
-       -5.56,
+       -4.28,
        -0.29
       ]
      },
@@ -3970,8 +3974,8 @@
        29.0
       ],
       "opp_higher_m": [
-       -1.46,
-       -0.0
+       -1.55,
+       -0.01
       ]
      },
      {
@@ -3981,7 +3985,7 @@
        28.9
       ],
       "opp_higher_m": [
-       -1.0,
+       -0.99,
        -0.54
       ]
      }
@@ -4028,7 +4032,7 @@
     "lane": 2,
     "first_visible_s": 7484.0,
     "stays_visible_from_s": 7484.0,
-    "first_visible_s_drawn_surface": 7484.0,
+    "first_visible_s_bilinear_query": 7484.0,
     "range_m": 28415.0,
     "road_h_m": 761.1,
     "visible_share_after": 1.0
@@ -4062,14 +4066,14 @@
       "at_s": 41296.0
      },
      "query": {
-      "min_m": 0.28,
-      "at_s": 41296.0
+      "min_m": 0.215,
+      "at_s": 5590.0
      },
      "lift_on_centre_line_m": {
       "max": 7.12,
       "max_at_s": 41992.0,
       "median": 0.64,
-      "p95": 2.25
+      "p95": 2.31
      }
     },
     "opposite_above_terrain": {
@@ -4080,8 +4084,8 @@
       "at_s": 3896.0
      },
      "query": {
-      "min_m": 0.295,
-      "at_s": 3897.0
+      "min_m": 0.181,
+      "at_s": 13395.0
      }
     },
     "speed": {
@@ -4216,7 +4220,7 @@
     },
     "interchanges_overpasses": {
      "ok": true,
-     "count": 18,
+     "count": 15,
      "min_clearance_m": 5.41,
      "dropped": [
       {
@@ -4254,6 +4258,21 @@
        "name": "",
        "why": "a branch of a ramp, too tangled to build by rule (no profile clears the route with both ends on the ground: over another road at s 0-444; over another road at s 0-444)",
        "branch": true
+      },
+      {
+       "road": "x.road.8",
+       "why": "an open end high in the air that cannot come down to the ground",
+       "branch": true
+      },
+      {
+       "road": "x.road.10",
+       "why": "an open end high in the air that cannot come down to the ground",
+       "branch": true
+      },
+      {
+       "road": "x.road.11",
+       "why": "an open end high in the air that cannot come down to the ground",
+       "branch": true
       }
      ],
      "note": "branches of ramps that are too tangled to build by rule are left out and listed (simplified)"
@@ -4265,8 +4284,14 @@
     "interchanges_plan_overlap_rule": {
      "ok": true,
      "violations": 0,
-     "overlapping_pairs": 136,
-     "min_separation_m": 6.17
+     "overlapping_pairs": 124,
+     "min_separation_m": 6.4
+    },
+    "ramps_over_ground": {
+     "ok": true,
+     "ramp_stations_within_clearance": 1,
+     "worst_m": -0.1,
+     "note": "drawn ground at most worst_m above any ramp's or crossing's pavement; stations within 0.1 m counted"
     }
    },
    "interchanges": {
@@ -4276,11 +4301,11 @@
      "diverge": 32,
      "merge": 37,
      "connects": 14,
-     "crossings": 18,
-     "decks": 37,
-     "piers": 123,
-     "abutments": 65,
-     "roads": 87
+     "crossings": 15,
+     "decks": 29,
+     "piers": 105,
+     "abutments": 57,
+     "roads": 84
     },
     "extract": {
      "osm": "2026-11-22T09:28:51Z",
@@ -4324,7 +4349,7 @@
       "ref": "50",
       "label": "Lamb Boulevard",
       "ramp": "i15s.x50.off",
-      "ramp_m": 744.0,
+      "ramp_m": 676.0,
       "ok": true
      },
      {
@@ -4499,27 +4524,12 @@
      {
       "road": "x.road.5",
       "name": "",
-      "clearance_m": 5.5
+      "clearance_m": 8.33
      },
      {
       "road": "x.road.7",
       "name": "",
       "clearance_m": 5.45
-     },
-     {
-      "road": "x.road.8",
-      "name": "",
-      "clearance_m": 5.5
-     },
-     {
-      "road": "x.road.10",
-      "name": "",
-      "clearance_m": 11.4
-     },
-     {
-      "road": "x.road.11",
-      "name": "",
-      "clearance_m": 12.11
      },
      {
       "road": "x.west-flamingo-road",
@@ -4563,10 +4573,10 @@
      },
      {
       "road": "i15s.x50.off",
-      "length_m": 744.0,
+      "length_m": 676.0,
       "lanes": 1,
-      "decks": 1,
-      "max_layer": 9,
+      "decks": 0,
+      "max_layer": 0,
       "side": "right",
       "gore_start": true,
       "gore_end": false,
@@ -4761,9 +4771,9 @@
      },
      {
       "road": "i15n.x50.off",
-      "length_m": 680.0,
+      "length_m": 576.0,
       "lanes": 1,
-      "decks": 1,
+      "decks": 0,
       "max_layer": 9,
       "side": "right",
       "gore_start": true,
@@ -5003,10 +5013,10 @@
      },
      {
       "road": "i15n.x39.on2",
-      "length_m": 668.0,
+      "length_m": 576.0,
       "lanes": 1,
-      "decks": 1,
-      "max_layer": 9,
+      "decks": 0,
+      "max_layer": 0,
       "side": "right",
       "gore_start": false,
       "gore_end": true,
@@ -5168,10 +5178,10 @@
      },
      {
       "road": "i15n.x46.off",
-      "length_m": 692.0,
+      "length_m": 608.0,
       "lanes": 2,
-      "decks": 1,
-      "max_layer": 1,
+      "decks": 0,
+      "max_layer": 0,
       "side": "right",
       "gore_start": true,
       "gore_end": false,
@@ -5353,6 +5363,21 @@
      {
       "road": "i15s.x45.on3",
       "why": "runs on the pavement of i15s.x45.on2 over most of its length"
+     },
+     {
+      "road": "x.road.8",
+      "why": "an open end high in the air that cannot come down to the ground",
+      "branch": true
+     },
+     {
+      "road": "x.road.10",
+      "why": "an open end high in the air that cannot come down to the ground",
+      "branch": true
+     },
+     {
+      "road": "x.road.11",
+      "why": "an open end high in the air that cannot come down to the ground",
+      "branch": true
      }
     ],
     "simplified": [
@@ -5374,7 +5399,8 @@
      },
      {
       "road": "i15s.x50.off",
-      "why": "over everything it meets (its mapped level does not fit)"
+      "why": "ends before a road it would have to pass under",
+      "length_m": 676.0
      },
      {
       "road": "i15s.xkm37.off",
@@ -5476,7 +5502,8 @@
      },
      {
       "road": "i15n.x39.on2",
-      "why": "over everything it meets (its mapped level does not fit)"
+      "why": "ends before a road it would have to pass under",
+      "length_m": 576.0
      },
      {
       "road": "i15n.x41.on",
@@ -5636,6 +5663,21 @@
       "road": "i15n.x42A.off",
       "why": "shortened until a profile fits: under ['i15n.x42B.off', 'i15n.x43.on'] at s 140-408",
       "length_m": 332.0
+     },
+     {
+      "road": "x.road.5",
+      "why": "open end cut back to where it meets the ground",
+      "length_m": 1312.0
+     },
+     {
+      "road": "i15n.x50.off",
+      "why": "open end cut back to where it meets the ground",
+      "length_m": 576.0
+     },
+     {
+      "road": "i15n.x46.off",
+      "why": "open end cut back to where it meets the ground",
+      "length_m": 608.0
      }
     ],
     "overlaps": [],
@@ -5678,7 +5720,7 @@
      },
      "overpasses": {
       "ok": true,
-      "count": 18,
+      "count": 15,
       "min_clearance_m": 5.41,
       "dropped": [
        {
@@ -5716,6 +5758,21 @@
         "name": "",
         "why": "a branch of a ramp, too tangled to build by rule (no profile clears the route with both ends on the ground: over another road at s 0-444; over another road at s 0-444)",
         "branch": true
+       },
+       {
+        "road": "x.road.8",
+        "why": "an open end high in the air that cannot come down to the ground",
+        "branch": true
+       },
+       {
+        "road": "x.road.10",
+        "why": "an open end high in the air that cannot come down to the ground",
+        "branch": true
+       },
+       {
+        "road": "x.road.11",
+        "why": "an open end high in the air that cannot come down to the ground",
+        "branch": true
        }
       ],
       "note": "branches of ramps that are too tangled to build by rule are left out and listed (simplified)"
@@ -5727,10 +5784,32 @@
      "plan_overlap_rule": {
       "ok": true,
       "violations": 0,
-      "overlapping_pairs": 136,
-      "min_separation_m": 6.17
+      "overlapping_pairs": 124,
+      "min_separation_m": 6.4
      }
     }
+   },
+   "ramps_over_ground": {
+    "passes": [
+     {
+      "pass": 1,
+      "ramp_stations_under_ground": 851,
+      "worst_m": 1.54
+     },
+     {
+      "pass": 2,
+      "ramp_stations_under_ground": 1,
+      "worst_m": -0.1
+     },
+     {
+      "pass": 3,
+      "ramp_stations_under_ground": 1,
+      "worst_m": -0.1
+     },
+     {
+      "kept": 2
+     }
+    ]
    }
   }
  },
@@ -5746,12 +5825,33 @@
    "i15n.opp",
    "i15s.main"
   ],
-  "identical": true
+  "identical": false,
+  "plan_identical": true,
+  "heights": [
+   {
+    "road": "i15s.main",
+    "heights_changed": 5284,
+    "max_change_m": 0.6,
+    "changed_s": [
+     256.0,
+     45040.0
+    ]
+   },
+   {
+    "road": "i15n.opp",
+    "heights_changed": 4792,
+    "max_change_m": 1.72,
+    "changed_s": [
+     32.0,
+     45064.0
+    ]
+   }
+  ]
  },
  "files": {
-  "roadnet-i15s.json": 239600,
-  "roadnet-i15s.bin": 1119384,
-  "total": 1358984,
+  "roadnet-i15s.json": 234269,
+  "roadnet-i15s.bin": 1106084,
+  "total": 1340353,
   "ok": true
  }
 }

@@ -49,7 +49,6 @@ import numpy as np
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from lib.alignment import fit_line, stations  # noqa: E402
 from lib.frame import create_frame, curve_drop  # noqa: E402
-from lib.ground import drawn_surface  # noqa: E402
 from lib.heights import load_heights  # noqa: E402
 from lib.crosssection import normalise_sections, pavement_edges  # noqa: E402
 from lib.lanes import assign_ids, decide_sides, lane_evidence, parse_turn, place_tapers, turn_in  # noqa: E402
@@ -380,13 +379,17 @@ def finish_road(state):
             sections[i]["taper"].update(side=dc["side"], evidence=dc["evidence"])
     left, right = pavement_edges(normalise_sections(sections), s)
 
-    # heights: the envelope over the highest drawn or queried ground, then smoothed from above
-    def ground(px, py):
-        return np.maximum(hs.height_at(px, py), top(px, py))
+    # heights: the envelope over the ground as the drive draws it (Heights.drawn_at: the meshes' triangles, every
+    # grid), then smoothed from above. The bilinear query is not what is on screen: in a twisted 160 m cell the two
+    # differ by metres, either way.
+    ground = top
 
     held = []
     env = hold_decks(envelope(st, left, right, ground, clearance=CLEARANCE, margin=MARGIN, across=1.0), s, bridge_runs,
                      held=held)
+    if state.get("lift_to") is not None:
+        # where a ramp pinned to this road would run under the ground beside it (ramp_lifts), the road comes up
+        env = np.maximum(env, state["lift_to"])
     radius = np.maximum(1500.0, (speed * MPH) ** 2 / COMFORT)
     h = smooth_from_above(env, SPACING, GRADE_SOLVE, radius)
     st["h"] = h
@@ -625,7 +628,7 @@ def check_main_line(city, doc, blob, routes_doc, main_ids, files=("roadnet.json"
     return {"checked": True, "roads": sorted(main_ids), "identical": True}
 
 
-def build_group(city, cfg, routes_cfg, frame, hs, top):
+def build_group(city, cfg, routes_cfg, frame, hs, top, lifts=None):
     """Build one RoadNet: the routes routes_cfg (each with its opposite carriageway, ramps, crossings
     and structures). Returns {"doc", "blob", "text", "routes", "report", "main_ids", "source"}."""
     extracts = {}
@@ -661,6 +664,9 @@ def build_group(city, cfg, routes_cfg, frame, hs, top):
             print(f"  not built: {ex}")
         if po is not None:
             rr["inside_shoulders"] = narrow_inside_shoulders(pm, po)
+        for st_ in (pm, po):
+            if st_ is not None:
+                st_["lift_to"] = (lifts or {}).get(st_["road_id"])
         main_road, mi = finish_road(pm)
         roads.append(main_road)
         opp_road, oi = finish_road(po) if po is not None else (None, None)
@@ -748,8 +754,10 @@ def build_group(city, cfg, routes_cfg, frame, hs, top):
         ey = p["y"] + d_eye * np.cos(p["heading"])
         eh = p["h"] + p["crossfall"] * d_eye
         eY = eye_scene_y(eh, ex, ey, cfg["base"], EYE)
-        vis_q, worst_q = visible(hs.ground_y, ex, ey, eY, target)
-        vis_d, _ = visible(lambda x, y: top(x, y) - cfg["base"] - curve_drop(x, y), ex, ey, eY, target)
+        # the reveal over the ground as drawn (what the runtime's sightline uses: terrain.surfaceY); the bilinear
+        # query's answer is kept in the report for comparison
+        vis_q, worst_q = visible(hs.drawn_y, ex, ey, eY, target)
+        vis_b, _ = visible(hs.ground_y, ex, ey, eY, target)
 
         def first_true(v):
             idx = np.flatnonzero(v)
@@ -765,7 +773,7 @@ def build_group(city, cfg, routes_cfg, frame, hs, top):
             "target": target_id, "target_point": {k: round(float(target[k]), 2) for k in ("x", "y", "Y", "h")},
             "target_how": target["how"], "eye_m": EYE, "lane": lane,
             "first_visible_s": reveal_s, "stays_visible_from_s": stays_from(vis_q),
-            "first_visible_s_drawn_surface": first_true(vis_d),
+            "first_visible_s_bilinear_query": first_true(vis_b),
             "range_m": round(float(np.hypot(target["x"] - ex[k_rev], target["y"] - ey[k_rev])), 0) if k_rev is not None else None,
             "road_h_m": round(float(eh[k_rev]), 1) if k_rev is not None else None,
             "visible_share_after": round(float(vis_q[k_rev:].mean()), 3) if k_rev is not None else None,
@@ -830,11 +838,13 @@ def build_group(city, cfg, routes_cfg, frame, hs, top):
         prof = rr["main"]["profile"]
         acc["grade"] = {"ok": prof["max_grade"] <= GRADE + 1e-6, "max": prof["max_grade"]}
         cl = prof["pavement_clearance"]
-        acc["above_terrain"] = {"ok": cl["drawn"]["min_m"] >= 0 and cl["query"]["min_m"] >= 0, **cl,
+        # the ground that is drawn is what the pavement must clear; the bilinear query is reported, not required (it
+        # differs from what is on screen by metres either way in the mountains)
+        acc["above_terrain"] = {"ok": cl["drawn"]["min_m"] >= 0, **cl,
                                 "lift_on_centre_line_m": prof["lift_over_terrain_m"]}
         if oi is not None:
             ocl = rr["opposite"]["profile"]["pavement_clearance"]
-            acc["opposite_above_terrain"] = {"ok": ocl["drawn"]["min_m"] >= 0 and ocl["query"]["min_m"] >= 0,
+            acc["opposite_above_terrain"] = {"ok": ocl["drawn"]["min_m"] >= 0,
                                              "max_grade": rr["opposite"]["profile"]["max_grade"], **ocl}
             acc["opposite_above_terrain"]["ok"] &= rr["opposite"]["profile"]["max_grade"] <= GRADE + 1e-6
         mphs = [z["mph"] for z in speed_list]
@@ -897,8 +907,8 @@ def build_group(city, cfg, routes_cfg, frame, hs, top):
             road_id = st_["road_id"]
             cws.append({"frame": RoadFrame(decoded[road_id]), "ids": list(st_["ids"]), "ways": set(st_["chain"].ways),
                         "prefix": road_id.split(".")[0], "links": decoded[road_id]["links"]})
-        ic = build_interchanges(osm_all, cws, frame.to_local, lambda px, py: np.maximum(hs.height_at(px, py), top(px, py)),
-                                own_ref=rc["ref"])
+        ic = build_interchanges(osm_all, cws, frame.to_local, top,
+                                own_ref=rc["ref"], lifts=lifts)
         extra_roads += ic["roads"]
         junction_recs += ic["junctions"]
         structure_recs += ic["structures"]
@@ -907,7 +917,7 @@ def build_group(city, cfg, routes_cfg, frame, hs, top):
             spans = [(b["s0"], b["s1"]) for b in decoded[cw["frame"].id]["bridges"] if b.get("deck")]
             if spans:
                 recs = piers_and_abutments(cw["frame"], spans, ic["frames"],
-                                           lambda px, py: np.maximum(hs.height_at(px, py), top(px, py)))
+                                           top)
                 # a deck that runs on past the road's end has no abutment there
                 L = cw["frame"].length
                 structure_recs += [r for r in recs if not (r["kind"] == "abutment" and min(r["s"], L - r["s"]) < 2 * SPACING)]
@@ -954,6 +964,58 @@ def files_of(rc, first):
     return {"roadnet": f"roadnet-{rid}.json", "signs": f"signs-{rid}.json", "traffic": f"traffic/{rid}.json"}
 
 
+RAMP_CLEAR = 0.1  # m: a ramp or crossing's pavement at least this far above the drawn ground under it
+PAVEMENT_TOL = 0.01  # m: drawn ground may come this close over a pavement between the stations the profile is set at
+LIFT_PASSES = 4  # rebuilds at most, raising the carriageways under the ramps that need it
+LIFT_REACH = 120.0  # m in plan: a ramp station this close to a carriageway's pavement is lifted with it
+
+
+def ramp_lifts(g, ground, lifts):
+    """Where a ramp or crossing of the built group `g` runs under the drawn ground (by its pavement and
+    shoulders, as lib.groundcheck measures it), the height the roads it is tied to by a junction (its carriageway, a
+    crossing road it starts or ends on) must reach nearby so that it, pinned to them there, clears:
+    {road id: per-station lower bound}, merged into `lifts` (a copy).
+    Returns (new lifts, worst violation in metres, number of ramp stations under the ground)."""
+    from scipy.spatial import cKDTree
+    from lib.groundcheck import Road, check_pavement
+    doc = json.loads(g["text"])
+    roads = decode_roadnet(doc, g["blob"])
+    tied = {}
+    for j in doc.get("junctions", []):
+        a, b = j["a"]["road"], j["b"]["road"]
+        tied.setdefault(a, set()).add(b)
+        tied.setdefault(b, set()).add(a)
+    # the roads a ramp is pinned to: the carriageways and the crossing roads
+    mains = [r for r in roads if r.get("role", "main") in ("main", "crossing")]
+    trees = {r["id"]: cKDTree(np.column_stack([r["x"], r["y"]])) for r in mains}
+    out = {k: v.copy() for k, v in (lifts or {}).items()}
+    worst, bad = -np.inf, 0
+    for r in roads:
+        if r.get("role", "main") == "main":
+            continue
+        gap, s = check_pavement(Road(r), ground, along=2.0, across=0.25)
+        need = gap + RAMP_CLEAR
+        k = np.flatnonzero(need > 0)
+        worst = max(worst, float(gap.max()))
+        bad += len(k)
+        if not len(k):
+            continue
+        p = Road(r).line.at(s[k])
+        for m in mains:
+            if m["id"] == r["id"] or m["id"] not in tied.get(r["id"], ()):
+                continue  # only the roads it is tied to by a junction hold it up
+            d, j = trees[m["id"]].query(np.column_stack([p["x"], p["y"]]))
+            near = d < LIFT_REACH
+            if not near.any():
+                continue
+            lo = out.setdefault(m["id"], np.full(m["count"], -np.inf))
+            for jj, v in zip(j[near], need[k][near]):
+                # the carriageway's own height there, lifted by what the ramp lacks, over a few stations
+                a, b = max(0, jj - 3), min(m["count"], jj + 4)
+                lo[a:b] = np.maximum(lo[a:b], m["h"][a:b] + v + 0.02)
+    return out, worst, bad
+
+
 def main():
     args = [a for a in sys.argv[1:]]
     out_override = None
@@ -979,7 +1041,7 @@ def main():
         sys.exit(f"no route {sorted(unknown)} in data/cities.json")
     frame = create_frame(cfg)
     hs = load_heights(city)
-    top = drawn_surface(hs)
+    top = hs.drawn_at  # the one ground every height below is set against (lib.heights)
     out_dir = out_override or ROOT / "public" / "data" / city
     rep_dir = out_override or ROOT / "data" / "derived" / city
     out_dir.mkdir(parents=True, exist_ok=True)
@@ -995,9 +1057,28 @@ def main():
             if rid in old_routes:
                 entries[rid] = old_routes[rid]
             continue
-        g = build_group(city, cfg, [rc], frame, hs, top)
+        # the carriageways come up wherever a ramp pinned to them would run under the ground beside them (ramp_lifts)
+        # (a pass that does not help, where lifting the carriageway cannot reach a ramp's trouble, ends it: the best
+        # pass is kept)
+        lifts, passes, best = None, [], None
+        for k in range(LIFT_PASSES):
+            gk = build_group(city, cfg, [rc], frame, hs, top, lifts)
+            lifts, worst, bad = ramp_lifts(gk, top, lifts)
+            passes.append({"pass": k + 1, "ramp_stations_under_ground": bad, "worst_m": round(worst, 2)})
+            print(f"{rid}: pass {k + 1}: {bad} ramp stations under the drawn ground (worst {worst:.2f} m)")
+            if best is not None and bad >= best[1] and worst >= best[2] - 0.005:
+                break
+            best = (gk, bad, worst, k + 1)
+            if not bad:
+                break
+        g, bad, worst, kept = best
+        passes.append({"kept": kept})
         snapshots.update(g["source"]["osm"].split())
         report = g["report"]
+        report["routes"][rid]["ramps_over_ground"] = {"passes": passes}
+        report["routes"][rid]["acceptance"]["ramps_over_ground"] = {
+            "ok": worst <= PAVEMENT_TOL, "ramp_stations_within_clearance": bad, "worst_m": round(worst, 3),
+            "note": f"drawn ground at most worst_m above any ramp's or crossing's pavement; stations within {RAMP_CLEAR} m counted"}
         bin_name = files["roadnet"][:-len(".json")] + ".bin"
         routes_doc = routes_doc_of(g["routes"], g["source"])
         report["main_line"] = check_main_line(city, json.loads(g["text"]), g["blob"], routes_doc, g["main_ids"],

@@ -196,6 +196,7 @@ export async function createSession(ctx, terrain, hooks, { route: firstRoute, ro
       const chunks = createRoadChunks({ roadnet: d.roadnet, base: city.base, earthR: EARTH_R, parent: roads, materials, barriers: d.barriers });
       const roadside = d.signs ? createRoadside({
         signs: d.signs, barriers: d.barriers, roadnet: d.roadnet, base: city.base, earthR: EARTH_R, parent: roads, anisotropy,
+        ground: terrain.surfaceAt,
       }) : null;
       if (roadside && look) roadside.setLook(look);
       return { ...d, chunks, roadside, dispose() { roadside?.dispose(); chunks.dispose(); } };
@@ -226,7 +227,7 @@ export async function createSession(ctx, terrain, hooks, { route: firstRoute, ro
   addPart({ name: 'terrain', whenSettled: () => terrain.whenSettled(), stats: () => terrain.stats() });
   if (corridorIndex && wide) {
     addPart(createCorridor({
-      index: corridorIndex, fetchBinary: (f) => get(`corridor/${f}`).then((r) => r.arrayBuffer()), heightAt: terrain.heightAt,
+      index: corridorIndex, fetchBinary: (f) => get(`corridor/${f}`).then((r) => r.arrayBuffer()), heightAt: terrain.surfaceAt,
       base: city.base, earthR: EARTH_R, parent: group, anisotropy: renderer.capabilities.getMaxAnisotropy(),
     }));
   }
@@ -533,7 +534,7 @@ export async function createSession(ctx, terrain, hooks, { route: firstRoute, ro
       if (!entry || !entry.mesh.visible || !pose) return false;
       const eye = rig.apply(scratch, pose, viewport()).position.clone();
       const top = topOf(entry).add(entry.mesh.position);
-      if (!sightOverGround(eye, top, terrain.groundY).clear) return false;
+      if (!sightOverGround(eye, top, terrain.surfaceY).clear) return false;
       const dist = eye.distanceTo(top);
       ray.set(eye, top.clone().sub(eye).normalize());
       ray.far = dist - 1;

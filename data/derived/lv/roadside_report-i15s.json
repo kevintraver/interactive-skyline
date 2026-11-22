@@ -811,14 +811,14 @@
     "s": 44191.0,
     "exit": "36",
     "why": "6 lanes",
-    "structure": "span",
+    "structure": "cantilever",
     "d": -9.08,
     "clearance_m": 5.56
    }
   ],
   "structures": {
-   "cantilever": 27,
-   "span": 9
+   "cantilever": 28,
+   "span": 8
   },
   "left_offsets": [
    {
@@ -907,17 +907,17 @@
   "placed_m": {
    "concrete mapped": 8268,
    "concrete rule": 9736,
-   "guardrail rule": 18164,
+   "guardrail rule": 16744,
    "wall mapped": 1084
   },
   "roads": {
    "i15s.main": {
     "runs": 191,
-    "delineators": 527
+    "delineators": 530
    },
    "i15n.opp": {
-    "runs": 81,
-    "delineators": 295
+    "runs": 79,
+    "delineators": 296
    },
    "i15s.xkm6.off": {
     "runs": 0,
@@ -932,8 +932,8 @@
     "delineators": 30
    },
    "i15s.x50.off": {
-    "runs": 2,
-    "delineators": 24
+    "runs": 0,
+    "delineators": 26
    },
    "i15s.x48.off": {
     "runs": 0,
@@ -1004,8 +1004,8 @@
     "delineators": 36
    },
    "i15n.x50.off": {
-    "runs": 2,
-    "delineators": 21
+    "runs": 0,
+    "delineators": 18
    },
    "i15n.x52B.off": {
     "runs": 0,
@@ -1089,11 +1089,11 @@
    },
    "i15n.x39.on": {
     "runs": 3,
-    "delineators": 10
+    "delineators": 9
    },
    "i15n.x39.on2": {
     "runs": 3,
-    "delineators": 30
+    "delineators": 35
    },
    "i15n.xkm7.on": {
     "runs": 1,
@@ -1152,8 +1152,8 @@
     "delineators": 57
    },
    "i15n.x46.off": {
-    "runs": 2,
-    "delineators": 20
+    "runs": 0,
+    "delineators": 18
    },
    "i15s.x50.on": {
     "runs": 0,
@@ -1184,7 +1184,7 @@
     "delineators": 49
    },
    "i15s.x40.off": {
-    "runs": 9,
+    "runs": 15,
     "delineators": 73
    },
    "i15n.x38.off": {
@@ -1192,8 +1192,8 @@
     "delineators": 20
    },
    "i15n.x39.off": {
-    "runs": 11,
-    "delineators": 43
+    "runs": 10,
+    "delineators": 44
    }
   },
   "check_points": [
@@ -1691,7 +1691,7 @@
  "files": {
   "signs-i15s.json": 32366,
   "limit": 150000,
-  "barriers-i15s.json": 33956,
+  "barriers-i15s.json": 33915,
   "barrier_limit": 100000,
   "ok": true
  },

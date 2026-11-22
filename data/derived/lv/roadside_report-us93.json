@@ -650,29 +650,29 @@
    "fill": {
     "unit": "m of fill",
     "rule": "barrier where fill > threshold",
-    "positives_train": 624,
-    "stations_train": 11107,
+    "positives_train": 583,
+    "stations_train": 10623,
     "positives_test": 254,
     "stations_test": 1979,
     "threshold": 3.0,
     "fitted": false,
-    "best_fit": 1.82,
+    "best_fit": 1.76,
     "train_at_best_fit": {
-     "precision": 0.13,
-     "recall": 0.704,
-     "f1": 0.219,
-     "tp": 439,
-     "fp": 2945,
-     "fn": 185,
-     "stations": 11107
+     "precision": 0.124,
+     "recall": 0.674,
+     "f1": 0.21,
+     "tp": 393,
+     "fp": 2771,
+     "fn": 190,
+     "stations": 10623
     },
-    "why": "the best threshold scores F1 0.219 on the training share (< 0.3): the feature does not explain where OSM maps this barrier; design value kept",
+    "why": "the best threshold scores F1 0.21 on the training share (< 0.3): the feature does not explain where OSM maps this barrier; design value kept",
     "holdout": {
-     "precision": 0.372,
+     "precision": 0.371,
      "recall": 0.866,
-     "f1": 0.52,
+     "f1": 0.519,
      "tp": 220,
-     "fp": 372,
+     "fp": 373,
      "fn": 34,
      "stations": 1979
     }
@@ -685,23 +685,23 @@
   "osm_mapped_m": {
    "concrete": 10100,
    "wall": 792,
-   "guardrail": 3512,
+   "guardrail": 3348,
    "fence": 1352
   },
   "placed_m": {
    "concrete mapped": 6944,
-   "concrete rule": 26460,
-   "guardrail mapped": 3104,
-   "guardrail rule": 19452,
+   "concrete rule": 26452,
+   "guardrail mapped": 2940,
+   "guardrail rule": 20072,
    "wall mapped": 692
   },
   "roads": {
    "us93.main": {
-    "runs": 331,
-    "delineators": 657
+    "runs": 337,
+    "delineators": 649
    },
    "us93s.opp": {
-    "runs": 150,
+    "runs": 153,
     "delineators": 444
    },
    "us93.x14.off": {
@@ -709,8 +709,8 @@
     "delineators": 32
    },
    "us93.x15A.off": {
-    "runs": 1,
-    "delineators": 13
+    "runs": 2,
+    "delineators": 0
    },
    "us93.x17A.off": {
     "runs": 0,
@@ -789,8 +789,8 @@
     "delineators": 22
    },
    "us93s.x64B.off": {
-    "runs": 2,
-    "delineators": 22
+    "runs": 0,
+    "delineators": 16
    },
    "us93s.x64A.off": {
     "runs": 2,
@@ -801,8 +801,8 @@
     "delineators": 32
    },
    "us93s.x20.off": {
-    "runs": 2,
-    "delineators": 19
+    "runs": 0,
+    "delineators": 16
    },
    "us93s.x19.off": {
     "runs": 0,
@@ -813,8 +813,8 @@
     "delineators": 40
    },
    "us93s.x15A.off": {
-    "runs": 0,
-    "delineators": 16
+    "runs": 2,
+    "delineators": 12
    },
    "us93s.x14.off": {
     "runs": 0,
@@ -822,19 +822,19 @@
    },
    "us93s.xkm53.off": {
     "runs": 1,
-    "delineators": 3
+    "delineators": 2
    },
    "us93s.x2.off": {
-    "runs": 9,
-    "delineators": 2
+    "runs": 0,
+    "delineators": 0
    },
    "us93.x2.on": {
     "runs": 8,
     "delineators": 0
    },
    "us93.x14.on": {
-    "runs": 2,
-    "delineators": 48
+    "runs": 0,
+    "delineators": 46
    },
    "us93.x15A.on": {
     "runs": 0,
@@ -933,8 +933,8 @@
     "delineators": 38
    },
    "us93s.x23.on2": {
-    "runs": 3,
-    "delineators": 39
+    "runs": 1,
+    "delineators": 40
    },
    "us93s.x20.on2": {
     "runs": 0,
@@ -954,35 +954,35 @@
    },
    "us93s.x14.on": {
     "runs": 3,
-    "delineators": 11
+    "delineators": 4
    },
    "us93s.x14.on2": {
     "runs": 0,
     "delineators": 24
    },
    "us93s.xkm53.on": {
-    "runs": 3,
-    "delineators": 9
+    "runs": 4,
+    "delineators": 5
    },
    "us93s.x2.on": {
-    "runs": 6,
-    "delineators": 9
+    "runs": 2,
+    "delineators": 4
    },
    "us93.x2.off": {
     "runs": 10,
     "delineators": 9
    },
    "us93.x23.off": {
-    "runs": 10,
-    "delineators": 48
+    "runs": 11,
+    "delineators": 55
    },
    "us93.x62.off": {
     "runs": 0,
     "delineators": 32
    },
    "us93.x64B.off": {
-    "runs": 4,
-    "delineators": 50
+    "runs": 2,
+    "delineators": 34
    },
    "us93.x75.off": {
     "runs": 0,
@@ -993,8 +993,8 @@
     "delineators": 58
    },
    "us93s.x23.off": {
-    "runs": 2,
-    "delineators": 72
+    "runs": 9,
+    "delineators": 80
    },
    "us93.x17B.on": {
     "runs": 2,
@@ -1017,8 +1017,8 @@
     "delineators": 16
    },
    "us93s.x20.on": {
-    "runs": 1,
-    "delineators": 48
+    "runs": 6,
+    "delineators": 26
    }
   },
   "check_points": [
@@ -1516,7 +1516,7 @@
  "files": {
   "signs-us93.json": 33901,
   "limit": 150000,
-  "barriers-us93.json": 44099,
+  "barriers-us93.json": 43652,
   "barrier_limit": 100000,
   "ok": true
  },

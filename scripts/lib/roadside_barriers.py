@@ -23,6 +23,7 @@ from scipy.spatial import cKDTree
 
 from .crosssection import normalise_sections, pavement_edges
 from .refline import Refline
+from .heights import ground_of
 from .roadside_place import EMBANKMENT
 
 STEP = 4.0
@@ -278,7 +279,7 @@ def fill_height(geom, heights, side):
     drops = []
     for o in (3.0, 6.0, 9.0):
         d = e + sgn * o
-        g = heights.height_at(geom.x - np.sin(geom.hd) * d, geom.y + np.cos(geom.hd) * d)
+        g = ground_of(heights)(geom.x - np.sin(geom.hd) * d, geom.y + np.cos(geom.hd) * d)
         drops.append(he - g)
     return np.max(drops, axis=0)
 
@@ -596,7 +597,7 @@ def _pieces(geom, side, i, j, t, off, hgt, prov, heights, max_err, max_len):
             z = []
             for q in (a, b):
                 x, y, he = geom.point(geom.s[q], side, off[q])
-                g = float(heights.height_at(x, y)[0]) if np.ndim(heights.height_at(x, y)) else float(heights.height_at(x, y))
+                g = float(np.ravel(ground_of(heights)(x, y))[0])
                 surface = max(g, float(he[0]) - float(emb_drop(off[q])))
                 z.append(round(surface - float(he[0]), 2))
             r["z0"], r["z1"] = z

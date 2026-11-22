@@ -18,6 +18,8 @@ import re
 
 import numpy as np
 
+from .heights import ground_of
+
 FT = 0.3048
 # a standard bulletin (14 x 48 ft) and a 30-sheet poster (10.5 x 22.8 ft viewing area)
 BULLETIN = (48 * FT, 14 * FT)
@@ -368,7 +370,7 @@ def place(boards, index, route_index, heights=None, route_m=300.0):
             # stand above a raised road beside it: the panel's bottom at least 4.5 m over the nearest road
             j = route_index.nearest_main(rec["x"], rec["y"], 80.0)
             if j is not None:
-                g = float(heights.height_at(rec["x"], rec["y"]))
+                g = float(ground_of(heights)(rec["x"], rec["y"]))
                 rec["bottom"] = max(rec["bottom"], min(20.0, float(route_index.h[j]) - g + 4.5))
         placed.append(rec)
     report = {"placed": len(placed), "moved": moved, "dropped": [{"id": i, "why": w} for i, w in dropped],

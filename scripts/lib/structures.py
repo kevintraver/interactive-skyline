@@ -147,8 +147,10 @@ def piers_and_abutments(F, spans, others, ground):
                 if blocked:
                     reach = max(0.0, t - 1.0)
                     break
-            xt, yt = F.xy(np.array([s_end + direction * reach]), np.array([dc]))
-            g1 = float(ground(xt, yt)[0])
+            # the toe is the abutment's width across: it comes down to the lowest ground anywhere along it
+            dd = np.linspace(ri - 0.5, le + 0.5, 9)
+            xt, yt = F.xy(np.full(9, s_end + direction * reach), dd)
+            g1 = float(np.min(ground(xt, yt)))
             if top - g1 < 0.5 or reach < 1:
                 continue
             out.append({"kind": "abutment", "road": F.id, "s": round(s_end, 2), "dir": direction, "d": round(dc, 2),

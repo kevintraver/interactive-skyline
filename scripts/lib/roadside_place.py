@@ -8,6 +8,8 @@ line, positive to the left, as in src/drive/roadnet/crosssection.js.
 import numpy as np
 from scipy.spatial import cKDTree
 
+from .heights import ground_of
+
 LANE_W, SHOULDER_WIDE, SHOULDER_NARROW = 3.66, 3.05, 1.22
 EMBANKMENT = ((24.0, 6.0), (20.0, 40.0))  # as EMBANKMENT in src/drive/roadnet/mesher.js
 
@@ -89,5 +91,5 @@ def panel_ground(road, line, heights, s, side, offset, width):
     lat = d_edge + sgn * (offset + np.array([0.0, width / 2, width]))
     xs = float(p["x"]) - np.sin(hd) * lat
     ys = float(p["y"]) + np.cos(hd) * lat
-    g = heights.height_at(xs, ys)
+    g = ground_of(heights)(xs, ys)
     return h_edge, float(np.max(g))

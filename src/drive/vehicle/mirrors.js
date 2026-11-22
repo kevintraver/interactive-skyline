@@ -41,6 +41,9 @@ import { mirrorVertex, mirrorFragment } from './mirrors.glsl.js';
 import { mirrorsDue, MIRROR_NAMES } from './glassPresets.js';
 import { createTimings } from '../timing.js';
 
+/** Metres around the car within which the mirrors draw each ground grid at its full resolution, and how far the car
+ * moves before that ring is moved with it. */
+export const FINE_M = 1200, FINE_STEP_M = 400;
 export const MIRROR_FAR = 150000; // the main camera's far plane (rig.js FAR): the sky dome is 120 km out
 /** The share of the traffic part's body range kept behind the car when it looks ahead (traffic/index.js BEHIND_SHARE). */
 const TRAFFIC_BEHIND_SHARE = 0.35;
@@ -172,12 +175,14 @@ export function projectToMirror(view, P) {
  * A coarser index for a regular grid mesh (post (i, j) is vertex j * nx + i, as src/city/terrain.js lays them out):
  * every `stride`-th post each way, over the same vertex buffer. A block with a hole in it (the full index skips the
  * cells under a finer grid) keeps its fine cells instead, so nothing opens at a hole's edge. About 1 / stride^2 of
- * the triangles.
+ * the triangles. Blocks that touch `fine` (a range of cells [i0, i1] x [j0, j1], inclusive) keep their fine cells
+ * too: a coarse triangle spans stride^2 cells and lies metres above or below the ground drawn on screen, so near
+ * the car it would rise through the road behind it in a mirror.
  * @param {ArrayLike<number>} index the full index (two triangles a, b, d / b, e, d per cell)  @param {number} nx
- * @param {number} ny  @param {number} stride
+ * @param {number} ny  @param {number} stride  @param {number[]|null} [fine] [i0, i1, j0, j1]
  * @returns {Uint32Array}
  */
-export function coarseGridIndex(index, nx, ny, stride) {
+export function coarseGridIndex(index, nx, ny, stride, fine = null) {
   const cells = new Uint8Array((nx - 1) * (ny - 1));
   for (let t = 0; t < index.length; t += 6) {
     const a = index[t], i = a % nx, j = (a - i) / nx;
@@ -188,7 +193,7 @@ export function coarseGridIndex(index, nx, ny, stride) {
     const j1 = Math.min(j + stride, ny - 1);
     for (let i = 0; i < nx - 1; i += stride) {
       const i1 = Math.min(i + stride, nx - 1);
-      let all = true;
+      let all = !(fine && i1 > fine[0] && i <= fine[1] && j1 > fine[2] && j <= fine[3]);
       for (let jj = j; jj < j1 && all; jj++) for (let ii = i; ii < i1; ii++) if (!cells[jj * (nx - 1) + ii]) { all = false; break; }
       if (all) {
         const a = j * nx + i, b = j * nx + i1, d = j1 * nx + i, e = j1 * nx + i1;
@@ -259,20 +264,32 @@ export function createMirrors({ renderer, scene, session, cabinScene, faces, opt
   // Each grid mesh gets a second index over its own vertices, swapped in for the mirror passes only.
   // A mesh whose full index is replaced later (the wide mesh, when a terrain patch is cut out of it: session.js
   // addPatches) gets its coarse index again from the new one.
+  // Within FINE_M of the car each grid keeps its own cells (coarseGridIndex's `fine`), rebuilt when the car has moved
+  // FINE_STEP_M from where it last was.
   const coarse = [];
   for (const [mesh, stride] of ground) {
     const g = mesh?.geometry, idx = g?.index, uv = g?.getAttribute('uv'), pos = g?.getAttribute('position');
     if (!idx || !uv || !pos || !(stride > 1)) continue;
     const nx = Math.round(1 / uv.array[2]) + 1, ny = pos.count / nx;
     if (!Number.isInteger(ny) || ny < 2) continue;
+    // the grid's posts in map metres: post (i, j) at (x0 + i * step, y0 + j * step); scene z is -y
+    const a = pos.array, step = a[3] - a[0];
+    const x0 = a[0] + mesh.position.x, y0 = -(a[2] + mesh.position.z);
     const index = new THREE.BufferAttribute(coarseGridIndex(idx.array, nx, ny, stride), 1);
-    coarse.push({ geometry: g, full: idx, index, nx, ny, stride });
+    coarse.push({ geometry: g, full: idx, index, nx, ny, stride, x0, y0, step, at: null });
   }
-  const swapGround = (on) => {
+  const fineOf = (c, x, y) => {
+    const r = FINE_M / c.step;
+    const fi = (x - c.x0) / c.step, fj = (y - c.y0) / c.step;
+    return [Math.floor(fi - r), Math.ceil(fi + r), Math.floor(fj - r), Math.ceil(fj + r)];
+  };
+  const swapGround = (on, x, y) => {
     for (const c of coarse) {
-      if (on && c.geometry.index !== c.full) {
-        c.full = c.geometry.index;
-        c.index = new THREE.BufferAttribute(coarseGridIndex(c.full.array, c.nx, c.ny, c.stride), 1);
+      const moved = on && Number.isFinite(x) && (!c.at || Math.hypot(x - c.at[0], y - c.at[1]) > FINE_STEP_M);
+      if (on && (c.geometry.index !== c.full || moved)) {
+        if (c.geometry.index !== c.full) c.full = c.geometry.index;
+        if (Number.isFinite(x)) c.at = [x, y];
+        c.index = new THREE.BufferAttribute(coarseGridIndex(c.full.array, c.nx, c.ny, c.stride, c.at && fineOf(c, ...c.at)), 1);
       }
       // a geometry's index can be swapped between draws: the renderer binds whichever it finds
       c.geometry.index = on ? c.index : c.full;
@@ -350,7 +367,7 @@ export function createMirrors({ renderer, scene, session, cabinScene, faces, opt
     for (const k of skipped) { k.v = k.o.visible; k.o.visible = false; }
     const info = renderer.info.render;
     let pixels = 0, calls = 0, submit = 0;
-    swapGround(true);
+    swapGround(true, _body.elements[12], -_body.elements[14]);
     // the session brought every matrix up to date for this frame (session.js render): the passes skip the scene graph's update
     const prevAutoMatrix = scene.matrixWorldAutoUpdate;
     scene.matrixWorldAutoUpdate = false;

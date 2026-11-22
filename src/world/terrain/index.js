@@ -12,6 +12,7 @@
 
 import { curveDrop } from '../frame.js';
 import { heightField } from './heightfield.js';
+import { drawnGrid, drawnSurface } from './drawn.js';
 
 export { heightField };
 
@@ -33,8 +34,14 @@ export function createTerrain({ meta, buffers, base, fetchBinary }) {
   const inFlight = new Set();
   // every loaded grid and patch, finest first; the last one answers outside them all (its clamped edge)
   let layers = [];
+  // the meshes the drive draws (drawn.js): near whole, far under it, wide under far with the patches cut out of it
+  let drawn = null;
   const relayer = () => {
     layers = [near, ...patches.values(), far, ...(wide ? [wide] : [])].sort((a, b) => a.step - b.step);
+    const cuts = [...patches.values()];
+    const meshes = [drawnGrid(near, null), drawnGrid(far, near), ...cuts.map((p) => drawnGrid(p, null)),
+      ...(wide ? [drawnGrid(wide, far, () => cuts)] : [])];
+    drawn = drawnSurface(meshes, (x, y) => layers[layers.length - 1].sample(x, y));
   };
   relayer();
 
@@ -55,8 +62,16 @@ export function createTerrain({ meta, buffers, base, fetchBinary }) {
   return {
     apiVersion: 1,
     heightAt,
-    /** Scene Y of the ground. Inside near or far this is exactly main.js's groundY. */
+    /** Scene Y of the height query. Inside near or far this is exactly main.js's groundY (the map's). */
     groundY: (x, y) => heightAt(x, y) - base - curveDrop(x, y),
+    /**
+     * Metres above sea level of the ground as the drive DRAWS it (drawn.js): the triangles of every mesh, the
+     * highest where two overlap. heightAt is the bilinear query the map uses; it differs from what is on screen
+     * by metres in the mountains. Everything the drive stands on the ground is placed on this one.
+     */
+    surfaceAt: (x, y) => drawn(x, y),
+    /** Scene Y of surfaceAt. */
+    surfaceY: (x, y) => drawn(x, y) - base - curveDrop(x, y),
     /** Inside the detailed (near) grid: where buildings may be placed and moved, as place() in main.js requires. */
     inBuildArea: (x, y, inset = 0) => near.contains(x, y, inset),
     /** A grid by name ('near', 'far', 'wide') or a patch by its id; null until it is loaded. */

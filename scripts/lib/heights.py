@@ -94,11 +94,33 @@ class Heights:
             taken |= m
         return out[()] if out.ndim == 0 else out
 
+    def drawn_at(self, x, y):
+        """Metres above sea level of the ground as the drive DRAWS it: the triangles of every grid and patch
+        mesh, the highest where two overlap (lib.ground.drawn_surface; groundAt in src/world/terrain). This,
+        not height_at, is what everything the drive stands on the ground is placed on."""
+        if getattr(self, "_drawn", None) is None:
+            from .ground import drawn_surface
+            self._drawn = drawn_surface(self)
+        out = self._drawn(x, y)
+        return out[()] if np.ndim(out) == 0 else out
+
+    def drawn_y(self, x, y):
+        """Scene Y of the drawn ground (drawn_at with the base and the curvature drop)."""
+        x = np.asarray(x, dtype=np.float64)
+        y = np.asarray(y, dtype=np.float64)
+        return self.drawn_at(x, y) - self.base - curve_drop(x, y)
+
     def ground_y(self, x, y):
         """Scene Y of the ground, as groundY in main.js (and in src/world/terrain) computes it."""
         x = np.asarray(x, dtype=np.float64)
         y = np.asarray(y, dtype=np.float64)
         return self.height_at(x, y) - self.base - curve_drop(x, y)
+
+
+def ground_of(heights):
+    """The function that stands things on the ground: heights.drawn_at (the ground as drawn), or the height query of an
+    object that has nothing else (a test's stand-in)."""
+    return getattr(heights, "drawn_at", None) or heights.height_at
 
 
 def load_heights(city, root=ROOT, patches=True):

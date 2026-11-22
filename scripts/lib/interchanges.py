@@ -982,16 +982,28 @@ def bounds_against(dr, built, junctions, layers_of):
     return lo, hi, over, under_conflict
 
 
-def solve_profile(dr, ground, built, junctions, layers_of, grade=GRADE, pin_ends=False):
-    """Set dr.h. Returns None on success, else the first station of an impossible stretch."""
+# per road id, a lower bound on its reference line from the build's previous pass (build_roads.ramp_lifts): where a
+# ramp pinned to it would otherwise run under the ground beside it. Set by build_interchanges.
+LIFTS = None
+END_LIFT = 1.0
+OPEN_END_DROP = 4.0  # m: a road whose open end stays higher than this over the ground is left out  # m: a ramp's free end (it meets no road we build) comes down to this far above the ground's envelope
+
+
+def solve_profile(dr, ground, built, junctions, layers_of, grade=GRADE, pin_ends=False, free=None):
+    """Set dr.h. Returns None on success, else the first station of an impossible stretch. pin_ends brings both
+    ends to the ground (a crossing road); free = (start, end) brings those ends of a ramp to the ground, where no
+    road it meets holds them (an open end in the air is a cliff)."""
     set_crossfall(dr)
     s = np.arange(dr.n) * SPACING
     secs = normalise_sections(dr.sections)
     left, right = pavement_edges(secs, s)
     st = {"x": dr.st["x"], "y": dr.st["y"], "heading": dr.st["heading"], "crossfall": dr.crossfall}
-    env = envelope(st, left, right, ground, clearance=CLEARANCE, margin=MARGIN, across=1.0)
+    env = envelope(st, left, right, ground, clearance=CLEARANCE, margin=MARGIN, across=0.5)  # as finely as lib.groundcheck looks
     lo_b, hi_b, over, under = bounds_against(dr, built, junctions, layers_of)
     lower = np.maximum(env, lo_b)
+    lift = (LIFTS or {}).get(dr.id)
+    if lift is not None and len(lift) == dr.n:
+        lower = np.maximum(lower, lift)  # a ramp pinned to this road needs it this high (build_roads.ramp_lifts)
     upper = hi_b.copy()
     pinned = np.isfinite(dr.pin)
     # a pin wins over the ground; past it the ground gives way to the highest profile the grade
@@ -1023,6 +1035,10 @@ def solve_profile(dr, ground, built, junctions, layers_of, grade=GRADE, pin_ends
         for i in (0, 1, dr.n - 2, dr.n - 1):
             if not pinned[i] and not np.isfinite(hi_b[i]):
                 upper[i] = max(lower[i], env[i] + 1.5)
+    if free is not None:
+        for i in ([0, 1] if free[0] else []) + ([dr.n - 2, dr.n - 1] if free[1] else []):
+            if not pinned[i] and not np.isfinite(hi_b[i]) and not np.isfinite(lo_b[i]):
+                upper[i] = min(upper[i], max(lower[i], env[i] + END_LIFT))
     dr.env = env
     dr.over = over
     bad = np.flatnonzero(under & ~pinned)
@@ -1154,12 +1170,14 @@ def _ramp_name(cws, spec, used_ids):
     return rid
 
 
-def build_interchanges(osm, cws, to_xy, ground, log=print, own_ref=None):
+def build_interchanges(osm, cws, to_xy, ground, log=print, own_ref=None, lifts=None):
     """Ramps, crossing roads, junctions and structures around carriageways `cws`
     ([{"frame": RoadFrame of the decoded road, "ids", "ways", "prefix", "links"}]); own_ref is the
     route's road reference ("I 15", the default).
     Returns {"roads": [writer dicts], "junctions", "structures", "embankment": {road id: [...]},
-    "report": {...}}."""
+    "report": {...}}. lifts: {road id: per-station lower bound} for the crossing roads (see LIFTS)."""
+    global LIFTS
+    LIFTS = lifts
     for cw in cws:
         cw["frame"].layer_arr = _layer_array(cw["frame"])
         cw["frame"].fixed = True
@@ -1194,6 +1212,9 @@ def build_interchanges(osm, cws, to_xy, ground, log=print, own_ref=None):
     estimates = []
     for dr in ramps:
         if solve_profile(dr, ground, built, junctions, _layers_of, grade=RAMP_GRADE) is None:
+            # a crossing must clear the ramp where it will finally be, and that is never below the ground under it:
+            # the estimate gives way to the ground beside its pins, the final profile may not
+            dr.h = np.maximum(dr.h, dr.env)
             F = _frame_of(dr)
             F.estimate = True
             F.ends = {dr.info.get("end_node"), dr.info.get("start_node")} - {None}
@@ -1306,7 +1327,10 @@ def build_interchanges(osm, cws, to_xy, ground, log=print, own_ref=None):
     for dr in ramps:
         ok = False
         for attempt in range(5):
-            r = solve_profile(dr, ground, built, junctions, _layers_of, grade=RAMP_GRADE)
+            free = (dr.free_start, dr.free_end)
+            r = solve_profile(dr, ground, built, junctions, _layers_of, grade=RAMP_GRADE, free=free)
+            if r is not None and attempt == 0:
+                r = solve_profile(dr, ground, built, junctions, _layers_of, grade=RAMP_GRADE)  # as before, ends free to hang
             if r is None:
                 ok = True
                 break
@@ -1409,6 +1433,63 @@ def build_interchanges(osm, cws, to_xy, ground, log=print, own_ref=None):
             break
         built = [cw["frame"] for cw in cws] + [_frame_of(d) for d in drafts]
 
+    built = [cw["frame"] for cw in cws] + [_frame_of(d) for d in drafts]
+    # an open end left in the air (a ramp shortened after its profile was set, or one whose end lies over another road,
+    # or a crossing road's end over a ramp): solved again with that end on the ground, and where it cannot come down
+    # there, cut back to where it can; kept only if the profile still fits
+    for dr in list(drafts):
+        if dr.role == "ramp":
+            # an end that meets a road we built is pinned to it; any other end is open, whatever OSM ties it to (a
+            # street that is not built here)
+            free = [not np.isfinite(dr.pin[0]), not np.isfinite(dr.pin[-1])]
+        else:  # a crossing: an end no junction ties to anything
+            near = [j for j in junctions if dr.id in (j["a"]["road"], j["b"]["road"])]
+            def tied(s_end):
+                for j in near:
+                    side = j["a"] if j["a"]["road"] == dr.id else j["b"]
+                    if side["s0"] - 60 <= s_end <= side["s1"] + 60:
+                        return True
+                return False
+            free = [not tied(0.0) and not np.isfinite(dr.pin[0]), not tied(dr.length) and not np.isfinite(dr.pin[-1])]
+        if not any(free) or dr.h is None or getattr(dr, "env", None) is None or len(dr.env) != dr.n:
+            continue
+        hang = lambda d: [f and d.h[k] - d.env[k] > END_LIFT + 0.2 for f, k in zip(free, (0, -1))]  # noqa: E731
+        if not any(hang(dr)):
+            continue
+        others = [F for F in built if getattr(F, "draft", None) is not dr]
+        for attempt in range(4):
+            keep = (dr.h.copy(), dr.env, dr.over)
+            if solve_profile(dr, ground, others, junctions, _layers_of, grade=RAMP_GRADE if dr.role == "ramp" else GRADE,
+                             free=tuple(f and hg for f, hg in zip(free, hang(dr)))) is None and not any(hang(dr)):
+                report["simplified"].append({"road": dr.id, "why": "open end brought down to the ground", "length_m": dr.length})
+                break
+            dr.h, dr.env, dr.over = keep
+            # cut it back to the last station from that end where it is near the ground
+            near_g = dr.h - dr.env <= END_LIFT
+            hg = hang(dr)
+            if hg[1]:
+                k = np.flatnonzero(near_g[: dr.n - 1])
+                k1 = int(k[-1]) if len(k) else -1
+                if k1 < 20 or dr.n - 1 - k1 > 0.4 * dr.n:
+                    break
+                dr.trim(0, k1, junctions)
+            elif hg[0]:
+                k = np.flatnonzero(near_g[1:])
+                k0 = int(k[0]) + 1 if len(k) else dr.n
+                if dr.n - k0 < 20 or k0 > 0.4 * dr.n:
+                    break
+                dr.trim(k0, dr.n - 1, junctions)
+            dr.env = dr.env[:dr.n] if hg[1] else dr.env[-dr.n:]
+            report["simplified"].append({"road": dr.id, "why": "open end cut back to where it meets the ground", "length_m": dr.length})
+            if not any(hang(dr)):
+                break
+        if any(f and dr.h[k] - dr.env[k] > OPEN_END_DROP for f, k in zip(free, (0, -1))):
+            # still a cliff in the air at an end nothing holds (a stub of a flyover whose other parts are not built):
+            # better left out than drawn floating
+            drafts.remove(dr)
+            junctions[:] = [j for j in junctions if dr.id not in (j["a"]["road"], j["b"]["road"])]
+            report["dropped"].append({"road": dr.id, "why": "an open end high in the air that cannot come down to the ground",
+                                      "branch": dr.role == "crossing"})
     built = [cw["frame"] for cw in cws] + [_frame_of(d) for d in drafts]
     # what is left of same-level overlaps between two ramps: a few metres of two pavements in one
     # plane where their gore stretches meet. They are two roads meeting: a connect junction

@@ -6,10 +6,10 @@
  *
  * A sign stands beside the pavement at its chainage, `offset` metres outside the outer shoulder
  * edge that edgesAt gives there, facing oncoming traffic and upright along true vertical (localUp).
- * Its posts run from the panel down past the embankment surface, so it never floats.
+ * Its posts run from the panel down past what it stands on (standY), so it never floats.
  */
 import { localUp } from '../../world/frame.js';
-import { EMBANKMENT } from '../roadnet/mesher.js';
+import { EMBANKMENT, embScales } from '../roadnet/mesher.js';
 import { sheetingCode, sheetingOfColour } from './sheeting.js';
 
 /** [background, legend] sheeting codes of a plate: the record's `sheeting`, else its colours; the exit plaque is a white legend on green. */
@@ -37,6 +37,33 @@ export function embankmentDrop(lateral) {
   const [[w1, d1], [w2, d2]] = EMBANKMENT;
   const l = Math.max(0, lateral);
   return l <= w1 ? (l * d1) / w1 : d1 + ((l - w1) * d2) / w2;
+}
+
+const EMB_W = EMBANKMENT[0][0] + EMBANKMENT[1][0];
+
+/**
+ * What a post `lateral` metres outside the shoulder edge on `side` stands on, in metres above the pavement edge
+ * (negative below it): the embankment as the mesher draws it there (squeezed by embScales, none on a deck or
+ * beyond its reach) or the ground as the drive draws it, whichever is higher. Without the road's record or a
+ * ground function (tests, tools) it is the full embankment's surface, as before.
+ * @param {{ raw?: object, ground?: (x: number, y: number) => number }} road  raw: the decoded road; ground: metres
+ *   above sea level of the drawn ground (terrain.surfaceAt)
+ * @param {object} p the reference line at s (refline.at)  @param {{ left: number, right: number }} e edges at s
+ */
+export function standY(road, s, p, e, side, lateral, mx, my, edgeH) {
+  let emb = -embankmentDrop(lateral);
+  if (road.raw) {
+    // on a deck (its ends included: the mesher's row there is the deck's) a post stands on the deck's edge
+    if ((road.raw.bridges || []).some((b) => b.deck && s >= b.s0 && s <= b.s1)) return 0;
+    else {
+      const [sl, sr] = embScales(road.raw, p, e.left, e.right, s);
+      const sc = side === 'left' ? sl : sr;
+      emb = lateral <= sc * EMB_W + 1e-6 ? -embankmentDrop(lateral / sc) : -Infinity;
+    }
+  }
+  const g = road.ground ? road.ground(mx, my) - edgeH : -Infinity;
+  const y = Math.max(emb, g);
+  return Number.isFinite(y) ? y : -embankmentDrop(lateral);
 }
 
 /**
@@ -128,7 +155,8 @@ export function buildSign(rec, tab, road, uvOf) {
   for (const p of rec.over ? [] : postsOf(rec)) { // an overhead panel hangs from its structure
     // how far outside the shoulder edge this post stands, and the embankment surface there
     const lateral = rec.offset + rec.w / 2 + f.sideSign * p.x;
-    const yFoot = -embankmentDrop(lateral) - BURY;
+    const foot = at(p.x, 0, 0);
+    const yFoot = standY(road, rec.s, f.p, f.edges, rec.side, lateral, foot[0], -foot[2], f.edgeH) - BURY;
     const yTop = Math.max(rec.mount + 0.3 * rec.h, top - 0.15);
     const z0 = -THICK, z1 = -THICK - p.w, xa = p.x - p.w / 2, xb = p.x + p.w / 2;
     quad(at(xa, yFoot, z0), at(xb, yFoot, z0), at(xb, yTop, z0), at(xa, yTop, z0), f.face, POST_COLOUR);

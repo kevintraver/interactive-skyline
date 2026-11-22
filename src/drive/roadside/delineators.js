@@ -13,7 +13,7 @@ import { createRefline } from '../roadnet/refline.js';
 import { edgesAt } from '../roadnet/crosssection.js';
 import { localUp } from '../../world/frame.js';
 import { asDecoded } from './barrierFormat.js';
-import { embankmentDrop } from './geometry.js';
+import { standY } from './geometry.js';
 import { sheetingCode } from './sheeting.js';
 import { nightWeight } from './batch.js';
 
@@ -24,16 +24,20 @@ export const FACE = { w: 0.075, y0: 0.95, y1: 1.15 }; // reflector at about 4 ft
 const NIGHT_GLOW = 0.55;
 
 /**
- * Every delineator as { x, y (map), pos (scene, doubles), right, up, face (unit vectors), colour }.
+ * Every delineator as { x, y (map), pos (scene, doubles), right, up, face (unit vectors), colour }. Each stands on
+ * the embankment the mesher draws at its offset or, where that does not reach or the ground is higher, on the
+ * drawn ground (geometry.js standY).
  * @param {object} barriers barriers.json, raw or decoded  @param {{ roads: object[] }} roadnet decoded
+ * @param {number} base  @param {number} earthR  @param {(x: number, y: number) => number} [ground] terrain.surfaceAt
  */
-export function placeDelineators(barriers, roadnet, base, earthR) {
+export function placeDelineators(barriers, roadnet, base, earthR, ground = null) {
   const roads = new Map(roadnet.roads.map((r) => [r.id, r]));
   const out = [];
   for (const br of asDecoded(barriers).roads) {
     const road = roads.get(br.id);
     if (!road || !br.delineators.length) continue;
     const ref = createRefline(road);
+    const stand = { raw: road, ground };
     const p = {};
     for (const dl of br.delineators) {
       const left = dl.side === 'left', sgn = left ? 1 : -1;
@@ -44,7 +48,8 @@ export function placeDelineators(barriers, roadnet, base, earthR) {
         const d = edge + sgn * dl.o;
         const sn = Math.sin(p.heading), c = Math.cos(p.heading);
         const mx = p.x - d * sn, my = p.y + d * c;
-        const h = p.h + p.crossfall * edge - embankmentDrop(dl.o);
+        const hEdge = p.h + p.crossfall * edge;
+        const h = hEdge + standY(stand, s, p, e, dl.side, dl.o, mx, my, hEdge);
         const pos = [mx, h - base - (mx * mx + my * my) / (2 * earthR), -my];
         const u = localUp(pos[0], pos[2], new THREE.Vector3());
         const up = [u.x, u.y, u.z];
@@ -72,10 +77,11 @@ function faceGeometry() {
 }
 
 /**
- * @param {{ barriers: object, roadnet: object, base: number, earthR: number, parent: THREE.Object3D }} opts
+ * @param {{ barriers: object, roadnet: object, base: number, earthR: number, parent: THREE.Object3D,
+ *           ground?: (x: number, y: number) => number }} opts
  */
-export function createDelineators({ barriers, roadnet, base, earthR, parent }) {
-  const all = placeDelineators(barriers, roadnet, base, earthR);
+export function createDelineators({ barriers, roadnet, base, earthR, parent, ground = null }) {
+  const all = placeDelineators(barriers, roadnet, base, earthR, ground);
   const counts = { white: 0, yellow: 0 };
   for (const d of all) counts[d.colour]++;
   const group = new THREE.Group();

@@ -1,0 +1,109 @@
+{
+ "i15n": {
+  "wall_base": {
+   "why": "walls' bases are set over the full embankment's surface (roadside_barriers.py), the mesher squeezes it there",
+   "items": [
+    {
+     "road": "i15n.main",
+     "s": 44296.0,
+     "side": "left"
+    },
+    {
+     "road": "i15n.main",
+     "s": 44300.0,
+     "side": "left"
+    },
+    {
+     "road": "i15n.main",
+     "s": 44292.0,
+     "side": "left"
+    }
+   ],
+   "count": 3,
+   "max_m": 0.31
+  }
+ },
+ "us93": {
+  "embankment_main": {
+   "why": "36 m of US-93 at km 6.05 on a fill over a wash deeper than the fixed embankment (46 m) reaches; a deck would add a bridge to the plan",
+   "items": [
+    {
+     "road": "us93.main",
+     "s": 6064.0,
+     "side": "right"
+    },
+    {
+     "road": "us93.main",
+     "s": 6060.0,
+     "side": "right"
+    },
+    {
+     "road": "us93.main",
+     "s": 6068.0,
+     "side": "right"
+    },
+    {
+     "road": "us93.main",
+     "s": 6056.0,
+     "side": "right"
+    },
+    {
+     "road": "us93.main",
+     "s": 6052.0,
+     "side": "right"
+    },
+    {
+     "road": "us93.main",
+     "s": 6072.0,
+     "side": "right"
+    },
+    {
+     "road": "us93.main",
+     "s": 6048.0,
+     "side": "right"
+    },
+    {
+     "road": "us93.main",
+     "s": 6076.0,
+     "side": "right"
+    }
+   ],
+   "count": 9,
+   "max_m": 1.95
+  },
+  "end_ramp": {
+   "why": "us93s.x2.off is cut to its gore (the rest could not be fitted); its end lies beside US-93's high fill, 21 m over the wash",
+   "items": [
+    {
+     "road": "us93s.x2.off",
+     "s": 260.0
+    }
+   ],
+   "count": 1,
+   "max_m": 20.92
+  },
+  "end_crossing": {
+   "why": "South Nellis Boulevard's end is 6 cm over the 1.5 m an open end may stand",
+   "items": [
+    {
+     "road": "x.south-nellis-boulevard",
+     "s": 408.0
+    }
+   ],
+   "count": 1,
+   "max_m": 1.56
+  },
+  "building_hang": {
+   "why": "one building's outline crosses a crease of the drawn ground between the points its base is found from",
+   "items": [
+    {
+     "s": 68.0,
+     "x": 38924.4,
+     "y": -11067.1
+    }
+   ],
+   "count": 1,
+   "max_m": 0.28
+  }
+ }
+}

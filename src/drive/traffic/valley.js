@@ -40,7 +40,7 @@ export async function createValleyPart(ctx) {
   const { renderer } = ctx.app;
   const tz = data.tz || env.city?.tz || 'America/Los_Angeles';
 
-  const g = buildValleyGeometry(data, { heightAt: terrain.heightAt, base, curveDrop });
+  const g = buildValleyGeometry(data, { heightAt: terrain.surfaceAt, base, curveDrop });
   const geometry = new THREE.BufferGeometry();
   geometry.setAttribute('position', new THREE.BufferAttribute(g.position, 3));
   geometry.setAttribute('aDir', new THREE.BufferAttribute(g.dir, 3));
