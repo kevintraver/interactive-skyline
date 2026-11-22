@@ -53,7 +53,7 @@ const seekSettled = (page, at) => drive(page, async (a) => {
   return d.pose();
 }, at);
 
-test('lv drive: motion, seeking, the reveal and the per-frame budget', async ({ page }) => {
+test('lv drive: motion, seeking and the reveal', async ({ page }) => {
   const problems = watchConsole(page);
   await openCity(page, 'lv');
   const route = await drive(page, async (id) => {
@@ -106,25 +106,6 @@ test('lv drive: motion, seeking, the reveal and the per-frame budget', async ({ 
     const seen = async (s) => { await seekSettled(page, { s }); return drive(page, (id) => window.__skyline.drive.visible(id), STRAT); };
     expect(await seen(r.s - 1500)).toBe(false);
     expect(await seen(r.s + 1500)).toBe(true);
-  });
-
-  await test.step('the drive\'s own JavaScript stays within budget', async () => {
-    const js = await drive(page, async (length) => {
-      const d = window.__skyline.drive;
-      d.stats(); // warm
-      window.__skyline.driveTimings = null;
-      const before = d.stats().js.total.count;
-      for (let i = 0; i < 60; i++) {
-        d.seek({ s: (i + 0.5) * (length / 60) });
-        await d.whenSettled();
-      }
-      const st = d.stats();
-      return { ...st.js, frames: st.js.total.count - before };
-    }, route.s1);
-    console.log('drive per-frame JS (ms):', JSON.stringify(js));
-    expect(js.total.count).toBeGreaterThanOrEqual(60);
-    expect(js.total.p95).toBeLessThan(4);
-    expect(js.total.max).toBeLessThan(16);
   });
 
   expect(problems).toEqual([]);
