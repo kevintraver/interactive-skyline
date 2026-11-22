@@ -19,6 +19,7 @@
       -111.862
     ],
     "base": 1300,
+    "tz": "America/Denver",
     "lidar": {
       "dataset": "USGS_LPC_UT_Wasatch_L4_2013_LAS_2016",
       "year": 2013,
@@ -101,6 +102,7 @@
       -115.135
     ],
     "base": 620,
+    "tz": "America/Los_Angeles",
     "lidar": {
       "dataset": "NV_ClarkCo_2_B22",
       "year": 2022,
@@ -125,6 +127,16 @@
         "y1": 8200,
         "step": 12,
         "mpp": 2.5
+      },
+      "wide": {
+        "zoom": 11,
+        "x0": -56000,
+        "y0": -64000,
+        "x1": 48000,
+        "y1": 48000,
+        "step": 160,
+        "mpp": 32,
+        "quality": 78
       }
     },
     "shadow": {

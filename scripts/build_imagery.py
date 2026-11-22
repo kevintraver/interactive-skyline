@@ -2,12 +2,13 @@
 # requires-python = ">=3.11"
 # dependencies = ["numpy", "pillow", "pyproj", "requests"]
 # ///
-"""Usage: build_imagery.py <city>
+"""Usage: build_imagery.py <city> [grid ...]
 
 Drape imagery for the terrain: USGS NAIP aerial photography (public domain),
-resampled onto the same local-metre extents as the two terrain grids.
+resampled onto the same local-metre extents as the terrain grids. Every grid in
+terrain.json gets its image unless grid names are given.
 
-Output: public/data/<city>/ground-{far,near}.jpg  (row 0 = north)
+Output: public/data/<city>/ground-<grid>.jpg  (row 0 = north)
 """
 import io
 import json
@@ -23,6 +24,7 @@ from pyproj import Transformer
 
 ROOT = Path(__file__).resolve().parent.parent
 CITY = sys.argv[1]
+ONLY = sys.argv[2:]
 CFG = json.loads((ROOT / "data" / "cities.json").read_text())[CITY]
 OUT = ROOT / "public" / "data" / CITY
 CACHE = ROOT / "data" / "raw" / "naip"
@@ -32,6 +34,10 @@ URL = "https://imagery.nationalmap.gov/arcgis/rest/services/USGSNAIPPlus/ImageSe
 meta = json.loads((OUT / "terrain.json").read_text())
 to_merc = Transformer.from_crs(meta["projection"], "EPSG:3857", always_xy=True)
 MPP = {k: g["mpp"] for k, g in CFG["terrain"].items()}  # output metres per pixel
+# JPEG quality per grid; the wide grid is squeezed to keep the drive's download small
+QUALITY = {k: g.get("quality", 84) for k, g in CFG["terrain"].items()}
+if unknown := set(ONLY) - set(meta["grids"]):
+    sys.exit(f"terrain.json for {CITY} has no grid {', '.join(sorted(unknown))}; build it with build_terrain.py first")
 TILE = 2000
 
 
@@ -49,6 +55,8 @@ def chunk(name, bbox, w, h):
 
 
 for name, g in meta["grids"].items():
+    if ONLY and name not in ONLY:
+        continue
     mpp = MPP[name]
     x1 = g["x0"] + (g["nx"] - 1) * g["step"]
     y1 = g["y0"] + (g["ny"] - 1) * g["step"]
@@ -72,5 +80,5 @@ for name, g in meta["grids"].items():
             src[r:r + h, c:c + w] = a
     ix = np.clip(((mx - sx0) / res).astype(int), 0, SW - 1)
     iy = np.clip(((sy1 - my) / res).astype(int), 0, SH - 1)
-    Image.fromarray(src[iy, ix]).save(OUT / f"ground-{name}.jpg", quality=84)
+    Image.fromarray(src[iy, ix]).save(OUT / f"ground-{name}.jpg", quality=QUALITY[name])
     print(f"{name}: {W}x{H} px at {mpp} m/px from {len(jobs)} requests")

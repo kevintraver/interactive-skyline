@@ -2,13 +2,16 @@
 # requires-python = ">=3.11"
 # dependencies = ["numpy", "pillow", "pyproj", "requests"]
 # ///
-"""Usage: build_terrain.py <city>
+"""Usage: build_terrain.py <city> [grid ...]
 
-Build two terrain height grids in local metres from AWS Terrarium tiles
-(3DEP-derived in the US): a coarse one for the valley and its mountains, and a
-fine one for the built-up core.
+Build the terrain height grids in local metres from AWS Terrarium tiles
+(3DEP-derived in the US): a coarse one for the valley and its mountains, a
+fine one for the built-up core, and for some cities a wide one for the drives.
+Every grid listed under the city's "terrain" in cities.json is built unless
+grid names are given; then only those are rebuilt and the other entries in
+terrain.json are kept as they are.
 
-Output: public/data/<city>/terrain-{far,near}.bin (uint16 decimetres, row 0 = south)
+Output: public/data/<city>/terrain-<grid>.bin (uint16 decimetres, row 0 = south)
         public/data/<city>/terrain.json
 """
 import io
@@ -26,6 +29,7 @@ from pyproj import Transformer
 ROOT = Path(__file__).resolve().parent.parent
 TILES = ROOT / "data" / "raw" / "terrarium"
 CITY = sys.argv[1]
+ONLY = sys.argv[2:]
 CFG = json.loads((ROOT / "data" / "cities.json").read_text())[CITY]
 OUT = ROOT / "public" / "data" / CITY
 TILES.mkdir(parents=True, exist_ok=True)
@@ -37,6 +41,8 @@ to_ll = Transformer.from_crs(LOCAL, "EPSG:4326", always_xy=True)
 
 # name: (zoom, xmin, ymin, xmax, ymax, step)  -- local metres, east/north of the origin
 GRIDS = {k: (g["zoom"], g["x0"], g["y0"], g["x1"], g["y1"], g["step"]) for k, g in CFG["terrain"].items()}
+if unknown := set(ONLY) - set(GRIDS):
+    sys.exit(f"{CITY} has no terrain grid {', '.join(sorted(unknown))}; it has {', '.join(GRIDS)}")
 
 
 def tile(z, x, y):
@@ -85,5 +91,13 @@ def build(name, z, xmin, ymin, xmax, ymax, step):
 
 meta = {"origin": {"lat": LAT0, "lon": LON0}, "projection": LOCAL,
         "source": "AWS Terrain Tiles (Terrarium), USGS 3DEP in the US",
-        "grids": {k: build(k, *v) for k, v in GRIDS.items()}}
+        "grids": {}}
+if ONLY:
+    # rebuild some grids only: keep every other entry exactly as it was written
+    meta = json.loads((OUT / "terrain.json").read_text())
+    if meta["projection"] != LOCAL:
+        sys.exit("terrain.json has another projection; rebuild every grid")
+for k, v in GRIDS.items():
+    if not ONLY or k in ONLY:
+        meta["grids"][k] = build(k, *v)
 (OUT / "terrain.json").write_text(json.dumps(meta, indent=1))
