@@ -48,10 +48,10 @@ export function buildWideMesh({ wide, hole, cuts = [], base, map }) {
   // the far grid's footprint, as index ranges on this grid
   const inside = (v, lo, hi, inset) => v > lo + inset && v < hi - inset;
   const hx = hole && [hole.x0, hole.x0 + (hole.nx - 1) * hole.step], hy = hole && [hole.y0, hole.y0 + (hole.ny - 1) * hole.step];
-  const inX = new Uint8Array(nx), inY = new Uint8Array(ny), cutX = new Uint8Array(nx), cutY = new Uint8Array(ny);
+  const inX = new Uint8Array(nx), inY = new Uint8Array(ny);
   if (hole) {
-    for (let i = 0; i < nx; i++) { const x = x0 + i * step; inX[i] = inside(x, ...hx, 0); cutX[i] = inside(x, ...hx, step) && inside(x + step, ...hx, step); }
-    for (let j = 0; j < ny; j++) { const y = y0 + j * step; inY[j] = inside(y, ...hy, 0); cutY[j] = inside(y, ...hy, step) && inside(y + step, ...hy, step); }
+    for (let i = 0; i < nx; i++) inX[i] = inside(x0 + i * step, ...hx, 0);
+    for (let j = 0; j < ny; j++) inY[j] = inside(y0 + j * step, ...hy, 0);
   }
   const half = 1 / (2 * step);
   for (let j = 0; j < ny; j++) {
@@ -67,6 +67,33 @@ export function buildWideMesh({ wide, hole, cuts = [], base, map }) {
       uv[(row + i) * 2] = i / (nx - 1); uv[(row + i) * 2 + 1] = v;
     }
   }
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+  geo.setAttribute('normal', new THREE.BufferAttribute(nor, 3));
+  geo.setAttribute('uv', new THREE.BufferAttribute(uv, 2));
+  geo.setIndex(new THREE.BufferAttribute(wideIndex({ wide, hole, cuts }), 1));
+  geo.computeBoundingSphere();
+  const mesh = new THREE.Mesh(geo, new THREE.MeshLambertMaterial({ map }));
+  mesh.position.set(cx, 0, -cy);
+  mesh.receiveShadow = false;
+  mesh.name = 'terrain-wide';
+  return mesh;
+}
+
+/**
+ * The wide mesh's triangles: every cell but those well inside `hole` and those inside one of `cuts` (two triangles
+ * a, b, d / b, e, d per cell, post (i, j) being vertex j * nx + i).
+ * @returns {Uint32Array}
+ */
+export function wideIndex({ wide, hole, cuts = [] }) {
+  const { nx, ny, step, x0, y0 } = wide;
+  const inside = (v, lo, hi, inset) => v > lo + inset && v < hi - inset;
+  const cutX = new Uint8Array(nx), cutY = new Uint8Array(ny);
+  if (hole) {
+    const hx = [hole.x0, hole.x0 + (hole.nx - 1) * hole.step], hy = [hole.y0, hole.y0 + (hole.ny - 1) * hole.step];
+    for (let i = 0; i < nx; i++) { const x = x0 + i * step; cutX[i] = inside(x, ...hx, step) && inside(x + step, ...hx, step); }
+    for (let j = 0; j < ny; j++) { const y = y0 + j * step; cutY[j] = inside(y, ...hy, step) && inside(y + step, ...hy, step); }
+  }
   const idx = new Uint32Array((nx - 1) * (ny - 1) * 6);
   const patched = cuts.length ? cellsInside(wide, cuts) : null;
   let n = 0;
@@ -78,17 +105,15 @@ export function buildWideMesh({ wide, hole, cuts = [], base, map }) {
       idx[n++] = a; idx[n++] = b; idx[n++] = d; idx[n++] = b; idx[n++] = e; idx[n++] = d;
     }
   }
-  const geo = new THREE.BufferGeometry();
-  geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
-  geo.setAttribute('normal', new THREE.BufferAttribute(nor, 3));
-  geo.setAttribute('uv', new THREE.BufferAttribute(uv, 2));
-  geo.setIndex(new THREE.BufferAttribute(idx.slice(0, n), 1));
-  geo.computeBoundingSphere();
-  const mesh = new THREE.Mesh(geo, new THREE.MeshLambertMaterial({ map }));
-  mesh.position.set(cx, 0, -cy);
-  mesh.receiveShadow = false;
-  mesh.name = 'terrain-wide';
-  return mesh;
+  return idx.slice(0, n);
+}
+
+/**
+ * Cut the cells of patches that arrive after the wide mesh was built out of it (a new index over the same vertices).
+ * @param {THREE.Mesh} mesh from buildWideMesh  @param {{ wide: object, hole: object|null, cuts: object[] }} grids every cut so far
+ */
+export function cutWideMesh(mesh, { wide, hole, cuts }) {
+  mesh.geometry.setIndex(new THREE.BufferAttribute(wideIndex({ wide, hole, cuts }), 1));
 }
 
 /**

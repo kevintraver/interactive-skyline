@@ -27,6 +27,7 @@ import * as THREE from 'three';
 import { night } from '../../night.js';
 import { addSurfaceTerm } from '../lights/surfaceLight.js';
 import { createTimings } from '../timing.js';
+import { eachGround } from '../parts.js';
 import { contentSeconds } from './clock.js';
 import { createLedMeanCache, ledLevel, ledMean, ledSamples } from './led.js';
 import { createScreenRegistry } from './registry.js';
@@ -140,7 +141,7 @@ export function createScreensPart(ctx) {
   attach(ctx.materials?.road);
   attach(ctx.materials?.roadNear);
   attach(ctx.wideMesh?.material);
-  for (const [mesh] of ctx.ground || []) attach(mesh.material);
+  const offGround = eachGround(ctx, (mesh) => attach(mesh.material)); // the terrain patches too, when they come
   let corridorCheck = 0;
   function attachLate() {
     const low = app.getLow?.();
@@ -234,6 +235,7 @@ export function createScreensPart(ctx) {
       };
     },
     dispose() {
+      offGround();
       release();
       offChanged?.(); offRebuilt?.();
       for (const d of detach) d();

@@ -31,7 +31,8 @@
 // gets a second mesh, a child of its own (so it shows only when the layer does), that draws a reflected streak of each
 // sprite on wet pavement (sprites.glsl.js spriteTwinVertex). It draws a short list of its own: the instances within
 // TWIN_LIST_M of the car, rebuilt in commitRows for layers rewritten each frame and, for written-once layers, from a
-// grid of their positions when the car has moved TWIN_RELIST_M. Every reflecting layer shares TWIN_UNIFORMS, which
+// grid of their positions when the car has moved TWIN_RELIST_M (the grid is built in idle time after commit, so the
+// first rain does not wait for it). Every reflecting layer shares TWIN_UNIFORMS, which
 // the weather part sets through setTwins(); with wet 0 (the default, and whenever it is dry) the twin meshes are
 // hidden and their lists are not kept.
 
@@ -48,6 +49,8 @@ export const TWIN_LIST_M = 420;
 /** A written-once layer's twin list is rebuilt when the car has moved this far (m). */
 export const TWIN_RELIST_M = 20;
 const TWIN_CELL_M = 64;
+/** Instances added to a twin grid per idle slice (about 2 ms). */
+const GRID_SLICE = 8192;
 /** Uniforms shared by every reflecting layer's twins (see setTwins). */
 export const TWIN_UNIFORMS = {
   uTwinWet: { value: 0 },
@@ -140,7 +143,7 @@ export function createSpriteLayer({ capacity, name = 'sprites', minPx = 1.5, hal
   const size = new THREE.Vector2();
 
   // ---- reflected twins
-  let twin = null;
+  let twin = null, disposed = false;
   if (reflect) {
     const tg = new THREE.InstancedBufferGeometry();
     tg.setAttribute('corner', geometry.getAttribute('corner'));
@@ -161,7 +164,7 @@ export function createSpriteLayer({ capacity, name = 'sprites', minPx = 1.5, hal
     tmesh.renderOrder = renderOrder - 1;
     tmesh.visible = false;
     mesh.add(tmesh);
-    twin = { mesh: tmesh, geometry: tg, material: tm, list, listAttr, count: 0, dynamic: false, grid: null, at: [NaN, NaN] };
+    twin = { mesh: tmesh, geometry: tg, material: tm, list, listAttr, count: 0, dynamic: false, grid: null, gridAt: 0, gridJob: null, at: [NaN, NaN] };
   }
   /** Rebuild the twin list from instances 0..n-1 (layers rewritten each frame). */
   function twinScan(n) {
@@ -174,23 +177,51 @@ export function createSpriteLayer({ capacity, name = 'sprites', minPx = 1.5, hal
     }
     twinCommit(w);
   }
+  /**
+   * Grow the grid of a written-once layer's instances (cells of TWIN_CELL_M) up to instance `until`, from where the last
+   * call stopped. The whole valley's street lamps take about 60 ms, too long for the frame the rain starts on: the grid
+   * is built ahead in idle time (scheduleGrid), and finished here at once only if the rain comes first.
+   */
+  function growGrid(until) {
+    const P = data[0];
+    if (!twin.grid) { twin.grid = new Map(); twin.gridAt = 0; }
+    const end = Math.min(capacity, until);
+    for (let i = twin.gridAt; i < end; i++) {
+      const o = 4 * i;
+      if (!(P[o + 3] > 0)) continue;
+      const key = (Math.floor(P[o] / TWIN_CELL_M) + 32768) * 65536 + Math.floor(P[o + 2] / TWIN_CELL_M) + 32768;
+      let cell = twin.grid.get(key);
+      if (!cell) twin.grid.set(key, (cell = []));
+      cell.push(i);
+    }
+    twin.gridAt = Math.max(twin.gridAt, end);
+    return twin.gridAt >= capacity;
+  }
+  /** Build the grid in idle time, a slice at a time (written-once layers; not while the twins are drawn). */
+  function scheduleGrid() {
+    if (!twin || twin.dynamic || twin.gridJob || (twin.grid && twin.gridAt >= capacity)) return;
+    const idle = typeof requestIdleCallback === 'function'
+      ? (fn) => requestIdleCallback(fn, { timeout: 2000 })
+      : (fn) => setTimeout(() => fn({ timeRemaining: () => 8, didTimeout: false }), 50);
+    const step = (deadline) => {
+      twin.gridJob = null;
+      if (disposed || twin.dynamic) return;
+      let done = false;
+      while (!done && (deadline.timeRemaining() > 2 || deadline.didTimeout)) {
+        done = growGrid((twin.gridAt || 0) + GRID_SLICE);
+        if (deadline.didTimeout) break;
+      }
+      if (!done) twin.gridJob = idle(step);
+    };
+    twin.gridJob = idle(step);
+  }
   /** Rebuild the twin list from the grid of a written-once layer, when the car has moved TWIN_RELIST_M. */
   function twinGridList() {
     const u = TWIN_UNIFORMS.uTwinRoad.value, cx = u.x, cz = u.y;
     if (Math.hypot(cx - twin.at[0], cz - twin.at[1]) < TWIN_RELIST_M) return;
     twin.at[0] = cx; twin.at[1] = cz;
     const P = data[0];
-    if (!twin.grid) {
-      twin.grid = new Map();
-      for (let i = 0; i < capacity; i++) {
-        const o = 4 * i;
-        if (!(P[o + 3] > 0)) continue;
-        const key = (Math.floor(P[o] / TWIN_CELL_M) + 32768) * 65536 + Math.floor(P[o + 2] / TWIN_CELL_M) + 32768;
-        let cell = twin.grid.get(key);
-        if (!cell) twin.grid.set(key, (cell = []));
-        cell.push(i);
-      }
-    }
+    if (!twin.grid || twin.gridAt < capacity) growGrid(capacity); // the rest of it now
     const r = Math.ceil(TWIN_LIST_M / TWIN_CELL_M), gx = Math.floor(cx / TWIN_CELL_M), gz = Math.floor(cz / TWIN_CELL_M);
     const r2 = TWIN_LIST_M * TWIN_LIST_M, L = twin.list;
     let w = 0;
@@ -228,7 +259,9 @@ export function createSpriteLayer({ capacity, name = 'sprites', minPx = 1.5, hal
       if (!twin.dynamic) twinGridList();
     },
     /** For a written-once layer whose instances changed: the twins' grid is rebuilt on the next frame. */
-    invalidateTwins() { if (twin) { twin.grid = null; twin.at[0] = NaN; } },
+    invalidateTwins() { if (twin) { twin.grid = null; twin.gridAt = 0; twin.at[0] = NaN; scheduleGrid(); } },
+    /** Whether a written-once layer's twin grid is built (for tests). */
+    get twinGridReady() { return !!(twin && twin.grid && twin.gridAt >= capacity); },
 
     /**
      * A pattern: { kind: 'isotropic' | 'lobe' | 'cutoff' | 'droplens' | 'highmast', exponent?, kDown?, kUp?, downShare? }.
@@ -260,6 +293,7 @@ export function createSpriteLayer({ capacity, name = 'sprites', minPx = 1.5, hal
     /** Upload what was written; with a count, draw instances 0..count-1 (and drop any draw list). */
     commit(count) {
       layer.markDirty();
+      if (twin && !twin.dynamic) scheduleGrid(); // a written-once layer: its twins' grid built ahead, in idle time
       if (Number.isFinite(count)) {
         if (usingList) { identity(); indexAttr.clearUpdateRanges(); indexAttr.needsUpdate = true; usingList = false; }
         drawCount = Math.min(count, capacity);
@@ -332,6 +366,7 @@ export function createSpriteLayer({ capacity, name = 'sprites', minPx = 1.5, hal
     },
 
     dispose() {
+      disposed = true;
       mesh.parent?.remove(mesh);
       if (twin) { twinLayers.delete(layer); twin.geometry.dispose(); twin.material.dispose(); }
       geometry.dispose();

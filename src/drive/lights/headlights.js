@@ -37,6 +37,7 @@ import { HEAD, diffuseBody, RETRO_HEAD, retroBody, retroHeadFor } from './headla
 import { beamTexture, retroTable, MARKING_ROWS, linearOf, chromaOf, lampPositions } from './headlampMirror.js';
 import { markingMaskOf } from './markingMask.js';
 import { createTimings } from '../timing.js';
+import { eachGround } from '../parts.js';
 
 /** Ambient illuminance (lux) under which the headlamps are on: UN R48's automatic dipped-beam switch-on level. */
 export const AUTO_ON_LUX = 1000;
@@ -162,7 +163,7 @@ export async function createHeadlightsPart(ctx) {
   attach(ctx.materials?.road, 'road');
   attach(ctx.materials?.roadNear, 'road');
   attach(ctx.wideMesh?.material);
-  for (const [mesh] of ctx.ground || []) attach(mesh.material);
+  const offGround = eachGround(ctx, (mesh) => attach(mesh.material)); // the terrain patches too, when they come
   // the signs and delineators are the route's own (session.js): attached again when the route changes (setRoute)
   let roadsideOf = null, roadsideUndo = [], roadsideCounts = { beam: 0, retro: 0 };
   function attachRoadside() {
@@ -260,6 +261,7 @@ export async function createHeadlightsPart(ctx) {
       return { on, high, beams, ambientLux: ambient, materials: { beam: counts.beam, retro: counts.retro }, mask: !!markTex, js: { mean: t.mean, p95: t.p95, max: t.max } };
     },
     dispose() {
+      offGround();
       if (typeof window !== 'undefined') window.removeEventListener('keydown', onKey);
       for (const u of [...undo, ...roadsideUndo].reverse()) u();
       ctx.materials?.setHeadlights?.(false);

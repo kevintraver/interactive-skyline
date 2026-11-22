@@ -455,6 +455,15 @@ export function initDrive(app, loaded) {
     look(l) { need().rig.look(l || {}); writeAddress(); invalidate(); },
     pose: () => (session && seam.active ? session.poseNumbers() : null),
     whenSettled: () => need().whenSettled(),
+    /** The parts not settled within `ms` (default 0), by name: for a script that timed out on whenSettled. */
+    unsettled: (ms) => need().unsettled(ms),
+    /** Draw the current frame once, now (as the app's loop would: parts' beforeRender, the passes, the world, the cabin); for probes. */
+    renderFrame() { need().render(); },
+    /**
+     * The adaptive render scale's state ({ adaptive, allowed, full, ratio, playRatio, ... }); { adaptive } switches it on or
+     * off (it is off under automation and on a software renderer: a probe switches it on to measure it).
+     */
+    renderScale(o) { const sn = need(); if (o && 'adaptive' in o) sn.renderScale.setAdaptive(o.adaptive); return sn.renderScale.stats(); },
     visible: (targetId) => need().visible(targetId),
     stats: () => (session ? { ...session.stats(), active: seam.active } : null),
     active: () => seam.active,

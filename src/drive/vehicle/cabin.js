@@ -16,7 +16,7 @@
 // coordinates) and windshield { corners }.
 //
 // The glass (D4.3, D4.4) is attached here rather than as parts of its own, because both draw within the cabin's
-// pass: the mirror passes (mirrors.js) run in afterRender just before the cabin is drawn, and the windshield layer
+// pass: the mirror passes (mirrors.js) run in beforeWorld, before the world and the cabin are drawn, and the windshield layer
 // (windshield.js) is a mesh of the cabin scene. Their sizes and rates come from glassPresets.js by the cabin's
 // model. The part exposes them as `glass` { options, mirrors, windshield, rain }. Rain on the glass (D8.2: drops, film,
 // wiper blades; glassRain.js) is three more meshes of the cabin scene, drawn before the veil, fed from env.weather;
@@ -31,6 +31,7 @@ import { createMirrors } from './mirrors.js';
 import { createWindshield } from './windshield.js';
 import { createGlassRain } from './glassRain.js';
 import { glassPresetFor } from './glassPresets.js';
+import { isSoftwareRenderer } from '../renderScale.js';
 
 export const CABIN_NEAR = 0.05;
 export const CABIN_FAR = 6;
@@ -56,13 +57,7 @@ export function chooseCabinModel({ software = false, deviceMemory, cores, coarse
 
 /** What chooseCabinModel needs, read from the browser and the renderer. */
 export function probeDevice(renderer) {
-  let software = false;
-  try {
-    const gl = renderer.getContext();
-    const ext = gl.getExtension('WEBGL_debug_renderer_info');
-    const name = ext ? String(gl.getParameter(ext.UNMASKED_RENDERER_WEBGL)) : '';
-    software = /swiftshader|llvmpipe|software|softpipe/i.test(name);
-  } catch { /* unknown: not software */ }
+  const software = isSoftwareRenderer(renderer);
   const nav = typeof navigator === 'undefined' ? {} : navigator;
   const coarse = typeof matchMedia === 'function' && matchMedia('(pointer: coarse)').matches;
   const minScreen = typeof screen === 'undefined' ? undefined : Math.min(screen.width, screen.height);
@@ -195,6 +190,12 @@ export async function createCabin(ctx) {
     if (glassOptions.rain?.enabled) rainLayer = createGlassRain({ cabinScene, corners: windshield.corners, options: glassOptions.rain, env, session, renderer });
   } catch (e) { console.warn(`cabin rain on the glass left out: ${e && e.message ? e.message : e}`); }
   const _sunDir = new THREE.Vector3();
+  // the rain on the glass is hidden while dry, so its programs have never been drawn: compiled in idle time instead of on
+  // the frame the first rain starts (compileAsync uses the parallel compile)
+  if (rainLayer && renderer.compileAsync && renderer.extensions?.has?.('KHR_parallel_shader_compile')) { // else it would block
+    const idle = typeof requestIdleCallback === 'function' ? (fn) => requestIdleCallback(fn, { timeout: 3000 }) : (fn) => setTimeout(fn, 1000);
+    idle(() => { for (const m of rainLayer.meshes) renderer.compileAsync(m, cabinCamera, cabinScene).catch(() => {}); });
+  }
 
   // ---------------------------------------------------------------- displays
   let look = { night: false, dusk: 0 };
@@ -270,7 +271,37 @@ export async function createCabin(ctx) {
     }
   }
 
-  let renders = 0;
+  // the cabin's silhouette for the world's depth (beforeWorld): its opaque meshes again, sharing their geometry, drawn at
+  // the near plane with no colour; the glass layers (windshield.js, glassRain.js) are not under `root` and stay out
+  const maskMaterial = new THREE.ShaderMaterial({
+    name: 'cabin-mask', vertexShader: MASK_VERTEX, fragmentShader: MASK_FRAGMENT,
+    colorWrite: false, depthWrite: true, depthTest: true, side: THREE.DoubleSide, fog: false, lights: false,
+  });
+  const mask = { enabled: true, scene: new THREE.Scene(), pairs: [] };
+  mask.scene.name = 'cabin-mask';
+  mask.scene.matrixWorldAutoUpdate = false; // the copies' world matrices are the cabin's, copied each frame
+  root.traverse((o) => {
+    if (!o.isMesh || o.material?.transparent) return;
+    const m = new THREE.Mesh(o.geometry, maskMaterial);
+    m.matrixAutoUpdate = false;
+    m.frustumCulled = false;
+    mask.scene.add(m);
+    mask.pairs.push([o, m]);
+  });
+  const shown = (o) => { for (let p = o; p; p = p.parent) if (!p.visible) return false; return true; };
+  const _clear = new THREE.Color();
+  /** The cabin camera at the head and the steering wheel turned, for this frame. */
+  function placeCabin(L) {
+    cabinCamera.matrixWorld.copy(L.head);
+    cabinCamera.matrixWorldInverse.copy(L.head).invert();
+    cabinCamera.fov = L.fov;
+    cabinCamera.aspect = L.aspect;
+    cabinCamera.updateProjectionMatrix();
+    if (wheel) wheel.quaternion.copy(wheelRest).multiply(_wq.setFromAxisAngle(wheelAxis, L.wheel));
+    root.updateMatrixWorld(true);
+  }
+
+  let renders = 0, mirrorJs = 0;
   const timing = createTimings(); // the part's own JavaScript per drawn frame, the cabin's draw call excluded
   const part = {
     name: 'cabin',
@@ -286,19 +317,50 @@ export async function createCabin(ctx) {
     setLook(l) { look = { night: !!l.night, dusk: Number.isFinite(l.dusk) ? l.dusk : l.night ? 1 : 0 }; mirrorPass?.setLook(look); },
     /** The mirrors and the windshield layer (mirrors.js, windshield.js) and the options they were made with. */
     glass: { options: glassOptions, mirrors: mirrorPass, windshield: windshieldLayer, rain: rainLayer },
+    /** The cabin's silhouette in the world's depth on or off (for measuring what it saves). */
+    setDepthMask(v) { mask.enabled = !!v; },
+    get depthMask() { return mask.enabled; },
     update(frame) { if (rig.view === 'cabin') updateDisplays(frame, false); },
+    // Before the world (session.js render): the mirror passes, then the cabin's silhouette into the canvas's depth at the
+    // near plane (the world's fragments behind the dashboard, the pillars and the roof then fail the depth test instead
+    // of being shaded and drawn over); not while it rains on the glass (below). Returns 'cleared' when the canvas has
+    // been cleared here, so the world's draw does not clear it again.
+    beforeWorld(frame) {
+      const L = rig.last;
+      if (!L || L.view !== 'cabin' || rig.view !== 'cabin') return undefined;
+      const t0 = performance.now();
+      placeCabin(L);
+      updateLight(L.body, frame.camera.position); // this frame's light for the car's inside in the interior mirror
+      const own = performance.now() - t0;
+      if (mirrorPass) {
+        mirrorPass.shade(worldHemi, worldSun);
+        mirrorJs = mirrorPass.render(frame, L);
+      }
+      mirrorJs += own;
+      // the rain on the glass this frame (state only); while it rains the drops and the film sample the world as drawn,
+      // over the whole opening and a margin past it (glassRain.js copyFrame), so the world is drawn whole: no silhouette
+      const tr = performance.now();
+      rainLayer?.update(frame, { sky: scene.fog?.color });
+      mirrorJs += performance.now() - tr;
+      if (!mask.enabled || rainLayer?.raining) return undefined;
+      const t1 = performance.now();
+      for (const [src, m] of mask.pairs) { m.matrixWorld.copy(src.matrixWorld); m.visible = shown(src); }
+      renderer.setRenderTarget(null);
+      renderer.setClearColor(renderer.getClearColor(_clear), renderer.getClearAlpha()); // three's own clear, as the world's draw makes it
+      renderer.clear();
+      const auto = renderer.autoClear;
+      renderer.autoClear = false;
+      renderer.render(mask.scene, cabinCamera);
+      renderer.autoClear = auto;
+      mirrorJs += performance.now() - t1;
+      return 'cleared';
+    },
     afterRender(frame) {
       const L = rig.last;
       if (!L || L.view !== 'cabin' || rig.view !== 'cabin') return;
       const t0 = performance.now();
       updateDisplays(frame, false);
-      cabinCamera.matrixWorld.copy(L.head);
-      cabinCamera.matrixWorldInverse.copy(L.head).invert();
-      cabinCamera.fov = L.fov;
-      cabinCamera.aspect = L.aspect;
-      cabinCamera.updateProjectionMatrix();
-      if (wheel) wheel.quaternion.copy(wheelRest).multiply(_wq.setFromAxisAngle(wheelAxis, L.wheel));
-      root.updateMatrixWorld(true);
+      placeCabin(L);
       updateLight(L.body, frame.camera.position);
       const info = renderer.info.render;
       const calls = info.calls, triangles = info.triangles; // the world's draw, before the mirror passes
@@ -309,12 +371,6 @@ export async function createCabin(ctx) {
           frame, L, sunDir: _sunDir, sunColor: worldSun?.color, sunIntensity: worldSun?.intensity ?? 0, hemi: worldHemi,
           lampPoints: traffic?.lampPoints ? traffic.lampPoints() : null, eyeWorld: frame.camera.position,
         });
-      }
-      rainLayer?.update(frame, { sky: scene.fog?.color });
-      let mirrorJs = 0;
-      if (mirrorPass) {
-        mirrorPass.shade(worldHemi, worldSun);
-        mirrorJs = mirrorPass.render(frame, L);
       }
       const tm = performance.now();
       rainLayer?.copyFrame(cabinCamera); // the world as drawn, for the drops' lenses (only while it rains)
@@ -331,7 +387,8 @@ export async function createCabin(ctx) {
       renders++;
       // the part's own JavaScript: the mirror passes' own share counts, their renderer.render work does not (as the
       // cabin's own draw call does not)
-      timing.add(tm - t0 - (mirrorPass ? mirrorPass.lastPassMs : 0) + mirrorJs + (t2 - tm) + (performance.now() - t3));
+      timing.add(tm - t0 + mirrorJs + (t2 - tm) + (performance.now() - t3));
+      mirrorJs = 0;
     },
     stats: () => ({
       model, renders, calls: part.lastCalls ?? 0, js: timing.summary(),
@@ -343,12 +400,22 @@ export async function createCabin(ctx) {
       mirrorPass?.dispose();
       windshieldLayer?.dispose();
       rainLayer?.dispose();
-      for (const m of [...Object.values(materials), instrumentsMat, screenMat, ...mirrorMats]) m.dispose();
+      for (const m of [...Object.values(materials), instrumentsMat, screenMat, ...mirrorMats, maskMaterial]) m.dispose();
       instrumentsTex.dispose(); screenTex.dispose();
     },
   };
   return part;
 }
+
+// The silhouette's shaders: the position as three's project_vertex computes it, then put on the near plane (depth 0).
+const MASK_VERTEX = /* glsl */ `
+void main() {
+  vec4 mvPosition = vec4( position, 1.0 );
+  mvPosition = modelViewMatrix * mvPosition;
+  gl_Position = projectionMatrix * mvPosition;
+  gl_Position.z = -gl_Position.w;
+}`;
+const MASK_FRAGMENT = /* glsl */ `void main() { gl_FragColor = vec4( 0.0 ); }`;
 
 const NODE_ROLES = {
   Instruments: 'instruments', CenterScreen: 'screen', MirrorLeft: 'mirror', MirrorRight: 'mirror', MirrorCenter: 'mirror',

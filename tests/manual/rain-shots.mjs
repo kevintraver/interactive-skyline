@@ -12,7 +12,9 @@
 //   view 'cabin' (default) or 'clean'; lens defaults to the view's own (28 mm cabin, 50 mm clean); glance
 //   'left' | 'right' | 'center' | 'ahead' is shot at its hold, 0.6 s after the key; veil / mirrors false switch the
 //   windshield layer / the mirror passes off (D4.3, D4.4); clip 'left' | 'right' | 'center' saves only that mirror's
-//   face (with a margin), as drawn
+//   face (with a margin), as drawn (the whole frame when the face is off the screen)
+// A shot whose frame does not settle within a minute is taken anyway and its line names the parts that had not settled
+// (`unsettled`), so a run never stops silently.
 import { chromium } from '@playwright/test';
 import { mkdirSync } from 'node:fs';
 const out = process.argv[2]; const port = process.argv[3] || 5281;
@@ -75,7 +77,9 @@ async function shoot(s, when, opt) {
     }
     const look = { yaw: 0, pitch: 0, ...opt };
     d.look({ yaw: look.yaw, pitch: look.pitch, ...(look.lens ? { lens: look.lens } : {}) });
-    await d.whenSettled();
+    // never wait for ever: after a minute say which parts are not settled and go on (the shot is marked unsettled)
+    const settled = await Promise.race([d.whenSettled().then(() => true), new Promise((r) => setTimeout(() => r(false), 60000))]);
+    const unsettled = settled ? null : await (d.unsettled ? d.unsettled(100) : ['?']);
     if (opt.glance) { d.glance(opt.glance); await new Promise((r) => setTimeout(r, 600)); }
     await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
     const p = d.pose(); const c = d.cabin();
@@ -90,9 +94,11 @@ async function shoot(s, when, opt) {
       }
       const pad = 12, x0 = Math.max(0, Math.min(...xs) - pad), y0 = Math.max(0, Math.min(...ys) - pad);
       clip = { x: x0, y: y0, width: Math.min(innerWidth, Math.max(...xs) + pad) - x0, height: Math.min(innerHeight, Math.max(...ys) + pad) - y0 };
+      if (!(clip.width > 1 && clip.height > 1)) clip = null; // the face is off the screen: the whole frame is saved
     }
     const st = c?.stats();
     return {
+      ...(unsettled ? { unsettled } : {}),
       s: Math.round(p.s), night: p.night, sunEl: +p.sunElevation.toFixed(2), iso: p.iso, view: p.view, lens: p.lens, model: c?.model,
       mirrors: st?.mirrors && { renders: st.mirrors.renders, pixels: st.mirrors.pixels, calls: st.mirrors.calls },
       veil: st?.windshield && { S: st.windshield.scenePerLux, sunLux: Math.round(st.windshield.sunLux), lit: st.windshield.lit, lamps: st.windshield.lamps },

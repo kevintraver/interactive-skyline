@@ -25,6 +25,7 @@ import { createSpriteLayer } from './sprites.js';
 import { createPools } from './pools.js';
 import { createPoles } from './poles.js';
 import { createTimings } from '../timing.js';
+import { eachGround } from '../parts.js';
 
 /** Sprites drawn at most (plan 02, 9.1: 80 k sprites on High, lamps and vehicle lamps and studs together). */
 export const SPRITE_BUDGET = 80000;
@@ -99,7 +100,7 @@ export async function createLampsPart(ctx) {
   attach(ctx.materials?.road, 'ground');
   attach(ctx.materials?.roadNear, 'ground');
   attach(ctx.wideMesh?.material, 'ground');
-  for (const [mesh] of ctx.ground || []) attach(mesh.material, 'ground');
+  const offGround = eachGround(ctx, (mesh) => attach(mesh.material, 'ground')); // the terrain patches too, when they come
   let corridorMat = null, corridorCheck = 0, corridorGroup;
 
   // the poles stand near the roads of the route's RoadNet: rebuilt when the route changes (setRoute)
@@ -289,6 +290,7 @@ export async function createLampsPart(ctx) {
       };
     },
     dispose() {
+      offGround();
       for (const d of detach) d();
       layer.dispose();
       pools.dispose();

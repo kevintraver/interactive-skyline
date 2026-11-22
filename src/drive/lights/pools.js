@@ -94,7 +94,8 @@ export function createPools({ renderer, pack, createWorker = defaultWorker, work
   const cache = new Map(); // key -> Uint16Array rgba (most recently used last)
   const pending = new Map(); // key -> worker entry
   const slots = new Map(); // "sx,sy" -> tile key held in the ring
-  let want = null, shown = null, lastComplete = null, active = false, disposed = false, waiters = [], nextId = 1;
+  let want = null, shown = null, lastComplete = null, active = false, disposed = false, waiters = [], nextId = 1, missed = false;
+  const release = () => { const w = waiters; waiters = []; for (const r of w) r(); };
   const tileMs = [];
 
   const tileKey = (ti, tj) => `${ti},${tj}`;
@@ -143,7 +144,8 @@ export function createPools({ renderer, pack, createWorker = defaultWorker, work
 
   /** Put the window's cached tiles into the ring and choose what to show. */
   function refresh() {
-    if (!want || !active) return;
+    if (!want) return;
+    if (!active) { missed = true; return; } // shown when the lamps come on again (update)
     let complete = true;
     for (let j = 0; j < RING; j++) {
       for (let i = 0; i < RING; i++) {
@@ -174,7 +176,7 @@ export function createPools({ renderer, pack, createWorker = defaultWorker, work
     shown = rect;
     if (rect) uniforms.uLampPoolRect.value.set(rect[0], rect[1], rect[2], rect[3]);
     else uniforms.uLampPoolRect.value.set(0, 0, 0, 0);
-    if (complete) { const w = waiters; waiters = []; for (const r of w) r(); }
+    if (complete) release();
   }
 
   return {
@@ -186,9 +188,14 @@ export function createPools({ renderer, pack, createWorker = defaultWorker, work
     update(x, y, on) {
       active = !!on;
       uniforms.uLampPoolSpec.value.z = active ? 1 : 0;
-      if (!active) return;
+      if (!active) { release(); return; } // off, there is nothing to wait for
       const w = poolWindow(x, y);
-      if (want && w.key === want.key) return;
+      if (want && w.key === want.key) {
+        // tiles that came back while the lamps were off are put in now (else the window would never complete)
+        if (missed) { missed = false; refresh(); }
+        return;
+      }
+      missed = false;
       want = w;
       // nearest tiles first
       const order = [];
@@ -215,7 +222,7 @@ export function createPools({ renderer, pack, createWorker = defaultWorker, work
       for (const p of pool) p.w.terminate?.();
       ring.dispose();
       tileTex.dispose();
-      const w = waiters; waiters = []; for (const r of w) r();
+      release();
     },
   };
 }

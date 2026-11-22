@@ -14,7 +14,6 @@ import { WET_DIFFUSE, WET_RETRO, GLOSS, GROUND_DIFFUSE } from './wetMirror.js';
 import { regionU, WEAR } from '../roadnet/atlas.js';
 
 export const TERM_ID = 'wet';
-const CHECK_EVERY = 60; // frames between checks that the term is still the last
 
 /**
  * @param {{ road: THREE.Material[], ground: THREE.Material[] }} materials
@@ -35,7 +34,7 @@ export function createWetRoad({ road, ground }) {
   };
   const targets = [...new Set(road.filter(Boolean))].map((m) => [m, 'road'])
     .concat([...new Set(ground.filter(Boolean))].filter((m) => !road.includes(m)).map((m) => [m, 'ground']));
-  let added = false, frames = 0;
+  let added = false;
 
   function addAll() {
     for (const [m, kind] of targets) addSurfaceTerm(m, terms[kind]);
@@ -60,8 +59,18 @@ export function createWetRoad({ road, ground }) {
       if (sky) shared.uWetSky.value.copy(sky);
       if (w > 0 && !added) addAll();
     },
-    /** Once a frame while the term is on. */
-    tick() { if (added && ++frames % CHECK_EVERY === 0) keepLast(); },
+    /**
+     * Put the term on every material now, at wetness 0 (where it adds exactly nothing), so the first rain does not
+     * recompile the road's and the ground's programs on the frame it starts (about 100 ms on an M4); the drive does this
+     * while it loads.
+     */
+    prepare() { if (!added) addAll(); },
+    /**
+     * Once a frame: the term is put back last where another term came after it. Checked every frame (a few array reads),
+     * so the reordering (a recompile) happens on the update right after another part adds its term, while the drive
+     * loads, not a second into the drive.
+     */
+    tick() { if (added) keepLast(); },
     /** Add a material later (one that loads after the part). */
     add(material, kind = 'ground') {
       if (!material || targets.some(([m]) => m === material)) return;

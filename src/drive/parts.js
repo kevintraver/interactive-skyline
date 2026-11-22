@@ -16,7 +16,11 @@
 //   get(name)  fetch a file of this city's data directory (rejects unless the answer is 2xx)
 //   optional(name)  the same as JSON, or null when the file is missing
 //   group, roads     the drive's scene group, and the group under it that holds everything on the road
-//   terrain, wideMesh, ground    the terrain provider, the wide ground mesh, the app's ground meshes [[mesh, grid], ...]
+//   terrain, wideMesh, ground    the terrain provider, the wide ground mesh, the ground meshes [[mesh, grid], ...] (the app's
+//              and the terrain patches loaded so far)
+//   eachGround(fn)  fn(mesh, grid) for every ground mesh now and for each that arrives later (a terrain patch comes with
+//              the route that passes it, session.js); returns the unsubscribe. Parts that add terms to the ground's
+//              materials use it (through eachGround below), not a loop over `ground`
 //   net, env, clock, rig, frameOf, earthR, base   (net: routes.js; net.roadnet is the RoadNet loaded last)
 //   materials  the road materials, shared by every route
 //   chunks, roadside  getters: the current route's road chunk system and signs (null without signs); read them
@@ -35,3 +39,16 @@ export const PART_FACTORIES = [
   (ctx) => import('./roadside/billboards.js').then((m) => m.createBillboardsPart(ctx)), // billboards: structures, abstract faces, digital glow (D7.4, D7.5)
   (ctx) => import('./weather/index.js').then((m) => m.createWeatherPart(ctx)), // rain on the stand-in weather: wet road, reflected lamps, rain, spray, grey sky (D8.1, D8.3)
 ];
+
+/**
+ * fn(mesh, grid) for every ground mesh of the part context, now and as more arrive (ctx.eachGround); a context without
+ * the subscription (a test's) gets its `ground` list once. Returns the unsubscribe.
+ * @param {{ eachGround?: (fn: Function) => () => void, ground?: Array<[object, string]> }} ctx
+ * @param {(mesh: object, grid: string) => void} fn
+ * @returns {() => void}
+ */
+export function eachGround(ctx, fn) {
+  if (typeof ctx?.eachGround === 'function') return ctx.eachGround(fn);
+  for (const [mesh, grid] of ctx?.ground || []) fn(mesh, grid);
+  return () => {};
+}

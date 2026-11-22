@@ -14,6 +14,7 @@
 import * as THREE from 'three';
 import { addSurfaceTerm } from '../lights/surfaceLight.js';
 import { createTimings } from '../timing.js';
+import { eachGround } from '../parts.js';
 import { buildAtlas, hash32 } from '../screens/art.js';
 import { contentSeconds } from '../screens/clock.js';
 import { digitalLevel, digitalMean, phaseOf, staticLevel } from '../screens/digital.js';
@@ -180,7 +181,7 @@ export async function createBillboardsPart(ctx) {
   attach(ctx.materials?.road);
   attach(ctx.materials?.roadNear);
   attach(ctx.wideMesh?.material);
-  for (const [mesh] of ctx.ground || []) attach(mesh.material);
+  const offGround = eachGround(ctx, (mesh) => attach(mesh.material)); // the terrain patches too, when they come
   const digitals = faces.filter((f) => f.digital);
   const near = [];
   const mean = [0, 0, 0];
@@ -242,6 +243,7 @@ export async function createBillboardsPart(ctx) {
       };
     },
     dispose() {
+      offGround();
       for (const d of detach) d();
       group.removeFromParent();
       for (const g of [poleGeo, boxGeo, faceGeo]) g.dispose();

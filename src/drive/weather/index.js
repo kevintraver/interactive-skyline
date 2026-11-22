@@ -5,9 +5,10 @@
 //
 // Everything is a pure function of the weather's state (env.js weatherFor: a preset, or the test hook's rate), the
 // simulation time and the frame: nothing is carried from frame to frame but caches. Dry (Clear, the default), each
-// piece adds exactly nothing: the wet term is not on any material until the first rain (and at wetness 0 it skips its
-// block), the twins are hidden with their wetness uniform 0, the rain and spray meshes are hidden, and the sky's
-// weather is overcast 0, which paints the sky as before.
+// piece adds exactly nothing: the wet term is on the road and ground materials from the start but at wetness 0 skips
+// its block (it is put on while the drive loads so the first rain recompiles nothing), the twins are hidden with their
+// wetness uniform 0, the rain and spray meshes are hidden (their programs compiled in idle time), and the sky's weather
+// is overcast 0, which paints the sky as before.
 //
 // Pieces:
 //   wetRoad.js   the `wet` surface term on the road and ground materials (darker, glossier, wheel paths first, the sky
@@ -27,6 +28,7 @@ import { meanCover, facetSlope, GLOSS } from './wetMirror.js';
 import { relativeRain } from './rainMirror.js';
 import { setTwins, TWIN_UNIFORMS } from '../lights/sprites.js';
 import { setSkyWeather } from '../skyblend.js';
+import { eachGround } from '../parts.js';
 import { createTimings } from '../timing.js';
 
 /** Twins are drawn where their reflection point is within this far across the car's road (m: both carriageways of a
@@ -42,8 +44,24 @@ export function createWeatherPart(ctx) {
   const app = ctx.app || {};
   const wet = createWetRoad({
     road: [ctx.materials?.road, ctx.materials?.roadNear],
-    ground: [ctx.wideMesh?.material, ...(ctx.ground || []).map(([mesh]) => mesh.material)],
+    ground: [ctx.wideMesh?.material],
   });
+  const offGround = eachGround(ctx, (mesh) => wet.add(mesh.material, 'ground')); // the terrain patches too, when they come
+  wet.prepare(); // the term on at wetness 0 from the start: the first rain recompiles nothing
+  // The rain's own programs (the twins, the streaks, the spray: hidden while dry, so never drawn yet) compiled in idle
+  // time, off the frame, so the first rain does not wait for them either (compileAsync uses the parallel compile).
+  const warm = () => {
+    const { renderer, scene, camera } = app;
+    // without the parallel compile it would block the main thread (and three warns): the first rain compiles then
+    if (!renderer?.compileAsync || !renderer.extensions?.has?.('KHR_parallel_shader_compile') || !scene || !camera) return;
+    const objects = [rain.mesh, spray.mesh];
+    group.traverse((o) => { if (o.name?.endsWith('-twins')) objects.push(o); });
+    for (const o of objects) renderer.compileAsync(o, camera, scene).catch(() => {});
+  };
+  const idle = typeof requestIdleCallback === 'function' ? (fn) => requestIdleCallback(fn, { timeout: 3000 }) : (fn) => setTimeout(fn, 1000);
+  let disposed = false;
+  idle(() => { if (!disposed) warm(); });
+
   const rain = createRain({ parent: group });
   const spray = createSpray({ parent: group });
   const timings = createTimings();
@@ -78,7 +96,7 @@ export function createWeatherPart(ctx) {
       pose = frame.pose;
       const w = state.wetness;
       wet.set({ wetness: w, sky: skyRadiance() });
-      if (w > 0) wet.tick();
+      wet.tick(); // dry too: the term is kept last ahead of the rain
       if (w > 0) {
         const p = pose.position, f = pose.forward, h = Math.hypot(f.x, f.z) || 1;
         setTwins({
@@ -117,6 +135,8 @@ export function createWeatherPart(ctx) {
       };
     },
     dispose() {
+      disposed = true;
+      offGround();
       offChange(); unbind();
       setTwins({ wet: 0 });
       setSkyWeather({ overcast: 0 });

@@ -232,6 +232,9 @@ export function createGlassRain({ cabinScene, corners, options, env, session, re
     if (prev) renderer.setRenderTarget(null);
     renderer.initTexture(frameTex);
     const gl = renderer.getContext(), st = renderer.state;
+    // The copy ends the GPU's pass over the canvas, which stores the canvas's multisampled buffers to load them again for
+    // the cabin; the cabin pass clears the depth first (cabin.js), so the depth and stencil need not be kept.
+    gl.invalidateFramebuffer?.(gl.FRAMEBUFFER, [gl.DEPTH, gl.STENCIL]);
     st.bindTexture(gl.TEXTURE_2D, renderer.properties.get(frameTex).__webglTexture);
     gl.copyTexSubImage2D(gl.TEXTURE_2D, 0, x0, y0, x0, y0, x1 - x0, y1 - y0);
     st.unbindTexture();

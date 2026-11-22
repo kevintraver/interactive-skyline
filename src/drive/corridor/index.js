@@ -118,7 +118,7 @@ export function createCorridor({
       c.state = 'meshed';
       meshMs.push(ms);
       if (meshMs.length > 64) meshMs.shift();
-    } else if (!c.mesh) c.state = 'none';
+    } else if (ticket === c.load) c.state = c.mesh ? 'meshed' : 'none'; // no longer wanted: never left 'loading' (dispatch would not retry it)
     dispatch();
     settle();
   }

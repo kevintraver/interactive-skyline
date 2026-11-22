@@ -28,7 +28,8 @@ export function createTerrain({ meta, buffers, base, fetchBinary }) {
   const patchMeta = meta.patches || {};
   /** id -> heightField, once loaded */
   const patches = new Map();
-  let patchLoad = null;
+  /** id -> the promise of its heightField; a list of ids joined -> the promise of that list */
+  const patchLoad = new Map(), listLoad = new Map();
   const inFlight = new Set();
   // every loaded grid and patch, finest first; the last one answers outside them all (its clamped edge)
   let layers = [];
@@ -75,23 +76,33 @@ export function createTerrain({ meta, buffers, base, fetchBinary }) {
       return wideLoad;
     },
     /**
-     * Fetch every patch once (drive-only data). Resolves to [{ id, grid, info }] (empty for a city without
-     * patches); heightAt answers from them as soon as this resolves. A failed fetch can be retried.
+     * Fetch patches once each (drive-only data): the ones named, or every one. Resolves to [{ id, grid, info }] (empty
+     * for a city without patches, or for no ids); heightAt answers from a patch as soon as it is in. A failed fetch can
+     * be retried. The same list asked for twice gets the same promise.
+     * @param {string[]} [ids] patch ids (default: all of them; unknown ids are left out)
      */
-    loadPatches() {
-      const ids = Object.keys(patchMeta);
-      if (!patchLoad) {
-        patchLoad = track(Promise.all(ids.map(async (id) => {
-          const grid = patches.get(id) ?? heightField(await fetchBinary(patchMeta[id].file), patchMeta[id]);
-          return { id, grid, info: patchMeta[id] };
-        })).then((list) => {
-          for (const p of list) patches.set(p.id, p.grid);
-          relayer();
-          return list;
-        }));
-        patchLoad.catch(() => { patchLoad = null; });
+    loadPatches(ids) {
+      const list = (ids ?? Object.keys(patchMeta)).filter((id) => patchMeta[id]);
+      const key = list.join('|');
+      if (!listLoad.has(key)) {
+        const one = (id) => {
+          if (!patchLoad.has(id)) {
+            const p = track(fetchBinary(patchMeta[id].file).then((buf) => {
+              const grid = heightField(buf, patchMeta[id]);
+              patches.set(id, grid);
+              relayer();
+              return grid;
+            }));
+            patchLoad.set(id, p);
+            p.catch(() => patchLoad.delete(id));
+          }
+          return patchLoad.get(id);
+        };
+        const p = Promise.all(list.map(async (id) => ({ id, grid: await one(id), info: patchMeta[id] })));
+        listLoad.set(key, p);
+        p.catch(() => listLoad.delete(key));
       }
-      return patchLoad;
+      return listLoad.get(key);
     },
     /** Resolves once no grid is loading. */
     async whenSettled() {

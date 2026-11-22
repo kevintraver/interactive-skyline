@@ -71,6 +71,7 @@ async function shoot(s, when, opt) {
       }
       const pad = 12, x0 = Math.max(0, Math.min(...xs) - pad), y0 = Math.max(0, Math.min(...ys) - pad);
       clip = { x: x0, y: y0, width: Math.min(innerWidth, Math.max(...xs) + pad) - x0, height: Math.min(innerHeight, Math.max(...ys) + pad) - y0 };
+      if (!(clip.width > 1 && clip.height > 1)) clip = null; // the face is off the screen: the whole frame is saved
     }
     const st = c?.stats();
     return {

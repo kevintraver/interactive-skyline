@@ -15,7 +15,8 @@
 //
 // Parts. Each drive feature (the road chunks, the roadside signs, the terrain's loading, and every
 // later one) is registered with addPart(part), where a part is
-//   { name, update?(frame), setLook?(look), setRoute?(route), whenSettled?(), stats?(), beforeRender?(frame), afterRender?(frame), dispose?() }
+//   { name, update?(frame), setLook?(look), setRoute?(route), whenSettled?(), stats?(), beforeRender?(frame), beforeWorld?(frame),
+//     afterRender?(frame), dispose?() }
 //   frame = { simMs, dtSimMs, pose, camera, viewport, night, sun: { elevation, azimuth }, rate, playing }
 //   look  = look.js lookAt(): { night: boolean, dusk: number, lights: number, beams: number, sun, ambientLux, sky, light, street }
 //           dusk 0 by day .. 1 by night, in steps of 1 / LOOK_STEPS; lights 0..1, how far the city's lights are on;
@@ -25,14 +26,17 @@
 // update runs when the pose moved (every frame while the clock plays), setLook when the look changes
 // (and once on registering, if there is a look already), setRoute when the route changes (and once on
 // registering, if a route is set; before the journey moves onto the new route, so session.journey may still
-// be the old one's), whenSettled and stats over all parts. The part context's `chunks` and `roadside` (parts.js)
+// be the old one's), whenSettled and stats over all parts. beforeWorld runs after every part's beforeRender, with the
+// scene's matrices up to date, for passes drawn into targets of their own before the world is drawn (the mirrors); it
+// may clear the canvas and draw into it (the cabin's silhouette in the depth) and return 'cleared', and the world's
+// draw then leaves the canvas as it is. The part context's `chunks` and `roadside` (parts.js)
 // are the current route's.
 
 import * as THREE from 'three';
 import { createFrame, EARTH_R, localUp } from '../world/frame.js';
-import { buildWideMesh } from '../world/terrain/widemesh.js';
+import { buildWideMesh, cutWideMesh } from '../world/terrain/widemesh.js';
 import { buildSkirt } from '../world/terrain/skirt.js';
-import { buildPatches, NO_PATCHES } from '../world/terrain/patches.js';
+import { buildPatches, NO_PATCHES, patchesCrossing } from '../world/terrain/patches.js';
 import { loadRoutes } from './routes.js';
 import { createRoadMaterials } from './roadnet/material.js';
 import { createRoadChunks } from './roadnet/chunks.js';
@@ -48,6 +52,7 @@ import { isNightAt, lookAt } from './look.js';
 import { createSkyBlend, SUN_STEP_MS } from './skyblend.js';
 import { sightOverGround } from './sightline.js';
 import { createTimings } from './timing.js';
+import { createRenderScale, adaptiveAllowed, isSoftwareRenderer } from './renderScale.js';
 
 /** Real time a single frame may advance the clock by, so a hidden tab or a stalled frame does not jump the car. */
 const MAX_STEP_MS = 250;
@@ -83,18 +88,27 @@ export async function createSession(ctx, terrain, hooks, { route: firstRoute, ro
   };
   // the signs, barriers and roadside buildings are dressing: a city or a build without them still drives
   const optional = (name) => get(name).then((r) => r.json()).catch(() => null);
-  const fetchJson = (n) => (n === 'routes.json' && routesDoc ? Promise.resolve(routesDoc) : get(n).then((r) => r.json()));
-  // the terrain's patches (finer ground where the wide grid loses the land's shape: Black Canyon) come with the wide
-  // grid; their meshes go into the part context's `ground`, so the lamps, headlights and wet road reach them too
+  let routesJson = routesDoc ? Promise.resolve(routesDoc) : null;
+  const fetchJson = (n) => (n === 'routes.json' ? (routesJson ||= get(n).then((r) => r.json())) : get(n).then((r) => r.json()));
+  // The terrain's patches (finer ground where the wide grid loses the land's shape: Black Canyon) are fetched with the
+  // route that passes them (patchesCrossing: the route's outline against the patch's extent), the first route's with
+  // the wide grid and the others when a route switch loads such a route (addPatches below). Their meshes join the part
+  // context's ground (eachGround), so the lamps, headlights, screens and wet road reach them whenever they arrive.
+  const patchMeta = terrain.patchIds.length ? Object.fromEntries(terrain.patchIds.map((id) => [id, terrain.patchInfo(id)])) : null;
+  const patchesOf = (route) => (patchMeta && route ? patchesCrossing(route.outline, patchMeta) : []);
+  const buildSome = (ids) => (ids.length ? buildPatches({
+    terrain, base: city.base, renderer, json: optional, ids,
+    image: (f) => get(f).then((r) => r.blob()).then(bitmapOf),
+  }).catch((e) => { console.warn(`terrain patches left out: ${e && e.message ? e.message : e}`); return NO_PATCHES; }) : Promise.resolve(NO_PATCHES));
   const [net, wide, bitmap, corridorIndex, patches] = await Promise.all([
     loadRoutes({ fetchJson, fetchBinary: (n) => get(n).then((r) => r.arrayBuffer()) }, { route: firstRoute }),
     terrain.loadWide(),
     terrain.hasWide ? get('ground-wide.jpg').then((r) => r.blob()).then(bitmapOf) : null,
     optional('corridor/index.json'),
-    buildPatches({
-      terrain, base: city.base, renderer, json: optional,
-      image: (f) => get(f).then((r) => r.blob()).then(bitmapOf),
-    }).catch((e) => { console.warn(`terrain patches left out: ${e && e.message ? e.message : e}`); return NO_PATCHES; }),
+    patchMeta ? fetchJson('routes.json').then((doc) => {
+      const list = doc?.routes || [];
+      return buildSome(patchesOf(list.find((r) => r.id === firstRoute) ?? list[0]));
+    }, () => NO_PATCHES) : NO_PATCHES,
   ]);
 
   const group = new THREE.Group();
@@ -116,7 +130,41 @@ export async function createSession(ctx, terrain, hooks, { route: firstRoute, ro
   for (const [mesh, name] of ground) group.add(buildSkirt(mesh, terrain.grid(name), SKIRT_DEPTH));
   // the patches bring their own skirts and water
   if (wide) for (const o of patches.objects) group.add(o);
-  const groundMeshes = wide ? [...ground, ...patches.ground] : ground;
+  const groundMeshes = wide ? [...ground, ...patches.ground] : [...ground];
+  const patchSets = wide ? [patches] : [];
+  const patchIdsIn = new Set(wide ? patches.ground.map(([, id]) => id) : []);
+  const groundListeners = new Set();
+  /** Run fn(mesh, gridId) for every ground mesh, now and for each that arrives later; returns the unsubscribe. */
+  function eachGround(fn) {
+    for (const [mesh, id] of groundMeshes) fn(mesh, id);
+    groundListeners.add(fn);
+    return () => groundListeners.delete(fn);
+  }
+  /** The patches a route needs and the session has not built yet: fetched, built, cut out of the wide mesh, announced. */
+  const patchLoads = new Map();
+  function addPatches(route) {
+    if (!wide) return Promise.resolve();
+    const ids = patchesOf(route).filter((id) => !patchIdsIn.has(id));
+    if (!ids.length) return Promise.resolve();
+    const key = ids.join('|');
+    if (!patchLoads.has(key)) {
+      patchLoads.set(key, buildSome(ids).then((set) => {
+        const fresh = set.ground.filter(([, id]) => !patchIdsIn.has(id));
+        if (!fresh.length) return;
+        for (const [, id] of fresh) patchIdsIn.add(id);
+        for (const o of set.objects) group.add(o);
+        set.setImagery(settings.imagery);
+        patchSets.push(set);
+        if (wideMesh) cutWideMesh(wideMesh, { wide, hole: terrain.grid('far'), cuts: patchSets.flatMap((p) => p.grids) });
+        for (const entry of fresh) {
+          groundMeshes.push(entry);
+          for (const fn of groundListeners) fn(entry[0], entry[1]);
+        }
+        invalidate();
+      }).finally(() => patchLoads.delete(key)));
+    }
+    return patchLoads.get(key);
+  }
   const roads = new THREE.Group();
   roads.name = 'roads';
   group.add(roads);
@@ -141,7 +189,7 @@ export async function createSession(ctx, terrain, hooks, { route: firstRoute, ro
     async load(id) {
       const { route, roadnet, road } = await net.loadRoute(id);
       const files = net.filesOf(route);
-      const [signs, barriers] = await Promise.all([optional(files.signs), optional(files.barriers)]);
+      const [signs, barriers] = await Promise.all([optional(files.signs), optional(files.barriers), addPatches(route)]);
       return { id: route.id, route, roadnet, road, files, signs, barriers };
     },
     build(d) {
@@ -187,7 +235,7 @@ export async function createSession(ctx, terrain, hooks, { route: firstRoute, ro
   let partsReady = Promise.resolve();
   function loadParts() {
     const ctx = {
-      app: ctx0, session, get, optional, group, roads, terrain, wideMesh, ground: groundMeshes, net, env, clock, rig, frameOf,
+      app: ctx0, session, get, optional, group, roads, terrain, wideMesh, ground: groundMeshes, eachGround, net, env, clock, rig, frameOf,
       earthR: EARTH_R, base: city.base, materials,
       get chunks() { return routes.kit?.chunks ?? null; },
       get roadside() { return routes.kit?.roadside ?? null; },
@@ -211,6 +259,11 @@ export async function createSession(ctx, terrain, hooks, { route: firstRoute, ro
   let locked = false, startKey = 'reveal';
   const timings = { total: createTimings(), journey: createTimings(), chunks: createTimings(), rig: createTimings(), ui: createTimings() };
   const viewport = () => ({ width: innerWidth, height: innerHeight });
+  // the adaptive render scale (renderScale.js): playing, the pixel ratio follows the frame times; paused, the full one
+  const scale = createRenderScale({
+    renderer, invalidate,
+    allowed: adaptiveAllowed({ webdriver: typeof navigator !== 'undefined' && !!navigator.webdriver, software: isSoftwareRenderer(renderer) }),
+  });
 
   function journeyFor(routeId) {
     const route = net.route(routeId);
@@ -292,6 +345,8 @@ export async function createSession(ctx, terrain, hooks, { route: firstRoute, ro
 
   const session = {
     net, env, clock, rig, group, terrain, timings, addPart,
+    /** The adaptive render scale (renderScale.js): stats(), setAdaptive(on). */
+    renderScale: scale,
     get parts() { return parts.map((p) => p.name); },
     /** A registered part by name, or null. */
     part: (name) => parts.find((p) => p.name === name) || null,
@@ -383,13 +438,14 @@ export async function createSession(ctx, terrain, hooks, { route: firstRoute, ro
     show(on) {
       group.visible = on;
       lastNow = null;
+      if (on) scale.enter(); else scale.leave(); // leaving Drive puts the app's own pixel ratio back
       if (!on) releaseLook();
       if (on) {
         if (wideMesh) {
           wideMesh.material.map = settings.imagery ? wideMap : null;
           wideMesh.material.color.set(settings.imagery ? 0xffffff : 0xbdb9ad);
           wideMesh.material.needsUpdate = true;
-          patches.setImagery(settings.imagery);
+          for (const p of patchSets) p.setImagery(settings.imagery);
         }
         needPose = true;
         update();
@@ -422,13 +478,31 @@ export async function createSession(ctx, terrain, hooks, { route: firstRoute, ro
         timings.total.add(performance.now() - t0);
       }
       if (clock.playing || rig.glancing) invalidate(); // a glance eases over real time
+      scale.tick(now, clock.playing); // before the frame is drawn: a paused frame at the full ratio
     },
 
     /** Draw the frame (app.drive.render, while driving): parts' beforeRender, the scene, parts' afterRender. */
     render() {
       if (holdUntil > performance.now()) return; // a route switch: the last frame stays until the new road is in
       if (frame) for (const p of parts) p.beforeRender?.(frame);
+      // passes into targets of their own (the mirrors) go before the world: the canvas is then drawn in one go, world
+      // and cabin, where a pass in between makes the GPU store the canvas's multisampled buffer and load it again
+      // (about 4.5 ms at 2560 x 1440 on an M4). The scene's matrices are brought up to date once, for all of them.
+      // A part that has cleared the canvas and drawn into it already (the cabin's silhouette in the depth) says so.
+      let early = false, cleared = false;
+      if (frame) {
+        for (const p of parts) {
+          if (!p.beforeWorld) continue;
+          if (!early) { scene.updateMatrixWorld(); early = true; }
+          if (p.beforeWorld(frame) === 'cleared') cleared = true;
+        }
+      }
+      const auto = scene.matrixWorldAutoUpdate, autoClear = renderer.autoClear;
+      if (early) scene.matrixWorldAutoUpdate = false;
+      if (cleared) renderer.autoClear = false;
       renderer.render(scene, camera);
+      scene.matrixWorldAutoUpdate = auto;
+      renderer.autoClear = autoClear;
       if (frame) for (const p of parts) p.afterRender?.(frame);
     },
 
@@ -475,7 +549,20 @@ export async function createSession(ctx, terrain, hooks, { route: firstRoute, ro
       await settledParts();
       const drawn = renderer.info.render.frame;
       invalidate();
-      while (renderer.info.render.frame === drawn) await nextFrame();
+      // a lost context stops three's animation loop: no frame will come, so say so rather than wait for ever
+      while (renderer.info.render.frame === drawn) {
+        if (renderer.getContext().isContextLost?.()) throw new Error('the WebGL context was lost; no frame can be drawn');
+        await nextFrame();
+      }
+    },
+    /** The names of the parts whose whenSettled has not resolved within `ms` (for scripts that time out waiting). */
+    async unsettled(ms = 0) {
+      const names = await Promise.all(parts.map(async (p) => {
+        if (!p.whenSettled) return null;
+        const done = await Promise.race([Promise.resolve(p.whenSettled()).then(() => true), new Promise((r) => setTimeout(() => r(false), ms))]);
+        return done ? null : p.name;
+      }));
+      return names.filter(Boolean);
     },
 
     /** Pose as plain numbers. */
@@ -500,6 +587,7 @@ export async function createSession(ctx, terrain, hooks, { route: firstRoute, ro
         signs: null, // a city or build without signs
         ...Object.fromEntries(parts.filter((p) => p.stats).map((p) => [p.name, p.stats()])),
         js: Object.fromEntries(Object.entries(timings).map(([k, v]) => [k, v.summary()])),
+        renderScale: scale.stats(),
       };
     },
   };

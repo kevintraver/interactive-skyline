@@ -17,7 +17,9 @@
 // Each camera is then carried into the scene by the body's matrix (rig.last.body).
 //
 // The passes (createMirrors). A mirror pass draws the world scene only: not the cabin, not the windshield layer
-// (both live in the cabin's own scene), and the shadow map is not redrawn for it (the main view's is sampled).
+// (both live in the cabin's own scene). The passes run before the world's own draw (session.js render, cabin.js
+// beforeWorld), so the canvas's world and cabin are drawn without a pass between them; the first pass redraws the
+// shadow map when it is due (only buildings cast shadows, so it is the map the world's draw would have made).
 // Two things the world's parts cull against the main camera are put right for each pass: the traffic bodies
 // (traffic.renderer.draw is run again for the mirror's camera, and once more for the main camera afterwards,
 // so the traffic part's lamp points and stats stay the main view's), and the light sprites and ribbons, which
@@ -255,6 +257,8 @@ export function createMirrors({ renderer, scene, session, cabinScene, faces, opt
 
   // ---------------------------------------------------------------- the coarse ground
   // Each grid mesh gets a second index over its own vertices, swapped in for the mirror passes only.
+  // A mesh whose full index is replaced later (the wide mesh, when a terrain patch is cut out of it: session.js
+  // addPatches) gets its coarse index again from the new one.
   const coarse = [];
   for (const [mesh, stride] of ground) {
     const g = mesh?.geometry, idx = g?.index, uv = g?.getAttribute('uv'), pos = g?.getAttribute('position');
@@ -262,10 +266,14 @@ export function createMirrors({ renderer, scene, session, cabinScene, faces, opt
     const nx = Math.round(1 / uv.array[2]) + 1, ny = pos.count / nx;
     if (!Number.isInteger(ny) || ny < 2) continue;
     const index = new THREE.BufferAttribute(coarseGridIndex(idx.array, nx, ny, stride), 1);
-    coarse.push({ geometry: g, full: idx, index });
+    coarse.push({ geometry: g, full: idx, index, nx, ny, stride });
   }
   const swapGround = (on) => {
     for (const c of coarse) {
+      if (on && c.geometry.index !== c.full) {
+        c.full = c.geometry.index;
+        c.index = new THREE.BufferAttribute(coarseGridIndex(c.full.array, c.nx, c.ny, c.stride), 1);
+      }
       // a geometry's index can be swapped between draws: the renderer binds whichever it finds
       c.geometry.index = on ? c.index : c.full;
     }
@@ -315,7 +323,7 @@ export function createMirrors({ renderer, scene, session, cabinScene, faces, opt
   }
 
   /**
-   * Draw the mirrors due on this frame. Called from the cabin's afterRender, before the cabin is drawn.
+   * Draw the mirrors due on this frame. Called from the cabin's beforeWorld, before the world and the cabin are drawn.
    * @param {object} frame the session's frame  @param {object} L rig.last (cabin view)  @param {{ all?: boolean }} [opt]
    * @returns {number} the pass's own JavaScript, ms (renderer.render's work excluded)
    */
@@ -330,8 +338,8 @@ export function createMirrors({ renderer, scene, session, cabinScene, faces, opt
     _body.copy(L.body);
     const prevTarget = renderer.getRenderTarget();
     const prevAuto = renderer.autoClear;
-    const prevShadow = renderer.shadowMap.needsUpdate;
-    renderer.shadowMap.needsUpdate = false;
+    // the shadow map (refreshed on demand: shadowMap.autoUpdate is off) is redrawn by the first pass when it is due,
+    // and then not again by the world's draw that follows; only buildings cast shadows, so it is the same map
     const traffic = session.part?.('traffic');
     const placed = traffic?.placed?.();
     const vpH = frame.viewport?.height || 720;
@@ -343,7 +351,7 @@ export function createMirrors({ renderer, scene, session, cabinScene, faces, opt
     const info = renderer.info.render;
     let pixels = 0, calls = 0, submit = 0;
     swapGround(true);
-    // the main render has brought every matrix up to date this frame: the passes skip the scene graph's update
+    // the session brought every matrix up to date for this frame (session.js render): the passes skip the scene graph's update
     const prevAutoMatrix = scene.matrixWorldAutoUpdate;
     scene.matrixWorldAutoUpdate = false;
     for (const name of due) {
@@ -402,7 +410,6 @@ export function createMirrors({ renderer, scene, session, cabinScene, faces, opt
     if (tw) traffic.renderer.draw(placed, frame.camera, vpH, { s: frame.pose.s, range: traffic.renderer.rangeFor(frame.camera, vpH) });
     renderer.setRenderTarget(prevTarget);
     renderer.autoClear = prevAuto;
-    renderer.shadowMap.needsUpdate = prevShadow;
     renders++;
     lastPixels = pixels; lastCalls = calls;
     lastPassMs = performance.now() - t0;
