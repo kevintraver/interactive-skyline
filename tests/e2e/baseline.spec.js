@@ -24,6 +24,7 @@ for (const scene of SCENES) {
       test.info().annotations.push({ type: 'skipped-golden', description: `no ${process.platform} golden for ${name}` });
       return;
     }
-    await expect(page).toHaveScreenshot(name);
+    // SKYLINE_GOLDEN_STRICT=1: every pixel must match (for checking a refactor), not the 0.1 % default
+    await expect(page).toHaveScreenshot(name, process.env.SKYLINE_GOLDEN_STRICT ? { maxDiffPixels: 0, threshold: 0 } : {});
   });
 }

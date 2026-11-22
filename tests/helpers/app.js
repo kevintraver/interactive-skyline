@@ -29,6 +29,11 @@ export async function stage(page, { view, look }) {
     s.attractions.freeze(show);
     s.setSetting('night', night);
     s.setView(view);
+    // The shadow map is drawn only on demand, and nothing redraws it after freeze() on a day scene (setting
+    // night to false is then no change), so it would keep the fountain jets as they stood whenever it was last
+    // drawn during loading. Redraw it now, with the clocks held.
+    s.renderer.shadowMap.needsUpdate = true;
+    s.invalidate();
   }, { view, night: look === 'night', show: SHOW_TIME });
   // the view tiles redraw while the camera is still, then the frame itself; the loading cover fades out
   await frames(page, 4);
