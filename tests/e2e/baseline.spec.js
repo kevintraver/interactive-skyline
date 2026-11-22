@@ -24,12 +24,6 @@ for (const scene of SCENES) {
       test.info().annotations.push({ type: 'skipped-golden', description: `no ${process.platform} golden for ${name}` });
       return;
     }
-    // SKYLINE_GOLDEN_WITHOUT_SKY_TOGGLE=1 (diagnostic): hide the phase 1 #sky-toggle, the one thing in the pinned
-    // app that the goldens of phase 0 do not have, to check that everything else is unchanged
-    if (process.env.SKYLINE_GOLDEN_WITHOUT_SKY_TOGGLE) {
-      await page.evaluate(() => { document.getElementById('sky-toggle').hidden = true; });
-      await page.waitForTimeout(100);
-    }
     // SKYLINE_GOLDEN_STRICT=1: every pixel must match (for checking a refactor), not the 0.1 % default
     await expect(page).toHaveScreenshot(name, process.env.SKYLINE_GOLDEN_STRICT ? { maxDiffPixels: 0, threshold: 0 } : {});
   });

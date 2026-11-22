@@ -27,9 +27,9 @@ golden coverage until Linux goldens are committed.** To make them:
 - locally, in the Playwright image that matches `@playwright/test` (1.65.1):
   `docker run --rm -v "$PWD":/w -w /w mcr.microsoft.com/playwright:v1.65.1-noble sh -c "corepack enable && pnpm install --frozen-lockfile && pnpm test:goldens:update"`
 
-Since phase 1 the pinned app has one thing the goldens do not: `#sky-toggle` under `#night`, which the full-page
-goldens include. `SKYLINE_GOLDEN_WITHOUT_SKY_TOGGLE=1` hides that button before comparing, to check that nothing
-else moved; without it the ten goldens differ only in the tools column, until they are regenerated on purpose.
+The goldens are full-page, so they include the controls. Phase 1 added `#sky-toggle` under `#night`; the ten goldens
+were regenerated for it after checking, pixel by pixel against the phase 0 images, that only the tools column differs.
+Do the same whenever a control is added: regenerate on purpose, and confirm where the differing pixels are.
 
 `pnpm test:goldens:update` rewrites the goldens of the platform it runs on. Do it only when a change is meant to
 change the picture, and say so in the commit.
