@@ -100,7 +100,7 @@ export function initSkyPopover(app) {
 
   const togglePlay = control(() => {
     if (clock.playing) { clock.pause(); return; }
-    if (!clock.rate || !SPEEDS.includes(clock.rate)) clock.setRate(1);
+    if (!clock.rate) clock.setRate(1); // keep the speed in force: a journey's transport bar has speeds this popover does not list
     clock.play();
   });
   const goLive = control(() => clock.goLive());

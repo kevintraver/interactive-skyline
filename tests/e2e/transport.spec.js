@@ -91,6 +91,13 @@ test.describe('transport and the test journey', () => {
     await page.locator('#transport .play').click();
     let r = await page.evaluate(() => ({ playing: window.__skyline.clock.playing, rate: window.__skyline.clock.rate }));
     expect(r).toEqual({ playing: true, rate: 4 });
+    // Space pauses and resumes at the journey's speed, not at 1x
+    await page.evaluate(() => document.activeElement && document.activeElement.blur());
+    await page.keyboard.press('Space');
+    expect(await page.evaluate(() => window.__skyline.clock.playing)).toBe(false);
+    await page.keyboard.press('Space');
+    r = await page.evaluate(() => ({ playing: window.__skyline.clock.playing, rate: window.__skyline.clock.rate }));
+    expect(r).toEqual({ playing: true, rate: 4 });
     await page.locator('#transport .play').click();
     await page.evaluate(() => window.__skyline.timeline.active.seek(30));
     await page.locator('#transport .now').click();
