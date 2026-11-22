@@ -41,7 +41,7 @@ export default defineConfig({
   projects: [
     {
       name: 'webgl2-software',
-      testIgnore: /perf\.(timing|ab)\.spec\.js/,
+      testIgnore: /perf\.(timing|ab)\.spec\.js|webgpu\.spec\.js/,
       // software frames take seconds, and under load from other work a test can run out of time: one more try, and
       // the report then lists it as flaky. A wrong image or count fails both tries.
       retries: 1,
@@ -59,9 +59,19 @@ export default defineConfig({
     {
       // the classic renderer against the new one, interleaved in one run, on this machine's GPU (pnpm test:perf:ab)
       name: 'gpu-ab',
-      testMatch: /perf\.ab\.spec\.js/,
+      testMatch: /perf\.ab\.spec\.js|bench\.spec\.js|webgpu\.spec\.js/,
       use: { ...devices['Desktop Chrome'], viewport: { width: 1280, height: 800 }, deviceScaleFactor: 1,
         launchOptions: { args: [...GPU, ...WEBGPU] } },
+    },
+    {
+      // Chromium's software WebGPU adapter (Dawn on SwiftShader), the app forced to ?backend=webgpu: the flags
+      // established by T2.0 (docs/plans/notes/01-phase2-spike.md). Boot, edit, the hooks and the materials on the
+      // WebGPU backend without a GPU. Not yet a required CI job (decision 6).
+      name: 'webgpu-software',
+      testMatch: /renderer\.spec\.js|hooks\.spec\.js|webgpu\.spec\.js/,
+      retries: 1,
+      use: { ...devices['Desktop Chrome'], viewport: { width: 1280, height: 800 }, deviceScaleFactor: 1,
+        launchOptions: { args: ['--enable-unsafe-webgpu', ...SOFTWARE] } },
     },
     {
       // the timing suite on SwiftShader: recorded, and gated only at 2x

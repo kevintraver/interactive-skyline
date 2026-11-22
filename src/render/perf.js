@@ -1,3 +1,5 @@
+import { shadowCasters } from './shadowCompat.js';
+
 // window.__skyline.perf: measuring the renderer without vsync, for the performance suite (plan 01, 8.7, T0.8).
 // Additive to the hooks contract; nothing in the app calls it.
 //
@@ -21,7 +23,8 @@ export function glOf(renderer) {
   return renderer.backend && renderer.backend.gl ? renderer.backend.gl : null;
 }
 
-export function createPerf({ renderer, scene, camera, loop, pipeline }) {
+export function createPerf({ renderer, scene, camera, loop, pipeline: pipe }) {
+  const pipeline = pipe && !pipe.legacy ? pipe : null;
   const backend = backendOf(renderer);
   const gl = glOf(renderer);
   const draw = () => (pipeline ? pipeline.render() : renderer.render(scene, camera));
@@ -45,7 +48,14 @@ export function createPerf({ renderer, scene, camera, loop, pipeline }) {
   const nextTask = () => new Promise((done) => setTimeout(done, 0));
   // count shadow-map redraws (T1.3: at most one per 0.1 degree of solar motion)
   let shadowRenders = 0;
-  if (!renderer.isWebGPURenderer) {
+  if (renderer.isWebGPURenderer) {
+    // WebGPURenderer draws a light's shadow map inside render() when its shadow.needsUpdate (or autoUpdate) is set
+    const draw0 = renderer.render.bind(renderer);
+    renderer.render = (s, c) => {
+      if (s === scene && shadowCasters(scene).some((l) => l.shadow.needsUpdate || l.shadow.autoUpdate)) shadowRenders++;
+      return draw0(s, c);
+    };
+  } else {
     const shadowMap = renderer.shadowMap, drawShadows = shadowMap.render;
     shadowMap.render = function render(...args) {
       if (shadowMap.enabled && (shadowMap.autoUpdate || shadowMap.needsUpdate)) shadowRenders++;
@@ -87,6 +97,8 @@ export function createPerf({ renderer, scene, camera, loop, pipeline }) {
 
   return {
     backend,
+    /** Resolves when the GPU has finished everything submitted so far. */
+    sync,
     /**
      * Throughput: draw `n` frames back to back (after `warm`), wait for the GPU, and resolve to the mean time per
      * frame: { msPerFrame, method: 'throughput' }. Measured on all three renderers the same way. Added in T2.0

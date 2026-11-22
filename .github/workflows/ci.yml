@@ -46,6 +46,26 @@ jobs:
             test-results/
           retention-days: 14
 
+  # The app on Chromium's software WebGPU adapter (plan 01, decision 6; flags from T2.0). Not required yet: it
+  # becomes a required check once it has passed here for a week. Until then a local report from a real GPU
+  # (tests/reference/reports/) is required for changes under src/render, src/sky, src/weather or the materials.
+  webgpu-software:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm exec playwright install --with-deps chromium
+      - run: pnpm test:webgpu
+        env:
+          CI: '1'
+
   linux-goldens:
     if: ${{ github.event_name == 'workflow_dispatch' && inputs.linux_goldens }}
     runs-on: ubuntu-24.04

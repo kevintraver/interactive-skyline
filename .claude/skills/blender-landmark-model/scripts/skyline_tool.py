@@ -79,8 +79,19 @@ BROWSERS = [
     "/Applications/Microsoft Edge.app/Contents/MacOS/Microsoft Edge",
     "/usr/bin/google-chrome", "/usr/bin/chromium", "/usr/bin/chromium-browser", "/usr/bin/microsoft-edge",
 ]
-INTEGRATION = 6  # `// skyline-integration: vN` is the first line of every integration file in src/
+INTEGRATION = 7  # `// skyline-integration: vN` is the first line of every integration file in src/
+# v7 (plan 01, phase 2): the app renders with WebGPURenderer; the four files import three/webgpu and three/tsl
+# through src/render/, which only this repo has, so v7 installs and upgrades this app, not an older checkout
 INTEGRATION_VERSION = f"skyline-integration: v{INTEGRATION}"
+ASSETS_V6 = os.path.join(ASSETS, "v6")  # the v6 files, for checkouts from before plan 01's phase 2
+
+
+def integration_for(repo: str) -> tuple[int, str]:
+    """The integration level a checkout can take, and the folder its files come from: v7 needs the new renderer's
+    modules (src/render/renderer.js and the TSL materials); a checkout without them stays at v6."""
+    if os.path.exists(os.path.join(repo, "src", "render", "materials", "buildingMaterial.js")):
+        return INTEGRATION, ASSETS
+    return 6, ASSETS_V6
 INTEGRATION_FILES = ("night.js", "attractions.js", "fountain.js")  # copied as they are; customModels.js aside
 # fountain shows that ship with the skill, per city (assets/skyline/attractions/<file>)
 BUNDLED_FOUNTAINS = {"lv": [{"name": "Fountains of Bellagio", "file": "bellagio.json"}]}
@@ -446,14 +457,15 @@ def ensure_integration(repo: str, force: bool, city: str | None = None) -> list[
         with open(main_path, "w", encoding="utf-8", newline="") as fh:
             fh.write(upgraded)
     done += notes
+    level, assets = integration_for(repo)
     for name in INTEGRATION_FILES:
         target = os.path.join(repo, "src", name)
         if not os.path.exists(target):
-            shutil.copyfile(os.path.join(ASSETS, name), target)
+            shutil.copyfile(os.path.join(assets, name), target)
             done.append(f"added src/{name}")
-        elif file_version(open(target, encoding="utf-8").read()) < INTEGRATION:
-            shutil.copyfile(os.path.join(ASSETS, name), target)
-            done.append(f"updated src/{name} to {INTEGRATION_VERSION}")
+        elif file_version(open(target, encoding="utf-8").read()) < level:
+            shutil.copyfile(os.path.join(assets, name), target)
+            done.append(f"updated src/{name} to skyline-integration: v{level}")
     done += ensure_custom_models(repo, force)
     done += move_models_into_city_folders(repo)  # before the fountains, which now live in the city folder
     done += ensure_fountains(repo, city)
@@ -463,15 +475,16 @@ def ensure_integration(repo: str, force: bool, city: str | None = None) -> list[
 def ensure_custom_models(repo: str, force: bool) -> list[str]:
     """Add or update src/customModels.js; a hard-coded older version moves its entries into models.json."""
     cm = os.path.join(repo, "src", "customModels.js")
-    asset_cm = os.path.join(ASSETS, "customModels.js")
+    level, assets = integration_for(repo)
+    asset_cm = os.path.join(assets, "customModels.js")
     if not os.path.exists(cm):
         shutil.copyfile(asset_cm, cm)
         return ["added src/customModels.js (reads public/models/models.json)"]
     text = open(cm, encoding="utf-8").read()
     if "models.json" in text:
-        if file_version(text) < INTEGRATION:
+        if file_version(text) < level:
             shutil.copyfile(asset_cm, cm)
-            return [f"updated src/customModels.js to {INTEGRATION_VERSION} (reads `_WINDOWS` and Led materials)"]
+            return [f"updated src/customModels.js to skyline-integration: v{level} (reads `_WINDOWS` and Led materials)"]
         return []
     entries = legacy_entries(text)
     if "const MODELS = {" not in text and not force:
@@ -585,7 +598,7 @@ def upgrade(repo: str, city: str, force: bool) -> int:
     """Bring the integration up to the current version without installing a model."""
     check_repo(repo, city)
     done = ensure_integration(repo, force, city)
-    finish_install(repo, done or [f"already at {INTEGRATION_VERSION}; nothing to do"])
+    finish_install(repo, done or [f"already at skyline-integration: v{integration_for(repo)[0]}; nothing to do"])
     return 0
 
 
@@ -674,7 +687,13 @@ const s = window.__skyline;
 if (!s) report.errors.push('the app never finished loading (window.__skyline missing)');
 else {
   report.nightSupported = 'night' in s.settings;
-  if (report.nightSupported) s.setSetting('night', q.get('night') === '1');
+  // v7: day and night as frozen environment states where the app has them (plan 01, phase 2): the classic afternoon
+  // (the Sun at 245, 32) and the reference night; older checkouts switch the pinned look
+  if (s.env && typeof s.env.freeze === 'function') {
+    s.env.freeze(q.get('night') === '1' ? { time: 1773896400000 } : { time: 1774307280000, sunAzAlt: [245, 32] });
+    report.frozenEnv = q.get('night') === '1' ? 'reference night' : 'classic afternoon';
+  } else if (report.nightSupported) s.setSetting('night', q.get('night') === '1');
+  report.backend = s.backend || 'webgl';
   s.setSetting('highlight', q.get('highlight') === '1');
   if (s.attractions) {
     // hold fountain shows and LED skins at one moment: repeatable shots, and no frames rendered meanwhile
@@ -745,7 +764,7 @@ else {
     if (q.get('panel') !== '1' || id === 'loading') document.getElementById(id)?.style.setProperty('display', 'none');
   s.invalidate();
   // draw once now, so every material compiles here and a shader that fails is caught in this report
-  try { s.renderer.render(s.scene, s.camera); } catch (e) { report.errors.push(`render failed: ${e.message}`); }
+  try { if (s.pipeline) s.pipeline.render(); else s.renderer.render(s.scene, s.camera); } catch (e) { report.errors.push(`render failed: ${e.message}`); }
   report.ok = report.errors.length === 0;
 }
 out.textContent = JSON.stringify(report);
@@ -766,7 +785,7 @@ def three_versions(repo: str) -> dict[str, str]:
     return versions
 
 
-BARE_IMPORT = re.compile(r"""(\bfrom\s*|\bimport\s*\(?\s*)(['"])(three-mesh-bvh(?:/worker)?|three(?:/addons/[^'"]+)?|astronomy-engine)\2""")
+BARE_IMPORT = re.compile(r"""(\bfrom\s*|\bimport\s*\(?\s*)(['"])(three-mesh-bvh(?:/worker)?|three(?:/addons/[^'"]+|/webgpu|/tsl)?|astronomy-engine)\2""")
 JSON_IMPORT = re.compile(r"""(\bfrom\s*)(['"])(\.{0,2}/[^'"]+\.json)\2""")
 
 
@@ -801,6 +820,8 @@ def local_module(name: str) -> str:
     """Where a bare import resolves in the repo's node_modules, as Vite resolves it in dev."""
     if name == "three":
         return "/node_modules/three/build/three.module.js"
+    if name in ("three/webgpu", "three/tsl"):  # v7: WebGPURenderer and TSL (plan 01, phase 2)
+        return f"/node_modules/three/build/three.{name.split('/')[1]}.js"
     if name.startswith("three/addons/"):
         return "/node_modules/three/examples/jsm/" + name[len("three/addons/"):]
     if name == "three-mesh-bvh/worker":
@@ -822,7 +843,7 @@ def rewrite_imports(source: str, local: bool) -> str:
 
 def import_map(repo: str) -> str:
     if has_local_modules(repo):
-        imports = {name: local_module(name) for name in ("three", "three-mesh-bvh", "three-mesh-bvh/worker", "astronomy-engine")}
+        imports = {name: local_module(name) for name in ("three", "three/webgpu", "three/tsl", "three-mesh-bvh", "three-mesh-bvh/worker", "astronomy-engine")}
         imports["three/addons/"] = "/node_modules/three/examples/jsm/"
     else:
         # from a CDN the BVH worker cannot start (a worker must come from the page's origin): run `pnpm install`,
@@ -830,6 +851,8 @@ def import_map(repo: str) -> str:
         v = three_versions(repo)
         cdn = "https://cdn.jsdelivr.net/npm"
         imports = {"three": f"{cdn}/three@{v['three']}/build/three.module.js",
+                   "three/webgpu": f"{cdn}/three@{v['three']}/build/three.webgpu.js",
+                   "three/tsl": f"{cdn}/three@{v['three']}/build/three.tsl.js",
                    "three/addons/": f"{cdn}/three@{v['three']}/examples/jsm/",
                    "three-mesh-bvh": f"{cdn}/three-mesh-bvh@{v['three-mesh-bvh']}/build/index.module.js",
                    "three-mesh-bvh/worker": f"{cdn}/three-mesh-bvh@{v['three-mesh-bvh']}/src/workers/index.js"}
@@ -1033,7 +1056,9 @@ def check(repo: str, city: str, bid: str | None, out: str, shots: list[str], bro
         params = {"city": city, "id": bid or "", "night": int(shot["night"]), "highlight": int(shot["highlight"]),
                   "bearing": shot["bearing"], "elev": shot["elev"], "dist": shot["dist"], "target": shot["target"],
                   "panel": int(panel), "show": show_time, **({"extra": extra} if extra else {}),
-                  "autopitch": int(not shots)}
+                  "autopitch": int(not shots),
+                  # v7: the WebGL2 backend, chosen synchronously, and the Low preset (the app ignores both before v7)
+                  "backend": "webgl", "q": "low", "nobench": 1}
         return f"http://127.0.0.1:{port}/__check.html?{urllib.parse.urlencode(params)}"
 
     def take(job: tuple[int, dict | None], budget_ms: int = 45000) -> tuple[str, list[str]]:

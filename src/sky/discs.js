@@ -6,36 +6,19 @@
 // The Moon's quad shades a sphere lit from the Sun's direction, so its phase and the tilt of its terminator are
 // right for the instant: the normal of each fragment is rebuilt from the quad's own axes.
 import * as THREE from 'three';
+import { active } from '../render/active.js';
+import { discNodeMaterial, discUniforms } from '../render/materials/skyMaterials.js';
 
 const DISTANCE = 110000;
 const HALO = 4; // the Sun's quad reaches four disc radii, for a soft glow
 const SUN_DIST_M = 1.496e11, MOON_DIST_M = 3.844e8;
 
-const VERTEX = 'varying vec2 vUv; void main(){ vUv = uv * 2.0 - 1.0; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }';
-const SUN_FRAGMENT = `uniform vec3 color; uniform float strength; varying vec2 vUv;
-void main(){
-  float r = length(vUv) * ${HALO.toFixed(1)};
-  float disc = 1.0 - smoothstep(0.92, 1.04, r);
-  float limb = 1.0 - 0.35 * (1.0 - sqrt(max(0.0, 1.0 - min(r, 1.0) * min(r, 1.0))));
-  float glow = 0.22 * exp(-2.2 * max(r - 1.0, 0.0)) * (1.0 - disc) * step(r, ${HALO.toFixed(1)});
-  gl_FragColor = vec4(color * strength * (disc * limb + glow), 1.0);
-}`;
-const MOON_FRAGMENT = `uniform vec3 color; uniform float strength; uniform vec3 lightDir; uniform vec3 axisX; uniform vec3 axisY; uniform vec3 axisZ;
-varying vec2 vUv;
-void main(){
-  float r2 = dot(vUv, vUv);
-  if (r2 > 1.0) discard;
-  vec3 n = axisX * vUv.x + axisY * vUv.y + axisZ * sqrt(1.0 - r2);
-  float lit = smoothstep(-0.015, 0.015, dot(n, lightDir));
-  float edge = 1.0 - smoothstep(0.94, 1.0, sqrt(r2));
-  gl_FragColor = vec4(color * strength * lit * edge * (0.86 + 0.14 * sqrt(1.0 - r2)), 1.0);
-}`;
-
-function quad(fragmentShader, uniforms) {
-  const mesh = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), new THREE.ShaderMaterial({
-    vertexShader: VERTEX, fragmentShader, uniforms, transparent: true, depthWrite: false, depthTest: true, fog: false,
-    blending: THREE.AdditiveBlending,
-  }));
+function quad(kind) {
+  // GLSL on the classic renderer, TSL on the new one (src/render/materials/skyMaterials.js); the same uniforms
+  const uniforms = discUniforms(kind);
+  const material = active.legacy ? active.legacy.discMaterial(kind, uniforms) : discNodeMaterial(kind, uniforms);
+  material.uniforms = uniforms;
+  const mesh = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), material);
   mesh.frustumCulled = false;
   mesh.renderOrder = 10;
   mesh.visible = false;
@@ -43,11 +26,8 @@ function quad(fragmentShader, uniforms) {
 }
 
 export function createDiscs(scene) {
-  const sun = quad(SUN_FRAGMENT, { color: { value: new THREE.Color(1, 0.97, 0.9) }, strength: { value: 1 } });
-  const moon = quad(MOON_FRAGMENT, {
-    color: { value: new THREE.Color(0.93, 0.93, 0.9) }, strength: { value: 1 }, lightDir: { value: new THREE.Vector3(0, 1, 0) },
-    axisX: { value: new THREE.Vector3(1, 0, 0) }, axisY: { value: new THREE.Vector3(0, 1, 0) }, axisZ: { value: new THREE.Vector3(0, 0, 1) },
-  });
+  const sun = quad('sun');
+  const moon = quad('moon');
   sun.name = 'sun disc';
   moon.name = 'moon disc';
   const dirs = { sun: new THREE.Vector3(0, 1, 0), moon: new THREE.Vector3(0, 1, 0) };

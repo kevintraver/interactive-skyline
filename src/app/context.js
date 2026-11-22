@@ -5,6 +5,7 @@ import { DEFAULTS } from './settings.js';
 import { createEmitter } from './events.js';
 import { createFrameLoop } from '../render/frameLoop.js';
 import { startDownloads } from '../city/data.js';
+import { createRenderer, onDeviceLost } from '../render/renderer.js';
 
 const CITY_STORE = 'skyline-city';
 
@@ -19,9 +20,10 @@ function pickCity(cities) {
 
 /**
  * The shared application context: city, downloads, settings, renderer, scene, camera, controls, frame loop and
- * event bus. Modules add their own functions to it as they are set up.
+ * event bus. Modules add their own functions to it as they are set up. Asynchronous since phase 2: the renderer
+ * chooses its backend and initializes before anything is built (T2.1); the downloads start first.
  */
-export function createApp(cities) {
+export async function createApp(cities) {
   const cityId = pickCity(cities);
   const city = cities[cityId];
   document.title = `Interactive Skyline · ${city.name}`;
@@ -32,15 +34,10 @@ export function createApp(cities) {
   const settings = { ...DEFAULTS, ...loadSettings() };
 
   const canvas = document.getElementById('scene');
-  const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, preserveDrawingBuffer: true });
-  renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
-  renderer.toneMapping = THREE.ACESFilmicToneMapping;
-  renderer.toneMappingExposure = 1.0;
-  renderer.shadowMap.enabled = true;
-  renderer.shadowMap.type = THREE.PCFShadowMap;
-  renderer.shadowMap.autoUpdate = false;
-
   const scene = new THREE.Scene();
+  const { renderer, kind, backend, reason } = await createRenderer({ canvas, scene });
+  if (kind === 'webgpu' && backend === 'webgpu') onDeviceLost(renderer);
+
   const camera = new THREE.PerspectiveCamera(27, 1, 5, 150000);
   const controls = new OrbitControls(camera, canvas);
   controls.enableDamping = true;
@@ -59,5 +56,5 @@ export function createApp(cities) {
   controls.addEventListener('change', invalidate);
 
   return { cities, cityId, city, base, pending, settings, canvas, renderer, scene, camera, controls, loop, invalidate,
-    events: createEmitter() };
+    rendererKind: kind, backend, backendReason: reason, events: createEmitter() };
 }

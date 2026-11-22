@@ -1,4 +1,5 @@
 // Driving the app from Playwright. Everything goes through window.__skyline (the hooks contract, T0.5).
+import { test } from '@playwright/test';
 import cities from '../../data/cities.json' with { type: 'json' };
 
 export const CITIES = Object.keys(cities);
@@ -9,9 +10,13 @@ export const sceneName = ({ city, view, look }) => `${city}-${view}-${look}`;
 /** Seconds into the fountain, LED and wheel loops at which the goldens are held (the landmark checker's default). */
 export const SHOW_TIME = 47;
 
-/** Open a city and wait until the app, its extras and its fountain shows are loaded. */
-export async function boot(page, city) {
-  await page.goto(`/?city=${city}`);
+/** Open a city and wait until the app, its extras and its fountain shows are loaded. `query`: more parameters. */
+export async function boot(page, city, query = '') {
+  // the webgpu-software project runs every spec on the WebGPU backend (Chromium's software adapter)
+  let project = '';
+  try { project = test.info().project.name; } catch { /* outside a test */ }
+  if (project === 'webgpu-software' && !/backend=|renderer=legacy/.test(query)) query = query ? `${query}&backend=webgpu` : 'backend=webgpu';
+  await page.goto(`/?city=${city}${query ? `&${query}` : ''}`);
   await page.waitForFunction(() => window.__skyline && window.__skyline.attractions, null, { timeout: 90_000 });
   await page.evaluate(() => window.__skyline.attractions.ready);
 }
