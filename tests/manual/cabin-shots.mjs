@@ -1,9 +1,12 @@
 // Screenshots of the drive from the cabin on the GPU (the copy of drive-shots.mjs with the cabin's options).
 // Serve the repo first:   pnpm exec vite --port 5281 --strictPort
 // then: node tests/manual/cabin-shots.mjs <out-dir> <port> '<shots>' [width] [height]   (keep the out dir outside the repo)
-// <shots> is JSON: [[name, s in metres, "day" | "night", { view, yaw, pitch, lens, reduceMotion, glance }?], ...]
+// <shots> is JSON: [[name, s in metres, "day" | "night" | ISO time, { view, yaw, pitch, lens, reduceMotion, glance,
+//   veil, mirrors, clip }?], ...]
 //   view 'cabin' (default) or 'clean'; lens defaults to the view's own (28 mm cabin, 50 mm clean); glance
-//   'left' | 'right' | 'center' | 'ahead' is shot at its hold, 0.6 s after the key
+//   'left' | 'right' | 'center' | 'ahead' is shot at its hold, 0.6 s after the key; veil / mirrors false switch the
+//   windshield layer / the mirror passes off (D4.3, D4.4); clip 'left' | 'right' | 'center' saves only that mirror's
+//   face (with a margin), as drawn
 import { chromium } from '@playwright/test';
 import { mkdirSync } from 'node:fs';
 const out = process.argv[2]; const port = process.argv[3] || 5281;
@@ -35,24 +38,46 @@ for (const [name, s, when, opt = {}] of shots) {
   for (let attempt = 0; attempt < 3 && !info; attempt++) {
     try { info = await shoot(s, when, opt); } catch (e) { console.log('retrying', name, e.message.split('\n')[0]); await setup(); }
   }
-  await page.screenshot({ path: `${out}/${name}.png` });
-  console.log('shot', name, JSON.stringify(info));
+  await page.screenshot({ path: `${out}/${name}.png`, ...(info?.clip ? { clip: info.clip } : {}) });
+  console.log('shot', name, JSON.stringify({ ...info, clip: undefined }));
 }
 await browser.close();
 
 async function shoot(s, when, opt) {
+  const t = when === 'night' ? NIGHT : when === 'day' ? DAY : Date.parse(when);
   return page.evaluate(async ({ s, t, opt }) => {
     const d = window.__skyline.drive;
     d.pause();
     d.setView(opt.view || 'cabin');
     d.setReduceMotion(!!opt.reduceMotion);
+    const g = d.cabin()?.glass;
+    g?.windshield?.setEnabled(opt.veil !== false);
+    g?.mirrors?.setEnabled(opt.mirrors !== false);
     d.seek({ s, t });
     const look = { yaw: 0, pitch: 0, ...opt };
-    d.look({ yaw: look.yaw, pitch: look.pitch, ...(look.lens ? { lens: look.lens } : {}) });
+    d.look({ yaw: look.yaw, pitch: look.pitch, lens: look.lens || (opt.view === 'clean' ? 50 : 28) });
     await d.whenSettled();
     if (opt.glance) { d.glance(opt.glance); await new Promise((r) => setTimeout(r, 600)); }
     await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
     const p = d.pose(); const c = d.cabin();
-    return { s: Math.round(p.s), night: p.night, view: p.view, lens: p.lens, model: c?.model, readout: c?.readout && { speed: c.readout.speed, clock: c.readout.clock, next: c.readout.next } };
-  }, { s, t: when === 'night' ? NIGHT : DAY, opt });
+    let clip = null;
+    if (opt.clip && c) {
+      // the mirror face's corners on screen, through the cabin camera
+      const m = c.mirrors[opt.clip], cam = c.cabinCamera;
+      const xs = [], ys = [];
+      for (const k of ['bottomLeft', 'bottomRight', 'topRight', 'topLeft']) {
+        const q = m.corners[k].clone().applyMatrix4(cam.matrixWorldInverse).applyMatrix4(cam.projectionMatrix);
+        xs.push(((q.x + 1) / 2) * innerWidth); ys.push(((1 - q.y) / 2) * innerHeight);
+      }
+      const pad = 12, x0 = Math.max(0, Math.min(...xs) - pad), y0 = Math.max(0, Math.min(...ys) - pad);
+      clip = { x: x0, y: y0, width: Math.min(innerWidth, Math.max(...xs) + pad) - x0, height: Math.min(innerHeight, Math.max(...ys) + pad) - y0 };
+    }
+    const st = c?.stats();
+    return {
+      s: Math.round(p.s), night: p.night, sunEl: +p.sunElevation.toFixed(2), iso: p.iso, view: p.view, lens: p.lens, model: c?.model,
+      mirrors: st?.mirrors && { renders: st.mirrors.renders, pixels: st.mirrors.pixels, calls: st.mirrors.calls },
+      veil: st?.windshield && { S: st.windshield.scenePerLux, sunLux: Math.round(st.windshield.sunLux), lit: st.windshield.lit, lamps: st.windshield.lamps },
+      clip,
+    };
+  }, { s, t, opt });
 }

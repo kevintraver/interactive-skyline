@@ -263,3 +263,106 @@ test('lv drive cabin: view=clean in a link opens the clean camera', async ({ pag
   expect((await params(page)).view).toBe('cabin');
   expect(problems).toEqual([]);
 });
+
+// The mirrors and the windshield (plan 02, D4.3 and D4.4). A magenta box 30 m behind the car in the next lane must
+// show in the correct mirror on the correct side, read back from the mirrors' own render targets; a settled frame's
+// mirrors are all current; the windshield layer is drawn in the cabin pass only.
+test('lv drive cabin: mirrors show the road behind on the correct side; settled mirrors are current', async ({ page }) => {
+  const problems = watchConsole(page);
+  await openCity(page, 'lv');
+  await run(page, async () => {
+    const d = window.__skyline.drive;
+    await d.start('i15n', { s: 44200, t: Date.parse('2026-11-20T23:30:00Z') }); // a Friday afternoon, traffic behind
+    d.pause();
+    while (!d.cabin()) await new Promise((r) => setTimeout(r, 100));
+    await d.whenSettled();
+  });
+
+  /** Put the marker `lateral` metres to the car's right, 30 m behind, and find it in each mirror. */
+  const markerIn = (lateral) => run(page, async (lat) => {
+    const s = window.__skyline, d = s.drive, g = d.cabin().glass.mirrors;
+    const p = d.pose(), f = p.forward, u = p.up;
+    const r = { x: f.y * u.z - f.z * u.y, y: f.z * u.x - f.x * u.z, z: f.x * u.y - f.y * u.x }; // forward x up = right
+    const at = (k) => p.position[k] - f[k] * 30 + r[k] * lat + u[k] * 1.0;
+    g.marker({ x: at('x'), y: at('y'), z: at('z') }, 1.6);
+    s.invalidate();
+    await d.whenSettled();
+    const found = {};
+    for (const name of ['left', 'right', 'center']) {
+      const img = g.read(name);
+      let n = 0, sx = 0;
+      for (let i = 0; i < img.width * img.height; i++) {
+        const R = img.data[4 * i], G = img.data[4 * i + 1], B = img.data[4 * i + 2];
+        if (R > 0.5 && B > 0.5 && G < 0.2 * Math.min(R, B)) { n++; sx += i % img.width; }
+      }
+      // as the driver sees the face: u to the right (the image is flipped in u on the face)
+      found[name] = { share: n / (img.width * img.height), u: n ? 1 - sx / n / img.width : null };
+    }
+    g.marker(null);
+    return found;
+  }, lateral);
+
+  await test.step('a vehicle 30 m behind in the lane to the left: in the left mirror, left of the interior mirror\'s middle', async () => {
+    const m = await markerIn(-3.7);
+    expect(m.left.share, 'left mirror').toBeGreaterThan(0.01);
+    expect(m.right.share, 'right mirror').toBe(0);
+    expect(m.center.share, 'interior mirror').toBeGreaterThan(0.005);
+    expect(m.center.u).toBeLessThan(0.5);
+  });
+
+  await test.step('a vehicle 30 m behind in the lane to the right: in the right mirror, right of the interior mirror\'s middle', async () => {
+    const m = await markerIn(3.7);
+    expect(m.right.share, 'right mirror').toBeGreaterThan(0.002);
+    expect(m.left.share, 'left mirror').toBe(0);
+    expect(m.center.share, 'interior mirror').toBeGreaterThan(0.005);
+    expect(m.center.u).toBeGreaterThan(0.5);
+  });
+
+  await test.step('farther out in the left mirror is farther left on its face', async () => {
+    const near = await markerIn(-3.0), far = await markerIn(-5.5);
+    expect(near.left.share).toBeGreaterThan(0);
+    expect(far.left.share).toBeGreaterThan(0);
+    expect(far.left.u).toBeLessThan(near.left.u);
+  });
+
+  await test.step('a settled frame\'s mirrors are all current: drawn on the last frame, at its simulation time', async () => {
+    for (const at of [{ s: 44800 }, { s: 60000, t: Date.parse('2026-11-21T01:30:00Z') }]) {
+      const r = await run(page, async (a) => {
+        const d = window.__skyline.drive, g = d.cabin().glass.mirrors;
+        // played a little first, so the rotation has left the mirrors at different frames
+        d.play();
+        for (let i = 0; i < 5; i++) await new Promise((res) => requestAnimationFrame(res));
+        d.pause();
+        d.seek(a);
+        await d.whenSettled();
+        return { t: d.pose().t, frame: g.frame, stamps: g.stamps(), playing: d.pose().playing };
+      }, at);
+      expect(r.playing).toBe(false);
+      for (const name of ['left', 'right', 'center']) {
+        expect(r.stamps[name].simMs, name).toBe(r.t);
+        expect(r.stamps[name].frame, name).toBe(r.frame);
+      }
+    }
+  });
+
+  await test.step('the windshield is a layer of the cabin pass; the clean camera draws neither glass nor mirrors', async () => {
+    const r = await run(page, async () => {
+      const d = window.__skyline.drive, c = d.cabin(), g = c.glass;
+      const inCabin = g.windshield.mesh.parent === c.cabinScene;
+      const before = g.mirrors.frame;
+      d.setView('clean');
+      d.seek({ s: d.pose().s + 5 });
+      await d.whenSettled();
+      const after = g.mirrors.frame;
+      d.setView('cabin');
+      await d.whenSettled();
+      return { inCabin, before, after, w: c.stats().windshield, model: c.model, presets: Object.keys(g.options) };
+    });
+    expect(r.inCabin).toBe(true);
+    expect(r.after).toBe(r.before);
+    expect(r.w.enabled).toBe(true);
+    expect(r.presets).toEqual(['mirrors', 'windshield']);
+  });
+
+  expect(problems).toEqual([]);
+});

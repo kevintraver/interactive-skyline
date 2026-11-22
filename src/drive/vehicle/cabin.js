@@ -14,12 +14,20 @@
 // For the parts that come next (mirrors, windshield), the part exposes cabinScene, cabinCamera, mirrors
 // { left, right, center } (each the mesh and its plane, size and corners from cabin.json, in cabin
 // coordinates) and windshield { corners }.
+//
+// The glass (D4.3, D4.4) is attached here rather than as parts of its own, because both draw within the cabin's
+// pass: the mirror passes (mirrors.js) run in afterRender just before the cabin is drawn, and the windshield layer
+// (windshield.js) is a mesh of the cabin scene. Their sizes and rates come from glassPresets.js by the cabin's
+// model. The part exposes them as `glass` { options, mirrors, windshield }.
 
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { localUp } from '../../world/frame.js';
 import { instrumentText, screenText, createInstrumentCanvas, createScreenCanvas } from './displays.js';
 import { createTimings } from '../timing.js';
+import { createMirrors } from './mirrors.js';
+import { createWindshield } from './windshield.js';
+import { glassPresetFor } from './glassPresets.js';
 
 export const CABIN_NEAR = 0.05;
 export const CABIN_FAR = 6;
@@ -168,6 +176,20 @@ export async function createCabin(ctx) {
   const cabinCamera = new THREE.PerspectiveCamera(50, 16 / 9, CABIN_NEAR, CABIN_FAR);
   cabinCamera.matrixAutoUpdate = false;
 
+  // ---------------------------------------------------------------- the glass: mirrors and windshield
+  const glassOptions = glassPresetFor(model);
+  let mirrorPass = null, windshieldLayer = null;
+  try {
+    const strides = glassOptions.mirrors.groundStride || {};
+    const ground = [...(ctx.ground || []).map(([mesh, grid]) => [mesh, strides[grid] || 1]), ...(ctx.wideMesh ? [[ctx.wideMesh, strides.wide || 1]] : [])];
+    mirrorPass = createMirrors({ renderer, scene, session, cabinScene, faces: mirrors, options: glassOptions.mirrors, lights: [hemi, sun, glow, fill], ground });
+    mirrorMats.length = 0; // the stand-ins are replaced by the mirror faces' own material
+  } catch (e) { console.warn(`cabin mirrors left out: ${e && e.message ? e.message : e}`); }
+  try {
+    if (glassOptions.windshield.enabled) windshieldLayer = createWindshield({ cabinScene, corners: windshield.corners, options: glassOptions.windshield, env });
+  } catch (e) { console.warn(`cabin windshield left out: ${e && e.message ? e.message : e}`); }
+  const _sunDir = new THREE.Vector3();
+
   // ---------------------------------------------------------------- displays
   let look = { night: false, dusk: 0 };
   let route = null; // the journey whose line the screen shows
@@ -255,7 +277,9 @@ export async function createCabin(ctx) {
     wheel,
     /** The values the displays last drew (for tests and the next builders). */
     get readout() { return { ...readout }; },
-    setLook(l) { look = { night: !!l.night, dusk: Number.isFinite(l.dusk) ? l.dusk : l.night ? 1 : 0 }; },
+    setLook(l) { look = { night: !!l.night, dusk: Number.isFinite(l.dusk) ? l.dusk : l.night ? 1 : 0 }; mirrorPass?.setLook(look); },
+    /** The mirrors and the windshield layer (mirrors.js, windshield.js) and the options they were made with. */
+    glass: { options: glassOptions, mirrors: mirrorPass, windshield: windshieldLayer },
     update(frame) { if (rig.view === 'cabin') updateDisplays(frame, false); },
     afterRender(frame) {
       const L = rig.last;
@@ -271,7 +295,21 @@ export async function createCabin(ctx) {
       root.updateMatrixWorld(true);
       updateLight(L.body, frame.camera.position);
       const info = renderer.info.render;
-      const calls = info.calls, triangles = info.triangles;
+      const calls = info.calls, triangles = info.triangles; // the world's draw, before the mirror passes
+      if (windshieldLayer) {
+        _sunDir.copy(sun.position).sub(sun.target.position).normalize();
+        const traffic = session.part?.('traffic');
+        windshieldLayer.update({
+          frame, L, sunDir: _sunDir, sunColor: worldSun?.color, sunIntensity: worldSun?.intensity ?? 0, hemi: worldHemi,
+          lampPoints: traffic?.lampPoints ? traffic.lampPoints() : null, eyeWorld: frame.camera.position,
+        });
+      }
+      let mirrorJs = 0;
+      if (mirrorPass) {
+        mirrorPass.shade(worldHemi, worldSun);
+        mirrorJs = mirrorPass.render(frame, L);
+      }
+      const tm = performance.now();
       const auto = renderer.autoClear;
       renderer.autoClear = false;
       renderer.clearDepth();
@@ -283,11 +321,18 @@ export async function createCabin(ctx) {
       info.calls += calls; // the world's draw and the cabin's, both in the stats
       info.triangles += triangles;
       renders++;
-      timing.add(t2 - t0 + (performance.now() - t3));
+      // the part's own JavaScript: the mirror passes' own share counts, their renderer.render work does not (as the
+      // cabin's own draw call does not)
+      timing.add(tm - t0 - (mirrorPass ? mirrorPass.lastPassMs : 0) + mirrorJs + (t2 - tm) + (performance.now() - t3));
     },
-    stats: () => ({ model, renders, calls: part.lastCalls ?? 0, js: timing.summary() }),
+    stats: () => ({
+      model, renders, calls: part.lastCalls ?? 0, js: timing.summary(),
+      mirrors: mirrorPass ? mirrorPass.stats() : null, windshield: windshieldLayer ? windshieldLayer.stats() : null,
+    }),
     dispose() {
       root.traverse((o) => { if (o.isMesh) o.geometry.dispose(); });
+      mirrorPass?.dispose();
+      windshieldLayer?.dispose();
       for (const m of [...Object.values(materials), instrumentsMat, screenMat, ...mirrorMats]) m.dispose();
       instrumentsTex.dispose(); screenTex.dispose();
     },
