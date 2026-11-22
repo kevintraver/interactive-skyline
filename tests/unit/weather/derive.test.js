@@ -192,7 +192,8 @@ describe('fusion: each recorded day against its reports (section 8.2)', () => {
   it('+TSRA, 18 July 2022 21:56: twenty flashes a minute, a cumulonimbus at the reported base, convective rain', () => {
     const s = sampleAt('lv', '2022-07-18', '21:56'); // 01005KT 10SM +TSRA FEW120CB SCT200
     expect(s.storm).toMatchObject({ thunder: true, flashRatePerMin: 20, cells: 3 });
-    expect(s.storm.capeJKg).toBeGreaterThan(800);
+    // CAPE is the model's, whichever model that is (not asserted as a value: decision 11)
+    expect(s.storm.capeJKg === null || s.storm.capeJKg >= 0).toBe(true);
     expect(s.clouds[0]).toMatchObject({ genus: 'cb', cover: COVER.FEW });
     expect(s.clouds[0].baseM).toBeCloseTo(lvG + 12000 * FT_M, 3);
     expect(s.clouds[0].topM).toBeGreaterThanOrEqual(12000);
@@ -211,7 +212,7 @@ describe('fusion: each recorded day against its reports (section 8.2)', () => {
     expect(later.storm.flashRatePerMin).toBe(6);
     expect(later.precip.kind).toBe('rain');
     expect(later.wind.gustMs).toBeCloseTo(26 * 0.514444, 3);
-    expect(later.windAloft.map((w) => w.level)).toEqual([850, 700, 500, 300]); // the historical forecast's levels
+    expect(later.windAloft.map((w) => w.level)).toEqual([850, 700, 500, 300]); // the model's levels where it has them, else extrapolated
   });
 
   it('overcast, 23 January 2024 10:18: OVC003 is stratus 91 m up; 15:56 -DZ BR 2 SM is drizzle', () => {

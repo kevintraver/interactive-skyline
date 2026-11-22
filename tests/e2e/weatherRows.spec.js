@@ -103,6 +103,19 @@ test.describe('the weather rows of #sky', () => {
     await expect(page.locator('#sky-source')).toHaveText(/^History · /);
   });
 
+  test('the credits section 12.2 asks for are visible in the app (T5.6)', async ({ page }) => {
+    await boot(page, CITY);
+    await page.locator('#options-toggle').click();
+    const credit = page.locator('#about-weather');
+    await expect(credit).toBeVisible();
+    await expect(credit).toContainText('Weather data by Open-Meteo.com');
+    await expect(credit).toContainText('Copernicus Climate Change Service');
+    await expect(credit).toContainText('Copernicus Atmosphere Monitoring Service');
+    await expect(credit).toContainText('NOAA / National Weather Service');
+    await expect(credit).toContainText('Iowa Environmental Mesonet of Iowa State University');
+    expect(await credit.locator('a').getAttribute('href')).toBe('https://open-meteo.com/');
+  });
+
   for (const [width, height] of [[1280, 800], [700, 800], [700, 600]]) {
     for (const theme of ['light', 'dark']) {
       test(`#sky with every weather row fits at ${width} x ${height}, ${theme}, and scrolls inside itself`, async ({ page }) => {

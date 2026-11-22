@@ -1,0 +1,40 @@
+# The daily live contract test (plan 01, T5.6, risk R6): the weather upstreams through the app's own URL templates and
+# normalizers, and the deployed /api/weather when the repository variable SKYLINE_DEPLOY_URL names a deployment (the
+# deployed half is skipped, not failed, while it is unset). A failure opens an issue, or comments on the open one.
+name: live
+on:
+  schedule:
+    - cron: '17 13 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  contract:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm test:live
+        env:
+          SKYLINE_DEPLOY_URL: ${{ vars.SKYLINE_DEPLOY_URL }}
+      - if: ${{ failure() }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          title="Live weather contract test failing"
+          existing=$(gh issue list --repo "$GITHUB_REPOSITORY" --state open --search "$title in:title" --json number --jq '.[0].number')
+          if [ -n "$existing" ]; then
+            gh issue comment "$existing" --repo "$GITHUB_REPOSITORY" --body "Failed again: $RUN_URL"
+          else
+            gh issue create --repo "$GITHUB_REPOSITORY" --title "$title" --body "The daily contract test of the weather sources failed: $RUN_URL. An upstream may have changed its schema or be down; see plan 01, section 6.1 and risk R6."
+          fi

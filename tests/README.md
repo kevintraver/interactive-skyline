@@ -76,3 +76,24 @@ Two tiers.
 `build_lights.py` and checks them against their sidecars and known sky and street facts. `build_nightlights.py` is
 tested on small synthetic VNP46A4 tiles written by the test itself; `tests/unit/sky/nightlights.test.js` checks the
 real Las Vegas grid against its landmarks once `public/data/lv/nightlights.json` exists, and skips until then.
+
+## Phase 5 (plan 01): weather data
+
+| Spec | What |
+|---|---|
+| `tests/unit/weather/*.test.js` | the sample and its validator (fuzzed), presets, overrides, interpolation; the normalizers on the recorded days of section 8.2; `derive.js` (fusion of every recorded day, the medium, `setAtmosphereFromWeather`); the client service with the real handler behind a fake fetch; the chip's wording |
+| `tests/unit/api/*.test.js` | `/api/weather`: cache headers, partial responses, the upstream-failure matrix, the User-Agent, hostile input (no request value reaches an upstream URL); the `pnpm dev` middleware |
+| `tests/unit/env/weather.test.js` | the weather in `env.state` in the clock state only; `state.medium` |
+| `tests/python/test_aerosol_climatology.py` | the monthly aerosol climatology, and Las Vegas' against AERONET |
+| `tests/e2e/weather.spec.js` | nothing weather-related at boot; each link of the fallback chain; the preset within two seconds with the network blocked; scrubbing across midnight UTC and a month's end |
+| `tests/e2e/weatherRows.spec.js` | the `#sky` weather rows by real input: 14 July 1975, each preset, each slider and "follow data", the credits, the fit at 1280 × 800 and 700 px in both themes |
+| `tests/live/weatherContract.test.js` | **not part of `pnpm test`**: the real upstreams, and the deployed function when `SKYLINE_DEPLOY_URL` is set (`pnpm test:live`; daily in `.github/workflows/live.yml`, which opens an issue on failure) |
+
+The weather fixtures (`tests/fixtures/weather/<city>-<day>.rec-<date>.json`) are recorded by
+`uv run scripts/fetch_weather_fixtures.py all`. The first set was recorded on 22 November 2026, before Open-Meteo
+retires the HRRR and NAM models at the end of November; decision 11 of plan 01 asks for a recording on or after
+1 December 2026. Re-record then, delete the older files, and re-run `pnpm test:unit`. No test asserts a value that only
+HRRR or NAM provide: values from the historical forecast are read from the fixture itself.
+
+`tests/helpers/app.js`'s `boot()` blocks every weather request unless a spec routes them itself
+(`tests/helpers/weatherRoutes.js` answers `/api/weather` with the real handler over the fixtures).

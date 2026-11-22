@@ -152,10 +152,13 @@ describe('the recorded days (section 8.2)', () => {
     expect(hours[0].visibilityM).toBe(null);
     expect(hours[0].capeJKg).toBe(null);
     expect(hours[0].aloft).toEqual([]);
+    // the historical forecast fills what the archive lacks (values read from the fixture itself, not hard-coded: they
+    // come from whichever model Open-Meteo's best match uses, which changes when HRRR and NAM retire; decision 11)
+    const hf = f['open-meteo-historical'].body.hourly;
     const merged = mergeModel(hours, normalizeOpenMeteo(f['open-meteo-historical'].body));
-    expect(merged[0].visibilityM).toBe(22100);
-    expect(merged[0].capeJKg).toBe(480);
-    expect(merged[0].aloft.map((w) => w.level)).toEqual([850, 700, 500, 300]);
+    expect(merged[0].visibilityM).toBe(hf.visibility[0] ?? null);
+    expect(merged[0].capeJKg).toBe(hf.cape[0] ?? null);
+    expect(merged[0].aloft.map((w) => w.level)).toEqual([850, 700, 500, 300].filter((l) => hf[`wind_speed_${l}hPa`][0] !== null));
     expect(merged[0].tempC).toBe(hours[0].tempC);
   });
 

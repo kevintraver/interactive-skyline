@@ -9,6 +9,7 @@
     "data": "for c in slc lv; do uv run scripts/fetch_lidar.py $c && uv run scripts/build_terrain.py $c && uv run scripts/build_imagery.py $c && uv run scripts/build_buildings.py $c; done",
     "test": "pnpm test:unit && pnpm test:e2e",
     "test:unit": "vitest run",
+    "test:live": "vitest run --config tests/live/vitest.config.js",
     "test:py": "uv run --python 3.12 --with pytest --with numpy --with requests --with pillow --with openexr --with scipy --with shapely --with pyproj --with h5py pytest -q tests/python",
     "test:e2e": "playwright test --project=webgl2-software",
     "test:goldens:update": "playwright test --project=webgl2-software baseline --update-snapshots=all",

@@ -36,6 +36,24 @@ pnpm dev
 
 The built data in `public/data` is checked in, so the app runs without the data pipeline.
 
+### Weather
+
+The clock button's popover shows the weather for the time on the clock: live near now, and for any date back to 1940
+from the archives, or a preset. It comes from `api/weather.js`, a Vercel function that fetches and normalizes
+Open-Meteo, the National Weather Service's observations and the Iowa Environmental Mesonet's archive; `pnpm dev`
+serves the same function through `vite.config.js`. Without it (`vite preview`, the landmark tool's server) the app asks
+Open-Meteo directly, and failing that shows a preset. Nothing is fetched until the popover opens or the clock leaves
+the pinned day and night looks.
+
+The NOAA services ask automated clients for a User-Agent that identifies them. The function sends
+`interactive-skyline-weather/1.0`; set the environment variable **`WEATHER_CONTACT`** in the deployment (an email
+address or URL) to append a contact to it. Nothing else about anyone is sent, and nothing is needed to run it.
+
+`uv run scripts/fetch_weather_fixtures.py all` records the responses the tests read (`tests/fixtures/weather/`);
+`uv run scripts/build_aerosol_climatology.py <city>` rebuilds `public/data/<city>/aerosol.json`. `pnpm test:live`
+calls the real services (daily in `.github/workflows/live.yml`; set the repository variable `SKYLINE_DEPLOY_URL` to
+check a deployment too).
+
 ## How the model is built
 
 One unit is one meter. Every building sits on real terrain at its real position.
@@ -150,5 +168,10 @@ The data and images are not covered by it and keep their own terms:
 
 - Building data © [OpenStreetMap](https://www.openstreetmap.org/copyright) contributors, available under the Open Database License.
 - LiDAR, elevation and NAIP imagery from the U.S. Geological Survey, public domain.
+- Weather data by [Open-Meteo.com](https://open-meteo.com/), [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/); used under its free tier, for non-commercial use.
+  - ERA5: generated using Copernicus Climate Change Service information. Hersbach, H. et al. (2023): ERA5 hourly data on single levels from 1940 to present. Copernicus Climate Change Service (C3S) Climate Data Store (CDS), doi:[10.24381/cds.adbb2d47](https://doi.org/10.24381/cds.adbb2d47).
+  - Aerosols (CAMS): generated using Copernicus Atmosphere Monitoring Service information.
+- Weather observations from NOAA / National Weather Service ([aviationweather.gov](https://aviationweather.gov/), [api.weather.gov](https://www.weather.gov/documentation/services-web-api)), public domain.
+- Archived observations from the Iowa Environmental Mesonet of Iowa State University ([ASOS archive](https://mesonet.agron.iastate.edu/request/download.phtml)).
 - Comparison photo: "Salt Lake City skyline (2020) from Ensign Peak" by Iansmh98, [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/), via Wikimedia Commons.
 - The models in 41 of the `landmarks/` folders were drawn from public reference photos, which are not included. Their sources are in each model's `landmarks/lv/<model>/refs/` folder: `sources.json` gives author and license, and `commons_candidates.json` gives the Wikimedia Commons pages of the thumbnails a model was compared with. The other models were built from the map data and published figures alone.

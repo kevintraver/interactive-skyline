@@ -98,10 +98,11 @@ describe('month', () => {
   });
 
   it('August 2023 adds the historical forecast and aerosols', async () => {
-    const { body, calls } = await call('?city=lv&month=2023-08', { fixtures: loadFixture('lv', '2023-08-20') });
+    const fx = loadFixture('lv', '2023-08-20');
+    const { body, calls } = await call('?city=lv&month=2023-08', { fixtures: fx });
     expect(calls.map((c) => new URL(c.url).hostname).sort()).toEqual(['air-quality-api.open-meteo.com', 'archive-api.open-meteo.com',
       'historical-forecast-api.open-meteo.com', 'mesonet.agron.iastate.edu']);
-    expect(body.data.model[0].visibilityM).toBe(22100);
+    expect(body.data.model[0].visibilityM).toBe(fx.responses['open-meteo-historical'].body.hourly.visibility[0] ?? null);
     expect(body.data.aerosol.length).toBe(24);
   });
 
