@@ -19,7 +19,6 @@
       -111.862
     ],
     "base": 1300,
-    "tz": "America/Denver",
     "lidar": {
       "dataset": "USGS_LPC_UT_Wasatch_L4_2013_LAS_2016",
       "year": 2013,
@@ -102,7 +101,6 @@
       -115.135
     ],
     "base": 620,
-    "tz": "America/Los_Angeles",
     "lidar": {
       "dataset": "NV_ClarkCo_2_B22",
       "year": 2022,

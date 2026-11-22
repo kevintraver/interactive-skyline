@@ -79,6 +79,18 @@ What the build found that differs from the text below:
 - The default drive opens in the night look, because the default moment is mid civil twilight and the app has only a day and a night look until plan 01's sky.
 - The software renderer used for goldens takes seconds per frame. Timing checks bound the drive's own per-frame JavaScript and run in their own Playwright project after the other tests.
 
+## Decisions for the second stretch (2026-11-22)
+
+The user asked for the build to be driven to the end. These are the assumptions made for that; they rank below the user's decisions at the top.
+
+- **Base.** The branch is rebased onto plan 01's phase 0 (`t3/sky-weather-phase-zero-performance`, commit 6d91328): the split `main.js`, `src/core`, the test toolchain and the performance suite. The map goldens of D0.1 are plan 01's baseline; this branch's own map smoke suite was dropped in the rebase.
+- **Renderer.** Plan 01's renderer (its phase 2) has not started. Phases 4 to 9 are therefore built on today's `WebGLRenderer`, against the stand-ins in `src/drive/env.js`, so that the drive is whole now and is ported once. Every custom shader sits in a file of its own and is listed in the port table below.
+- **Light units.** Sources are described in physical units (candela, lumen, lux, cd/m²) in data and in pure functions, which is where the photometric acceptance checks run. One constant per unit in `env.lighting.units` maps them to today's scene values at a fixed exposure. Probes of rendered luminance wait for plan 01's exposure.
+- **Dusk.** While driving, the look blends between the app's day and night looks by the sun's elevation, as a stand-in for plan 01's sky.
+- **Parts.** Each drive feature is a part registered with the session (`update`, `setLook`, `whenSettled`, `stats`, `beforeRender`, `afterRender`, `dispose`), so features are built and tested apart and joined in one line.
+- **Lamp inventory.** D5.3 is built once, as plan 01's T4.0 (`scripts/build_lights.py`), and used here.
+- **Terrain.** Still deferred with the tile pyramid: Phase 2, D3.2 and D3.3. Ramps and overpasses take their heights by rule over the coarse ground, as the main line does.
+
 ---
 
 ## 1. Executive summary
