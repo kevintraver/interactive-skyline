@@ -113,8 +113,9 @@ test('T2.5: a sunlit white roof at noon and a lit window at night', async ({ pag
   const night = await page.evaluate(async () => {
     const s = window.__skyline, raf = () => new Promise((d) => requestAnimationFrame(d));
     s.clock.set(Date.UTC(2026, 2, 19, 5, 0));
-    const t = s.tall.filter((e) => e.mesh.material.userData.buildingVariant === 'extruded').sort((x, y) => y.data.h - x.data.h)[0];
-    t.mesh.geometry.computeBoundingBox();
+    // the tallest extruded block with a 30 to 80 m footprint (the tallest of all can be a thin mast)
+    const size = (e) => { e.mesh.geometry.computeBoundingBox(); const bb = e.mesh.geometry.boundingBox; return Math.min(bb.max.x - bb.min.x, bb.max.z - bb.min.z); };
+    const t = s.tall.filter((e) => e.mesh.material.userData.buildingVariant === 'extruded' && size(e) > 30 && size(e) < 80).sort((x, y) => y.data.h - x.data.h)[0];
     const b = t.mesh.geometry.boundingBox, c = b.getCenter(new s.camera.position.constructor());
     s.camera.position.set(c.x + 250, c.y, c.z + 60);
     s.controls.target.set(c.x, c.y, c.z);
