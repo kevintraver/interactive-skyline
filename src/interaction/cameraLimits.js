@@ -75,7 +75,7 @@ export function makePivotGround(near, far, base) {
  * Lift `cam` along its orbit about `tgt` (same distance, same compass direction, a steeper angle) until it is at
  * least `agl` above `ground(x, z)`; straight up if even overhead is too low. Mutates `cam`; true if it moved.
  */
-export function liftAlongOrbit(cam, tgt, ground, agl, iterations = 4) {
+export function liftAlongOrbit(cam, tgt, ground, agl, iterations = 8) {
   const ox = cam.x - tgt.x, oz = cam.z - tgt.z, oy = cam.y - tgt.y;
   const r = Math.sqrt(ox * ox + oy * oy + oz * oz), hr = Math.sqrt(ox * ox + oz * oz);
   const ux = hr > 1e-9 ? ox / hr : 0, uz = hr > 1e-9 ? oz / hr : 0;
@@ -136,12 +136,12 @@ export function createCameraLimits({ camera, controls, ground, pivotGround, boun
     if (!same(pos, lastCam) || !same(tgt, lastTgt) || !limits.enabled || controls.enabled === false) limits.armed = false;
     copy(cam0, pos); copy(tgt0, tgt);
     let changed = update(deltaTime);
+    if (limits.armed) holdInsideDistances();
     if (limits.armed && (moved(pos, cam0) || moved(tgt, tgt0)) && correct()) {
       if (camera.lookAt) camera.lookAt(tgt.x, tgt.y, tgt.z);
       invalidate();
       changed = true;
     }
-    if (limits.armed) holdInsideDistances();
     copy(lastCam, pos); copy(lastTgt, tgt);
     return changed;
   }
@@ -209,8 +209,14 @@ export function createCameraLimits({ camera, controls, ground, pivotGround, boun
     // (lifted straight up, the distance grows and so does its 1 %: lift once more for that)
     // (1 cm above the line, so the controls' own round trip of the position next frame cannot dip under it)
     const lifted = liftAlongOrbit(pos, tgt, ground, agl + 0.01);
-    if (lifted) liftAlongOrbit(pos, tgt, ground, 0.01 + Math.max(agl, allowedHeight(clearanceFor(dist3(pos, tgt)), before, clearanceFor(r0))));
     if (lifted) {
+      liftAlongOrbit(pos, tgt, ground, 0.01 + Math.max(agl, allowedHeight(clearanceFor(dist3(pos, tgt)), before, clearanceFor(r0))));
+      // a straight-up lift past maxDistance would be clamped back down into the slope by the controls next frame:
+      // bring it inside and lift along the orbit again
+      if (dist3(pos, tgt) > controls.maxDistance * (1 - 1e-9)) {
+        holdInsideDistances();
+        liftAlongOrbit(pos, tgt, ground, agl + 0.01, 12);
+      }
       const spin = controls._sphericalDelta;
       if (spin && spin.phi > 0) spin.phi = 0; // stop the tilt here rather than push against it each frame
       limits.stats.lifted++;
