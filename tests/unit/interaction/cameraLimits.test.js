@@ -73,6 +73,12 @@ describe('clearance', () => {
     expect(allowedHeight(35, 1.7)).toBe(1.7);
     expect(allowedHeight(10, -5)).toBe(-5);
   });
+  it('lets a low camera climb as the visitor moves it sideways, up to the full clearance and no further', () => {
+    expect(allowedHeight(35, 1.7, 35, 0)).toBe(1.7);        // standing still: left alone
+    expect(allowedHeight(35, 1.7, 35, 10)).toBeCloseTo(6.7); // ten metres sideways: five metres up
+    expect(allowedHeight(35, 1.7, 35, 1000)).toBe(35);       // far enough: the ordinary clearance
+    expect(allowedHeight(35, 50, 35, 1000)).toBe(35);        // a clear camera is not lifted beyond it
+  });
   it('holds a camera that was clear to the clearance for its new distance', () => {
     expect(allowedHeight(301, 300, 300)).toBe(301); // was exactly clear at 30 km; zoomed out 100 m
     expect(allowedHeight(301, 250, 300)).toBe(250); // was already low

@@ -39,10 +39,13 @@ export const clearanceFor = (dist) => Math.max(10, 0.01 * dist);
  * The height above ground the camera must keep after an update. A camera that was clear before the update
  * (`before` at least `clearanceBefore`, the clearance for its old distance) must keep the full clearance for its new
  * distance. One that was already lower (a street-level view puts it there) may not go lower than it was, and is
- * never pushed up by itself.
+ * not pushed up while it stays where it is. Once the visitor moves it sideways it climbs, half a metre for each
+ * metre travelled (`moved`), until it has the full clearance: a low eye that orbits or pans away from its spot would
+ * otherwise skim the slope, and the near plane (5 m) cuts into ground that close, which shows the sky under the hill.
  */
-export const allowedHeight = (clearance, before, clearanceBefore = clearance) =>
-  (before >= clearanceBefore - 1e-6 ? clearance : Math.min(clearance, before));
+export const LOW_CAMERA_RISE = 0.5;
+export const allowedHeight = (clearance, before, clearanceBefore = clearance, moved = 0) =>
+  (before >= clearanceBefore - 1e-6 ? clearance : Math.min(clearance, before + LOW_CAMERA_RISE * moved));
 
 /** How wide an area the pivot's ground is averaged over: wider as the camera pulls back. */
 export const smoothRadius = (dist) => Math.min(1500, Math.max(30, 0.08 * dist));
@@ -190,7 +193,8 @@ export function createCameraLimits({ camera, controls, ground, pivotGround, boun
     // 3. the camera stays above the ground
     const r0 = dist3(cam0, tgt0);
     const before = cam0.y - ground(cam0.x, cam0.z);
-    const agl = allowedHeight(clearanceFor(dist), before, clearanceFor(r0));
+    const moved = Math.hypot(pos.x - cam0.x, pos.z - cam0.z); // sideways travel of the camera in this update
+    const agl = allowedHeight(clearanceFor(dist), before, clearanceFor(r0), moved);
     if (pos.y - ground(pos.x, pos.z) >= agl) return fixed;
     if (Math.abs(dist - r0) > 1e-4 * r0) {
       // a zoom: stop it where it meets the clearance (bisect between where the camera was and where it went)
@@ -210,7 +214,7 @@ export function createCameraLimits({ camera, controls, ground, pivotGround, boun
     // (1 cm above the line, so the controls' own round trip of the position next frame cannot dip under it)
     const lifted = liftAlongOrbit(pos, tgt, ground, agl + 0.01);
     if (lifted) {
-      liftAlongOrbit(pos, tgt, ground, 0.01 + Math.max(agl, allowedHeight(clearanceFor(dist3(pos, tgt)), before, clearanceFor(r0))));
+      liftAlongOrbit(pos, tgt, ground, 0.01 + Math.max(agl, allowedHeight(clearanceFor(dist3(pos, tgt)), before, clearanceFor(r0), moved)));
       // a straight-up lift past maxDistance would be clamped back down into the slope by the controls next frame:
       // bring it inside and lift along the orbit again
       if (dist3(pos, tgt) > controls.maxDistance * (1 - 1e-9)) {
