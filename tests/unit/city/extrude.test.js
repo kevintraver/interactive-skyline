@@ -46,3 +46,24 @@ describe('extrude', () => {
     expect(geo.attributes.windows).toBeUndefined();
   });
 });
+
+// The stability pass: extruded footprints are drawn a hair inside their outline, by class, so coplanar surfaces of
+// two buildings never fight.
+import { insetRing, INSET } from '../../../src/city/extrude.js';
+import { Vector2 } from 'three';
+describe('insetRing', () => {
+  it('moves a square outline inward on every side, a hole outward', () => {
+    const sq = [new Vector2(0, 0), new Vector2(10, 0), new Vector2(10, 10), new Vector2(0, 10)]; // counter-clockwise
+    const r = insetRing(sq, 0.1);
+    expect(r.map((p) => [+p.x.toFixed(6), +p.y.toFixed(6)])).toEqual([[0.1, 0.1], [9.9, 0.1], [9.9, 9.9], [0.1, 9.9]]);
+    const hole = [...sq].reverse(); // clockwise
+    const h = insetRing(hole, 0.1);
+    expect(h.map((p) => [+p.x.toFixed(6), +p.y.toFixed(6)])).toEqual([[-0.1, 10.1], [10.1, 10.1], [10.1, -0.1], [-0.1, -0.1]]);
+  });
+  it('the classes: models never, tall extruded less than low', () => {
+    expect(INSET.model).toBe(0);
+    expect(INSET.tall).toBeGreaterThan(0);
+    expect(INSET.low).toBeGreaterThan(INSET.tall);
+    expect(INSET.low).toBeLessThanOrEqual(0.2);
+  });
+});

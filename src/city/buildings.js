@@ -5,7 +5,7 @@ import { computeBoundsTree, disposeBoundsTree, acceleratedRaycast } from 'three-
 import { GenerateMeshBVHWorker } from 'three-mesh-bvh/worker';
 import { placeModel } from '../customModels.js';
 import { lightAtNight } from '../night.js';
-import { ring, extrude, toGeometry, fresh } from './extrude.js';
+import { ring, extrude, toGeometry, fresh, INSET } from './extrude.js';
 
 THREE.BufferGeometry.prototype.computeBoundsTree = computeBoundsTree;
 THREE.BufferGeometry.prototype.disposeBoundsTree = disposeBoundsTree;
@@ -78,7 +78,7 @@ export function createBuildings({ scene, settings, base: BASE }, model, customMo
       if (b.h >= settings.cutoff || customModels.has(b.id)) {
         const custom = customModels.get(b.id);
         const out = custom ? placeModel(custom, b.c[0], b.c[1], b.ground - BASE) : fresh();
-        if (!custom) for (const v of b.v) extrude(v, out, [1, 1, 1], BASE);
+        if (!custom) for (const v of b.v) extrude(v, out, [1, 1, 1], BASE, INSET.tall);
         const geo = toGeometry(out);
         geo.computeBoundsTree();
         // a little self-light keeps the shaded faces blue instead of near-black
@@ -96,7 +96,7 @@ export function createBuildings({ scene, settings, base: BASE }, model, customMo
         // a little per-building variation so blocks of houses read as separate roofs
         const n = Math.sin(b.c[0] * 12.9898 + b.c[1] * 78.233) * 43758.5453;
         const k = 0.93 + 0.07 * (n - Math.floor(n));
-        for (const v of b.v) extrude(v, lowOut, [GRAY.r * k, GRAY.g * k, GRAY.b * k], BASE);
+        for (const v of b.v) extrude(v, lowOut, [GRAY.r * k, GRAY.g * k, GRAY.b * k], BASE, INSET.low);
       }
     }
     const lowGeo = toGeometry(lowOut);
