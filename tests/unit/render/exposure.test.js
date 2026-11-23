@@ -38,13 +38,15 @@ describe('exposure', () => {
     expect(targetEv(null, 10)).toBe(10);
     expect(targetEv(NaN, 10)).toBe(10);
   });
-  it('Eye mode lowers the key from 0.18 at EV 9 to 0.03 at EV 0; Camera keeps middle grey', () => {
+  it('Eye mode lowers the key from 0.18 at EV 9 to 0.005 at EV 1, evenly in stops; Camera keeps middle grey', () => {
     expect(eyeKey(9)).toBeCloseTo(0.18, 9);
     expect(eyeKey(15)).toBeCloseTo(0.18, 9);
-    expect(eyeKey(0)).toBeCloseTo(0.03, 9);
-    expect(eyeKey(-10)).toBeCloseTo(0.03, 9);
-    expect(eyeKey(4.5)).toBeCloseTo(0.105, 9);
-    expect(exposureFor(-4, 'eye') / exposureFor(-4, 'camera')).toBeCloseTo(0.03 / 0.18, 9);
+    expect(eyeKey(1)).toBeCloseTo(0.005, 9);
+    expect(eyeKey(-10)).toBeCloseTo(0.005, 9);
+    expect(eyeKey(5)).toBeCloseTo(Math.sqrt(0.18 * 0.005), 9); // half way in stops
+    // monotonic, so a dusk scrub never brightens as the light falls
+    for (let ev = -2; ev < 12; ev += 0.25) expect(eyeKey(ev + 0.25)).toBeGreaterThanOrEqual(eyeKey(ev));
+    expect(exposureFor(-4, 'eye') / exposureFor(-4, 'camera')).toBeCloseTo(0.005 / 0.18, 9);
     expect(exposureFor(12, 'eye')).toBeCloseTo(exposureFor(12, 'camera'), 12);
     expect(exposureFor(12, 'camera', 1)).toBeCloseTo(2 * exposureFor(12, 'camera'), 12);
   });

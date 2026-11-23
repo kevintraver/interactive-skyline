@@ -39,16 +39,18 @@ export const SETTLED_EV = 0.03;
 export const REOPEN_EV = 0.15;
 
 /**
- * Eye mode's key: 0.18 at EV100 9 and above, falling to EYE_NIGHT_KEY at EYE_NIGHT_EV and below, linear in EV
- * between. Section 7.2 proposed 0.05 at EV -4; on the city at night (EV 0 to 2 here) that kept the key near 0.1 and
- * drew the night city three times brighter than the classic look, so phase 2 lowered the dark end (a tunable
- * perceptual model, checked against the photo boards in phase 4).
+ * Eye mode's key: 0.18 at EV100 9 and above, falling to EYE_NIGHT_KEY at EYE_NIGHT_EV and below, linear in log2 of
+ * the key (in stops) between. Section 7.2 proposed 0.05 at EV -4; phase 2 used 0.03 at EV 0, linear in the key,
+ * which with the meter gone (decision 14) drew the city at night (EV about 1) at three times the classic look's
+ * brightness, walls beige under the interim city light; the stability pass lowered the dark end to match the classic
+ * night's tone (a tunable perceptual model, checked against the photo boards in phase 4).
  */
-export const EYE_NIGHT_KEY = 0.03;
-export const EYE_NIGHT_EV = 0;
+export const EYE_NIGHT_KEY = 0.005;
+export const EYE_NIGHT_EV = 1;
+export const EYE_DAY_EV = 9;
 export function eyeKey(ev100) {
-  const t = Math.min(1, Math.max(0, (ev100 - EYE_NIGHT_EV) / (9 - EYE_NIGHT_EV)));
-  return EYE_NIGHT_KEY + (0.18 - EYE_NIGHT_KEY) * t;
+  const t = Math.min(1, Math.max(0, (ev100 - EYE_NIGHT_EV) / (EYE_DAY_EV - EYE_NIGHT_EV)));
+  return EYE_NIGHT_KEY * (0.18 / EYE_NIGHT_KEY) ** t;
 }
 
 /** The EV to expose at, from a metered EV (or null) and the prior's: the meter clamped to [prior - 3, prior + 2]. */
