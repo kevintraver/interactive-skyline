@@ -4,11 +4,13 @@
 |---|---|---|
 | `pnpm test:unit` | Vitest: `src/core`, extrusion, cities.json shape, source hygiene, the landmark tool, upper bounds on hot code; the drive's frame, terrain and patches, road net, routes, journey, rig and cabin, signs, corridor, traffic, lights (beam, retroreflection, lamps, pools), screens, weather and UI formatting; the data credits (`credits.test.js`) | CI and locally |
 | `pnpm test:data` | pytest (through `uv`): the data pipeline's Python twins (frame, heights, roads, interchanges, roadside, barriers, routes, terrain patch, traffic, valley traffic, corridor and its overrides, billboards, lamp packing, beam maps) | CI and locally |
-| `pnpm test:e2e` | Playwright, three projects in turn (below) | CI and locally |
+| `pnpm test:e2e` | Playwright, the map's project (`webgl2-software`, below) | CI and locally |
+| `pnpm test:e2e:drive` | Playwright, Drive mode on SwiftShader (`drive-software`): about 40 minutes on a quiet machine | locally only |
 | `pnpm test` | `test:unit`, then `test:e2e` | |
 | `pnpm test:goldens:update` | rewrites the map goldens of this platform (`baseline.spec.js`) | locally |
 | `pnpm test:goldens:drive:update` | writes the drive goldens (`drive-*.png`) that differ or are missing, for this platform; never the map's | locally |
 | `pnpm test:perf` | timing on this machine's GPU (`gpu` project, one worker) against `tests/reference/perf/timing/<machine id>.json` | locally only |
+| `pnpm test:perf:drive` | the drive's own per-frame JavaScript on this machine's GPU (`drive-timing`, one worker): under 4 ms at the 95th percentile, cabin included | locally only |
 | `pnpm test:perf:software` | the same timing suite on SwiftShader, gated at 2x | locally |
 | `pnpm test:perf:update` | rewrites this machine's timing baseline | locally |
 | `pnpm test:perf:budgets:update` | rewrites `tests/reference/perf/budgets.json` | locally |
@@ -20,7 +22,7 @@ The Playwright projects (`playwright.config.js`; every one serves the production
 |---|---|---|
 | `webgl2-software` | `baseline`, `hooks`, `interactions`, `buildless`, `perf.budgets` | the map on SwiftShader, 1280 x 800 |
 | `drive-software` | `drive.spec.js` (goldens), `drive-ui.spec.js` (route bar, picker, popovers, links), `drive-cabin.spec.js` (the cabin view, its instruments and inputs), `routes.spec.js` (each route and route switching) | after `webgl2-software` |
-| `drive-timing` | `drive.perf.spec.js` (the drive's own per-frame JavaScript) | last and alone |
+| `drive-timing` | `drive.perf.spec.js` (the drive's own per-frame JavaScript) | on the GPU, through `pnpm test:perf:drive` |
 | `gpu`, `software-timing` | `perf.timing.spec.js` | only through `pnpm test:perf` and `test:perf:software` |
 
 ## Golden images
@@ -50,12 +52,12 @@ change the picture, and say so in the commit.
 
 `tests/e2e/drive.spec.js` compares the WebGL canvas only (no DOM) at five places on route `i15n` (`drive-km5`,
 `drive-km33`, `drive-reveal`, `drive-km62`, `drive-km62-day`) within 0.2 % of pixels, in the same folder and under the
-same per-platform rule as the map's. They are provisional: the drive's picture changes as its later phases land.
-`pnpm test:goldens:drive:update` writes them; it never touches the map's. A SwiftShader frame of the drive takes
-seconds, so the drive specs have a 15-minute timeout, share one page per test, and run in a project of their own,
-`drive-software`, after the map suite (beside it they starve the render-on-demand budgets). The drive's per-frame
-JavaScript is timed in `drive-timing`, last and alone: with other software renderers busy on every core the page
-being timed is starved.
+same per-platform rule as the map's. `pnpm test:goldens:drive:update` writes them; it never touches the map's. A
+SwiftShader frame of the drive takes seconds (a settled cabin frame draws the world four times, once for each mirror),
+so the drive specs have 15- and 30-minute timeouts, share one page per test, and run in a project of their own,
+`drive-software`, apart from the map suite (beside it they starve the render-on-demand budgets) and not in CI, whose
+job is 45 minutes. Run them on a quiet machine: with other software renderers busy on every core they time out. The
+drive's per-frame JavaScript is timed on the GPU in `drive-timing`, where a frame takes milliseconds.
 
 ## Performance (plan 01, section 8.7)
 

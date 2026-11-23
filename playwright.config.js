@@ -4,10 +4,10 @@
 //   webgl2-software  Chromium on SwiftShader (software WebGL2). Deterministic enough for goldens; the one CI runs.
 //   gpu              Chromium on this machine's GPU. Local only: timing budgets (pnpm test:perf).
 //   software-timing  The timing suite on SwiftShader, gated at 2x (pnpm test:perf:software).
-//   drive-software   Drive mode (drive*.spec.js, routes.spec.js) on SwiftShader, after webgl2-software: a drive frame takes seconds
-//                    there, and beside the map suite it starves the render-on-demand budgets' timing.
-//   drive-timing     The drive's own per-frame JavaScript (*.perf.spec.js) on SwiftShader, last and alone: with
-//                    other software renderers busy on every core the page timed is starved.
+//   drive-software   Drive mode (drive*.spec.js, routes.spec.js) on SwiftShader, on its own (pnpm test:e2e:drive): a
+//                    drive frame takes seconds there, and beside the map suite it starves the render-on-demand
+//                    budgets' timing. About 40 minutes; local only.
+//   drive-timing     The drive's own per-frame JavaScript (*.perf.spec.js) on this machine's GPU (pnpm test:perf:drive).
 //
 // Golden images are per platform (Chromium's text and SwiftShader output differ between macOS and Linux), so
 // the snapshot path carries {platform}. A spec compares only when a snapshot for the running platform exists;
@@ -66,19 +66,20 @@ export default defineConfig({
         launchOptions: { args: SOFTWARE } },
     },
     {
+      // Drive mode on SwiftShader, run on its own (pnpm test:e2e:drive): about 40 minutes, too long for CI's job
       name: 'drive-software',
       testMatch: /(drive[\w.-]*|routes)\.spec\.js$/,
       testIgnore: /\.perf\.spec\.js$/,
-      dependencies: ['webgl2-software'],
       use: { ...devices['Desktop Chrome'], viewport: { width: 1280, height: 800 }, deviceScaleFactor: 1,
         launchOptions: { args: SOFTWARE } },
     },
     {
+      // the drive's own per-frame JavaScript, on this machine's GPU like the other timing (pnpm test:perf:drive):
+      // on SwiftShader a settled cabin frame draws the world four times and the test does not finish
       name: 'drive-timing',
       testMatch: /\.perf\.spec\.js$/,
-      dependencies: ['drive-software'],
       use: { ...devices['Desktop Chrome'], viewport: { width: 1280, height: 800 }, deviceScaleFactor: 1,
-        launchOptions: { args: SOFTWARE } },
+        launchOptions: { args: GPU } },
     },
   ],
 });

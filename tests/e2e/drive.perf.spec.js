@@ -27,14 +27,27 @@ test('lv drive: its own JavaScript stays within the per-frame budget', async ({ 
       await d.whenSettled();
     }
     const st = d.stats();
-    return { ...st.js, frames: st.js.total.count - before, view: d.pose().view, cabin: st.cabin?.js ?? null };
+    const seeks = { ...st.js, frames: st.js.total.count - before, view: d.pose().view, cabin: st.cabin?.js ?? null };
+    // Playing: the steady state the budget is for. The timings keep their last 240 samples, so 300 frames of play
+    // leave only playing frames in them. In the city, where traffic, lamps and signs are densest.
+    d.seek({ s: 60000 });
+    await d.whenSettled();
+    d.play();
+    await new Promise((resolve) => { let n = 0; const step = () => (++n >= 300 ? resolve() : requestAnimationFrame(step)); requestAnimationFrame(step); });
+    d.pause();
+    const pl = d.stats();
+    return { seeks, playing: { total: pl.js.total, cabin: pl.cabin?.js ?? null } };
   }, ROUTE);
   console.log('drive per-frame JS (ms):', JSON.stringify(js));
-  expect(js.view).toBe('cabin');
-  expect(js.total.count).toBeGreaterThanOrEqual(60);
-  expect(js.total.p95).toBeLessThan(4);
-  expect(js.total.max).toBeLessThan(16);
-  // the cabin pass, drawn after the world, counts against the same budget
-  expect(js.cabin?.count).toBeGreaterThan(0);
-  expect(js.total.p95 + js.cabin.p95).toBeLessThan(4);
+  const { seeks, playing } = js;
+  expect(seeks.view).toBe('cabin');
+  expect(seeks.total.count).toBeGreaterThanOrEqual(60);
+  // a seek's frame: the pose jumps a kilometre and everything is placed afresh
+  expect(seeks.total.p95).toBeLessThan(4);
+  expect(seeks.total.max).toBeLessThan(16);
+  // While playing, the drive's own work and the cabin's (drawn after the world: its displays, one mirror's set-up,
+  // the glass) share the main thread's 4 ms (plan 02, section 9.1). A paused frame is not held to it: it redraws
+  // all three mirrors so that what is settled is current, three times the cabin's playing cost.
+  expect(playing.cabin?.count).toBeGreaterThan(0);
+  expect(playing.total.p95 + playing.cabin.p95).toBeLessThan(4);
 });
