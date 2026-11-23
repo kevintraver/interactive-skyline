@@ -49,12 +49,16 @@ export function createPerf({ renderer, scene, camera, loop, pipeline: pipe }) {
   // count shadow-map redraws (T1.3: at most one per 0.1 degree of solar motion)
   let shadowRenders = 0;
   if (renderer.isWebGPURenderer) {
-    // WebGPURenderer draws a light's shadow map inside render() when its shadow.needsUpdate (or autoUpdate) is set
-    const draw0 = renderer.render.bind(renderer);
-    renderer.render = (s, c) => {
-      if (s === scene && shadowCasters(scene).some((l) => l.shadow.needsUpdate || l.shadow.autoUpdate)) shadowRenders++;
-      return draw0(s, c);
-    };
+    // WebGPURenderer redraws a light's shadow map at most once per node frame and then clears shadow.needsUpdate:
+    // count the clearing (a render made while the flag is pending does not always redraw)
+    for (const light of shadowCasters(scene)) {
+      let flag = light.shadow.needsUpdate;
+      Object.defineProperty(light.shadow, 'needsUpdate', {
+        configurable: true,
+        get: () => flag,
+        set(v) { if (flag && !v) shadowRenders++; flag = v; },
+      });
+    }
   } else {
     const shadowMap = renderer.shadowMap, drawShadows = shadowMap.render;
     shadowMap.render = function render(...args) {

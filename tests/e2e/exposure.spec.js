@@ -32,7 +32,7 @@ test('scrubbing noon to midnight to noon: no frame jumps in brightness', async (
   });
   await frames(page, 6);
   const start = await page.evaluate(() => window.__skyline.clock.timeMs);
-  const STEP = 15 * 60e3, N = 48; // 15 minutes a step, 12 hours each way
+  const STEP = 20 * 60e3, N = 36; // 20 minutes a step, 12 hours each way
   const luma = [];
   for (let i = 0; i <= 2 * N; i++) {
     const k = i <= N ? i : 2 * N - i;

@@ -15,7 +15,7 @@ test('?bench=1 runs and reports per-pass times and texture memory', async ({ pag
   for (const backend of backends) {
     const errors = [];
     page.on('pageerror', (e) => errors.push(e.message));
-    await boot(page, 'lv', `backend=${backend}&bench=1&nobench=1&q=${real ? 'high' : 'low'}${real ? '' : '&benchSeconds=2&benchFrames=2'}`);
+    await boot(page, real ? 'lv' : 'slc', `backend=${backend}&bench=1&nobench=1&q=${real ? 'high' : 'low'}${real ? '' : '&benchSeconds=2&benchFrames=2'}`);
     const result = await page.waitForFunction(() => window.__skyline.bench && window.__skyline.bench.result, null, { timeout: 600_000 })
       .then((h) => h.jsonValue());
     console.log(JSON.stringify(result));

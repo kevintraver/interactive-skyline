@@ -118,10 +118,14 @@ export function createPipeline({ renderer, scene, camera, legacy = false, exposu
     /** Draw one frame of the current view. */
     render() {
       token.value++;
+      for (const fn of pipeline.around) fn(true);
       renderer.toneMapping = NoToneMapping; // the graph tone-maps; the renderer must not do it again
       output.render();
       renderer.toneMapping = TONE_MAPPINGS[settings.toneMapping];
+      for (const fn of pipeline.around) fn(false);
     },
+    /** fn(true) before and fn(false) after every render (the look puts its light on the scene only while drawing). */
+    around: [],
     /** The active view: shadows, atmosphere and exposure follow it. */
     setCamera(c) { scenePass.camera = c; output.needsUpdate = true; },
     /**

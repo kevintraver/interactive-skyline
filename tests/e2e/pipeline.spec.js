@@ -108,24 +108,25 @@ test('T2.5: a sunlit white roof at noon and a lit window at night', async ({ pag
     v.sort((a, b) => a - b);
     return v[v.length - 3]; // the third brightest, so one edge pixel cannot decide it
   });
-  // a tall extruded wall, face on, 70 m away, at the reference night: the brightest samples are lit panes
-  await page.evaluate(() => {
-    const s = window.__skyline;
+  // a tall extruded tower at the reference night, framed from 250 m: probe a grid on its facade (where screen()
+  // puts it); the brightest samples are lit panes
+  const night = await page.evaluate(async () => {
+    const s = window.__skyline, raf = () => new Promise((d) => requestAnimationFrame(d));
     s.clock.set(Date.UTC(2026, 2, 19, 5, 0));
     const t = s.tall.filter((e) => e.mesh.material.userData.buildingVariant === 'extruded').sort((x, y) => y.data.h - x.data.h)[0];
     t.mesh.geometry.computeBoundingBox();
     const b = t.mesh.geometry.boundingBox, c = b.getCenter(new s.camera.position.constructor());
-    // looking at the tower's middle from 70 m beyond its east edge: the ray from the eye hits the east facade
-    s.camera.position.set(b.max.x + 70, c.y, c.z);
+    s.camera.position.set(c.x + 250, c.y, c.z + 60);
     s.controls.target.set(c.x, c.y, c.z);
     s.controls.update();
     s.invalidate();
-  });
-  await frames(page, 6);
-  const night = await page.evaluate(async () => {
-    const s = window.__skyline, v = [];
-    for (let i = -3; i <= 3; i++) for (let j = -3; j <= 3; j++) v.push((await s.probe(i * 0.02, j * 0.02)).luminanceCdM2);
-    return v.sort((a, b) => a - b);
+    for (let i = 0; i < 6; i++) await raf();
+    const p = s.screen(t.data.id);
+    // screen() aims near the top; come down to the middle of the facade
+    const cx = (p.x / innerWidth) * 2 - 1, cy = 0;
+    const v = [];
+    for (let i = -3; i <= 3; i++) for (let j = -3; j <= 3; j++) v.push((await s.probe(cx + i * 0.01, cy + j * 0.02)).luminanceCdM2);
+    return v.sort((x, y) => x - y);
   });
   const lit = night.filter((v) => v > 20);
   const litMedian = lit.length ? lit[lit.length >> 1] : null;

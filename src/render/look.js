@@ -55,6 +55,32 @@ export function createLook(app, { display = displayFromSearch(globalThis.locatio
     current.priorEv = priorEv100(current);
   }
 
+  // The physical, pre-exposed intensities are put on the lights only while the pipeline draws, and the classic
+  // values the legacy sky set are put back after: window.__skyline.sun and the landmark checker read them, and
+  // they keep their meaning between frames (the hooks contract).
+  const saved = { sun: 0, hemi: 0, terrain: [] };
+  function applyLight(on) {
+    if (classicDisplay) return;
+    const terrain = sky.terrain || [];
+    if (!on) {
+      sky.sun.intensity = saved.sun; sky.hemi.intensity = saved.hemi; cityLight.intensity = 0;
+      terrain.forEach((t, i) => { t.mesh.material.emissiveIntensity = saved.terrain[i]; });
+      return;
+    }
+    saved.sun = sky.sun.intensity; saved.hemi = sky.hemi.intensity;
+    saved.terrain = terrain.map((t) => t.mesh.material.emissiveIntensity);
+    const k = exposureUniform.value, c = sky.classic;
+    sky.sun.intensity = (current.keyLux * k) / lumOf(sky.sun.color);
+    sky.hemi.intensity = (current.ambientLux * k) / lumOf(sky.hemi.color);
+    cityLight.intensity = (current.cityLux * k * env.nodes.cityFactor.value) / lumOf(cityLight.color);
+    terrain.forEach((t, i) => {
+      const m = t.mesh.material;
+      m.emissiveIntensity = (streetCdM2(c.street[i] || 0) * (c.imagery ? 1 : 0.3) * k * env.nodes.cityFactor.value) / lumOf(m.emissive);
+    });
+  }
+  pipeline.around.push(applyLight);
+  if (!classicDisplay) lights();
+
   const look = {
     display, exposure, current, cityLight,
     update(frame) {
@@ -63,17 +89,8 @@ export function createLook(app, { display = displayFromSearch(globalThis.locatio
       if (classicDisplay) return;
       lights();
       exposure.update(frame);
-      const k = exposureUniform.value;
-      sky.sun.intensity = (current.keyLux * k) / lumOf(sky.sun.color);
-      sky.hemi.intensity = (current.ambientLux * k) / lumOf(sky.hemi.color);
-      cityLight.intensity = current.cityLux * k * env.nodes.cityFactor.value / lumOf(cityLight.color);
       // the interim legacy surfaces follow the exposure's departure from what the prior alone would give
-      legacyScale.value = k / exposure.expectedFor(current.priorEv);
-      const c = sky.classic;
-      (sky.terrain || []).forEach((t, i) => {
-        const m = t.mesh.material;
-        m.emissiveIntensity = (streetCdM2(c.street[i] || 0) * (c.imagery ? 1 : 0.3) * k * env.nodes.cityFactor.value) / lumOf(m.emissive);
-      });
+      legacyScale.value = exposureUniform.value / exposure.expectedFor(current.priorEv);
     },
     /** After the frame is drawn: meter it for the next. */
     afterRender() { if (!classicDisplay) exposure.afterRender(); },

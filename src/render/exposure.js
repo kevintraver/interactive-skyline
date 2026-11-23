@@ -135,7 +135,7 @@ function createMeter(renderer, colorTexture) {
 export function createExposure({ renderer, pipeline, prior, uniform: exposureUniform, settings = {}, clock = null, offsetEv = 0, invalidate = () => {} }) {
   const meter = pipeline && pipeline.scenePass ? createMeter(renderer, pipeline.scenePass.getTexture('output')) : null;
   const state = { mode: settings.exposureMode || 'eye', compensation: settings.exposureComp || 0, enabled: true,
-    ev: NaN, target: NaN, prior: NaN, bias: 0, biases: [], metered: null, meteredAt: -Infinity, settled: false, snapRequested: true, awaiting: !!meter, lastMs: null, gen: 0 };
+    ev: NaN, target: NaN, prior: NaN, bias: 0, biases: [], metered: null, meteredAt: -Infinity, lastSnapMs: -Infinity, lastPrior: NaN, settled: false, snapRequested: true, awaiting: !!meter, lastMs: null, gen: 0 };
   if (clock) {
     clock.on('seek', () => { state.snapRequested = true; });
     clock.on('rate', () => { if (Math.abs(clock.rate) > 60) state.snapRequested = true; });
@@ -164,14 +164,19 @@ export function createExposure({ renderer, pipeline, prior, uniform: exposureUni
       state.prior = prior();
       if (state.snapRequested) {
         state.snapRequested = false;
+        // a seek within half a second of the last is a scrub: keep adapting smoothly instead of jumping to each
+        // fresh reading (a dusk scrub would otherwise step at every reading)
+        const scrubbing = nowMs - state.lastSnapMs < 500;
+        state.lastSnapMs = nowMs;
         state.gen++;
         // the offset remembered nearest this light level (within 1.5 EV), else the last one
         let best = null;
         for (const [p, b] of state.biases) if (Math.abs(p - state.prior) < 1.5 && (!best || Math.abs(p - state.prior) < Math.abs(best[0] - state.prior))) best = [p, b];
         if (best) state.bias = best[1];
-        state.ev = state.prior + state.bias;
-        state.awaiting = !!meter;
+        if (!scrubbing) { state.ev = state.prior + state.bias; state.awaiting = !!meter; }
+        else { state.ev += state.prior - state.lastPrior; state.awaiting = false; } // follow the light, keep the offset
       }
+      state.lastPrior = state.prior;
       const reading = meter && meter.latest && meter.latest.gen === state.gen ? meter.latest : null;
       const metered = reading ? ev100FromLuminance(reading.luminanceCdM2) : null;
       state.metered = metered;
@@ -201,7 +206,7 @@ export function createExposure({ renderer, pipeline, prior, uniform: exposureUni
       if (p) p.then((r) => {
         if (!r || r.gen !== state.gen || !state.enabled) return;
         const t = targetEv(ev100FromLuminance(r.luminanceCdM2), state.prior);
-        if (state.awaiting || Math.abs(t - state.ev) >= SETTLED_EV) { state.settled = false; invalidate(); }
+        if (state.awaiting || Math.abs(t - state.target) > 0.05) { state.settled = false; invalidate(); }
       });
     },
     /** Continuous until the eye has adapted (section 5.5); idle once settled. */

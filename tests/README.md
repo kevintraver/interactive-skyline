@@ -93,7 +93,10 @@ real Las Vegas grid against its landmarks once `public/data/lv/nightlights.json`
 | `webgpu.spec.js` | the WebGPU and WebGL2 backends agree within 4 % on two scenes |
 
 The timing tier (`pnpm test:perf`) runs the new renderer on its WebGL2 backend (`?backend=webgl`), the backend the
-ship gate is defined on, so its machine id stays the one recorded in phase 0.
+ship gate is defined on, so its machine id stays the one recorded in phase 0. Since phase 2 its frame time is
+throughput (20 batches of 12 frames submitted back to back; median and 95th percentile over the batches), not
+per-frame timer queries: on ANGLE Metal those follow the GPU's clock, and on the new renderer they read about four
+times its throughput. The baseline was re-recorded for the new renderer on 22 November 2026.
 
 Changes under `src/render`, `src/sky`, `src/weather` or the materials need a local report from a real GPU in
 `tests/reference/reports/` until the `webgpu-software` job is required (decision 6).
