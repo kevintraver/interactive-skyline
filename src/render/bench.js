@@ -9,11 +9,13 @@
 // Measured at five points of the script, after it has played.
 export function createBench(app) {
   const { renderer, scene, camera, controls, pipeline, clock, env, views, city } = app;
-  const seconds = Number(new URLSearchParams(location.search).get('benchSeconds')) || 20;
+  const q = new URLSearchParams(location.search);
+  const seconds = Number(q.get('benchSeconds')) || 20;
+  const passFrames = Number(q.get('benchFrames')) || 20; // frames per pass measurement (2 for a software check)
   const bench = { running: false, result: null };
 
   async function measurePasses(perf) {
-    const n = 20, out = {};
+    const n = passFrames, out = {};
     const time = async (fn) => {
       for (let i = 0; i < 3; i++) fn();
       await perf.sync();

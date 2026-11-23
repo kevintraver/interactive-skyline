@@ -143,7 +143,11 @@ export function createExposure({ renderer, pipeline, prior, uniform: exposureUni
   const sub = {
     state,
     /** Turn adaptation off (the classic display): exposure is then held at `value`; hold() turns it back on. */
-    hold(value) { state.enabled = value === undefined; if (!state.enabled) exposureUniform.value = value; else state.snapRequested = true; },
+    hold(value) {
+      state.enabled = value === undefined;
+      if (!state.enabled) { exposureUniform.value = value; state.settled = true; } // held: nothing left to adapt
+      else { state.snapRequested = true; state.settled = false; }
+    },
     setMode(mode) { state.mode = mode; },
     setCompensation(ev) { state.compensation = ev; },
     /**
@@ -154,7 +158,8 @@ export function createExposure({ renderer, pipeline, prior, uniform: exposureUni
     update(frame) {
       if (!state.enabled) return;
       const nowMs = frame ? frame.nowMs : performance.now();
-      const dtS = state.lastMs === null ? 0 : Math.min((nowMs - state.lastMs) / 1000, 0.25);
+      // up to a second per frame, so a slow (software) renderer still adapts in about the same wall time
+      const dtS = state.lastMs === null ? 0 : Math.min((nowMs - state.lastMs) / 1000, 1);
       state.lastMs = nowMs;
       state.prior = prior();
       if (state.snapRequested) {
