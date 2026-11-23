@@ -77,6 +77,7 @@ app.applySettings();
 applyTimeParams(app);
 document.getElementById('loading').classList.add('done');
 performance.mark('skyline-ready');
+const readyAt = performance.now();
 
 let lastFrame = null;
 loop.start(renderer, {
@@ -90,7 +91,9 @@ loop.start(renderer, {
     pipeline.render();
     if (app.look) app.look.afterRender();
     // the quality governor sees the interval between frames drawn back to back (section 7.14, T2.7)
-    if (loop.tier === 'continuous' && lastFrame !== null && now - lastFrame < 250) app.quality.frame(now, now - lastFrame);
+    // (not in the first five seconds: shader compilation makes the first frames slow, and the governor never raises
+    // a render scale it lowered then until a long continuous stretch)
+    if (loop.tier === 'continuous' && lastFrame !== null && now - lastFrame < 250 && now - readyAt > 5000) app.quality.frame(now, now - lastFrame);
     lastFrame = now;
     if (!performance.getEntriesByName('skyline-frame').length) performance.mark('skyline-frame');
   },

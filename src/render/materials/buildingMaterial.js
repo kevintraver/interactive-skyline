@@ -137,7 +137,11 @@ export function createBuildingMaterial({ variant = 'extruded', from = null, nigh
   }
   const nodes = buildingNodes({ variant, night, clock, haze });
   material.colorNode = materialColor.mul(nodes.color);
-  material.emissiveNode = materialEmissive.add(nodes.emissive);
+  // the material's own emissive is the blue highlight of the removable towers and the selection tint: display-
+  // referred (it reads the same at noon and midnight), but in the physical look scaled by legacyScale, which is 1
+  // when the exposure sits where the prior puts it. Left unscaled, its share of the metered light moved against
+  // the exposure and the automatic exposure chased itself (measured: 15.5 down past 14.2 EV, still sliding)
+  material.emissiveNode = materialEmissive.mul(mix(float(1), sharedLegacyScale, sharedPhysical)).add(nodes.emissive);
   material.userData.buildingVariant = variant;
   return material;
 }

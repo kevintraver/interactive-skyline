@@ -27,6 +27,12 @@ export const CLAMP_ABOVE_EV = 2;
 export const METER_CLAMP_STOPS = 8;
 /** Settled once the adapted exposure is this close to its target. */
 export const SETTLED_EV = 0.03;
+/**
+ * Once settled, a reading reopens adaptation only beyond this. Display-referred emission (the blue highlight of the
+ * removable towers is not multiplied by the exposure, on purpose) makes the metered scene luminance depend a
+ * little on the exposure itself; without hysteresis that feedback kept a settled view drawing every frame.
+ */
+export const REOPEN_EV = 0.15;
 
 /**
  * Eye mode's key: 0.18 at EV100 9 and above, falling to EYE_NIGHT_KEY at EYE_NIGHT_EV and below, linear in EV
@@ -162,6 +168,8 @@ export function createExposure({ renderer, pipeline, prior, uniform: exposureUni
       const dtS = state.lastMs === null ? 0 : Math.min((nowMs - state.lastMs) / 1000, 1);
       state.lastMs = nowMs;
       state.prior = prior();
+      // the light itself moved since the last frame (a scrub, the clock playing): the exposure then always follows
+      const priorMoved = Number.isFinite(state.lastPrior) && Math.abs(state.prior - state.lastPrior) > 1e-6;
       if (state.snapRequested) {
         state.snapRequested = false;
         // a seek within half a second of the last is a scrub: keep adapting smoothly instead of jumping to each
@@ -190,10 +198,12 @@ export function createExposure({ renderer, pipeline, prior, uniform: exposureUni
       }
       state.target = metered !== null ? targetEv(metered, state.prior) : state.prior + state.bias;
       const fast = clock && (clock.playing || clock.live) && Math.abs(clock.rate) > 60;
-      if (state.awaiting && metered !== null) { state.ev = state.target; state.awaiting = false; }
+      const holding = state.settled && !state.awaiting && Math.abs(state.target - state.ev) <= REOPEN_EV && !priorMoved;
+      if (holding) { /* settled: small moves of the reading do not reopen adaptation */ }
+      else if (state.awaiting && metered !== null) { state.ev = state.target; state.awaiting = false; }
       else if (fast || !Number.isFinite(state.ev)) state.ev = state.target;
       else state.ev = adaptEv(state.ev, state.target, dtS);
-      state.settled = !state.awaiting && Math.abs(state.ev - state.target) < SETTLED_EV;
+      state.settled = !state.awaiting && (holding || Math.abs(state.ev - state.target) < SETTLED_EV);
       exposureUniform.value = exposureFor(state.ev, state.mode, state.compensation + offsetEv);
       // the meter ignores light more than 8 stops above the prior's average (in buffer units)
       if (meter) meter.clampLog.value = Math.log2(Math.max(2 ** state.prior * 12.5 / 100, 1e-9) * exposureUniform.value) + METER_CLAMP_STOPS;
@@ -206,7 +216,7 @@ export function createExposure({ renderer, pipeline, prior, uniform: exposureUni
       if (p) p.then((r) => {
         if (!r || r.gen !== state.gen || !state.enabled) return;
         const t = targetEv(ev100FromLuminance(r.luminanceCdM2), state.prior);
-        if (state.awaiting || Math.abs(t - state.target) > 0.05) { state.settled = false; invalidate(); }
+        if (state.awaiting || Math.abs(t - state.target) > (state.settled ? REOPEN_EV : SETTLED_EV)) { state.settled = false; invalidate(); }
       });
     },
     /** Continuous until the eye has adapted (section 5.5); idle once settled. */

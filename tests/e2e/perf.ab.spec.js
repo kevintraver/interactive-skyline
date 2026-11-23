@@ -20,7 +20,8 @@ import { SCENES, CITIES, sceneName, stage } from '../helpers/app.js';
 import { median, round } from '../helpers/perf.js';
 
 const A = process.env.SKYLINE_AB_A ?? 'renderer=legacy&nobench=1';
-const B = process.env.SKYLINE_AB_B ?? 'backend=webgl&nobench=1';
+// q=high: the quality held (the governor would change the render scale during a measurement)
+const B = process.env.SKYLINE_AB_B ?? 'backend=webgl&nobench=1&q=high';
 const ROUNDS = Number(process.env.SKYLINE_AB_ROUNDS || 6);
 const GATE = Number(process.env.SKYLINE_AB_GATE || 1.15);
 const ONLY = process.env.SKYLINE_AB_SCENES ? new Set(process.env.SKYLINE_AB_SCENES.split(',')) : null;
