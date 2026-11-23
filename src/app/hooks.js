@@ -3,6 +3,10 @@
 import * as THREE from 'three';
 import { isHidden, isMoved } from '../interaction/edits.js';
 import { createPerf } from '../render/perf.js';
+import { createCapture } from '../render/capture.js';
+import * as uniforms from '../render/materials/shared.js';
+import { MeshBasicNodeMaterial, Mesh, PlaneGeometry, MeshBasicMaterial } from 'three/webgpu';
+import { vec3, vec4 } from 'three/tsl';
 
 const lerp = THREE.MathUtils.lerp;
 
@@ -30,6 +34,17 @@ export function installHooks(app) {
     clock: app.clock, env: app.env, loop: app.loop, timeline: app.timeline, transport: app.transport,
     // the explore camera's limits (src/interaction/cameraLimits.js): `enabled` off stands them down for other modes
     cameraLimits: app.cameraLimits,
+    // plan 01, phase 2: which renderer and backend draw ('webgpu' | 'webgl2' on WebGPURenderer, 'webgl' for the
+    // classic renderer behind ?renderer=legacy), why, and one frame as a PNG blob
+    backend: app.backend, rendererInfo: { kind: app.rendererKind, backend: app.backend, reason: app.backendReason },
+    capture: createCapture({ ...app, draw: app.draw }),
+    pipeline: app.pipeline, look: app.look || null, quality: app.quality || null,
+    /** pipeline.probe(): scene-referred light at a point of the screen, before exposure (T2.4) */
+    probe: (x, y) => app.pipeline.probe(x, y),
+    /** the uniforms every material shares (night, clock, haze, exposure, physical, switchOn, legacyScale, ...) */
+    uniforms,
+    /** a few three/webgpu and three/tsl names, for tests that add their own node materials (probe, stages) */
+    webgpu: { MeshBasicNodeMaterial, Mesh, PlaneGeometry, MeshBasicMaterial }, tsl: { vec3, vec4 },
   };
   return window.__skyline;
 }

@@ -44,8 +44,10 @@ the refiner brief, and a reviewer brief for fresh eyes (when the refiner can't s
 reviewer from that brief itself, before reading its own build script). Keep a ledger (model, minutes,
 tokens, gate, check, installed, reverted).
 
-Before the first refine of a repo, make sure it has the current integration (`skyline-integration: v4` at the
-top of `src/night.js`; `skyline_tool.py install` upgrades older versions): v4 is what draws the facade detail.
+Before the first refine of a repo, make sure it has the current integration (`skyline-integration: v4` or later at
+the top of `src/night.js`; `skyline_tool.py install` upgrades older versions): v4 is what draws the facade detail.
+Since v7 (plan 01, phase 2) that detail is a TSL node material on WebGPURenderer, with the same look and the same
+`_GLOW`, `_WINDOWS` and `Led` inputs; night shots are exposed automatically for the lit city.
 
 ## One refine pass (what a refiner does)
 

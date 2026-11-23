@@ -205,7 +205,7 @@ Credit photo sources only if the user plans to publish renders (authors and lice
 | app check: building not among tall ones | it is under the height cutoff and the repo's integration is older than v6: run `skyline_tool.py upgrade` |
 | app check: "did not finish loading" | a script error in the app: the printed console lines name the file and line |
 | app check: model hidden in shots | a neighboring tower is in the way; add `--shot` views from other bearings (0 = north) |
-| app check: "a shader failed to compile" | the printed console error names the GLSL line; a JS backtick inside a GLSL template string is a common cause |
+| app check: "a shader failed to compile" | the printed console error names the shader line (GLSL on the WebGL2 backend; since v7 the app's shaders are TSL in `src/render/materials/`, the v6 GLSL only behind `?renderer=legacy`); a JS backtick inside a GLSL template string is a common cause |
 | a tall face glows as bright as the crown at night | glow is chosen per corner and interpolated: decide it from `center[2]`, or split the face at the crown |
 | renders landed in an odd folder | pass absolute `--out` paths; relative ones resolve against the current directory |
 | Python can't find a path from Git Bash | pass `C:/Users/...` style paths to Python (`cygpath -m`), not `/c/Users/...` |

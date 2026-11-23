@@ -2,75 +2,75 @@
   "city": {
     "lv": {
       "edits": {
-        "hide": 27.95,
-        "move": 18.72,
-        "rebuild": 596.72,
-        "undo": 22.31
+        "hide": 135.31,
+        "move": 33.51,
+        "rebuild": 3371.51,
+        "undo": 91.28
       },
-      "firstFrameMs": 2164,
-      "readyMs": 1457.8
+      "firstFrameMs": 8462.1,
+      "readyMs": 4133.1
     },
     "slc": {
       "edits": {
-        "hide": 25.3,
-        "move": 19.23,
-        "rebuild": 200.72,
-        "undo": 18.86
+        "hide": 124.36,
+        "move": 26.69,
+        "rebuild": 1728.77,
+        "undo": 44.88
       },
-      "firstFrameMs": 1114.8,
-      "readyMs": 669.3
+      "firstFrameMs": 5312.6,
+      "readyMs": 2921.8
     }
   },
   "frame": {
     "lv-aerial-day": {
-      "median": 22.443,
-      "method": "gpu-timer",
-      "p95": 43.224
+      "median": 28.271,
+      "method": "throughput",
+      "p95": 32.651
     },
     "lv-aerial-night": {
-      "median": 22.261,
-      "method": "gpu-timer",
-      "p95": 38.986
+      "median": 27.379,
+      "method": "throughput",
+      "p95": 28.892
     },
     "lv-east-day": {
-      "median": 17.265,
-      "method": "gpu-timer",
-      "p95": 22.245
+      "median": 21.414,
+      "method": "throughput",
+      "p95": 22.35
     },
     "lv-east-night": {
-      "median": 15.014,
-      "method": "gpu-timer",
-      "p95": 18.42
+      "median": 21.788,
+      "method": "throughput",
+      "p95": 23.559
     },
     "lv-strat-day": {
-      "median": 17.377,
-      "method": "gpu-timer",
-      "p95": 21.887
+      "median": 22.264,
+      "method": "throughput",
+      "p95": 24.026
     },
     "lv-strat-night": {
-      "median": 17.497,
-      "method": "gpu-timer",
-      "p95": 22.149
+      "median": 22.116,
+      "method": "throughput",
+      "p95": 24.707
     },
     "slc-aerial-day": {
-      "median": 13.751,
-      "method": "gpu-timer",
-      "p95": 26.853
+      "median": 18.247,
+      "method": "throughput",
+      "p95": 21.432
     },
     "slc-aerial-night": {
-      "median": 15.324,
-      "method": "gpu-timer",
-      "p95": 21.95
+      "median": 18.339,
+      "method": "throughput",
+      "p95": 20.745
     },
     "slc-ensign-day": {
-      "median": 19.389,
-      "method": "gpu-timer",
-      "p95": 27.472
+      "median": 21.986,
+      "method": "throughput",
+      "p95": 24.255
     },
     "slc-ensign-night": {
-      "median": 19.144,
-      "method": "gpu-timer",
-      "p95": 29.194
+      "median": 21.698,
+      "method": "throughput",
+      "p95": 23.128
     }
   },
   "machine": {
@@ -79,5 +79,5 @@
     "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M4, Unspecified Version)",
     "software": false
   },
-  "recorded": "2026-11-22"
+  "recorded": "2026-11-23"
 }

@@ -2,9 +2,16 @@
 // hand-tuned looks. Behind three functions (init, apply, dispose) so phase 1 can drive it from the clock and
 // phase 3 can delete it in one commit (plan 01, section 5.6).
 import * as THREE from 'three';
+import { uniform } from 'three/tsl';
 import { night } from '../night.js';
 import { createKeyLight } from './lighting.js';
 import { createDiscs } from './discs.js';
+import { haze } from '../render/materials/shared.js';
+import { active } from '../render/active.js';
+import { domeNodeMaterial, legacyFogNode } from '../render/materials/skyMaterials.js';
+import { onDemandShadow } from '../render/shadowCompat.js';
+
+const FOG_DENSITY = 0.000014;
 
 // Sky, haze and light, by day and by night. `street` is how strongly the ground glows from street lighting
 // (near grid, far grid); the moon stands in for the sun so shadows stay where they are.
@@ -44,26 +51,25 @@ export function lookAt(altDeg, out = toColors(DAY)) {
 }
 
 export function createLegacySky() {
-  const HAZE = new THREE.Color(DAY.haze), ZENITH = new THREE.Color(DAY.zenith);
+  // the haze colour is the shared uniform's value: fog, dome horizon and facade reflections read it on both renderers
+  const HAZE = haze.value.set(DAY.haze), ZENITH = new THREE.Color(DAY.zenith);
   const sky = {
     sun: null, hemi: null, dome: null, scene: null, invalidate: null,
     /** 'pinned' (today's two looks) or 'clock' (follows env.state; plan 01, sections 4.2 and 5.6). */
     mode: 'pinned', state: null, imagery: true, terrain: [],
+    /** What the classic look set: key body, weight and sun power, hemisphere, street glow (read by render/look.js). */
+    classic: { sunPower: DAY.sunPower, hemi: DAY.hemi, street: [0, 0], imagery: true, keyBody: 'sun', keyWeight: 1, pinned: true },
     /** Add fog, dome and lights to the scene. */
     init({ scene, city, invalidate, renderer }) {
       sky.scene = scene;
       sky.invalidate = invalidate;
       sky.renderer = renderer;
-      scene.fog = new THREE.FogExp2(HAZE, 0.000014);
+      scene.fog = new THREE.FogExp2(HAZE, FOG_DENSITY);
+      // the new renderer: the same exponential-squared fog as a node, reading the shared haze uniform (T2.3)
+      if (!active.legacy) scene.fogNode = legacyFogNode(haze, uniform(FOG_DENSITY));
       sky.dome = new THREE.Mesh(
         new THREE.SphereGeometry(120000, 32, 16),
-        new THREE.ShaderMaterial({
-          side: THREE.BackSide, depthWrite: false, fog: false,
-          uniforms: { horizon: { value: HAZE }, zenith: { value: ZENITH } },
-          vertexShader: 'varying vec3 d; void main(){ d = normalize(position); gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }',
-          fragmentShader: `uniform vec3 horizon; uniform vec3 zenith; varying vec3 d;
-      void main(){ float t = pow(clamp(d.y, 0.0, 1.0), 0.45); gl_FragColor = vec4(mix(horizon, zenith, t), 1.0); }`,
-        }),
+        active.legacy ? active.legacy.domeMaterial({ value: ZENITH }) : domeNodeMaterial(ZENITH),
       );
       scene.add(sky.dome);
 
@@ -81,6 +87,7 @@ export function createLegacySky() {
       Object.assign(sun.shadow.camera, { left: -shade.half, right: shade.half, top: shade.half, bottom: -shade.half, near: shade.half * 0.5, far: shade.half * 4.5 });
       sun.shadow.bias = -0.0004;
       sun.shadow.normalBias = 1.2;
+      onDemandShadow(renderer, sun);
       scene.add(sun, sun.target);
       sky.key = createKeyLight({ sun, renderer, shade });
       sky.discs = createDiscs(scene);
@@ -101,6 +108,10 @@ export function createLegacySky() {
     look(look, nightValue) {
       const { imagery, terrain } = sky;
       night.value = nightValue;
+      // the classic values, for the physical look to scale (src/render/look.js); in the pinned looks the key is the
+      // afternoon Sun or the stand-in moon at full strength
+      Object.assign(sky.classic, { sunPower: look.sunPower, hemi: look.hemi, street: [...look.street], imagery,
+        keyBody: nightValue > 0.5 ? 'moon' : 'sun', keyWeight: 1, pinned: sky.mode !== 'clock' });
       HAZE.set(look.haze);
       sky.scene.fog.color.copy(HAZE); // the fog keeps its own copy of the haze color
       ZENITH.set(look.zenith);
@@ -134,6 +145,7 @@ export function createLegacySky() {
       if (key.body !== 'none') sky.key.aim(key.dir);
       const sunPower = sky.current ? sky.current.sunPower : DAY.sunPower;
       sky.sun.intensity = key.body === 'sun' ? sunPower * key.weight : key.body === 'moon' ? NIGHT.sunPower * key.weight : 0;
+      Object.assign(sky.classic, { keyBody: key.body, keyWeight: key.weight, sunPower: key.body === 'moon' ? NIGHT.sunPower : sunPower, pinned: false });
     },
     /** Switch between the pinned looks and the clock; back to pinned restores today's fixed light. */
     setMode(mode, state) {

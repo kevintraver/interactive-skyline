@@ -77,6 +77,30 @@ Two tiers.
 tested on small synthetic VNP46A4 tiles written by the test itself; `tests/unit/sky/nightlights.test.js` checks the
 real Las Vegas grid against its landmarks once `public/data/lv/nightlights.json` exists, and skips until then.
 
+## Phase 2 (plan 01): the renderer
+
+| Command / spec | What |
+|---|---|
+| `pnpm test:perf:ab` (`perf.ab.spec.js`, project `gpu-ab`) | The classic renderer (`?renderer=legacy`) and the new one in the same run, interleaved (A B, B A, six pairs of 60 frames per scene), as throughput on this machine's GPU; prints the median per-pair ratio per scene and their geometric mean, and fails above `SKYLINE_AB_GATE` (default 1.15, the ship gate). `SKYLINE_AB_B='backend=webgpu'` times the WebGPU backend. Throughput, not timer queries: on ANGLE Metal a frame timed alone follows the GPU's clock (see `docs/plans/notes/01-phase2-spike.md`) |
+| `pnpm test:webgpu` (project `webgpu-software`) | `renderer`, `hooks` and `webgpu` specs on Chromium's software WebGPU adapter, the app forced to `?backend=webgpu`. In CI as a job that does not block a merge yet (decision 6) |
+| `pnpm test:bench` (`bench.spec.js` on `gpu-ab`) | `?bench=1` on both backends; `SKYLINE_BENCH_UPDATE=1` records `tests/reference/bench/<machine id>.json`. The software suite runs it for two seconds |
+| `renderer.spec.js` | boot, hide, undo and a captured frame on each renderer and backend (T2.1) |
+| `buildingMaterial.spec.js`, `parity.spec.js`, `attractions.spec.js` | the new renderer at the classic display (`?display=classic`: ACES, exposure 1, no bloom) against the classic renderer in the same run: buildings within 3 %, the ten scenes within 2 % (and against the T0.2 goldens), the fountain within 5 %; the show paused renders nothing; an instant shows the same jets after a scrub (T2.2, T2.3, T2.11) |
+| `pipeline.spec.js` | the pipeline at the classic display matches the direct render within 1 %; `probe()` within 2 % of known emission; stages; a sunlit roof at noon 20,000 to 35,000 cd/m², a lit window at night 30 to 90 (T2.4, T2.5) |
+| `exposure.spec.js` | a noon-midnight-noon scrub without jumps, seeks within 0.3 EV, idle once settled (T2.6); the pan-settling time is in `perf.timing.spec.js` |
+| `displaySettings.spec.js` | Quality, Exposure and Reduce flashes in `#settings` by real input (T2.7) |
+| `landmarkChecker.spec.js` | the skill's own `check` (integration v7) for the Strat, the High Roller and the fountain, with Playwright's Chromium (T2.9) |
+| `webgpu.spec.js` | the WebGPU and WebGL2 backends agree within 4 % on two scenes |
+
+The timing tier (`pnpm test:perf`) runs the new renderer on its WebGL2 backend (`?backend=webgl`), the backend the
+ship gate is defined on, so its machine id stays the one recorded in phase 0. Since phase 2 its frame time is
+throughput (20 batches of 12 frames submitted back to back; median and 95th percentile over the batches), not
+per-frame timer queries: on ANGLE Metal those follow the GPU's clock, and on the new renderer they read about four
+times its throughput. The baseline was re-recorded for the new renderer on 22 November 2026.
+
+Changes under `src/render`, `src/sky`, `src/weather` or the materials need a local report from a real GPU in
+`tests/reference/reports/` until the `webgpu-software` job is required (decision 6).
+
 ## Phase 5 (plan 01): weather data
 
 | Spec | What |

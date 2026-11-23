@@ -22,3 +22,4 @@ landmarks/**/refs/*.png
 test-results/
 playwright-report/
 tests/reference/perf/runs/
+dist-dev

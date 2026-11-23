@@ -66,14 +66,16 @@ export function bundleSizes() {
 
 /** In the page: render-loop edits, each timed from the call to the GPU finishing the frame that shows it. */
 export const EDIT_LATENCY = async () => {
-  const s = window.__skyline, gl = s.renderer.getContext();
+  // gl.finish() as in phase 0, so the numbers stay comparable with the baseline (it does not wait on ANGLE Metal);
+  // on the WebGPU backend there is no GL context, and the frame count alone is used
+  const s = window.__skyline, gl = s.renderer.getContext(), finish = gl && gl.finish ? () => gl.finish() : () => {};
   const nextFrames = (n) => new Promise((done) => { const step = () => (n-- <= 0 ? done() : requestAnimationFrame(step)); requestAnimationFrame(step); });
   const timed = async (action) => {
     await nextFrames(3);
     const target = s.perf.frames() + 1, t0 = performance.now();
     action();
     await new Promise((done) => { const check = () => (s.perf.frames() >= target ? done() : requestAnimationFrame(check)); requestAnimationFrame(check); });
-    gl.finish();
+    finish();
     return performance.now() - t0;
   };
   const undo = () => dispatchEvent(new KeyboardEvent('keydown', { key: 'z', metaKey: true, ctrlKey: true }));

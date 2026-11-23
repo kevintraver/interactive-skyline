@@ -4,6 +4,9 @@
 // (bundle, bytes downloaded) may grow 3 % before the suite fails.
 import { test, expect } from '@playwright/test';
 import { SCENES, CITIES, sceneName, boot, stage } from '../helpers/app.js';
+
+// software frames under load from other sessions: each scene boots, stages, waits for the exposure and counts
+test.describe.configure({ timeout: 600_000 });
 import { BUDGETS, UPDATING, SIZE_GROWTH, readJson, writeJsonAt, bundleSizes } from '../helpers/perf.js';
 
 const budgets = readJson(BUDGETS, {});

@@ -1,0 +1,74 @@
+{
+  "webgpu": {
+    "backend": "webgpu",
+    "byTime": [
+      {
+        "at": 0.1,
+        "localHour": 7.6,
+        "frameMs": 19.91,
+        "scenePassMs": 19.905,
+        "bloomMs": 0,
+        "postMs": 0.855,
+        "meterMs": 3.745
+      },
+      {
+        "at": 0.3,
+        "localHour": 10.8,
+        "frameMs": 25.5,
+        "scenePassMs": 16.075,
+        "bloomMs": 10.505,
+        "postMs": 0,
+        "meterMs": 0
+      },
+      {
+        "at": 0.5,
+        "localHour": 14,
+        "frameMs": 24.365,
+        "scenePassMs": 15.62,
+        "bloomMs": 9.125,
+        "postMs": 0,
+        "meterMs": 0
+      },
+      {
+        "at": 0.7,
+        "localHour": 17.2,
+        "frameMs": 23.235,
+        "scenePassMs": 22.51,
+        "bloomMs": 1.57,
+        "postMs": 0,
+        "meterMs": 0.64
+      },
+      {
+        "at": 0.9,
+        "localHour": 20.4,
+        "frameMs": 23.22,
+        "scenePassMs": 16.38,
+        "bloomMs": 7.28,
+        "postMs": 0,
+        "meterMs": 0
+      }
+    ],
+    "cpuSubmitMs": {
+      "median": 13.8,
+      "p95": 23
+    },
+    "frames": 368,
+    "gpu": "apple metal-3 0x0000 Apple M4",
+    "method": "throughput by difference (perf.throughput); per-pass timestamps are not exposed by three r187",
+    "passesMs": {
+      "bloom": 7.28,
+      "frame": 23.235,
+      "meter": 0,
+      "post": 0,
+      "scenePass": 16.38
+    },
+    "peakTextureMB": 309.6,
+    "quality": "high",
+    "recorded": "2026-11-23",
+    "seconds": 20,
+    "size": [
+      1280,
+      800
+    ]
+  }
+}

@@ -11,6 +11,11 @@ import { test, expect } from '@playwright/test';
 import { SCENES, CITIES, sceneName, boot, stage } from '../helpers/app.js';
 import { PERF_DIR, UPDATING, GATES, FRAME_SLACK_MS, readJson, writeJsonAt, machineId, quantile, median, round, EDIT_LATENCY } from '../helpers/perf.js';
 
+// Phase 2: the timing tier runs the new renderer on its WebGL2 backend, the backend the ship gate is defined on (the
+// A/B spec, perf.ab.spec.js, compares it with the classic renderer and times the WebGPU backend too).
+// q=high: the quality held (the governor would change the render scale during a measurement)
+const Q = 'backend=webgl&nobench=1&q=high';
+
 let file, baseline, software, recording, busy = '';
 
 // Cross-origin isolation (on the page only, by the test) raises performance.now() from 0.1 ms to 5 us resolution.
@@ -23,7 +28,7 @@ test.beforeEach(async ({ page }) => {
 
 test.beforeAll(async ({ browser }) => {
   const page = await browser.newPage();
-  await page.goto('/?city=slc');
+  await page.goto(`/?city=slc&${Q}`);
   await page.waitForFunction(() => window.__skyline && window.__skyline.perf, null, { timeout: 90_000 });
   const gpu = await page.evaluate(() => window.__skyline.perf.gpu());
   const cores = await page.evaluate(() => navigator.hardwareConcurrency);
@@ -36,7 +41,10 @@ test.beforeAll(async ({ browser }) => {
   baseline = readJson(file, null);
   recording = UPDATING || !baseline;
   if (recording) {
-    if (fs.existsSync(file)) fs.rmSync(file);
+    // start a fresh file once per day's recording: a retried test restarts the worker and runs this again, and must
+    // not delete what the run has already written (it did in phase 1 and 2's first attempt)
+    const today = new Date().toISOString().slice(0, 10);
+    if (fs.existsSync(file) && readJson(file, {}).recorded !== today) fs.rmSync(file);
     writeJsonAt(file, ['machine'], { renderer: gpu.renderer, cores, software, os: `${os.platform()} ${os.arch()}` });
     writeJsonAt(file, ['recorded'], new Date().toISOString().slice(0, 10));
   }
@@ -54,19 +62,20 @@ function check(what, actual, base, kind, slack = 0) {
 
 for (const scene of SCENES) {
   test(`frame time ${sceneName(scene)}`, async ({ page }) => {
-    await boot(page, scene.city);
+    await boot(page, scene.city, Q);
     await stage(page, scene);
-    // five batches of 120 frames; the batch whose median is the median of the five gives both numbers (GPU clocks
-    // vary between batches, measured up to 30 % on an M4)
-    const { batches, isolated } = await page.evaluate(async () => {
+    // Phase 2: throughput, 20 batches of 12 frames submitted back to back (perf.throughput()): GPU timer queries
+    // around a frame timed alone follow the GPU's clock on ANGLE Metal, and on the new renderer they read about four
+    // times its throughput (68 against 16 ms, measured 22 November 2026; docs/plans/notes/01-phase2-spike.md).
+    // The median and the 95th percentile are over the batches' mean frame times.
+    const { times, isolated } = await page.evaluate(async () => {
       const out = [];
-      for (let i = 0; i < 5; i++) out.push(await window.__skyline.perf.renderFrames(120));
-      return { batches: out, isolated: crossOriginIsolated };
+      await window.__skyline.perf.throughput(30, 10);
+      for (let i = 0; i < 20; i++) out.push((await window.__skyline.perf.throughput(12, 0)).msPerFrame);
+      return { times: out, isolated: crossOriginIsolated };
     });
     expect(isolated, 'the page is cross-origin isolated (fine timers)').toBe(true);
-    expect(batches[0].ms.length, 'most frames timed').toBeGreaterThan(100);
-    const times = batches.map((b) => b.ms).sort((a, b) => median(a) - median(b))[2];
-    const m = { median: round(median(times), 3), p95: round(quantile(times, 0.95), 3), method: batches[0].method };
+    const m = { median: round(median(times), 3), p95: round(quantile(times, 0.95), 3), method: 'throughput' };
     test.info().annotations.push({ type: 'frame', description: JSON.stringify(m) });
     if (recording) return writeJsonAt(file, ['frame', sceneName(scene)], m);
     const base = baseline.frame?.[sceneName(scene)] || {};
@@ -94,7 +103,7 @@ for (const city of CITIES) {
   test(`time to ready and edit latency ${city}`, async ({ page }) => {
     const ready = [], first = [];
     for (let i = 0; i < 3; i++) {
-      await boot(page, city);
+      await boot(page, city, Q);
       const t = await page.evaluate(() => ({ ready: performance.getEntriesByName('skyline-ready')[0].startTime,
         first: (performance.getEntriesByName('skyline-frame')[0] || {}).startTime }));
       ready.push(t.ready); first.push(t.first);
@@ -118,7 +127,7 @@ for (const city of CITIES) {
 // scene itself renders: the phase 0 baseline puts every scene above 13 ms of GPU time on the reference M4).
 for (const city of CITIES) {
   test(`scrubbing the time of day ${city}`, async ({ page }) => {
-    await boot(page, city);
+    await boot(page, city, Q);
     await page.evaluate(() => { window.__skyline.attractions.freeze(47); document.getElementById('sky-toggle').click(); });
     const r = await page.evaluate(async () => {
       const s = window.__skyline, scrub = document.getElementById('sky-scrub'), raf = () => new Promise((d) => requestAnimationFrame(d));
@@ -156,3 +165,36 @@ for (const city of CITIES) {
     expect(r.fps, `${round(r.fps)} fps while scrubbing; the scene alone renders at most ${round(ceiling)}${busy}`).toBeGreaterThan(ceiling * (software ? 0.5 : 0.85));
   });
 }
+
+// T2.6 (plan 01, phase 2): panning from the Strip to the dark west settles the exposure in under four seconds (within
+// 0.5 EV of its target: the 3 s darkening time constant of section 7.2 then leaves no visible drift). Wall time, so
+// on a real GPU only.
+test('exposure settles after a pan from the Strip to the dark west', async ({ page }) => {
+  await boot(page, 'lv', Q);
+  await page.evaluate(() => { const s = window.__skyline; s.attractions.freeze(47); s.setSetting('night', true); s.setView('strat'); });
+  await page.waitForFunction(() => window.__skyline.look.exposure.state.settled, null, { timeout: 60_000 });
+  const r = await page.evaluate(() => new Promise((done) => {
+    const s = window.__skyline, c = s.controls, t0 = performance.now(), before = s.look.exposure.state.ev, f0 = s.perf.frames();
+    // turn the view to the west, away from the lit towers, as one drag would
+    const d = s.camera.position.clone().sub(c.target);
+    c.target.set(s.camera.position.x - 3000, s.camera.position.y - 400, s.camera.position.z);
+    c.update();
+    s.invalidate();
+    const check = () => {
+      const st = s.look.exposure.state, el = performance.now() - t0;
+      // the exposure has used a reading of a frame drawn after the pan and is within 0.5 EV of its target; or that
+      // reading is within 0.15 EV of the exposure, which then does not move (and draws nothing more)
+      const x = s.look.exposure, fresh = x.lastReadingAt > t0;
+      const used = st.meteredAt > t0 && Math.abs(st.ev - st.target) < 0.5;
+      const unmoved = fresh && st.settled && Math.abs(x.lastReadingEv - st.ev) <= 0.15;
+      if (used || unmoved) done({ ms: el, before, ev: st.ev, target: st.target, metered: st.metered, reading: x.lastReadingEv, how: used ? 'adapted' : 'unmoved' });
+      else if (el > 10000) done({ ms: el, before, ev: st.ev, target: st.target, timeout: true, frames: s.perf.frames() - f0, reading: s.look.exposure.lastReadingAt - t0, tier: s.loop.tier });
+      else requestAnimationFrame(check);
+    };
+    void d;
+    requestAnimationFrame(check);
+  }));
+  test.info().annotations.push({ type: 'exposure-pan', description: JSON.stringify(r) });
+  console.log(JSON.stringify(r));
+  expect(software || r.ms < 4000, `settled in ${Math.round(r.ms)} ms (${JSON.stringify(r)})`).toBeTruthy();
+});

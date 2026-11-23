@@ -99,7 +99,7 @@ index 918aa7c..8738532 100644
  const tall = []; // removable buildings, tallest first: { data, mesh, marker, row, offset }
  let low = null; // every other building, merged into one mesh
  const tallGroup = new THREE.Group();
-@@ -328,13 +342,14 @@ function buildCity() {
+@@ -328,13 +342,13 @@ function buildCity() {
  
    const lowOut = fresh();
    for (const b of model.buildings) {
@@ -107,9 +107,8 @@ index 918aa7c..8738532 100644
 -      const out = fresh();
 -      for (const v of b.v) extrude(v, out, [1, 1, 1]);
 +    if (b.h >= settings.cutoff || customModels.has(b.id)) {
-+      const out = fresh(), custom = customModels.get(b.id);
-+      if (custom) placeModel(custom, b.c[0], b.c[1], b.ground - BASE, out);
-+      else for (const v of b.v) extrude(v, out, [1, 1, 1]);
++      const custom = customModels.get(b.id), out = custom ? placeModel(custom, b.c[0], b.c[1], b.ground - BASE) : fresh();
++      if (!custom) for (const v of b.v) extrude(v, out, [1, 1, 1]);
        const geo = toGeometry(out);
        geo.computeBoundsTree();
        // a little self-light keeps the shaded faces blue instead of near-black
@@ -118,7 +117,7 @@ index 918aa7c..8738532 100644
        mesh.castShadow = mesh.receiveShadow = true;
        mesh.visible = !wasHidden.has(b.id);
        mesh.add(new THREE.LineSegments(new THREE.EdgesGeometry(geo, 30), edgeMat));
-@@ -450,7 +465,7 @@ const plural = (n) => `${n} building${n === 1 ? '' : 's'}`;
+@@ -450,7 +464,7 @@ const plural = (n) => `${n} building${n === 1 ? '' : 's'}`;
  function paint(e) {
    const m = e.mesh.material;
    m.color.copy(e === selected ? SELECT : e === hovered ? (settings.highlight ? HOVER : WHITE) : settings.highlight ? REMOVABLE : GRAY);
@@ -127,7 +126,7 @@ index 918aa7c..8738532 100644
    e.mesh.children[0].visible = settings.highlight;
    e.mesh.position.copy(e.offset);
    e.marker.visible = settings.markers && (isHidden(e) || isMoved(e));
-@@ -849,17 +864,38 @@ function describeCutoff(m) {
+@@ -849,17 +863,38 @@ function describeCutoff(m) {
    cutoffOut.textContent = `${fmt(m)} · ${plural(n)}`;
  }
  
@@ -167,10 +166,10 @@ index 918aa7c..8738532 100644
    tall.forEach(paint);
    lede.replaceChildren();
    if (settings.highlight) lede.append(Object.assign(document.createElement('span'), { className: 'swatch' }));
-@@ -945,3 +981,6 @@ window.__skyline = {
+@@ -945,3 +980,6 @@ window.__skyline = {
    place, movedIds: () => tall.filter(isMoved).map((t) => t.data.id),
    hiddenIds: () => tall.filter((t) => !t.mesh.visible).map((t) => t.data.id),
  };
 +
-+// extras, the fountain show and animated LED surfaces (skyline-integration v5, src/attractions.js)
++// extras, the fountain show and animated LED surfaces (skyline-integration v7, src/attractions.js)
 +initAttractions({ cityId, scene, camera, renderer, settings, invalidate, groundY, tall });
