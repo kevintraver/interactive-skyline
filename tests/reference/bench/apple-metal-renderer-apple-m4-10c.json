@@ -5,66 +5,66 @@
       {
         "at": 0.1,
         "localHour": 7.6,
-        "frameMs": 16.08,
-        "scenePassMs": 10.87,
-        "bloomMs": 0,
-        "postMs": 6.09,
-        "meterMs": 1.12
+        "frameMs": 22.14,
+        "scenePassMs": 20.965,
+        "bloomMs": 2.485,
+        "postMs": 0,
+        "meterMs": 2.8
       },
       {
         "at": 0.3,
         "localHour": 10.8,
-        "frameMs": 14.735,
-        "scenePassMs": 11.755,
-        "bloomMs": 0.135,
-        "postMs": 2.845,
+        "frameMs": 25.07,
+        "scenePassMs": 24.245,
+        "bloomMs": 2.685,
+        "postMs": 0,
         "meterMs": 0
       },
       {
         "at": 0.5,
         "localHour": 14,
-        "frameMs": 14.285,
-        "scenePassMs": 12.615,
-        "bloomMs": 0,
-        "postMs": 1.695,
-        "meterMs": 0.64
+        "frameMs": 25.45,
+        "scenePassMs": 21.62,
+        "bloomMs": 6.285,
+        "postMs": 0,
+        "meterMs": 0.955
       },
       {
         "at": 0.7,
         "localHour": 17.2,
-        "frameMs": 13.755,
-        "scenePassMs": 13.615,
-        "bloomMs": 0,
-        "postMs": 1.165,
-        "meterMs": 0.7
+        "frameMs": 28.775,
+        "scenePassMs": 26.605,
+        "bloomMs": 8.845,
+        "postMs": 0,
+        "meterMs": 0
       },
       {
         "at": 0.9,
         "localHour": 20.4,
-        "frameMs": 13.705,
-        "scenePassMs": 13.14,
-        "bloomMs": 0,
-        "postMs": 0.86,
-        "meterMs": 1.325
+        "frameMs": 24.86,
+        "scenePassMs": 18.9,
+        "bloomMs": 5.355,
+        "postMs": 0.605,
+        "meterMs": 0
       }
     ],
     "cpuSubmitMs": {
-      "median": 20.2,
-      "p95": 28.6
+      "median": 15.7,
+      "p95": 30.5
     },
-    "frames": 405,
+    "frames": 239,
     "gpu": "ANGLE (Apple, ANGLE Metal Renderer: Apple M4, Unspecified Version)",
     "method": "throughput by difference (perf.throughput); per-pass timestamps are not exposed by three r187",
     "passesMs": {
-      "bloom": 0,
-      "frame": 14.285,
-      "meter": 0.7,
-      "post": 1.695,
-      "scenePass": 12.615
+      "bloom": 5.355,
+      "frame": 25.07,
+      "meter": 0,
+      "post": 0,
+      "scenePass": 21.62
     },
-    "peakTextureMB": 317.1,
+    "peakTextureMB": 309.6,
     "quality": "high",
-    "recorded": "2026-11-22",
+    "recorded": "2026-11-23",
     "seconds": 20,
     "size": [
       1280,

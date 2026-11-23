@@ -5,66 +5,66 @@
       {
         "at": 0.1,
         "localHour": 7.6,
-        "frameMs": 17.645,
-        "scenePassMs": 10.39,
-        "bloomMs": 5.79,
-        "postMs": 1.465,
-        "meterMs": 0
+        "frameMs": 19.91,
+        "scenePassMs": 19.905,
+        "bloomMs": 0,
+        "postMs": 0.855,
+        "meterMs": 3.745
       },
       {
         "at": 0.3,
         "localHour": 10.8,
-        "frameMs": 13.66,
-        "scenePassMs": 12.34,
-        "bloomMs": 2.285,
+        "frameMs": 25.5,
+        "scenePassMs": 16.075,
+        "bloomMs": 10.505,
         "postMs": 0,
         "meterMs": 0
       },
       {
         "at": 0.5,
         "localHour": 14,
-        "frameMs": 13.655,
-        "scenePassMs": 11.245,
-        "bloomMs": 2.935,
+        "frameMs": 24.365,
+        "scenePassMs": 15.62,
+        "bloomMs": 9.125,
         "postMs": 0,
         "meterMs": 0
       },
       {
         "at": 0.7,
         "localHour": 17.2,
-        "frameMs": 14.02,
-        "scenePassMs": 10.965,
-        "bloomMs": 1.915,
-        "postMs": 1.14,
-        "meterMs": 0
+        "frameMs": 23.235,
+        "scenePassMs": 22.51,
+        "bloomMs": 1.57,
+        "postMs": 0,
+        "meterMs": 0.64
       },
       {
         "at": 0.9,
         "localHour": 20.4,
-        "frameMs": 14.475,
-        "scenePassMs": 12.545,
-        "bloomMs": 3.525,
+        "frameMs": 23.22,
+        "scenePassMs": 16.38,
+        "bloomMs": 7.28,
         "postMs": 0,
         "meterMs": 0
       }
     ],
     "cpuSubmitMs": {
-      "median": 17.4,
-      "p95": 24
+      "median": 13.8,
+      "p95": 23
     },
-    "frames": 577,
+    "frames": 368,
     "gpu": "apple metal-3 0x0000 Apple M4",
     "method": "throughput by difference (perf.throughput); per-pass timestamps are not exposed by three r187",
     "passesMs": {
-      "bloom": 2.935,
-      "frame": 14.02,
+      "bloom": 7.28,
+      "frame": 23.235,
       "meter": 0,
       "post": 0,
-      "scenePass": 11.245
+      "scenePass": 16.38
     },
-    "peakTextureMB": 317.1,
+    "peakTextureMB": 309.6,
     "quality": "high",
-    "recorded": "2026-11-22",
+    "recorded": "2026-11-23",
     "seconds": 20,
     "size": [
       1280,

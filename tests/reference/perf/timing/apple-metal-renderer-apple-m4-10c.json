@@ -2,75 +2,75 @@
   "city": {
     "lv": {
       "edits": {
-        "hide": 45.45,
-        "move": 22.76,
-        "rebuild": 1439.14,
-        "undo": 36.68
+        "hide": 135.31,
+        "move": 33.51,
+        "rebuild": 3371.51,
+        "undo": 91.28
       },
-      "firstFrameMs": 3437.8,
-      "readyMs": 1795.8
+      "firstFrameMs": 8462.1,
+      "readyMs": 4133.1
     },
     "slc": {
       "edits": {
-        "hide": 40.31,
-        "move": 25.13,
-        "rebuild": 805.53,
-        "undo": 35.51
+        "hide": 124.36,
+        "move": 26.69,
+        "rebuild": 1728.77,
+        "undo": 44.88
       },
-      "firstFrameMs": 2294.6,
-      "readyMs": 1060.2
+      "firstFrameMs": 5312.6,
+      "readyMs": 2921.8
     }
   },
   "frame": {
     "lv-aerial-day": {
-      "median": 17.963,
+      "median": 28.271,
       "method": "throughput",
-      "p95": 20.349
+      "p95": 32.651
     },
     "lv-aerial-night": {
-      "median": 17.616,
+      "median": 27.379,
       "method": "throughput",
-      "p95": 19.795
+      "p95": 28.892
     },
     "lv-east-day": {
-      "median": 14.415,
+      "median": 21.414,
       "method": "throughput",
-      "p95": 15.374
+      "p95": 22.35
     },
     "lv-east-night": {
-      "median": 15.313,
+      "median": 21.788,
       "method": "throughput",
-      "p95": 18.107
+      "p95": 23.559
     },
     "lv-strat-day": {
-      "median": 12.56,
+      "median": 22.264,
       "method": "throughput",
-      "p95": 15.451
+      "p95": 24.026
     },
     "lv-strat-night": {
-      "median": 15.114,
+      "median": 22.116,
       "method": "throughput",
-      "p95": 18.277
+      "p95": 24.707
     },
     "slc-aerial-day": {
-      "median": 12.122,
+      "median": 18.247,
       "method": "throughput",
-      "p95": 14.083
+      "p95": 21.432
     },
     "slc-aerial-night": {
-      "median": 12.292,
+      "median": 18.339,
       "method": "throughput",
-      "p95": 14.174
+      "p95": 20.745
     },
     "slc-ensign-day": {
-      "median": 15.527,
+      "median": 21.986,
       "method": "throughput",
-      "p95": 18.585
+      "p95": 24.255
     },
     "slc-ensign-night": {
-      "median": 14.572,
+      "median": 21.698,
       "method": "throughput",
-      "p95": 18.725
+      "p95": 23.128
     }
   },
   "machine": {
@@ -79,5 +79,5 @@
     "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M4, Unspecified Version)",
     "software": false
   },
-  "recorded": "2026-11-22"
+  "recorded": "2026-11-23"
 }

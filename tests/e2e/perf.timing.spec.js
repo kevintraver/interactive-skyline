@@ -13,7 +13,8 @@ import { PERF_DIR, UPDATING, GATES, FRAME_SLACK_MS, readJson, writeJsonAt, machi
 
 // Phase 2: the timing tier runs the new renderer on its WebGL2 backend, the backend the ship gate is defined on (the
 // A/B spec, perf.ab.spec.js, compares it with the classic renderer and times the WebGPU backend too).
-const Q = 'backend=webgl&nobench=1';
+// q=high: the quality held (the governor would change the render scale during a measurement)
+const Q = 'backend=webgl&nobench=1&q=high';
 
 let file, baseline, software, recording, busy = '';
 
@@ -173,7 +174,7 @@ test('exposure settles after a pan from the Strip to the dark west', async ({ pa
   await page.evaluate(() => { const s = window.__skyline; s.attractions.freeze(47); s.setSetting('night', true); s.setView('strat'); });
   await page.waitForFunction(() => window.__skyline.look.exposure.state.settled, null, { timeout: 60_000 });
   const r = await page.evaluate(() => new Promise((done) => {
-    const s = window.__skyline, c = s.controls, t0 = performance.now(), before = s.look.exposure.state.ev, at0 = s.look.exposure.state.meteredAt;
+    const s = window.__skyline, c = s.controls, t0 = performance.now(), before = s.look.exposure.state.ev, f0 = s.perf.frames();
     // turn the view to the west, away from the lit towers, as one drag would
     const d = s.camera.position.clone().sub(c.target);
     c.target.set(s.camera.position.x - 3000, s.camera.position.y - 400, s.camera.position.z);
@@ -181,9 +182,13 @@ test('exposure settles after a pan from the Strip to the dark west', async ({ pa
     s.invalidate();
     const check = () => {
       const st = s.look.exposure.state, el = performance.now() - t0;
-      // a reading of a frame drawn after the pan, and the exposure within 0.5 EV of where that reading sends it
-      if (st.meteredAt > at0 && st.meteredAt > t0 && Math.abs(st.ev - st.target) < 0.5) done({ ms: el, before, ev: st.ev, target: st.target, metered: st.metered });
-      else if (el > 10000) done({ ms: el, before, ev: st.ev, target: st.target, timeout: true });
+      // the exposure has used a reading of a frame drawn after the pan and is within 0.5 EV of its target; or that
+      // reading is within 0.15 EV of the exposure, which then does not move (and draws nothing more)
+      const x = s.look.exposure, fresh = x.lastReadingAt > t0;
+      const used = st.meteredAt > t0 && Math.abs(st.ev - st.target) < 0.5;
+      const unmoved = fresh && st.settled && Math.abs(x.lastReadingEv - st.ev) <= 0.15;
+      if (used || unmoved) done({ ms: el, before, ev: st.ev, target: st.target, metered: st.metered, reading: x.lastReadingEv, how: used ? 'adapted' : 'unmoved' });
+      else if (el > 10000) done({ ms: el, before, ev: st.ev, target: st.target, timeout: true, frames: s.perf.frames() - f0, reading: s.look.exposure.lastReadingAt - t0, tier: s.loop.tier });
       else requestAnimationFrame(check);
     };
     void d;

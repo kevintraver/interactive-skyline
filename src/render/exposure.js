@@ -109,6 +109,8 @@ function createMeter(renderer, colorTexture) {
   return {
     clampLog, exposureAt,
     /** Run the passes for the frame just drawn and start a readback if none is in flight. */
+    /** The readback in flight, if any. */
+    get pending() { return pending; },
     measure(exposure, gen = 0) {
       if (pending) return null;
       const previous = renderer.getRenderTarget();
@@ -146,6 +148,7 @@ export function createExposure({ renderer, pipeline, prior, uniform: exposureUni
     clock.on('seek', () => { state.snapRequested = true; });
     clock.on('rate', () => { if (Math.abs(clock.rate) > 60) state.snapRequested = true; });
   }
+  let missed = false;
   const sub = {
     state,
     /** Turn adaptation off (the classic display): exposure is then held at `value`; hold() turns it back on. */
@@ -212,6 +215,12 @@ export function createExposure({ renderer, pipeline, prior, uniform: exposureUni
     afterRender() {
       if (!state.enabled || !meter) return;
       const p = meter.measure(exposureUniform.value, state.gen);
+      // this frame could not be metered (a readback was still in flight): when that one lands, draw another, so a
+      // change seen by only one frame (a pan, an edit) is metered; with the scene idle nothing else would draw
+      if (!p && meter.pending && !missed) {
+        missed = true;
+        meter.pending.then(() => { missed = false; state.settled = false; invalidate(); });
+      }
       // a reading that moves the target asks for frames (the scene may be idle by then: a pan draws one frame)
       if (p) p.then((r) => {
         if (!r || r.gen !== state.gen || !state.enabled) return;
@@ -222,6 +231,10 @@ export function createExposure({ renderer, pipeline, prior, uniform: exposureUni
     /** Continuous until the eye has adapted (section 5.5); idle once settled. */
     demand() { return state.enabled && !state.settled ? 'continuous' : 'idle'; },
     get ev100() { return state.ev; },
+    /** When the latest meter reading's frame was drawn (ms), whether or not it moved the exposure. */
+    get lastReadingAt() { return meter && meter.latest ? meter.latest.at : -Infinity; },
+    /** That reading as EV100 (null before the first). */
+    get lastReadingEv() { return meter && meter.latest ? ev100FromLuminance(meter.latest.luminanceCdM2) : null; },
     /** The exposure the prior alone would give (for surfaces that keep their classic relation to the scene). */
     expectedFor: (ev) => exposureFor(ev, state.mode, state.compensation + offsetEv),
     dispose() { if (meter) meter.dispose(); },
