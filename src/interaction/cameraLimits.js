@@ -97,6 +97,17 @@ export function liftAlongOrbit(cam, tgt, ground, agl, iterations = 8) {
   return moved;
 }
 
+/**
+ * Drop the spin and the pan a drag left in the controls' damping. Whatever places the camera itself (a named view,
+ * a glide to a building, the compass) calls this first: the controls would otherwise add the rest of the drag to
+ * the new position, and the view would land beside the one that was asked for.
+ */
+export function stopMomentum(controls) {
+  const spin = controls._sphericalDelta, pan = controls._panOffset;
+  if (spin) { spin.theta = 0; spin.phi = 0; }
+  if (pan) { pan.x = 0; pan.y = 0; pan.z = 0; }
+}
+
 const dist3 = (a, b) => Math.sqrt((a.x - b.x) ** 2 + (a.y - b.y) ** 2 + (a.z - b.z) ** 2);
 const same = (a, b) => a.x === b.x && a.y === b.y && a.z === b.z;
 /** Moved by more than a micrometre: the controls' own spherical round trip shifts the camera by less each frame. */

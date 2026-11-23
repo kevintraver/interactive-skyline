@@ -2,9 +2,11 @@
 // bounds clamp, the relative terrain shift, the clearance rule and standing down for anything that is not the
 // visitor's gesture.
 import { describe, it, expect } from 'vitest';
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import {
   boundsFromGrid, clampAxis, clearanceFor, allowedHeight, smoothRadius, smoothGround, makePivotGround,
-  liftAlongOrbit, createCameraLimits, BOUNDS_MARGIN,
+  liftAlongOrbit, createCameraLimits, stopMomentum, BOUNDS_MARGIN,
 } from '../../../src/interaction/cameraLimits.js';
 import { curveDrop } from '../../../src/core/earth.js';
 
@@ -273,5 +275,46 @@ describe('the limits on the controls', () => {
     expect(len(camera.position, controls.target)).toBeCloseTo(150 * (1 + 1e-7), 9);
     gesture(controls, (p) => { p.z = 30000.0000001; });
     expect(len(camera.position, controls.target)).toBeCloseTo(30000 * (1 - 1e-7), 6);
+  });
+});
+
+describe('stopMomentum', () => {
+  // the real controls, on an element that only has to take listeners
+  const element = () => {
+    const taker = { addEventListener() {}, removeEventListener() {} };
+    return { ...taker, style: {}, ownerDocument: taker, getRootNode: () => taker };
+  };
+  const rigControls = () => {
+    const camera = new THREE.PerspectiveCamera(27, 1, 5, 150000);
+    camera.position.set(0, 500, 1000);
+    const controls = new OrbitControls(camera, element());
+    Object.assign(controls, { enableDamping: true, dampingFactor: 0.12 });
+    return { camera, controls };
+  };
+  /** What a drag leaves in the damping when the button comes up. */
+  const leaveMomentum = (controls) => { controls._sphericalDelta.theta = 0.2; controls._sphericalDelta.phi = -0.05; controls._panOffset.set(40, 0, -25); };
+  const eye = new THREE.Vector3(300, 400, 900), aim = new THREE.Vector3(100, 0, 50);
+
+  it('a camera placed after a drag stays where it is put, on the first update and on the ones that follow', () => {
+    const { camera, controls } = rigControls();
+    leaveMomentum(controls);
+    stopMomentum(controls);
+    camera.position.copy(eye); controls.target.copy(aim);
+    for (let i = 0; i < 30; i++) controls.update();
+    expect(camera.position.distanceTo(eye)).toBeLessThan(1e-6);
+    expect(controls.target.distanceTo(aim)).toBeLessThan(1e-6);
+  });
+
+  it('without it the rest of the drag moves the placed camera (what the call is there to prevent)', () => {
+    const { camera, controls } = rigControls();
+    leaveMomentum(controls);
+    camera.position.copy(eye); controls.target.copy(aim);
+    for (let i = 0; i < 30; i++) controls.update();
+    expect(camera.position.distanceTo(eye)).toBeGreaterThan(10);
+    expect(controls.target.distanceTo(aim)).toBeGreaterThan(10);
+  });
+
+  it('takes controls without those fields (the fakes above, other control types)', () => {
+    expect(() => stopMomentum({})).not.toThrow();
   });
 });

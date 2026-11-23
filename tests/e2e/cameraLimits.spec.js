@@ -266,13 +266,11 @@ for (const city of CITIES) {
       for (const v of views(city)) {
         await page.evaluate(() => window.__skyline.setView('aerial'));
         for (let i = 0; i < 4; i++) await drag(page, -150, 90);
-        // let the controls' damping run out first: setView applies whatever is left of it, as it always has
-        expect(await idleFrames(page)).toBe(0);
+        // straight after the drag, while its damping is still running: the view drops what is left of it
         expect((await state()).armed).toBe(true);
         await page.evaluate((v) => window.__skyline.setView(v), v);
         await frames(page, 30);
         const after = await state();
-        // (to a micrometre: setView applies the last few nanometres of damping, as it always has)
         for (let i = 0; i < 3; i++) {
           expect(Math.abs(after.c[i] - before[v].c[i]), `${v}: camera`).toBeLessThan(1e-3);
           expect(Math.abs(after.t[i] - before[v].t[i]), `${v}: target`).toBeLessThan(1e-3);
@@ -280,10 +278,8 @@ for (const city of CITIES) {
         expect(after.armed).toBe(false);
       }
 
-      // focusOn lands where its own maths says (after the damping of the gesture has run out: focusOn does not stop
-      // it, and the controls apply what is left after the glide, as they always have)
+      // focusOn lands where its own maths says, started while the gesture's damping is still running
       await drag(page, 40, 20);
-      expect(await idleFrames(page)).toBe(0);
       const focus = await page.evaluate(async () => {
         const s = window.__skyline, e = s.tall[0], b = e.data;
         s.focusOn(e);

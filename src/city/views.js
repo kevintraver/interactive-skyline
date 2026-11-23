@@ -3,6 +3,7 @@
 // picture of the live scene.
 import * as THREE from 'three';
 import { summit } from './terrain.js';
+import { stopMomentum } from '../interaction/cameraLimits.js';
 
 const LENS_HFOV = 39.6; // horizontal field of view of a 50 mm lens on full frame
 const THUMB = { w: 176, h: 116 };
@@ -42,12 +43,11 @@ export function createViews(app, { near, groundY }) {
   }
   function setView(name) {
     views.active = name;
+    // the rest of the last drag is dropped, not added to the view
+    stopMomentum(controls);
     camera.position.copy(VIEWS[name].pos);
     controls.target.copy(VIEWS[name].target);
-    // updating once with damping off discards any leftover spin from the last drag
-    controls.enableDamping = false;
     controls.update();
-    controls.enableDamping = true;
     for (const btn of document.querySelectorAll('.views button')) btn.classList.toggle('active', btn.dataset.view === name);
     invalidate();
   }
