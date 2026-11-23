@@ -4,7 +4,7 @@
 //   scene pass (HDR colour and depth, MSAA)          sceneColor, sceneDepth
 //     -> stages afterScene, afterWorld, beforeBloom, afterAA   (node stages, in that order; render stages draw into
 //                                                               the scene pass's own targets right after it)
-//     -> bloom (BloomNode, mixed in, not added)       bloom
+//     -> bloom (13-tap down, tent up; mixed in)       bloom
 //     -> stage afterBloom
 //     -> tone map (ACES, AgX or Neutral) and sRGB
 //     -> stage overlay
@@ -66,6 +66,7 @@ export function createPipeline({ renderer, scene, camera, legacy = false, exposu
     drawnToken = token.value;
     for (const s of stages) if (s.at === 'beforeScene' && s.render) s.render(renderer, frame, null);
     const result = drawScene(frame);
+    if (bloom) bloom.run(renderer);
     const late = stages.filter((s) => s.render && s.at !== 'beforeScene' && s.at !== 'overlay');
     if (late.length) {
       const target = renderer.getRenderTarget(), autoClear = renderer.autoClear;
@@ -87,8 +88,8 @@ export function createPipeline({ renderer, scene, camera, legacy = false, exposu
     nodeStages('beforeBloom');
     nodeStages('afterAA');
     if (settings.bloom > 0) {
-      if (!bloom) bloom = createBloom(color, settings.bloomScale, token);
-      else bloom.setInput(color);
+      // bloom reads the scene pass's resolved colour (node stages before it do not reach the halo)
+      if (!bloom) bloom = createBloom(scenePass.getTexture('output'), settings.bloomScale);
       // mixed in, not added: a share of each pixel's light moves into the halo, so light is conserved
       color = vec4(mix(color.rgb, bloom.node.rgb, bloomStrength), color.a);
     } else if (bloom) { bloom.dispose(); bloom = null; }
