@@ -3,8 +3,8 @@
     "chunks": {
       "GLTFLoader.js": 13517,
       "atlas.js": 207,
-      "billboards.js": 5271,
-      "cabin.js": 23362,
+      "billboards.js": 8561,
+      "cabin.js": 24068,
       "control.js": 1228,
       "crosssection.js": 2536,
       "env.js": 2679,
@@ -12,26 +12,26 @@
       "flow.js": 1602,
       "frame.js": 909,
       "generateMeshBVH.worker.js": 47185,
-      "headlights.js": 7453,
+      "headlights.js": 7452,
       "index.css": 4985,
-      "index.js": 55701,
+      "index.js": 56411,
       "lamps.js": 1184,
       "legacySky.js": 1177,
       "light.glsl.js": 697,
-      "lights.js": 7476,
-      "mesher.js": 839,
-      "mesher.worker.js": 9811,
+      "lights.js": 7474,
+      "mesher.js": 878,
+      "mesher.worker.js": 4065,
       "night.js": 2495,
-      "obstruction.js": 2192,
-      "parts.js": 920,
+      "obstruction.js": 2196,
+      "parts.js": 925,
       "pools.worker.js": 2796,
       "preload-helper.js": 831,
       "rainMirror.js": 802,
       "renderScale.js": 1033,
       "rolldown-runtime.js": 154,
       "routemap.js": 2567,
-      "screens.js": 3422,
-      "session.js": 27831,
+      "screens.js": 3424,
+      "session.js": 28655,
       "skyblend.js": 1939,
       "sprites.js": 10791,
       "surfaceLight.js": 1104,
@@ -39,23 +39,23 @@
       "three.module.js": 83217,
       "timing.js": 264,
       "traffic.js": 28040,
-      "valley.js": 6051,
-      "weather.js": 7787,
+      "valley.js": 6056,
+      "weather.js": 7789,
       "wetMirror.js": 338
     },
     "cssGzip": 4985,
-    "jsGzip": 448907
+    "jsGzip": 454770
   },
   "bytes": {
     "lv": {
-      "beforeReady": 29254593,
+      "beforeReady": 29255300,
       "requests": 158,
-      "total": 31250324
+      "total": 31251031
     },
     "slc": {
-      "beforeReady": 21941098,
+      "beforeReady": 21941805,
       "requests": 99,
-      "total": 21994066
+      "total": 21994773
     }
   },
   "scenes": {
