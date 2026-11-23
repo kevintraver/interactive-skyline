@@ -306,7 +306,8 @@ export function initAttractions({ cityId, scene, camera, renderer, settings, inv
     const changed = applyVisibility();
     if (changed) redrawShadows();
     viewProjection.multiplyMatrices(camera.projectionMatrix, camera.matrixWorldInverse);
-    frustum.setFromProjectionMatrix(viewProjection);
+    // the camera's own depth convention (v7: WebGPU's 0..1 range and a reversed depth buffer change the planes)
+    frustum.setFromProjectionMatrix(viewProjection, camera.coordinateSystem, camera.reversedDepth);
     const show = settings.fountain && fountains.some((f) => near(f.boundingSphere, SHOW_RANGE));
     const led = parts.some(ledNear) || tall.some((t) => ledNear(t.mesh));
     const turning = settings.wheel && wheels.some((w) => shown(w.root) && near(w.sphere, SPIN_RANGE));

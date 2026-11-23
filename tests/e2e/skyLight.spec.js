@@ -23,6 +23,9 @@ async function stageClock(page, { view, timeMs }) {
   await page.waitForFunction(() => getComputedStyle(document.getElementById('loading')).opacity === '0');
   await page.evaluate(() => { window.__skyline.renderer.shadowMap.needsUpdate = true; window.__skyline.invalidate(); });
   await frames(page, 3);
+  // phase 2: the automatic exposure has metered the scene and stopped adapting
+  await page.waitForFunction(() => { const l = window.__skyline.look; return !l || l.exposure.state.settled; }, null, { timeout: 600_000 });
+  await frames(page, 2);
 }
 
 for (const city of CITIES) {
