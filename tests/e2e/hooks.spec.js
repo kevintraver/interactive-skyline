@@ -64,6 +64,15 @@ for (const city of CITIES) {
       expect(r.zone).toBe(city === 'lv' ? 'America/Los_Angeles' : 'America/Denver');
     });
 
+    test('camera limits: enabled, bounds inside the terrain grid', async ({ page }) => {
+      const r = await page.evaluate(() => {
+        const L = window.__skyline.cameraLimits, b = L.bounds, g = L.terrain;
+        return { enabled: L.enabled, inside: b.minX > g.minX && b.maxX < g.maxX && b.minZ > g.minZ && b.maxZ < g.maxZ,
+          fns: [typeof L.groundAt, typeof L.clearance] };
+      });
+      expect(r).toEqual({ enabled: true, inside: true, fns: ['function', 'function'] });
+    });
+
     test('settings: night and highlight', async ({ page }) => {
       const r = await page.evaluate(() => {
         const s = window.__skyline, out = {};
