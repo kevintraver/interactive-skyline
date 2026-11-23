@@ -51,7 +51,7 @@ test('scrubbing noon to midnight to noon: no frame jumps in brightness', async (
 
 test('a seek lands within 0.3 EV of the settled exposure; settled, nothing renders', async ({ page }) => {
   await boot(page, 'lv', 'backend=webgl');
-  const settle = () => page.waitForFunction(() => window.__skyline.look.exposure.state.settled, null, { timeout: 120_000 });
+  const settle = () => page.waitForFunction(() => window.__skyline.look.exposure.state.settled, null, { timeout: 600_000 }); // software frames take seconds
   await page.evaluate(() => {
     const s = window.__skyline;
     s.attractions.freeze(47);

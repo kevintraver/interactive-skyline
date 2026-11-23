@@ -217,9 +217,10 @@ export function createExposure({ renderer, pipeline, prior, uniform: exposureUni
       const p = meter.measure(exposureUniform.value, state.gen);
       // this frame could not be metered (a readback was still in flight): when that one lands, draw another, so a
       // change seen by only one frame (a pan, an edit) is metered; with the scene idle nothing else would draw
-      if (!p && meter.pending && !missed) {
+      // (only for a settled, idle scene: while adapting, frames keep coming and skipping a reading is normal)
+      if (!p && meter.pending && !missed && state.settled) {
         missed = true;
-        meter.pending.then(() => { missed = false; state.settled = false; invalidate(); });
+        meter.pending.then(() => { missed = false; invalidate(); });
       }
       // a reading that moves the target asks for frames (the scene may be idle by then: a pan draws one frame)
       if (p) p.then((r) => {
