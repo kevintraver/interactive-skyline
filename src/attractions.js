@@ -375,7 +375,8 @@ export function initAttractions({ cityId, scene, camera, renderer, settings, inv
       if (state.night !== settings.night || state.fountain !== settings.fountain) { applyVisibility(); redrawShadows(); }
       invalidate();
     },
-    animating: () => state.animating,
+    /** Whether anything animates in view now (evaluated when asked: a slow frame may not have stepped yet). */
+    animating: () => { step(performance.now()); return state.animating; },
     summary: () => {
       applyVisibility();
       return { extras: extras.map(describe), fountains: fountains.map(describe), problems: [...state.problems] };
