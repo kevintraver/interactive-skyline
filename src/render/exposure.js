@@ -149,6 +149,12 @@ export function createExposure({ renderer, pipeline, prior, uniform: exposureUni
     clock.on('rate', () => { if (Math.abs(clock.rate) > 60) state.snapRequested = true; });
   }
   let missed = false;
+  /** A reading that moves the target asks for frames (the scene may be idle by then: a pan draws one frame). */
+  function onReading(r) {
+    if (!r || r.gen !== state.gen || !state.enabled) return;
+    const t = targetEv(ev100FromLuminance(r.luminanceCdM2), state.prior);
+    if (state.awaiting || Math.abs(t - state.target) > (state.settled ? REOPEN_EV : SETTLED_EV)) { state.settled = false; invalidate(); }
+  }
   const sub = {
     state,
     /** Turn adaptation off (the classic display): exposure is then held at `value`; hold() turns it back on. */
@@ -215,19 +221,21 @@ export function createExposure({ renderer, pipeline, prior, uniform: exposureUni
     afterRender() {
       if (!state.enabled || !meter) return;
       const p = meter.measure(exposureUniform.value, state.gen);
-      // this frame could not be metered (a readback was still in flight): when that one lands, draw another, so a
-      // change seen by only one frame (a pan, an edit) is metered; with the scene idle nothing else would draw
-      // (only for a settled, idle scene: while adapting, frames keep coming and skipping a reading is normal)
+      // this frame could not be metered (a readback was still in flight): when that one lands, meter the scene pass
+      // again (it still holds this frame), so a change seen by only one frame (a pan, an edit) is metered without
+      // drawing another; the reading then asks for frames only if it moves the target (only for a settled scene:
+      // while adapting, frames keep coming and skipping a reading is normal)
       if (!p && meter.pending && !missed && state.settled) {
         missed = true;
-        meter.pending.then(() => { missed = false; invalidate(); });
+        const k = exposureUniform.value, gen = state.gen;
+        meter.pending.then(() => {
+          missed = false;
+          const again = meter.measure(k, gen);
+          if (again) again.then(onReading);
+        });
       }
       // a reading that moves the target asks for frames (the scene may be idle by then: a pan draws one frame)
-      if (p) p.then((r) => {
-        if (!r || r.gen !== state.gen || !state.enabled) return;
-        const t = targetEv(ev100FromLuminance(r.luminanceCdM2), state.prior);
-        if (state.awaiting || Math.abs(t - state.target) > (state.settled ? REOPEN_EV : SETTLED_EV)) { state.settled = false; invalidate(); }
-      });
+      if (p) p.then(onReading);
     },
     /** Continuous until the eye has adapted (section 5.5); idle once settled. */
     demand() { return state.enabled && !state.settled ? 'continuous' : 'idle'; },
