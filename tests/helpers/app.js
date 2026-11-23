@@ -53,7 +53,7 @@ export async function stage(page, { view, look }) {
   // the view tiles redraw while the camera is still, then the frame itself; the loading cover fades out
   await frames(page, 4);
   await page.waitForFunction(() => getComputedStyle(document.getElementById('loading')).opacity === '0');
-  // phase 2: the automatic exposure has metered the new scene and stopped adapting (nothing then renders)
+  // phase 2: the exposure has settled (Eye mode, the default, at once; Camera mode once metered), so nothing then renders
   await page.waitForFunction(() => { const l = window.__skyline.look; return !l || l.exposure.state.settled; }, null, { timeout: 300_000 });
   await frames(page, 2);
 }

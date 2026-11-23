@@ -55,3 +55,63 @@ describe('exposure', () => {
     expect(adaptEv(NaN, 7, 0.1)).toBe(7);
   });
 });
+
+// Decision 13 (the stability pass): in Eye mode the exposure is the prior's alone; the meter exists only in Camera mode.
+describe('createExposure', async () => {
+  const { createExposure } = await import('../../../src/render/exposure.js');
+  const { Texture } = await import('three');
+  const fake = () => {
+    const calls = { reads: 0, invalidate: 0 };
+    const renderer = { getRenderTarget: () => null, setRenderTarget() {}, render() {}, readRenderTargetPixelsAsync: () => { calls.reads++; return new Promise(() => {}); } };
+    const pipeline = { scenePass: { getTexture: () => new Texture() } };
+    return { renderer, pipeline, calls };
+  };
+  it('Eye mode: the exposure follows the prior only, never asks for frames and meters nothing', () => {
+    const { renderer, pipeline, calls } = fake();
+    let prior = 14;
+    const u = { value: 0 };
+    const x = createExposure({ renderer, pipeline, prior: () => prior, uniform: u, settings: { exposureMode: 'eye', exposureComp: 0 }, offsetEv: 0.5, invalidate: () => calls.invalidate++ });
+    expect(x.metering).toBe(false);
+    for (let i = 0; i < 5; i++) {
+      x.update({ nowMs: i * 16 });
+      x.afterRender();
+      expect(u.value).toBe(exposureFor(14, 'eye', 0.5));
+      expect(x.demand()).toBe('idle');
+    }
+    x.snap(true); // a new view
+    x.update({ nowMs: 100 });
+    expect(u.value).toBe(exposureFor(14, 'eye', 0.5));
+    prior = 2; // the light changed: at once, no adaptation
+    x.update({ nowMs: 116 });
+    expect(u.value).toBe(exposureFor(2, 'eye', 0.5));
+    x.setCompensation(1);
+    x.update({ nowMs: 132 });
+    expect(u.value).toBe(exposureFor(2, 'eye', 1.5));
+    expect(x.demand()).toBe('idle');
+    expect(calls.reads).toBe(0);
+    expect(calls.invalidate).toBe(0);
+  });
+  it('Camera mode creates the meter, and leaving it drops the meter', () => {
+    const { renderer, pipeline } = fake();
+    const u = { value: 0 };
+    const x = createExposure({ renderer, pipeline, prior: () => 10, uniform: u, settings: { exposureMode: 'eye' } });
+    x.update({ nowMs: 0 });
+    x.setMode('camera');
+    expect(x.metering).toBe(true);
+    x.update({ nowMs: 16 });
+    expect(u.value).toBe(exposureFor(10, 'camera')); // the first frame after the switch: the prior, awaiting a reading
+    expect(x.demand()).toBe('continuous');
+    x.setMode('eye');
+    expect(x.metering).toBe(false);
+    x.update({ nowMs: 32 });
+    expect(u.value).toBe(exposureFor(10, 'eye'));
+    expect(x.demand()).toBe('idle');
+  });
+  it('without a pipeline (the classic renderer) Camera mode cannot meter and exposes at the prior', () => {
+    const u = { value: 0 };
+    const x = createExposure({ renderer: null, pipeline: null, prior: () => 10, uniform: u, settings: { exposureMode: 'camera' } });
+    x.update({ nowMs: 0 });
+    expect(x.metering).toBe(false);
+    expect(x.demand()).toBe('idle');
+  });
+});
