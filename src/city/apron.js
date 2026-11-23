@@ -2,8 +2,8 @@
 // where the fog has hidden the ground (exponential-squared, density 0.000014: 99 % at about 150 km), so a camera
 // near the edge of its limits never sees the terrain end in a cliff with the sky below it.
 //
-//   shape    rings of the grid's border rectangle, grown outward; the first ring is the border itself at the grid's
-//            own heights, an inner ring tucks under the grid so a step between two border samples shows ground,
+//   shape    rings of the grid's border rectangle, grown outward; the first ring is the border itself, at the lowest
+//            of the grid's own border heights around each sample, an inner ring tucks under the grid so a step between two border samples shows ground,
 //            not sky; outward the heights ease to a smoothed border height and fall with the Earth's curve
 //            (curveDrop), as the terrain does
 //   colour   the aerial photo's edge colours, averaged along the border, as vertex colours; the material follows the
@@ -80,7 +80,16 @@ function smoothClosed(list, k) {
 export function apronGeometry(hf, BASE, tones = null, { rings = APRON_RINGS, segment = APRON_SEGMENT } = {}) {
   const samples = borderSamples(hf, segment);
   const n = samples.length;
-  const border = samples.map((s) => hf.sample(s.x, s.y));
+  // the border ring never rises above the grid's edge between two samples: from inside, looking out, a ray that
+  // passes over the edge then meets the apron's top, never its underside (culled, the sky would show through);
+  // from outside, the step below the edge shows the ring tucked under the grid
+  const edgeMin = (a, b) => {
+    const n = Math.max(1, Math.ceil(Math.hypot(b.x - a.x, b.y - a.y) / hf.step));
+    let m = Infinity;
+    for (let k = 0; k <= n; k++) m = Math.min(m, hf.sample(a.x + ((b.x - a.x) * k) / n, a.y + ((b.y - a.y) * k) / n));
+    return m;
+  };
+  const border = samples.map((s, i) => Math.min(edgeMin(samples[(i - 1 + samples.length) % samples.length], s), edgeMin(s, samples[(i + 1) % samples.length])) - 1);
   const far = smoothClosed(border, 6);
   const tone = tones || samples.map(() => [1, 1, 1]);
   const pos = new Float32Array(rings.length * n * 3), col = new Float32Array(rings.length * n * 3), nor = new Float32Array(rings.length * n * 3);

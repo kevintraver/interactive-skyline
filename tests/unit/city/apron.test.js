@@ -19,11 +19,17 @@ describe('apron', () => {
     expect(s.some((p) => p.x === 20000 && p.y === 15000)).toBe(true);
     for (const p of s) expect(p.x === -20000 || p.x === 20000 || p.y === -15000 || p.y === 15000).toBe(true);
   });
-  it('its border ring sits at the grid\'s own heights, on the curved Earth', () => {
+  it('its border ring follows the grid\'s border heights on the curved Earth, never above the edge between samples', () => {
     const r = APRON_RINGS.indexOf(0);
     for (let i = 0; i < n; i++) {
       const k = (r * n + i) * 3, x = g.pos[k], y = -g.pos[k + 2];
-      expect(g.pos[k + 1]).toBeCloseTo(hf.sample(x, y) - 600 - curveDrop(x, y), 1);
+      const h = g.pos[k + 1] + 600 + curveDrop(x, y);
+      expect(h).toBeLessThanOrEqual(hf.sample(x, y) - 1 + 1e-3);
+      expect(h).toBeGreaterThan(hf.sample(x, y) - 60); // close below: a 2 km stretch of this edge varies by tens of metres
+      // and below the edge half way to the next sample
+      const k2 = (r * n + ((i + 1) % n)) * 3, mx = (x + g.pos[k2]) / 2, my = (y - g.pos[k2 + 2]) / 2;
+      const hm = (g.pos[k + 1] + g.pos[k2 + 1]) / 2 + 600 + curveDrop(mx, my);
+      expect(hm).toBeLessThanOrEqual(hf.sample(mx, my) + 0.5);
     }
   });
   it('the ring under the grid stays below the grid', () => {
