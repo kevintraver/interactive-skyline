@@ -71,6 +71,16 @@ export function createLegacySky() {
         new THREE.SphereGeometry(120000, 32, 16),
         active.legacy ? active.legacy.domeMaterial({ value: ZENITH }) : domeNodeMaterial(ZENITH),
       );
+      // centred on the camera for every render (the main view, the view tiles, probes): from far off-centre a dome
+      // fixed at the origin reached past the far plane and showed the clear colour; its gradient comes from the
+      // normalised vertex position, so its look does not change
+      sky.dome.frustumCulled = false;
+      sky.dome.matrixAutoUpdate = false;
+      sky.dome.onBeforeRender = (r, s, camera) => {
+        camera.getWorldPosition(sky.dome.position);
+        sky.dome.updateMatrix();
+        sky.dome.updateMatrixWorld(true);
+      };
       scene.add(sky.dome);
 
       const hemi = sky.hemi = new THREE.HemisphereLight(DAY.skyLight, DAY.groundLight, DAY.hemi);
