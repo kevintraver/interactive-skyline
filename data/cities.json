@@ -110,6 +110,22 @@
     "iemNetwork": "NV_ASOS",
     "stationElevationM": 664.5,
     "stationNote": "Harry Reid International Airport; elevation 2,180 ft from NOAA station metadata (api.weather.gov/stations/KLAS, read 21 Nov 2026)",
+    "airport": {
+      "faa": "LAS",
+      "box": [
+        -500,
+        -5200,
+        5200,
+        -1400
+      ],
+      "boxNote": "Map metres [x0, y0, x1, y1]: every runway end (FAA NASR, cycle of 29 Oct 2026, as projected by scripts/build_airport.py; the 19R end at 1,474, -1,668 is the nearest to an edge) and the terminals, gates and cargo apron, with at least 250 m to spare",
+      "arrivals": [
+        "19L",
+        "19R",
+        "26L",
+        "26R"
+      ]
+    },
     "bbox": [
       36.085,
       -115.2,

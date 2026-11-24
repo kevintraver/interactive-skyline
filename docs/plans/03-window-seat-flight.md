@@ -63,6 +63,15 @@ Written by the orchestrating session when the build started, on the user's instr
 - **F4.7** extends plan 2's provider (which already serves three grids and patches) to any number of nested grids with chunked meshes, and keeps its interface.
 - **F8.3 (Salt Lake City), F8.4 to F8.6 (stretch)** are attempted last and only if the Las Vegas work is verified.
 
+### The flight file, settled (24 November)
+
+Section 6.2 gives the layout of `skyline-flight/1` but not its units or the values of three channels, and the loader and the bake first disagreed on them. These hold for both `scripts/bake_flight.py` and `src/flight/track.js`:
+
+- **Units.** Metres and metres per second. `hdg`, `pitch` and `roll` are in degrees. `hdg` is clockwise from grid north of the city's projection (the direction of the projected path), not true north; the two differ by up to 2 degrees at cruise range.
+- **`flap`** is the surface position in lever units, 0 to 40. **`slat`** is 0 retracted, 1 extend, 2 full extend, as in `AircraftState`. `gear`, `speedbrake`, `groundSpoiler`, `reverser`, `cabinLight` and `turbulence` run 0 to 1.
+- **`lights`** is a bit field with the values of section 5.5 in its order: NAV 1, BEACON 2, STROBE 4, LANDING 8, TAXI 16, TURNOFF 32, LOGO 64, WING 128. A lamp that is on has its bit set, the navigation lights, beacon and strobes included; nothing is assumed on.
+- **Event ids**, in flight order, each with `t` (seconds from the start), `s` (metres along the track) and a label: `cruise` (or `start` when the recording begins below 18,000 ft), `tod`, `fl180`, `10000`, `terrain` (the aircraft enters the terrain that exists today; playback starts here until Phase 6), `gear`, `ft1000` (1,000 ft above the landing threshold), `threshold`, `touchdown`, `vacate`, `end`. The loader takes `onGround` from `touchdown`.
+
 ### Order of work
 
 1. Phase 0 with Phase 1's three independent starts, in parallel: the track sampler and kinematics on a synthetic track with the adapter and the airport block (F0.1, F0.2, F1.3); the runway ends and the bake of one real runway 19 arrival (F0.3, F1.1, F1.2); the window, wing and head (F1.5). The airframe's dimensions and kit (F3.1, F3.2) start at the same time because nothing blocks them.

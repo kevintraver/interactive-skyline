@@ -43,3 +43,36 @@ describe.each(Object.entries(cities))('cities.json: %s', (id, c) => {
     expect(str(c.stationNote)).toBe(true);
   });
 });
+
+// Plan 03, F0.1: a city with an airport says which one and where its detailed area is. The box must hold all four
+// runways and the terminals.
+describe('cities.json: airport block (plan 03, F0.1)', () => {
+  it('lv has the airport, its box and its arrival runways', () => {
+    const a = cities.lv.airport;
+    expect(a.faa).toBe('LAS');
+    expect(a.box).toHaveLength(4);
+    expect(a.box.every(num)).toBe(true);
+    const [x0, y0, x1, y1] = a.box;
+    expect(x1 > x0 && y1 > y0).toBe(true);
+    expect(a.arrivals).toEqual(['19L', '19R', '26L', '26R']);
+    expect(str(a.boxNote)).toBe(true);
+  });
+  it('the lv box holds the four runways and the terminals, with room to spare', () => {
+    const [x0, y0, x1, y1] = cities.lv.airport.box;
+    const inside = ([x, y], margin = 250) => x >= x0 + margin && x <= x1 - margin && y >= y0 + margin && y <= y1 - margin;
+    // every runway end, map metres, from FAA NASR (cycle of 29 Oct 2026) through scripts/build_airport.py
+    const points = {
+      '1L': [219, -4369], '19R': [1474, -1668], '1R': [479, -4489], '19L': [1733, -1789],
+      '8L': [137, -4254], '26R': [4658, -4248], '8R': [1024, -4557], '26L': [4232, -4553],
+      // the terminals and the gates, from the map (estimates: the building data stops at y = -3,300)
+      'Terminal 1': [2000, -2900], 'Terminal 3': [2300, -3600], 'D gates': [1200, -3500],
+    };
+    for (const [name, p] of Object.entries(points)) expect(inside(p), name).toBe(true);
+    // the box is the airport, not the valley: under 7 km by 5 km
+    expect(x1 - x0).toBeLessThan(7000);
+    expect(y1 - y0).toBeLessThan(5000);
+  });
+  it('no other city has an airport block yet', () => {
+    for (const [id, c] of Object.entries(cities)) if (id !== 'lv') expect(c.airport, id).toBeUndefined();
+  });
+});
