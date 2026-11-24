@@ -32,11 +32,19 @@ import {
 import { ATLAS_COLS, ATLAS_ROWS, CELL_H, CELL_W, DESIGNS } from '../screens/art.js';
 import { FADE_S, HOLD_S, PLAIN, VINYL } from '../screens/digital.js';
 import { luminance, photometryContext } from '../lights/photometry.node.js';
+import { FACE_DISPLAY } from './faceDisplay.js';
 
 const shared = (v, name) => uniform(v).setGroup(renderGroup).setName(name);
 
 /** The display a photometry context draws for ('classic' or 'physical'): which units faceLevels should give. */
 export const displayOf = (photometry) => photometryContext(photometry).display;
+
+/** faceDisplay.js's limit as a node: the drawn white level for a pre-exposed white level. */
+const faceDisplayNode = (x) => {
+  const span = FACE_DISPLAY.max - FACE_DISPLAY.knee;
+  const over = x.sub(FACE_DISPLAY.knee).max(0);
+  return x.clamp(0, FACE_DISPLAY.knee).add(float(span).mul(float(1).sub(over.div(span).negate().exp())));
+};
 
 /** lowbias32 (art.js hash32) on uint nodes: x ^= x >> 16; x *= 0x7feb352d; x ^= x >> 15; x *= 0x846ca68b; x ^= x >> 16 */
 export function bbHash(x0) {
@@ -126,7 +134,10 @@ export function faceMaterial({ blank, blankTable, photometry = {} }) {
   material.colorNode = vec4(now.mul(mix(float(VINYL), float(0.06), digital)), 1);
   // emission: the screen's picture, or the vinyl under its floodlights (brighter at the bottom)
   const level = mix(uStaticLevel.mul(mix(float(1.35), float(0.65), faceUv.y)), uDigitalLevel, digital);
-  material.emissiveNode = now.mul(luminance(level, ctx));
+  // in the shipped look the face's white is held inside what the tone mapping shows (faceDisplay.js); the classic
+  // display draws the classic levels as they are
+  const white = luminance(level, ctx);
+  material.emissiveNode = now.mul(ctx.display === 'classic' ? white : faceDisplayNode(white));
   material.addEventListener('dispose', () => stand.dispose());
   return { material, uniforms };
 }

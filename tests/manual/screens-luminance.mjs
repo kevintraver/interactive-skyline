@@ -106,6 +106,7 @@ const result = await page.evaluate(async ({ DAY, NIGHT, SPHERE }) => {
     const { adFrame } = await import('/src/drive/roadside/billboardsImages.js');
     const { contentSeconds } = await import('/src/drive/screens/clock.js');
     const { VINYL } = await import('/src/drive/screens/digital.js');
+    const { faceDisplay } = await import('/src/drive/roadside/faceDisplay.js');
     // the atlas as pixels (the bitmap is flipped as uploaded: texture v = 0 is its row 0)
     const img = bb.uniforms.uAds.value.image;
     const cv = new OffscreenCanvas(img.width, img.height), g = cv.getContext('2d');
@@ -171,7 +172,10 @@ const result = await page.evaluate(async ({ DAY, NIGHT, SPHERE }) => {
         const c0 = texel(fr.prev, iu, iv, box), c1 = texel(fr.cur, iu, iv, box);
         const c = c0.map((x, k) => x + (c1[k] - x) * fr.fade);
         const grad = f.digital ? 1 : 1.35 + (0.65 - 1.35) * p.v;
-        return Y(c) * level * grad;
+        // the face's white is drawn no brighter than faceDisplay.js allows in the pre-exposed buffer (it matters at
+        // night); the probe divides the exposure out again
+        const k = s.uniforms.exposure.value * (s.uniforms.cityFactor ? s.uniforms.cityFactor.value : 1);
+        return Y(c) * (faceDisplay(level * grad * k) / k);
       });
       const mean = (xs) => xs.reduce((q, x) => q + x, 0) / Math.max(1, xs.length);
       return { n: pts.length, level, emitted: mean(on.map((x, i) => x - off[i])), expected: mean(exp), reflected: mean(off), box, image: fr.cur, fade: +fr.fade.toFixed(2) };
