@@ -1417,13 +1417,13 @@
    "tris": 620,
    "bbox_min": [
     -0.64,
-    -0.938,
+    -1.015,
     -2.091
    ],
    "bbox_max": [
     0.64,
-    0.565,
-    0.0
+    0.637,
+    0.037
    ],
    "islands": 7,
    "open_islands": 0,
@@ -1442,7 +1442,7 @@
    "role": "part",
    "pivot": [
     2.86,
-    0.0,
+    0.45,
     2.1
    ]
   },
@@ -1453,13 +1453,13 @@
    "tris": 620,
    "bbox_min": [
     -0.64,
-    -0.938,
+    -1.015,
     -2.091
    ],
    "bbox_max": [
     0.64,
-    0.565,
-    0.0
+    0.637,
+    0.037
    ],
    "islands": 7,
    "open_islands": 0,
@@ -1478,7 +1478,7 @@
    "role": "part",
    "pivot": [
     -2.86,
-    0.0,
+    0.45,
     2.1
    ]
   },
@@ -1560,7 +1560,7 @@
  "errors": [],
  "light_channels": {
   "NAV": {
-   "lit_corners": 335,
+   "lit_corners": 432,
    "max": 1.0
   },
   "BEACON": {
@@ -1573,7 +1573,7 @@
   },
   "LANDING": {
    "lit_corners": 0,
-   "max": 0.0016
+   "max": 0.0017
   },
   "TAXI": {
    "lit_corners": 0,
@@ -1595,6 +1595,6 @@
  "files": {
   "glb": "airframe.glb",
   "rig": "rig.json",
-  "glb_bytes": 798536
+  "glb_bytes": 798608
  }
 }

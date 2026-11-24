@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Airframe rig and lights</title>
+  <link rel="icon" href="data:,">
+  <style>
+    html, body { margin: 0; height: 100%; overflow: hidden; background: #000; color: #ccc; font: 12px monospace; }
+    canvas { display: block; width: 100vw; height: 100vh; touch-action: none; }
+    #log { position: fixed; left: 8px; bottom: 6px; pointer-events: none; text-shadow: 0 0 3px #000; }
+  </style>
+</head>
+<body>
+  <!--
+    F3.4 and F3.8's harness (plan 03): the modelled airframe (public/models/aircraft/airframe.glb posed by rig.js, its
+    wing flexed, its own lights on the skin and as points), the cabin and the head rig on the new renderer
+    (?backend=webgl|webgpu), over the plain ground of flight-cabin.html, posed from the synthetic track
+    (tests/fixtures/flight/synthetic-19.*) with any channel overridden. Drag, wheel, W A S D Q E, R and C work by hand;
+    keys 1-9 step through the configurations, N toggles night.
+    Driven by flight-airframe-shots.mjs through window.__af:
+      __af.ready                        resolves when the model has loaded and a frame is drawn
+      __af.info                         { backend, reason, gpu, model: true | error }
+      await __af.view({ t, set, seat, look, night, wallS, reducedMotion, clean, outside })
+          t: seconds of the synthetic track; set: channels to override (flap, slat, gear, groundSpoiler, reverser,
+          lights, onGround, pitch, ias, turbulence...); outside: { azimuth, elevation, distance, lens, target } puts the
+          camera outside the aircraft; resolves after a frame with stats()
+      __af.stats()                      { triangles, drawCalls, scene draws and triangles with and without the airframe,
+                                          update ms per call, tips, lamp levels, state channels }
+  -->
+  <canvas id="scene"></canvas>
+  <div id="log">loading</div>
+  <script type="module" src="./flight-airframe.js"></script>
+</body>
+</html>

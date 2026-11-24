@@ -317,3 +317,56 @@ export function placeAirframe(group, state) {
   group.updateMatrixWorld(true);
   return group;
 }
+
+// ---------------------------------------------------------------- the modelled airframe (F3.4)
+
+/**
+ * The airframe the flight draws: this file's stand-in at once, swapped for the modelled airframe (model.js:
+ * airframe.glb with moving parts, flex and its own lights) when that has loaded. The same shape as createAirframe()
+ * ({ group, parts, materials, triangles, dispose }) so view/layers.js and the session take either; placeAirframe()
+ * still places `group`. Call update(state, o) each frame after the state is sampled: it poses the model (no-op while
+ * the stand-in shows). If the model fails to load, the stand-in stays and `error` says why.
+ * @param {{ nodes: object, load?: (o: { nodes: object }) => Promise<ReturnType<import('./model.js').buildAirframeModel>>,
+ *   url?: string, rigUrl?: string, materials?: ReturnType<typeof airframeMaterials> }} opts  nodes: the environment's
+ *   (app.env.nodes); load: how to get the model (by default model.js loadAirframeModel from url and rigUrl)
+ */
+export function createModelledAirframe({ nodes, load = null, url, rigUrl, materials } = {}) {
+  const standIn = createAirframe(materials ? { materials } : {});
+  standIn.group.name = 'airframe-standin';
+  const group = new Group();
+  group.name = 'airframe';
+  group.add(standIn.group);
+  let model = null, error = null, disposed = false;
+  const get = load ?? ((o) => import('./model.js').then((m) => m.loadAirframeModel({ ...o, ...(url ? { url } : {}), ...(rigUrl ? { rigUrl } : {}) })));
+  const api = {
+    group,
+    parts: standIn.parts,
+    materials: standIn.materials,
+    standIn,
+    get model() { return model; },
+    get error() { return error; },
+    get triangles() { return model ? model.triangles : standIn.triangles; },
+    get drawCalls() { return model ? model.drawCalls : Object.keys(standIn.parts).length + 2; },
+    /** Resolves with the model once it is in the group, or with null if it failed or came after dispose(). */
+    ready: Promise.resolve()
+      .then(() => get({ nodes }))
+      .then((m) => {
+        if (disposed) { m.dispose(); return null; }
+        model = m;
+        group.remove(standIn.group);
+        group.add(m.root);
+        standIn.dispose();
+        return m;
+      }, (e) => { error = e; return null; }),
+    /**
+     * Pose the model for a state (rig, flex, lights) at presentation time o.wallS; see model.js update().
+     * @param {object} state  @param {Parameters<ReturnType<import('./model.js').buildAirframeModel>['update']>[1]} [o]
+     */
+    update(state, o) { if (model) model.update(state, o); return api; },
+    dispose() {
+      disposed = true;
+      if (model) model.dispose(); else standIn.dispose();
+    },
+  };
+  return api;
+}

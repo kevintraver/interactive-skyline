@@ -116,3 +116,68 @@ describe('placeAirframe()', () => {
     expect(tip.y).toBeLessThan(3.91);
   });
 });
+
+// ---------------------------------------------------------------- the modelled airframe swapped in (F3.4)
+import { readFileSync } from 'node:fs';
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
+import { createModelledAirframe } from '../../../src/flight/aircraft/airframe.js';
+import { buildAirframeModel } from '../../../src/flight/aircraft/model.js';
+import { createEnvNodes } from '../../../src/env/nodes.js';
+
+const glbBytes = readFileSync(new URL('../../../public/models/aircraft/airframe.glb', import.meta.url));
+const rigJson = JSON.parse(readFileSync(new URL('../../../public/models/aircraft/rig.json', import.meta.url), 'utf8'));
+const loadModel = async ({ nodes }) => {
+  const gltf = await new Promise((resolve, reject) =>
+    new GLTFLoader().parse(glbBytes.buffer.slice(glbBytes.byteOffset, glbBytes.byteOffset + glbBytes.byteLength), '', resolve, reject));
+  return buildAirframeModel(gltf.scene, rigJson, { nodes });
+};
+
+describe('createModelledAirframe()', () => {
+  const nodes = createEnvNodes({ state: null });
+  const state = { position: new Vector3(5, 640, 9), quaternion: new Quaternion(), flap: 15, slat: 2, gear: 1, lights: 1, onGround: false, pitch: 0, roll: 0, ias: 80 };
+
+  it('shows the stand-in at once and keeps the shape createAirframe() gives', () => {
+    const a = createModelledAirframe({ nodes, load: () => new Promise(() => {}) });
+    expect(a.group.name).toBe('airframe');
+    expect(a.parts.wingRight).toBeTruthy();
+    expect(a.model).toBe(null);
+    expect(a.triangles).toBe(createAirframe().triangles);
+    expect(a.group.children.length).toBe(1);
+    // update() before the model has loaded does nothing and does not throw
+    a.update(state);
+  });
+
+  it('swaps the model in for the stand-in when it is ready, and poses it from a state', async () => {
+    const a = createModelledAirframe({ nodes, load: loadModel });
+    const model = await a.ready;
+    expect(a.model).toBe(model);
+    expect(a.group.children).toEqual([model.root]);
+    expect(a.triangles).toBe(model.triangles);
+    a.update(state, { wallS: 1 });
+    expect(model.parts.get('FlapInboard_R').quaternion.angleTo(new Quaternion())).toBeGreaterThan(0.1);
+    // placing is still placeAirframe()'s: the group, not the model inside it
+    placeAirframe(a.group, state);
+    expect(a.group.position.equals(state.position)).toBe(true);
+    expect(model.root.position.length()).toBe(0);
+  });
+
+  it('keeps the stand-in when the model fails to load, and says why', async () => {
+    const a = createModelledAirframe({ nodes, load: () => Promise.reject(new Error('404')) });
+    expect(await a.ready).toBe(null);
+    expect(a.error.message).toBe('404');
+    expect(a.group.children.length).toBe(1);
+    expect(a.model).toBe(null);
+  });
+
+  it('disposes the model if it arrives after dispose()', async () => {
+    let resolve;
+    const a = createModelledAirframe({ nodes, load: () => new Promise((r) => { resolve = r; }) });
+    a.dispose();
+    const model = await loadModel({ nodes });
+    let disposed = false;
+    const d = model.dispose; model.dispose = () => { disposed = true; d(); };
+    resolve(model);
+    expect(await a.ready).toBe(null);
+    expect(disposed).toBe(true);
+  });
+});

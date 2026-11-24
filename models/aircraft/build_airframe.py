@@ -73,6 +73,20 @@ ROUGH = {"Paint": 0.35, "PaintGrey": 0.45, "BareMetal": 0.3, "Walk": 0.5, "Windo
 METAL = {"BareMetal": 0.85, "Hub": 0.6, "Strut": 0.7, "Exhaust": 0.5}
 
 
+# Two corrections found by the app's window-seat harness (tests/manual/flight-airframe.*, F3.4), kept here until
+# spec.py takes them (ESTIMATED, like the numbers they replace):
+# - The main flap's share of the landing detents. The aft flap-track fairings ride the main flap, and in photographs of
+#   the type at flaps 30 and 40 they droop much further than a 20 or 25 degree main flap gives ('A fully extended
+#   flap.jpg'); the main flap takes most of the angle there and the aft flap the rest, so main + aft is still the
+#   lever's angle. lever -> (main-flap angle, aft-flap extra), replacing spec.FLAPS["detents"]'s two angles.
+MAIN_FLAP_SHARE = {30: (24.0, 6.0), 40: (30.0, 10.0)}
+# - The main gear's trunnion. Above the axle (spec.GEAR's main_trunnion_z at the gear station) it stood 0.16 m behind
+#   the inboard flap's hinge, in the flap cove, and the top of the leg showed through the slot behind the wing with the
+#   flaps out. On the type it hangs from the rear spar and the gear beam, inside the wing box: the leg leans forward to
+#   a trunnion this far ahead of the axle, and the drag brace runs forward to the wing, not aft into the cove.
+MAIN_TRUNNION_FWD = 0.45   # m
+
+
 def builder(smooth_deg=38.0):
     return ak.PartBuilder(COLORS, roughness=ROUGH, metallic=METAL, smooth_deg=smooth_deg)
 
@@ -521,6 +535,7 @@ def build_wing_parts(model, side, rig):
         direction = Vector((0.0, -math.cos(a), -math.sin(a)))      # Blender: aft and down
         rows_main, rows_aft = [], []
         for lever, angle, frac, extra in detents:
+            angle, extra = MAIN_FLAP_SHARE.get(lever, (angle, extra))
             t = direction * (frac * travel * chord)
             rows_main.append({"at": lever, "t": [round(c, 4) for c in ak.to_gltf(t)], "r": angle})
             rows_aft.append({"at": lever, "t": [0.0, 0.0, 0.0], "r": extra})
@@ -705,13 +720,14 @@ def build_gear(model, rig):
         x = MAIN
         axle_z = d / 2
         tz = F(G["main_trunnion_z"])
-        strut(b, (x, y_leg, axle_z), (x, y_leg, tz), 0.13)
+        xt = x - MAIN_TRUNNION_FWD                                    # the trunnion, inside the wing box
+        strut(b, (x, y_leg, axle_z), (xt, y_leg, tz), 0.13)
         strut(b, (x, y_leg - 0.48, axle_z), (x, y_leg + 0.48, axle_z), 0.07)
-        strut(b, (x - 0.05, y_leg, axle_z + 0.4), (x + 0.9, y_leg - side * 0.25, tz - 0.05), 0.05)   # drag brace
+        strut(b, (x - 0.05, y_leg, axle_z + 0.4), (xt - 0.6, y_leg - side * 0.25, tz - 0.05), 0.05)   # drag brace
         for off in (-0.5, 0.5):
             wheel(b, (x, y_leg + off * F(G["main_wheel_spacing"]), axle_z), 0, d, F(G["main_tyre_width"]),
                   F(G["main_rim_diameter"]))
-        piv = (x, side * F(G["main_trunnion_y"]), tz)
+        piv = (xt, side * F(G["main_trunnion_y"]), tz)
         model.part(b, f"MainGear_{sfx}", pivot=P(*piv), axis=(0.0, 1.0 if side > 0 else -1.0, 0.0))
         ang = F(G["main_retract_deg"])
         rig[f"MainGear_{sfx}"] = {"gear": [{"at": 0, "t": [0, 0, 0], "r": ang}, {"at": 1, "t": [0, 0, 0], "r": 0}]}

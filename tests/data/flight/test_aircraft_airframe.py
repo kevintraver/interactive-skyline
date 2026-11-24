@@ -207,3 +207,29 @@ def test_no_branding_in_names(glb):
     names = [n.get("name", "") for key in ("nodes", "meshes", "materials") for n in glb.get(key, [])]
     banned = ("boeing", "southwest", "ryanair", "united", "delta", "american", "alaska", "logo", "cfm")
     assert not [n for n in names if any(b in n.lower() for b in banned)]
+
+
+def test_main_gear_leg_stands_ahead_of_the_flap_cove(rig):
+    """The leg's trunnion is inside the wing box, ahead of the inboard flap's nose, so the slot that opens behind the
+    wing with the flaps out does not show the top of the leg (it did, at the gear station, 0.16 m behind the hinge)."""
+    by_node = {p["node"]: p for p in rig["parts"]}
+    for s in "LR":
+        gear, flap = by_node[f"MainGear_{s}"], by_node[f"FlapInboard_{s}"]
+        # the flap's hinge line at the gear's buttock line
+        ax, p = np.array(flap["axis"]), np.array(flap["pivot"])
+        hinge_z = p[2] + ax[2] / ax[0] * (gear["pivot"][0] - p[0])
+        assert gear["pivot"][2] < hinge_z - 0.25, (s, gear["pivot"], hinge_z)
+
+
+def test_flap_track_fairings_droop_with_the_main_flap_at_30_and_40(rig):
+    """The aft fairings ride the main flap, so at the landing detents the main flap carries most of the angle (the
+    fairings visibly droop in photographs of the type at 30 and 40), and main + aft flap is still the lever's angle."""
+    by_node = {p["node"]: p for p in rig["parts"]}
+    for s in "LR":
+        for name in ("Inboard", "Outboard"):
+            main = {r["at"]: r["r"] for r in by_node[f"Flap{name}_{s}"]["tables"]["flap"]}
+            aft = {r["at"]: r["r"] for r in by_node[f"Flap{name}Aft_{s}"]["tables"]["flap"]}
+            assert main[30] >= 24 and main[40] >= 30, (name, s, main)
+            assert main[30] + aft[30] == pytest.approx(30) and main[40] + aft[40] == pytest.approx(40)
+            levers = sorted(main)
+            assert all(main[a] <= main[b] for a, b in zip(levers, levers[1:]))
