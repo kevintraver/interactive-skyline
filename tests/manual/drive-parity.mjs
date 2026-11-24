@@ -9,7 +9,8 @@
 //
 // A shot: { name, route, s (metres along the route's road), t ('day' | 'night' | ISO time | ms), view ('clean'),
 //   look ({ yaw, pitch, lens }), target (a removable building's id: the head turns to it, then look.lens applies),
-//   parts ('none', 'a,b', or 'all' for no ?parts= at all), rain (a preset or mm/h), limit (percent), reason }.
+//   parts ('none', 'a,b', or 'all' for no ?parts= at all), rain (a preset or mm/h), query (more address parameters for
+//   both renderers, e.g. 'weathersky=off'), limit (percent), reason }.
 // Without --shots the static-world set below runs. A shot's `limit` replaces the default for that shot only, and
 // should carry a `reason`.
 //
@@ -115,18 +116,19 @@ const RENDERERS = {
 const pages = new Map(); // `${renderer}|${parts}|${rain}` -> page
 
 async function pageFor(renderer, shot) {
-  const parts = shot.parts ?? 'none', rain = shot.rain ?? '';
-  const key = `${renderer}|${parts}|${rain}`;
+  const parts = shot.parts ?? 'none', rain = shot.rain ?? '', extra = shot.query ?? ''; // query: more address parameters, both renderers (weather port)
+  const key = `${renderer}|${parts}|${rain}|${extra}`;
   if (pages.has(key)) return pages.get(key);
   // one page per renderer at a time: a page for another parts set replaces the last one
   for (const [k, p] of pages) if (k.startsWith(`${renderer}|`)) { await p.close(); pages.delete(k); }
   const page = await browser.newPage({ viewport: { width: W, height: H }, deviceScaleFactor: 1 });
   page.problems = [];
+  await page.routeWebSocket(/.*/, () => {}); // a dev server's hot-update socket answered silently: other work in the checkout must not reload the page (weather port)
   page.on('console', (m) => { if (m.type() === 'error' || m.type() === 'warning') page.problems.push(`[${m.type()}] ${m.text().slice(0, 300)}`); });
   page.on('pageerror', (e) => page.problems.push(`[pageerror] ${e.message.slice(0, 300)}`));
   await page.addInitScript(() => { try { localStorage.clear(); localStorage.setItem('slc-skyline-hinted', '1'); } catch { /* none */ } });
   // parts 'all' leaves the parameter out: every part the renderer runs (and an older build without ?parts= takes the same address)
-  const q = `city=lv&${RENDERERS[renderer]}${parts === 'all' ? '' : `&parts=${encodeURIComponent(parts)}`}${rain ? `&rain=${encodeURIComponent(rain)}` : ''}`;
+  const q = `city=lv&${RENDERERS[renderer]}${parts === 'all' ? '' : `&parts=${encodeURIComponent(parts)}`}${rain ? `&rain=${encodeURIComponent(rain)}` : ''}${extra ? `&${extra}` : ''}`;
   await page.goto(`http://localhost:${port}/?${q}`);
   await page.waitForFunction(() => performance.getEntriesByName('skyline-ready').length > 0 && window.__skyline?.attractions && window.__skyline?.drive, null, { timeout: 180000 });
   page.info = await page.evaluate(async () => {

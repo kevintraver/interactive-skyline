@@ -40,7 +40,7 @@ function contextOf(app, { terrainData }) {
     /** true on the classic WebGLRenderer (the drive's GLSL path), false on plan 01's renderer (node materials) */
     legacy: app.rendererKind === 'legacy',
     /** plan 01's contract (section 11), on its renderer: the clock, the timeline, the environment, quality, the pipeline, the loop */
-    plan01: { clock: app.clock, timeline: app.timeline, env: app.env, quality: app.quality, pipeline: app.pipeline, loop: app.loop },
+    plan01: { clock: app.clock, timeline: app.timeline, env: app.env, quality: app.quality, pipeline: app.pipeline, loop: app.loop, weather: () => app.loadWeather?.() ?? null }, // weather: plan 01's weather service, loaded on demand (the drive's weather, decision 9)
     /** the app's event bus (src/app/events.js): 'buildings:changed' after a hide, show or move, 'buildings:rebuilt' */
     events,
     /** { active, night, frame, render, focus }: the seam main.js reads (see the top of this file) */

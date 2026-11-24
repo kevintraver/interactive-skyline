@@ -7,8 +7,9 @@
 // Plan 01's renderer (third stretch, decisions 4, 5 and 9): the adapter of plan 01's section 11.10 (createEnv with
 // `app`). The clock is app.clock (one clock for the app), the ephemeris is app.env.ephemeris, the ambient light is
 // env.state.sky.horizontalLux, and `plan01`, `nodes` and `state` reach plan 01's environment itself. The members keep
-// the drive's names and shapes, so a part reads the same port on either renderer. The weather is still the stand-in
-// below on both (decision 9 moves it to env.state when the weather part is ported).
+// the drive's names and shapes, so a part reads the same port on either renderer. The weather is plan 01's on its
+// renderer (decision 9, weatherOn below: env.state's sample, with rain and wetness still derived in the drive until
+// plan 01's phase 7) and the stand-in below on the classic one.
 import { zonedToUtc } from '../core/time.js';
 
 export const RATE_MIN = 0.25;
@@ -359,6 +360,184 @@ export function createWeather({ preset = 'clear' } = {}) {
   return weather.setPreset(preset);
 }
 
+// ---------------------------------------------------------------- the weather on plan 01 (third stretch, decision 9)
+// On plan 01's renderer env.weather keeps the stand-in's interface (state(), setPreset, setRain, on('change'), presets,
+// hasTemperature) over plan 01's weather: env.state.weather (the sample of plan 01 section 6.4, from live data, a date
+// in history or a preset, with the #sky overrides applied), env.state.visibilityM and the sample's wind. Everything
+// is read from env.state, which plan 01 rebuilds from the clock at frame step 40, so it is a pure function of
+// simulation time. The drive's shorthand (?rain=, the drive's popover, the test hooks setPreset and setRain) is
+// written into plan 01's weather as its Rain preset with two overrides, so the #sky rows show it and can change it.
+
+/** The rain shorthand's wind: from 200 degrees, at the stand-in presets' speeds (see the stand-in above). */
+export const SHORTHAND_WIND_FROM_DEG = WIND_FROM_DEG;
+
+/**
+ * The drive's rain shorthand as plan 01 weather settings: null for clear (the drive imposes nothing), else plan 01's
+ * Rain preset (overcast low cloud, 12 km visibility) with the rate and the stand-in's wind as overrides, so a
+ * shorthand rains and drifts as it did on the stand-in.
+ * @param {string | number} choice  a RAIN_PRESETS id or a rate in mm/h
+ * @returns {{ source: { kind: 'preset', id: string }, overrides: Record<string, number> } | null}
+ */
+export function shorthandWeather(choice) {
+  let R, wind;
+  if (typeof choice === 'number') {
+    if (!Number.isFinite(choice)) return null;
+    R = Math.min(MAX_RATE, Math.max(0, choice));
+    let best = RAIN_PRESETS[0];
+    for (const p of RAIN_PRESETS) if (Math.abs(p.mmPerHour - R) < Math.abs(best.mmPerHour - R)) best = p;
+    wind = Math.max(best.windMps, 1);
+  } else {
+    const p = RAIN_PRESETS.find((x) => x.id === choice);
+    if (!p) return null;
+    R = p.mmPerHour; wind = p.windMps;
+  }
+  if (!(R > 0)) return null;
+  return { source: { kind: 'preset', id: 'rain' }, overrides: { rain: R, windSpeed: wind, windDir: SHORTHAND_WIND_FROM_DEG } };
+}
+
+// ==== PLAN 01 PHASE 7 STAND-IN: BEGIN =================================================================================
+// Plan 01's env.state.rain, env.state.wetness and env.at().rainRateMmH / .wetness are stubs (dry) until its phase 7
+// (plan 01 section 11.1). Until then the drive derives them here, and only here, from the weather sample itself: the
+// rain rate is the sample's precipitation when it reaches the ground, and wetness, puddles and the sky's dimming
+// follow from it by the stand-in's rules (weatherFor). When phase 7 lands: delete this block, read
+// env.state.rain.rateMmH and env.state.wetness.{film,puddles} (or env.at(position)) in weatherStateFrom, and take the
+// sky's dimming from plan 01's light (env.state.sky.horizontalLux) instead of skyDim.
+const RAINING = new Set(['rain', 'drizzle', 'hail']);
+/** The rate at the ground (mm/h) of a plan 01 weather sample: virga, snow and none give 0 (the drive has no snow). */
+export function rainRateOfSample(sample) {
+  const p = sample?.precip;
+  if (!p || !RAINING.has(p.kind)) return 0;
+  return Math.min(MAX_RATE, Math.max(0, Number(p.rateMmH) || 0));
+}
+function derivedRain(sample) {
+  const R = Math.round(rainRateOfSample(sample) * 100) / 100;
+  const w = weatherFor(R, { windMps: 0 });
+  return { R, wetness: w.wetness, puddles: w.puddles, skyDim: w.skyDim, overcast: w.overcast };
+}
+// ==== PLAN 01 PHASE 7 STAND-IN: END ===================================================================================
+
+/**
+ * The drive's weather state (the stand-in's shape, weatherFor) from plan 01's env.state. Values are rounded (rate
+ * 0.01 mm/h, wind 0.1 m/s and 1 degree, visibility 10 m, temperature 0.1 degree) so that live data, interpolated every
+ * frame, changes the state now and then rather than on every frame. Pure.
+ * @param {object | null} envState  plan 01's env.state (null or without weather: clear and calm)
+ * @param {{ preset?: string | null, hasTemperature?: boolean }} [o]
+ */
+export function weatherStateFrom(envState, { preset = null, hasTemperature = false } = {}) {
+  const sample = envState?.weather || null;
+  const rain = derivedRain(sample);
+  const wind = sample?.wind || { speedMs: 0, dirDeg: 0 };
+  const vis = Number.isFinite(envState?.visibilityM) ? envState.visibilityM : sample?.visibilityM;
+  const tempC = Number.isFinite(sample?.tempC) ? Math.round(sample.tempC * 10) / 10 : null;
+  return Object.freeze({
+    preset,
+    precipMmPerHour: rain.R,
+    precipKind: rain.R > 0 ? 'rain' : 'none',
+    wetness: rain.wetness,
+    puddles: rain.puddles,
+    visibilityM: Number.isFinite(vis) ? Math.max(10, Math.round(vis / 10) * 10) : DRY_VISIBILITY_M,
+    skyDim: rain.skyDim,
+    overcast: rain.overcast,
+    windMps: Math.round((wind.speedMs || 0) * 10) / 10,
+    windSpeed: Math.round((wind.speedMs || 0) * 10) / 10,
+    windFromDeg: Math.round(wind.dirDeg || 0) % 360,
+    dust: 0,
+    tempC: hasTemperature ? tempC : null,
+    hasTemperature: hasTemperature && tempC !== null,
+  });
+}
+
+const sameSettings = (a, b) => !!a && !!b && JSON.stringify(a.source) === JSON.stringify(b.source)
+  && JSON.stringify(Object.entries(a.overrides).sort()) === JSON.stringify(Object.entries(b.overrides).sort());
+
+/**
+ * env.weather on plan 01's renderer (see above). `app` is the drive's plan 01 context: env (plan 01's environment)
+ * and weather() (a promise of plan 01's weather service, src/weather/service.js, loaded on demand; absent in tests).
+ *   state()                 the drive's weather state now (weatherStateFrom of env.state), cached per env.state
+ *   setPreset(id), setRain(mm)  the shorthand, into plan 01's weather (asynchronous: whenApplied() resolves after)
+ *   release()               put back plan 01's weather as it was before the first shorthand, unless the visitor has
+ *                           changed it since (the weather part calls it when it goes)
+ *   on('change', fn)        fn(state) when the state's values change
+ */
+export function weatherOn(app) {
+  const env = app.env;
+  const listeners = new Set();
+  let service = null, loaded = false, chosen = null; // chosen: the shorthand in force (id or rate), null for none
+  let saved = null, imposed = null; // plan 01's settings before the first shorthand, and what the shorthand set
+  let seen = undefined, current = weatherStateFrom(null);
+  let queue = Promise.resolve();
+  const request = typeof app.weather === 'function' ? app.weather : null;
+  const ready = request ? Promise.resolve().then(request).then((s) => { service = s || null; loaded = !!s; refresh(); return service; }).catch(() => null) : Promise.resolve(null);
+
+  const settingsNow = () => (service ? { source: service.source, overrides: service.overrides } : null);
+  const presetNow = () => (chosen !== null && sameSettings(settingsNow(), imposed) ? (typeof chosen === 'number' ? null : chosen) : null);
+
+  function refresh() {
+    const s = env?.state ?? null;
+    seen = s;
+    const next = weatherStateFrom(s, { preset: presetNow(), hasTemperature: loaded });
+    const same = Object.keys(next).every((k) => next[k] === current[k]);
+    if (same) return;
+    current = next;
+    for (const fn of [...listeners]) fn(current);
+  }
+  const offWeather = env?.on ? env.on('weather', refresh) : () => {};
+
+  async function apply(choice) {
+    const svc = await ready;
+    if (!svc) return;
+    const want = shorthandWeather(choice);
+    if (!want) { restore(); return; }
+    if (!saved || !sameSettings(settingsNow(), imposed)) saved = settingsNow();
+    svc.setSource(want.source);
+    svc.clearOverrides();
+    for (const [k, v] of Object.entries(want.overrides)) svc.setOverride(k, v);
+    imposed = settingsNow();
+    chosen = choice;
+    refresh();
+  }
+  function restore() {
+    if (service && saved && sameSettings(settingsNow(), imposed)) {
+      service.setSource(saved.source);
+      service.clearOverrides();
+      for (const [k, v] of Object.entries(saved.overrides)) service.setOverride(k, v);
+    }
+    saved = null; imposed = null; chosen = null;
+    refresh();
+  }
+  const enqueue = (fn) => (queue = queue.then(fn).catch(() => {}));
+
+  const weather = {
+    /** Plan 01's weather is behind this port (the stand-in has no such member). */
+    plan01: true,
+    /** A real temperature once plan 01's weather has loaded (the cabin shows it then). */
+    get hasTemperature() { return loaded; },
+    presets: RAIN_PRESETS,
+    state() {
+      if ((env?.state ?? null) !== seen) refresh();
+      return current;
+    },
+    setPreset(id) { if (RAIN_PRESETS.some((p) => p.id === id)) enqueue(() => apply(id)); return weather; },
+    setRain(mmPerHour) {
+      const R = Number(mmPerHour);
+      if (!Number.isFinite(R)) return weather;
+      const p = RAIN_PRESETS.find((x) => x.mmPerHour === R);
+      enqueue(() => apply(p ? p.id : R));
+      return weather;
+    },
+    /** Resolves once every shorthand asked for so far is in plan 01's weather (and env.state follows it). */
+    whenApplied: () => Promise.all([ready, queue]).then(() => { refresh(); return current; }),
+    release() { enqueue(restore); return queue; },
+    on(type, fn) {
+      if (type !== 'change') return () => {};
+      listeners.add(fn);
+      return () => listeners.delete(fn);
+    },
+    dispose() { offWeather(); listeners.clear(); },
+  };
+  return weather;
+}
+
 /**
  * The drive's clock on plan 01's SimClock (section 11.2), with the drive clock's interface: now(), playing, rate, seek,
  * play, pause, setRate (clamped to the drive's RATE_MIN..RATE_MAX), on(tick | seek | rate | play | pause). Time moves
@@ -450,7 +629,7 @@ function adapterEnv(city, app) {
   const env = app.env;
   const clock = clockOn(app.clock);
   const ephemeris = ephemerisOn(env.ephemeris, city.tz || app.clock.zone || 'UTC');
-  const weather = createWeather();
+  const weather = weatherOn(app);
   const q = app.quality;
   return {
     city,

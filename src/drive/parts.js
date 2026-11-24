@@ -56,7 +56,7 @@ export const PARTS = [
   { id: 'obstruction', node: true, load: (ctx) => import('./lights/obstruction.js').then((m) => m.createObstructionPart(ctx)) }, // red obstruction lights on buildings above 61 m, hidden and moved with them (D5.6)
   { id: 'screens', node: true, load: (ctx) => import('./screens/index.js').then((m) => m.createScreensPart(ctx)) }, // screens on simulation time, their registry, the Sphere's light (D7.3, D7.5)
   { id: 'billboards', node: true, load: (ctx) => import('./roadside/billboards.js').then((m) => m.createBillboardsPart(ctx)) }, // billboards: structures, abstract faces, digital glow (D7.4, D7.5)
-  { id: 'weather', node: false, load: (ctx) => import('./weather/index.js').then((m) => m.createWeatherPart(ctx)) }, // rain on the stand-in weather: wet road, reflected lamps, rain, spray, grey sky (D8.1, D8.3)
+  { id: 'weather', node: true, load: (ctx) => import('./weather/index.js').then((m) => m.createWeatherPart(ctx)) }, // rain: wet road, reflected lamps, rain, spray (D8.1, D8.3); plan 01's weather on its renderer, the stand-in and a grey sky on the classic one
 ];
 
 /**
