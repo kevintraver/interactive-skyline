@@ -82,7 +82,7 @@ export function initDrive(app, loaded) {
   about.textContent = about.textContent.replace('footprints from OpenStreetMap.', 'footprints and road geometry from OpenStreetMap.');
 
   const el = {
-    views: document.querySelector('.views'), night: document.getElementById('night'), hint: document.getElementById('hint'),
+    views: document.querySelector('.views'), night: document.getElementById('night'), sky: document.getElementById('sky-toggle'), hint: document.getElementById('hint'),
     compass: document.getElementById('compass'), tools: document.getElementById('tools'),
   };
   const tz = city.tz || 'UTC';
@@ -299,6 +299,13 @@ export function initDrive(app, loaded) {
    * @param {{ s?: number, t?: number, view?: string, yaw?: number, pitch?: number, lens?: number, route?: boolean, startKey?: string }} [at]
    */
   async function enter(id, at = {}) {
+    // until the drive's materials are ported to the new renderer (plan 02), Drive runs on the classic one: entering
+    // from the new renderer reloads the page into it (src/render/renderer.js reads ?mode=drive)
+    if (app.rendererKind && app.rendererKind !== 'legacy') {
+      const q = new URLSearchParams(encodeDriveState({ route: id, s: at.s, t: at.t, view: at.view, yaw: at.yaw, pitch: at.pitch, lens: at.lens }, location.search));
+      location.assign(`${location.pathname}?${q}`);
+      return new Promise(() => {});
+    }
     const token = ++entering;
     const switching = seam.active && !!session && id !== session.route;
     showMode('drive');
@@ -377,6 +384,7 @@ export function initDrive(app, loaded) {
     seam.active = true;
     el.views.hidden = true;
     el.night.hidden = true;
+    if (el.sky) el.sky.hidden = true; // the map's time of day; the drive has its own clock until it takes the app's
     hintText.textContent = DRIVE_HINT;
     setCompassTitle('Look ahead');
     document.body.classList.add('driving');
@@ -405,6 +413,7 @@ export function initDrive(app, loaded) {
     document.documentElement.dataset.theme = settings.night ? 'dark' : 'light';
     el.views.hidden = false;
     el.night.hidden = false;
+    if (el.sky) el.sky.hidden = false;
     document.body.classList.remove('driving');
     restoreMap();
     writeAddress();

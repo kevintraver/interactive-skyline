@@ -1,6 +1,12 @@
 // User-adjustable behaviour, kept between visits. `cutoff` is in meters.
-export const DEFAULTS = { cutoff: 35, highlight: true, units: 'ft', imagery: true, night: false, fountain: true, wheel: true };
+// (one line: the landmark tool reads DEFAULTS by line; quality to reduceFlashes are plan 01's display settings, T2.7)
+export const DEFAULTS = { cutoff: 35, highlight: true, units: 'ft', imagery: true, night: false, fountain: true, wheel: true, quality: 'auto', exposureMode: 'eye', exposureComp: 0, reduceFlashes: false };
 const STORE = 'slc-skyline-settings';
+/**
+ * In the clock state (src/env/environment.js) `settings.night` is derived from the Sun and must not be saved;
+ * the pinned value it will return to is kept under this key, and saved in its place.
+ */
+export const PINNED_NIGHT = Symbol('pinned night');
 
 export function loadSettings() {
   try {
@@ -9,4 +15,8 @@ export function loadSettings() {
   } catch { return {}; }
 }
 
-export function saveSettings(settings) { try { localStorage.setItem(STORE, JSON.stringify(settings)); } catch { /* private window: settings last for this visit only */ } }
+export function saveSettings(settings) {
+  const data = { ...settings };
+  if (PINNED_NIGHT in settings) data.night = settings[PINNED_NIGHT];
+  try { localStorage.setItem(STORE, JSON.stringify(data)); } catch { /* private window: settings last for this visit only */ }
+}

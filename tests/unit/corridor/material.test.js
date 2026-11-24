@@ -5,6 +5,10 @@ import * as THREE from 'three';
 import { corridorMaterial, patchCorridorShader } from '../../../src/drive/corridor/material.js';
 import { meshCell, groundUnder, windowShare, WINDOW_MIN_M } from '../../../src/drive/corridor/mesher.js';
 import { encodeCell, decodeCell, TYPE } from '../../../src/drive/corridor/format.js';
+import { active } from '../../../src/render/active.js';
+import * as legacyMaterials from '../../../src/render/legacy/materials.js';
+
+active.legacy = legacyMaterials; // the drive's GLSL materials are the classic renderer's, until they are ported (plan 02)
 
 const sq = (x, y, s) => [[x, y], [x + s, y], [x + s, y + s], [x, y + s]];
 

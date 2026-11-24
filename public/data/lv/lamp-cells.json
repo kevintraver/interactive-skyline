@@ -1,0 +1,34 @@
+{
+ "file": "lamp-cells.bin",
+ "layout": "LampCells (plan 01, 11.7): three float32 little-endian planes, sodiumLm, ledLm, otherLm, each ny rows of nx cells, row 0 = south, column 0 = west",
+ "units": "initial lamp lumens per cell",
+ "order": [
+  "sodium",
+  "led",
+  "other"
+ ],
+ "x0": -60000,
+ "y0": -65000,
+ "z0": 65000,
+ "step": 500,
+ "nx": 220,
+ "ny": 230,
+ "nz": 230,
+ "frame": "local metres of public/data/lv/terrain.json (x east, y north); world z = -y, so row j spans world z from z0 - j*step to z0 - (j+1)*step",
+ "projection": "+proj=tmerc +lat_0=36.1147 +lon_0=-115.1728 +k=1 +x_0=0 +y_0=0 +ellps=WGS84 +units=m",
+ "totalsLm": {
+  "sodium": 1164583420.0,
+  "led": 1232671950.0,
+  "other": 77944460.0
+ },
+ "lampsInGrid": 193532,
+ "excluded": {
+  "enclosedLamps": 1147,
+  "enclosedLm": 19236650.0,
+  "why": "under bridges (Clark County SUPP_TYPE UBL) or tunnel luminaires: they light the road and send nothing to the sky"
+ },
+ "lampsOutsideGrid": 1621,
+ "lumensOutsideGrid": 16179880.0,
+ "source": "scripts/build_lights.py; lamps from data/derived/lv/lamps.bin; see data/derived/lv/lights_report.json",
+ "credit": "Street lights: Clark County Public Works, City of Las Vegas, City of Henderson (via its lighting contractor's public layer), Boulder City; OpenStreetMap contributors (ODbL)."
+}

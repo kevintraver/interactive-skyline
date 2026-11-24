@@ -15,7 +15,7 @@ const page = await browser.newPage({ viewport: { width: 640, height: 360 } });
 page.on('pageerror', (e) => console.log('[pageerror]', e.message));
 await page.addInitScript(() => { try { localStorage.clear(); localStorage.setItem('slc-skyline-hinted', '1'); } catch {} });
 const ready = () => page.waitForFunction(() => performance.getEntriesByName('skyline-ready').length > 0 && window.__skyline?.attractions && window.__skyline?.drive, null, { timeout: 120000 });
-await page.goto(`http://localhost:${port}/?city=lv`);
+await page.goto(`http://localhost:${port}/?city=lv&renderer=legacy`);
 await ready();
 // the dev server may reload the page once while it settles its dependencies; run again after a reload
 const run = async (fn, arg) => { for (let k = 0; ; k++) { try { return await page.evaluate(fn, arg); } catch (e) { if (k > 8 || !/context was destroyed/.test(e.message)) throw e; await ready(); } } };

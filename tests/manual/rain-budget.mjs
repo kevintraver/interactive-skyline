@@ -11,7 +11,7 @@ const page = await browser.newPage({ viewport: { width: 1280, height: 720 } });
 page.on('pageerror', (e) => console.log('[pageerror]', e.message));
 await page.routeWebSocket(/.*/, () => {});
 await page.addInitScript(() => { try { localStorage.clear(); localStorage.setItem('slc-skyline-hinted', '1'); } catch {} });
-await page.goto(`http://localhost:${port}/?city=lv`);
+await page.goto(`http://localhost:${port}/?city=lv&renderer=legacy`);
 await page.waitForFunction(() => performance.getEntriesByName('skyline-ready').length > 0 && window.__skyline?.drive, null, { timeout: 120000 });
 await page.evaluate(async () => { const s = window.__skyline; s.attractions.freeze(20); await s.attractions.ready; await s.drive.start('i15n', {}); s.drive.pause(); s.drive.setView('clean'); });
 await page.waitForFunction(() => { let w = null; window.__skyline.scene.traverse((o) => { if (o.userData?.weatherPart) w = 1; }); return w; }, null, { timeout: 60000 });

@@ -18,11 +18,36 @@ export type Emitter<Events> = { on<K extends keyof Events>(type: K, fn: (e: Even
 export type FrameInfo = { nowMs: number; dtWallMs: number; simMs: number; dtSimMs: number; frame: number };
 export type QualityProfile = Record<string, unknown>;
 export type ModeRegistry = unknown;
-export type FrameLoop = { invalidate(): void; settle(): Promise<void> };
-export type DayEvents = Record<string, number | null>;
+export type FrameLoop = {
+  invalidate(): void; settle(): Promise<void>;
+  add(sub: Partial<Pick<Subsystem, 'update' | 'demand'>>, order?: number): () => void;   // section 5.5 frame order; 20-29 for modes
+  readonly tier: Demand; readonly frames: number;
+};
+/** UTC ms of each event in [dayStartMs, dayStartMs + 24 h), or null when it does not happen that day (src/sky/ephemeris.js). */
+export type DayEvents = { astronomicalDawn: number | null; nauticalDawn: number | null; civilDawn: number | null; sunrise: number | null;
+  noon: number | null; sunset: number | null; civilDusk: number | null; nauticalDusk: number | null; astronomicalDusk: number | null;
+  moonrise: number | null; moonset: number | null };
 export type AtmosphereUniforms = Record<string, unknown>;
-export type OverrideKey = string;
-export type WeatherSample = Record<string, unknown>;
+/** src/weather/medium.js atmosphereMedium(): what phase 3 writes into its uniforms with setAtmosphereFromWeather(). */
+export interface AtmosphereMedium { rayleighExtinctionPerM: number; aerosolExtinctionPerM: number; aerosolScaleHeightM: number; aerosolOpticalDepth: number;
+  angstrom: number; asymmetryG: number; singleScatteringAlbedo: number; singleScatteringAlbedo440: number; dustShare: number; visibilityM: number }
+export type OverrideKey = 'lowCloud' | 'highCloud' | 'cloudBase' | 'haze' | 'dust' | 'humidity' | 'windSpeed' | 'windDir' | 'rain' | 'lightning';
+// section 6.4 (src/weather/schema.js): one instant after fusion and overrides; SI units, UTC ms, heights above sea level
+export interface CloudLayer { genus: 'cu' | 'tcu' | 'cb' | 'sc' | 'st' | 'ac' | 'as' | 'ci' | 'cs'; baseM: number; topM: number; cover: number }
+export interface WeatherSample {
+  t: number;
+  source: { surface: 'metar' | 'model' | 'preset'; clouds: 'metar' | 'model' | 'preset'; aerosol: 'cams' | 'climatology' | 'preset' };
+  tempC: number; dewPointC: number; rh: number; pressureHPa: number;   // pressure at the ground
+  wind: { dirDeg: number; speedMs: number; gustMs: number };
+  windAloft: { level: 850 | 700 | 500 | 300; dirDeg: number; speedMs: number }[];
+  visibilityM: number; visibilityCensored: boolean;
+  aerosol: { aod550: number; angstrom: number; dustUgM3: number; pm25UgM3: number; layerHeightM: number };
+  clouds: CloudLayer[];
+  precip: { rateMmH: number; kind: 'none' | 'drizzle' | 'rain' | 'snow' | 'virga' | 'hail'; convective: boolean; virgaBaseM: number | null };
+  storm: { thunder: boolean; flashRatePerMin: number; cells: number; capeJKg: number | null };
+  dustWall: { active: boolean; bearingDeg: number; distanceM: number; speedMs: number; heightM: number } | null;
+  wxCodes: string[];
+}
 
 // ---- section 5.4: internal interfaces
 // src/app/context.js
@@ -54,6 +79,8 @@ export declare function createEphemeris(observer: { lat: number; lon: number; el
   at(timeMs: number): CelestialState;                          // memoised to 1 s of simulation time
   events(dayStartMs: number): DayEvents;                       // sunrise, sunset, twilights, moonrise, moonset for the scrubber
   eqjToScene(timeMs: number): Matrix3;                         // J2000 equatorial -> scene axes, for stars and the Milky Way
+  timeOfSunAltitude(altDeg: number, dayMs: number, which: 'rising' | 'setting'): number | null;   // what env.ephemeris exposes
+  readonly observer: { lat: number; lon: number; elevationM: number };
 };
 export interface BodyState { dir: Vector3; azDeg: number; altDeg: number; trueAltDeg: number; distanceM: number; angularRadiusRad: number; magnitude: number }
 export interface CelestialState {
@@ -153,11 +180,15 @@ export interface JourneyHandle {
   setTimeOfDay(hour: number, minute?: number): void;   // setStart so that the present moment has that local time
   useRecordedStart(): void;
   end(): void;
+  readonly journey: Journey;  readonly coupling: 'clock' | 'frozen-sky';   // phase 1 additions, read by the transport bar
 }
 export interface Timeline {
   begin(j: Journey, o?: { startMs?: number; coupling?: 'clock' | 'frozen-sky' }): JourneyHandle;
   readonly active: JourneyHandle | null;
   on(type: 'begin' | 'end', fn: (h: JourneyHandle) => void): () => void;
+  // phase 1: the timeline is the frame loop's step 10 (loop.add(timeline, 10)); a journey playing asks for every frame
+  update(f: { dtWallMs: number }): void;
+  demand(): Demand;
 }
 export interface Transport {
   attachJourney(j: Journey | null): JourneyHandle | null;   // the same as timeline.begin(j) and handle.end()
@@ -181,7 +212,11 @@ export interface Environment {
   freeze(o: { time?: string | number; weather?: string | WeatherSample; seed?: number; ev100?: number;
               lights?: number; sunAzAlt?: [number, number] }): void;       // pin anything for tests and screenshots
   unfreeze(): void;
-  on(type: 'weather' | 'lights' | 'quality', fn: () => void): () => void;
+  on(type: 'weather' | 'lights' | 'quality' | 'mode' | 'night', fn: (payload?: unknown) => void): () => void;
+  // phase 1 additions: the two states of section 4.2 ('pinned' is today's app; 'clock' follows the SimClock)
+  readonly mode: 'pinned' | 'clock';
+  enterClock(): void;                   // what any time control does
+  pin(night: boolean): void;            // back to a pinned look; pauses the clock
 }
 
 export interface EnvState {
@@ -195,6 +230,7 @@ export interface EnvState {
   lights: { cityFactor: number;                 // the lights-out slider, 0..1
             windows: number; street: number; signs: number };   // 0..1 switch-on state from dusk and hour of night
   weather: WeatherSample;                       // section 6.4; interpolated, overrides applied
+  medium: AtmosphereMedium | null;              // section 7.5, from the weather; null until the weather code has loaded (phase 5)
   wind: Vector3;                                // m/s at 10 m, world axes
   visibilityM: number;                          // meteorological range at the camera
   rain: { rateMmH: number; fallSpeedMs: number; streakM: number };   // at the camera

@@ -26,7 +26,7 @@ await page.routeWebSocket(/.*/, (ws) => {
   server.onMessage((m) => { if (!/full-reload|"type":"update"|"type":"prune"/.test(String(m))) ws.send(m); });
   ws.onMessage((m) => server.send(m));
 });
-await page.goto(`http://localhost:${port}/?city=lv`);
+await page.goto(`http://localhost:${port}/?city=lv&renderer=legacy`);
 await page.waitForFunction(() => performance.getEntriesByName('skyline-ready').length > 0 && window.__skyline?.drive, null, { timeout: 120000 });
 await page.evaluate(async (route) => { const d = window.__skyline.drive; await d.start(route, { view: 'clean' }); d.pause(); d.setView('clean'); await d.whenSettled(); }, route);
 const DAY = Date.parse('2026-11-21T20:30:00Z'), NIGHT = Date.parse('2026-11-22T02:30:00Z');

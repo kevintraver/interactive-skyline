@@ -8,6 +8,10 @@ import {
 import { createSkyBlend, sceneDirection, SUN_STEP_MS } from '../../../src/drive/skyblend.js';
 import { createLegacySky, DAY, NIGHT } from '../../../src/sky/legacySky.js';
 import { night } from '../../../src/night.js';
+import { active } from '../../../src/render/active.js';
+import * as legacyMaterials from '../../../src/render/legacy/materials.js';
+
+active.legacy = legacyMaterials; // the drive's sky blend is the classic renderer's, until it is ported (plan 02)
 
 const range = (a, b, step) => { const out = []; for (let x = a; x >= b - 1e-9; x -= step) out.push(x); return out; };
 
@@ -143,7 +147,7 @@ describe('createSkyBlend on the legacy sky', () => {
     const scene = new THREE.Scene();
     const sky = createLegacySky();
     let frames = 0;
-    sky.init({ scene, city, invalidate: () => frames++ });
+    sky.init({ scene, city, invalidate: () => frames++, renderer: { shadowMap: {} } });
     const ground = [0, 1].map(() => [new THREE.Mesh(new THREE.BufferGeometry(), new THREE.MeshLambertMaterial()), 'g']);
     const terrain = ground.map(([mesh]) => ({ mesh }));
     const renderer = { shadowMap: { needsUpdate: false } };

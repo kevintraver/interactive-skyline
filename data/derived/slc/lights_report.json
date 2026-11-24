@@ -1,0 +1,299 @@
+{
+ "city": "slc",
+ "built": "2026-11-22",
+ "credit": "Street lights: OpenStreetMap contributors (ODbL) and a rule along roads; Salt Lake City publishes no street-light inventory that was found.",
+ "licence": "Inventories treated as public domain by the owner's decision of 10 November 2026 (plan 01, 2.3; plan 02, decisions after planning); none of the layers names a licence. OpenStreetMap data: ODbL 1.0, (c) OpenStreetMap contributors.",
+ "grid": {
+  "x0": -60000,
+  "y0": -80000,
+  "x1": 50000,
+  "y1": 70000,
+  "cell": 500,
+  "nx": 220,
+  "ny": 300
+ },
+ "builtUpCells": 5745,
+ "builtUpThresholdKmPerKm2": 6.0,
+ "lamps": 199756,
+ "bySource": {
+  "rule": 187184,
+  "osm": 12572
+ },
+ "byType": {
+  "led_street": 99524,
+  "hps": 87855,
+  "unknown": 12132,
+  "led_highmast": 245
+ },
+ "byClass": {
+  "led": 99769,
+  "sodium": 87855,
+  "other": 12132
+ },
+ "lumensByClass": {
+  "sodium": 1568210950.0,
+  "led": 949451220.0,
+  "other": 97056000.0
+ },
+ "bySourceAndClass": {
+  "osm": {
+   "other": 12132,
+   "led": 421,
+   "sodium": 19
+  },
+  "rule": {
+   "led": 99348,
+   "sodium": 87836
+  }
+ },
+ "ruleShare": 0.9370632171248924,
+ "enclosed": {
+  "lamps": 0,
+  "lumens": 0.0
+ },
+ "ruleByRoadClass": {
+  "local": 93855,
+  "collector": 60156,
+  "major": 21189,
+  "freeway": 6105,
+  "ramp": 5779,
+  "highmast": 100
+ },
+ "dedupe": {
+  "radiusM": 5.0,
+  "droppedBySource": {
+   "osm": 0
+  },
+  "note": "across sources only; inventories outrank OSM in the order osm",
+  "sameSourcePairsWithin5m": {
+   "osm": 72
+  }
+ },
+ "sources": {
+  "osm": {
+   "jurisdiction": "any",
+   "lamps": 12572,
+   "kept": 12572,
+   "byType": {
+    "unknown": 12132,
+    "led_street": 276,
+    "led_highmast": 145,
+    "hps": 19
+   },
+   "provenance": null,
+   "tagged": {
+    "lamp_type": 1806,
+    "lamp_mount": 2498
+   }
+  }
+ },
+ "osm": {
+  "timestampRoads": null,
+  "roadWays": 97007,
+  "timestamp": "2026-11-22T09:07:29Z",
+  "endpoint": "https://overpass-api.de/api/interpreter",
+  "retrieved": "2026-11-22",
+  "boundaries": [
+   "Alpine",
+   "Alta",
+   "American Fork",
+   "Bluffdale",
+   "Bountiful",
+   "Brighton",
+   "Cedar Fort",
+   "Cedar Hills",
+   "Centerville",
+   "Charleston",
+   "Clearfield",
+   "Clinton",
+   "Coalville",
+   "Copperton",
+   "Cottonwood Heights",
+   "Daniel",
+   "Draper",
+   "Eagle Mountain",
+   "Elk Ridge",
+   "Emigration Canyon",
+   "Erda",
+   "Fairfield",
+   "Farmington",
+   "Farr West",
+   "Francis",
+   "Fruit Heights",
+   "Genola",
+   "Grantsville",
+   "Harrisville",
+   "Heber",
+   "Henefer",
+   "Herriman",
+   "Hideout",
+   "Highland",
+   "Holladay",
+   "Hooper",
+   "Huntsville",
+   "Independence",
+   "Interlaken",
+   "Kamas",
+   "Kaysville",
+   "Kearns",
+   "Lake Point",
+   "Layton",
+   "Lehi",
+   "Lindon",
+   "Magna",
+   "Mapleton",
+   "Marriott-Slaterville",
+   "Midvale",
+   "Midway",
+   "Millcreek",
+   "Morgan",
+   "Murray",
+   "North Ogden",
+   "North Salt Lake",
+   "Oakley",
+   "Ogden",
+   "Ogden Valley",
+   "Orem",
+   "Park City",
+   "Payson",
+   "Plain City",
+   "Pleasant Grove",
+   "Pleasant View",
+   "Provo",
+   "Riverdale",
+   "Riverton",
+   "Roy",
+   "Rush Valley",
+   "Salem",
+   "Salt Lake City",
+   "Sandy",
+   "Saratoga Springs",
+   "South Jordan",
+   "South Ogden",
+   "South Salt Lake",
+   "South Weber",
+   "Spanish Fork",
+   "Springville",
+   "Stockton",
+   "Sunset",
+   "Syracuse",
+   "Taylorsville",
+   "Tooele",
+   "Uintah",
+   "Vernon",
+   "Vineyard",
+   "Wallsburg",
+   "Washington Terrace",
+   "West Bountiful",
+   "West Haven",
+   "West Jordan",
+   "West Point",
+   "West Valley City",
+   "White City",
+   "Willard",
+   "Woodland Hills",
+   "Woods Cross"
+  ]
+ },
+ "rule": {
+  "tunedFrom": "lv",
+  "surface": {
+   "local": {
+    "spacing": 42.064231382320536,
+    "litFraction": 0.38519028075804784,
+    "lamps": 55868,
+    "litKm": 3375.977054714518,
+    "totalKm": 6410.789797450016,
+    "medianWatts": {
+     "hps": 100.0,
+     "led_street": 72.0
+    },
+    "offset": 7.0,
+    "stagger": false,
+    "mountM": 9.14
+   },
+   "collector": {
+    "spacing": 28.077811674189007,
+    "litFraction": 0.6359610995418187,
+    "lamps": 43540,
+    "litKm": 1756.204499630951,
+    "totalKm": 2019.9094695096292,
+    "medianWatts": {
+     "hps": 250.0,
+     "led_street": 106.0
+    },
+    "offset": 10.0,
+    "stagger": true,
+    "mountM": 9.14
+   },
+   "major": {
+    "spacing": 26.884792223815143,
+    "litFraction": 0.6768981580409822,
+    "lamps": 22528,
+    "litKm": 870.0670580032349,
+    "totalKm": 940.1924618744066,
+    "medianWatts": {
+     "hps": 250.0,
+     "led_street": 160.0
+    },
+    "offset": 15.0,
+    "stagger": true,
+    "mountM": 10.7
+   }
+  },
+  "freeway": {
+   "freeway": {
+    "spacing": 60.0,
+    "litFraction": 1.0,
+    "offset": 0.0,
+    "stagger": false,
+    "mountM": 12.2,
+    "type": "led_street",
+    "watts": 210
+   },
+   "ramp": {
+    "spacing": 45.0,
+    "litFraction": 1.0,
+    "offset": 5.0,
+    "stagger": false,
+    "mountM": 12.2,
+    "type": "led_street",
+    "watts": 160
+   }
+  },
+  "mix": {
+   "hps": 0.5,
+   "led_street": 0.5
+  },
+  "gapJurisdictions": "all built-up roads (no inventory)",
+  "highMasts": {
+   "perInterchange": 4,
+   "radiusM": 150.0,
+   "skipIfMastWithinM": 600.0,
+   "watts": 302,
+   "mountM": 30.5,
+   "systemInterchanges": 31,
+   "placed": 100
+  },
+  "assignM": 30.0,
+  "litM": 40.0,
+  "avoidM": {
+   "surface": 25.0,
+   "freeway": 40.0
+  },
+  "assumed": [
+   "freeway and ramp spacing, mount height and wattage",
+   "the sodium/LED mix of rule lamps",
+   "high masts: four per system interchange that has none in an inventory",
+   "Salt Lake City's spacing and share of lit road are Las Vegas's"
+  ]
+ },
+ "holdout": null,
+ "assumptions": [
+  "City of Las Vegas TYPE is used as recorded (34,454 sodium against 17,094 LED), although a 2011-2013 programme reported converting most of the city's lights to LED (plan 02, 6.6); to be checked against night photographs (plan 02, 8.1)",
+  "City of Las Vegas STATUS codes (X, N, OUT, D, AR) are undocumented; every record is kept",
+  "Henderson's decorative fixture styles (ANTHEM, INSPIRADA, SEVEN HILLS, LANDWELL, WATER STREET) are taken as LED",
+  "Boulder City records with a blank LAMP_TYPE are taken as LED (the layer is the city's dark-sky LED replacement)",
+  "two lamps from the same inventory within 5 m are kept: they are usually two heads on one pole"
+ ]
+}

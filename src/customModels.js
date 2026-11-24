@@ -1,5 +1,5 @@
-// skyline-integration: v6 (blender-landmark-model skill)
-// (older tools test for the text "skyline-integration: v4" and replace files without it; v6 includes it here)
+// skyline-integration: v7 (blender-landmark-model skill)
+// (older tools test for the text "skyline-integration: v4" and replace files without it; v7 includes it here)
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 

@@ -1,0 +1,89 @@
+{
+ "milkyWay": {
+  "files": {
+   "2k": "milkyway-2k.jpg",
+   "4k": "milkyway-4k.jpg"
+  },
+  "sizes": {
+   "milkyway-4k.jpg": {
+    "bytes": 1917786,
+    "width": 4096,
+    "height": 2048
+   },
+   "milkyway-2k.jpg": {
+    "bytes": 437865,
+    "width": 2048,
+    "height": 1024
+   },
+   "moon-1k.jpg": {
+    "bytes": 130080,
+    "width": 1024,
+    "height": 512
+   }
+  },
+  "projection": "equirectangular, J2000 equatorial; u = 0.5 - RA/360 (mod 1), so the centre column is RA 0h and RA increases to the left; v = (90 - Dec)/180 from the top row (north) down",
+  "galacticCentreUV": [
+   0.759986,
+   0.660756
+  ],
+  "encoding": {
+   "curve": "sqrt",
+   "white": 1.0,
+   "decode": "linear = (texel / 255)^2 * white, per channel, the texel read without any colour-space conversion",
+   "colorSpace": "linear sRGB primaries after decoding"
+  },
+  "scaleCdM2": 0.004954404184840593,
+  "scaleNote": "luminance in cd/m2 = scaleCdM2 * (0.2126 R + 0.7152 G + 0.0722 B) of the decoded linear value",
+  "calibration": {
+   "anchor": "integrated starlight near the north galactic pole = 39.0 S10 (Leinert et al. 1998, A&AS 127, 1)",
+   "capRadiusDeg": 10.0,
+   "textureMeanLuma": 0.004617948345508535,
+   "catalogueStarsInCap": 62,
+   "catalogueS10": 11.54,
+   "textureS10": 27.46,
+   "textureCdM2": 2.287918260836518e-05,
+   "s10MagArcsec2": 27.782,
+   "luminanceFromMu": "L = 10.8e4 * 10^(-0.4 mu) cd/m2 (Garstang)"
+  },
+  "composition": {
+   "layers": [
+    "milkyway_2020_4k.exr (Milky Way background, every Hipparcos and Tycho star omitted)",
+    "hiptyc_2020_4k.exr (Hipparcos and Tycho stars) with the stars of stars.bin masked out"
+   ],
+   "maskRadiusDeg": "0.13 + 0.08 * (6.5 - V), clipped to 0.13 .. 0.8",
+   "maskedPixelsFraction": 0.02991,
+   "brightStarLightKept": 0.4905,
+   "pixelsAboveWhite": 0.0001195669174194336
+  },
+  "source": {
+   "product": "NASA SVS Deep Star Maps 2020 (item 4851)",
+   "urls": [
+    "https://svs.gsfc.nasa.gov/vis/a000000/a004800/a004851/milkyway_2020_4k.exr",
+    "https://svs.gsfc.nasa.gov/vis/a000000/a004800/a004851/hiptyc_2020_4k.exr"
+   ],
+   "page": "https://svs.gsfc.nasa.gov/4851/",
+   "retrieved": "2026-11-22",
+   "terms": "SVS: \"All of our content is in the public domain (unless otherwise noted)\" (https://svs.gsfc.nasa.gov/help/)",
+   "credit": "NASA/Goddard Space Flight Center Scientific Visualization Studio. Gaia DR2: ESA/Gaia/DPAC. Constructed from Hipparcos-2, Tycho-2 and Gaia DR2."
+  }
+ },
+ "moon": {
+  "file": "moon-1k.jpg",
+  "width": 1024,
+  "height": 512,
+  "projection": "equirectangular selenographic; u = (longitude + 180)/360, east to the right, centre column 0 degrees; v = (90 - latitude)/180 from the top row (north) down",
+  "colorSpace": "sRGB (as published)",
+  "source": {
+   "product": "NASA SVS CGI Moon Kit (item 4720), LROC colour map, 2025 version",
+   "url": "https://svs.gsfc.nasa.gov/vis/a000000/a004700/a004720/lroc_color_2k.jpg",
+   "page": "https://svs.gsfc.nasa.gov/4720/",
+   "sourceSize": [
+    2048,
+    1024
+   ],
+   "retrieved": "2026-11-22",
+   "terms": "SVS: \"All of our content is in the public domain (unless otherwise noted)\" (https://svs.gsfc.nasa.gov/help/)",
+   "credit": "NASA/Goddard Space Flight Center Scientific Visualization Studio; LRO camera (LROC) and laser altimeter (LOLA) teams."
+  }
+ }
+}

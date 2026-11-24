@@ -2,6 +2,9 @@
 // aerial photos and lowered onto the curved Earth.
 import * as THREE from 'three';
 import { curveDrop } from '../core/earth.js';
+import { createTerrainMaterial } from '../render/materials/terrainMaterial.js';
+import { maxAnisotropy } from '../render/renderer.js';
+import { createApron } from './apron.js';
 
 const lerp = THREE.MathUtils.lerp;
 
@@ -63,7 +66,7 @@ export function terrainMesh(hf, hole, map, BASE) {
   geo.setAttribute('normal', new THREE.BufferAttribute(nor, 3));
   geo.setAttribute('uv', new THREE.BufferAttribute(uv, 2));
   geo.setIndex(new THREE.BufferAttribute(idx.slice(0, n), 1));
-  const mesh = new THREE.Mesh(geo, new THREE.MeshLambertMaterial({ map }));
+  const mesh = new THREE.Mesh(geo, createTerrainMaterial(map));
   mesh.receiveShadow = !hole;
   return mesh;
 }
@@ -92,11 +95,13 @@ export async function loadTerrain({ scene, renderer, base }, terrainData, mapsPe
     const t = new THREE.Texture(bitmap);
     t.flipY = false;
     t.colorSpace = THREE.SRGBColorSpace;
-    t.anisotropy = renderer.capabilities.getMaxAnisotropy();
+    t.anisotropy = maxAnisotropy(renderer);
     t.needsUpdate = true;
     return t;
   });
   const terrain = [{ mesh: terrainMesh(far, near, farMap, base), map: farMap }, { mesh: terrainMesh(near, null, nearMap, base), map: nearMap }];
   scene.add(terrain[0].mesh, terrain[1].mesh);
-  return { near, far, terrain, groundY: makeGroundY(near, far, base) };
+  // ground beyond the far grid, out to where the fog hides it (src/city/apron.js)
+  const apron = createApron({ scene, base }, far, terrain[0].mesh, farMap);
+  return { near, far, terrain, apron, groundY: makeGroundY(near, far, base) };
 }

@@ -24,6 +24,14 @@ describe.each(Object.entries(cities))('cities.json: %s', (id, c) => {
       expect(num(v.target.x) && num(v.target.y) && num(v.target.agl)).toBe(true);
     }
   });
+  it('has the night-lights grids that the lamp and night-lights pipelines share (plan 01, T4.0, T4.4)', () => {
+    for (const g of ['metro', 'region']) {
+      const n = c.nightlights[g];
+      for (const k of ['x0', 'y0', 'x1', 'y1', 'cell']) expect(num(n[k]), `${g}.${k}`).toBe(true);
+      expect(Number.isInteger((n.x1 - n.x0) / n.cell) && Number.isInteger((n.y1 - n.y0) / n.cell)).toBe(true);
+    }
+    expect(c.nightlights.metro.cell).toBe(500);
+  });
   it('has a time zone, a weather station and its elevation (plan 01, T0.7)', () => {
     expect(() => new Intl.DateTimeFormat('en-US', { timeZone: c.tz })).not.toThrow();
     expect(c.icao).toMatch(/^K[A-Z]{3}$/);

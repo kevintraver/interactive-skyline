@@ -1,12 +1,16 @@
 // Camera moves: gliding to a building, the zoom buttons and the compass.
 import * as THREE from 'three';
+import { stopMomentum } from './cameraLimits.js';
 
 const lerp = THREE.MathUtils.lerp;
 
 export function initFocus(app) {
   const { camera, controls, invalidate, base: BASE } = app;
   let flight = null; // a camera move in progress: { t0, dur, at(k) } with k easing from 0 to 1
-  function fly(dur, at) { flight = { t0: performance.now(), dur, at }; }
+  function fly(dur, at) {
+    stopMomentum(controls); // the glide ends where it says, not pushed aside by the rest of the last drag
+    flight = { t0: performance.now(), dur, at };
+  }
   /** Glide the camera so one building sits in the middle of the view, keeping the current viewing direction. */
   function focusOn(entry) {
     if (app.drive.active) return app.drive.focus(entry); // drive seam: turn the head instead

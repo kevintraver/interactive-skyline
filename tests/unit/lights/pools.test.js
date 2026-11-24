@@ -11,6 +11,10 @@ import { ambientLux } from '../../../src/drive/env.js';
 import { decodeLampPack } from '../../../src/drive/lights/pack.js';
 import { addSurfaceTerm, removeSurfaceTerm, surfaceTerms } from '../../../src/drive/lights/surfaceLight.js';
 import { lightAtNight } from '../../../src/night.js';
+import { active } from '../../../src/render/active.js';
+import * as legacyMaterials from '../../../src/render/legacy/materials.js';
+
+active.legacy = legacyMaterials; // the drive's GLSL materials are the classic renderer's, until they are ported (plan 02)
 
 const ROOT = new URL('../../../', import.meta.url).pathname;
 const typesJson = JSON.parse(readFileSync(`${ROOT}data/lamp_types.json`, 'utf8'));

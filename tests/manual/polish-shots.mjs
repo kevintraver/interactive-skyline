@@ -18,7 +18,7 @@ const page = await browser.newPage({ viewport: { width: 1280, height: 720 } });
 page.on('console', (m) => { if (m.type() === 'error') console.log('[error]', m.text().slice(0, 200)); });
 page.on('pageerror', (e) => console.log('[pageerror]', e.message));
 await page.addInitScript(() => { try { localStorage.clear(); localStorage.setItem('slc-skyline-hinted', '1'); } catch {} });
-await page.goto(`http://localhost:${port}/?city=lv`);
+await page.goto(`http://localhost:${port}/?city=lv&renderer=legacy`);
 await page.waitForFunction(() => performance.getEntriesByName('skyline-ready').length > 0 && window.__skyline?.attractions && window.__skyline?.drive, null, { timeout: 120000 });
 await page.evaluate(async () => {
   const s = window.__skyline; s.attractions.freeze(20); await s.attractions.ready;

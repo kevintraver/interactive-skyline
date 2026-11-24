@@ -18,8 +18,9 @@
         <g id="i-sun"><circle cx="10" cy="10" r="3.2" /><path d="M10 2.5v2M10 15.5v2M2.5 10h2M15.5 10h2M4.7 4.7l1.4 1.4M13.9 13.9l1.4 1.4M4.7 15.3l1.4-1.4M13.9 6.1l1.4-1.4" /></g>
         <g id="i-layers"><path d="m10 3 7 4-7 4-7-4 7-4z" /><path d="m3 11 7 4 7-4" /></g>
         <g id="i-eye"><path d="M2 10s3-5.5 8-5.5S18 10 18 10s-3 5.5-8 5.5S2 10 2 10z" /><circle cx="10" cy="10" r="2.3" /></g>
-        <g id="i-play"><path d="M6.5 4.5v11l9-5.5z" /></g>
-        <g id="i-pause"><path d="M7 4.5v11M13 4.5v11" /></g>
+        <g id="i-clock"><circle cx="10" cy="10" r="7" /><path d="M10 6v4.2l2.8 1.8" /></g>
+        <g id="i-play"><path d="M7 5.2v9.6l7.6-4.8z" /></g>
+        <g id="i-pause"><path d="M7.5 5.5v9M12.5 5.5v9" /></g>
         <g id="i-lock"><rect x="4.5" y="9" width="11" height="8" rx="1.8" /><path d="M7 9V6.6a3 3 0 0 1 6 0V9" /></g>
         <g id="i-unlock"><rect x="4.5" y="9" width="11" height="8" rx="1.8" /><path d="M7 9V6.6a3 3 0 0 1 5.8-1.1" /></g>
         <g id="i-replay"><path d="M4.6 11.2a5.6 5.6 0 1 0 1.3-5.1" /><path d="M5.2 3.2v3.3h3.3" /></g>
@@ -75,6 +76,7 @@
 
     <div id="tools">
       <button id="night" aria-pressed="false"><svg class="icon" viewBox="0 0 20 20" aria-hidden="true"><use href="#i-moon" /></svg></button>
+      <button id="sky-toggle" aria-expanded="false" aria-controls="sky" aria-label="Time of day" title="Time of day (T)"><svg class="icon" viewBox="0 0 20 20" aria-hidden="true"><use href="#i-clock" /></svg></button>
       <button id="options-toggle" aria-expanded="false" aria-controls="settings" aria-label="Map options" title="Map options"><svg class="icon" viewBox="0 0 20 20" aria-hidden="true"><use href="#i-layers" /></svg></button>
       <button id="compass" aria-label="Face north" title="Face north">
         <svg viewBox="0 0 20 20" aria-hidden="true"><path class="n" d="M10 2.5 13 10H7z" /><path class="s" d="M10 17.5 13 10H7z" /></svg>
@@ -96,9 +98,118 @@
         <label><input type="radio" name="units" value="ft" /><span>Feet</span></label>
         <label><input type="radio" name="units" value="m" /><span>Meters</span></label>
       </div>
+      <div class="sep" role="separator"></div>
+      <div class="field">
+        <span class="row"><span>Quality</span><output id="quality-out"></output></span>
+        <div class="seg" role="group" aria-label="Quality">
+          <label><input type="radio" name="quality" value="auto" /><span>Auto</span></label>
+          <label><input type="radio" name="quality" value="low" /><span>Low</span></label>
+          <label><input type="radio" name="quality" value="high" /><span>High</span></label>
+          <label><input type="radio" name="quality" value="ultra" /><span>Ultra</span></label>
+        </div>
+      </div>
+      <label class="field">
+        <span class="row"><span>Exposure</span><output id="exposure-out"></output></span>
+        <input type="range" name="exposureComp" min="-2" max="2" step="0.5" aria-label="Exposure compensation" />
+      </label>
+      <div class="seg" role="group" aria-label="Exposure mode">
+        <label title="Brightness follows the light and the time of day, wherever you look"><input type="radio" name="exposureMode" value="eye" /><span>As the eye sees</span></label>
+        <label title="Brightness follows the view, as a camera's automatic exposure: it changes as you look around"><input type="radio" name="exposureMode" value="camera" /><span>As a camera</span></label>
+      </div>
+      <label class="check"><input type="checkbox" name="reduceFlashes" /><span>Reduce flashes</span></label>
       <button type="button" id="settings-reset">Reset options</button>
       <p id="about"></p>
       <button type="button" id="credits-open" data-credits>About the data</button>
+      <p id="about-weather">Weather data by <a href="https://open-meteo.com/" target="_blank" rel="noopener">Open-Meteo.com</a> (CC BY 4.0), generated using Copernicus Climate Change Service information (ERA5) and Copernicus Atmosphere Monitoring Service information. Observations: NOAA / National Weather Service; archive: Iowa Environmental Mesonet of Iowa State University.</p>
+    </form>
+
+    <form id="sky" class="pop" aria-label="Time of day" onsubmit="return false" hidden>
+      <div class="row sky-now">
+        <button type="button" id="sky-play" aria-label="Play" title="Play (Space)"><svg class="icon" viewBox="0 0 20 20" aria-hidden="true"><use href="#i-play" /></svg></button>
+        <output id="sky-time" aria-live="off"></output>
+        <button type="button" id="sky-live" title="Now (N)">Now</button>
+      </div>
+      <label class="field">
+        <span class="row"><span>Time of day</span><output id="sky-phase"></output></span>
+        <span class="sky-track" aria-hidden="true"><span class="tick" data-event="sunrise"></span><span class="tick" data-event="sunset"></span></span>
+        <input type="range" id="sky-scrub" min="0" max="1439" step="1" aria-label="Time of day" />
+        <span class="row sky-ticks"><output id="sky-sunrise"></output><output id="sky-sunset"></output></span>
+      </label>
+      <div class="seg" role="group" aria-label="Jump to">
+        <label><input type="radio" name="sky-jump" value="sunrise" /><span>Sunrise</span></label>
+        <label><input type="radio" name="sky-jump" value="noon" /><span>Noon</span></label>
+        <label><input type="radio" name="sky-jump" value="sunset" /><span>Sunset</span></label>
+        <label><input type="radio" name="sky-jump" value="night" /><span>Night</span></label>
+      </div>
+      <div class="row sky-more">
+        <label>Date <input type="date" id="sky-date" min="1940-01-01" /></label>
+        <label>Speed <select id="sky-speed">
+          <option value="0">Paused</option>
+          <option value="1">1×</option>
+          <option value="60">1 min/s</option>
+          <option value="600">10 min/s</option>
+          <option value="3600">1 h/s</option>
+        </select></label>
+      </div>
+      <div class="sky-weather">
+        <div class="row sky-chip">
+          <output id="sky-weather" aria-live="polite"></output>
+          <button type="button" id="sky-real" hidden>Back to real</button>
+        </div>
+        <p id="sky-source"></p>
+        <div class="seg" role="group" aria-label="Weather source">
+          <label><input type="radio" name="sky-source" value="live" /><span>Live</span></label>
+          <label><input type="radio" name="sky-source" value="history" /><span>History</span></label>
+          <label><input type="radio" name="sky-source" value="preset" /><span>Preset</span></label>
+        </div>
+        <div class="row sky-more">
+          <label id="sky-year-row" hidden>This date in <input type="number" id="sky-year" min="1940" step="1" /></label>
+          <label id="sky-preset-row" hidden>Preset <select id="sky-preset"></select></label>
+        </div>
+        <label class="check"><input type="checkbox" id="sky-adjust" /><span>Adjust the weather</span></label>
+        <div id="sky-sliders" hidden>
+          <div class="field sky-slider" data-key="lowCloud">
+            <span class="row"><label for="sky-lowCloud">Low cloud</label><span><output></output><button type="button" class="follow" hidden>Follow data</button></span></span>
+            <input type="range" id="sky-lowCloud" min="0" max="1" step="0.05" />
+          </div>
+          <div class="field sky-slider" data-key="highCloud">
+            <span class="row"><label for="sky-highCloud">High cloud</label><span><output></output><button type="button" class="follow" hidden>Follow data</button></span></span>
+            <input type="range" id="sky-highCloud" min="0" max="1" step="0.05" />
+          </div>
+          <div class="field sky-slider" data-key="cloudBase">
+            <span class="row"><label for="sky-cloudBase">Cloud base</label><span><output></output><button type="button" class="follow" hidden>Follow data</button></span></span>
+            <input type="range" id="sky-cloudBase" min="150" max="4500" step="50" />
+          </div>
+          <div class="field sky-slider" data-key="haze">
+            <span class="row"><label for="sky-haze">Haze</label><span><output></output><button type="button" class="follow" hidden>Follow data</button></span></span>
+            <input type="range" id="sky-haze" min="0" max="1.5" step="0.01" />
+          </div>
+          <div class="field sky-slider" data-key="dust">
+            <span class="row"><label for="sky-dust">Dust</label><span><output></output><button type="button" class="follow" hidden>Follow data</button></span></span>
+            <input type="range" id="sky-dust" min="0" max="5000" step="10" />
+          </div>
+          <div class="field sky-slider" data-key="humidity">
+            <span class="row"><label for="sky-humidity">Humidity</label><span><output></output><button type="button" class="follow" hidden>Follow data</button></span></span>
+            <input type="range" id="sky-humidity" min="0.02" max="1" step="0.01" />
+          </div>
+          <div class="field sky-slider" data-key="windSpeed">
+            <span class="row"><label for="sky-windSpeed">Wind speed</label><span><output></output><button type="button" class="follow" hidden>Follow data</button></span></span>
+            <input type="range" id="sky-windSpeed" min="0" max="30" step="0.5" />
+          </div>
+          <div class="field sky-slider" data-key="windDir">
+            <span class="row"><label for="sky-windDir">Wind direction</label><span><output></output><button type="button" class="follow" hidden>Follow data</button></span></span>
+            <input type="range" id="sky-windDir" min="0" max="359" step="1" />
+          </div>
+          <div class="field sky-slider" data-key="rain">
+            <span class="row"><label for="sky-rain">Rain</label><span><output></output><button type="button" class="follow" hidden>Follow data</button></span></span>
+            <input type="range" id="sky-rain" min="0" max="50" step="0.5" />
+          </div>
+          <div class="field sky-slider" data-key="lightning">
+            <span class="row"><label for="sky-lightning">Lightning</label><span><output></output><button type="button" class="follow" hidden>Follow data</button></span></span>
+            <input type="range" id="sky-lightning" min="0" max="30" step="1" />
+          </div>
+        </div>
+      </div>
     </form>
 
     <div id="tip" hidden></div>
@@ -111,6 +222,18 @@
       </div>
       <div id="toast" role="status" hidden><span></span><button>Undo</button></div>
       <div id="changes" hidden><span></span><button id="reset-all">Reset</button></div>
+      <div id="transport-slot" hidden></div>
+      <div id="transport" role="group" aria-label="Journey" hidden>
+        <button type="button" class="play" aria-label="Play" title="Play (Space)"><svg class="icon" viewBox="0 0 20 20" aria-hidden="true"><use href="#i-play" /></svg></button>
+        <span class="label"></span>
+        <span class="track"><input type="range" class="scrub" min="0" max="1" step="0.1" aria-label="Position along the journey" /><span class="marks" aria-hidden="true"></span></span>
+        <output class="pos"></output>
+        <select class="speed" aria-label="Speed">
+          <option value="1">1×</option><option value="2">2×</option><option value="4">4×</option><option value="8">8×</option>
+        </select>
+        <label class="depart">Depart <input type="datetime-local" step="60" aria-label="Depart at" /></label>
+        <button type="button" class="now" title="Now (N)">Now</button>
+      </div>
     </div>
     <div id="credit">Interactive Skyline<span class="data"> · <button type="button" data-credits title="About the data">© OpenStreetMap contributors</button></span></div>
     <div id="loading">Loading the city…</div>

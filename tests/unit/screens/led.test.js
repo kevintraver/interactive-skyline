@@ -8,7 +8,8 @@ import { measureFlash, luminance, FLASH_LIMIT_HZ } from '../../../src/drive/scre
 import { contentSeconds, CONTENT_PERIOD_S } from '../../../src/drive/screens/clock.js';
 
 const ROOT = path.resolve(__dirname, '../../..');
-const night = fs.readFileSync(path.join(ROOT, 'src/night.js'), 'utf8');
+// the GLSL the drive mirrors is the classic renderer's (plan 01 moved it out of night.js in its phase 2)
+const night = fs.readFileSync(path.join(ROOT, 'src/render/legacy/materials.js'), 'utf8');
 
 // the Sphere (buildings.json w976405284: centre 966.2 E, 726.2 N, 112 m tall), as LED points on a sphere of 78 m
 function sphereSamples(n = 400) {

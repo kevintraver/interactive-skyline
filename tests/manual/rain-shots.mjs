@@ -31,7 +31,7 @@ await page.routeWebSocket(/.*/, () => {});
 await page.addInitScript(() => { try { localStorage.clear(); localStorage.setItem('slc-skyline-hinted', '1'); } catch {} });
 // open the app and start the drive; again after a reload (a dev server reloads the page when a source changes)
 async function setup() {
-  await page.goto(`http://localhost:${port}/?city=lv`);
+  await page.goto(`http://localhost:${port}/?city=lv&renderer=legacy`);
   await page.waitForFunction(() => performance.getEntriesByName('skyline-ready').length > 0 && window.__skyline?.attractions && window.__skyline?.drive, null, { timeout: 120000 });
   const gl = await page.evaluate(() => { const g = window.__skyline.renderer.getContext(); const e = g.getExtension('WEBGL_debug_renderer_info'); return e ? g.getParameter(e.UNMASKED_RENDERER_WEBGL) : 'n/a'; });
   console.log('renderer:', gl);

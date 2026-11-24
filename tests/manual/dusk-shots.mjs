@@ -30,7 +30,7 @@ page.on('console', (m) => { if (m.type() === 'error') console.log('[error]', m.t
 page.on('pageerror', (e) => console.log('[pageerror]', e.message));
 await page.addInitScript(() => { try { localStorage.clear(); localStorage.setItem('slc-skyline-hinted', '1'); } catch {} });
 const ready = () => page.waitForFunction(() => performance.getEntriesByName('skyline-ready').length > 0 && window.__skyline?.attractions && window.__skyline?.drive, null, { timeout: 120000 });
-await page.goto(`http://localhost:${port}/?city=lv`);
+await page.goto(`http://localhost:${port}/?city=lv&renderer=legacy`);
 await ready();
 // the dev server reloads the page when a source file changes; start again after a reload
 const run = async (fn, arg) => {

@@ -174,6 +174,50 @@ test.describe('the interface answers real input', () => {
     await expect(page.locator('#settings')).toBeHidden();
   });
 
+  test('the tools: time of day (phase 1): #sky-toggle, the scrubber, a quick jump, T, N, Escape, one popover at a time', async ({ page }) => {
+    const clock = () => page.evaluate(() => ({ mode: window.__skyline.env.mode, live: window.__skyline.clock.live, t: window.__skyline.clock.timeMs }));
+    await page.locator('#sky-toggle').click();
+    await expect(page.locator('#sky')).toBeVisible();
+    await expect(page.locator('#sky-toggle')).toHaveAttribute('aria-expanded', 'true');
+    expect((await clock()).mode).toBe('pinned'); // opening it changes nothing
+    // the scrubber, by keyboard: one step is one minute, and it enters the clock state
+    await page.locator('#sky-scrub').focus();
+    const t0 = (await clock()).t;
+    await page.keyboard.press('ArrowRight');
+    const c1 = await clock();
+    expect(c1.mode).toBe('clock');
+    // the scrubber moves in whole minutes: the next minute after the one shown (shown rounded), so 0 to 2 minutes on
+    expect(c1.t - t0).toBeGreaterThan(0);
+    expect(c1.t - t0).toBeLessThanOrEqual(120000);
+    expect(c1.t % 60000).toBe(0);
+    // and by pointer: a click near the left end is shortly after midnight
+    const box = await page.locator('#sky-scrub').boundingBox();
+    await page.mouse.click(box.x + 9, box.y + box.height / 2);
+    expect(await page.evaluate(() => window.__skyline.clock.local().hour)).toBe(0);
+    // a quick jump
+    await page.locator('#sky .seg label', { hasText: 'Sunrise' }).click();
+    const rise = await page.evaluate(() => { const s = window.__skyline; return Math.abs(s.clock.timeMs - s.env.ephemeris.events(s.clock.timeMs - s.clock.local().hour * 3600000 - s.clock.local().minute * 60000 - s.clock.local().second * 1000 - (s.clock.timeMs % 1000)).sunrise); });
+    expect(rise).toBeLessThan(1000);
+    // one popover at a time
+    await page.locator('#options-toggle').click();
+    await expect(page.locator('#settings')).toBeVisible();
+    await expect(page.locator('#sky')).toBeHidden();
+    // T opens #sky (closing #settings), Escape closes it
+    await page.locator('#scene').click({ position: { x: 640, y: 120 } });
+    await page.locator('#options-toggle').click();
+    await page.keyboard.press('t');
+    await expect(page.locator('#sky')).toBeVisible();
+    await expect(page.locator('#settings')).toBeHidden();
+    await page.keyboard.press('Escape');
+    await expect(page.locator('#sky')).toBeHidden();
+    // N: the live sky
+    await page.keyboard.press('n');
+    expect(await clock()).toMatchObject({ mode: 'clock', live: true });
+    // and #night returns to a pinned look
+    await page.locator('#night').click();
+    expect((await clock()).mode).toBe('pinned');
+  });
+
   test('the tools: the city menu, viewpoints and zoom', async ({ page }) => {
     await page.locator('#city').click();
     await expect(page.locator('#city-menu')).toBeVisible();

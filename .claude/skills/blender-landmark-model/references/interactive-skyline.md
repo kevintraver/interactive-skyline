@@ -43,6 +43,18 @@ building's `ground` elevation, unrotated. So:
 python <skill>/scripts/skyline_tool.py install --repo <repo> --city lv --id <id> --glb <model>.glb --offset E,N
 ```
 
+**Integration v7 (plan 01, phase 2).** The app renders with `WebGPURenderer` (WebGPU, or its WebGL2 backend) and
+TSL node materials. `night.js`, `fountain.js`, `attractions.js` and `customModels.js` keep their names and exports
+(`night`, `clock`, `lightAtNight`, `createFountain`, `initAttractions`, `flatten`, `placeModel`), but the shading
+lives in the app's `src/render/materials/` (building, fountain, sky) and the v6 GLSL in `src/render/legacy/`
+(for `?renderer=legacy`), so the v7 files work only in a checkout that has `src/render/` (the tool checks for
+`src/render/materials/buildingMaterial.js`); an older checkout is kept at v6 from `assets/skyline/v6/`. `check`'s
+import map adds `three/webgpu` and `three/tsl`, its URL adds `backend=webgl&q=low&nobench=1` (the WebGL2 backend,
+chosen synchronously, the Low preset, no fill-rate benchmark), and its probe sets day and night with `env.freeze`
+(the classic afternoon, the Sun at 245, 32; the reference night) where the app has it, else `setSetting('night')`.
+Night now means physical light and automatic exposure: the night shots are exposed for the lit city, and a
+model's `_GLOW` of 1 is 80 cd/m2, a lit window about 60. The materials of a GLB keep their meaning.
+
 Idempotent. On a repo without the integration it applies `assets/skyline/skyline-main.patch` (loader hooks,
 night mode and the `initAttractions` call in `src/main.js`, a Night checkbox in `index.html`) and adds
 `src/customModels.js`, `src/night.js`, `src/attractions.js` and `src/fountain.js`; for `lv` it also copies the

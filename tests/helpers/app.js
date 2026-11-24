@@ -1,4 +1,5 @@
 // Driving the app from Playwright. Everything goes through window.__skyline (the hooks contract, T0.5).
+import { test } from '@playwright/test';
 import cities from '../../data/cities.json' with { type: 'json' };
 
 export const CITIES = Object.keys(cities);
@@ -9,9 +10,23 @@ export const sceneName = ({ city, view, look }) => `${city}-${view}-${look}`;
 /** Seconds into the fountain, LED and wheel loops at which the goldens are held (the landmark checker's default). */
 export const SHOW_TIME = 47;
 
-/** Open a city and wait until the app, its extras and its fountain shows are loaded. */
-export async function boot(page, city) {
-  await page.goto(`/?city=${city}`);
+/** Every weather request the app can make (plan 01, phase 5): the function, and the upstreams it falls back to. */
+export const WEATHER_URLS = /\/api\/weather|open-meteo\.com|aviationweather\.gov|api\.weather\.gov|mesonet\.agron\.iastate\.edu/;
+
+/**
+ * Open a city and wait until the app, its extras and its fountain shows are loaded. `query`: more parameters, as a
+ * string. No e2e test reaches a real weather service: playwright.config.js makes their hosts unresolvable, and
+ * `vite preview` has no /api (it answers with the app page, which the client does not take for weather). The specs
+ * that route weather themselves pass an object (`{ weather: false }`, with `query` if they need one); `weather` is
+ * kept for them and has no effect.
+ */
+export async function boot(page, city, options = '') {
+  let query = typeof options === 'string' ? options : options.query || '';
+  // the webgpu-software project runs every spec on the WebGPU backend (Chromium's software adapter)
+  let project = '';
+  try { project = test.info().project.name; } catch { /* outside a test */ }
+  if (project === 'webgpu-software' && !/backend=|renderer=legacy/.test(query)) query = query ? `${query}&backend=webgpu` : 'backend=webgpu';
+  await page.goto(`/?city=${city}${query ? `&${query}` : ''}`);
   await page.waitForFunction(() => window.__skyline && window.__skyline.attractions, null, { timeout: 90_000 });
   await page.evaluate(() => window.__skyline.attractions.ready);
 }
@@ -38,5 +53,7 @@ export async function stage(page, { view, look }) {
   // the view tiles redraw while the camera is still, then the frame itself; the loading cover fades out
   await frames(page, 4);
   await page.waitForFunction(() => getComputedStyle(document.getElementById('loading')).opacity === '0');
+  // phase 2: the exposure has settled (Eye mode, the default, at once; Camera mode once metered), so nothing then renders
+  await page.waitForFunction(() => { const l = window.__skyline.look; return !l || l.exposure.state.settled; }, null, { timeout: 300_000 });
   await frames(page, 2);
 }

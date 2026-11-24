@@ -1,0 +1,74 @@
+{
+  "webgl2": {
+    "backend": "webgl2",
+    "byTime": [
+      {
+        "at": 0.1,
+        "localHour": 7.6,
+        "frameMs": 22.14,
+        "scenePassMs": 20.965,
+        "bloomMs": 2.485,
+        "postMs": 0,
+        "meterMs": 2.8
+      },
+      {
+        "at": 0.3,
+        "localHour": 10.8,
+        "frameMs": 25.07,
+        "scenePassMs": 24.245,
+        "bloomMs": 2.685,
+        "postMs": 0,
+        "meterMs": 0
+      },
+      {
+        "at": 0.5,
+        "localHour": 14,
+        "frameMs": 25.45,
+        "scenePassMs": 21.62,
+        "bloomMs": 6.285,
+        "postMs": 0,
+        "meterMs": 0.955
+      },
+      {
+        "at": 0.7,
+        "localHour": 17.2,
+        "frameMs": 28.775,
+        "scenePassMs": 26.605,
+        "bloomMs": 8.845,
+        "postMs": 0,
+        "meterMs": 0
+      },
+      {
+        "at": 0.9,
+        "localHour": 20.4,
+        "frameMs": 24.86,
+        "scenePassMs": 18.9,
+        "bloomMs": 5.355,
+        "postMs": 0.605,
+        "meterMs": 0
+      }
+    ],
+    "cpuSubmitMs": {
+      "median": 15.7,
+      "p95": 30.5
+    },
+    "frames": 239,
+    "gpu": "ANGLE (Apple, ANGLE Metal Renderer: Apple M4, Unspecified Version)",
+    "method": "throughput by difference (perf.throughput); per-pass timestamps are not exposed by three r187",
+    "passesMs": {
+      "bloom": 5.355,
+      "frame": 25.07,
+      "meter": 0,
+      "post": 0,
+      "scenePass": 21.62
+    },
+    "peakTextureMB": 309.6,
+    "quality": "high",
+    "recorded": "2026-11-23",
+    "seconds": 20,
+    "size": [
+      1280,
+      800
+    ]
+  }
+}

@@ -38,7 +38,7 @@ async function take(shot) {
   await page.addInitScript(() => { try { localStorage.clear(); localStorage.setItem('slc-skyline-hinted', '1'); } catch { /* defaults */ } });
   const q = new URLSearchParams({ city: 'lv', mode: 'drive', route: shot.route, view: shot.view || 'cabin', t: { night: NIGHT, dusk: DUSK }[shot.when] || DAY });
   if (Number.isFinite(shot.s)) q.set('s', String(shot.s));
-  await page.goto(`http://localhost:${port}/?${q}`);
+  await page.goto(`http://localhost:${port}/?${q}&renderer=legacy`);
   await page.waitForFunction(() => window.__skyline?.attractions && window.__skyline?.drive?.active?.() && window.__skyline.drive.pose()
     && !document.getElementById('drivebar')?.classList.contains('busy'), null, { timeout: 180000 });
   const info = await page.evaluate(async (shot) => {

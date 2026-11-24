@@ -37,7 +37,9 @@ export async function openAt(page, query) {
   await page.addInitScript(() => {
     try { localStorage.clear(); localStorage.setItem('slc-skyline-hinted', '1'); } catch { /* defaults apply anyway */ }
   });
-  await page.goto(`/?${query}`);
+  // Drive runs on the classic renderer until its materials are ported to the new one (plan 02); the map specs of
+  // plan 01 run on the new renderer through helpers/app.js
+  await page.goto(`/?${/(^|&)renderer=/.test(query) ? query : `${query}&renderer=legacy`}`);
   await page.waitForFunction(() => performance.getEntriesByName('skyline-ready').length > 0
     && document.getElementById('loading').classList.contains('done')
     && window.__skyline && window.__skyline.attractions && window.__skyline.drive, null, { timeout: 120_000 });

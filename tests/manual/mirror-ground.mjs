@@ -12,7 +12,7 @@ const browser = await chromium.launch({ channel: 'chromium', headless: true, arg
 const page = await browser.newPage({ viewport: { width: 1280, height: 720 } });
 await page.addInitScript(() => { try { localStorage.clear(); localStorage.setItem('slc-skyline-hinted', '1'); } catch { /* defaults */ } });
 const q = new URLSearchParams({ city: 'lv', mode: 'drive', route: c.route, s: String(c.s), t: c.t || '2026-11-21T20:30:00Z', view: 'cabin' });
-await page.goto(`http://localhost:${port}/?${q}`);
+await page.goto(`http://localhost:${port}/?${q}&renderer=legacy`);
 await page.waitForFunction(() => window.__skyline?.drive?.active?.() && window.__skyline.drive.pose(), null, { timeout: 120000 });
 await page.evaluate(() => window.__skyline.drive.whenSettled());
 await page.waitForTimeout(2000);

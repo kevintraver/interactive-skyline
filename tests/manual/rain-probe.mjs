@@ -6,7 +6,7 @@ const browser = await chromium.launch({ channel: 'chromium', headless: true, arg
 const page = await browser.newPage({ viewport: { width: 1280, height: 720 } });
 await page.routeWebSocket(/.*/, () => {});
 await page.addInitScript(() => { try { localStorage.clear(); localStorage.setItem('slc-skyline-hinted', '1'); } catch {} });
-await page.goto(`http://localhost:${process.argv[3] || 5303}/?city=lv`);
+await page.goto(`http://localhost:${process.argv[3] || 5303}/?city=lv&renderer=legacy`);
 await page.waitForFunction(() => performance.getEntriesByName('skyline-ready').length > 0 && window.__skyline?.drive, null, { timeout: 120000 });
 await page.evaluate(async () => { const s = window.__skyline; s.attractions.freeze(20); await s.attractions.ready; await s.drive.start('i15n', {}); s.drive.pause(); });
 await page.waitForFunction(() => { let w = null; window.__skyline.scene.traverse((o) => { if (o.userData?.weatherPart) w = 1; }); return w; }, null, { timeout: 60000 });

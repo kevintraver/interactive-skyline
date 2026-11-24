@@ -15,7 +15,7 @@ const page = await browser.newPage({ viewport: { width: 1280, height: 720 } });
 page.on('console', (m) => { if (m.type() === 'error' || m.type() === 'warning') console.log(`[${m.type()}]`, m.text().slice(0, 200)); });
 page.on('pageerror', (e) => console.log('[pageerror]', e.message));
 await page.addInitScript(() => { try { localStorage.clear(); } catch { /* defaults */ } });
-await page.goto(`http://localhost:${port}/?city=lv`);
+await page.goto(`http://localhost:${port}/?city=lv&renderer=legacy`);
 await page.waitForFunction(() => performance.getEntriesByName('skyline-ready').length > 0 && window.__skyline?.drive, null, { timeout: 120000 });
 await page.getByRole('button', { name: 'Drive', exact: true }).click();
 await page.evaluate(async () => {

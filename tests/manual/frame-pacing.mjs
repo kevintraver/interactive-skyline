@@ -16,7 +16,7 @@ for (const c of cases) {
   page.on('pageerror', (e) => errors.push('pageerror ' + e.message.slice(0, 160)));
   await page.addInitScript(() => { try { localStorage.clear(); localStorage.setItem('slc-skyline-hinted', '1'); } catch {} });
   const q = `city=lv&mode=drive&route=${c.route}&s=${c.s}&t=${encodeURIComponent(c.t)}&view=${c.view || 'cabin'}${c.rain ? '&rain=' + c.rain : ''}`;
-  await page.goto(`http://localhost:${port}/?${q}`);
+  await page.goto(`http://localhost:${port}/?${q}&renderer=legacy`);
   await page.waitForFunction(() => window.__skyline?.drive?.active?.() && window.__skyline.drive.pose(), null, { timeout: 120000 });
   await page.evaluate(() => window.__skyline.drive.whenSettled());
   await page.waitForTimeout(1500);

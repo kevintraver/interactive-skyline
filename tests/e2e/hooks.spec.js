@@ -6,6 +6,8 @@ import { CITIES, boot, frames, views } from '../helpers/app.js';
 // Every member window.__skyline has at the end of phase 0. Later phases may add members, never remove these.
 const MEMBERS = ['tall', 'renderer', 'scene', 'camera', 'controls', 'sun', 'invalidate', 'settings', 'setSetting', 'focusOn',
   'flying', 'setView', 'select', 'selectedId', 'screen', 'place', 'movedIds', 'hiddenIds', 'perf', 'attractions'];
+// Added in phase 1 (plan 01, section 8.6): never removed from here on either.
+const PHASE1 = ['clock', 'env', 'loop', 'timeline', 'transport'];
 // What attractions.js exposes; the checker's probe uses ready, freeze, summary, find, extras and fountains.
 const ATTRACTIONS = ['ready', 'extras', 'fountains', 'find', 'freeze', 'animating', 'summary'];
 // Element ids the app and the checker rely on (the checker hides loading, tip, menu, card, toast, top, tools,
@@ -35,6 +37,40 @@ for (const city of CITIES) {
       expect(got.attractions).toEqual([]);
       expect(got.ids).toEqual([]);
       expect(got.types).toEqual({ tall: true, renderer: true, scene: 'function', camera: true, controls: true, sun: true, nightKey: true, ready: 'function' });
+    });
+
+    test('phase 1 members: clock, env, loop, timeline, transport', async ({ page }) => {
+      const r = await page.evaluate((members) => {
+        const s = window.__skyline, st = s.env.state;
+        return {
+          missing: members.filter((k) => !(k in s)),
+          clock: ['timeMs', 'rate', 'playing', 'live', 'zone'].every((k) => k in s.clock) && typeof s.clock.setLocal === 'function',
+          env: ['state', 'nodes', 'lights', 'nightlights', 'ephemeris', 'exposure', 'at', 'lightAt', 'lightning', 'precipitation', 'freeze', 'unfreeze', 'on']
+            .filter((k) => !(k in s.env)),
+          state: ['timeMs', 'seed', 'sun', 'moon', 'key', 'sky', 'exposure', 'lights', 'weather', 'wind', 'visibilityM', 'rain', 'wetness', 'lightning']
+            .filter((k) => !(k in st)),
+          types: [typeof st.timeMs, st.sun.dir.isVector3, typeof st.moon.phaseFraction, st.key.body, st.sky.phase, typeof st.lights.cityFactor],
+          loop: typeof s.loop.settle === 'function' && typeof s.loop.invalidate === 'function' && typeof s.loop.add === 'function',
+          mode: s.env.mode, zone: s.clock.zone,
+        };
+      }, PHASE1);
+      expect(r.missing).toEqual([]);
+      expect(r.clock).toBe(true);
+      expect(r.env).toEqual([]);
+      expect(r.state).toEqual([]);
+      expect(r.types).toEqual(['number', true, 'number', 'sun', 'day', 'number']);
+      expect(r.loop).toBe(true);
+      expect(r.mode).toBe('pinned');
+      expect(r.zone).toBe(city === 'lv' ? 'America/Los_Angeles' : 'America/Denver');
+    });
+
+    test('camera limits: enabled, bounds inside the terrain grid', async ({ page }) => {
+      const r = await page.evaluate(() => {
+        const L = window.__skyline.cameraLimits, b = L.bounds, g = L.terrain;
+        return { enabled: L.enabled, inside: b.minX > g.minX && b.maxX < g.maxX && b.minZ > g.minZ && b.maxZ < g.maxZ,
+          fns: [typeof L.groundAt, typeof L.clearance] };
+      });
+      expect(r).toEqual({ enabled: true, inside: true, fns: ['function', 'function'] });
     });
 
     test('settings: night and highlight', async ({ page }) => {

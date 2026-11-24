@@ -15,7 +15,7 @@ await page.routeWebSocket(/.*/, (ws) => {
   server.onMessage((m) => { if (!/full-reload|"type":"update"|"type":"prune"/.test(String(m))) ws.send(m); });
   ws.onMessage((m) => server.send(m));
 });
-await page.goto(`http://localhost:${port}/?city=lv`);
+await page.goto(`http://localhost:${port}/?city=lv&renderer=legacy`);
 await page.waitForFunction(() => performance.getEntriesByName('skyline-ready').length > 0 && window.__skyline?.attractions && window.__skyline?.drive, null, { timeout: 120000 });
 const NIGHT = Date.parse('2026-11-22T02:30:00Z');
 

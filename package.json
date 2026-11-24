@@ -9,6 +9,8 @@
     "data": "for c in slc lv; do uv run scripts/fetch_lidar.py $c && uv run scripts/build_terrain.py $c && uv run scripts/build_imagery.py $c && uv run scripts/build_buildings.py $c; done",
     "test": "pnpm test:unit && pnpm test:e2e",
     "test:unit": "vitest run",
+    "test:live": "vitest run --config tests/live/vitest.config.js",
+    "test:py": "uv run --python 3.12 --with pytest --with numpy --with requests --with pillow --with openexr --with scipy --with shapely --with pyproj --with h5py pytest -q tests/python",
     "test:e2e": "playwright test --project=webgl2-software",
     "test:e2e:drive": "playwright test --project=drive-software",
     "test:data": "uv run --with-requirements tests/data/requirements.txt pytest tests/data -q",
@@ -18,11 +20,15 @@
     "test:perf:drive": "playwright test --project=drive-timing --workers=1",
     "bench": "vitest bench --run --reporter=verbose",
     "test:perf:software": "playwright test --project=software-timing --workers=1",
+    "test:webgpu": "playwright test --project=webgpu-software",
+    "test:bench": "playwright test --project=gpu-ab bench --workers=1",
+    "test:perf:ab": "playwright test --project=gpu-ab perf.ab --workers=1",
     "test:perf:update": "SKYLINE_PERF_UPDATE=1 playwright test --project=gpu --workers=1",
     "test:perf:budgets:update": "SKYLINE_PERF_UPDATE=1 playwright test --project=webgl2-software perf.budgets --workers=1"
   },
   "dependencies": {
-    "three": "^0.187.0",
+    "astronomy-engine": "^2.1.19",
+    "three": "0.187.0",
     "three-mesh-bvh": "^0.9.18"
   },
   "devDependencies": {

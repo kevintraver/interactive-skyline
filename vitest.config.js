@@ -7,5 +7,8 @@ export default defineConfig({
     // micro-benchmarks: Vitest runs these in a project of their own (`pnpm bench`)
     benchmark: { include: ['tests/bench/**/*.bench.js'] },
     environment: 'node',
+    // a few tests do seconds of arithmetic or start Python, and every file runs at once: with other work on the
+    // machine they passed alone and ran out of the default 5 s together
+    testTimeout: 30_000,
   },
 });

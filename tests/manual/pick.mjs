@@ -18,7 +18,7 @@ const page = await browser.newPage({ viewport: { width: 1280, height: 720 } });
 await page.addInitScript(() => { try { localStorage.clear(); localStorage.setItem('slc-skyline-hinted', '1'); } catch { /* defaults */ } });
 const q = new URLSearchParams({ city: 'lv', mode: 'drive', route: shot.route, view: shot.view || 'clean', t: shot.when === 'night' ? NIGHT : DAY });
 if (Number.isFinite(shot.s)) q.set('s', String(shot.s));
-await page.goto(`http://localhost:${port}/?${q}`);
+await page.goto(`http://localhost:${port}/?${q}&renderer=legacy`);
 await page.waitForFunction(() => window.__skyline?.drive?.active?.() && window.__skyline.drive.pose()
   && !document.getElementById('drivebar')?.classList.contains('busy'), null, { timeout: 180000 });
 const out = await page.evaluate(async ({ shot, pixels }) => {

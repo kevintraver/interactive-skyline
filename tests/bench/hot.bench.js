@@ -6,6 +6,7 @@ import { test } from 'vitest';
 import { extrude, toGeometry, fresh } from '../../src/city/extrude.js';
 import { heightField, makeGroundY } from '../../src/city/terrain.js';
 import { curveDrop } from '../../src/core/earth.js';
+import { makePivotGround, smoothGround } from '../../src/interaction/cameraLimits.js';
 import cities from '../../data/cities.json' with { type: 'json' };
 
 const lv = JSON.parse(fs.readFileSync(new URL('../../public/data/lv/buildings.json', import.meta.url)));
@@ -15,6 +16,7 @@ const meta = JSON.parse(fs.readFileSync(new URL('../../public/data/lv/terrain.js
 const near = heightField(read('lv', meta.grids.near.file), meta.grids.near);
 const far = heightField(read('lv', meta.grids.far.file), meta.grids.far);
 const groundY = makeGroundY(near, far, cities.lv.base);
+const pivotGround = makePivotGround(near, far, cities.lv.base);
 
 test('extrude + toGeometry, 2,000 Las Vegas buildings', async ({ bench }) => {
   await bench('extrude + toGeometry, 2,000 Las Vegas buildings', () => {
@@ -36,6 +38,17 @@ test('curveDrop, 100,000 calls', async ({ bench }) => {
   await bench('curveDrop, 100,000 calls', () => {
     let s = 0;
     for (let i = 0; i < 100000; i++) s += curveDrop(i - 50000, 50000 - i);
+    return s;
+  }).run();
+});
+
+test('camera limits: the pivot ground (five-point average) and the camera clearance, 10,000 drag frames', async ({ bench }) => {
+  await bench('camera limits: the pivot ground (five-point average) and the camera clearance, 10,000 drag frames', () => {
+    let s = 0;
+    for (let i = 0; i < 10000; i++) {
+      const x = -6000 + i * 1.3, z = 2000 - i * 0.7;
+      s += smoothGround(pivotGround, x, z, 40) + groundY(x + 300, -(z + 300)) + groundY(x + 299, -(z + 300));
+    }
     return s;
   }).run();
 });

@@ -5,7 +5,9 @@ import { computeBoundsTree, disposeBoundsTree, acceleratedRaycast } from 'three-
 import { GenerateMeshBVHWorker } from 'three-mesh-bvh/worker';
 import { placeModel } from '../customModels.js';
 import { lightAtNight } from '../night.js';
-import { ring, extrude, toGeometry, fresh } from './extrude.js';
+import { active } from '../render/active.js';
+import { createEdgeMaterial } from '../render/materials/buildingMaterial.js';
+import { ring, extrude, toGeometry, fresh, INSET } from './extrude.js';
 
 THREE.BufferGeometry.prototype.computeBoundsTree = computeBoundsTree;
 THREE.BufferGeometry.prototype.disposeBoundsTree = disposeBoundsTree;
@@ -26,7 +28,9 @@ export function createBuildings({ scene, settings, base: BASE }, model, customMo
   const tallGroup = new THREE.Group();
   const markerGroup = new THREE.Group();
   scene.add(tallGroup, markerGroup);
-  const edgeMat = new THREE.LineBasicMaterial({ color: 0x16324d, transparent: true, opacity: 0.7 });
+  // on the new renderer a LineBasicNodeMaterial that skips the per-frame refresh while nothing moves (steady.js)
+  const edgeParams = { color: 0x16324d, transparent: true, opacity: 0.7 };
+  const edgeMat = active.legacy ? new THREE.LineBasicMaterial(edgeParams) : createEdgeMaterial(edgeParams);
   const outlineMat = new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.95 });
 
   /** Flat footprint on the ground where a tower really stands, shown once it is hidden or moved away. */
@@ -78,7 +82,7 @@ export function createBuildings({ scene, settings, base: BASE }, model, customMo
       if (b.h >= settings.cutoff || customModels.has(b.id)) {
         const custom = customModels.get(b.id);
         const out = custom ? placeModel(custom, b.c[0], b.c[1], b.ground - BASE) : fresh();
-        if (!custom) for (const v of b.v) extrude(v, out, [1, 1, 1], BASE);
+        if (!custom) for (const v of b.v) extrude(v, out, [1, 1, 1], BASE, INSET.tall);
         const geo = toGeometry(out);
         geo.computeBoundsTree();
         // a little self-light keeps the shaded faces blue instead of near-black
@@ -96,7 +100,7 @@ export function createBuildings({ scene, settings, base: BASE }, model, customMo
         // a little per-building variation so blocks of houses read as separate roofs
         const n = Math.sin(b.c[0] * 12.9898 + b.c[1] * 78.233) * 43758.5453;
         const k = 0.93 + 0.07 * (n - Math.floor(n));
-        for (const v of b.v) extrude(v, lowOut, [GRAY.r * k, GRAY.g * k, GRAY.b * k], BASE);
+        for (const v of b.v) extrude(v, lowOut, [GRAY.r * k, GRAY.g * k, GRAY.b * k], BASE, INSET.low);
       }
     }
     const lowGeo = toGeometry(lowOut);

@@ -3,6 +3,7 @@
 // picture of the live scene.
 import * as THREE from 'three';
 import { summit } from './terrain.js';
+import { stopMomentum } from '../interaction/cameraLimits.js';
 
 const LENS_HFOV = 39.6; // horizontal field of view of a 50 mm lens on full frame
 const THUMB = { w: 176, h: 116 };
@@ -32,7 +33,8 @@ export function createViews(app, { near, groundY }) {
     for (const v of Object.values(VIEWS)) {
       camera.position.copy(v.pos);
       camera.lookAt(v.target);
-      renderer.render(scene, camera);
+      // through the pipeline on the new renderer, so the tiles have the frame's look (no exposure metering)
+      if (app.draw) app.draw(); else renderer.render(scene, camera);
       // crop the middle of the frame to the tile's shape
       const w = Math.min(canvas.width, canvas.height * THUMB.w / THUMB.h), h = w * THUMB.h / THUMB.w;
       v.thumb.getContext('2d').drawImage(canvas, (canvas.width - w) / 2, (canvas.height - h) / 2, w, h, 0, 0, THUMB.w, THUMB.h);
@@ -42,12 +44,12 @@ export function createViews(app, { near, groundY }) {
   }
   function setView(name) {
     views.active = name;
+    // the rest of the last drag is dropped, not added to the view
+    stopMomentum(controls);
+    if (app.look) app.look.seek(); // a new view is a seek for the exposure (plan 01, T2.6)
     camera.position.copy(VIEWS[name].pos);
     controls.target.copy(VIEWS[name].target);
-    // updating once with damping off discards any leftover spin from the last drag
-    controls.enableDamping = false;
     controls.update();
-    controls.enableDamping = true;
     for (const btn of document.querySelectorAll('.views button')) btn.classList.toggle('active', btn.dataset.view === name);
     invalidate();
   }
