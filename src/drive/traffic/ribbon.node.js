@@ -1,25 +1,30 @@
 // Light ribbons on the route's own road (plan 02, D6.4) as a node material for plan 01's renderer (three r187): the
 // sibling of ribbon.js and ribbon.glsl.js (plan 02, third stretch, decision 2), with the same factory, options and
 // returned object. tests/manual/traffic-node-shots.mjs draws both and compares them; tests/unit/traffic/
-// ribbon-node.test.js holds their geometry and density tables equal.
+// node-parity.test.js holds their geometry and density tables equal.
 //
 // Beyond the lamp sprites every lane of both carriageways is one emissive strip out to the horizon, its light
 // density x per-vehicle intensity: the red river ahead and the white one coming. One draw call. The CPU side
 // (geometry per route; three density sets for quantised times, the third worked out a slice per frame) is
-// ribbon.js's, line for line. The shader is ribbon.glsl.js's in TSL; its header has the flux rule and the display
-// rule: per vehicle, for each of its lights, the tone-mapped far sprite integrated over its profile, spread over the
-// strip's pixels, so the colour written is already toned.
+// ribbonCore.js, shared with ribbon.js. The shader is ribbon.glsl.js's in TSL; its header has the flux rule.
+//
+// Two ways to show the light (option `tone`):
+//  - 'scene' (the shipped look, plan 01's pipeline tone-maps the frame): the strip writes scene-referred light, as the
+//    light sprites do (lights/sprites.node.js). A stretch ds of a lane holding lambda ds vehicles of intensity I toward
+//    the eye gives E = lambda ds I T / d^2 there; spread over the W x pxPerM ds pixels the strip covers, each of pa^2
+//    steradians, that is the luminance L = lambda I T / (d^2 W pxPerM pa^2) at the strip's centre (a Gaussian across
+//    whose integral is W). Written as L x gain x lightScale; no tone in the shader.
+//  - 'sprite' (the classic display and the parity page): ribbon.glsl.js's display rule, per vehicle, for each of its
+//    lights, the tone-mapped far sprite integrated over its profile, spread over the strip's pixels; the colour is a
+//    toned display value, handed to `toScene` (the scene value the output pass shows as that).
 //
 // What differs from ribbon.js, deliberately:
-//  - light units (decision 6): `gain` in update() is the look's fade alone (look.beams), not lighting.units.nit x
-//    the fade; the factory's `lightScale` (a number or a TSL node: the pre-exposure in the shipped look, 0.1 at the
-//    classic display) carries the scale from cd/m^2. The sprite tone inside runs on gain x lightScale, as the GLSL
-//    one runs on uGain.
-//  - `toScene` (option): the strip's colour is a toned display value (0..1, linear). The classic renderer wrote it
-//    to the canvas untouched (toneMapped false); plan 01's renderer tone-maps the whole frame after the scene pass,
-//    so the caller hands a node function that turns a toned value into the scene value its output pass shows as
-//    that (plan 01's displayToScene of the sRGB-encoded value, at the classic display). Default: identity, which is
-//    right for linear output with no tone mapping (the parity tool).
+//  - light units (decision 6): `gain` in update() is the look's fade alone (look.beams at the classic display, 1 in
+//    the shipped look), not lighting.units.nit x the fade; the factory's `lightScale` (a number or a TSL node: the
+//    pre-exposure x the lights-out slider in the shipped look, 0.1 at the classic display) carries the scale from
+//    cd/m^2.
+//  - `toScene` (option, 'sprite' only): default identity, right for linear output with no tone mapping (the parity
+//    page).
 //  - the uniforms are TSL uniform nodes in the render group (set by `.value`, as the GLSL ones); tDensity stays a
 //    { value } holder of the density texture.
 
@@ -29,18 +34,9 @@ import {
   Fn, attribute, varying, vec2, vec3, vec4, float, int, ivec2, uniform, textureLoad, clamp, floor, min, max, mix,
   exp, pow, dot, length, select, positionGeometry, cameraPosition, cameraViewMatrix, cameraProjectionMatrix, renderGroup,
 } from 'three/tsl';
-import { LAMP_CD, LOBE, LAMP_RGB, TRUCK_MARKERS } from './lamps.js';
-import { WHITEN } from './lightData.js';
+import { createRibbonsWith } from './ribbonCore.js';
 
-export const STEP_M = 50;
-export const BIN_M = 100;
-export const DENSITY_Q_MS = 10000;
-export const LAMP_H = 0.8;
-export const WIDTH_PX = 2;
-const ROWS = 16; // 2 directions x 8 lanes
-const SETS = 3;
-/** Frames over which a density set is worked out ahead of need. */
-const SPREAD_FRAMES = 24;
+export { STEP_M, BIN_M, DENSITY_Q_MS, LAMP_H, WIDTH_PX } from './ribbonCore.js';
 
 const PI = Math.PI;
 const shared = (v) => uniform(v).setGroup(renderGroup);
@@ -97,7 +93,8 @@ const spriteDisplay = /*@__PURE__*/ Fn(([colour, E, minPx, pixelAngle, scale, wh
  * The ribbon material: the vertex stage of ribbon.glsl.js (a strip of uWidthPx pixels across, facing the screen)
  * and its fragment (a Gaussian across whose integral is the width).
  * @param {object} u the uniforms  @param {import('three').Texture} tex the density table
- * @param {import('three/webgpu').Node} lightScale  @param {(c: import('three/webgpu').Node) => import('three/webgpu').Node} toScene
+ * @param {import('three/webgpu').Node} lightScale
+ * @param {((c: import('three/webgpu').Node) => import('three/webgpu').Node) | null} toScene  null: scene light, no tone
  */
 function ribbonMaterial(u, tex, lightScale, toScene) {
   const aTangent = attribute('aTangent', 'vec3'), aInfo = attribute('aInfo', 'vec4'), aTruck = attribute('aTruck', 'float');
@@ -129,7 +126,11 @@ function ribbonMaterial(u, tex, lightScale, toScene) {
   const fw = max(c, 0), bw = max(c.negate(), 0);
   const T = exp(d.negate().div(u.uVisibility)).div(d.mul(d));
   const scale = u.uGain.mul(lightScale);
-  const sd = (colour, E) => spriteDisplay(colour, E, u.uMinPx, u.uPixelAngle, scale, u.uWhiten);
+  // per light: the toned far sprite integrated over its pixels ('sprite'), or its scene light over its pixels, colour x
+  // E x scale / pa^2 (px^2 of luminance: the same integral without the tone, 'scene')
+  const sd = toScene
+    ? (colour, E) => spriteDisplay(colour, E, u.uMinPx, u.uPixelAngle, scale, u.uWhiten)
+    : (colour, E) => colour.mul(E.mul(scale).div(u.uPixelAngle.mul(u.uPixelAngle)));
   // a vehicle's lights toward the eye (lamps.js vehicleIntensity), each shown as its far sprite would be
   const S = sd(u.uCw, u.uCd.x.mul(2).mul(pow(fw, u.uLobe.x)).mul(T))
     .add(sd(u.uCr, u.uCd.y.mul(2).mul(pow(bw, u.uLobe.y)).add(aTruck.mul(u.uLobe.w).mul(u.uCd.w).mul(pow(bw, u.uLobe.z))).mul(T)))
@@ -157,169 +158,24 @@ function ribbonMaterial(u, tex, lightScale, toScene) {
     // a Gaussian across whose integral is uWidthPx: sigma = W / sqrt(pi), peak 1; the colour is already toned
     const sigma = u.uWidthPx.mul(0.5641895835);
     const q = vAcross.div(sigma);
-    return vec4(toScene(vRad.mul(exp(q.mul(q).negate()))), 1);
+    const c = vRad.mul(exp(q.mul(q).negate()));
+    return vec4(toScene ? toScene(c) : c, 1);
   })();
   return material;
 }
 
 /**
  * @param {{ parent: THREE.Object3D, traffic: object, laneMap: object, frame: object,
- *   lightScale?: number | import('three/webgpu').Node, toScene?: (c: import('three/webgpu').Node) => import('three/webgpu').Node }} opts
- *   lightScale: physical units -> what the material writes (default 1); toScene: see the header (default identity)
+ *   lightScale?: number | import('three/webgpu').Node, tone?: 'scene' | 'sprite',
+ *   toScene?: (c: import('three/webgpu').Node) => import('three/webgpu').Node }} opts
+ *   lightScale: physical units -> what the material writes (default 1); tone and toScene: see the header (default
+ *   'sprite' and identity, which the parity page compares with ribbon.js)
  */
-export function createRibbons({ parent, traffic, laneMap, frame, lightScale = 1, toScene = (c) => c }) {
-  const [S0, S1] = traffic.range;
-  const nPts = Math.ceil((S1 - S0) / STEP_M) + 1;
-  const sAt = (i) => Math.min(S1, S0 + i * STEP_M);
-  // ---- geometry
-  const strips = [];
-  for (const [di, dir] of [[0, 'with'], [1, 'against']]) {
-    const lanes = traffic.lanes(dir).map((L) => L.lane);
-    const segs = traffic.segments(dir).slice().sort((p, q) => p.s0 - q.s0);
-    for (const lane of lanes) if (lane <= 8) strips.push({ di, dir, lane, segs });
-  }
-  const nV = strips.length * nPts * 2;
-  const pos = new Float32Array(nV * 3), tan = new Float32Array(nV * 3), info = new Float32Array(nV * 4), truck = new Float32Array(nV);
-  const index = [];
-  const lm = { sRoad: 0, d: 0, dds: 0, w: 0 }, r = {};
-  let v = 0;
-  for (const st of strips) {
-    const ld = laneMap.dirs[st.dir];
-    let g = 0;
-    const base = v;
-    for (let i = 0; i < nPts; i++) {
-      const s = sAt(i);
-      while (g + 1 < st.segs.length && st.segs[g + 1].s0 <= s) g++;
-      laneMap.atDir(ld, st.lane, s, lm);
-      ld.refline.at(lm.sRoad, r);
-      const ch = Math.cos(r.heading), sh = Math.sin(r.heading);
-      const mx = r.x - sh * lm.d, my = r.y + ch * lm.d;
-      const Y = frame.sceneY(r.h + r.crossfall * lm.d, mx, my) + LAMP_H;
-      const tx = ch - sh * lm.dds, ty = sh + ch * lm.dds;
-      const tl = Math.hypot(tx, ty, r.grade);
-      for (let side = -1; side <= 1; side += 2) {
-        pos[3 * v] = mx; pos[3 * v + 1] = Y; pos[3 * v + 2] = -my;
-        tan[3 * v] = tx / tl; tan[3 * v + 1] = r.grade / tl; tan[3 * v + 2] = -ty / tl;
-        info[4 * v] = s; info[4 * v + 1] = st.di * 8 + st.lane - 1; info[4 * v + 2] = side; info[4 * v + 3] = lm.w;
-        truck[v] = st.segs[g].truckShare || 0;
-        v++;
-      }
-      if (i > 0) {
-        const a = base + 2 * (i - 1);
-        index.push(a, a + 1, a + 2, a + 1, a + 3, a + 2);
-      }
-    }
-  }
-  const geometry = new THREE.BufferGeometry();
-  geometry.setAttribute('position', new THREE.BufferAttribute(pos, 3));
-  geometry.setAttribute('aTangent', new THREE.BufferAttribute(tan, 3));
-  geometry.setAttribute('aInfo', new THREE.BufferAttribute(info, 4));
-  geometry.setAttribute('aTruck', new THREE.BufferAttribute(truck, 1));
-  geometry.setIndex(nV > 65535 ? new THREE.Uint32BufferAttribute(index, 1) : new THREE.Uint16BufferAttribute(index, 1));
-
-  // ---- density table
-  const bins = Math.ceil((S1 - S0) / BIN_M) + 1;
-  const texData = new Float32Array(bins * ROWS * SETS);
-  const tex = new THREE.DataTexture(texData, bins, ROWS * SETS, THREE.RedFormat, THREE.FloatType);
-  tex.minFilter = tex.magFilter = THREE.NearestFilter;
-  tex.generateMipmaps = false;
-  tex.needsUpdate = true;
-  const setQ = [NaN, NaN, NaN]; // the quantum each set holds (complete)
-  let pending = null; // { set, q, next: bin index }
-  const dens = new Float32Array(8);
-
-  function fillBins(set, q, b0, b1) {
-    const ms = q * DENSITY_Q_MS;
-    for (let b = b0; b < b1; b++) {
-      const s = Math.min(S1, S0 + b * BIN_M);
-      for (let di = 0; di < 2; di++) {
-        traffic.laneDensities(di === 0 ? 'with' : 'against', s, ms, dens);
-        for (let l = 0; l < 8; l++) texData[(set * ROWS + di * 8 + l) * bins + b] = dens[l];
-      }
-    }
-  }
-  /** The set holding quantum q, worked out now if it is not there; keep: quanta not to evict. */
-  function ensureSet(q, keep) {
-    let set = setQ.indexOf(q);
-    if (set >= 0) return set;
-    if (pending && pending.q === q) {
-      fillBins(pending.set, q, pending.next, bins);
-      setQ[pending.set] = q; set = pending.set; pending = null;
-      tex.needsUpdate = true;
-      return set;
-    }
-    set = freeSet(keep);
-    fillBins(set, q, 0, bins);
-    setQ[set] = q;
-    tex.needsUpdate = true;
-    return set;
-  }
-  /** A set not holding any of the quanta in `keep` (and not pending). */
-  function freeSet(keep) {
-    for (let k = 0; k < SETS; k++) if (!keep.includes(setQ[k]) && !(pending && pending.set === k)) return k;
-    return 0;
-  }
-
-  const uniforms = {
-    tDensity: { value: tex }, uS0: shared(S0), uBinM: shared(BIN_M), uBins: shared(bins), uRows: shared(new THREE.Vector3(0, 0, 0)),
-    uCarS: shared(0), uAhead: shared(4000), uBehind: shared(2000), uBand: shared(0.25),
-    uViewport: shared(new THREE.Vector2(1, 1)), uPixelAngle: shared(1e-3), uWidthPx: shared(WIDTH_PX),
-    uVisibility: shared(80000), uGain: shared(1), uLit: shared(1),
-    uCw: shared(new THREE.Vector3(...LAMP_RGB.white)), uCr: shared(new THREE.Vector3(...LAMP_RGB.red)), uCa: shared(new THREE.Vector3(...LAMP_RGB.amber)),
-    uCd: shared(new THREE.Vector4(LAMP_CD.head, LAMP_CD.tail, LAMP_CD.amber, LAMP_CD.red)),
-    uLobe: shared(new THREE.Vector4(LOBE.head, LOBE.tail, LOBE.marker, TRUCK_MARKERS)),
-    uMinPx: shared(1.5), uWhiten: shared(WHITEN),
-  };
-  const material = ribbonMaterial(uniforms, tex, asNode(lightScale), toScene);
-  const mesh = new THREE.Mesh(geometry, material);
-  mesh.name = 'traffic-ribbons';
-  mesh.frustumCulled = false;
-  mesh.renderOrder = 10;
-  mesh.matrixAutoUpdate = false;
-  mesh.visible = false;
-  parent.add(mesh);
-  const size = new THREE.Vector2();
-  const stats = { filledBins: 0 };
-
-  /**
-   * Per frame. @param {{ simMs: number, carS: number, ahead: number, behind: number, band: number, camera, renderer,
-   *   gain: number, lit: number, visibility: number, on: boolean }} f  gain: the look's fade (no light units)
-   */
-  function update({ simMs, carS, ahead, behind, band, camera, renderer, gain, lit, visibility, on }) {
-    mesh.visible = !!on && gain > 0 && lit > 0;
-    if (!mesh.visible) return;
-    const q = Math.floor(simMs / DENSITY_Q_MS);
-    const a = ensureSet(q, [q, q + 1]), b = ensureSet(q + 1, [q, q + 1]);
-    // work out the next quantum ahead of need, a slice per frame
-    if (setQ.indexOf(q + 2) < 0) {
-      if (!pending || pending.q !== q + 2) {
-        const keep = [q, q + 1];
-        pending = null;
-        pending = { set: freeSet(keep), q: q + 2, next: 0 };
-        setQ[pending.set] = NaN;
-      }
-      const n = Math.ceil(bins / SPREAD_FRAMES);
-      const b1 = Math.min(bins, pending.next + n);
-      fillBins(pending.set, pending.q, pending.next, b1);
-      stats.filledBins += b1 - pending.next;
-      pending.next = b1;
-      if (b1 >= bins) { setQ[pending.set] = pending.q; pending = null; tex.needsUpdate = true; }
-    }
-    uniforms.uRows.value.set(a * ROWS, b * ROWS, (simMs - q * DENSITY_Q_MS) / DENSITY_Q_MS);
-    uniforms.uCarS.value = carS;
-    uniforms.uAhead.value = ahead; uniforms.uBehind.value = behind; uniforms.uBand.value = band;
-    renderer.getDrawingBufferSize(size);
-    uniforms.uViewport.value.copy(size);
-    const fov = camera.isPerspectiveCamera ? camera.getEffectiveFOV() : 50;
-    uniforms.uPixelAngle.value = (2 * Math.tan((fov * Math.PI) / 360)) / Math.max(1, size.y);
-    uniforms.uGain.value = gain; uniforms.uLit.value = lit; uniforms.uVisibility.value = visibility || 80000;
-  }
-
-  return {
-    mesh, update, uniforms,
-    /** Forget the density sets (the traffic's lanes were shifted or the model changed). */
-    invalidate() { setQ.fill(NaN); pending = null; },
-    stats: () => ({ strips: strips.length, vertices: nV, bins, filledBins: stats.filledBins, visible: mesh.visible }),
-    dispose() { parent.remove(mesh); geometry.dispose(); material.dispose(); tex.dispose(); },
-  };
+export function createRibbons({ parent, traffic, laneMap, frame, lightScale = 1, tone = 'sprite', toScene = (c) => c }) {
+  return createRibbonsWith({
+    parent, traffic, laneMap, frame,
+    uniform: shared,
+    gain0: 1,
+    material: (uniforms, tex) => ribbonMaterial(uniforms, tex, asNode(lightScale), tone === 'scene' ? null : toScene),
+  });
 }

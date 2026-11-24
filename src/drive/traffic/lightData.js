@@ -3,6 +3,8 @@
 // not changed); tests/unit/traffic/node-parity.test.js holds every value here equal to theirs. When the GLSL path
 // is deleted (plan 02, third stretch, decision 2) this file is what is left.
 
+import { LAMP_CD, LENS_M } from './lamps.js';
+
 /** Per-vertex `_lamp` values (render.js makes them from the lens colours baked in the model). As material.js LAMP. */
 export const LAMP = Object.freeze({ none: 0, head: 1, tail: 2 });
 
@@ -20,6 +22,15 @@ export const POOL_PULL = SHADOW_PULL * 1.2;
  * measurement: a real LED head lamp's lens is some 10^5 cd/m^2 or more.
  */
 export const LAMP_FACE_CDM2 = Object.freeze({ head: 60, tail: 9, brake: 22 });
+/**
+ * The lamp faces' luminance in the shipped look (plan 01's renderer, decision 6), cd/m^2: each lamp's on-axis intensity
+ * over its lens's area (lamps.js LAMP_CD, LENS_M), so a face shows the light its sprite carries. The brake value is
+ * the stop lamp's alone (the shader adds the tail's while the lamps are on).
+ */
+export function physicalFaceCdM2() {
+  const area = (d) => (Math.PI * d * d) / 4;
+  return { head: LAMP_CD.head / area(LENS_M.head), tail: LAMP_CD.tail / area(LENS_M.tail), brake: LAMP_CD.stop / area(LENS_M.tail) };
+}
 /** The lamp faces' colours (linear), as material.js. */
 export const HEAD_FACE_RGB = Object.freeze([1.0, 0.94, 0.82]);
 export const TAIL_FACE_RGB = Object.freeze([1.0, 0.012, 0.006]);

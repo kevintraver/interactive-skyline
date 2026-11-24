@@ -8,7 +8,8 @@
 // writes a luminance in cd/m^2 x gain x lightScale. On a wet road each lamp's light is weakened by
 // 1 - cover x F(incidence) and the diffuse reflection by 1 - cover x (1 - wet/dry diffuse ratio), cover being the
 // lanes' mean cover the weather part publishes for the reflected twins (uTwinWet / the twins' gloss). Pulled toward
-// the eye in depth (POOL_PULL of the distance) so it shows over the road. The CPU side is pools.js's.
+// the eye in depth (POOL_PULL of the distance) so it shows over the road. The CPU side is poolsCore.js, shared with
+// pools.js.
 //
 // What differs from pools.js, deliberately:
 //  - light units (decision 6): `gain` in update() is the look's fade alone, not lighting.units.nit x the fade; the
@@ -28,22 +29,11 @@ import {
   dot, modelWorldMatrixInverse, cameraPosition, renderGroup,
 } from 'three/tsl';
 import { LAMP_RGB } from './lamps.js';
-import { WET_DIFFUSE, GLOSS, fresnelWater } from '../weather/wetMirror.js';
-import { MAX_POOLS, POOL_RANGE_M, POOL_LENGTH_M, ASPHALT_RHO, POOL_PULL, poolBeam, poolIlluminanceWith } from './lightData.js';
+import { WET_DIFFUSE, GLOSS } from '../weather/wetMirror.js';
+import { POOL_PULL } from './lightData.js';
+import { createPoolsWith, ASPHALT_RHO, POOL_LENGTH_M } from './poolsCore.js';
 
-export { MAX_POOLS, POOL_RANGE_M, POOL_LENGTH_M, ASPHALT_RHO, poolBeam };
-
-/**
- * Illuminance (lux) on the road at (across, along) metres from a vehicle's front, from both lamps, dry or wet (cover:
- * the water's share of the pavement). As pools.js.
- */
-export const poolIlluminance = (across, along, halfSpacing = 0.5, height = 0.65, cover = 0) =>
-  poolIlluminanceWith(fresnelWater, across, along, halfSpacing, height, cover);
-/** Mirrors the pool shader: the decal's luminance (cd/m^2) at a point, dry or wet. As pools.js. */
-export function poolLuminance(across, along, { halfSpacing = 0.5, height = 0.65, cover = 0, rho = ASPHALT_RHO } = {}) {
-  const k = 1 - cover * (1 - WET_DIFFUSE);
-  return (rho * poolIlluminance(across, along, halfSpacing, height, cover) * k) / Math.PI;
-}
+export { MAX_POOLS, POOL_RANGE_M, POOL_LENGTH_M, ASPHALT_RHO, poolBeam, poolIlluminance, poolLuminance } from './poolsCore.js';
 
 const DEG = 57.29577951308232;
 const shared = (v) => uniform(v).setGroup(renderGroup);
@@ -91,20 +81,6 @@ function twinWetNode(o) {
  *   lightScale: physical units -> what the material writes (default 1); twinWet: see the header
  */
 export function createPools({ parent, sidecar, bodyNames, lightScale = 1, twinWet }) {
-  const quad = new THREE.InstancedBufferGeometry();
-  const N = 12; // along, so the shape tapers smoothly
-  const corners = [], idx = [];
-  for (let i = 0; i <= N; i++) { const y = i / N; corners.push(-1, y, 1, y); if (i) { const a = 2 * (i - 1); idx.push(a, a + 1, a + 2, a + 1, a + 3, a + 2); } }
-  quad.setAttribute('corner', new THREE.Float32BufferAttribute(corners, 2));
-  // node materials read `position` (positionGeometry) even when positionNode replaces it; without one three warns on
-  // every build. The decal's place comes from the corner and the instance, so this one is all zeros.
-  quad.setAttribute('position', new THREE.Float32BufferAttribute(new Float32Array((corners.length / 2) * 3), 3));
-  quad.setIndex(idx);
-  const mk = (n) => { const a = new THREE.InstancedBufferAttribute(new Float32Array(MAX_POOLS * n), n); a.setUsage(THREE.DynamicDrawUsage); return a; };
-  const aOrigin = mk(3), aFwd = mk(3), aUp = mk(3), aLamp = mk(2), aScale = mk(1);
-  quad.setAttribute('iOrigin', aOrigin); quad.setAttribute('iFwd', aFwd); quad.setAttribute('iUp', aUp);
-  quad.setAttribute('iLamp', aLamp); quad.setAttribute('iScale', aScale);
-  quad.instanceCount = 0;
   const uniforms = {
     uLength: shared(POOL_LENGTH_M), uHalfWidth: shared(12), uPull: shared(POOL_PULL),
     uGain: shared(1), uRho: shared(ASPHALT_RHO), uColor: shared(new THREE.Vector3(...LAMP_RGB.white)),
@@ -138,68 +114,5 @@ export function createPools({ parent, sidecar, bodyNames, lightScale = 1, twinWe
       return vec4(uniforms.uColor.mul(L), 1);
     })();
   }
-  const mesh = new THREE.Mesh(quad, material);
-  mesh.name = 'traffic-head-pools';
-  mesh.frustumCulled = false;
-  mesh.renderOrder = -1;
-  mesh.matrixAutoUpdate = false;
-  mesh.visible = false;
-  parent.add(mesh);
-
-  // per body: front overhang (m ahead of the origin), half the head lamp spacing, lamp height
-  const bodies = bodyNames.map((name) => {
-    const b = sidecar.bodies[name];
-    const h = b.lamps?.head || [[-0.5, 0.65, -b.length / 2], [0.5, 0.65, -b.length / 2]];
-    return { front: -h[0][2], half: Math.abs(h[0][0]), height: h[0][1] };
-  });
-  const pick = new Int32Array(256), pickD = new Float32Array(256);
-  let count = 0;
-
-  /**
-   * @param {{ near: object|null, eye: {x,y,z}, ambient: number, gain: number, threshold: (id) => number }} f
-   *   gain: the look's fade (no light units)
-   */
-  function update({ near, eye, ambient, gain, threshold }) {
-    count = 0;
-    if (!near || !(gain > 0)) { mesh.visible = false; quad.instanceCount = 0; return; }
-    let m = 0;
-    const R2 = POOL_RANGE_M * POOL_RANGE_M;
-    for (let i = 0; i < near.count && m < pick.length; i++) {
-      if (near.alpha[i] < 0.05) continue;
-      const dx = near.pos[3 * i] - eye.x, dy = near.pos[3 * i + 1] - eye.y, dz = near.pos[3 * i + 2] - eye.z;
-      const d2 = dx * dx + dy * dy + dz * dz;
-      if (d2 > R2) continue;
-      if (!(ambient < threshold(near.id[i]))) continue;
-      pick[m] = i; pickD[m] = d2; m++;
-    }
-    // the nearest MAX_POOLS (selection: m is a few dozen)
-    const n = Math.min(m, MAX_POOLS);
-    for (let a = 0; a < n; a++) {
-      let best = a;
-      for (let b = a + 1; b < m; b++) if (pickD[b] < pickD[best]) best = b;
-      const ti = pick[a], td = pickD[a]; pick[a] = pick[best]; pickD[a] = pickD[best]; pick[best] = ti; pickD[best] = td;
-      const i = pick[a], i3 = 3 * i, B = bodies[near.body[i]];
-      const Fx = near.fwd[i3], Fy = near.fwd[i3 + 1], Fz = near.fwd[i3 + 2];
-      aOrigin.array[3 * a] = near.pos[i3] + Fx * B.front; aOrigin.array[3 * a + 1] = near.pos[i3 + 1] + Fy * B.front; aOrigin.array[3 * a + 2] = near.pos[i3 + 2] + Fz * B.front;
-      aFwd.array[3 * a] = Fx; aFwd.array[3 * a + 1] = Fy; aFwd.array[3 * a + 2] = Fz;
-      aUp.array[3 * a] = near.up[i3]; aUp.array[3 * a + 1] = near.up[i3 + 1]; aUp.array[3 * a + 2] = near.up[i3 + 2];
-      aLamp.array[2 * a] = B.half; aLamp.array[2 * a + 1] = B.height;
-      // fade over the last fifth of the range so nothing pops
-      const d = Math.sqrt(pickD[a]);
-      const f = Math.min(1, Math.max(0, (POOL_RANGE_M - d) / (0.2 * POOL_RANGE_M)));
-      aScale.array[a] = near.alpha[i] * f;
-    }
-    count = n;
-    for (const a of [aOrigin, aFwd, aUp, aLamp, aScale]) { a.clearUpdateRanges(); a.addUpdateRange(0, Math.max(1, n) * a.itemSize); a.needsUpdate = true; }
-    quad.instanceCount = n;
-    uniforms.uGain.value = gain;
-    mesh.visible = n > 0;
-  }
-
-  return {
-    mesh, update, uniforms,
-    clear() { count = 0; quad.instanceCount = 0; mesh.visible = false; },
-    stats: () => ({ pools: count }),
-    dispose() { parent.remove(mesh); quad.dispose(); material.dispose(); },
-  };
+  return createPoolsWith({ parent, sidecar, bodyNames, uniforms, material: () => material, positions: true });
 }

@@ -23,7 +23,8 @@
 //              the route that passes it, session.js); returns the unsubscribe. Parts that add terms to the ground's
 //              materials use it (through eachGround below), not a loop over `ground`
 //   eachSurface(fn)  fn(material, kind) for every surface the drive's light lands on ('road', 'sign', 'support', 'delineator',
-//              'building'), now and as a route switch builds more; returns the unsubscribe. On plan 01's renderer these are
+//              'building', 'vehicle'), now and as a route switch builds more; returns the unsubscribe. addSurfaces([[m, kind]])
+//              offers a part's own (the traffic part's vehicle bodies, 'vehicle'). On plan 01's renderer these are
 //              node materials with userData.surfaceLight = kind: the lights part adds retroreflection and surface light to
 //              them through src/drive/lights/surfaceLight.node.js, composing with their emissiveNode
 //              (material.emissiveNode = (material.emissiveNode ?? materialEmissive).add(term))
@@ -50,9 +51,9 @@
 export const PARTS = [
   { id: 'lamps', node: true, load: (ctx) => import('./lights/index.js').then((m) => m.createLampsPart(ctx)) }, // street lamps: sprites, pools, poles, switching (D5.4, D5.5)
   { id: 'headlights', node: true, load: (ctx) => import('./lights/headlights.js').then((m) => m.createHeadlightsPart(ctx)) }, // the visitor's headlamps and what signs and markings return (D5.1, D5.2)
-  { id: 'traffic', node: false, load: (ctx) => import('./traffic/index.js').then((m) => m.createTrafficPart(ctx)) }, // vehicles on both carriageways, placed by the demand model (D6.4)
+  { id: 'traffic', node: true, load: (ctx) => import('./traffic/index.js').then((m) => m.createTrafficPart(ctx)) }, // vehicles on both carriageways, placed by the demand model (D6.4)
   { id: 'cabin', node: true, load: (ctx) => (ctx.legacy ? import('./vehicle/cabin.js') : import('./vehicle/cabin.node.js')).then((m) => m.createCabin(ctx)) }, // the cabin, its displays, the steering wheel, mirrors, windshield and rain on the glass (D4.2 to D4.6, D8.2)
-  { id: 'valley', node: false, load: (ctx) => import('./traffic/valley.js').then((m) => m.createValleyPart(ctx)) }, // light ribbons on the rest of the valley's roads (D6.6)
+  { id: 'valley', node: true, load: (ctx) => (ctx.legacy ? import('./traffic/valley.js').then((m) => m.createValleyPart(ctx)) : import('./traffic/valleyPart.node.js').then((m) => m.createValleyPart(ctx))) }, // light ribbons on the rest of the valley's roads (D6.6)
   { id: 'obstruction', node: true, load: (ctx) => import('./lights/obstruction.js').then((m) => m.createObstructionPart(ctx)) }, // red obstruction lights on buildings above 61 m, hidden and moved with them (D5.6)
   { id: 'screens', node: true, load: (ctx) => import('./screens/index.js').then((m) => m.createScreensPart(ctx)) }, // screens on simulation time, their registry, the Sphere's light (D7.3, D7.5)
   { id: 'billboards', node: true, load: (ctx) => import('./roadside/billboards.js').then((m) => m.createBillboardsPart(ctx)) }, // billboards: structures, abstract faces, digital glow (D7.4, D7.5)

@@ -6,17 +6,24 @@
 // thin glowing strips on the ground, one per direction; the route being driven is left out (setRoute). Their
 // brightness is the light of the vehicles on them at the moment (valleyModel.js, mirrored by the shader below as by
 // valley.glsl.js: vehicles per metre x each vehicle's intensity toward the eye, white coming, red going, a pattern
-// drifting at the traffic's speed), toned on luminance as the light sprites are. The CPU side is valley.js's.
+// drifting at the traffic's speed): a luminance in cd/m^2. The part's CPU side is valleyCore.js, shared with valley.js.
+//
+// Two ways to show the light (option `tone`):
+//  - 'scene' (the shipped look; parts.js on plan 01's renderer): the strip writes its luminance x lightScale, scene-
+//    referred light that plan 01's pipeline tone-maps with the frame, as the light sprites do. The look's `lights`
+//    fade stood in for the classic fixed exposure; here the fade is the vehicles' lit share (traffic/lamps.js
+//    vehicleLitShare) at the ambient light of the moment, read each frame, so the ribbons follow the vehicles' own
+//    switching and need no look.
+//  - 'sprite' (the classic display and the parity page): valley.glsl.js's tone on luminance, a display value handed
+//    to `toScene` (the scene value the output pass shows as that); the fade is the look's `lights`.
 //
 // What differs from valley.js, deliberately:
-//  - light units (decision 6): uGain is the look's fade x the debugging gain scale, without lighting.units.nit; the
-//    option `lightScale` (a number or a TSL node: the pre-exposure in the shipped look, 0.1 at the classic display)
-//    carries the scale from cd/m^2. The part reads no `env.lighting`.
-//  - `toScene` (option): the ribbon's colour is a toned display value written untouched by the classic renderer;
-//    plan 01's tone-maps the frame after the scene pass, so the caller hands the node function that turns a toned
-//    value into the scene value its output pass shows as that. Default: identity (linear output, the parity tool).
-//  - options come as a second argument, `createValleyPart(ctx, { lightScale, toScene })`, or as ctx.lightScale and
-//    ctx.toScene.
+//  - light units (decision 6): uGain is the fade x the debugging gain scale, without lighting.units.nit; the option
+//    `lightScale` (a number or a TSL node: the pre-exposure x the lights-out slider in the shipped look, 0.1 at the
+//    classic display) carries the scale from cd/m^2. The part reads no `env.lighting.units`.
+//  - detail by plan 01's quality level (option `quality`, valleyCore.js VALLEY_CLASSES).
+//  - options come as a second argument, `createValleyPart(ctx, { lightScale, tone, toScene, quality })`, or as
+//    ctx.lightScale and ctx.toScene. Default: 'sprite', identity, no quality: what the parity page compares.
 
 import * as THREE from 'three';
 import { MeshBasicNodeMaterial } from 'three/webgpu';
@@ -25,18 +32,10 @@ import {
   max, min, pow, exp, dot, cross, length, normalize, smoothstep, select, inverseSqrt, abs, positionGeometry,
   cameraPosition, cameraViewMatrix, cameraProjectionMatrix, renderGroup,
 } from 'three/tsl';
-import { curveDrop } from '../../world/frame.js';
-import { decodeValley, hiddenGroups } from './valleyFormat.js';
-import { buildValleyGeometry, indexWithout } from './valleyGeometry.js';
-import { VALLEY_LAMPS, HEAD_COLOR, TAIL_COLOR, HASH_MEAN, hourOfWeekAt, driftTime } from './valleyModel.js';
-import { createTimings } from '../timing.js';
+import { createValleyPartWith } from './valleyCore.js';
+import { vehicleLitShare } from './lamps.js';
 
-/** The ribbons fade in between these distances from the eye, metres. */
-export const NEAR_M = [350, 1200];
-/** Narrowest strip on the screen, pixels. */
-export const MIN_PX = 1.5;
-/** With the transparent lights, just before the light sprites (sprites.js, renderOrder 10). */
-const RENDER_ORDER = 9;
+export { NEAR_M, MIN_PX } from './valleyCore.js';
 /** valley.glsl.js driftSpeed's quantum: 64 cells of 60 m an hour, m/s. */
 const DRIFT_Q = (60 * 64) / 3600;
 
@@ -65,7 +64,7 @@ const hash11 = /*@__PURE__*/ Fn(([i]) => {
   return fract(p2);
 }).setLayout({ name: 'valleyHash11', type: 'float', inputs: [{ name: 'i', type: 'float' }] });
 
-/** The ribbons' node material (valley.glsl.js in TSL). */
+/** The ribbons' node material (valley.glsl.js in TSL); toScene null: scene light, no tone (see the header). */
 function valleyMaterial(u, lightScale, toScene) {
   const aDir = attribute('aDir', 'vec3'), aAlong = attribute('aAlong', 'vec2'), aTraffic = attribute('aTraffic', 'vec4');
   const rel = positionGeometry.sub(cameraPosition); // relative to the eye: no large numbers on the GPU
@@ -134,132 +133,28 @@ function valleyMaterial(u, lightScale, toScene) {
     const drift = vAmp.mul(v.mul(2).sub(1)).add(1);
     const acrossK = float(1).sub(vSide.mul(vSide)).mul(1.5); // a soft line across the strip, of mean 1
     const col = u.uHeadColor.mul(vLight.x).add(u.uTailColor.mul(vLight.y)).mul(drift.mul(acrossK));
-    return vec4(toScene(toneRibbon(col)), 1);
+    return vec4(toScene ? toScene(toneRibbon(col)) : col, 1);
   })();
   return material;
 }
 
 /**
  * @param {object} ctx the part context (parts.js)
- * @param {{ lightScale?: number | import('three/webgpu').Node, toScene?: (c: import('three/webgpu').Node) => import('three/webgpu').Node }} [opts]
- *   lightScale: physical units -> what the material writes (default ctx.lightScale, else 1); toScene: see the header
+ * @param {{ lightScale?: number | import('three/webgpu').Node, tone?: 'scene' | 'sprite',
+ *   toScene?: (c: import('three/webgpu').Node) => import('three/webgpu').Node, quality?: object | null }} [opts]
+ *   lightScale: physical units -> what the material writes (default ctx.lightScale, else 1); tone, toScene: see the
+ *   header; quality: plan 01's app.quality
  */
-export async function createValleyPart(ctx, opts = {}) {
+export function createValleyPart(ctx, opts = {}) {
   const lightScale = asNode(opts.lightScale ?? ctx.lightScale ?? 1);
+  const scene = (opts.tone ?? ctx.tone) === 'scene';
   const toScene = opts.toScene ?? ctx.toScene ?? ((c) => c);
-  const doc = await ctx.optional('traffic/valley.json');
-  if (!doc) return null;
-  const buffer = await ctx.get(doc.file || 'traffic/valley.bin').then((r) => r.arrayBuffer());
-  const data = decodeValley(doc, buffer);
-  const { env, terrain, base } = ctx;
-  const { renderer } = ctx.app;
-  const tz = data.tz || env.city?.tz || 'America/Los_Angeles';
-
-  const g = buildValleyGeometry(data, { heightAt: terrain.surfaceAt, base, curveDrop });
-  const geometry = new THREE.BufferGeometry();
-  geometry.setAttribute('position', new THREE.BufferAttribute(g.position, 3));
-  geometry.setAttribute('aDir', new THREE.BufferAttribute(g.dir, 3));
-  geometry.setAttribute('aAlong', new THREE.BufferAttribute(g.along, 2));
-  geometry.setAttribute('aTraffic', new THREE.BufferAttribute(g.traffic, 4));
-  geometry.setIndex(new THREE.BufferAttribute(g.index, 1));
-  let routeId = null, hidden = [];
-  /** Leave out the groups of the route being driven (a new index; the vertices stay). */
-  const applyRoute = (id) => {
-    const next = hiddenGroups(data, id);
-    if (id === routeId && next.length === hidden.length) return;
-    routeId = id;
-    hidden = next;
-    geometry.setIndex(new THREE.BufferAttribute(indexWithout(g, hidden), 1));
-    ctx.app?.invalidate?.();
-  };
-
-  // the shapes as a float texture, one row per shape
-  const shapeTex = new Float32Array(168 * data.shapes.length);
-  data.shapes.forEach((s, r) => shapeTex.set(s, r * 168));
-  const shapes = new THREE.DataTexture(shapeTex, 168, data.shapes.length, THREE.RedFormat, THREE.FloatType);
-  shapes.minFilter = shapes.magFilter = THREE.NearestFilter;
-  shapes.needsUpdate = true;
-
-  const uniforms = {
-    tShapes: { value: shapes }, uHow: shared(0), uPixelAngle: shared(1e-3), uMinPx: shared(MIN_PX),
-    uNear: shared(new THREE.Vector2(NEAR_M[0], NEAR_M[1])), uVisibility: shared(80000),
-    uLamps: shared(new THREE.Vector4(VALLEY_LAMPS.head, VALLEY_LAMPS.headPower, VALLEY_LAMPS.spill, VALLEY_LAMPS.tail)),
-    uGain: shared(0), uTime: shared(0), uHashMean: shared(HASH_MEAN),
-    uHeadColor: shared(new THREE.Vector3(...HEAD_COLOR)), uTailColor: shared(new THREE.Vector3(...TAIL_COLOR)),
-  };
-  const material = valleyMaterial({ ...uniforms, shapes }, lightScale, toScene);
-  const mesh = new THREE.Mesh(geometry, material);
-  mesh.name = 'valley-ribbons';
-  mesh.frustumCulled = false;
-  mesh.matrixAutoUpdate = false;
-  mesh.renderOrder = RENDER_ORDER;
-  mesh.visible = false;
-  ctx.group.add(mesh);
-
-  const timings = createTimings();
-  const size = new THREE.Vector2();
-  let fade = 0, enabled = true, lastHow = 0, gainScale = 1;
-  // the zone offset changes twice a year: cache it per UTC hour
-  let offHour = NaN, offHow = 0;
-  const howAt = (simMs) => {
-    const H = Math.floor(simMs / 3600000);
-    if (H !== offHour) { offHour = H; offHow = hourOfWeekAt(H * 3600000, tz); }
-    return (offHow + (simMs - H * 3600000) / 3600000) % 168;
-  };
-
-  const show = () => { mesh.visible = enabled && fade > 0; };
-
-  const part = {
-    name: 'valley',
-    update(frame) {
-      if (!mesh.visible) return;
-      const t0 = performance.now();
-      lastHow = howAt(frame.simMs);
-      uniforms.uHow.value = lastHow;
-      uniforms.uTime.value = driftTime(frame.simMs);
-      timings.add(performance.now() - t0);
-    },
-    beforeRender(frame) {
-      if (!mesh.visible) return;
-      const t0 = performance.now();
-      const cam = frame.camera;
-      renderer.getDrawingBufferSize(size);
-      const fov = cam.isPerspectiveCamera ? cam.getEffectiveFOV() : 50;
-      uniforms.uPixelAngle.value = (2 * Math.tan((fov * Math.PI) / 360)) / Math.max(1, size.y);
-      uniforms.uVisibility.value = env.weather?.state?.().visibilityM || 80000;
-      // a paused clock still gets its hour (update runs only when the pose moves)
-      const how = howAt(frame.simMs);
-      if (how !== lastHow) { lastHow = how; uniforms.uHow.value = how; uniforms.uTime.value = driftTime(frame.simMs); }
-      timings.add(performance.now() - t0);
-    },
-    setLook(look) {
-      fade = Math.min(1, Math.max(0, look.lights ?? look.dusk ?? (look.night ? 1 : 0)));
-      uniforms.uGain.value = fade * gainScale;
-      show();
-    },
-    /** Multiply the ribbons' brightness: a debugging aid for finding them in a screenshot, never a look. */
-    setGainScale(k) { gainScale = k; uniforms.uGain.value = fade * gainScale; ctx.app?.invalidate?.(); },
-    /** The route being driven: its own carriageways are left out (its vehicles are the `traffic` part's). */
-    setRoute({ route } = {}) { applyRoute(route?.id ?? null); },
-    /** Turn the ribbons off and on (for the frame-budget probe and the screenshots). */
-    setEnabled(on) { enabled = !!on; show(); ctx.app?.invalidate?.(); },
-    whenSettled: () => Promise.resolve(),
-    stats() {
-      const t = timings.summary();
-      return {
-        visible: mesh.visible, enabled, fade, pieces: data.count, ribbons: g.ribbons, points: g.points,
-        triangles: geometry.index.count / 3, route: routeId, hidden: hidden.map((h) => h.id), groups: data.groups.map((h) => h.id),
-        how: +lastHow.toFixed(3), js: { mean: t.mean, p95: t.p95, max: t.max },
-      };
-    },
-    mesh,
-    dispose() {
-      mesh.parent?.remove(mesh);
-      geometry.dispose();
-      material.dispose();
-      shapes.dispose();
-    },
-  };
-  mesh.userData.part = part; // for tests/manual/valley-shots.mjs, which finds it in the scene
-  return part;
+  return createValleyPartWith(ctx, {
+    uniform: shared,
+    unit: 1,
+    material: (uniforms, shapes) => valleyMaterial({ ...uniforms, shapes }, lightScale, scene ? null : toScene),
+    quality: opts.quality ?? null,
+    // the shipped look: the vehicles' lit share at the ambient light now (traffic/lamps.js), drawn above a thousandth
+    ...(scene ? { liveFade: () => vehicleLitShare(ctx.env.lighting.ambientLux()), minFade: 1e-3 } : {}),
+  });
 }
