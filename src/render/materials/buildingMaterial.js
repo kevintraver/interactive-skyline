@@ -12,7 +12,7 @@
 //   physical  windows, glow and LED skins in cd/m2 (src/render/photometry.js) times the exposure and the
 //             lights-out factor; windows switch on one by one through dusk, each against its own threshold
 //             (switchOn.windows); the facade's reflected sky is a legacy surface, scaled like the dome
-import { MeshLambertNodeMaterial } from 'three/webgpu';
+import { MeshLambertNodeMaterial, LineBasicNodeMaterial } from 'three/webgpu';
 import {
   attribute, varying, positionGeometry, normalGeometry, normalWorld, positionWorld, cameraPosition,
   materialEmissive, diffuseColor, vec2, vec3, float, fract, floor, dot, normalize, step, smoothstep, mix, max, abs, fwidth, cos,
@@ -21,6 +21,7 @@ import {
 import { night as sharedNight, clock as sharedClock, haze as sharedHaze, exposure as sharedExposure, physical as sharedPhysical,
   switchOn as sharedSwitchOn, cityFactor as sharedCityFactor, legacyScale as sharedLegacyScale } from './shared.js';
 import { PHOTOMETRY } from '../photometry.js';
+import { steady } from './steady.js';
 
 /** fract-based hash of a 2D cell, as nightHash() in night.js v6 */
 // Pure (no mutable variable): TSL may emit a call's body more than once, in different branches, and a variable
@@ -129,7 +130,7 @@ export function buildingNodes({ variant = 'extruded', night = sharedNight, clock
  * colours and opacity (the landmark variant's mullion grid). Not a `colorNode`: the shadow pass derives its own
  * nodes from a material's `colorNode`, fresh ones for every material, and so would build a shader per building.
  */
-class BuildingNodeMaterial extends MeshLambertNodeMaterial {
+class BuildingNodeMaterial extends steady(MeshLambertNodeMaterial) {
   constructor() {
     super();
     /** Multiplies the diffuse colour (null: no change). */
@@ -185,3 +186,9 @@ export function createBuildingMaterial({ variant = 'extruded', from = null, nigh
   return material;
 }
 
+const EdgeNodeMaterial = steady(LineBasicNodeMaterial);
+
+/** The outline drawn along a removable tower's edges: a LineBasicMaterial with `params`, on the steady refresh. */
+export function createEdgeMaterial(params) {
+  return new EdgeNodeMaterial(params);
+}
