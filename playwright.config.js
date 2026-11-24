@@ -3,6 +3,7 @@
 // Projects
 //   webgl2-software  Chromium on SwiftShader (software WebGL2). Deterministic enough for goldens; the one CI runs.
 //   gpu              Chromium on this machine's GPU. Local only: timing budgets (pnpm test:perf).
+//   gpu-functional   The functional specs on this machine's GPU. Local only: a fast run of everything but the goldens.
 //   software-timing  The timing suite on SwiftShader, gated at 2x (pnpm test:perf:software).
 //   drive-software   Drive mode (drive*.spec.js, routes.spec.js) on SwiftShader, on its own (pnpm test:e2e:drive): a
 //                    drive frame takes seconds there, and beside the map suite it starves the render-on-demand
@@ -57,6 +58,17 @@ export default defineConfig({
       retries: 1,
       use: { ...devices['Desktop Chrome'], viewport: { width: 1280, height: 800 }, deviceScaleFactor: 1,
         launchOptions: { args: SOFTWARE } },
+    },
+    {
+      // The functional specs on this machine's GPU (pnpm test:e2e:gpu): the same checks in minutes where SwiftShader
+      // takes hours (one software frame of this app is about 3 s on a quiet machine, far more on a busy one). For
+      // local runs. Pictures are compared with the goldens only on SwiftShader, so baseline.spec.js stays with
+      // webgl2-software, which is also what CI runs (it has no GPU).
+      name: 'gpu-functional',
+      testIgnore: /perf\.(timing|ab)\.spec\.js|webgpu\.spec\.js|baseline\.spec\.js|bench\.spec\.js/,
+      retries: 1,
+      use: { ...devices['Desktop Chrome'], viewport: { width: 1280, height: 800 }, deviceScaleFactor: 1,
+        launchOptions: { args: GPU } },
     },
     {
       // this machine's GPU, headless (on macOS through Metal); timing only, one worker

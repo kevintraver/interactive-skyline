@@ -14,6 +14,7 @@
     "test:e2e": "playwright test --project=webgl2-software",
     "test:e2e:drive": "playwright test --project=drive-software",
     "test:data": "uv run --with-requirements tests/data/requirements.txt pytest tests/data -q",
+    "test:e2e:gpu": "playwright test --project=gpu-functional",
     "test:goldens:update": "playwright test --project=webgl2-software baseline --update-snapshots=all",
     "test:goldens:drive:update": "playwright test --project=drive-software drive --update-snapshots=changed",
     "test:perf": "playwright test --project=gpu --workers=1",

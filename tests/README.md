@@ -7,6 +7,7 @@
 | `pnpm test:data` | pytest (through `uv`): the data pipeline's Python twins (frame, heights, roads, interchanges, roadside, barriers, routes, terrain patch, traffic, valley traffic, corridor and its overrides, billboards, lamp packing, beam maps) | CI and locally |
 | `pnpm test:e2e` | Playwright on SwiftShader, the map's project (`webgl2-software`, below): goldens, the `window.__skyline` contract, the buildless boot, the deterministic performance budgets | CI and locally |
 | `pnpm test:e2e:drive` | Playwright, Drive mode on SwiftShader (`drive-software`): about 40 minutes on a quiet machine | locally only |
+| `pnpm test:e2e:gpu` | the functional specs of `pnpm test:e2e` on this machine's GPU (`gpu-functional`): everything but the goldens, which are compared only on SwiftShader. One software frame of this app takes about 3 s on a quiet machine and far longer on a busy one, so this is the quick local run; it is not a substitute for `pnpm test:e2e` before a merge | locally only |
 | `pnpm test` | `test:unit`, then `test:e2e` | |
 | `pnpm test:goldens:update` | rewrites the map goldens of this platform (`baseline.spec.js`) | locally |
 | `pnpm test:goldens:drive:update` | writes the drive goldens (`drive-*.png`) that differ or are missing, for this platform; never the map's | locally |
