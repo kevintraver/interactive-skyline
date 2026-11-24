@@ -16,12 +16,17 @@ for d in sorted(glob.glob(f'{root}/*/*/')):
         rows.append(dict(i=p['i'], leg=p['leg'], dist=p['dist'], polar=p['polarDeg'],
             lag_pct=round(float((lag > 10).mean() * 100), 2), lag_gain=round(float(m[1].mean() / max(s[1].mean(), 1)), 3),
             micro_pct=round(float((mic > 20).mean() * 100), 3), micro_mean=round(float(mic.mean()), 2), lum=round(float(s[1].mean()), 1),
-            black_pct=round(float((s[0].max(-1) < 4).mean() * 100), 1)))
+            black_pct=round(float((s[0].max(-1) < 4).mean() * 100), 1),
+            k_same=p.get('kMoving') == p.get('kSettled'), k_ratio=(p['kMoving'] / p['kSettled']) if p.get('kMoving') and p.get('kSettled') else None))
     json.dump(rows, open(d + 'metrics.json', 'w'), indent=1)
     L = np.array([r['lag_pct'] for r in rows]); M = np.array([r['micro_pct'] for r in rows]); G = np.array([r['lag_gain'] for r in rows])
     print(f"== {name} ({info['start']['backend']}) poses={len(rows)} errors={len(info['errors'])}")
     print(f"   moving vs settled: px off >10 levels  median {np.median(L):.2f}%  max {L.max():.2f}% (pose {rows[int(L.argmax())]['i']} {rows[int(L.argmax())]['leg']})   brightness ratio min/max {G.min():.3f}/{G.max():.3f}")
     print(f"   sub-pixel nudge:   px off >20 levels  median {np.median(M):.3f}%  max {M.max():.3f}% (pose {rows[int(M.argmax())]['i']} {rows[int(M.argmax())]['leg']})")
+    K = [r['k_ratio'] for r in rows if r['k_ratio'] is not None]
+    if K: print(f"   exposure moving/settled: identical at {sum(r['k_same'] for r in rows)} of {len(rows)} poses, ratio min/max {min(K):.4f}/{max(K):.4f}")
+    print(f"   poses with brightness ratio outside 0.99..1.01: {[(r['i'], r['leg'], r['lag_gain']) for r in rows if not 0.99 <= r['lag_gain'] <= 1.01][:10]}")
+    print(f"   poses with a nudge changing >= 0.5 % of pixels: {[(r['i'], r['leg'], r['micro_pct']) for r in rows if r['micro_pct'] >= 0.5][:10]}")
     top = sorted(rows, key=lambda r: -r['micro_pct'])[:4]
     print('   worst nudge poses:', [(r['i'], r['leg'], r['micro_pct'], r['dist'], r['polar']) for r in top])
     topl = sorted(rows, key=lambda r: -r['lag_pct'])[:4]
