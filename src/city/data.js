@@ -1,4 +1,5 @@
 import { loadCustomModels } from '../customModels.js';
+import { separateModels } from './coplanar.js';
 
 /** Start every download for a city at once, so the files arrive while the renderer is being set up. */
 export function startDownloads(cityId) {
@@ -13,6 +14,7 @@ export function startDownloads(cityId) {
     // decoded off the main thread; flipped here because WebGL ignores its own flip setting for bitmaps
     maps: ['far', 'near'].map((k) => download(`ground-${k}.jpg`, 'blob')
       .then((blob) => createImageBitmap(blob, { imageOrientation: 'flipY', premultiplyAlpha: 'none', colorSpaceConversion: 'none' }))),
-    custom: loadCustomModels(cityId),
+    // faces of one model in one plane are moved apart, so they cannot flicker (coplanar.js)
+    custom: loadCustomModels(cityId).then(separateModels),
   };
 }

@@ -89,7 +89,15 @@ export function createBuildings({ scene, settings, base: BASE }, model, customMo
         const mesh = new THREE.Mesh(geo, lightAtNight(new THREE.MeshLambertMaterial({ vertexColors: true, emissive: 0x2a5f96 }), { windows: !custom }));
         mesh.castShadow = mesh.receiveShadow = true;
         mesh.visible = !wasHidden.has(b.id);
-        mesh.add(new THREE.LineSegments(new THREE.EdgesGeometry(geo, 30), edgeMat));
+        // a model's edges from its faces as modelled, before coplanar ones were moved apart (coplanar.js): a moved
+        // face would otherwise outline itself, and lines 3 cm apart draw as one
+        let edgeSource = geo;
+        if (custom?.outline) {
+          edgeSource = new THREE.BufferGeometry();
+          edgeSource.setAttribute('position', new THREE.BufferAttribute(placeModel({ ...custom, pos: custom.outline }, b.c[0], b.c[1], b.ground - BASE).pos, 3));
+        }
+        mesh.add(new THREE.LineSegments(new THREE.EdgesGeometry(edgeSource, 30), edgeMat));
+        if (edgeSource !== geo) edgeSource.dispose();
         const marker = groundMarker(b);
         // offset: how far the user has dragged it from where it really stands
         mesh.userData.entry = marker.userData.entry = { data: b, mesh, marker, row: null, offset: wasMoved.get(b.id) || new THREE.Vector3() };
