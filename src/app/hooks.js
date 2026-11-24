@@ -45,6 +45,8 @@ export function installHooks(app) {
     uniforms,
     /** a few three/webgpu and three/tsl names, for tests that add their own node materials (probe, stages) */
     webgpu: { MeshBasicNodeMaterial, Mesh, PlaneGeometry, MeshBasicMaterial }, tsl: { vec3, vec4 },
+    /** three.js's Raycaster and Vector3, for the stability tools (tools/stability/pair.mjs names the surfaces that fight) */
+    three: { Raycaster: THREE.Raycaster, Vector3: THREE.Vector3 },
   };
   return window.__skyline;
 }

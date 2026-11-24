@@ -25,12 +25,13 @@ describe('emissive and the physical values', () => {
     expect(emissiveCpu(60, { exposure: 0.01 })).toBeCloseTo(0.6, 12);
     expect(emissiveCpu(60, { exposure: 0.01, artificial: true, cityFactor: 0.5 })).toBeCloseTo(0.3, 12);
   });
-  it('windows average 60 cd/m2, +-50 %; LED skins 1,200 dimmed to a quarter at night; street glow', () => {
+  // the stability pass (plan 01) dimmed the LED skins at night to 36 cd/m2 and raised the street glow to 2.2 cd/m2
+  it('windows average 60 cd/m2, +-50 %; LED skins 1,200 dimmed to 3 % at night; street glow', () => {
     expect(windowCdM2(0.5)).toBe(60);
     expect(windowCdM2(0)).toBe(30);
     expect(windowCdM2(1)).toBe(90);
     expect(ledCdM2(0)).toBe(1200);
-    expect(ledCdM2(1)).toBe(300);
-    expect(streetCdM2(PHOTOMETRY.streetLegacyNear)).toBeCloseTo(1.0, 12);
+    expect(ledCdM2(1)).toBeCloseTo(36, 9);
+    expect(streetCdM2(PHOTOMETRY.streetLegacyNear)).toBeCloseTo(2.2, 12);
   });
 });

@@ -166,12 +166,12 @@ for (const city of CITIES) {
   });
 }
 
-// T2.6 (plan 01, phase 2): panning from the Strip to the dark west settles the exposure in under four seconds (within
-// 0.5 EV of its target: the 3 s darkening time constant of section 7.2 then leaves no visible drift). Wall time, so
-// on a real GPU only.
-test('exposure settles after a pan from the Strip to the dark west', async ({ page }) => {
+// T2.6 (plan 01, phase 2): in Camera mode (metered; decision 14 made Eye mode, which does not meter, the default),
+// panning from the Strip to the dark west settles the exposure in under four seconds (within 0.5 EV of its target:
+// the 3 s darkening time constant of section 7.2 then leaves no visible drift). Wall time, so on a real GPU only.
+test('Camera mode: exposure settles after a pan from the Strip to the dark west', async ({ page }) => {
   await boot(page, 'lv', Q);
-  await page.evaluate(() => { const s = window.__skyline; s.attractions.freeze(47); s.setSetting('night', true); s.setView('strat'); });
+  await page.evaluate(() => { const s = window.__skyline; s.setSetting('exposureMode', 'camera'); s.attractions.freeze(47); s.setSetting('night', true); s.setView('strat'); });
   await page.waitForFunction(() => window.__skyline.look.exposure.state.settled, null, { timeout: 60_000 });
   const r = await page.evaluate(() => new Promise((done) => {
     const s = window.__skyline, c = s.controls, t0 = performance.now(), before = s.look.exposure.state.ev, f0 = s.perf.frames();

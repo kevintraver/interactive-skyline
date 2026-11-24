@@ -1,9 +1,13 @@
-// T2.6: automatic exposure in the app (plan 01, section 7.2). Scrubbing noon -> midnight -> noon shows no frame
-// brighter than 1.5x or darker than 0.67x the mean of its two neighbours; a seek lands within 0.3 EV of the
-// settled exposure on its first frame at any light level the view has already been metered at (a first seek into a
-// new light level lands on the prior plus the last offset; its error is recorded, not gated: up to about 1.2 EV going
-// from day into a Las Vegas night, see the phase 2 outcome); after settling, a scene held still renders nothing. (Panning from the Strip
-// to the dark west settles in under four seconds: timed on a real GPU, perf.timing.spec.js.)
+// T2.6: exposure in the app (plan 01, section 7.2 and decision 14). Scrubbing noon -> midnight -> noon shows no frame
+// brighter than 1.5x or darker than 0.67x the mean of its two neighbours (the default, Eye mode).
+// Eye mode: the exposure is the prior's alone, so any seek lands on the settled exposure on its first frame (T2.6's
+// 0.3 EV line holds by construction), a camera move never changes it, and after a move the frame loop draws one frame
+// and goes idle; no meter pass is drawn and nothing is read back.
+// Camera mode (metered): a seek lands within 0.3 EV of the settled exposure on its first frame at any light level
+// the view has already been metered at (a first seek into a new light level lands on the prior plus the last offset;
+// its error is recorded, not gated: up to about 1.2 EV going from day into a Las Vegas night, see the phase 2
+// outcome); after settling, a scene held still renders nothing. (Panning from the Strip to the dark west settles in
+// under four seconds in Camera mode: timed on a real GPU, perf.timing.spec.js.)
 import { test, expect } from '@playwright/test';
 import { boot, frames } from '../helpers/app.js';
 
@@ -49,9 +53,15 @@ test('scrubbing noon to midnight to noon: no frame jumps in brightness', async (
   expect(bad).toEqual([]);
 });
 
-test('a seek lands within 0.3 EV of the settled exposure; settled, nothing renders', async ({ page }) => {
+test('Camera mode: a seek lands within 0.3 EV of the settled exposure; settled, nothing renders', async ({ page }) => {
   await boot(page, 'lv', 'backend=webgl');
-  const settle = () => page.waitForFunction(() => window.__skyline.look.exposure.state.settled, null, { timeout: 600_000 }); // software frames take seconds
+  await page.evaluate(() => window.__skyline.setSetting('exposureMode', 'camera'));
+  expect(await page.evaluate(() => window.__skyline.look.exposure.metering)).toBe(true);
+  // software frames take seconds; on a timeout, say where the exposure stood
+  const settle = () => page.waitForFunction(() => window.__skyline.look.exposure.state.settled, null, { timeout: 600_000 }).catch(async (e) => {
+    console.log('not settled', JSON.stringify(await page.evaluate(() => { const x = window.__skyline.look.exposure, st = x.state; return { ...st, biases: st.biases.length, reading: x.lastReadingEv, frames: window.__skyline.perf.frames(), tier: window.__skyline.loop.tier }; })));
+    throw e;
+  });
   await page.evaluate(() => {
     const s = window.__skyline;
     s.attractions.freeze(47);
@@ -82,4 +92,61 @@ test('a seek lands within 0.3 EV of the settled exposure; settled, nothing rende
   test.info().annotations.push({ type: 'seeks', description: JSON.stringify(rows) });
   for (const r of rows.filter((x) => x.revisit)) expect(r.diff, `seek back to ${r.hour} h`).toBeLessThanOrEqual(0.3);
   expect(idle).toBe(0);
+});
+
+// Eye mode, the default (decision 14): seeks land on the prior at once; a camera move changes nothing and draws one
+// frame; no meter.
+test('Eye mode: the exposure follows the light, not the view, and a move draws one frame', async ({ page }) => {
+  await boot(page, 'lv', 'backend=webgl');
+  const s0 = await page.evaluate(() => ({ mode: window.__skyline.look.exposure.state.mode, metering: window.__skyline.look.exposure.metering }));
+  expect(s0).toEqual({ mode: 'eye', metering: false });
+  await page.evaluate(() => {
+    const s = window.__skyline;
+    s.attractions.freeze(47);
+    s.setView('east');
+    s.env.enterClock();
+    s.clock.setLocal({ year: 2026, month: 6, day: 21, hour: 10, minute: 0 });
+  });
+  await page.waitForFunction(() => window.__skyline.loop.tier === 'idle', null, { timeout: 600_000 });
+  // seeks: the first frame after each has the exposure the scene keeps
+  const seeks = [];
+  for (const hour of [15, 19.5, 21, 10]) {
+    const first = await page.evaluate((hour) => new Promise((done) => {
+      const s = window.__skyline, f0 = s.perf.frames();
+      s.clock.setLocal({ year: 2026, month: 6, day: 21, hour: Math.floor(hour), minute: (hour % 1) * 60 });
+      const check = () => (s.perf.frames() > f0 ? done(s.uniforms.exposure.value) : requestAnimationFrame(check));
+      requestAnimationFrame(check);
+    }), hour);
+    await frames(page, 3);
+    const later = await page.evaluate(() => window.__skyline.uniforms.exposure.value);
+    seeks.push({ hour, first, later });
+  }
+  for (const r of seeks) expect(r.first, `seek to ${r.hour} h`).toBe(r.later);
+  // camera moves by the hooks: the exposure stays, each move draws one frame, then the loop is idle
+  await page.waitForFunction(() => window.__skyline.loop.tier === 'idle', null, { timeout: 600_000 });
+  const moves = [];
+  for (const [dx, dz] of [[-3000, 0], [0, 2500], [1500, -1500]]) {
+    const before = await page.evaluate(() => ({ k: window.__skyline.uniforms.exposure.value, f: window.__skyline.perf.frames() }));
+    await page.evaluate(([dx, dz]) => {
+      const s = window.__skyline, c = s.controls;
+      c.target.x += dx; c.target.z += dz;
+      c.update();
+      s.invalidate();
+    }, [dx, dz]);
+    // the camera's damping may take a few frames to come to rest; then nothing more is drawn
+    await page.waitForFunction(() => window.__skyline.loop.tier === 'idle', null, { timeout: 600_000 });
+    await frames(page, 30);
+    const mid = await page.evaluate(() => window.__skyline.perf.frames());
+    await page.waitForTimeout(2000);
+    const after = await page.evaluate(() => ({ k: window.__skyline.uniforms.exposure.value, f: window.__skyline.perf.frames(), settled: window.__skyline.look.exposure.state.settled, demand: window.__skyline.look.demand() }));
+    moves.push({ drawn: mid - before.f, idleFrames: after.f - mid, same: after.k === before.k, settled: after.settled, demand: after.demand });
+  }
+  console.log(JSON.stringify({ seeks, moves }));
+  for (const m of moves) {
+    expect(m.same).toBe(true);
+    expect(m.idleFrames).toBe(0);
+    expect(m.demand).toBe('idle');
+    expect(m.drawn).toBeGreaterThanOrEqual(1);
+    expect(m.drawn, "frames drawn for a move").toBeLessThanOrEqual(3);
+  }
 });

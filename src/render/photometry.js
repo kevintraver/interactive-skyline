@@ -5,30 +5,36 @@
 //   the Sun     100,000 lux at high altitude, falling with the keyframes' sun power (2.7 by day, 1.6 at sunset)
 //   the sky     the environment's clear-sky ambient table (about 15,000 lux at noon, 0.0006 lux at night)
 //   the Moon    0.25 lux full (the pinned night's stand-in moon is a full Moon); in the clock state the ephemeris's
-//   the city    3 lux of ambient light at 4000 K where the street lights are on: an interim stand-in for the light a
+//   the city    1 lux of ambient light at 4000 K where the street lights are on: an interim stand-in for the light a
 //               lit city throws on itself, until phase 4 computes it from the night-lights product
-//   windows     60 cd/m2 average, +-50 % by hash; `_GLOW` 80 cd/m2 per unit (7.12 said 200, see below); LED skins 1,200 cd/m2, dimmed to a
-//               quarter at night (section 7.12); street glow on the ground 1 cd/m2 at the legacy near-grid value
-// These are working numbers; phase 4 calibrates the city's light end to end (section 7.8).
+//   windows     60 cd/m2 average, +-50 % by hash; `_GLOW` 30 cd/m2 per unit (7.12 said 200, see below); LED skins
+//               1,200 cd/m2, dimmed to 3 % at night (section 7.12 said a quarter); street glow on the ground 2.2 cd/m2
+//               at the legacy near-grid value
+// These are working numbers; phase 4 calibrates the city's light end to end (section 7.8). The stability pass (plan 01,
+// after phase 2) set the city light, the glow, the LED dimming and the street glow so the night reads as the classic
+// night did (dark walls, windows that glow against them, coloured signs, a dim ground): 3 lux lit every wall a mid
+// tone, 80 cd/m2 a unit made the models' glowing facades as bright as their windows, 300 cd/m2 blew the LED skins and
+// the Sphere out to white; the ground's glow rose as the night's exposure fell (src/render/exposure.js, eyeKey).
 import { ev100FromLuminance } from '../core/units.js';
 
 export const PHOTOMETRY = {
   sunLux: 100000,
   sunPowerDay: 2.7, // the legacy keyframes' sun power at and above 10 degrees
   fullMoonLux: 0.25,
-  cityLux: 3,
+  cityLux: 1,
   // the prior's share of the city's own emission seen by the camera (windows, signs) at full switch-on, calibrated so
   // that the meter's offset from the prior is about the same by night as by day over the baseline views (measured on
   // the reference M4, phase 2: by day +0.05 to +0.4 EV); interim, until phase 4 knows the city's emission
   cityEmissionLux: 1,
   cityKelvin: 4000,
   windowCdM2: 60,
-  // section 7.12 said 200; that lit whole facades of the hand-made models at 20 cd/m2 and more. 80 keeps the classic
-  // look's ratio: one unit of glow was 1 / 0.75 of a lit window's light
-  glowCdM2PerUnit: 80,
+  // section 7.12 said 200; that lit whole facades of the hand-made models at 20 cd/m2 and more. Phase 2 used 80 (the
+  // classic look's ratio to a window, 1 / 0.75), which after tone mapping drew glowing facades as light as their
+  // windows; 30 reads as the classic night did
+  glowCdM2PerUnit: 30,
   ledCdM2: 1200,
-  ledNightDim: 0.25,
-  streetCdM2: 1.0, // at the legacy near-grid street glow of 0.26
+  ledNightDim: 0.03,
+  streetCdM2: 2.2, // at the legacy near-grid street glow of 0.26
   streetLegacyNear: 0.26,
 };
 

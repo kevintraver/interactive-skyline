@@ -1,18 +1,22 @@
-// Automatic exposure (plan 01, section 7.2; task T2.6): a prior predicted from the light, a meter that reads the
-// frame, a clamp that keeps the meter within -3 and +2 EV of the prior, adaptation toward the target, and two
-// modes. Exposure is applied as pre-exposure (env.nodes.exposure): light intensities and emission are multiplied by
-// it before they reach the HDR buffer, and tone mapping runs at exposure 1.
+// Exposure (plan 01, section 7.2; task T2.6, revised by decision 14 after the stability pass). Exposure is applied as
+// pre-exposure (env.nodes.exposure): light intensities and emission are multiplied by it before they reach the HDR
+// buffer, and tone mapping runs at exposure 1. Two modes:
 //
-//   meter       the HDR frame reduced to 64 x 64 log2-luminance texels, centre-weighted, clamped at 8 stops above
-//               the prior (so a few signs cannot drag it), averaged down to one texel and read back asynchronously
-//               (one to three frames late, on both backends)
-//   prior       L = 0.2 (E_key max(sin alt, 0) + E_sky + E_city) / pi (src/render/photometry.js); the exposure for the
-//               first frame after a seek, and the centre of the clamp
-//   adaptation  exponential in EV: 0.6 s toward brighter, 3 s toward darker; instantaneous on a seek or when the
-//               clock runs faster than 60x
-//   Camera      maps the adapted average to middle grey at every light level, as a long-exposure photograph
-//   Eye         the default: the key falls from 0.18 at EV 9 and above to 0.03 at EV 0 and below, so night is drawn
-//               as dark as it is seen; a tunable perceptual model, not a measurement
+//   Eye         the default: the exposure is the prior's alone, exposureFor(prior, 'eye', compensation). The
+//               brightness follows the light (the clock, a pinned look, the night setting, the compensation), never
+//               where the camera looks: no meter is drawn, nothing is read back, a camera move never asks for frames.
+//               The key falls from 0.18 at EV 9 and above to EYE_NIGHT_KEY at EYE_NIGHT_EV and below, so night is
+//               drawn as dark as it is seen; a tunable perceptual model, not a measurement
+//   Camera      the metered automatic exposure, as built in phase 2, for people who choose it: the brightness then
+//               follows the view. Maps the adapted average to middle grey at every light level, as a long-exposure
+//               photograph. The meter exists only while this mode is on:
+//     meter       the HDR frame reduced to 64 x 64 log2-luminance texels, centre-weighted, clamped at 8 stops above
+//                 the prior (so a few signs cannot drag it), averaged down to one texel and read back asynchronously
+//                 (one to three frames late, on both backends)
+//     clamp       the meter is kept within -3 and +2 EV of the prior
+//     adaptation  exponential in EV: 0.6 s toward brighter, 3 s toward darker; instantaneous on a seek or when the
+//                 clock runs faster than 60x
+//   prior       L = 0.2 (E_key max(sin alt, 0) + E_sky + E_city) / pi (src/render/photometry.js)
 //   compensation  +-EV from the settings
 import { RenderTarget, QuadMesh, MeshBasicNodeMaterial, FloatType, HalfFloatType, RGBAFormat, NearestFilter } from 'three/webgpu';
 import { Fn, texture, uniform, vec2, vec4, float, uv, log2, max, min, dot, vec3, length, exp, Loop, int } from 'three/tsl';
@@ -35,16 +39,18 @@ export const SETTLED_EV = 0.03;
 export const REOPEN_EV = 0.15;
 
 /**
- * Eye mode's key: 0.18 at EV100 9 and above, falling to EYE_NIGHT_KEY at EYE_NIGHT_EV and below, linear in EV
- * between. Section 7.2 proposed 0.05 at EV -4; on the city at night (EV 0 to 2 here) that kept the key near 0.1 and
- * drew the night city three times brighter than the classic look, so phase 2 lowered the dark end (a tunable
- * perceptual model, checked against the photo boards in phase 4).
+ * Eye mode's key: 0.18 at EV100 9 and above, falling to EYE_NIGHT_KEY at EYE_NIGHT_EV and below, linear in log2 of
+ * the key (in stops) between. Section 7.2 proposed 0.05 at EV -4; phase 2 used 0.03 at EV 0, linear in the key,
+ * which with the meter gone (decision 14) drew the city at night (EV about 1) at three times the classic look's
+ * brightness, walls beige under the interim city light; the stability pass lowered the dark end to match the classic
+ * night's tone (a tunable perceptual model, checked against the photo boards in phase 4).
  */
-export const EYE_NIGHT_KEY = 0.03;
-export const EYE_NIGHT_EV = 0;
+export const EYE_NIGHT_KEY = 0.005;
+export const EYE_NIGHT_EV = 1;
+export const EYE_DAY_EV = 9;
 export function eyeKey(ev100) {
-  const t = Math.min(1, Math.max(0, (ev100 - EYE_NIGHT_EV) / (9 - EYE_NIGHT_EV)));
-  return EYE_NIGHT_KEY + (0.18 - EYE_NIGHT_KEY) * t;
+  const t = Math.min(1, Math.max(0, (ev100 - EYE_NIGHT_EV) / (EYE_DAY_EV - EYE_NIGHT_EV)));
+  return EYE_NIGHT_KEY * (0.18 / EYE_NIGHT_KEY) ** t;
 }
 
 /** The EV to expose at, from a metered EV (or null) and the prior's: the meter clamped to [prior - 3, prior + 2]. */
@@ -128,7 +134,7 @@ function createMeter(renderer, colorTexture) {
     },
     get latest() { return latest; },
     reset() { latest = null; },
-    dispose() { for (const t of [t64, t16, t4, t1]) t.dispose(); },
+    dispose() { for (const t of [t64, t16, t4, t1]) t.dispose(); for (const [q] of quads) q.material.dispose(); },
   };
 }
 
@@ -136,14 +142,27 @@ function createMeter(renderer, colorTexture) {
  * The exposure subsystem. `prior()` returns the prior EV100 for the current state; `uniform` is the pre-exposure
  * uniform it drives. Frame step 45 (after env.update, before the pipeline).
  *
- * A seek (a clock seek, a new view, a pinned look) lands on the prior plus the meter's last offset from it, so a
- * time seek in the same view is right on its first frame; the first meter reading taken after the seek is then
- * applied at once. Continuous change (a pan, the clock playing) adapts with the time constants above.
+ * Eye mode (the default) exposes at the prior every frame: a seek, a scrub or the clock playing move it with the
+ * light, a camera move never does. Camera mode meters the frame: a seek (a clock seek, a new view, a pinned look)
+ * lands on the prior plus the meter's last offset from it, so a time seek in the same view is right on its first
+ * frame; the first meter reading taken after the seek is then applied at once. Continuous change (a pan, the clock
+ * playing) adapts with the time constants above.
  */
 export function createExposure({ renderer, pipeline, prior, uniform: exposureUniform, settings = {}, clock = null, offsetEv = 0, invalidate = () => {} }) {
-  const meter = pipeline && pipeline.scenePass ? createMeter(renderer, pipeline.scenePass.getTexture('output')) : null;
-  const state = { mode: settings.exposureMode || 'eye', compensation: settings.exposureComp || 0, enabled: true,
-    ev: NaN, target: NaN, prior: NaN, bias: 0, biases: [], metered: null, meteredAt: -Infinity, lastSnapMs: -Infinity, lastPrior: NaN, settled: false, snapRequested: true, awaiting: !!meter, lastMs: null, gen: 0 };
+  const canMeter = !!(pipeline && pipeline.scenePass);
+  let meter = null;
+  const mode0 = settings.exposureMode === 'camera' ? 'camera' : 'eye';
+  const state = { mode: mode0, compensation: settings.exposureComp || 0, enabled: true,
+    ev: NaN, target: NaN, prior: NaN, bias: 0, biases: [], metered: null, meteredAt: -Infinity, lastSnapMs: -Infinity, lastPrior: NaN,
+    settled: mode0 !== 'camera', snapRequested: true, awaiting: false, lastMs: null, gen: 0 };
+  /** The meter's passes and readback exist only in Camera mode. */
+  function useMeter(on) {
+    if (on && !meter && canMeter) meter = createMeter(renderer, pipeline.scenePass.getTexture('output'));
+    if (!on && meter) { meter.dispose(); meter = null; }
+    state.metered = null; state.biases = []; state.bias = 0; state.gen++;
+  }
+  const metering = () => state.mode === 'camera' && !!meter;
+  if (mode0 === 'camera') { useMeter(true); state.awaiting = !!meter; }
   if (clock) {
     clock.on('seek', () => { state.snapRequested = true; });
     clock.on('rate', () => { if (Math.abs(clock.rate) > 60) state.snapRequested = true; });
@@ -151,7 +170,7 @@ export function createExposure({ renderer, pipeline, prior, uniform: exposureUni
   let missed = false;
   /** A reading that moves the target asks for frames (the scene may be idle by then: a pan draws one frame). */
   function onReading(r) {
-    if (!r || r.gen !== state.gen || !state.enabled) return;
+    if (!r || r.gen !== state.gen || !state.enabled || !metering()) return;
     const t = targetEv(ev100FromLuminance(r.luminanceCdM2), state.prior);
     if (state.awaiting || Math.abs(t - state.target) > (state.settled ? REOPEN_EV : SETTLED_EV)) { state.settled = false; invalidate(); }
   }
@@ -161,13 +180,23 @@ export function createExposure({ renderer, pipeline, prior, uniform: exposureUni
     hold(value) {
       state.enabled = value === undefined;
       if (!state.enabled) { exposureUniform.value = value; state.settled = true; } // held: nothing left to adapt
-      else { state.snapRequested = true; state.settled = false; }
+      else { state.snapRequested = true; state.settled = !metering(); }
     },
-    setMode(mode) { state.mode = mode; },
+    setMode(mode) {
+      mode = mode === 'camera' ? 'camera' : 'eye';
+      if (mode === state.mode) return;
+      state.mode = mode;
+      useMeter(mode === 'camera');
+      state.snapRequested = true;
+      state.awaiting = metering();
+      state.settled = !metering();
+      invalidate();
+    },
     setCompensation(ev) { state.compensation = ev; },
     /**
-     * A seek: the next frame lands on prior + bias, the next meter reading is taken at once. `newView`: the meter's
-     * offsets from the prior, remembered per light level, belong to the old view and are forgotten.
+     * A seek: in Camera mode the next frame lands on prior + bias, the next meter reading is taken at once.
+     * `newView`: the meter's offsets from the prior, remembered per light level, belong to the old view and are
+     * forgotten. In Eye mode there is nothing to do: the exposure is the prior's on every frame.
      */
     snap(newView = false) { state.snapRequested = true; if (newView) state.biases = []; },
     update(frame) {
@@ -177,6 +206,15 @@ export function createExposure({ renderer, pipeline, prior, uniform: exposureUni
       const dtS = state.lastMs === null ? 0 : Math.min((nowMs - state.lastMs) / 1000, 1);
       state.lastMs = nowMs;
       state.prior = prior();
+      if (!metering()) {
+        // Eye mode (decision 14): the light alone sets the exposure
+        state.snapRequested = false;
+        state.ev = state.target = state.prior;
+        state.lastPrior = state.prior;
+        state.awaiting = false; state.settled = true;
+        exposureUniform.value = exposureFor(state.ev, 'eye', state.compensation + offsetEv);
+        return;
+      }
       // the light itself moved since the last frame (a scrub, the clock playing): the exposure then always follows
       const priorMoved = Number.isFinite(state.lastPrior) && Math.abs(state.prior - state.lastPrior) > 1e-6;
       if (state.snapRequested) {
@@ -190,11 +228,11 @@ export function createExposure({ renderer, pipeline, prior, uniform: exposureUni
         let best = null;
         for (const [p, b] of state.biases) if (Math.abs(p - state.prior) < 1.5 && (!best || Math.abs(p - state.prior) < Math.abs(best[0] - state.prior))) best = [p, b];
         if (best) state.bias = best[1];
-        if (!scrubbing) { state.ev = state.prior + state.bias; state.awaiting = !!meter; }
+        if (!scrubbing || !Number.isFinite(state.ev)) { state.ev = state.prior + state.bias; state.awaiting = true; }
         else { state.ev += state.prior - state.lastPrior; state.awaiting = false; } // follow the light, keep the offset
       }
       state.lastPrior = state.prior;
-      const reading = meter && meter.latest && meter.latest.gen === state.gen ? meter.latest : null;
+      const reading = meter.latest && meter.latest.gen === state.gen ? meter.latest : null;
       const metered = reading ? ev100FromLuminance(reading.luminanceCdM2) : null;
       state.metered = metered;
       state.meteredAt = reading ? reading.at : state.meteredAt; // when the reading in use was taken (ms)
@@ -213,40 +251,43 @@ export function createExposure({ renderer, pipeline, prior, uniform: exposureUni
       else if (fast || !Number.isFinite(state.ev)) state.ev = state.target;
       else state.ev = adaptEv(state.ev, state.target, dtS);
       state.settled = !state.awaiting && (holding || Math.abs(state.ev - state.target) < SETTLED_EV);
-      exposureUniform.value = exposureFor(state.ev, state.mode, state.compensation + offsetEv);
+      exposureUniform.value = exposureFor(state.ev, 'camera', state.compensation + offsetEv);
       // the meter ignores light more than 8 stops above the prior's average (in buffer units)
-      if (meter) meter.clampLog.value = Math.log2(Math.max(2 ** state.prior * 12.5 / 100, 1e-9) * exposureUniform.value) + METER_CLAMP_STOPS;
+      meter.clampLog.value = Math.log2(Math.max(2 ** state.prior * 12.5 / 100, 1e-9) * exposureUniform.value) + METER_CLAMP_STOPS;
     },
-    /** After the frame is drawn: meter it. */
+    /** After the frame is drawn: meter it (Camera mode only). */
     afterRender() {
-      if (!state.enabled || !meter) return;
-      const p = meter.measure(exposureUniform.value, state.gen);
+      if (!state.enabled || !metering()) return;
+      const m = meter;
+      const p = m.measure(exposureUniform.value, state.gen);
       // this frame could not be metered (a readback was still in flight): when that one lands, meter the scene pass
       // again (it still holds this frame), so a change seen by only one frame (a pan, an edit) is metered without
       // drawing another; the reading then asks for frames only if it moves the target (only for a settled scene:
       // while adapting, frames keep coming and skipping a reading is normal)
-      if (!p && meter.pending && !missed && state.settled) {
+      if (!p && m.pending && !missed && state.settled) {
         missed = true;
         const k = exposureUniform.value, gen = state.gen;
-        meter.pending.then(() => {
+        m.pending.then(() => {
           missed = false;
-          const again = meter.measure(k, gen);
+          if (meter !== m) return; // the mode changed meanwhile
+          const again = m.measure(k, gen);
           if (again) again.then(onReading);
         });
       }
-      // a reading that moves the target asks for frames (the scene may be idle by then: a pan draws one frame)
       if (p) p.then(onReading);
     },
-    /** Continuous until the eye has adapted (section 5.5); idle once settled. */
+    /** Camera mode: continuous until the eye has adapted (section 5.5); idle once settled. Eye mode: always idle. */
     demand() { return state.enabled && !state.settled ? 'continuous' : 'idle'; },
     get ev100() { return state.ev; },
+    /** Whether the meter's passes exist (Camera mode on the new renderer's pipeline). */
+    get metering() { return metering(); },
     /** When the latest meter reading's frame was drawn (ms), whether or not it moved the exposure. */
     get lastReadingAt() { return meter && meter.latest ? meter.latest.at : -Infinity; },
     /** That reading as EV100 (null before the first). */
     get lastReadingEv() { return meter && meter.latest ? ev100FromLuminance(meter.latest.luminanceCdM2) : null; },
     /** The exposure the prior alone would give (for surfaces that keep their classic relation to the scene). */
     expectedFor: (ev) => exposureFor(ev, state.mode, state.compensation + offsetEv),
-    dispose() { if (meter) meter.dispose(); },
+    dispose() { if (meter) meter.dispose(); meter = null; },
   };
   return sub;
 }

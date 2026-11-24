@@ -63,14 +63,17 @@ const dir = `${out}/${label}/${city}-${light}`;
 fs.mkdirSync(dir, { recursive: true });
 const raf = (n = 2) => page.evaluate((k) => new Promise((done) => { const step = () => (k-- <= 0 ? done() : requestAnimationFrame(step)); requestAnimationFrame(step); }), n);
 const id = (i) => String(i).padStart(3, '0');
-const cams = [];
-for (let i = 0; i < poses.length; i++) { cams.push(await page.evaluate((p) => window.__pose(p), poses[i])); await raf(2); await page.screenshot({ path: `${dir}/${id(i)}-m.png` }); }
+const cams = [], kMoving = [], kSettled = [];
+// the pre-exposure each frame was drawn with (null on the classic renderer)
+const k = () => page.evaluate(() => { const u = window.__skyline.uniforms; return u && u.exposure ? u.exposure.value : null; });
+for (let i = 0; i < poses.length; i++) { cams.push(await page.evaluate((p) => window.__pose(p), poses[i])); await raf(2); await page.screenshot({ path: `${dir}/${id(i)}-m.png` }); kMoving.push(await k()); }
 for (let i = 0; i < poses.length; i++) {
   await page.evaluate((p) => window.__pose(p), poses[i]); await page.waitForTimeout(700); await raf(2);
   await page.screenshot({ path: `${dir}/${id(i)}-s.png` });
+  kSettled.push(await k());
   await page.evaluate((p) => window.__pose(p), { ...poses[i], dist: poses[i].dist * 1.0005, az: poses[i].az + 0.01 * D }); await page.waitForTimeout(250); await raf(2);
   await page.screenshot({ path: `${dir}/${id(i)}-e.png` });
 }
-fs.writeFileSync(`${dir}/info.json`, JSON.stringify({ start, poses: poses.map((p, i) => ({ i, leg: p.leg, cam: cams[i], dist: Math.round(p.dist), polarDeg: +(p.polar / D).toFixed(1) })), errors: [...new Set(errors)].slice(0, 20) }, null, 1));
+fs.writeFileSync(`${dir}/info.json`, JSON.stringify({ start, poses: poses.map((p, i) => ({ i, leg: p.leg, cam: cams[i], dist: Math.round(p.dist), polarDeg: +(p.polar / D).toFixed(1), kMoving: kMoving[i], kSettled: kSettled[i] })), errors: [...new Set(errors)].slice(0, 20) }, null, 1));
 console.log(label, city, light, start.backend, 'poses', poses.length, 'errors', new Set(errors).size, [...new Set(errors)].slice(0, 2));
 await browser.close();

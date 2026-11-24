@@ -4,6 +4,7 @@ import * as THREE from 'three';
 import { curveDrop } from '../core/earth.js';
 import { createTerrainMaterial } from '../render/materials/terrainMaterial.js';
 import { maxAnisotropy } from '../render/renderer.js';
+import { createApron } from './apron.js';
 
 const lerp = THREE.MathUtils.lerp;
 
@@ -100,5 +101,7 @@ export async function loadTerrain({ scene, renderer, base }, terrainData, mapsPe
   });
   const terrain = [{ mesh: terrainMesh(far, near, farMap, base), map: farMap }, { mesh: terrainMesh(near, null, nearMap, base), map: nearMap }];
   scene.add(terrain[0].mesh, terrain[1].mesh);
-  return { near, far, terrain, groundY: makeGroundY(near, far, base) };
+  // ground beyond the far grid, out to where the fog hides it (src/city/apron.js)
+  const apron = createApron({ scene, base }, far, terrain[0].mesh, farMap);
+  return { near, far, terrain, apron, groundY: makeGroundY(near, far, base) };
 }
