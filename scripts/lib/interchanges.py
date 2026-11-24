@@ -18,7 +18,9 @@ There is no LiDAR here, so every height is a rule over the coarse ground, as for
   under every road already built where the two overlap in plan, by OSM `layer`. Roads are
   solved crossing roads first, then ramps, each in order of layer, so a road only ever has to
   clear what was built before it. A ramp that would have to pass under a road that cannot go
-  higher (the main line sits on the ground) ends before it.
+  higher (the main line sits on the ground) ends before it. The leads (the same road on beyond
+  the carriageways' ends, build_roads.build_lead) are fixed roads like the carriageways: crossing
+  roads clear them, ramps go over them or end before them.
 """
 import re
 
@@ -1068,6 +1070,18 @@ def solve_profile(dr, ground, built, junctions, layers_of, grade=GRADE, pin_ends
     return None
 
 
+def _open_end(dr, k, junctions):
+    """Whether end k (0 or -1) of ramp dr is open: no road carries on from it. A pin holds an end where its lane tapers
+    into the carriageway there (a gore's far end) or a connect junction ties that end to another road."""
+    if not np.isfinite(dr.pin[k]):
+        return True
+    if dr.sections[k]["lanes"][0]["w"] < 0.1:
+        return False
+    s_end = 0.0 if k == 0 else dr.length
+    return not any(j["kind"] == "connect" and j[x]["road"] == dr.id and j[x]["s0"] - 1.0 <= s_end <= j[x]["s1"] + 1.0
+                   for j in junctions for x in ("a", "b"))
+
+
 # ---------------------------------------------------------------------------------- the whole build
 
 def _layer_array(F):
@@ -1170,25 +1184,32 @@ def _ramp_name(cws, spec, used_ids):
     return rid
 
 
-def build_interchanges(osm, cws, to_xy, ground, log=print, own_ref=None, lifts=None):
+def build_interchanges(osm, cws, to_xy, ground, log=print, own_ref=None, lifts=None, leads=()):
     """Ramps, crossing roads, junctions and structures around carriageways `cws`
     ([{"frame": RoadFrame of the decoded road, "ids", "ways", "prefix", "links"}]); own_ref is the
     route's road reference ("I 15", the default).
     Returns {"roads": [writer dicts], "junctions", "structures", "embankment": {road id: [...]},
-    "report": {...}}. lifts: {road id: per-station lower bound} for the crossing roads (see LIFTS)."""
+    "report": {...}}. lifts: {road id: per-station lower bound} for the crossing roads (see LIFTS).
+    leads: RoadFrames of the same road on beyond the carriageways' ends (build_roads.build_lead), finished before the
+    interchanges: fixed like the carriageways, so the crossing roads clear them and the ramps go over them or end
+    before them; no ramps or crossings are looked for along them."""
     global LIFTS
     LIFTS = lifts
     for cw in cws:
         cw["frame"].layer_arr = _layer_array(cw["frame"])
         cw["frame"].fixed = True
         cw["xy"] = lambda n: tuple(poly(osm, to_xy, [n])[0])
+    for F in leads:
+        F.layer_arr = _layer_array(F)
+        F.fixed = True
     route_tree = cKDTree(np.vstack([np.column_stack([cw["frame"].x, cw["frame"].y]) for cw in cws]))
     report = {"ramps": [], "crossings": [], "dropped": [], "simplified": []}
     specs, ramp_ways = find_ramps(osm, cws, to_xy)
     chains = find_crossings(osm, cws, to_xy, ramp_ways, own_ref)
     log(f"  interchanges: {len(specs)} ramp chains, {len(chains)} crossing chains")
     weave_limits(osm, to_xy, specs, cws)
-    built = [cw["frame"] for cw in cws]
+    base = [cw["frame"] for cw in cws] + list(leads)  # the fixed roads: every other road clears them
+    built = list(base)
     junctions = []
     drafts = []
     used_ids = {cw["frame"].id for cw in cws}
@@ -1246,12 +1267,12 @@ def build_interchanges(osm, cws, to_xy, ground, log=print, own_ref=None, lifts=N
             dr = build_crossing(osm, to_xy, ch, cws, rid, approach)
             if dr is None:
                 break
-            # where it is over a carriageway it is a level above it
-            for cw in cws:
-                m, sc, _ = cw["frame"].inside(dr.st["x"], dr.st["y"], grow=15.0)
+            # where it is over a carriageway (or a lead on beyond one) it is a level above it
+            for B in base:
+                m, sc, _ = B.inside(dr.st["x"], dr.st["y"], grow=15.0)
                 if m.any():
                     k = np.flatnonzero(m)
-                    dr.layer[k] = np.maximum(dr.layer[k], _layers_of(cw["frame"], sc[k]) + 1)
+                    dr.layer[k] = np.maximum(dr.layer[k], _layers_of(B, sc[k]) + 1)
                     dr.osm_bridge[k] = True
             splits = split_from(dr, branch_of, junctions)
             if splits is None:
@@ -1431,17 +1452,18 @@ def build_interchanges(osm, cws, to_xy, ground, log=print, own_ref=None, lifts=N
                             break
         if not changed:
             break
-        built = [cw["frame"] for cw in cws] + [_frame_of(d) for d in drafts]
+        built = list(base) + [_frame_of(d) for d in drafts]
 
-    built = [cw["frame"] for cw in cws] + [_frame_of(d) for d in drafts]
+    built = list(base) + [_frame_of(d) for d in drafts]
     # an open end left in the air (a ramp shortened after its profile was set, or one whose end lies over another road,
     # or a crossing road's end over a ramp): solved again with that end on the ground, and where it cannot come down
     # there, cut back to where it can; kept only if the profile still fits
     for dr in list(drafts):
         if dr.role == "ramp":
             # an end that meets a road we built is pinned to it; any other end is open, whatever OSM ties it to (a
-            # street that is not built here)
-            free = [not np.isfinite(dr.pin[0]), not np.isfinite(dr.pin[-1])]
+            # street that is not built here), and so is a pinned end that nothing carries on from (a ramp cut back to
+            # its gore, beside its carriageway: the pin holds its side, not its end)
+            free = [_open_end(dr, k, junctions) for k in (0, -1)]
         else:  # a crossing: an end no junction ties to anything
             near = [j for j in junctions if dr.id in (j["a"]["road"], j["b"]["road"])]
             def tied(s_end):
@@ -1453,7 +1475,7 @@ def build_interchanges(osm, cws, to_xy, ground, log=print, own_ref=None, lifts=N
             free = [not tied(0.0) and not np.isfinite(dr.pin[0]), not tied(dr.length) and not np.isfinite(dr.pin[-1])]
         if not any(free) or dr.h is None or getattr(dr, "env", None) is None or len(dr.env) != dr.n:
             continue
-        hang = lambda d: [f and d.h[k] - d.env[k] > END_LIFT + 0.2 for f, k in zip(free, (0, -1))]  # noqa: E731
+        hang = lambda d: [f and d.h[k] - d.env[k] > END_LIFT for f, k in zip(free, (0, -1))]  # noqa: E731
         if not any(hang(dr)):
             continue
         others = [F for F in built if getattr(F, "draft", None) is not dr]
@@ -1490,7 +1512,7 @@ def build_interchanges(osm, cws, to_xy, ground, log=print, own_ref=None, lifts=N
             junctions[:] = [j for j in junctions if dr.id not in (j["a"]["road"], j["b"]["road"])]
             report["dropped"].append({"road": dr.id, "why": "an open end high in the air that cannot come down to the ground",
                                       "branch": dr.role == "crossing"})
-    built = [cw["frame"] for cw in cws] + [_frame_of(d) for d in drafts]
+    built = list(base) + [_frame_of(d) for d in drafts]
     # what is left of same-level overlaps between two ramps: a few metres of two pavements in one
     # plane where their gore stretches meet. They are two roads meeting: a connect junction
     for v in plan_overlaps(built, junctions)["violations"]:
@@ -1506,7 +1528,7 @@ def build_interchanges(osm, cws, to_xy, ground, log=print, own_ref=None, lifts=N
         report["simplified"].append({"road": v["a"], "why": f"meets {v['b']} in one plane over a few metres (a connect junction)"})
     from .structures import deck_spans, embankment_room, piers_and_abutments
     structures = []
-    for F in built[len(cws):]:
+    for F in built[len(base):]:
         dr = F.draft
         spans = deck_spans(F, built, ground, dr.osm_bridge)
         dr.bridges = [{"s0": rnd(a), "s1": rnd(b), "kind": "bridge", "deck": True} for a, b in spans]
@@ -1516,6 +1538,8 @@ def build_interchanges(osm, cws, to_xy, ground, log=print, own_ref=None, lifts=N
     dtree = cKDTree(all_draft_xy) if len(all_draft_xy) else None
     embank = {}
     for F in built:
+        if any(F is L for L in leads):
+            continue  # a lead's embankment is the lead's own (build_roads)
         near = None
         if getattr(F, "fixed", False) and dtree is not None:
             dd, _ = dtree.query(np.column_stack([F.x, F.y]), distance_upper_bound=120.0)

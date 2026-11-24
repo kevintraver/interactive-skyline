@@ -5,8 +5,11 @@ and how their footprints are tidied. Pure functions, so tests/data/test_corridor
     h, rung = height_of(tags, area, overture_h)
     keep(dist, area, h, rules)               # the distance-band rule
     rings = tidy(poly)                       # simplified, oriented rings, small holes dropped
+    rings[0] = seat(rings[0], ground)        # a point where the drawn ground dips between the runtime's samples
 """
 import math
+
+import numpy as np
 
 from .corridor_format import RUNG, TYPE
 from .ladder import LEVEL_M, num
@@ -95,6 +98,33 @@ def keep(dist, area, height, rules=RULES):
     if dist <= rules["band"]:
         return area >= rules["band_area"] or height >= rules["band_height"]
     return False
+
+
+SINK = 1.0  # m: the runtime stands a building this far below the lowest ground it samples (corridor/mesher.js)
+SEAT_STEP = 0.5  # m along each side at which the drawn ground is looked at
+
+
+def seat(ring, ground, sink=SINK, step=SEAT_STEP):
+    """The outer ring, with a point added on a side wherever the drawn ground (`ground`, lib.heights drawn_at) dips
+    further below what the runtime stands the building on than it is sunk: the runtime takes the lowest ground at the
+    ring's points and its sides' middles (corridor/mesher.js groundUnder), but the drawn ground is triangles and can
+    fall below both between them, where a long side crosses a crease, and the building would stand in the air there.
+    Each added point lies on its side (the outline does not change); it makes the runtime sample the dip."""
+    ring = [tuple(p) for p in ring]
+    for _ in range(8):
+        r = np.asarray(ring, dtype=np.float64)
+        nxt = np.roll(r, -1, axis=0)
+        pts = np.concatenate([r, (r + nxt) / 2])
+        base = float(ground(pts[:, 0], pts[:, 1]).min()) - sink
+        k = max(2, int(np.ceil(float(np.hypot(*(nxt - r).T).max()) / step)))
+        t = np.linspace(0, 1, k + 1)[1:-1]
+        line = r[:, None, :] * (1 - t[None, :, None]) + nxt[:, None, :] * t[None, :, None]
+        g = ground(line[..., 0].ravel(), line[..., 1].ravel()).reshape(line.shape[:2])
+        i, j = np.unravel_index(int(np.argmin(g)), g.shape)
+        if g[i, j] >= base:
+            break
+        ring = ring[:i + 1] + [(float(line[i, j, 0]), float(line[i, j, 1]))] + ring[i + 1:]
+    return ring
 
 
 def tidy(poly, tol=1.0, min_hole=6.0):

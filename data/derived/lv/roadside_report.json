@@ -1073,9 +1073,9 @@
   },
   "placed_m": {
    "concrete mapped": 13360,
-   "concrete rule": 20620,
+   "concrete rule": 20700,
    "guardrail mapped": 892,
-   "guardrail rule": 16392,
+   "guardrail rule": 17336,
    "wall mapped": 5784
   },
   "roads": {
@@ -1084,7 +1084,7 @@
     "delineators": 768
    },
    "i15s.opp": {
-    "runs": 101,
+    "runs": 100,
     "delineators": 505
    },
    "i15n.x1.off": {
@@ -1300,8 +1300,8 @@
     "delineators": 77
    },
    "i15n.xkm68.off": {
-    "runs": 1,
-    "delineators": 52
+    "runs": 5,
+    "delineators": 50
    },
    "i15s.x36.off": {
     "runs": 0,
@@ -1332,8 +1332,8 @@
     "delineators": 32
    },
    "i15s.x41.on": {
-    "runs": 3,
-    "delineators": 37
+    "runs": 5,
+    "delineators": 33
    },
    "i15s.xkm2.on3": {
     "runs": 11,
@@ -1349,7 +1349,7 @@
    },
    "i15n.x42A.off": {
     "runs": 0,
-    "delineators": 22
+    "delineators": 0
    },
    "i15s.x40.off": {
     "runs": 15,
@@ -1364,12 +1364,12 @@
     "delineators": 13
    },
    "i15n.main.out": {
-    "runs": 16,
+    "runs": 18,
     "delineators": 10
    },
    "i15s.opp.in": {
-    "runs": 16,
-    "delineators": 7
+    "runs": 20,
+    "delineators": 9
    },
    "i15s.opp.out": {
     "runs": 0,
@@ -1871,7 +1871,7 @@
  "files": {
   "signs.json": 35999,
   "limit": 150000,
-  "barriers.json": 47568,
+  "barriers.json": 47624,
   "barrier_limit": 100000,
   "ok": true
  },

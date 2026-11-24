@@ -21,8 +21,8 @@ KINDS = ["pavement_main", "pavement_ramp", "pavement_crossing", "embankment_main
          "embankment_crossing", "end_ramp", "end_crossing", "pier_foot", "pier_buried", "abutment_toe", "sign_post",
          "sign_buried", "sign_column", "delineator_hang", "delineator_buried", "wall_base", "billboard_hang",
          "billboard_buried", "pole_hang", "building_hang"]
-# The few items still over tolerance, each kind with why (tests/data/ground_known.json): no more of them, none worse,
-# and none other.
+# Items still over tolerance, each kind with why (tests/data/ground_known.json): no more of them, none worse, and none
+# other. It is empty: each item is fixed at its cause rather than recorded here.
 KNOWN = json.loads((Path(__file__).with_name("ground_known.json")).read_text())
 
 
@@ -54,6 +54,12 @@ def test_everything_meets_the_drawn_ground(reports, route, kind):
     assert k["wrong"] <= known["count"] and k["max_m"] <= known["max_m"] + 0.01, f"{route} {kind}: {k['wrong']}, {k['max_m']} m"
     allowed = {_key(w) for w in known["items"]}
     assert all(_key(w) in allowed for w in k["worst"]), f"{route} {kind}: {[w for w in k['worst'] if _key(w) not in allowed]}"
+
+
+def test_no_exception_is_recorded():
+    # an item over tolerance is fixed where it is made (brought to the ground, cut back, given its structure, or left
+    # out with the reason in the build's report), not excused here
+    assert KNOWN == {}
 
 
 def test_the_drawn_ground_is_the_meshes_triangles(hs):

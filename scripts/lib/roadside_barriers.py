@@ -24,7 +24,6 @@ from scipy.spatial import cKDTree
 from .crosssection import normalise_sections, pavement_edges
 from .refline import Refline
 from .heights import ground_of
-from .roadside_place import EMBANKMENT
 
 STEP = 4.0
 TYPES = ("concrete", "guardrail", "wall", "cable")
@@ -105,12 +104,6 @@ class RoadGeom:
         s = i * sp + dx * np.cos(hd) + dy * np.sin(hd)
         d = -dx * np.sin(hd) + dy * np.cos(hd)
         return s, d, hd
-
-
-def emb_drop(lateral):
-    (w1, d1), (w2, d2) = EMBANKMENT
-    lateral = np.maximum(0.0, lateral)
-    return np.where(lateral <= w1, lateral * d1 / w1, d1 + (np.minimum(lateral, w1 + w2) - w1) * d2 / w2)
 
 
 # ---------------------------------------------------------------- OSM
@@ -568,6 +561,20 @@ def to_runs(geom, side, lab, off, hgt, prov, heights, max_err=0.15, max_len=240.
     return runs
 
 
+def wall_support(geom, side, s, off, heights):
+    """Height, relative to the pavement edge, of what a wall `off` metres outside `side`'s edge stands on at each s:
+    the higher of the drawn ground and the drawn embankment (squeezed as the mesher squeezes it)."""
+    from .groundcheck import Road
+    if getattr(geom, "_drawn", None) is None:
+        geom._drawn = Road(geom.road)
+    road = geom._drawn
+    s = np.asarray(s, dtype=np.float64)
+    z, he, _ = road.emb_surface(s, side, off)
+    x, y, _ = geom.point(s, side, off)
+    g = np.ravel(ground_of(heights)(x, y))
+    return np.maximum(g, z) - he
+
+
 def _pieces(geom, side, i, j, t, off, hgt, prov, heights, max_err, max_len):
     out = []
     stack = [(i, j)]
@@ -594,13 +601,14 @@ def _pieces(geom, side, i, j, t, off, hgt, prov, heights, max_err, max_len):
         if TYPES[t] == "wall":
             hh = float(np.max(hgt[a:b + 1])) or WALL_H["wall"]
             r["h"] = round(hh, 1)
-            z = []
-            for q in (a, b):
-                x, y, he = geom.point(geom.s[q], side, off[q])
-                g = float(np.ravel(ground_of(heights)(x, y))[0])
-                surface = max(g, float(he[0]) - float(emb_drop(off[q])))
-                z.append(round(surface - float(he[0]), 2))
-            r["z0"], r["z1"] = z
+            # the base stands on what is drawn there, relative to the edge: the higher of the ground and the
+            # embankment as the mesher squeezes it (lib.groundcheck, mesher.js embScales), and nowhere along the run
+            # above it (the base is a straight line between the ends)
+            qs = np.arange(a, b + 1)
+            sup = wall_support(geom, side, geom.s[qs], np.maximum(off[qs], 0.0), heights)
+            line = np.interp(qs, [a, b], [sup[0], sup[-1]])
+            lower = max(0.0, float((line - sup).max()))
+            r["z0"], r["z1"] = (math.floor((float(v) - lower) * 100) / 100 for v in (sup[0], sup[-1]))
         out.append(r)
     return out
 

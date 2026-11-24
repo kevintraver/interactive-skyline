@@ -212,3 +212,67 @@ def test_python_writer_matches_the_interchange_parity_fixture():
     doc, blob = encode_roadnet(json.loads(json.dumps(fx["input"])))
     assert base64.b64encode(blob).decode() == fx["bin"]
     assert json.loads(json.dumps(doc)) == fx["json"]
+
+
+# ------------------------------------------------------------------ leads (the road on beyond a carriageway's end)
+
+def lead_frame(grade):
+    """The lead-out (build_roads.build_lead) of the carriageway t.main of a route that ends at x = 0: it goes on east to
+    x = 1500 from the carriageway's height at `grade`, no lower than the flat ground (a fill when it climbs, on the
+    ground once it has come down)."""
+    x = np.arange(0.0, 1500.0 + 1e-9, 4.0)
+    n = len(x)
+    h = np.clip(MAIN_H + grade * x, GROUND_H + 0.3, MAIN_H + 60.0)
+    return RoadFrame({"id": "t.main.out", "lead": {"of": "t.main", "end": "end"}, "spacing": 4.0, "x": x,
+                      "y": np.zeros(n), "h": h, "heading": np.zeros(n), "curvature": np.zeros(n),
+                      "crossfall": np.full(n, 0.02), "sections": [{"s0": 0, "s1": 1500, "lanes": [{}, {}, {}]}],
+                      "bridges": [], "links": []})
+
+
+def build_with_lead(doc, ids, grade, leads=True):
+    road = main_road()
+    k = int(np.flatnonzero(road["x"] <= 0.0)[-1]) + 1
+    for key in ("x", "y", "h", "heading", "curvature", "crossfall"):
+        road[key] = road[key][:k]
+    road["sections"][0]["s1"] = 1500
+    F, L = RoadFrame(road), lead_frame(grade)
+    cws = [{"frame": F, "ids": ids[:31], "ways": {1}, "prefix": "t", "links": []}]
+    ic = build_interchanges(doc.osm(), cws, FRAME.to_local, ground, log=lambda *a: None, leads=[L] if leads else ())
+    return ic, F, L
+
+
+def finished(ic, F, L):
+    """Frames of every road as written (decks included), the carriageway and the lead."""
+    return [F, L] + [RoadFrame(r) for r in ic["roads"]]
+
+
+def test_a_street_over_a_carriageway_s_end_clears_its_lead_too():
+    """A street crossing at a slant where the carriageway ends: under the far side of its deck is the climbing lead
+    (I-15 south's lead-out under Russell Road), which it clears by the rule as it clears the carriageway."""
+    doc = Doc()
+    ids = with_main(doc)
+    pts = [(-400 + 40 * k * 2 / 3, -600 + 40 * k) for k in range(31)]  # through (0, 0) at 56 degrees
+    nodes = [doc.node(x, y) for x, y in pts]
+    doc.way(500, nodes[:13], highway="secondary", name="Slant Street", lanes="4")
+    doc.way(501, nodes[12:19], highway="secondary", name="Slant Street", lanes="4", bridge="yes", layer="1")
+    doc.way(502, nodes[18:], highway="secondary", name="Slant Street", lanes="4")
+    ic, F, L = build_with_lead(doc, ids, 0.06)
+    from lib.layers import deck_clearances
+    found = [f for f in deck_clearances(finished(ic, F, L)) if f["lower"] == L.id]
+    assert found, "the street passes over the lead"
+    assert all(f["ok"] for f in found), found
+
+
+def test_an_exit_ramp_that_crosses_the_lead_goes_over_it_or_ends_before_it():
+    """An exit ramp whose mapped line turns back across the lead beyond the carriageway's end, at grade in OSM (the
+    Spaghetti Bowl's ramps against I-15's leads): it is not drawn through the lead's pavement."""
+    doc = Doc()
+    ids = with_main(doc, junctions={21})
+    link(doc, 100, 21, [(-440, -8), (-380, -24), (-300, -48), (-200, -70), (-80, -80), (40, -70), (140, -40),
+                        (220, 0), (300, 40), (380, 70), (460, 90), (560, 100)])
+    ic, F, L = build_with_lead(doc, ids, -0.06)
+    from lib.layers import close_overlaps, deck_clearances
+    assert any(r["role"] == "ramp" for r in ic["roads"])
+    frames = finished(ic, F, L)
+    assert not [f for f in close_overlaps(frames, ic["junctions"]) if not f["ok"]]
+    assert not [f for f in deck_clearances(frames) if not f["ok"]]

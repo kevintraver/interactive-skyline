@@ -85,7 +85,10 @@ def test_the_plan_view_is_as_committed(rid):
         if k in mains or a["count"] == b["count"]:
             assert a["count"] == b["count"], k
             assert np.array_equal(A[:, PLAN], B[:, PLAN]), k
-            strip = lambda r: {kk: v for kk, v in r.items() if kk not in HEIGHT_KEYS and kk != "stations"}  # noqa: E731
+            # a link's `to` names the ramp built from it, and goes with the ramp when the ramp is left out (as
+            # build_roads.check_main_line allows)
+            strip = lambda r: {kk: ([{a: b for a, b in e.items() if a != "to"} for e in v] if kk == "links" else v)  # noqa: E731
+                               for kk, v in r.items() if kk not in HEIGHT_KEYS and kk != "stations"}
             assert strip(now[k]) == strip(was[k]), k
             if k in mains:  # a ramp's or crossing's deck is where it stands over 3 m up (structures.deck_spans): it follows its heights
                 assert [(x["s0"], x["s1"]) for x in now[k].get("bridges", [])] == [(x["s0"], x["s1"]) for x in was[k].get("bridges", [])], k
@@ -203,8 +206,9 @@ def test_each_carriageway_runs_on_beyond_both_ends_as_scenery(rid):
         for which in ("in", "out"):
             info = leads[f"{cw}.{which}"]
             assert info["built"] and info["buried_below_envelope_m"] == 0 and info["eased_m"] < 0.5, info
-            # one known shortfall: I-15 south's lead-out starts under Russell Road's deck, 4.62 m below it (not 4.9)
-            assert "under_crossing" not in info or f"{cw}.{which}" == "i15s.main.out", info
+            # the leads are built before the interchanges, which clear them (tests/data/test_layers.py): no lead has to
+            # dip under a crossing road
+            assert "under_crossing" not in info, info
     # the US-93 deck runs on to the Arizona side: the lead-in starts on land and is a held deck where it meets the route
     if rid == "us93":
         lead = next(x for x in doc["roads"] if x["id"] == "us93.main.in")

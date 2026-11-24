@@ -907,13 +907,13 @@
   "placed_m": {
    "concrete mapped": 9544,
    "concrete rule": 9736,
-   "guardrail rule": 17036,
+   "guardrail rule": 17080,
    "wall mapped": 1084
   },
   "roads": {
    "i15s.main": {
-    "runs": 191,
-    "delineators": 527
+    "runs": 192,
+    "delineators": 526
    },
    "i15n.opp": {
     "runs": 78,
@@ -1707,7 +1707,7 @@
  "files": {
   "signs-i15s.json": 32366,
   "limit": 150000,
-  "barriers-i15s.json": 34699,
+  "barriers-i15s.json": 34719,
   "barrier_limit": 100000,
   "ok": true
  },

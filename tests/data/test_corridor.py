@@ -11,7 +11,7 @@ from pathlib import Path
 
 import pytest
 
-from lib.corridor import RULES, building_type, guess_height, height_of, keep, overture_plausible, tidy
+from lib.corridor import RULES, SINK, building_type, guess_height, height_of, keep, overture_plausible, seat, tidy
 from lib.corridor_format import RUNG, TYPE, CorridorFormatError, decode_cell, encode_cell
 
 FIX = Path(__file__).resolve().parents[1] / "unit" / "corridor" / "fixtures"
@@ -127,3 +127,29 @@ def test_overture_plausible():
     assert not overture_plausible(0.5, 100.0)
     assert not overture_plausible(20.0, 399.0)
     assert overture_plausible(20.0, 400.0)
+
+
+def _runtime_base(ring, ground):
+    """corridor/mesher.js groundUnder less its sink: the lowest ground at the ring's points and its sides' middles."""
+    import numpy as np
+    r = np.asarray(ring, dtype=float)
+    pts = np.concatenate([r, (r + np.roll(r, -1, axis=0)) / 2])
+    return float(ground(pts[:, 0], pts[:, 1]).min()) - SINK
+
+
+def test_seat_adds_a_point_where_the_ground_dips_between_the_runtime_s_samples():
+    import numpy as np
+    # a crease of the drawn ground (a valley 2 m deep along x = 20) under the long sides of a 57 m by 12 m building,
+    # between its corners (x = 0, 57) and its sides' middles (x = 28.5)
+    def ground(x, y):
+        return 100.0 + 0.2 * np.minimum(np.abs(np.asarray(x) - 20.0), 10.0)
+    ring = [(0.0, 0.0), (57.0, 0.0), (57.0, 12.0), (0.0, 12.0)]
+    assert _runtime_base(ring, ground) > 100.0 - 0.5  # the building would stand over 0.5 m in the air there
+    got = seat(ring, ground)
+    assert len(got) > len(ring) and all(p in got for p in ring)
+    assert _runtime_base(got, ground) <= 100.0 - SINK + 0.05
+    for p in got:  # every point added lies on a side of the outline
+        assert p[1] in (0.0, 12.0) or p[0] in (0.0, 57.0)
+    # on even ground nothing is added
+    assert seat(ring, lambda x, y: np.full(np.shape(x), 100.0)) == ring
+

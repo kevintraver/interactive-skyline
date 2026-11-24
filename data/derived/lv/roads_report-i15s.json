@@ -4284,7 +4284,7 @@
     "interchanges_plan_overlap_rule": {
      "ok": true,
      "violations": 0,
-     "overlapping_pairs": 124,
+     "overlapping_pairs": 129,
      "min_separation_m": 6.4
     },
     "ramps_over_ground": {
@@ -4317,8 +4317,7 @@
      "bridges": 0,
      "held_decks": 0,
      "max_grade": 0.0326,
-     "buried_below_envelope_m": 0.0,
-     "under_crossing": "SEPARATE under the crossing cannot be kept: the carriageway's end is too close to it and the ground beyond rises"
+     "buried_below_envelope_m": 0.0
     },
     "i15n.opp.in": {
      "built": true,
@@ -4355,8 +4354,8 @@
      "connects": 18,
      "crossings": 15,
      "decks": 29,
-     "piers": 105,
-     "abutments": 57,
+     "piers": 109,
+     "abutments": 58,
      "roads": 84
     },
     "extract": {
@@ -4551,7 +4550,7 @@
      {
       "road": "x.west-russell-road",
       "name": "West Russell Road",
-      "clearance_m": 5.5
+      "clearance_m": 5.47
      },
      {
       "road": "x.east-carey-avenue",
@@ -5836,7 +5835,7 @@
      "plan_overlap_rule": {
       "ok": true,
       "violations": 0,
-      "overlapping_pairs": 124,
+      "overlapping_pairs": 129,
       "min_separation_m": 6.4
      }
     }
@@ -5880,9 +5879,9 @@
   "identical": true
  },
  "files": {
-  "roadnet-i15s.json": 239000,
+  "roadnet-i15s.json": 239371,
   "roadnet-i15s.bin": 1149204,
-  "total": 1388204,
+  "total": 1388575,
   "ok": true
  }
 }
