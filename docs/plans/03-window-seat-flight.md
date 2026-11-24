@@ -82,6 +82,14 @@ Section 6.2 gives the layout of `skyline-flight/1` but not its units or the valu
 - **Density near the airport is a point every 0.5 to 2 s**, better than the 6 to 8 s section 1 expected. The 3 m height gate for the last minute is at the noise floor of altitudes reported in 25 ft steps.
 - **Height in the file is the wheels.** The 5.6 m from the antenna to the wheels is an estimate; the calibration found the aircraft reporting height above the ellipsoid.
 
+### Found while putting the airframe in the app (24 November)
+
+- **The whole airframe costs 64 draw calls from outside, 18 from seat 22F.** Section 9.1 budgets 40 for it. Each moving part is its own draw; the performance pass (F8.2) batches them. From the seat the cost is already inside the budget.
+- **The lamp light baked into the model is stored sRGB-encoded,** not linear as the kit says. The app decodes it in the vertex stage; the kit's note is corrected when the lamps are re-baked.
+- **The baked lamp light is too thin to read from the seat at night.** The landing lights reach only a patch of fuselage, the beacon's pulse does not reach the upper wing or the nacelle, and the winglet clips to white. The lamps are re-baked before the night flights are judged (with F3.8's remaining work).
+- **Two more estimates in the model's source:** the main-gear trunnion sits 0.45 m ahead of the axle, and the main flap carries 24° of flaps 30 and 30° of flaps 40. Both belong in `spec.py` with the other estimates.
+- **The ground attitude belongs to the state, not the model.** On its wheels the aircraft sits 0.81° nose down. Today the model alone turns; the session applies it to the state so the cabin and the camera tilt with it.
+
 ### Order of work
 
 1. Phase 0 with Phase 1's three independent starts, in parallel: the track sampler and kinematics on a synthetic track with the adapter and the airport block (F0.1, F0.2, F1.3); the runway ends and the bake of one real runway 19 arrival (F0.3, F1.1, F1.2); the window, wing and head (F1.5). The airframe's dimensions and kit (F3.1, F3.2) start at the same time because nothing blocks them.
