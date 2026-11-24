@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Window seat v0</title>
+  <link rel="icon" href="data:,">
+  <style>
+    html, body { margin: 0; height: 100%; overflow: hidden; background: #000; color: #ccc; font: 12px monospace; }
+    canvas { display: block; width: 100vw; height: 100vh; touch-action: none; }
+    #log { position: fixed; left: 8px; bottom: 6px; pointer-events: none; text-shadow: 0 0 3px #000; }
+  </style>
+</head>
+<body>
+  <!--
+    F1.5's harness (plan 03): the airframe v0, the cabin v0 and the head rig on the new renderer (src/render/renderer.js,
+    ?backend=webgl|webgpu), over a plain curved ground and a gradient sky, posed from the synthetic track
+    (tests/fixtures/flight/synthetic-19.*) or a hand-written state. Drag, wheel, W A S D Q E, R and C work by hand.
+    Driven by flight-cabin-shots.mjs through window.__cabin:
+      __cabin.ready                       resolves when the first frame is drawn
+      __cabin.info                        { backend, reason, reversedDepth, logDepth, gpu }
+      await __cabin.view({ state, seat, look, clean })   state: 'level' | 'bankLeft' | 'bankRight20'; resolves after a frame
+      await __cabin.outside({ state, azimuth, elevation, distance, lens })   a camera outside the aircraft
+      __cabin.stats()                     { airframeTriangles, cabinTriangles, near, far, eye }
+    Address parameters: ?backend=webgl|webgpu&state=level&seat=22F
+  -->
+  <canvas id="scene"></canvas>
+  <div id="log">loading</div>
+  <script type="module" src="./flight-cabin.js"></script>
+</body>
+</html>
