@@ -14,8 +14,8 @@ export function readParams(search) {
   const backend = q.get('backend');
   return {
     // drive seam: until Drive mode's materials are ported to node materials (plan 02), ?mode=drive opens on the
-    // classic renderer
-    renderer: q.get('renderer') === 'legacy' || q.get('mode') === 'drive' ? 'legacy' : 'webgpu',
+    // classic renderer; ?renderer=webgpu asks for the new one anyway, with the parts ported so far
+    renderer: q.get('renderer') === 'legacy' || (q.get('mode') === 'drive' && q.get('renderer') !== 'webgpu') ? 'legacy' : 'webgpu',
     backend: backend === 'webgl' || backend === 'webgpu' ? backend : 'auto',
   };
 }

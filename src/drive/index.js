@@ -301,7 +301,7 @@ export function initDrive(app, loaded) {
   async function enter(id, at = {}) {
     // until the drive's materials are ported to the new renderer (plan 02), Drive runs on the classic one: entering
     // from the new renderer reloads the page into it (src/render/renderer.js reads ?mode=drive)
-    if (app.rendererKind && app.rendererKind !== 'legacy') {
+    if (app.rendererKind && app.rendererKind !== 'legacy' && new URLSearchParams(location.search).get('renderer') !== 'webgpu') {
       const q = new URLSearchParams(encodeDriveState({ route: id, s: at.s, t: at.t, view: at.view, yaw: at.yaw, pitch: at.pitch, lens: at.lens }, location.search));
       location.assign(`${location.pathname}?${q}`);
       return new Promise(() => {});
