@@ -13,6 +13,66 @@ Conventions used below:
 
 ---
 
+## Decisions for the build (2026-11-23)
+
+Written by the orchestrating session when the build started, on the user's instruction to make assumptions instead of asking. Where they conflict with the document below, these win. Task ids and section numbers are unchanged. The plan was written on 9 and 10 November against a one-file `main.js` and a side panel; both are gone, and the two sibling plans have been built far enough that most of this plan's stand-ins are not needed.
+
+### Where and how it is built
+
+1. **Branch.** `feat/window-seat-flight`, cut from `feat/vegas-drive` at `44bbc4e`. That commit holds plan 2's drive and, merged into it, plan 1's renderer, clock, weather data and both stability passes. Plan 1's integration branch is `t3/sky-weather-integration`. Both siblings are still moving; this branch merges from them when they land something it needs, and never the other way.
+2. **Who writes the code.** Subagents (Claude Opus 5.5, high effort) in this one checkout, each with a list of files it owns. They do not commit, do not edit `package.json` or the lockfile, do not record reference screenshots or budgets, and do not run the software-rendered browser suites. The orchestrating session reviews each diff, runs the tests, looks at frames on the real GPU and commits. Nothing is pushed.
+3. **Test first.** New work starts with a failing pass/fail check (unit test, pytest or a browser spec) and then the code. A defect gets a pass/fail reproduction before any theory about its cause. This is the reading of the user's "pstack" shared by all three plans' sessions.
+4. **Disk.** The machine had about 9 GB free when this started, and one day of the adsb.lol archive is 2 to 4 GB. The archive is read as a stream and never stored whole: only the single-aircraft extracts that pass the first filter are kept. Raw downloads stay under `data/raw/` (git-ignored) and under 4 GB in total.
+5. **Parallel runs.** A browser test run builds into its own folder and serves on its own port: `SKYLINE_DIST=dist-<name> SKYLINE_PORT=<port>`. Timings taken while the other plans' agents are running are recorded as inflated.
+
+### The plan's names on today's tree
+
+| The plan says | Today |
+| --- | --- |
+| `src/main.js:<lines>` | `src/main.js` is a 126-line bootstrap; the code lives in `src/app`, `city`, `core`, `render`, `sim`, `sky`, `env`, `weather`, `interaction`, `ui`, `world`, `drive` |
+| The frame module | `src/world/frame.js` (`createFrame`, `localUp`, `sceneY`, `EARTH_R`) over `src/core/earth.js` (`curveDrop`, `horizonDistance`, `altitudeOf`); Python twin `scripts/lib/frame.py`. `levelQuaternion` is added to `src/world/frame.js` |
+| `SimClock`, `Timeline`, the transport | `app.clock` (`src/sim/clock.js`), `app.timeline` (`src/sim/timeline.js`), the bar `#transport` with `#transport-slot` above it (`src/ui/transport.js`). They exist, so there is no `LocalClock` stand-in |
+| The loop | `app.loop.add({ update, demand }, order)` (`src/render/frameLoop.js`); orders 20 to 29 are for modes |
+| The pipeline | `app.pipeline` (`src/render/pipeline.js`): `addStage({ id, at, render, node })` at `afterScene`, `afterWorld`, `beforeBloom`, `afterAA`, `afterBloom`, `overlay`; `setCamera`; `probe` |
+| Light and units | `app.env` (`src/env/environment.js`) and `app.env.nodes` (`emissive`, `pointSource`, `exposure`; `src/env/nodes.js`); plan 2's sprite and surface-light node modules under `src/drive/lights/` |
+| Quality | `app.quality` (`src/render/quality.js`) |
+| The mode registry | There is none. `#modes` holds the Map and Drive buttons and the drive joins the app through the seam `app.drive` (lines marked "drive seam"). The flight adds a **Fly** button and its own seam `app.fly`, with every line marked "flight seam". One registry for both modes waits until the drive's port to the new renderer has landed, so that the two branches do not edit the same lines |
+| `flight`, `stepFlight`, `flying()` (the camera glide) | Left as they are. The flight's seam is `app.fly`, its hooks are `__skyline.flight`, and the address says `mode=flight` |
+| `#panel`, `#browse`, `#fly` (section 4.9) | No panel. The picker's cards sit under `#top`, as the drive's route cards do. The journey scrubber is plan 1's `#transport`; the flight's own bar (status chip, seat, view) mounts in `#transport-slot`. The seat map and the view options are popovers (`.pop`), like `#sky`. Search, the building list, the card and the toast stay as they are in every mode |
+| The terrain interface | `src/world/terrain/` (plan 2): near, far, the coarse `wide` grid and patches behind `heightAt`, `groundY`, `inBuildArea`, `whenSettled`. F4.7 extends this provider; it does not write a second one |
+| What-if events | `app.events`: `buildings:changed`, `buildings:rebuilt` |
+| `public/data/cities.json` | `data/cities.json`, bundled by an import. It already has `icao`, `tz`, `iemStation` |
+| Test folders | Vitest `tests/unit/flight/`; pytest `tests/data/flight/` (`pnpm test:data`); Playwright `tests/e2e/flight/` in the projects `flight-software` and `flight-gpu` (`pnpm test:e2e:flight`, `pnpm test:flight:gpu`). A spec named `*.gpu.spec.js` runs only on the real GPU |
+| Lamp inventory | `public/data/lv/lamps-drive.bin`, `lamp-cells.bin`, `data/lamp_types.json`, `scripts/pack_lamps.py`, `scripts/lib/lamps.py` (plan 2); `scripts/build_nightlights.py` and `src/sky/nightlights.js` (plan 1) |
+
+### What the siblings supply, and what is stood in for
+
+| Capability (section 10) | State on 23 November | Here |
+| --- | --- | --- |
+| `P1:foundations`, `P1:clock`, `P1:renderer`, `P1:weather` | Built | Used directly. `src/flight/env.js` stays the only file that reaches into them, but it is a thin adapter, not a set of fallbacks |
+| `P2:terrain`, `P2:lamps` | Built | Used directly |
+| `P1:light` (atmosphere, aerial perspective, camera-following shadows) | In progress on `t3/sky-weather-atmosphere` and `t3/sky-weather-shadows` | Until it is merged: today's sky dome and fog, with the dome and the far plane scaled to the horizon while flying. Merged as soon as it lands |
+| `P1:night` (night-lights model, terrain emission, lights-out factor) | Data exists (`build_nightlights.py`); the model is plan 1's phase 4, not started | Lamp and airport light points are drawn in physical units through `env.nodes.pointSource`; the calibration against `nightlights.upwardLuminance` uses the radiance grids directly |
+| `P1:clouds`, `P1:rain` | Not started | Clear sky; droplets and the cloud veil take a debug input and the weather service's rain rate and cloud cover where it has them |
+
+### Changes to tasks
+
+- **The renderer is the new one from the first task.** Assumption A6 already holds, so nothing is written for the classic renderer and Fly is not offered under `?renderer=legacy`. F1.5's "three render calls with the depth cleared between them" is not built. Plan 1's depth buffer (reversed on WebGPU, logarithmic on WebGL2 without clip control) holds 5 cm to the horizon in one pass, so F1.5 draws the window frame and the wing in the scene pass with one camera. F3.9 then moves the cabin to its own `afterAA` stage, which the pane of Phase 5 needs.
+- **F0.2 shrinks** to the adapter and the few stand-ins in the table above.
+- **F2.2's "a person chooses"** is done by the orchestrating session against section 6.2's criteria, with the reason for each choice written into `selection.json`. The user can swap any flight later by editing that file and running the bake.
+- **F4.7** extends plan 2's provider (which already serves three grids and patches) to any number of nested grids with chunked meshes, and keeps its interface.
+- **F8.3 (Salt Lake City), F8.4 to F8.6 (stretch)** are attempted last and only if the Las Vegas work is verified.
+
+### Order of work
+
+1. Phase 0 with Phase 1's three independent starts, in parallel: the track sampler and kinematics on a synthetic track with the adapter and the airport block (F0.1, F0.2, F1.3); the runway ends and the bake of one real runway 19 arrival (F0.3, F1.1, F1.2); the window, wing and head (F1.5). The airframe's dimensions and kit (F3.1, F3.2) start at the same time because nothing blocks them.
+2. The mode, what-if from the air and the touchdown check (F1.4, F1.6, F1.7). Phase 1 is then checked on the real GPU and committed.
+3. Phases 2 and 4 (data and geometry) beside Phase 3 (airframe, cabin, seats, lights).
+4. Phase 5 (the pane), Phase 6 (from cruise, lamps), Phase 7 (orbit).
+5. Phase 8: the validation report, the performance pass, reference screenshots and budgets recorded once.
+
+---
+
 ## 1. Executive summary
 
 ### What the user will experience

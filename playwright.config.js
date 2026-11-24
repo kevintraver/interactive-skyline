@@ -8,6 +8,11 @@
 //                    drive frame takes seconds there, and beside the map suite it starves the render-on-demand
 //                    budgets' timing. About 40 minutes; local only.
 //   drive-timing     The drive's own per-frame JavaScript (*.perf.spec.js) on this machine's GPU (pnpm test:perf:drive).
+//   flight-software  Fly mode (tests/e2e/flight/) on SwiftShader, on its own (pnpm test:e2e:flight). Local only.
+//   flight-gpu       The same specs, and the ones named *.gpu.spec.js, on this machine's GPU (pnpm test:flight:gpu).
+//
+// Several runs at once in one checkout (the plans are built by agents working side by side): give each its own
+// build folder and port, SKYLINE_DIST=dist-<name> SKYLINE_PORT=<port>.
 //
 // Golden images are per platform (Chromium's text and SwiftShader output differ between macOS and Linux), so
 // the snapshot path carries {platform}. A spec compares only when a snapshot for the running platform exists;
@@ -15,6 +20,7 @@
 import { defineConfig, devices } from '@playwright/test';
 
 const PORT = Number(process.env.SKYLINE_PORT || 4791);
+const DIST = process.env.SKYLINE_DIST || 'dist';
 // No test reaches a real weather service (plan 01, phase 5): their hosts do not resolve in the test browser. A spec
 // that wants weather routes it itself (tests/helpers/weatherRoutes.js). This costs nothing, unlike a page.route on
 // every request, which slowed each boot by about ten seconds on SwiftShader.
@@ -43,7 +49,7 @@ export default defineConfig({
   },
   webServer: {
     // the production build, as it is deployed
-    command: `pnpm build && pnpm preview --host 127.0.0.1 --port ${PORT} --strictPort`,
+    command: `pnpm build --outDir ${DIST} && pnpm preview --outDir ${DIST} --host 127.0.0.1 --port ${PORT} --strictPort`,
     url: `http://127.0.0.1:${PORT}`,
     reuseExistingServer: false,
     timeout: 180_000,
@@ -51,7 +57,7 @@ export default defineConfig({
   projects: [
     {
       name: 'webgl2-software',
-      testIgnore: [/perf\.(timing|ab)\.spec\.js|webgpu\.spec\.js/, /\.perf\.spec\.js$/, /(drive[\w.-]*|routes)\.spec\.js$/],
+      testIgnore: [/perf\.(timing|ab)\.spec\.js|webgpu\.spec\.js/, /\.perf\.spec\.js$/, /(drive[\w.-]*|routes)\.spec\.js$/, /e2e\/flight\//],
       // software frames take seconds, and under load from other work a test can run out of time: one more try, and
       // the report then lists it as flaky. A wrong image or count fails both tries.
       retries: 1,
@@ -106,6 +112,22 @@ export default defineConfig({
       testMatch: /\.perf\.spec\.js$/,
       use: { ...devices['Desktop Chrome'], viewport: { width: 1280, height: 800 }, deviceScaleFactor: 1,
         launchOptions: { args: GPU } },
+    },
+    {
+      // Fly mode on SwiftShader (plan 03), on its own like the drive: a flight frame takes seconds there
+      name: 'flight-software',
+      testMatch: /e2e\/flight\/.*\.spec\.js$/,
+      testIgnore: /\.gpu\.spec\.js$/,
+      retries: 1,
+      use: { ...devices['Desktop Chrome'], viewport: { width: 1280, height: 800 }, deviceScaleFactor: 1,
+        launchOptions: { args: SOFTWARE } },
+    },
+    {
+      // Fly mode on this machine's GPU: every flight spec, and the timing ones (*.gpu.spec.js)
+      name: 'flight-gpu',
+      testMatch: /e2e\/flight\/.*\.spec\.js$/,
+      use: { ...devices['Desktop Chrome'], viewport: { width: 1280, height: 800 }, deviceScaleFactor: 1,
+        launchOptions: { args: [...GPU, ...WEBGPU] } },
     },
   ],
 });
