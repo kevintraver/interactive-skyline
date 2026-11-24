@@ -12,6 +12,7 @@
     "test:live": "vitest run --config tests/live/vitest.config.js",
     "test:py": "uv run --python 3.12 --with pytest --with numpy --with requests --with pillow --with openexr --with scipy --with shapely --with pyproj --with h5py pytest -q tests/python",
     "test:e2e": "playwright test --project=webgl2-software",
+    "test:e2e:gpu": "playwright test --project=gpu-functional",
     "test:goldens:update": "playwright test --project=webgl2-software baseline --update-snapshots=all",
     "test:perf": "playwright test --project=gpu --workers=1",
     "bench": "vitest bench --run --reporter=verbose",

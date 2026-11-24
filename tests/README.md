@@ -6,6 +6,7 @@
 | `pnpm test:py` | pytest on the data pipelines in `scripts/` (`tests/python/`): parsers, encoders and the committed outputs against their sidecars, never the network; needs [uv](https://docs.astral.sh/uv/) | CI and locally |
 | `pnpm test:e2e` | Playwright on SwiftShader (`webgl2-software`): goldens, the `window.__skyline` contract, the buildless boot, the deterministic performance budgets | CI and locally |
 | `pnpm test` | both of the above | |
+| `pnpm test:e2e:gpu` | the functional specs of `pnpm test:e2e` on this machine's GPU (`gpu-functional`): everything but the goldens, which are compared only on SwiftShader. One software frame of this app takes about 3 s on a quiet machine and far longer on a busy one, so this is the quick local run; it is not a substitute for `pnpm test:e2e` before a merge | locally only |
 | `pnpm test:perf` | timing on this machine's GPU (`gpu` project, one worker) against `tests/reference/perf/timing/<machine id>.json` | locally only |
 | `pnpm test:perf:software` | the same timing suite on SwiftShader, gated at 2x | locally |
 | `pnpm bench` | micro-benchmarks (`vitest bench`), reported, not gated | locally |
