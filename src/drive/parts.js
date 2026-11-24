@@ -48,12 +48,12 @@
  * @type {Array<{ id: string, node: boolean, load: (ctx: object) => (object | null | undefined | Promise<object | null | undefined>) }>}
  */
 export const PARTS = [
-  { id: 'lamps', node: false, load: (ctx) => import('./lights/index.js').then((m) => m.createLampsPart(ctx)) }, // street lamps: sprites, pools, poles, switching (D5.4, D5.5)
-  { id: 'headlights', node: false, load: (ctx) => import('./lights/headlights.js').then((m) => m.createHeadlightsPart(ctx)) }, // the visitor's headlamps and what signs and markings return (D5.1, D5.2)
+  { id: 'lamps', node: true, load: (ctx) => import('./lights/index.js').then((m) => m.createLampsPart(ctx)) }, // street lamps: sprites, pools, poles, switching (D5.4, D5.5)
+  { id: 'headlights', node: true, load: (ctx) => import('./lights/headlights.js').then((m) => m.createHeadlightsPart(ctx)) }, // the visitor's headlamps and what signs and markings return (D5.1, D5.2)
   { id: 'traffic', node: false, load: (ctx) => import('./traffic/index.js').then((m) => m.createTrafficPart(ctx)) }, // vehicles on both carriageways, placed by the demand model (D6.4)
   { id: 'cabin', node: false, load: (ctx) => import('./vehicle/cabin.js').then((m) => m.createCabin(ctx)) }, // the cabin, its displays and the steering wheel (D4.2, D4.5)
   { id: 'valley', node: false, load: (ctx) => import('./traffic/valley.js').then((m) => m.createValleyPart(ctx)) }, // light ribbons on the rest of the valley's roads (D6.6)
-  { id: 'obstruction', node: false, load: (ctx) => import('./lights/obstruction.js').then((m) => m.createObstructionPart(ctx)) }, // red obstruction lights on buildings above 61 m, hidden and moved with them (D5.6)
+  { id: 'obstruction', node: true, load: (ctx) => import('./lights/obstruction.js').then((m) => m.createObstructionPart(ctx)) }, // red obstruction lights on buildings above 61 m, hidden and moved with them (D5.6)
   { id: 'screens', node: true, load: (ctx) => import('./screens/index.js').then((m) => m.createScreensPart(ctx)) }, // screens on simulation time, their registry, the Sphere's light (D7.3, D7.5)
   { id: 'billboards', node: true, load: (ctx) => import('./roadside/billboards.js').then((m) => m.createBillboardsPart(ctx)) }, // billboards: structures, abstract faces, digital glow (D7.4, D7.5)
   { id: 'weather', node: false, load: (ctx) => import('./weather/index.js').then((m) => m.createWeatherPart(ctx)) }, // rain on the stand-in weather: wet road, reflected lamps, rain, spray, grey sky (D8.1, D8.3)

@@ -39,7 +39,9 @@ function toMesh(m, material) {
   g.setAttribute('normal', new THREE.BufferAttribute(m.normals, 3));
   g.setAttribute('uv', new THREE.BufferAttribute(m.uvs, 2));
   g.setAttribute('kind', new THREE.BufferAttribute(m.kind, 1));
-  if (m.retro) g.setAttribute('retro', new THREE.BufferAttribute(m.retro, 1)); // sheeting code (src/drive/roadside/sheeting.js)
+  // sheeting code (src/drive/roadside/sheeting.js); float32 on plan 01's renderer, whose WebGL2 backend cannot read a byte
+  // attribute as the uint it declares (and WebGPU has no one-byte vertex format)
+  if (m.retro) g.setAttribute('retro', new THREE.BufferAttribute((Array.isArray(material) ? material[0] : material)?.isNodeMaterial ? Float32Array.from(m.retro) : m.retro, 1));
   g.setIndex(new THREE.BufferAttribute(m.indices, 1));
   const [cx, cy, cz, r] = m.sphere;
   g.boundingSphere = new THREE.Sphere(new THREE.Vector3(cx, cy, cz), r);

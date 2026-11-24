@@ -27,6 +27,9 @@
 //     from setFrame's renderer, so a pipeline drawing at a render scale gets the right flux; camera and renderer are
 //     accepted and ignored.
 //   - commitRows uploads whole instance textures: three r187's WebGPURenderer has no partial texture upload.
+//   - The pixel's solid angle is taken where the sprite is: pa^2 cos^3 off the camera's axis (spriteData.js
+//     pixelAngleOffAxis), so a sprite anywhere on the screen carries I / d^2. sprites.glsl.js takes the centre's pa^2
+//     everywhere, which loses cos^3 of the light off axis (tests/manual/lights-probe.mjs found 0.859 at 18 degrees).
 
 import * as THREE from 'three';
 import { MeshBasicNodeMaterial } from 'three/webgpu';
@@ -185,6 +188,15 @@ function fetchInstance(u) {
 
 /** Radians per pixel at the centre of the view of the target being drawn: 2 tan(fov / 2) / height. */
 const pixelAngleNode = () => float(2).div(cameraProjectionMatrix.element(1).y.mul(screenSize.y).max(1));
+/**
+ * The pixel's angular size toward `rel` (eye to point, world): pa cos^1.5 of the angle off the camera's axis
+ * (spriteData.js pixelAngleOffAxis), so a sprite off the screen's centre keeps its flux.
+ */
+const pixelAngleToward = (rel) => {
+  const v = cameraViewMatrix.mul(vec4(rel, 0)).xyz;
+  const c = max(v.z.negate().div(max(length(v), 1e-6)), 1e-3);
+  return pixelAngleNode().mul(pow(c, 1.5));
+};
 
 // varyings of the sprites
 const vPx = varyingProperty('vec2', 'vSpPx');
@@ -204,11 +216,11 @@ function spriteVertexNode(u, gain) {
   return Fn(() => {
     const corner = attribute('corner', 'vec2');
     const { weight, p0, p1, p2, p3 } = fetchInstance(u);
-    const pixelAngle = pixelAngleNode().toVar('spPixelAngle');
     const viewport = screenSize;
 
     const on = u.uAmbient.lessThan(p3.x);
     const rel = p0.xyz.sub(cameraPosition).toVar('spRel');
+    const pixelAngle = pixelAngleToward(rel).toVar('spPixelAngle');
     const d0 = length(rel);
     const d = max(d0, 0.5).toVar('spD');
     const toEye = rel.negate().div(d).toVar('spToEye');
@@ -293,7 +305,6 @@ function twinVertexNode(u, gain) {
   return Fn(() => {
     const corner = attribute('corner', 'vec2');
     const { weight, p0, p1, p2, p3 } = fetchInstance(u);
-    const pixelAngle = pixelAngleNode().toVar('twPixelAngle');
     const viewport = screenSize;
     const on = T.uTwinWet.greaterThan(0).and(u.uAmbient.lessThan(p3.x));
 
@@ -308,6 +319,7 @@ function twinVertexNode(u, gain) {
     const dm = max(dm0, 1).toVar('twDm');
     const hsum = max(he.add(hl), 0.2);
     const r = m.mul(he.div(hsum)).toVar('twR');
+    const pixelAngle = pixelAngleToward(r).toVar('twPixelAngle'); // at the mirror point, where the twin is drawn
     const rq = eyeQ.add(r.xz);
     const along = dot(rq, fwd), across = dot(rq, vec2(fwd.y.negate(), fwd.x));
     const rLen = length(r.xz).toVar('twRLen');

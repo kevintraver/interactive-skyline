@@ -24,8 +24,10 @@ import { LIGHTING_UNITS } from '../env.js';
 
 export { LIGHTING_UNITS };
 
-/** The display the address asks for, as src/render/look.js reads it: 'classic' or 'physical'. */
-export const displayFromSearch = (search) => (new URLSearchParams(search || '').get('display') === 'classic' ? 'classic' : 'physical');
+import { displayOfSearch } from './display.js';
+
+/** The display the address asks for, as src/render/look.js reads it: 'classic' or 'physical' (display.js). */
+export const displayFromSearch = displayOfSearch;
 
 let defaultNodes = null;
 /** env.nodes without an environment: the same shared uniforms (exposure, cityFactor) the app's env.nodes holds. */

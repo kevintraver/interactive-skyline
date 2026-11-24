@@ -16,3 +16,11 @@ export const TWIN_FOOT = 0.5;
 export const TWIN_LIST_M = 420;
 /** A written-once layer's twin list is rebuilt when the car has moved this far (m). */
 export const TWIN_RELIST_M = 20;
+
+/**
+ * The angular size of a pixel at angle t off the camera's axis, as the sprite rule must use it: a pixel there subtends
+ * pa^2 cos^3(t) on a flat image plane, so the rule takes pa cos^1.5(t) (cosOff = cos t). With it a sprite carries I / d^2
+ * anywhere on the screen; with pa alone it lost cos^3 of its light off axis (29 % at the edge of a 54-degree view).
+ * The node layer's rule (sprites.node.js); the GLSL layer keeps pa, as the classic renderer drew.
+ */
+export const pixelAngleOffAxis = (pa, cosOff) => pa * Math.max(cosOff, 1e-3) ** 1.5;

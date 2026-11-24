@@ -6,6 +6,15 @@
 //   lamps: false switches the lamps part off for that shot
 // --perf: for each shot also measure frames (rAF intervals over 120 frames, the clock paused and the frame redrawn
 // every tick) with the lamps part on and off, and print the part's per-frame JavaScript.
+//
+// Plan 01's renderer (plan 02, third stretch): --renderer webgpu or webgl (the backend) opens ?renderer=webgpu in the
+// shipped look (add --display classic for ?display=classic), with --parts (default lamps,headlights,obstruction) and
+// --quality (default high, pinned before Drive is entered: a level change while driving breaks plan 01's frame).
+// The clean view; screenshots are the canvas alone. Each shot's look may say headlights: false, high: true,
+// obstruction: false as well as lamps: false. --perf there measures each of the three parts' cost per frame: the
+// pipeline's frame drawn and the GPU waited for (WebGPU: queue.onSubmittedWorkDone; WebGL2: finish), the part on and
+// off interleaved frame by frame (120 pairs), medians and the difference; and each part's own JavaScript while the car
+// drives for 6 s.
 import { chromium } from '@playwright/test';
 import { mkdirSync, readFileSync } from 'node:fs';
 import { createEphemeris } from '../../src/drive/env.js';
@@ -20,6 +29,10 @@ const city = Array.isArray(cities) ? cities.find((c) => c.id === 'lv') : cities.
 const eph = createEphemeris(city);
 const DAY = Date.parse('2026-11-21T20:30:00Z'), NIGHT = Date.parse('2026-11-22T02:30:00Z');
 const timeOf = (when) => (when === 'day' ? DAY : when === 'night' ? NIGHT : eph.timeOfSunElevation(when.sun, DAY, true));
+
+const argOf = (name, fallback) => { const i = process.argv.indexOf(`--${name}`); return i >= 0 ? process.argv[i + 1] : fallback; };
+const backend = argOf('renderer', null);
+if (backend) { await newRenderer(); process.exit(0); }
 
 const browser = await chromium.launch({ channel: 'chromium', headless: true, args: ['--use-angle=metal', '--ignore-gpu-blocklist', '--enable-gpu'] });
 const page = await browser.newPage({ viewport: { width: 1280, height: 720 } });
@@ -130,3 +143,76 @@ for (const [name, s, when, look] of shots) {
   }
 }
 await browser.close();
+
+/** The shots and the cost on plan 01's renderer (see the header). */
+async function newRenderer() {
+  const parts = argOf('parts', 'lamps,headlights,obstruction'), level = argOf('quality', 'high'), display = argOf('display', null);
+  const browser = await chromium.launch({ channel: 'chromium', headless: true,
+    args: ['--use-angle=metal', '--ignore-gpu-blocklist', '--enable-gpu', '--enable-unsafe-webgpu', '--enable-webgpu-developer-features',
+      '--host-resolver-rules=MAP *.open-meteo.com ~NOTFOUND, MAP aviationweather.gov ~NOTFOUND, MAP api.weather.gov ~NOTFOUND, MAP mesonet.agron.iastate.edu ~NOTFOUND'] });
+  const page = await browser.newPage({ viewport: { width: 1280, height: 720 }, deviceScaleFactor: 1 });
+  page.on('console', (m) => { if (m.type() === 'error' || m.type() === 'warning') console.log(`[${m.type()}]`, m.text().slice(0, 300)); });
+  page.on('pageerror', (e) => console.log('[pageerror]', e.message));
+  await page.addInitScript(() => { try { localStorage.clear(); localStorage.setItem('slc-skyline-hinted', '1'); } catch {} });
+  await page.routeWebSocket(/./, () => {});
+  const q = `city=lv&renderer=webgpu&backend=${backend === 'webgl' ? 'webgl' : 'webgpu'}&parts=${parts}${display ? `&display=${display}` : ''}`;
+  await page.goto(`http://localhost:${port}/?${q}`, { timeout: 300000 });
+  await page.waitForFunction(() => performance.getEntriesByName('skyline-ready').length > 0 && window.__skyline?.attractions && window.__skyline?.drive, null, { timeout: 300000 });
+  console.log('renderer:', JSON.stringify(await page.evaluate(async (level) => {
+    const s = window.__skyline; s.quality?.set(level); s.attractions.freeze(20); await s.attractions.ready;
+    await s.drive.start('i15n', { view: 'clean' }); s.drive.pause(); s.drive.setView('clean');
+    return { ...s.rendererInfo, quality: s.quality?.level };
+  }, level)));
+  await page.evaluate(() => { const c = window.__skyline.renderer.domElement; for (const el of document.body.querySelectorAll('*')) if (el !== c && !el.contains(c) && !(el instanceof SVGElement)) el.style.visibility = 'hidden'; });
+  // the three parts as switches: { name: [get part, setOn] }
+  const SWITCHES = `({
+    lamps: (on) => window.__skyline.scene.getObjectByName('lamp-sprites')?.userData.lampsPart?.setEnabled(on),
+    headlights: (on) => window.__skyline.scene.getObjectByName('drive')?.userData.headlightsPart?.setEnabled(on),
+    obstruction: (on) => { const m = window.__skyline.scene.getObjectByName('obstruction-lights'); if (m) m.visible = on; },
+  })`;
+  for (const [name, sM, when, look] of shots) {
+    const { lamps = true, headlights = true, obstruction = true, high = false, route = null, ...lk } = look || {};
+    const info = await page.evaluate(async ({ s, t, look, on, high, route, SWITCHES }) => {
+      const sk = window.__skyline, d = sk.drive, sw = eval(SWITCHES);
+      if (route && d.route()?.id !== route) { await d.start(route, { s, t, view: 'clean' }); d.pause(); }
+      for (const [k, v] of Object.entries(on)) sw[k](v);
+      sk.scene.getObjectByName('drive')?.userData.headlightsPart?.setHigh(high);
+      d.pause(); d.seek({ s, t }); d.look({ yaw: 0, pitch: 0, lens: 50, ...look });
+      await d.whenSettled();
+      for (let i = 0; i < 4; i++) await new Promise((r) => requestAnimationFrame(r));
+      await d.whenSettled();
+      if (on.obstruction) sw.obstruction(true); // setLook may have run
+      const p = d.pose(), st = d.stats();
+      return { s: Math.round(p.s), sun: +p.sunElevation.toFixed(2), ev100: +sk.env.state.exposure.ev100.toFixed(2), exposure: sk.env.nodes.exposure.value,
+        lamps: st.lamps && { sprites: st.lamps.sprites, pools: st.lamps.pools?.complete, budget: st.lamps.budget, poolPx: st.lamps.poolPx },
+        headlights: st.headlights && { on: st.headlights.on, high: st.headlights.high }, obstruction: st.obstruction && { lamps: st.obstruction.lamps } };
+    }, { s: sM, t: timeOf(when), look: lk, on: { lamps, headlights, obstruction }, high, route, SWITCHES });
+    await page.screenshot({ path: `${out}/${name}.png` });
+    console.log('shot', name, JSON.stringify(info));
+    if (!perf) continue;
+    const cost = await page.evaluate(async ({ parts, SWITCHES }) => {
+      const sk = window.__skyline, d = sk.drive, sw = eval(SWITCHES), r = sk.renderer;
+      const sync = async () => { if (r.backend.device) await r.backend.device.queue.onSubmittedWorkDone(); else r.backend.gl.finish(); };
+      const frame = async () => { await sync(); const t0 = performance.now(); sk.pipeline.render(); await sync(); return performance.now() - t0; };
+      const med = (x) => { const y = [...x].sort((a, b) => a - b); return y[y.length >> 1]; };
+      const out = {};
+      for (const name of parts.split(',')) {
+        if (!sw[name]) continue;
+        const t = { on: [], off: [] };
+        for (let i = 0; i < 10; i++) await frame();
+        for (let i = 0; i < 240; i++) { const on = i % 2 === 0; sw[name](on); t[on ? 'on' : 'off'].push(await frame()); if (i % 24 === 23) await new Promise((res) => setTimeout(res, 0)); }
+        sw[name](true);
+        out[name] = { onP50: +med(t.on).toFixed(2), offP50: +med(t.off).toFixed(2), deltaP50: +(med(t.on) - med(t.off)).toFixed(2) };
+      }
+      // each part's own JavaScript while the car drives
+      const p0 = d.pose(); d.play(); await new Promise((res) => setTimeout(res, 6000)); d.pause();
+      const st = d.stats(); d.seek({ s: p0.s, t: p0.t });
+      for (const name of parts.split(',')) if (out[name] && st[name]?.js) out[name].js = { mean: +st[name].js.mean.toFixed(3), p95: +st[name].js.p95.toFixed(2) };
+      out.sessionJs = st.js?.total && { mean: +st.js.total.mean.toFixed(2), p95: +st.js.total.p95.toFixed(2) };
+      out.sprites = st.lamps?.sprites;
+      return out;
+    }, { parts, SWITCHES });
+    console.log('  cost', JSON.stringify(cost));
+  }
+  await browser.close();
+}

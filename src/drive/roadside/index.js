@@ -117,6 +117,9 @@ export function createRoadside({ signs, roadnet, base, earthR, parent, anisotrop
   let shown = new Set(), bands = new Map(), wanted = [], dirty = false, timer = null;
   let waiters = [];
 
+  // the sheeting codes as float32 on plan 01's renderer: its WebGL2 backend cannot read a byte attribute as the uint it
+  // declares, and WebGPU has no one-byte vertex format (the lights part reads them, src/drive/lights/headlamps.node.js)
+  const f32 = (a) => (legacy ? a : Float32Array.from(a));
   function setAttrs(geom, attrs, index) {
     for (const [name, arr, size] of attrs) geom.setAttribute(name, new THREE.BufferAttribute(arr, size));
     geom.setIndex(new THREE.BufferAttribute(index, 1));
@@ -129,7 +132,7 @@ export function createRoadside({ signs, roadnet, base, earthR, parent, anisotrop
     packed.faces.forEach((pf, p) => {
       const old = faceMeshes[p].geometry;
       const g = new THREE.BufferGeometry();
-      setAttrs(g, [['position', pf.position, 3], ['normal', pf.normal, 3], ['uv', pf.uv, 2], ['retro', pf.retro, 1], ['retroLegend', pf.retroLegend, 1]], pf.index);
+      setAttrs(g, [['position', pf.position, 3], ['normal', pf.normal, 3], ['uv', pf.uv, 2], ['retro', f32(pf.retro), 1], ['retroLegend', f32(pf.retroLegend), 1]], pf.index);
       for (const gr of pf.groups) g.addGroup(gr.start, gr.count, gr.band);
       faceMeshes[p].geometry = g;
       faceMeshes[p].visible = pf.index.length > 0;

@@ -20,11 +20,15 @@
 //
 // When: from dusk, by the look's `lights` (0 by day, 1 by night, as the street lamps), scaled into the scene by
 // env.js's units like every light source of the drive.
+//
+// Plan 01's renderer (third stretch, decisions 2 and 6): the same part with sprites.node.js, picked by ctx.legacy. The
+// lamps are their candela there (photometry.node.js: the pre-exposure and the lights-out slider); the look's `lights`
+// still says when they are on, but no longer fades them in the shipped look (display.js).
 
 import { curveDrop } from '../../world/frame.js';
 import { decodeCell } from '../corridor/format.js';
 import { groundUnder } from '../corridor/mesher.js';
-import { createSpriteLayer } from './sprites.js';
+import { displayFade, displayOfSearch } from './display.js';
 import { createTimings } from '../timing.js';
 
 /** Buildings taller than this (metres above their ground) carry obstruction lights. */
@@ -145,6 +149,9 @@ export async function createObstructionPart(ctx) {
   const { app, env, base } = ctx;
   const { renderer, camera } = app;
   const tall = app.tall || [];
+  const legacy = ctx.legacy !== false;
+  const { createSpriteLayer } = await (legacy ? import('./sprites.js') : import('./sprites.node.js'));
+  const display = legacy ? 'classic' : displayOfSearch(globalThis.location?.search);
 
   // the corridor's tall buildings (fixed); missing data leaves just the towers
   let corridor = [];
@@ -162,7 +169,7 @@ export async function createObstructionPart(ctx) {
   const scan = () => { towers = tall.map((e) => ({ entry: e, lights: towerLights(e, base) })).filter((t) => t.lights); };
   scan();
   const capacity = Math.max(64, (corridor.reduce((a, c) => a + c.points.length, 0) + 4 * tall.length + 64));
-  const layer = createSpriteLayer({ capacity, name: 'obstruction-lights', minPx: 1.2 });
+  const layer = createSpriteLayer({ capacity, name: 'obstruction-lights', minPx: 1.2, ...(legacy ? {} : { photometry: { nodes: env.nodes } }) });
   layer.mesh.visible = false;
   ctx.group.add(layer.mesh);
 
@@ -229,12 +236,15 @@ export async function createObstructionPart(ctx) {
         const k = flashKey(simMs);
         if (k !== lastFlash) { lastFlash = k; for (const [i, id] of flashers) layer.data[0][i * 4 + 3] = FLASH_CD * flashOn(id, simMs); layer.commitRows(count); }
       }
-      layer.setFrame({ camera, renderer, gain: env.lighting.units.nit * lights, visibility: env.weather.state().visibilityM || 80000 });
+      layer.setFrame({
+        camera, renderer, ...(legacy ? { gain: env.lighting.units.nit * lights } : { fade: displayFade({ legacy, display, fade: lights }) }),
+        visibility: env.weather.state().visibilityM || 80000,
+      });
       timings.add(performance.now() - t0);
     },
     stats() {
       const t = timings.summary();
-      return { on, lights, lamps: count, towers: towers.length, corridor: corridor.length, flashing: flashers.length, sprites: on ? layer.drawn : 0, js: { mean: t.mean, p95: t.p95 } };
+      return { on, lights, renderer: legacy ? 'classic' : 'node', display, lamps: count, towers: towers.length, corridor: corridor.length, flashing: flashers.length, sprites: on ? layer.drawn : 0, js: { mean: t.mean, p95: t.p95 } };
     },
     /** For tests: the lamps as drawn, [{ x, y, z, intensity }]. */
     lamps() {
