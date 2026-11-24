@@ -61,6 +61,7 @@ Written by the orchestrating session when the build started, on the user's instr
 - **F0.2 shrinks** to the adapter and the few stand-ins in the table above.
 - **F2.2's "a person chooses"** is done by the orchestrating session against section 6.2's criteria, with the reason for each choice written into `selection.json`. The user can swap any flight later by editing that file and running the bake.
 - **F4.7** extends plan 2's provider (which already serves three grids and patches) to any number of nested grids with chunked meshes, and keeps its interface.
+- **F6.1's `valley` grid contains plan 2's `wide` grid.** Plan 2 has since added a coarse `wide` grid (160 m posts, x −56 to +48 km, y −64 to +48 km) for the drives. It is left alone, and `valley` is built as x −60 to +70 km, y −64 to +50 km so that it covers everything `wide` does. The flight draws `valley`; the drive keeps `wide`. Folding the two into one is a later tidy-up for whoever merges the plans.
 - **F8.3 (Salt Lake City), F8.4 to F8.6 (stretch)** are attempted last and only if the Las Vegas work is verified.
 
 ### The flight file, settled (24 November)
