@@ -192,6 +192,14 @@ The owner asked again for the build to be driven to completion, and for bugs to 
 12. **A billboard's face is drawn inside what the tone mapping shows.** At night a digital face is 300 cd/m² beside a road of 1 to 2, and the frame has one exposure. The face's white level is drawn no higher than 1.4 in the pre-exposed buffer (`src/drive/roadside/faceDisplay.js`); the board's luminance in the registry and the light it throws are unchanged.
 13. **The driver's night adaptation.** Plan 01's night key (the scene's average 5 stops under mid-grey) was fitted to a city seen from the air, with its sources authored to sit near 1.2 to 1.4 in the buffer; a road at 0.25 to 0.5 cd/m² then reads as black. While driving, a stage at `afterBloom` lifts the dim parts of the frame by up to 4 times at night and leaves values near 1.2 where they are, hue kept, for the whole frame (`src/drive/adaptation.node.js`); by day it is the identity. Nothing is tuned class by class and `probe()` is not affected. Separately, the pavement's return under headlamps is its coefficient of retroreflected luminance (R_L, as for markings), not a matte surface's, which is what lets a low beam reach 60 m.
 
+**The shortest path (owner, 2026-11-24).** The owner asked to leave the VIIRS fit (D7.1, D7.2) aside and to take the shortest path to a finished branch. What that keeps: every part on the new renderer, the road readable at night, Drive opening on the new renderer by default, and the tests green. What it drops from this branch, each to be picked up at the merge with plan 01's phase 3 or later:
+
+- Deleting the GLSL path and the stand-ins. The classic path stays behind `?renderer=legacy` until plan 01 deletes the classic renderer, and goes in that merge.
+- The frame-rate work at device pixel ratio 2: plan 01's quality governor owns the render scale; it is measured once and reported.
+- A separate pass over the controls by real input: the drive's interface spec covers it.
+- The cabin's fallback for a logarithmic depth buffer, variety in the billboards' lettering, joining `tests/data` to `tests/python`.
+- Further merges of plan 01 beyond its small commits; its phase 3 is the next merge.
+
 **State of the third stretch** (kept current as work lands).
 
 | Work | State |
@@ -211,7 +219,7 @@ The owner asked again for the build to be driven to completion, and for bugs to 
 | Frame rate at device pixel ratio 2, diagnosed on the new renderer | After the port. |
 | Luminance probes of section 8.3 | After the port (plan 01's `pipeline.probe`). |
 | Delete the GLSL path, the interim seams and the stand-ins; goldens, budgets, CI | Last. |
-| D7.1, D7.2 fit to VIIRS | Still blocked on a NASA Earthdata login. |
+| D7.1, D7.2 fit to VIIRS | Left aside by the owner (2026-11-24); it needs a NASA Earthdata login. |
 
 **Found in plan 01's code and left for it** (the drive works around each):
 
