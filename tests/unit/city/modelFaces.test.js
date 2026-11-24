@@ -2,13 +2,14 @@
 // stability pass found (Salt Lake City's 560 East South Temple and Clift Building, The Cosmopolitan Boulevard Tower).
 // coplanar.js moves them apart as a city's models load. Here: the geometry on made-up faces, then every model of
 // both cities read from its GLB file, as the app flattens it: how many have such faces (a number to update when a
-// model arrives with them, or is fixed), and that after the separation none is left and nothing moved over 5 cm.
+// model arrives with them, or is fixed), that after the separation none is left and nothing moved over 5 cm, and
+// that public/models/coplanar.json, the faces to move worked out ahead of time, still matches the models.
 import fs from 'node:fs';
 import path from 'node:path';
 import { describe, it, expect, beforeAll } from 'vitest';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { flatten } from '../../../src/customModels.js';
-import { coplanarOverlaps, coplanarFaces, overlapArea, separateCoplanarFaces, SEPARATION } from '../../../src/city/coplanar.js';
+import { coplanarOverlaps, coplanarFaces, overlapArea, separateCoplanarFaces, separateModels, separationTable, outlinePositions, SEPARATION, TABLE } from '../../../src/city/coplanar.js';
 import { ROOT } from '../../helpers/staticServer.js';
 
 // models with faces to separate, by city (45 of 131 and 32 of 76 on 23 November 2026)
@@ -72,6 +73,28 @@ describe('coplanar faces: separated', () => {
     expect(m.pos).toEqual(before);
   });
 
+  it('separateModels takes a model\'s faces from the table while the entry fits it, else works them out', () => {
+    const make = () => model([[square(0, 0, 10, 10, 40), GLASS], [square(-1, -1, 11, 11, 40), ROOF]]);
+    const table = separationTable(new Map([['a', make()]]));
+    expect(table.a.moved).toEqual([[0, SEPARATION], [1, SEPARATION]]);
+    // a table entry is used as it stands: here one that moves only the first face, 1 cm
+    const fromTable = separateModels(new Map([['a', make()]]), { a: { ...table.a, moved: [[0, 0.01]] } }).get('a');
+    expect(fromTable.pos[1]).toBeCloseTo(39.99);
+    expect(fromTable.pos[10]).toBe(40);
+    // an entry for another model (other triangle count or positions) is ignored
+    for (const stale of [{ ...table.a, tris: 3, moved: [[0, 0.01]] }, { ...table.a, check: table.a.check ^ 1, moved: [[0, 0.01]] }]) {
+      const m = separateModels(new Map([['a', make()]]), { a: stale }).get('a');
+      expect(m.pos[1]).toBeCloseTo(40 - SEPARATION);
+      expect(m.pos[10]).toBeCloseTo(40 - SEPARATION);
+    }
+    // and its edge lines are drawn from the faces as modelled, wherever it is placed
+    const m = separateModels(new Map([['a', make()]])).get('a');
+    const placed = Float32Array.from(m.pos, (v, i) => v + [100, 3, -50][i % 3]);
+    const outline = outlinePositions(m, placed);
+    expect(Array.from(outline.slice(0, 18)).filter((_, i) => i % 3 === 1).every((y) => Math.abs(y - 43) < 1e-4)).toBe(true);
+    expect(Array.from(outline.slice(18))).toEqual(Array.from(placed.slice(18)));
+  });
+
   it('a stack of three shares the 5 cm: the last on top, each earlier one further back', () => {
     const m = model([[square(0, 0, 10, 10, 40), GLASS], [square(-1, -1, 11, 11, 40), ROOF], [square(2, 2, 8, 8, 40), BAND]]);
     separateCoplanarFaces(m);
@@ -114,6 +137,15 @@ describe('coplanar faces: every model of both cities', () => {
       }
     });
   }
+
+  it(`${TABLE} is up to date (node tools/stability/model-faces.mjs --write)`, () => {
+    const table = JSON.parse(fs.readFileSync(path.join(ROOT, 'public', TABLE), 'utf8'));
+    for (const city of Object.keys(AFFECTED)) {
+      const now = separationTable(new Map(models[city].map((m) => [m.id, m.model])));
+      expect(Object.keys(table[city]).sort(), city).toEqual(Object.keys(now).sort());
+      for (const id of Object.keys(now)) expect(table[city][id], `${city} ${id}`).toEqual(now[id]);
+    }
+  });
 
   it('the four models the stability pass named are among them, and lose their fights', () => {
     const named = { slc: ['w595951117', 'w172543253'], lv: ['w472669744'] };
