@@ -74,3 +74,26 @@ export function mirrorsDue(frameNo, mirrors, all = false) {
 export function mirrorPixels(frameNo, mirrors, all = false) {
   return mirrorsDue(frameNo, mirrors, all).reduce((a, n) => a + mirrors[n].size[0] * mirrors[n].size[1], 0);
 }
+
+// ---------------------------------------------------------------- plan 01's quality levels (third stretch, decision 8)
+// On plan 01's renderer app.quality's level picks the preset, not the device probe: Low the low preset (with the low
+// model), High the high preset, Ultra the high preset with larger mirrors (interior 576 x 162, doors 384 x 230, at the
+// same rates: one pass a frame at most, 90.8 k mirror pixels a frame on average, within 9.1's 100 k) and rain sites 1.6 cm
+// apart (104 x 51 = 5,304 sites).
+export const QUALITY_GLASS = Object.freeze({
+  low: GLASS_PRESETS.low,
+  high: GLASS_PRESETS.high,
+  ultra: Object.freeze({
+    ...GLASS_PRESETS.high,
+    mirrors: Object.freeze({
+      ...GLASS_PRESETS.high.mirrors,
+      center: Object.freeze({ size: [576, 162], every: 2, phase: 0 }),
+      left: Object.freeze({ size: [384, 230], every: 4, phase: 1 }),
+      right: Object.freeze({ size: [384, 230], every: 4, phase: 3 }),
+    }),
+    rain: Object.freeze({ enabled: true, siteM: 0.016 }),
+  }),
+});
+
+/** The glass options for one of plan 01's quality levels ('low' | 'high' | 'ultra'); anything else by the cabin's model. */
+export const glassPresetForLevel = (level, model) => QUALITY_GLASS[level] || glassPresetFor(model);

@@ -16,19 +16,10 @@
 
 import * as THREE from 'three';
 import { glassRainShaders } from './glassRain.glsl.js';
-import { DROP, glassOf, siteLayout, arrivalRate, runSpeed, createBinWindow, glassDrops } from './drops.js';
-import { wiperSchedule, wipePhase, sweepAtPhase, comfortOf, bladeAngle } from './wipers.js';
+import { DROP, glassOf, siteLayout } from './drops.js';
 import { WIPERS } from './windshield.js';
-import { relativeRain } from '../weather/rainMirror.js';
 import { createTimings } from '../timing.js';
-
-const SAMPLES = 12;
-/** Micro-drops of the mist per unit of arriving water (ASSUMED: rain holds an order of magnitude more drops under
- * 1 mm than over it, Marshall-Palmer's ratio at a few mm/h), each in a MIST_CELL (4 mm) cell. */
-const MIST_K = 10, MIST_CELL = 0.004;
-/** The lens: a drop shows the scene over MAG times its own radius, upside down (ASSUMED, by eye; a real drop shows a
- * still wider field). */
-const MAG = 14;
+import { createRainFeed, SAMPLES, MAG } from './glassRainFeed.js';
 
 /**
  * @param {{ cabinScene: THREE.Scene, corners: object, options: object, env: object, session: object,
@@ -121,77 +112,23 @@ export function createGlassRain({ cabinScene, corners, options, env, session, re
   const meshes = [film, drops, blades];
   for (const m of meshes) { m.frustumCulled = false; m.visible = false; m.name = m.material.name; cabinScene.add(m); }
 
-  let enabled = options.enabled !== false;
-  let speedOverride = null;
-  let R = 0, sched = wiperSchedule(0), phase = 0, tSec = 0, raining = false, comfort = { c: 0, exposureS: 0, wipesPerRealS: 0 };
-  let win = null, poseNow = null, rateNow = 0;
-  let state = null;
+  const feed = createRainFeed({ glass, layout, env, session, enabled: options.enabled !== false });
+  const out = {
+    bins: uniforms.uBins.value, k0: uniforms.uK0, tw: uniforms.uTw, renewOffset: uniforms.uRenewOffset, wipe: uniforms.uWipe.value,
+    comfort: uniforms.uComfort, q: uniforms.uQ.value, qStep: uniforms.uQStep, qRange: uniforms.uQRange.value,
+    mistRate: uniforms.uMistRate, haze: uniforms.uHaze, sky: uniforms.uSky.value, blade: uniforms.uBlade.value,
+  };
+  let raining = false;
   const timing = createTimings();
-
-  // one bin of absolute simulation time: the expected arrivals per site and the runners' speed up the glass, from the
-  // car's pose at the bin's start. Pure in k for one cache key (the journey and its timing, the weather, the hold).
-  let held = null;
-  function source(k) {
-    const journey = session?.journey;
-    const tMs = k * DROP.BIN_S * 1000;
-    let pose = held ? held : journey ? journey.poseAt(tMs) : poseNow;
-    if (speedOverride !== null && pose) pose = { ...pose, speed: speedOverride };
-    if (!pose) return { lambda: 0, vy: 0 };
-    const rel = relativeRain(state, pose);
-    return { lambda: (arrivalRate(R, rel.velocityCar, glass, rel.fallMps) * DROP.BIN_S) / layout.count, vy: runSpeed(pose.speed || 0) };
-  }
-  const bins = createBinWindow(source);
 
   /**
    * @param {object} frame the session's frame  @param {{ sky?: THREE.Color }} [o] sky: the haze's colour (linear)
    */
   function update(frame, { sky } = {}) {
     const t0 = performance.now();
-    state = env?.weather?.state?.() || { precipMmPerHour: 0 };
-    R = state.precipMmPerHour || 0;
-    raining = enabled && R > 0;
-    sched = wiperSchedule(R);
-    tSec = frame.simMs / 1000;
-    phase = wipePhase(tSec, sched);
+    raining = feed.update(frame, out, { sky });
     for (const m of meshes) m.visible = raining;
     // the blades show when parked too (they sit along the cowl, mostly below the opening), but draw nothing new dry
-    if (!raining) { win = null; timing.add(performance.now() - t0); return; }
-    poseNow = frame.pose;
-    const journey = session?.journey;
-    const locked = !!session?.locked;
-    held = locked && journey ? { ...journey.poseAtS(frame.pose.s), speed: 0 } : null;
-    const key = `${journey?.id}|${journey?.departMs}|${R}|${state.windMps}|${state.windFromDeg}|${locked ? Math.round(frame.pose.s * 10) : ''}|${speedOverride}`;
-    win = bins.at(tSec, key);
-    const b = uniforms.uBins.value;
-    for (let j = 0; j < DROP.BINS; j++) b[j].fromArray(win.data, 4 * j);
-    uniforms.uK0.value = win.k0 >>> 0;
-    uniforms.uTw.value = win.tw;
-    uniforms.uRenewOffset.value = win.renewOffset;
-    const on = Number.isFinite(sched.periodS);
-    uniforms.uWipe.value.set(phase, sched.sweepS, on ? sched.periodS : 1, on ? 1 : 0);
-    rateNow = frame.rate;
-    comfort = comfortOf(sched, frame.rate, frame.playing);
-    uniforms.uComfort.value = comfort.c;
-    // the blades over the exposure: 12 instants from now back
-    let step = 0, prev = null, qlo = 1, qhi = 0;
-    for (let s = 0; s < SAMPLES; s++) {
-      const ph = on ? wipePhase(tSec - (comfort.exposureS * s) / (SAMPLES - 1), sched) : 0;
-      const q = sweepAtPhase(ph, sched);
-      uniforms.uQ.value[s] = q;
-      if (prev !== null) step = Math.max(step, Math.abs(q - prev));
-      prev = q; qlo = Math.min(qlo, q); qhi = Math.max(qhi, q);
-    }
-    uniforms.uQStep.value = step;
-    uniforms.uQRange.value.set(qlo, qhi);
-    // the mist: micro-drops per cell per second at the arrival rate now
-    const rel = relativeRain(state, speedOverride !== null ? { ...frame.pose, speed: speedOverride } : held || frame.pose);
-    const perM2 = arrivalRate(R, rel.velocityCar, glass, rel.fallMps) / glass.area;
-    uniforms.uMistRate.value = perM2 * MIST_CELL * MIST_CELL * MIST_K;
-    uniforms.uHaze.value = 0.25 + 0.25 * Math.min(1, R / 12);
-    if (sky) {
-      const c = uniforms.uSky.value.copy(sky).convertLinearToSRGB();
-      uniforms.uBlade.value.copy(c).multiplyScalar(0.06).addScalar(0.008);
-    }
     timing.add(performance.now() - t0);
   }
 
@@ -243,31 +180,18 @@ export function createGlassRain({ cabinScene, corners, options, env, session, re
   }
   let copied = null;
 
-  /** What the GPU draws, from the JavaScript mirror (for tests: a few milliseconds over every site). */
-  function mirrorDrops() {
-    if (!raining || !win) return [];
-    return glassDrops({ layout, win: { ...win, data: win.data.slice() }, wipe: { phase, sched }, wipers: WIPERS });
-  }
-
   return {
     meshes, layout, glass, frameTexture: frameTex,
-    get enabled() { return enabled; },
+    get enabled() { return feed.enabled; },
     get raining() { return raining; },
-    setEnabled(v) { enabled = !!v; if (!enabled) for (const m of meshes) m.visible = false; },
-    setSpeedOverride(v) { speedOverride = Number.isFinite(v) ? v : null; },
+    setEnabled(v) { feed.setEnabled(v); if (!feed.enabled) for (const m of meshes) m.visible = false; },
+    setSpeedOverride: feed.setSpeedOverride,
     update,
     copyFrame,
-    drops: mirrorDrops,
+    drops: feed.drops,
     /** { mode, angle (the driver's blade, degrees), angles, q, dropCount, comfort, rate } */
-    state() {
-      const q = sweepAtPhase(phase, sched);
-      return {
-        mode: sched.mode, q, angle: bladeAngle(q, WIPERS[0]), angles: WIPERS.map((w) => bladeAngle(q, w)),
-        dropCount: mirrorDrops().length, periodS: sched.periodS, comfort: comfort.c, exposureS: comfort.exposureS,
-        rateMmPerHour: R, clockRate: rateNow, sites: layout.count,
-      };
-    },
-    stats: () => ({ enabled, raining, mode: sched.mode, sites: layout.count, bins: bins.size, copied, js: timing.summary() }),
+    state: feed.state,
+    stats: () => ({ enabled: feed.enabled, raining, mode: feed.mode, sites: layout.count, bins: feed.binCount, copied, js: timing.summary() }),
     dispose() {
       for (const m of meshes) { cabinScene.remove(m); m.geometry.dispose(); }
       meshes[0].material.dispose(); meshes[1].material.dispose(); meshes[2].material.dispose();

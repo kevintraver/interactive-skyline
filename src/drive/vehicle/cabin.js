@@ -25,63 +25,24 @@
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { localUp } from '../../world/frame.js';
-import { instrumentText, screenText, createInstrumentCanvas, createScreenCanvas } from './displays.js';
+import { createInstrumentCanvas, createScreenCanvas } from './displays.js';
 import { createTimings } from '../timing.js';
 import { createMirrors } from './mirrors.js';
 import { createWindshield } from './windshield.js';
 import { createGlassRain } from './glassRain.js';
 import { glassPresetFor } from './glassPresets.js';
-import { isSoftwareRenderer } from '../renderScale.js';
+import { MODELS, FILL, PAINT, chooseCabinModel, probeDevice, roleOf, loadCabinMeta, cabinGlass, createDisplayDriver } from './cabinCommon.js';
 
+export { chooseCabinModel, probeDevice };
 export const CABIN_NEAR = 0.05;
 export const CABIN_FAR = 6;
-const MODELS = '/models/drive/';
-/** The interior fill: this share of the sky light's strength reaches inside from all round (assumed). */
-const FILL = 1.3;
-/** The displays redraw at most this often (real time), and at once when the pose jumps. */
-const REDRAW_MS = 100;
-
-/**
- * Which model a device gets. Low on a software renderer, on a device that reports 4 GB of memory or less or 4
- * logical cores or fewer, and on a phone (a coarse pointer and a screen under 768 px on its short side).
- * @param {{ software?: boolean, deviceMemory?: number, cores?: number, coarse?: boolean, minScreen?: number }} d
- * @returns {'high'|'low'}
- */
-export function chooseCabinModel({ software = false, deviceMemory, cores, coarse = false, minScreen } = {}) {
-  if (software) return 'low';
-  if (Number.isFinite(deviceMemory) && deviceMemory <= 4) return 'low';
-  if (Number.isFinite(cores) && cores <= 4) return 'low';
-  if (coarse && Number.isFinite(minScreen) && minScreen < 768) return 'low';
-  return 'high';
-}
-
-/** What chooseCabinModel needs, read from the browser and the renderer. */
-export function probeDevice(renderer) {
-  const software = isSoftwareRenderer(renderer);
-  const nav = typeof navigator === 'undefined' ? {} : navigator;
-  const coarse = typeof matchMedia === 'function' && matchMedia('(pointer: coarse)').matches;
-  const minScreen = typeof screen === 'undefined' ? undefined : Math.min(screen.width, screen.height);
-  return { software, deviceMemory: nav.deviceMemory, cores: nav.hardwareConcurrency, coarse, minScreen };
-}
-
-// Linear base colours. Matte and dark inside, as interiors are (a dashboard is about 4 % reflective); the
-// darker the part sits under the roof, the darker it is drawn, which stands in for the roof's shade.
-const PAINT = {
-  CabinDash: { color: [0.030, 0.031, 0.034], roughness: 0.92 },
-  CabinTrim: { color: [0.050, 0.051, 0.055], roughness: 0.85 },
-  CabinPillar: { color: [0.090, 0.090, 0.087], roughness: 0.95 },
-  Hood: { color: [0.32, 0.32, 0.31], roughness: 0.38 }, // a neutral mid-grey paint
-  MirrorHousing: { color: [0.035, 0.036, 0.04], roughness: 0.6 },
-};
 
 /** The cabin part. ctx is the part context (see parts.js). */
 export async function createCabin(ctx) {
   const { app, session, env } = ctx;
   const rig = session.rig;
   const { renderer, scene, settings, city } = app;
-  const metaRes = await fetch(`${MODELS}cabin.json`);
-  if (!metaRes.ok) throw new Error(`cabin.json: HTTP ${metaRes.status}`);
-  const meta = await metaRes.json();
+  const meta = await loadCabinMeta();
   const model = chooseCabinModel(probeDevice(renderer));
   const gltf = await new GLTFLoader().loadAsync(`${MODELS}${meta.files[model]}`);
   rig.setCabin(meta);
@@ -122,8 +83,7 @@ export async function createCabin(ctx) {
     if (o.name) byNode[o.name] = byNode[o.name] || o;
     if (!o.isMesh) return;
     o.frustumCulled = false; // a handful of meshes, all within a few metres: culling saves nothing
-    const owner = o.name in NODE_ROLES ? o.name : o.parent?.name;
-    const role = NODE_ROLES[owner];
+    const role = roleOf(o);
     const old = o.material;
     if (role === 'instruments') o.material = instrumentsMat;
     else if (role === 'screen') o.material = screenMat;
@@ -133,19 +93,7 @@ export async function createCabin(ctx) {
   });
 
   const v3 = (a) => new THREE.Vector3(...a);
-  const corners = (c) => Object.fromEntries(Object.entries(c).map(([k, v]) => [k, v3(v)]));
-  const face = (m) => {
-    const normal = v3(m.normal).normalize();
-    const center = v3(m.center);
-    return {
-      mesh: meshOf(byNode[m.node]), node: m.node, center, normal, right: v3(m.right), up: v3(m.up),
-      plane: new THREE.Plane().setFromNormalAndCoplanarPoint(normal, center),
-      width: m.width, height: m.height, corners: corners(m.corners), kind: m.kind || 'flat',
-      ...(m.radiusM ? { radiusM: m.radiusM } : {}), ...(m.minFovDeg ? { minFovDeg: m.minFovDeg } : {}),
-    };
-  };
-  const mirrors = { left: face(meta.mirrors.left), right: face(meta.mirrors.right), center: face(meta.mirrors.center) };
-  const windshield = { corners: corners(meta.windshield.corners) };
+  const { mirrors, windshield } = cabinGlass(meta, byNode);
 
   // the steering wheel turns about its own axis; its node sits at the pivot with no rotation
   const wheel = byNode[meta.wheel.node];
@@ -199,45 +147,11 @@ export async function createCabin(ctx) {
 
   // ---------------------------------------------------------------- displays
   let look = { night: false, dusk: 0 };
-  let route = null; // the journey whose line the screen shows
-  const drawn = { real: -Infinity, simMs: null, s: null, units: null, text: null, screen: null, dusk: null };
-  const readout = { speed: null, unit: null, clock: null, temp: null, next: null, dist: null, drawnAt: null, s: null, simMs: null };
-
-  function temperature() {
-    // the stand-in environment's weather has a placeholder temperature; only a real one is shown
-    const w = env?.weather;
-    if (!w || w.hasTemperature !== true) return null;
-    const t = w.state?.().tempC;
-    return Number.isFinite(t) ? t : null;
-  }
-
-  function updateDisplays(frame, force) {
-    const now = performance.now();
-    const journey = session.journey;
-    if (!journey || !frame.pose) return;
-    if (route !== journey) {
-      route = journey;
-      let road = null;
-      try { road = session.net.roadOf(journey.route); } catch { /* no line, the text still shows */ }
-      screenCanvas.setRoute(road, { s0: journey.s0, s1: journey.s1 });
-      force = true;
-    }
-    const units = settings.units;
-    // a jump: paused (a seek or a scrub), or simulation time moved further than the clock's own step
-    const expected = drawn.simMs === null ? 0 : (now - drawn.real) * (frame.rate || 1);
-    const jumped = drawn.simMs === null || (!frame.playing && frame.simMs !== drawn.simMs)
-      || Math.abs(frame.simMs - drawn.simMs - expected) > 2000 || units !== drawn.units || look.dusk !== drawn.dusk;
-    if (!force && !jumped && now - drawn.real < REDRAW_MS) return;
-    const held = session.locked || session.arrived;
-    const it = instrumentText({ speed: held ? 0 : frame.pose.speed, simMs: frame.simMs, tz: city.tz || 'UTC', units, tempC: temperature() });
-    const st = screenText({ s: frame.pose.s, s1: journey.s1, markers: journey.markers, to: journey.route.to, units });
-    const key = `${it.speed}|${it.unit}|${it.clock}|${it.temp}|${look.dusk}`;
-    if (key !== drawn.text) { instruments.draw(it, look.dusk); instrumentsTex.needsUpdate = true; drawn.text = key; }
-    const sKey = `${st.title}|${st.dist}|${Math.round(frame.pose.s / 25)}|${look.dusk}`;
-    if (sKey !== drawn.screen) { screenCanvas.draw(st, frame.pose.s, look.dusk); screenTex.needsUpdate = true; drawn.screen = sKey; }
-    Object.assign(drawn, { real: now, simMs: frame.simMs, s: frame.pose.s, units, dusk: look.dusk });
-    Object.assign(readout, { speed: it.speed, unit: it.unit, clock: it.clock, temp: it.temp, next: st.title, dist: st.dist, drawnAt: now, s: frame.pose.s, simMs: frame.simMs });
-  }
+  const displays = createDisplayDriver({
+    session, settings, city, env, instruments, screen: screenCanvas, look: () => look,
+    onDrawn: (which) => { (which === 'instruments' ? instrumentsTex : screenTex).needsUpdate = true; },
+  });
+  const updateDisplays = displays.update, readout = displays.readout;
 
   // ---------------------------------------------------------------- light, each frame
   const _inv = new THREE.Matrix4(), _dir = new THREE.Vector3(), _up = new THREE.Vector3(), _c = new THREE.Color();
@@ -317,6 +231,8 @@ export async function createCabin(ctx) {
     setLook(l) { look = { night: !!l.night, dusk: Number.isFinite(l.dusk) ? l.dusk : l.night ? 1 : 0 }; mirrorPass?.setLook(look); },
     /** The mirrors and the windshield layer (mirrors.js, windshield.js) and the options they were made with. */
     glass: { options: glassOptions, mirrors: mirrorPass, windshield: windshieldLayer, rain: rainLayer },
+    /** The drive's weather port (env.weather), for test scripts that set the rain. */
+    get weather() { return env?.weather ?? null; },
     /** The cabin's silhouette in the world's depth on or off (for measuring what it saves). */
     setDepthMask(v) { mask.enabled = !!v; },
     get depthMask() { return mask.enabled; },
@@ -416,16 +332,3 @@ void main() {
   gl_Position.z = -gl_Position.w;
 }`;
 const MASK_FRAGMENT = /* glsl */ `void main() { gl_FragColor = vec4( 0.0 ); }`;
-
-const NODE_ROLES = {
-  Instruments: 'instruments', CenterScreen: 'screen', MirrorLeft: 'mirror', MirrorRight: 'mirror', MirrorCenter: 'mirror',
-};
-
-/** The mesh of a node (a node with several primitives is a group of meshes: its first). */
-function meshOf(node) {
-  if (!node) return null;
-  if (node.isMesh) return node;
-  let m = null;
-  node.traverse((o) => { if (!m && o.isMesh) m = o; });
-  return m;
-}
