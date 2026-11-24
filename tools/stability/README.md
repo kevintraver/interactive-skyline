@@ -22,3 +22,9 @@ They are measurement tools, not part of `pnpm test`. Each takes the address of a
 Numbers on the Apple M4, 23 November 2026, before the fixes they led to: 60 of 183 tall Las Vegas buildings and 5 of
 76 in Salt Lake City showed more than 40 flipping blocks; a frame drawn while moving was between 0.8 and 2.0 times as
 bright as the same view once settled; the first frame came 2 to 3 s later than the classic renderer's in Las Vegas.
+
+After the three stability passes and the speed pass (24 November 2026, both backends): 1 Las Vegas building above 40
+blocks and none in Salt Lake City, none above 150 anywhere; the one left (the Arte Museum view) is the window edges of
+a building close to the camera moving by a pixel under the nudge, which the survey counts as flips. The moving and the
+settled frame have the same exposure at all 54 poses. The first frame comes 1,680 ms after navigation against the
+classic renderer's 1,639 ms in Las Vegas.
