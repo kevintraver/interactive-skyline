@@ -87,3 +87,38 @@ export function markingMaskOf(materials, regions, paint = null) {
   const ramp = rampOf(paint?.[source]?.white, source);
   return { data: classifyMarkings(src.data, src.width, src.height, { source, skip, ramp }), width: src.width, height: src.height, source };
 }
+
+// ---------------------------------------------------------------- the pavement's reference albedo (decision 13)
+const lin8 = (c) => { const x = c / 255; return x <= 0.04045 ? x / 12.92 : ((x + 0.055) / 1.055) ** 2.4; };
+/** The fallback when no atlas image can be read: the linear luminance of the atlas' base colours (atlas.js DAY lane, pave). */
+export const PAVEMENT_ALBEDO_FALLBACK = Object.freeze({ asphalt: 0.139, concrete: 0.324 });
+
+/**
+ * The mean linear albedo (Rec. 709 luminance) of the day atlas over a span of pixel columns, all rows. Pure.
+ * @param {Uint8ClampedArray|Uint8Array} rgba  @param {number} width  @param {number} height  @param {number[]} span [x0, x1)
+ */
+export function meanAlbedo(rgba, width, height, [x0, x1]) {
+  let s = 0, n = 0;
+  const a = Math.max(0, Math.floor(x0)), b = Math.min(width, Math.ceil(x1));
+  for (let y = 0; y < height; y += 2) for (let x = a; x < b; x += 2) {
+    const i = (y * width + x) * 4;
+    s += 0.2126 * lin8(rgba[i]) + 0.7152 * lin8(rgba[i + 1]) + 0.0722 * lin8(rgba[i + 2]); n++;
+  }
+  return n ? s / n : NaN;
+}
+
+/**
+ * The pavement's reference albedo for its R_L (headlamps.node.js): the mean of the day atlas over the asphalt lane
+ * and over the concrete lane, so that the pavement's return is R_L x albedo / reference x E_perp: R_L on average, with
+ * the atlas' wear, oil and joints showing through. regions: atlas.js REGIONS in the image's pixel columns.
+ * @param {{ map?: object }} materials  @param {{ lane: number[], laneC: number[] }} regions
+ * @returns {{ asphalt: number, concrete: number, source: 'atlas' | 'fallback' }}
+ */
+export function pavementAlbedo(materials, regions) {
+  const px = regions?.lane && regions?.laneC ? pixelsOf(materials?.map?.image) : null;
+  if (!px) return { ...PAVEMENT_ALBEDO_FALLBACK, source: 'fallback' };
+  const asphalt = meanAlbedo(px.data, px.width, px.height, regions.lane);
+  const concrete = meanAlbedo(px.data, px.width, px.height, regions.laneC);
+  if (!(asphalt > 0) || !(concrete > 0)) return { ...PAVEMENT_ALBEDO_FALLBACK, source: 'fallback' };
+  return { asphalt, concrete, source: 'atlas' };
+}

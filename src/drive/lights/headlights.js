@@ -8,7 +8,8 @@
 // Lambert and standard material in the scene, with the map projected through a perspective camera that cannot hold
 // the beam's +-45 degrees without wasting most of its texels. The retro term (section 7.4) follows the beam term on
 // the reflective materials: R_A(alpha, beta) x E_perp / cos(nu) for sheeting, R_L(alpha) x E_perp for markings, from a
-// small table of retro.js's coefficients. GLSL: headlamps.glsl.js; JavaScript mirrors: headlampMirror.js.
+// small table of retro.js's coefficients. GLSL: headlamps.glsl.js; JavaScript mirrors: headlampMirror.js. In the
+// shipped look on plan 01's renderer the pavement itself returns R_L x E_perp (decision 13, headlamps.node.js).
 //
 // Lamps. DEFAULT_LAMPS (beam.js) at the car's nose on the journey's pose (pose.position is the car's centre line on
 // the road; the nose is NOSE_M ahead, from public/models/drive/cabin.json's body.front less the lamp's depth), so the
@@ -39,7 +40,7 @@
 
 import { decodeBeam, DEFAULT_LAMPS } from './beam.js';
 import { beamTexture, retroTable, linearOf, chromaOf, lampPositions } from './headlampMirror.js';
-import { markingMaskOf } from './markingMask.js';
+import { markingMaskOf, pavementAlbedo } from './markingMask.js';
 import { displayFade } from './display.js';
 import { createTimings } from '../timing.js';
 import { eachGround } from '../parts.js';
@@ -82,16 +83,19 @@ export async function createHeadlightsPart(ctx) {
   const chroma = codes.map((c, i) => (i === 0 ? [0, 0, 0] : chromaOf(linearOf(hexOf(c)))));
 
   // the road's marking mask, from its atlas
-  let mask = null;
+  let mask = null, pavement = null;
   {
     let regions = null, atlasW = 0, paint = null;
     try { const a = await import('../roadnet/atlas.js'); regions = a.REGIONS; atlasW = a.ATLAS_W; paint = a.PAINT || null; } catch { regions = null; }
     const img = ctx.materials?.nightMap?.image || ctx.materials?.map?.image;
     const k = atlasW && img?.width ? img.width / atlasW : 1;
     mask = markingMaskOf(ctx.materials, regions?.reflector ? { reflector: regions.reflector.map((x) => Math.round(x * k)) } : null, paint);
+    // the pavement's reference albedo for its R_L (decision 13), from the day atlas
+    const kd = atlasW && ctx.materials?.map?.image?.width ? ctx.materials.map.image.width / atlasW : 1;
+    pavement = pavementAlbedo(ctx.materials, regions?.lane && regions?.laneC ? { lane: regions.lane.map((x) => x * kd), laneC: regions.laneC.map((x) => x * kd) } : null);
   }
   const terms = createHeadlampTerms({
-    ctx, maps, table, ink, chroma, mask, ageing: AGEING, colour: LAMP_COLOUR, range: { range: RANGE_M, fade: FADE_M },
+    ctx, maps, table, ink, chroma, mask, ageing: AGEING, colour: LAMP_COLOUR, range: { range: RANGE_M, fade: FADE_M }, pavement,
   });
   const display = terms.display || 'classic';
 
@@ -203,7 +207,7 @@ export async function createHeadlightsPart(ctx) {
     setRoute() { attachRoadside(); },
     stats() {
       const t = timings.summary();
-      return { on, high, beams, ambientLux: ambient, materials: { beam: counts.beam, retro: counts.retro }, mask: !!terms.hasMask, renderer: legacy ? 'classic' : 'node', display, js: { mean: t.mean, p95: t.p95, max: t.max } };
+      return { on, high, beams, ambientLux: ambient, materials: { beam: counts.beam, retro: counts.retro }, mask: !!terms.hasMask, pavement, renderer: legacy ? 'classic' : 'node', display, js: { mean: t.mean, p95: t.p95, max: t.max } };
     },
     dispose() {
       offGround();

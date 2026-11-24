@@ -56,6 +56,8 @@ import { createSkyBlend, SUN_STEP_MS } from './skyblend.js';
 import { sightOverGround } from './sightline.js';
 import { createTimings } from './timing.js';
 import { createRenderScale, adaptiveAllowed, isSoftwareRenderer } from './renderScale.js';
+import { createAdaptationStage } from './adaptation.node.js'; // decision 13: the driver's night adaptation
+import { displayOfSearch } from './lights/display.js';
 
 /** Real time a single frame may advance the clock by, so a hidden tab or a stalled frame does not jump the car. */
 const MAX_STEP_MS = 250;
@@ -284,6 +286,7 @@ export async function createSession(ctx, terrain, hooks, { route: firstRoute, ro
   function loadParts() {
     const ctx = {
       legacy, app: ctx0, session, get, optional, group, roads, terrain, wideMesh, ground: groundMeshes, eachGround, eachSurface, net, env, clock, rig, frameOf,
+      addSurfaces, // [[material, kind], ...]: a part's own surfaces for the light (the traffic's bodies, 'vehicle')
       earthR: EARTH_R, base: city.base, materials,
       get chunks() { return routes.kit?.chunks ?? null; },
       get roadside() { return routes.kit?.roadside ?? null; },
@@ -730,7 +733,22 @@ export async function createSession(ctx, terrain, hooks, { route: firstRoute, ro
     pipeline.around.push(around);
     if (pipeline.scenePass && pipeline.scenePass.camera !== camera) pipeline.setCamera(camera);
     syncTimeline();
+    // ---- decision 13: the driver's night adaptation (adaptation.node.js), shipped look only. Registered once the
+    // parts are in, so it follows their afterBloom stages (the cabin's veil is light in front of the eye too).
+    let adaptation = null, attached = true;
+    const shipped = displayOfSearch(globalThis.location ? location.search : '') !== 'classic';
+    if (shipped && pipeline.addStage) {
+      partsReady.then(() => {
+        if (!attached) return;
+        adaptation = createAdaptationStage({ pipeline, ev100: () => plan01.env?.state?.exposure?.ev100 });
+        group.userData.adaptation = adaptation; // for tests/manual/night-display.mjs
+        invalidate();
+      });
+    }
+    // ---- end decision 13
     detach = () => {
+      attached = false; // decision 13
+      if (adaptation) { adaptation.remove(); adaptation = null; delete group.userData.adaptation; } // decision 13
       off.forEach((f) => f());
       const i = pipeline.around.indexOf(around);
       if (i >= 0) pipeline.around.splice(i, 1);

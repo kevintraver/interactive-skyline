@@ -5,7 +5,7 @@
 // Car frame (beam.js): x right, y up, z forward. Scene vectors go to it through the car's basis
 // { right, up, forward } (unit vectors in the scene), as the shader's `d * uHlCar` does.
 
-import { RETRO_TYPES, retroCoefficient } from '../roadside/retro.js';
+import { RETRO_TYPES, retroCoefficient, PAVEMENT_RL } from '../roadside/retro.js';
 import { RETRO_SHOULDER } from './headlamps.glsl.js';
 
 const RAD = Math.PI / 180;
@@ -105,6 +105,32 @@ export function headlampIrradiance({ tex, lamps, basis, point, normal, gain = 1,
     if (cosi > 0 && f > 0) e += (beamCandela(tex, d, basis) * tex.peakCd * gain * cosi * f) / Math.max(d2, 0.25);
   }
   return e;
+}
+
+/**
+ * Mirrors headlamps.node.js roadParts (decision 13): both lamps' illuminance on a plane facing each lamp, E_perp (lux),
+ * with the same range fade and the same "lit side only" test as the Lambert beam. The pavement's luminance is then
+ * pavementLuminance(E_perp, ...).
+ */
+export function headlampIrradiancePerp({ tex, lamps, basis, point, normal, gain = 1, range = Infinity, fade = 1 }) {
+  let e = 0;
+  for (const lamp of lamps) {
+    const d = sub(point, lamp);
+    const d2 = dot(d, d), dist = Math.sqrt(d2);
+    const cosi = -dot(normal, d) / Math.max(dist, 1e-3);
+    const f = Math.min(Math.max((range - dist) * fade, 0), 1);
+    if (cosi > 0 && f > 0) e += (beamCandela(tex, d, basis) * tex.peakCd * gain * f) / Math.max(d2, 0.25);
+  }
+  return e;
+}
+
+/**
+ * The pavement's luminance under our headlamps (cd/m^2, before scene units and the lamp's colour): R_L x E_perp x
+ * albedo / reference (headlamps.node.js: the atlas' texel over the pavement's mean, so R_L on average).
+ * @param {{ ePerp: number, albedo: number, surface?: 'asphalt' | 'concrete', reference: { asphalt: number, concrete: number } }} o
+ */
+export function pavementLuminance({ ePerp, albedo, surface = 'asphalt', reference }) {
+  return (PAVEMENT_RL[surface] / reference[surface]) * albedo * ePerp;
 }
 
 // ---------------------------------------------------------------- retroreflection (uHlRetro, hlRetro)

@@ -10,6 +10,13 @@
 // (headlamps.glsl.js RETRO_SHOULDER) stood in for the classic fixed exposure and is applied only at the classic display,
 // so the parity tool compares like with like; in the shipped look the return is what the sheeting sends back.
 //
+// The pavement (decision 13). In the shipped look the beam on the road's pavement (the atlas' lane, marking, shoulder
+// and gore columns, PAVEMENT_SPANS) is not Lambertian: it is the pavement's retroreflected luminance R_L x E_perp
+// (retro.js PAVEMENT_RL, asphalt and concrete told apart by the atlas column the texel comes from, as atlas.js tileFor
+// chose it), a radiance through surfaceLight.node.js, times albedo / reference so the atlas' wear shows through
+// (markingMask.js pavementAlbedo). Paint keeps its own R_L (the retro term) and its Lambert share. Embankments,
+// structures and barriers keep the Lambert beam. At ?display=classic the road keeps the Lambert beam it had.
+//
 // Programs: one beam term object and one retro term object per kind (two for the delineators' rows) for every
 // material, so materials of one class share a program (surfaceLight.node.js, "Programs").
 
@@ -22,6 +29,18 @@ import { addSurfaceTerm } from './surfaceLight.node.js';
 import { photometryContext } from './photometry.node.js';
 import { RETRO_SHOULDER } from './headlamps.glsl.js';
 import { MARKING_ROWS } from './headlampMirror.js';
+import { REGIONS, ATLAS_W } from '../roadnet/atlas.js';
+
+/**
+ * The atlas columns that are pavement (atlas.js REGIONS): the lanes and the asphalt around the markings, shoulders and
+ * gores, and their concrete variants; not dirt, structure concrete, steel, reflectors or bridge joints. [u0, u1) pixels.
+ */
+export const PAVEMENT_SPANS = Object.freeze([
+  [REGIONS.lane[0], REGIONS.shoulder[1]], // lane, broken, solid, yellow, white, shoulder
+  REGIONS.gore,
+  [REGIONS.laneR[0], REGIONS.whiteC[1]], // laneR, laneC, shoulderC, brokenC, solidC, yellowC, whiteC
+]);
+import { PAVEMENT_RL } from '../roadside/retro.js';
 
 function halfTexture(half, width, height) {
   const t = new THREE.DataTexture(half, width, height, THREE.RedFormat, THREE.HalfFloatType);
@@ -42,7 +61,7 @@ const pick = (arr, i) => arr.slice(1).reduce((acc, v, k) => select(i.greaterThan
  *   mask: { data: Uint8Array, width: number, height: number } | null, ageing: { sheeting: number, marking: number },
  *   colour: number[], range: { range: number, fade: number } }} o  as headlamps.js
  */
-export function createHeadlampTerms({ ctx, maps, table, ink, chroma, mask, ageing, colour, range }) {
+export function createHeadlampTerms({ ctx, maps, table, ink, chroma, mask, ageing, colour, range, pavement = null }) {
   const photometry = photometryContext({ nodes: ctx.env.nodes });
   const shoulderOn = photometry.display === 'classic';
   const beamTex = { low: halfTexture(maps.low.half, maps.low.width, maps.low.height), high: halfTexture(maps.high.half, maps.high.width, maps.high.height) };
@@ -191,12 +210,57 @@ export function createHeadlampTerms({ ctx, maps, table, ink, chroma, mask, agein
     return retroTerms[key];
   }
 
+  // ---- the road's beam (decision 13): the pavement's R_L x E_perp as a radiance, the Lambert beam elsewhere
+  const pave = pavement || { asphalt: 0.139, concrete: 0.324 };
+  let roadShared = null;
+  /** Both lamps' E (Lambert, E cos i) and E_perp, the pavement's share and its R_L per albedo; built once, shared. */
+  function roadParts({ positionWorld, normalWorld }) {
+    if (roadShared) return roadShared;
+    let eLam = float(0), ePerp = float(0);
+    for (const lamp of uLamp) {
+      const dd = positionWorld.sub(lamp);
+      const d2 = dot(dd, dd), dist = d2.sqrt();
+      const cosi = dot(normalWorld, dd).negate().div(max(dist, 1e-3));
+      const fade = clamp(uRange.x.sub(dist).mul(uRange.y), 0, 1);
+      const i = candela(dd).mul(uPeak).mul(fade).div(max(d2, 0.25));
+      const lit = cosi.greaterThan(0).and(fade.greaterThan(0));
+      eLam = eLam.add(select(lit, i.mul(cosi), float(0)));
+      ePerp = ePerp.add(select(lit, i, float(0)));
+    }
+    // pavement by the atlas column the texel comes from (atlas.js tileFor), not by the mesh's `kind` attribute: that
+    // is a Uint8 buffer which the WebGL2 backend binds as an integer input, so reading it as a float made the road's
+    // draw call fail there ("Vertex shader input type does not match the type of the bound vertex attribute")
+    const au = mapUv().x.mul(ATLAS_W);
+    const inSpan = ([a, b]) => au.greaterThanEqual(a).and(au.lessThan(b));
+    const isPave = PAVEMENT_SPANS.map(inSpan).reduce((acc, x) => acc.or(x));
+    const concrete = au.greaterThanEqual(REGIONS.laneC[0]).and(au.lessThan(REGIONS.whiteC[1]));
+    // R_L per unit albedo: R_L / the pavement's reference albedo
+    const rlPerAlbedo = select(concrete, float(PAVEMENT_RL.concrete / pave.concrete), float(PAVEMENT_RL.asphalt / pave.asphalt));
+    const m = markTex ? texture(markTex, mapUv()) : null;
+    const paint = m ? clamp(m.r.add(m.g), 0, 1) : float(0);
+    const share = select(isPave, float(1).sub(paint), float(0));
+    roadShared = { eLam, ePerp, share, rlPerAlbedo };
+    return roadShared;
+  }
+  const roadBeamTerm = {
+    id: 'headlights', key: 'road-v1',
+    lux: (sf) => {
+      const { eLam, share } = roadParts(sf);
+      return select(uOn.greaterThan(0.5), lampColour.mul(eLam.mul(float(1).sub(share))), vec3(0));
+    },
+    radiance: (sf) => {
+      const { ePerp, share, rlPerAlbedo } = roadParts(sf);
+      return select(uOn.greaterThan(0.5), lampColour.mul(sf.albedo).mul(ePerp.mul(share).mul(rlPerAlbedo)), vec3(0));
+    },
+  };
+
   return {
     hasMask: !!markTex,
     /** The display this was built for ('physical' or 'classic'): headlights.js chooses its gain by it. */
     display: photometry.display,
     attach(material, kind = null, row = 0) {
-      const undo = [addSurfaceTerm(material, beamTerm, { photometry })];
+      const beam = kind === 'road' && !shoulderOn ? roadBeamTerm : beamTerm; // decision 13: the pavement's R_L
+      const undo = [addSurfaceTerm(material, beam, { photometry })];
       if (!kind || (kind === 'road' && !markTex)) return { undo: () => undo.reverse().forEach((u) => u()), retro: false };
       undo.push(addSurfaceTerm(material, retroTerm(kind, row), { photometry }));
       return { undo: () => undo.reverse().forEach((u) => u()), retro: true };

@@ -24,9 +24,11 @@
 //            spriteMirror.js instanceIntensity (the lamp type's pattern and aim, the far pool glow) and the visibility.
 //            Tolerance 5 %, the plan's "sprite flux across distance" (8.4), at two distances.
 //   road     ?parts=headlights, unlit desert at 23:30. The lane's centre 10, 30 and 60 m ahead of the lamps in the low
-//            beam and 30, 60 and 100 m in the high beam, the
-//            headlamps on minus off, against albedo x E / pi with E from headlampMirror.js headlampIrradiance (the beam
-//            map of beam.json, both lamps where the pose puts them). Tolerance 20 % (the plan's own is a factor of 2
+//            beam and 30, 60 and 100 m in the high beam, the headlamps on minus off, against the pavement's
+//            retroreflected luminance (third stretch, decision 13): R_L x E_perp x albedo / reference, with E_perp from
+//            headlampMirror.js headlampIrradiancePerp (the beam map of beam.json, both lamps where the pose puts them),
+//            R_L from retro.js PAVEMENT_RL and the reference albedo the part reports (markingMask.js pavementAlbedo).
+//            Until decision 13 this was albedo x E / pi, a matte road. Tolerance 20 % (the plan's own is a factor of 2
 //            at 30 m, 8.4; 20 % is what a correct port must reach: the albedo estimate and the beam map's filtering).
 //   sign     ?parts=headlights. A green guide sign (the first one ahead, overhead or beside the road) 60 and 150 m ahead under the low beam: its legend's and its
 //            background's luminance (on minus off; texels classified from the sign atlas at each probe's uv, only pure
@@ -453,15 +455,22 @@ async function headlights(backend) {
         const sight = lp.rayAtNdc(n.x, n.y), seen = lp.hitRoad(sight.o, sight.d, meshes);
         const [du, dv] = lp.footprint(n.x, n.y, seen || h, meshes);
         const rho = lp.albedoAt(h.object.material.map, h.uv, du, dv);
-        const E = m.mirror.headlampIrradiance({ tex: tex[beam], lamps, basis, point: [h.point.x, h.point.y, h.point.z], normal: [h.normal.x, h.normal.y, h.normal.z] });
+        const pt = [h.point.x, h.point.y, h.point.z], nn = [h.normal.x, h.normal.y, h.normal.z];
+        // the pavement's return (decision 13): R_L x E_perp x albedo / reference; the lane's centre is asphalt or
+        // concrete as the atlas column under it says
+        const ePerp = m.mirror.headlampIrradiancePerp({ tex: tex[beam], lamps, basis, point: pt, normal: nn });
+        const pav = part.stats().pavement;
+        const au = (h.uv.x * h.object.material.map.repeat.x + h.object.material.map.offset.x) * m.atlas.ATLAS_W;
+        const surface = au >= m.atlas.REGIONS.laneC[0] && au < m.atlas.REGIONS.whiteC[1] ? 'concrete' : 'asphalt';
         part.setEnabled(true); const on = await lp.probe(n.x, n.y);
         part.setEnabled(false); const off = await lp.probe(n.x, n.y);
         part.setEnabled(true);
         part.setHigh(false);
-        return { expected: lp.lum(rho.map((p, i) => p * colour[i])) * E / Math.PI, measured: on.L - off.L, E, rho: lp.lum(rho), at: seen ? seen.point.distanceTo(h.point) : null };
+        const expected = m.mirror.pavementLuminance({ ePerp, albedo: lp.lum(rho.map((p, i) => p * colour[i])), surface, reference: pav });
+        return { expected, measured: on.L - off.L, E: ePerp, rho: lp.lum(rho), surface, at: seen ? seen.point.distanceTo(h.point) : null };
       })()`), { dist, beam });
       if (r.error) report(backend, `road in ${beam} beam, ${dist} m`, NaN, NaN, 0.2, 'cd/m2', r.error);
-      else report(backend, `road in ${beam} beam, ${dist} m`, r.expected, r.measured, 0.2, 'cd/m2', `E ${r.E.toFixed(2)} lux, albedo ${r.rho.toFixed(3)}`);
+      else report(backend, `road in ${beam} beam, ${dist} m`, r.expected, r.measured, 0.2, 'cd/m2', `E_perp ${r.E.toFixed(2)} lux, ${r.surface}, albedo ${r.rho.toFixed(3)}`);
     }
   }
 
