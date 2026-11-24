@@ -32,6 +32,7 @@ import { createPipeline } from './render/pipeline.js';
 import { createLook } from './render/look.js';
 import { initQuality } from './render/setupQuality.js';
 import { createBench } from './render/bench.js';
+import { warmUp } from './render/warmup.js';
 import cities from '../data/cities.json';
 
 const app = await createApp(cities);
@@ -79,6 +80,8 @@ app.views.resize();
 app.views.set(city.views[0].id);
 app.applySettings();
 applyTimeParams(app);
+// the WebGL2 backend links the first frame's programs in parallel, under the loading cover (src/render/warmup.js)
+await warmUp(app);
 document.getElementById('loading').classList.add('done');
 performance.mark('skyline-ready');
 const readyAt = performance.now();
