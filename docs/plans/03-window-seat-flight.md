@@ -73,6 +73,15 @@ Section 6.2 gives the layout of `skyline-flight/1` but not its units or the valu
 - **`lights`** is a bit field with the values of section 5.5 in its order: NAV 1, BEACON 2, STROBE 4, LANDING 8, TAXI 16, TURNOFF 32, LOGO 64, WING 128. A lamp that is on has its bit set, the navigation lights, beacon and strobes included; nothing is assumed on.
 - **Event ids**, in flight order, each with `t` (seconds from the start), `s` (metres along the track) and a label: `cruise` (or `start` when the recording begins below 18,000 ft), `tod`, `fl180`, `10000`, `terrain` (the aircraft enters the terrain that exists today; playback starts here until Phase 6), `gear`, `ft1000` (1,000 ft above the landing threshold), `threshold`, `touchdown`, `vacate`, `end`. The loader takes `onGround` from `touchdown`.
 
+### Found while building the first flight (24 November)
+
+- **`lv-19-day` is a 737-900, not a 737-800.** Section 6.2 allows it when no 737-800 qualifies. Two days were scanned (14 October 2025 and 16 February 2026, chosen from the airport's recorded winds before anything was downloaded). The one 737-800 landing on runway 19 by day that met the selection criteria failed three of section 7.2's gates on what was recorded: a 3.44° glide path, 3.69 m/s² of deceleration and 3.65 m of height noise in the last minute. It is listed under `alternatives` in `data/flights/lv/selection.json` with the steps to swap it in. The airframe model is a 737-800; the 737-900 is 2.6 m longer with the same wing and window, and the app flies the one model for every flight.
+- **The file holds the whole flight** (30 minutes, 177 KB), not the 60 KB cut of F1.2. Its `terrain` event marks where playback starts until Phase 6.
+- **The air-to-ground flag is not the touchdown.** Both 737s looked at kept reporting airborne for 14 to 16 s after the wheels touched, until about 100 kt. The bake finds the touchdown where the vertical rate levels on the runway.
+- **Surface positions carry no altitude**, and the archive repeats a stale one. The height calibration uses only airborne-format positions sent while rolling, with a barometric fallback. On 14 October 2025 coverage ended 20 to 60 s before touchdown on every arrival; such a day yields no flights, and the rollout is reconstructed when a chosen flight lacks one.
+- **Density near the airport is a point every 0.5 to 2 s**, better than the 6 to 8 s section 1 expected. The 3 m height gate for the last minute is at the noise floor of altitudes reported in 25 ft steps.
+- **Height in the file is the wheels.** The 5.6 m from the antenna to the wheels is an estimate; the calibration found the aircraft reporting height above the ellipsoid.
+
 ### Order of work
 
 1. Phase 0 with Phase 1's three independent starts, in parallel: the track sampler and kinematics on a synthetic track with the adapter and the airport block (F0.1, F0.2, F1.3); the runway ends and the bake of one real runway 19 arrival (F0.3, F1.1, F1.2); the window, wing and head (F1.5). The airframe's dimensions and kit (F3.1, F3.2) start at the same time because nothing blocks them.
