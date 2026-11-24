@@ -11,6 +11,12 @@
 // glowTerm: up to GLOW_MAX flat emitters (digital billboard faces) of area A, normal m and mean luminance L light a
 // point at distance d by E = L A cos(theta_e) cos(theta_r) / (d^2 + A / pi), the far-field formula softened near the
 // face so it stays finite (the +A/pi keeps E at most pi L, a face's own luminance, at the face).
+//
+// createSphereLight and createGlowLight make the terms with their uniforms; light.node.js has the same two for plan
+// 01's renderer (in lux there), and the screens and billboards parts pick by ctx.legacy.
+
+import * as THREE from 'three';
+import { addSurfaceTerm } from '../lights/surfaceLight.js';
 
 export const GLOW_MAX = 6;
 
@@ -53,3 +59,33 @@ for ( int scI = 0; scI < ${GLOW_MAX}; scI++ ) {
   float scFade = 1.0 - smoothstep( 0.5 * scRange, scRange, scD );
   slE += scL * ( scA * scCe * scCr / ( scD2 + scA / 3.14159265 ) * scFade );
 }`;
+
+/**
+ * The Sphere's light (sphereTerm above) with its uniforms: { uniforms, display: 'legacy', attach(material) -> detach }.
+ * uScrSphereL is the mean luminance in scene units (the content's mean colour x its level).
+ * @param {{ range: number }} o  metres from the centre within which the light is drawn
+ */
+export function createSphereLight({ range }) {
+  const uniforms = {
+    uScrSphere: { value: new THREE.Vector4(0, 0, 0, 1) },
+    uScrSphereL: { value: new THREE.Vector3() },
+    uScrSphereSpec: { value: new THREE.Vector4(range, 0, 0, 0) },
+  };
+  const term = { id: 'screenSphere', key: 'v1', uniforms, head: SPHERE_HEAD, body: SPHERE_BODY };
+  return { uniforms, display: 'legacy', attach: (material) => addSurfaceTerm(material, term) };
+}
+
+/**
+ * The digital faces' glow (glowTerm above) with its uniforms: { uniforms, count, display: 'legacy', attach }. The
+ * uniforms' values are arrays of GLOW_MAX vectors (P: centre, area; N: normal, range; L: mean luminance, scene units).
+ * @param {{ range: number }} o  metres in front of a face that its glow reaches
+ */
+export function createGlowLight({ range }) {
+  const uniforms = {
+    uScrGlowP: { value: Array.from({ length: GLOW_MAX }, () => new THREE.Vector4()) },
+    uScrGlowN: { value: Array.from({ length: GLOW_MAX }, () => new THREE.Vector4(0, 0, 1, range)) },
+    uScrGlowL: { value: Array.from({ length: GLOW_MAX }, () => new THREE.Vector3()) },
+  };
+  const term = { id: 'screenGlow', key: 'v1', uniforms, head: GLOW_HEAD, body: GLOW_BODY };
+  return { uniforms, count: GLOW_MAX, display: 'legacy', attach: (material) => addSurfaceTerm(material, term) };
+}

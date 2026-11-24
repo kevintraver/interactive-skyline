@@ -19,12 +19,10 @@
 // x uDigitalLevel, cross-faded from hold k - 1 over FADE seconds, on a dark, low-reflectance screen surface.
 
 import { ATLAS_COLS, ATLAS_ROWS, CELL_H, CELL_W, DESIGNS } from '../screens/art.js';
-import { FADE_S, HOLD_S } from '../screens/digital.js';
+import { FADE_S, HOLD_S, PLAIN, VINYL } from '../screens/digital.js';
 
-/** Share of the light a printed face reflects at a white of the image. */
-export const VINYL = 0.82;
-/** Linear albedo of a face with nothing on it yet (blank white-grey vinyl). */
-export const PLAIN = [0.5, 0.5, 0.48];
+// shared with billboardsFace.node.js; defined in screens/digital.js
+export { PLAIN, VINYL };
 
 const f1 = (v) => (Number.isInteger(v) ? `${v}.0` : `${v}`);
 

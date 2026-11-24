@@ -1,16 +1,24 @@
-// The LED skins' content program (src/night.js, ledGlow) mirrored in JavaScript, for the screens registry: the
-// colour a point of an LED surface shows at a moment, and the mean over a surface from a fixed set of samples.
-// night.js is shared with the landmark tool and is not changed here; tests/unit/screens/led.test.js holds this
-// copy to the shader's text, so a change there fails the test until the mirror follows.
+// The LED skins' content program mirrored in JavaScript, for the screens registry: the colour a point of an LED
+// surface shows at a moment, and the mean over a surface from a fixed set of samples. The program exists twice in
+// plan 01's code, and this copy is held to both by tests/unit/screens/led.test.js, so a change to either fails the test
+// until the mirror follows:
+//   - in GLSL on the classic renderer (src/render/legacy/materials.js, ledGlow), and
+//   - in TSL on the new renderer (src/render/materials/buildingMaterial.js, buildingNodes, the landmark variant).
+// Neither is changed here.
 //
 // The shader works in float32; every step here is rounded to float32 (Math.fround) the same way, so the
 // lattice hashes agree with the GPU's wherever the GPU rounds as IEEE single precision does (it may fuse a
 // multiply and an add, so single points can differ; means over hundreds of points agree to well under 1%).
 //
-// Output is the shader's emissive radiance in scene units (before tone mapping): color x pulse x level, where
-// level = mix(0.05, 1.2, night) and `night` is the shared uniform the drive sets from the look's `lights`
-// (a smoothstep of the logarithm of the ambient illuminance: look.js lightsAt(duskAt(...))), so the skins are
-// readable but faint by day and bright at night, following ambientLux.
+// ledColor is the pattern at level 1 (colour x pulse). What the skin emits is that times ledScale:
+//   'legacy'    the classic renderer: mix(0.05, 1.2, night), scene units, where `night` is the shared uniform the look
+//               sets (faint by day, bright at night)
+//   'classic'   plan 01's renderer at ?display=classic: the same in cd/m^2 at the classic units (/ LIGHTING_UNITS.nit),
+//               as the building material's classic look draws it
+//   'physical'  plan 01's renderer, the shipped look: cd/m^2, plan 01's ledCdM2(switchOn.signs) (1,200 cd/m^2 by day,
+//               dimmed to 3 % at night), as the building material's physical look draws it
+
+import { ledCdM2 } from '../../render/photometry.js';
 
 const f = Math.fround;
 const TAU = f(6.2832);
@@ -43,6 +51,17 @@ export function ledNoise(px, py, pz) {
 
 /** The level factor of the skins: mix(0.05, 1.2, night). */
 export const ledLevel = (night) => 0.05 + 1.15 * Math.min(1, Math.max(0, night));
+
+/**
+ * What multiplies the pattern (ledColor, ledMean) for a renderer and display (see the header): scene units on the
+ * classic renderer, cd/m^2 on the new one.
+ * @param {{ display?: 'legacy' | 'classic' | 'physical', night?: number, signs?: number, nit?: number }} o
+ *   night: the shared `night` uniform; signs: the shared switchOn.signs uniform; nit: LIGHTING_UNITS.nit
+ */
+export function ledScale({ display = 'legacy', night = 0, signs = 0, nit = 0.1 } = {}) {
+  if (display === 'physical') return ledCdM2(Math.min(1, Math.max(0, signs)));
+  return display === 'classic' ? ledLevel(night) / nit : ledLevel(night);
+}
 
 /**
  * ledGlow() of night.js for one point with vLed = 1 and level 1: writes [r, g, b] into `out`.
