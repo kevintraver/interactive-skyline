@@ -168,6 +168,45 @@ The user asked for the build to be driven to the end. These are the assumptions 
 - `src/sky/legacySky.js`: the seam lines (`sky.hold`, the dome's `userData.sky`).
 - The other `// drive seam` lines: `src/main.js`, `src/ui/settingsPanel.js`, `src/interaction/edits.js`, `src/interaction/focus.js`, `src/drive/index.js`.
 
+## Decisions for the third stretch (2026-11-23): the port to plan 01's renderer
+
+The owner asked again for the build to be driven to completion, and for bugs to be fixed with the diagnose discipline (a pass/fail feedback loop first). Plan 01 has since built its renderer, clock and weather data, and its phase 3 deletes the classic renderer. So this stretch ports the drive, once, and then fixes what is left. These rank below the user's decisions at the top.
+
+**Base.** `feat/vegas-drive` merged plan 01's integration branch (`t3/sky-weather-integration` at 2e6eb6a: phases 1, 2 and 5 with both stability passes) in commit e3c9cb1. Plan 01 keeps building on that branch; this branch merges it again as it lands. Only plan 01's contract may be imported (its section 11: `src/env/`, `src/sim/`, `src/core/`, `src/render/quality.js`, the pipeline's stages, `src/contracts.d.ts`), plus the `// drive seam` lines.
+
+**Method.** For every bug and every ported shader: first a command that fails on the defect and passes when it is fixed (a test, a script on a dev page, or the parity tool below), run and shown before any theory; then reproduce and minimise, three to five ranked hypotheses with a prediction each, one probe per prediction, the regression test before the fix, and no debug code left behind. Children load the `mattpocock-skills:diagnosing-bugs` skill when they meet a bug.
+
+**The interim.** Until a part is ported it runs only on the classic renderer. `?mode=drive` selects the classic renderer and entering Drive from the new one reloads into it (`src/render/renderer.js`, `src/drive/index.js`). The classic path is the reference for the port and is not changed. When every part is ported and reviewed, the GLSL path, these two seams and the stand-ins are deleted in one commit.
+
+1. **Parity is the feedback loop of the port.** `tests/manual/drive-parity.mjs` draws the same place, moment and parts on the classic renderer and on the new one at `?display=classic` (ACES, exposure 1, no bloom), on this machine's GPU, and prints the mean absolute difference per frame against a limit, with a difference image. `?parts=a,b` (both renderers, test use) limits the drive to the named parts. A part is ported when its frames pass at the classic display on both backends and it has been looked at in the shipped look.
+2. **Where new code goes.** A GLSL module `x.js` gets a sibling `x.node.js` with the same factory and options, written with `three/webgpu` and `three/tsl`; the caller picks by `ctx.legacy`. No file mixes the two. At the end the GLSL files go and the `.node` suffix with them.
+3. **The pipeline draws.** On the new renderer the drive does not own the draw: `main.js` always calls `pipeline.render()`, the session gives the pipeline its camera (`pipeline.setCamera`) and is a frame-loop subsystem in orders 20 to 29 that votes `continuous` while it plays. Mirrors are a `beforeScene` stage. The cabin is drawn in the scene pass with the world, on one camera with a 0.1 m near plane (reversed depth), first in draw order so the world is not shaded behind it; if a backend cannot hold that range it falls back to an `afterWorld` stage with its own depth. Drops on the glass read the scene's colour in a `beforeBloom` node stage, which replaces the frame copy; the veil uses the pipeline's bloom at `afterBloom`.
+4. **One clock.** On the new renderer the drive's time is `app.clock`, and its journey is on `app.timeline`. The drive's bar stays the transport while driving and drives the timeline's handle; plan 01's `#transport` is hidden while driving. Choosing a time of day keeps the place and moves the sky (`handle.setTimeOfDay`). `src/drive/env.js` becomes the adapter of plan 01's section 11.10 and loses its clock, ephemeris, ambient table and weather.
+5. **The look is plan 01's.** Entering Drive enters the clock state (`env.enterClock()`) and leaving restores what the map had. `look.js` reads `env.state` (sun, `sky.horizontalLux`, `lights.street`); `skyblend.js` and `sky.hold` go. The sky, the haze and the far ground are plan 01's, so rain falls under plan 01's interim sky until its phases 3, 6 and 7.
+6. **Light in physical units.** The drive's sources are already in candela, lumen, lux and cd/m². On the new renderer they are multiplied by the pre-exposure (`env.nodes.exposure`, `emissive()`, `pointSource()`, all with `artificial: true`), and `LIGHTING_UNITS` is used only at the classic display, where the exposure is held at 1. Light the drive puts on surfaces (lamp pools, the beam, the retroreflected return, the screens' light, the wet road's reflections) is an illuminance in lux added through one helper, `src/drive/lights/surfaceLight.node.js`, as albedo times lux over pi.
+7. **Depth.** The near plane that followed the view, the pavement's depth pull and the cabin's separate pass exist because of the classic depth buffer. Each is dropped on the new renderer if a test shows the road, the far ground and the cabin hold without it, and kept in node form if not.
+8. **Quality.** `app.quality` replaces `renderScale.js` (its governor owns the render scale) and sets the drive's detail by level: mirror size, sprite counts, corridor range, traffic counts (D7.7).
+9. **Weather.** The drive reads rain, wetness, wind and visibility from `env.state` and `env.at()`. Plan 01's weather sample and its `#sky` rows replace the drive's four presets; `?rain=` stays as a shorthand for a preset. Plan 01's own rain and wet surfaces (its phase 7) do not exist yet, so the drive's wet road, rain, spray and glass rain are ported as the drive's and stay until then.
+10. **Tests.** The drive's browser specs move to the new renderer as their parts land; goldens and budgets are recorded once, at the end, by the orchestrator. `tests/data` joins `tests/python` and one command at the end.
+
+**State of the third stretch** (kept current as work lands).
+
+| Work | State |
+| --- | --- |
+| Merge of plan 01 (phases 1, 2, 5, stability passes) | Done, e3c9cb1. Drive on the classic renderer; map on the new one. |
+| Foundation: parity tool, `?parts=`, session on the pipeline, the adapter, the clock, terrain, road, static roadside by day | Started. |
+| Light sprites and the surface-light helper as node modules | Started. |
+| Traffic materials, ribbons, pools and valley as node modules | Started. |
+| Road data defects: the deck over `i15s.main.out` at 4.62 m, the five recorded ground exceptions, a ramp against a lead-out | Started. |
+| Lamps, pools, poles, obstruction lights, headlights and retroreflection, screens' light, billboards on the new renderer | After the foundation. |
+| Cabin, mirrors, instruments, windshield | After the foundation. |
+| Wet road, rain, spray, glass rain; the weather adapter | After the foundation. |
+| Timeline, the drive's bar on `app.clock`, `#sky` while driving, quality levels | After the foundation. |
+| Frame rate at device pixel ratio 2, diagnosed on the new renderer | After the port. |
+| Luminance probes of section 8.3 | After the port (plan 01's `pipeline.probe`). |
+| Delete the GLSL path, the interim seams and the stand-ins; goldens, budgets, CI | Last. |
+| D7.1, D7.2 fit to VIIRS | Still blocked on a NASA Earthdata login. |
+
 ---
 
 ## 1. Executive summary
