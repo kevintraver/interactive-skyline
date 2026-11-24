@@ -61,7 +61,11 @@ export function createCorridor({
     g.setAttribute('position', new THREE.BufferAttribute(m.positions, 3));
     g.setAttribute('normal', new THREE.BufferAttribute(m.normals, 3));
     g.setAttribute('color', new THREE.BufferAttribute(m.colors, 3));
-    if (m.winLit) g.setAttribute('winLit', new THREE.BufferAttribute(m.winLit, 1, true)); // the walls' window share (material.js)
+    if (m.winLit) {
+      // the walls' window share (material.js): normalised bytes; WebGPU has no one-byte vertex format, so the node
+      // material (material.node.js) asks for floats
+      g.setAttribute('winLit', mat.userData.winLitFloat ? new THREE.BufferAttribute(Float32Array.from(m.winLit, (v) => v / 255), 1) : new THREE.BufferAttribute(m.winLit, 1, true));
+    }
     g.setIndex(new THREE.BufferAttribute(m.indices, 1));
     const [sx, sy, sz, r] = m.sphere;
     g.boundingSphere = new THREE.Sphere(new THREE.Vector3(sx, sy, sz), r);

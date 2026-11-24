@@ -16,6 +16,7 @@ import { asDecoded } from './barrierFormat.js';
 import { standY } from './geometry.js';
 import { sheetingCode } from './sheeting.js';
 import { nightWeight } from './batch.js';
+import { lambert } from './lambert.js';
 
 export const SHOW = 1200; // m: delineators within this distance are drawn
 export const REBUILD = 150; // m the car moves before the set is rebuilt
@@ -78,20 +79,20 @@ function faceGeometry() {
 
 /**
  * @param {{ barriers: object, roadnet: object, base: number, earthR: number, parent: THREE.Object3D,
- *           ground?: (x: number, y: number) => number }} opts
+ *           ground?: (x: number, y: number) => number, legacy?: boolean }} opts  legacy: false on plan 01's renderer (node materials)
  */
-export function createDelineators({ barriers, roadnet, base, earthR, parent, ground = null }) {
+export function createDelineators({ barriers, roadnet, base, earthR, parent, ground = null, legacy = true }) {
   const all = placeDelineators(barriers, roadnet, base, earthR, ground);
   const counts = { white: 0, yellow: 0 };
   for (const d of all) counts[d.colour]++;
   const group = new THREE.Group();
   group.name = 'delineators';
   parent.add(group);
-  const postMat = new THREE.MeshLambertMaterial({ color: 0xd9dbd6 });
+  const postMat = lambert(legacy, { color: 0xd9dbd6 }, 'delineator');
   postMat.name = 'delineator posts';
   const faceMats = {
-    white: new THREE.MeshLambertMaterial({ color: 0xf4f4ef, emissive: 0xffffff, emissiveIntensity: 0 }),
-    yellow: new THREE.MeshLambertMaterial({ color: 0xf2c230, emissive: 0xffc840, emissiveIntensity: 0 }),
+    white: lambert(legacy, { color: 0xf4f4ef, emissive: 0xffffff, emissiveIntensity: 0 }, 'delineator'),
+    yellow: lambert(legacy, { color: 0xf2c230, emissive: 0xffc840, emissiveIntensity: 0 }, 'delineator'),
   };
   faceMats.white.name = 'delineator white';
   faceMats.yellow.name = 'delineator yellow';
@@ -106,6 +107,7 @@ export function createDelineators({ barriers, roadnet, base, earthR, parent, gro
   }
   for (const m of [posts, faces.white, faces.yellow]) {
     m.count = 0;
+    m.visible = false; // until the first rebuild
     m.frustumCulled = false; // the set spans 2.4 km around the car
     m.matrixAutoUpdate = false;
     group.add(m);
@@ -143,6 +145,8 @@ export function createDelineators({ barriers, roadnet, base, earthR, parent, gro
     },
     /** true/false or how far the night glow is on (0..1, the look's `lights`). */
     setNight(on) { const w = nightWeight(on); for (const m of Object.values(faceMats)) m.emissiveIntensity = NIGHT_GLOW * w; },
+    /** [material, kind] pairs for the lights part's surface light. */
+    surfaces: () => [[postMat, 'delineator'], [faceMats.white, 'delineator'], [faceMats.yellow, 'delineator']],
     stats() {
       const vis = [posts, faces.white, faces.yellow].filter((m) => m.visible && m.count);
       return { delineators: all.length, shown, drawCalls: vis.length,

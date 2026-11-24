@@ -158,3 +158,28 @@ export function lookAt(sun, { steps = 0 } = {}) {
     street: NIGHT.street.map((v) => (lights === 1 ? v : v * lights)),
   };
 }
+
+/**
+ * The look on plan 01's renderer (third stretch, decision 5), from plan 01's environment state (section 11.4) rather
+ * than from the drive's stand-ins. Plan 01 owns the sky, the haze, the light and the exposure there, so only what the
+ * parts read is computed: { night, dusk, lights, beams, sun, ambientLux }.
+ *   dusk        the same curve as duskAt(), on plan 01's horizontal illuminance (state.sky.horizontalLux) instead of
+ *               the stand-in table: 0 at or above the table's light at +6 degrees, 1 at or below its light at -9
+ *   lights      plan 01's switch-on of the street lights (state.lights.street)
+ *   beams       beamsAt(dusk), the headlight stand-in's curve, as on the classic renderer
+ *   sun         { elevation, azimuth } in degrees (apparent), from state.sun
+ *   ambientLux  state.sky.horizontalLux
+ * @param {{ sun: { altDeg: number, azDeg: number }, sky: { horizontalLux: number }, lights: { street: number } }} state
+ * @param {{ steps?: number }} [opts] steps: round dusk and lights to 1/steps, as lookAt does
+ */
+export function lookFromEnv(state, { steps = 0 } = {}) {
+  const lux = Math.max(state.sky.horizontalLux, 1e-6);
+  const u = clamp01((L_DAY - Math.log10(lux)) / (L_DAY - L_NIGHT));
+  const exact = u * u * (3 - 2 * u);
+  const round = (v) => (steps > 0 ? Math.round(v * steps) / steps : v);
+  const dusk = round(exact);
+  return {
+    night: exact >= NIGHT_DUSK, dusk, lights: round(clamp01(state.lights.street)), beams: beamsAt(dusk),
+    sun: { elevation: state.sun.altDeg, azimuth: state.sun.azDeg }, ambientLux: state.sky.horizontalLux,
+  };
+}

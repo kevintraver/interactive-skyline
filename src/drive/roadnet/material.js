@@ -16,15 +16,13 @@
  * changes depth and nothing on screen; embankment vertices stay put and meet the ground honestly.
  */
 import * as THREE from 'three';
-import { drawRoadAtlas, ATLAS_W, ATLAS_H, KIND, V_CYCLES } from './atlas.js';
+import { KIND } from './atlas.js';
+import { atlasTexture, NIGHT_GLOW, nightWeight } from './textures.js';
 
-const NIGHT_GLOW = { near: 0.5, far: 0.1 }; // emissive intensity on the night map
+export { nightWeight };
 // Fraction of its distance a pavement vertex moves towards the camera: 4 mm at 10 m, 0.4 m at 1 km,
 // 4 m at 10 km, each several times the depth buffer's resolution there with a near plane up to 5 m.
 export const PULL = 4e-4;
-
-/** true/false or a number to a glow weight in 0..1. */
-export const nightWeight = (on) => (typeof on === 'number' ? Math.min(1, Math.max(0, on)) || 0 : on ? 1 : 0);
 
 /** Pull pavement (every kind but embankment) towards the camera in depth; see the header. */
 function pullPavement(shader) {
@@ -34,31 +32,6 @@ function pullPavement(shader) {
       '#include <project_vertex>',
       `if ( kind < ${(KIND.embankment - 0.5).toFixed(1)} ) { mvPosition.xyz *= ${(1 - PULL).toFixed(6)}; gl_Position = projectionMatrix * mvPosition; }`,
     ].join('\n'));
-}
-
-/** A canvas for the atlas, or null where there is none (Node). */
-function makeCanvas() {
-  if (typeof OffscreenCanvas !== 'undefined') return new OffscreenCanvas(ATLAS_W, ATLAS_H);
-  if (typeof document !== 'undefined') return Object.assign(document.createElement('canvas'), { width: ATLAS_W, height: ATLAS_H });
-  return null;
-}
-
-function atlasTexture(night, anisotropy) {
-  const canvas = makeCanvas();
-  const ctx = canvas?.getContext('2d');
-  if (!ctx) return null;
-  drawRoadAtlas(ctx, { night });
-  const t = new THREE.CanvasTexture(canvas);
-  t.colorSpace = THREE.SRGBColorSpace;
-  t.wrapS = THREE.ClampToEdgeWrapping; // regions sit side by side across
-  t.wrapT = THREE.RepeatWrapping; // one marking cycle along, repeating with chainage
-  t.flipY = false; // v = 0 at the top of the canvas, where the dashes start
-  t.repeat.set(1, 1 / V_CYCLES); // the canvas stacks V_CYCLES marking cycles; the mesh's v counts cycles (atlas.js)
-  t.minFilter = THREE.LinearMipmapLinearFilter;
-  t.magFilter = THREE.LinearFilter;
-  t.generateMipmaps = true;
-  t.anisotropy = anisotropy;
-  return t;
 }
 
 /**

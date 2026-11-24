@@ -36,19 +36,22 @@ import * as THREE from 'three';
 import { createFrame, EARTH_R, localUp } from '../world/frame.js';
 import { buildWideMesh, cutWideMesh } from '../world/terrain/widemesh.js';
 import { buildSkirt } from '../world/terrain/skirt.js';
+import { createApron } from '../city/apron.js';
 import { buildPatches, NO_PATCHES, patchesCrossing } from '../world/terrain/patches.js';
 import { loadRoutes } from './routes.js';
 import { createRoadMaterials } from './roadnet/material.js';
+import { createRoadMaterials as createRoadNodeMaterials } from './roadnet/material.node.js';
+import { corridorMaterial as corridorNodeMaterial } from './corridor/material.node.js';
 import { createRoadChunks } from './roadnet/chunks.js';
 import { createRoadside } from './roadside/index.js';
 import { createCorridor } from './corridor/index.js';
 import { createRouteSwitch } from './routeswitch.js';
-import { PART_FACTORIES } from './parts.js';
+import { PARTS, selectParts, partsFromSearch } from './parts.js';
 import { createEnv } from './env.js';
 import { createJourney } from './journey.js';
 import { defaultDeparture } from './moment.js';
 import { createRig } from './vehicle/rig.js';
-import { isNightAt, lookAt } from './look.js';
+import { isNightAt, lookAt, lookFromEnv } from './look.js';
 import { createSkyBlend, SUN_STEP_MS } from './skyblend.js';
 import { sightOverGround } from './sightline.js';
 import { createTimings } from './timing.js';
@@ -56,6 +59,12 @@ import { createRenderScale, adaptiveAllowed, isSoftwareRenderer } from './render
 
 /** Real time a single frame may advance the clock by, so a hidden tab or a stalled frame does not jump the car. */
 const MAX_STEP_MS = 250;
+/**
+ * Plan 01's renderer: the camera's near plane, metres (decisions 3 and 7). The rig moves its near plane between 1 and 5 m
+ * for the classic depth buffer; with reversed depth a 0.1 m plane holds on both backends (the depth test of the port:
+ * a 0.1 m plane against the rig's changed at most 4 pixels of 921,600, the road against the ground at 15 to 22 km not one).
+ */
+export const NEAR_M = 0.1;
 /** Metres the skirts hang below the edges of the finer terrain meshes: more than the 8 m sink and the grids' disagreement. */
 const SKIRT_DEPTH = 20;
 const RAD = Math.PI / 180;
@@ -65,6 +74,9 @@ const RAD = Math.PI / 180;
  * dusk (sun +6 to -9 degrees, about an hour) it is 512 setLook calls, about two a second at 16x.
  */
 const LOOK_STEPS = 512;
+
+/** The renderer's maximum anisotropy, on either renderer. */
+const maxAnisotropy = (renderer) => (renderer.getMaxAnisotropy ? renderer.getMaxAnisotropy() : renderer.capabilities.getMaxAnisotropy());
 
 const bitmapOf = (blob) => createImageBitmap(blob, { imageOrientation: 'flipY', premultiplyAlpha: 'none', colorSpaceConversion: 'none' });
 
@@ -81,6 +93,9 @@ const HOLD_MAX_MS = 15000;
 export async function createSession(ctx, terrain, hooks, { route: firstRoute, routesDoc } = {}) {
   const ctx0 = ctx;
   const { city, DATA, scene, renderer, camera, seam, invalidate, applyNight, settings, tall, getLow, ground } = ctx;
+  // the classic WebGLRenderer (the GLSL path, the reference) or plan 01's renderer, whose contract is ctx.plan01
+  const legacy = ctx.legacy !== false;
+  const plan01 = ctx.plan01 || {};
   const get = async (name) => {
     const r = await fetch(`${DATA}/${name}`);
     if (!r.ok) throw new Error(`${name}: HTTP ${r.status}`);
@@ -97,7 +112,7 @@ export async function createSession(ctx, terrain, hooks, { route: firstRoute, ro
   const patchMeta = terrain.patchIds.length ? Object.fromEntries(terrain.patchIds.map((id) => [id, terrain.patchInfo(id)])) : null;
   const patchesOf = (route) => (patchMeta && route ? patchesCrossing(route.outline, patchMeta) : []);
   const buildSome = (ids) => (ids.length ? buildPatches({
-    terrain, base: city.base, renderer, json: optional, ids,
+    terrain, base: city.base, renderer, json: optional, ids, legacy,
     image: (f) => get(f).then((r) => r.blob()).then(bitmapOf),
   }).catch((e) => { console.warn(`terrain patches left out: ${e && e.message ? e.message : e}`); return NO_PATCHES; }) : Promise.resolve(NO_PATCHES));
   const [net, wide, bitmap, corridorIndex, patches] = await Promise.all([
@@ -120,12 +135,19 @@ export async function createSession(ctx, terrain, hooks, { route: firstRoute, ro
       wideMap = new THREE.Texture(bitmap);
       wideMap.flipY = false; // flipped while decoding, as main.js does for its grids
       wideMap.colorSpace = THREE.SRGBColorSpace;
-      wideMap.anisotropy = renderer.capabilities.getMaxAnisotropy();
+      wideMap.anisotropy = maxAnisotropy(renderer);
       wideMap.needsUpdate = true;
     }
-    wideMesh = buildWideMesh({ wide, hole: terrain.grid('far'), cuts: patches.grids, base: city.base, map: wideMap });
+    wideMesh = buildWideMesh({ wide, hole: terrain.grid('far'), cuts: patches.grids, base: city.base, map: wideMap, legacy });
     group.add(wideMesh);
   }
+  // Plan 01's renderer: plan 01's apron rings the far grid and, inside the wide grid, rises above the drive's ground in
+  // places (123 of its 488 posts there, by up to 418 m): two grounds. While driving it is hidden and the same apron
+  // (src/city/apron.js) rings the wide grid instead, tucked under its edge, so the ground runs on past the wide grid
+  // with no cliff and no second ground. The classic renderer keeps the map's apron (the reference is unchanged).
+  const mapApron = !legacy && wideMesh ? scene.getObjectByName('terrain apron') : null;
+  const driveApron = mapApron ? createApron({ scene: group, base: city.base }, wide, wideMesh, wideMap) : null;
+  if (driveApron) driveApron.name = 'drive apron';
   // ground[i] is drawn from the grid named alongside it; a skirt fills the ledge at each one's edge
   for (const [mesh, name] of ground) group.add(buildSkirt(mesh, terrain.grid(name), SKIRT_DEPTH));
   // the patches bring their own skirts and water
@@ -182,8 +204,28 @@ export async function createSession(ctx, terrain, hooks, { route: firstRoute, ro
     return part;
   }
 
-  const anisotropy = renderer.capabilities.getMaxAnisotropy();
-  const materials = createRoadMaterials({ anisotropy });
+  const anisotropy = maxAnisotropy(renderer);
+  const materials = legacy ? createRoadMaterials({ anisotropy }) : createRoadNodeMaterials({ anisotropy });
+
+  // Surfaces (plan 01's renderer, decision 6): the node materials light lands on, by kind ('road', 'sign', 'support',
+  // 'delineator', 'building'; the ground has eachGround). The lights part adds its terms to each through
+  // src/drive/lights/surfaceLight.node.js; a route switch brings new sign materials, which reach it as they are built.
+  const surfaces = new Map(), surfaceListeners = new Set();
+  function addSurfaces(list) {
+    for (const [m, kind] of list) {
+      if (!m || surfaces.has(m)) continue;
+      surfaces.set(m, kind);
+      for (const fn of surfaceListeners) fn(m, kind);
+    }
+  }
+  const dropSurfaces = (list) => { for (const [m] of list) surfaces.delete(m); };
+  /** fn(material, kind) for every surface material now and for each that arrives later; returns the unsubscribe. */
+  function eachSurface(fn) {
+    for (const [m, kind] of surfaces) fn(m, kind);
+    surfaceListeners.add(fn);
+    return () => surfaceListeners.delete(fn);
+  }
+  addSurfaces([[materials.road, 'road'], [materials.roadNear, 'road']]);
   // a route's kit: its road chunks, signs and barriers (see the top of this file); the materials are shared by all
   const routes = createRouteSwitch({
     async load(id) {
@@ -196,16 +238,19 @@ export async function createSession(ctx, terrain, hooks, { route: firstRoute, ro
       const chunks = createRoadChunks({ roadnet: d.roadnet, base: city.base, earthR: EARTH_R, parent: roads, materials, barriers: d.barriers });
       const roadside = d.signs ? createRoadside({
         signs: d.signs, barriers: d.barriers, roadnet: d.roadnet, base: city.base, earthR: EARTH_R, parent: roads, anisotropy,
-        ground: terrain.surfaceAt,
+        ground: terrain.surfaceAt, legacy,
       }) : null;
       if (roadside && look) roadside.setLook(look);
-      return { ...d, chunks, roadside, dispose() { roadside?.dispose(); chunks.dispose(); } };
+      const own = roadside?.surfaces?.() ?? [];
+      addSurfaces(own);
+      return { ...d, chunks, roadside, dispose() { dropSurfaces(own); roadside?.dispose(); chunks.dispose(); } };
     },
   });
   const routeInfo = (k) => ({ route: k.route, roadnet: k.roadnet, road: k.road, files: k.files });
   routes.onSwap((k) => { for (const p of parts) p.setRoute?.(routeInfo(k)); });
   await routes.use(firstRoute ?? net.routes[0].id);
-  const env = createEnv({ city });
+  // plan 01's renderer: the port adapts the app's clock and environment (env.js, decisions 4 and 5)
+  const env = createEnv({ city, app: legacy ? null : ctx.plan01 });
   const clock = env.clock;
   const frameOf = createFrame(city);
   const rig = createRig();
@@ -226,9 +271,11 @@ export async function createSession(ctx, terrain, hooks, { route: firstRoute, ro
   });
   addPart({ name: 'terrain', whenSettled: () => terrain.whenSettled(), stats: () => terrain.stats() });
   if (corridorIndex && wide) {
+    const corridorMat = legacy ? undefined : corridorNodeMaterial();
+    if (corridorMat) addSurfaces([[corridorMat, 'building']]);
     addPart(createCorridor({
       index: corridorIndex, fetchBinary: (f) => get(`corridor/${f}`).then((r) => r.arrayBuffer()), heightAt: terrain.surfaceAt,
-      base: city.base, earthR: EARTH_R, parent: group, anisotropy: renderer.capabilities.getMaxAnisotropy(),
+      base: city.base, earthR: EARTH_R, parent: group, anisotropy, material: corridorMat,
     }));
   }
 
@@ -236,14 +283,15 @@ export async function createSession(ctx, terrain, hooks, { route: firstRoute, ro
   let partsReady = Promise.resolve();
   function loadParts() {
     const ctx = {
-      app: ctx0, session, get, optional, group, roads, terrain, wideMesh, ground: groundMeshes, eachGround, net, env, clock, rig, frameOf,
+      legacy, app: ctx0, session, get, optional, group, roads, terrain, wideMesh, ground: groundMeshes, eachGround, eachSurface, net, env, clock, rig, frameOf,
       earthR: EARTH_R, base: city.base, materials,
       get chunks() { return routes.kit?.chunks ?? null; },
       get roadside() { return routes.kit?.roadside ?? null; },
     };
-    partsReady = Promise.all(PART_FACTORIES.map(async (factory) => {
+    const wanted = partsFromSearch(typeof location !== 'undefined' ? location.search : '');
+    partsReady = Promise.all(selectParts({ legacy, wanted, registry: PARTS }).map(async (entry) => {
       try {
-        const part = await factory(ctx);
+        const part = await entry.load(ctx);
         if (!part) return;
         addPart(part);
         if (frame) part.update?.(frame);
@@ -261,10 +309,11 @@ export async function createSession(ctx, terrain, hooks, { route: firstRoute, ro
   const timings = { total: createTimings(), journey: createTimings(), chunks: createTimings(), rig: createTimings(), ui: createTimings() };
   const viewport = () => ({ width: innerWidth, height: innerHeight });
   // the adaptive render scale (renderScale.js): playing, the pixel ratio follows the frame times; paused, the full one
-  const scale = createRenderScale({
+  // on plan 01's renderer its quality governor owns the render scale (decision 8): renderScale.js is not used there
+  const scale = legacy ? createRenderScale({
     renderer, invalidate,
     allowed: adaptiveAllowed({ webdriver: typeof navigator !== 'undefined' && !!navigator.webdriver, software: isSoftwareRenderer(renderer) }),
-  });
+  }) : governedScale(plan01.quality);
 
   function journeyFor(routeId) {
     const route = net.route(routeId);
@@ -287,18 +336,58 @@ export async function createSession(ctx, terrain, hooks, { route: firstRoute, ro
       journey.rebase(startS, Number.isFinite(d.startMs) ? d.startMs : Date.now());
     }
     clock.seek(journey.timeAt(startS));
+    syncTimeline();
     needPose = true;
     invalidate();
+  }
+
+  // Plan 01's renderer (decision 4): the journey is on app.timeline, so plan 01's environment, exposure and transport
+  // know a journey is under way and where it departed. The drive's journey (journey.js) stays the one that places the
+  // car; the timeline's handle is begun again whenever the drive re-times its departure (a start, a seek with a time,
+  // the time-of-day jumps; the lock re-times every frame and syncs when it is released). The timeline's own end of
+  // journey does nothing ('hold'): the car holds at the end of the route by itself, and the drive's bar says so.
+  let handle = null;
+  const timelineJourneys = new WeakMap();
+  function timelineJourney(j) {
+    if (!timelineJourneys.has(j)) {
+      const t0 = () => j.timeAt(j.s0);
+      timelineJourneys.set(j, {
+        id: j.id, label: j.route.label || j.route.name || j.route.id, durationS: j.duration / 1000, atEnd: 'hold',
+        markers: j.markers.filter((m) => Number.isFinite(m.s)).map((m) => ({ progressS: (j.timeAt(m.s) - t0()) / 1000, label: m.label })),
+        /** plan 01 moved the departure (handle.setStart): the car keeps its place on the road, the sky moves */
+        rebase: (startMs) => { j.rebase(j.s0, startMs); needPose = true; },
+      });
+    }
+    return timelineJourneys.get(j);
+  }
+  function syncTimeline() {
+    if (legacy || !group.visible || !journey || locked) return;
+    const startMs = journey.timeAt(journey.s0);
+    if (handle && plan01.timeline.active === handle && handle.journey === timelineJourney(journey) && handle.startMs === startMs) return;
+    handle = plan01.timeline.begin(timelineJourney(journey), { startMs });
+  }
+  function endTimeline() {
+    if (handle) handle.end();
+    handle = null;
   }
 
   // The look (look.js) for the sun: blended on the app's sky (skyblend.js), the parts told when dusk moves a step,
   // and the boolean night (the interface theme, the app's night-only extras) switched once at its threshold. The sun is
   // rounded (elevation to 0.02 degree, azimuth to 0.1) so the sky is repainted only when something visible changes.
-  const skyBlend = createSkyBlend({
+  // On plan 01's renderer the sky, the light, the haze and the exposure are plan 01's (decision 5): no blend, and the
+  // look the parts get is computed from env.state at frame step 45, after the environment (lookFromEnv, look.js).
+  const skyBlend = legacy ? createSkyBlend({
     dome: ctx.sky, renderer, invalidate, ephemeris: env.ephemeris, ground, imagery: () => settings.imagery,
-  });
+  }) : null;
   let skyKey = null;
+  /** Tell the parts when the look moved a step. */
+  function applyLook(next) {
+    if (look && look.dusk === next.dusk && look.night === next.night && look.lights === next.lights) return;
+    look = next;
+    for (const p of parts) p.setLook?.(look);
+  }
   function updateLook(sun, simMs) {
+    if (!legacy) { if (plan01.env.state) applyLook(lookFromEnv(plan01.env.state, { steps: LOOK_STEPS })); return; }
     const elevation = Math.round(sun.elevation * 50) / 50, azimuth = Math.round(sun.azimuth * 10) / 10;
     const next = lookAt({ elevation, azimuth }, { steps: LOOK_STEPS });
     const key = `${elevation} ${azimuth} ${Math.round(simMs / SUN_STEP_MS)}`;
@@ -345,7 +434,7 @@ export async function createSession(ctx, terrain, hooks, { route: firstRoute, ro
   const settledParts = () => partsReady.then(() => Promise.all(parts.map((p) => p.whenSettled?.())));
 
   const session = {
-    net, env, clock, rig, group, terrain, timings, addPart,
+    net, env, clock, rig, group, terrain, timings, addPart, eachSurface, legacy,
     /** The adaptive render scale (renderScale.js): stats(), setAdaptive(on). */
     renderScale: scale,
     get parts() { return parts.map((p) => p.name); },
@@ -393,7 +482,7 @@ export async function createSession(ctx, terrain, hooks, { route: firstRoute, ro
 
     /** Move the car: both s and t re-time the journey; s alone moves the clock to when the car is there. */
     seek({ s, t } = {}) {
-      if (Number.isFinite(s) && Number.isFinite(t)) { journey.rebase(s, t); clock.seek(t); }
+      if (Number.isFinite(s) && Number.isFinite(t)) { journey.rebase(s, t); clock.seek(t); syncTimeline(); }
       else if (Number.isFinite(s)) clock.seek(journey.timeAt(s));
       else if (Number.isFinite(t)) clock.seek(t);
       // the pose is current at once; the next frame redoes it and times the whole frame. No frame is
@@ -414,7 +503,7 @@ export async function createSession(ctx, terrain, hooks, { route: firstRoute, ro
       session.seek({ s: pose.s, t });
     },
     /** Locked, the journey is re-based every frame so the car holds its place while the clock runs. */
-    setLocked(on) { locked = !!on; },
+    setLocked(on) { locked = !!on; syncTimeline(); },
     setRate(rate) { clock.setRate(rate); },
     /** The default moment (moment.js) for where the car is, on the clock's own day. */
     duskAt() {
@@ -441,6 +530,8 @@ export async function createSession(ctx, terrain, hooks, { route: firstRoute, ro
       lastNow = null;
       if (on) scale.enter(); else scale.leave(); // leaving Drive puts the app's own pixel ratio back
       if (!on) releaseLook();
+      if (!legacy) attach(on);
+      if (mapApron) mapApron.visible = !on;
       if (on) {
         if (wideMesh) {
           wideMesh.material.map = settings.imagery ? wideMap : null;
@@ -482,8 +573,12 @@ export async function createSession(ctx, terrain, hooks, { route: firstRoute, ro
       scale.tick(now, clock.playing); // before the frame is drawn: a paused frame at the full ratio
     },
 
-    /** Draw the frame (app.drive.render, while driving): parts' beforeRender, the scene, parts' afterRender. */
+    /**
+     * Draw the frame now: on the classic renderer app.drive.render (parts' beforeRender, the passes, the scene, parts'
+     * afterRender); on plan 01's the pipeline draws it, with the parts' beforeRender and afterRender around it.
+     */
     render() {
+      if (!legacy) { plan01.pipeline.render(); return; }
       if (holdUntil > performance.now()) return; // a route switch: the last frame stays until the new road is in
       if (frame) for (const p of parts) p.beforeRender?.(frame);
       // passes into targets of their own (the mirrors) go before the world: the canvas is then drawn in one go, world
@@ -507,8 +602,12 @@ export async function createSession(ctx, terrain, hooks, { route: firstRoute, ro
       if (frame) for (const p of parts) p.afterRender?.(frame);
     },
 
+    /** A route switch holds the last frame on screen (plan 01's renderer: main.js then skips the pipeline's draw). */
+    get holding() { return holdUntil > performance.now(); },
+
     /** Remove every part's objects, last registered first. The session is unusable after this. */
     dispose() {
+      if (!legacy) attach(false);
       for (const p of [...parts].reverse()) p.dispose?.();
       parts.length = 0;
       releaseLook();
@@ -552,7 +651,7 @@ export async function createSession(ctx, terrain, hooks, { route: firstRoute, ro
       invalidate();
       // a lost context stops three's animation loop: no frame will come, so say so rather than wait for ever
       while (renderer.info.render.frame === drawn) {
-        if (renderer.getContext().isContextLost?.()) throw new Error('the WebGL context was lost; no frame can be drawn');
+        if (contextLost(renderer)) throw new Error('the WebGL context was lost; no frame can be drawn');
         await nextFrame();
       }
     },
@@ -576,7 +675,7 @@ export async function createSession(ctx, terrain, hooks, { route: firstRoute, ro
         position: v(pose.position), forward: v(pose.forward), up: v(pose.up), eye: v(rig.apply(scratch, pose, viewport()).position),
         t: clock.now(), iso: new Date(clock.now()).toISOString(), playing: clock.playing,
         yaw: rig.yaw, pitch: rig.pitch, lens: rig.lens, view: rig.view, reduceMotion: rig.reduceMotion, glance: rig.glancing,
-        night: !!seam.night, rate: clock.rate, locked, arrived: session.arrived,
+        night: legacy ? !!seam.night : !!look?.night, rate: clock.rate, locked, arrived: session.arrived,
         sunElevation: env.ephemeris.sun(clock.now()).elevation,
       };
     },
@@ -592,6 +691,51 @@ export async function createSession(ctx, terrain, hooks, { route: firstRoute, ro
       };
     },
   };
+
+  // ---------------------------------------------------------------- plan 01's renderer: the frame loop and the pipeline
+  // The session is a subsystem of the app's frame loop (decision 3): at order 20, after the clock (0) and the timeline
+  // (10), it places the car and the camera and runs the parts' update; at 45, after the environment (40), it gives the
+  // parts the look; it votes 'continuous' while the clock plays or a glance eases. main.js draws through the pipeline,
+  // whose camera is the app's camera the rig drives; the parts' beforeRender and afterRender run around each draw.
+  let lastSeenMs = null, detach = null;
+  function frameStep() {
+    if (!group.visible || !journey) return;
+    const t0 = performance.now();
+    const simMs = clock.now();
+    if (locked && pose && lastSeenMs !== null && simMs !== lastSeenMs) journey.rebase(pose.s, simMs);
+    const moved = needPose || simMs !== lastSeenMs;
+    lastSeenMs = simMs;
+    if (moved) { needPose = false; update(); }
+    let t = performance.now();
+    rig.apply(camera, pose, viewport());
+    if (camera.near !== NEAR_M) { camera.near = NEAR_M; camera.updateProjectionMatrix(); }
+    if (moved) timings.rig.add(performance.now() - t);
+    t = performance.now();
+    hooks.onFrame(session);
+    if (moved) { timings.ui.add(performance.now() - t); timings.total.add(performance.now() - t0); }
+  }
+  const around = (before) => {
+    if (!frame || !group.visible) return;
+    for (const p of parts) (before ? p.beforeRender : p.afterRender)?.call(p, frame);
+  };
+  function attach(on) {
+    if (!on) { detach?.(); detach = null; endTimeline(); return; }
+    if (detach) return;
+    lastSeenMs = null;
+    const { loop, pipeline } = plan01;
+    const off = [
+      loop.add({ update: frameStep, demand: () => (group.visible && (clock.playing || rig.glancing) ? 'continuous' : 'idle') }, 20),
+      loop.add({ update: () => { if (group.visible) updateLook(); } }, 45),
+    ];
+    pipeline.around.push(around);
+    if (pipeline.scenePass && pipeline.scenePass.camera !== camera) pipeline.setCamera(camera);
+    syncTimeline();
+    detach = () => {
+      off.forEach((f) => f());
+      const i = pipeline.around.indexOf(around);
+      if (i >= 0) pipeline.around.splice(i, 1);
+    };
+  }
 
   const scratch = new THREE.PerspectiveCamera();
   const ray = new THREE.Raycaster();
@@ -614,3 +758,16 @@ export async function createSession(ctx, terrain, hooks, { route: firstRoute, ro
 }
 
 const nextFrame = () => new Promise((resolve) => requestAnimationFrame(resolve));
+
+/** Whether the renderer's WebGL context is lost (WebGPU reports a lost device through its own handler instead). */
+function contextLost(renderer) {
+  try { return !!renderer.getContext?.()?.isContextLost?.(); } catch { return false; }
+}
+
+/** renderScale.js's interface on plan 01's renderer, where app.quality's governor owns the render scale (decision 8). */
+function governedScale(quality) {
+  return {
+    enter() {}, leave() {}, tick() {}, setAdaptive() {},
+    stats: () => ({ adaptive: false, allowed: false, governedBy: 'app.quality', ratio: quality?.renderScale ?? 1, level: quality?.level ?? null }),
+  };
+}

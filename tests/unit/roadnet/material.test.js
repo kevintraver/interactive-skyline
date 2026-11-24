@@ -38,7 +38,8 @@ describe('road atlas and materials', () => {
   });
 
   it('samples the stacked cycles of the atlas with a repeat of 1 / V_CYCLES along v', async () => {
-    const src = (await import('node:fs')).readFileSync(new URL('../../../src/drive/roadnet/material.js', import.meta.url), 'utf8');
+    // the atlas textures are shared by material.js and material.node.js (textures.js)
+    const src = (await import('node:fs')).readFileSync(new URL('../../../src/drive/roadnet/textures.js', import.meta.url), 'utf8');
     expect(src).toContain('t.repeat.set(1, 1 / V_CYCLES)');
     expect(V_CYCLES).toBeGreaterThan(1);
   });

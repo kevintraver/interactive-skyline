@@ -37,6 +37,10 @@ function contextOf(app, { terrainData }) {
   const { city, cityId, scene, camera, controls, renderer, canvas, settings, invalidate, sky, terrain, tall, events } = app;
   return {
     city, cityId, DATA: `/data/${cityId}`, scene, camera, controls, renderer, canvas, settings, invalidate, tall,
+    /** true on the classic WebGLRenderer (the drive's GLSL path), false on plan 01's renderer (node materials) */
+    legacy: app.rendererKind === 'legacy',
+    /** plan 01's contract (section 11), on its renderer: the clock, the timeline, the environment, quality, the pipeline, the loop */
+    plan01: { clock: app.clock, timeline: app.timeline, env: app.env, quality: app.quality, pipeline: app.pipeline, loop: app.loop },
     /** the app's event bus (src/app/events.js): 'buildings:changed' after a hide, show or move, 'buildings:rebuilt' */
     events,
     /** { active, night, frame, render, focus }: the seam main.js reads (see the top of this file) */
@@ -59,7 +63,7 @@ function contextOf(app, { terrainData }) {
  */
 export function initDrive(app, loaded) {
   const ctx = contextOf(app, loaded);
-  const { city, DATA, camera, controls, canvas, settings, seam, invalidate } = ctx;
+  const { city, DATA, camera, controls, canvas, settings, seam, invalidate, legacy, plan01 } = ctx;
   const terrain = createTerrain({
     meta: ctx.terrainMeta, buffers: ctx.buffers, base: city.base,
     fetchBinary: async (file) => {
@@ -83,7 +87,7 @@ export function initDrive(app, loaded) {
 
   const el = {
     views: document.querySelector('.views'), night: document.getElementById('night'), sky: document.getElementById('sky-toggle'), hint: document.getElementById('hint'),
-    compass: document.getElementById('compass'), tools: document.getElementById('tools'),
+    compass: document.getElementById('compass'), tools: document.getElementById('tools'), transport: document.getElementById('transport'),
   };
   const tz = city.tz || 'UTC';
   const units = () => settings.units;
@@ -276,6 +280,30 @@ export function initDrive(app, loaded) {
   }
   function setCompassTitle(text) { el.compass.title = text; el.compass.setAttribute('aria-label', text); }
 
+  // ---------------------------------------------------------------- the map's clock, handed to the drive (plan 01's renderer)
+  // One clock (decision 4): the drive runs on app.clock. Entering Drive saves what the map had (pinned or the clock
+  // state, the time, the rate, playing) and enters the clock state (decision 5); leaving puts it back.
+  let mapClock = null, driveRate = 1; // the drive's own rate on the shared clock, kept across sessions of this visit
+  function saveMapClock() {
+    if (legacy || mapClock) return;
+    const { clock, env } = plan01;
+    mapClock = { mode: env.mode, night: !!settings.night, timeMs: clock.timeMs, rate: clock.rate, playing: clock.playing, live: clock.live, frozen: env.frozen };
+  }
+  function restoreMapClock() {
+    if (legacy || !mapClock) return;
+    const { clock, env } = plan01;
+    const m = mapClock;
+    mapClock = null;
+    clock.pause();
+    if (m.live) clock.goLive();
+    else {
+      clock.set(m.timeMs);
+      if (clock.rate !== m.rate) clock.setRate(m.rate);
+    }
+    if (m.mode === 'pinned') { env.pin(m.night); return; } // pinning pauses the clock, as the map had it
+    if (m.playing && !m.live) clock.play();
+  }
+
   // ---------------------------------------------------------------- entering and leaving
   /** Load the drive the first time (on route `id`); a failed download shows one toast and leaves the app in Map. */
   function load(id) {
@@ -307,6 +335,7 @@ export function initDrive(app, loaded) {
       return new Promise(() => {});
     }
     const token = ++entering;
+    if (!seam.active) saveMapClock();
     const switching = seam.active && !!session && id !== session.route;
     showMode('drive');
     bar.show(true);
@@ -325,6 +354,7 @@ export function initDrive(app, loaded) {
         cards.show(false);
         cards.setLoading(false);
         showMode('map');
+        if (!seam.active) restoreMapClock();
         ctx.showToast('The drive could not be loaded.', false);
       }
       console.warn('Drive mode failed to load.', err);
@@ -375,8 +405,18 @@ export function initDrive(app, loaded) {
     ctx.stopFlight();
     saveMap();
     controls.enabled = false;
-    seam.frame = (now) => session.frame(now);
-    seam.render = () => session.render();
+    if (legacy) {
+      seam.frame = (now) => session.frame(now);
+      seam.render = () => session.render();
+    } else {
+      // plan 01's renderer: the session is a subsystem of the frame loop and the pipeline draws (session.js attach)
+      seam.frame = () => {};
+      seam.render = null;
+      seam.holding = () => session.holding;
+      plan01.env.enterClock();
+      session.setRate(driveRate); // the map's rate (60x, say) is the map's
+      if (el.transport) el.transport.style.display = 'none'; // the drive's bar is the transport while driving
+    }
     seam.focus = (entry) => {
       const b = entry.data;
       session.lookAt(entry.offset.clone().set(b.c[0], b.ground - city.base + b.h * 0.6, -b.c[1]).add(entry.offset));
@@ -403,11 +443,14 @@ export function initDrive(app, loaded) {
     viewPop.open(false);
     if (!seam.active) return;
     wasPlaying = session.clock.playing;
+    if (!legacy) driveRate = session.clock.rate;
     session.clock.pause();
     seam.active = false;
-    seam.frame = seam.render = seam.focus = null;
+    seam.frame = seam.render = seam.focus = seam.holding = null;
     seam.night = null;
     session.show(false);
+    restoreMapClock();
+    if (el.transport) el.transport.style.display = '';
     ctx.applyNight();
     ctx.repaint();
     document.documentElement.dataset.theme = settings.night ? 'dark' : 'light';
@@ -462,6 +505,14 @@ export function initDrive(app, loaded) {
     play() { need().clock.play(); invalidate(); },
     pause() { need().clock.pause(); writeAddress(); invalidate(); },
     look(l) { need().rig.look(l || {}); writeAddress(); invalidate(); },
+    /** Turn the head toward a removable building (its id, as in window.__skyline.tall), as the list's focus does. */
+    lookAtBuilding(id) {
+      const sn = need(), entry = (ctx.tall || []).find((e) => e.data.id === id);
+      if (!entry) throw new Error(`no removable building "${id}"`);
+      seam.focus(entry);
+      writeAddress();
+      return { yaw: sn.rig.yaw, pitch: sn.rig.pitch };
+    },
     pose: () => (session && seam.active ? session.poseNumbers() : null),
     whenSettled: () => need().whenSettled(),
     /** The parts not settled within `ms` (default 0), by name: for a script that timed out on whenSettled. */
