@@ -1733,6 +1733,7 @@ interface EnvNodes {
   aerialPerspective(posWorld: Node): Node;              // vec4: rgb in-scattered luminance, a transmittance
   transmittance(posWorld: Node): Node;                  // vec3 from the camera to that point; for sprites, which have no depth
   cloudShadow(posWorld: Node): Node;                    // float 0..1
+  terrainShadow(posWorld: Node): Node;                  // float 0..1: the far terrain shadow of the key light (T3.6); 1 until then
   wetness(posWorld: Node): Node;                        // vec2: film, puddles
   wetLayer(s: SurfaceNodes, o?: { porosity?: Node; puddleMask?: Node }): SurfaceNodes;
   applyWetSurface(material: NodeMaterial, o: { porosity: number; puddleMask?: Node }): void;   // wetLayer() wired into a standard node material
