@@ -192,13 +192,15 @@ The owner asked again for the build to be driven to completion, and for bugs to 
 12. **A billboard's face is drawn inside what the tone mapping shows.** At night a digital face is 300 cd/m² beside a road of 1 to 2, and the frame has one exposure. The face's white level is drawn no higher than 1.4 in the pre-exposed buffer (`src/drive/roadside/faceDisplay.js`); the board's luminance in the registry and the light it throws are unchanged.
 13. **The driver's night adaptation.** Plan 01's night key (the scene's average 5 stops under mid-grey) was fitted to a city seen from the air, with its sources authored to sit near 1.2 to 1.4 in the buffer; a road at 0.25 to 0.5 cd/m² then reads as black. While driving, a stage at `afterBloom` lifts the dim parts of the frame by up to 4 times at night and leaves values near 1.2 where they are, hue kept, for the whole frame (`src/drive/adaptation.node.js`); by day it is the identity. Nothing is tuned class by class and `probe()` is not affected. Separately, the pavement's return under headlamps is its coefficient of retroreflected luminance (R_L, as for markings), not a matte surface's, which is what lets a low beam reach 60 m.
 
-**The shortest path (owner, 2026-11-24).** The owner asked to leave the VIIRS fit (D7.1, D7.2) aside and to take the shortest path to a finished branch. What that keeps: every part on the new renderer, the road readable at night, Drive opening on the new renderer by default, and the tests green. What it drops from this branch, each to be picked up at the merge with plan 01's phase 3 or later:
+**The path to the pull request (owner, 2026-11-24).** The owner asked to leave the VIIRS fit (D7.1, D7.2) aside, confirmed this path, and asked for a pull request when it is done:
 
-- Deleting the GLSL path and the stand-ins. The classic path stays behind `?renderer=legacy` until plan 01 deletes the classic renderer, and goes in that merge.
-- The frame-rate work at device pixel ratio 2: plan 01's quality governor owns the render scale; it is measured once and reported.
-- A separate pass over the controls by real input: the drive's interface spec covers it.
-- The cabin's fallback for a logarithmic depth buffer, variety in the billboards' lettering, joining `tests/data` to `tests/python`.
-- Further merges of plan 01 beyond its small commits; its phase 3 is the next merge.
+1. The wet road, rain and spray; traffic and the valley's ribbons; the night look (decision 13). In progress.
+2. The closing pass: Drive opens on the new renderer; the quality level is held while driving so the WebGPU fault of a quality change cannot be triggered; the drive's browser specs pass on the new renderer, including on a logarithmic depth buffer (the cabin's fallback where reversed depth is refused).
+3. The GLSL path, the stand-ins and the interim seams are deleted, and the `.node` suffix with them; `tests/data` joins `tests/python` under one command.
+4. The billboards' lettering in several layouts (the text-free artwork was lost with the scratchpad in a restart, so it is generated again and this time kept in the repository).
+5. The orchestrator's final check, goldens and budgets, the README, then the pull request.
+
+Left out of this branch: the frame-rate work at device pixel ratio 2 beyond one measurement (plan 01's quality governor owns the render scale); a separate pass over the controls by real input (the drive's interface spec covers it); merges of plan 01 beyond its small commits (its phase 3 is the next merge).
 
 **State of the third stretch** (kept current as work lands).
 
