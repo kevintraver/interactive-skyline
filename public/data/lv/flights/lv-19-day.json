@@ -1,0 +1,301 @@
+{
+ "format": "skyline-flight/1",
+ "id": "lv-19-day",
+ "city": "lv",
+ "airport": "KLAS",
+ "runway": "19R",
+ "aircraftType": "B739",
+ "recordedStart": "2026-02-16T15:34:51Z",
+ "touchdown": "2026-02-16T16:04:51Z",
+ "touchdownT": 1800.0,
+ "dt": 1.0,
+ "samples": 2212,
+ "channels": [
+  "x",
+  "n",
+  "h",
+  "s",
+  "gs",
+  "vs",
+  "tas",
+  "ias",
+  "hdg",
+  "pitch",
+  "roll",
+  "flap",
+  "slat",
+  "gear",
+  "speedbrake",
+  "groundSpoiler",
+  "reverser",
+  "lights",
+  "cabinLight",
+  "turbulence"
+ ],
+ "units": {
+  "x": "m east of the city origin",
+  "n": "m north of the city origin",
+  "h": "m above sea level of the main-gear contact point (on the ground: the surface)",
+  "s": "m flown along the ground track since the first sample",
+  "gs": "m/s",
+  "vs": "m/s, up positive",
+  "tas": "m/s",
+  "ias": "m/s",
+  "hdg": "deg clockwise from grid north (+n)",
+  "pitch": "deg, nose up positive",
+  "roll": "deg, right wing down positive",
+  "flap": "deg (trailing-edge detent: 0, 1, 2, 5, 10, 15, 25, 30, 40)",
+  "slat": "0 retracted, 1 extend, 2 full extend",
+  "gear": "0 up and locked, 1 down and locked",
+  "speedbrake": "0..1 of flight-detent travel",
+  "groundSpoiler": "0..1",
+  "reverser": "0 stowed, 1 deployed",
+  "lights": "bit field (section 5.5): NAV 1, BEACON 2, STROBE 4, LANDING 8, TAXI 16, TURNOFF 32, LOGO 64, WING 128; every lamp that is on has its bit",
+  "cabinLight": "0..1",
+  "turbulence": "0..1"
+ },
+ "provenance": {
+  "x": "recorded",
+  "n": "recorded",
+  "h": "recorded",
+  "s": "derived",
+  "gs": "recorded",
+  "vs": "recorded",
+  "tas": "derived",
+  "ias": "derived",
+  "hdg": "derived",
+  "pitch": "inferred",
+  "roll": "derived",
+  "flap": "inferred",
+  "slat": "inferred",
+  "gear": "inferred",
+  "speedbrake": "inferred",
+  "groundSpoiler": "inferred",
+  "reverser": "inferred",
+  "lights": "inferred",
+  "cabinLight": "inferred",
+  "turbulence": "derived"
+ },
+ "provenanceNotes": {
+  "h": "ADS-B geometric altitude, calibrated on the runway; wheels = antenna - 5.6 m (estimate); the flare (last seconds before the recorded air-to-ground transition) is modelled",
+  "tas": "v0: ground speed, no wind",
+  "ias": "v0: from tas with an ISA shifted to the surface temperature",
+  "hdg": "v0: the ground track (no crab)",
+  "roll": "v0: coordinated turn from the track's turn rate",
+  "pitch": "v0: flight-path angle plus 2.5 deg clean to 5.4 deg with landing flap",
+  "flap": "v0: by distance to the threshold (1 at 22 km, 5 at 16, 15 at 11, 30 at 7.5), never above a limit speed, 1 deg/s travel",
+  "speedbrake": "v0: not modelled (always 0)"
+ },
+ "reconstructed": [
+  {
+   "from": 1796,
+   "to": 1800,
+   "what": "flare: wheel height modelled from 7.0 m to the runway"
+  }
+ ],
+ "events": [
+  {
+   "t": 0,
+   "s": 0.0,
+   "id": "cruise",
+   "label": "Cruise, 30,000 ft"
+  },
+  {
+   "t": 446,
+   "s": 82598.1,
+   "id": "tod",
+   "label": "Top of descent"
+  },
+  {
+   "t": 945,
+   "s": 162146.4,
+   "id": "fl180",
+   "label": "Through 18,000 ft"
+  },
+  {
+   "t": 1270,
+   "s": 209491.7,
+   "id": "10000",
+   "label": "Through 10,000 ft"
+  },
+  {
+   "t": 1314,
+   "s": 215636.6,
+   "id": "terrain",
+   "label": "Over the valley's terrain"
+  },
+  {
+   "t": 1652,
+   "s": 254846.7,
+   "id": "gear",
+   "label": "Gear down"
+  },
+  {
+   "t": 1731,
+   "s": 261325.9,
+   "id": "ft1000",
+   "label": "1,000 ft above the runway"
+  },
+  {
+   "t": 1794,
+   "s": 266188.5,
+   "id": "threshold",
+   "label": "Runway 19R threshold"
+  },
+  {
+   "t": 1800,
+   "s": 266662.2,
+   "id": "touchdown",
+   "label": "Touchdown"
+  },
+  {
+   "t": 1827,
+   "s": 267945.9,
+   "id": "vacate",
+   "label": "Taxi speed"
+  },
+  {
+   "t": 2211,
+   "s": 270969.3,
+   "id": "end",
+   "label": "End of recording"
+  }
+ ],
+ "atmosphere": [
+  [
+   664.5,
+   11.7,
+   0.0,
+   0.0
+  ]
+ ],
+ "atmosphereNote": "v0: the surface report only (altitude m, temperature degC, wind towards east and north m/s); the upper-air profile is F2.4",
+ "badges": {
+  "light": "day",
+  "weather": "clear",
+  "from": "north-east",
+  "stripSide": "right"
+ },
+ "qa": {
+  "glidePathDeg": 3.35,
+  "crossingHeightM": 22.7,
+  "touchdownPastThresholdM": 529.3,
+  "touchdownRecorded": true,
+  "touchdownSource": "levelled before the surface flag",
+  "touchdownOffCentreM": 1.5,
+  "altitudeOffsetM": -31.53,
+  "datum": "ellipsoid",
+  "calibration": {
+   "barometricOffsetM": -22.62,
+   "barometricPoints": 116,
+   "method": "rollout",
+   "offsetM": -31.53,
+   "points": 15,
+   "geoidM": -28.07,
+   "datum": "ellipsoid"
+  },
+  "flare": {
+   "err": -0.012,
+   "y0": 7.0,
+   "tdSink": 0.8,
+   "sink0": 3.151,
+   "duration": 4.081,
+   "shift": 0.0
+  },
+  "sunAtTouchdownDeg": 17.5,
+  "adsbShare": 1.0,
+  "gatedOut": 0,
+  "antennaAboveWheelsM": 5.6,
+  "gates": {
+   "positionRmsAirM": {
+    "value": 5.4,
+    "max": 12.0,
+    "pass": true
+   },
+   "positionRmsLowM": {
+    "value": 4.92,
+    "max": 5.0,
+    "pass": true
+   },
+   "heightRmsAirM": {
+    "value": 2.92,
+    "max": 8.0,
+    "pass": true
+   },
+   "heightRmsLast60sM": {
+    "value": 2.47,
+    "max": 3.0,
+    "pass": true
+   },
+   "glidePathDeg": {
+    "value": 3.35,
+    "nearest": 3.24,
+    "maxDiff": 0.35,
+    "warnDiff": 0.2,
+    "pass": true,
+    "warn": false
+   },
+   "crossingHeightM": {
+    "value": 22.7,
+    "min": 12.0,
+    "max": 32.0,
+    "pass": true
+   },
+   "touchdownPastThresholdM": {
+    "value": 529.3,
+    "min": 250.0,
+    "max": 1000.0,
+    "pass": true
+   },
+   "touchdownOffCentreM": {
+    "value": 1.5,
+    "maxAbs": 8.0,
+    "pass": true
+   },
+   "bankDeg": {
+    "value": 17.6,
+    "maxAbs": 35.0,
+    "pass": true
+   },
+   "pitchDeg": {
+    "value": [
+     -4.5,
+     5.2
+    ],
+    "min": -6.0,
+    "max": 12.0,
+    "pass": true
+   },
+   "decelerationMs2": {
+    "value": 3.33,
+    "max": 3.5,
+    "pass": true
+   },
+   "flapPlacard": {
+    "value": 0,
+    "max": 0,
+    "pass": true
+   }
+  },
+  "reported": {
+   "recordedRollRmsDeg": null
+  },
+  "pass": true
+ },
+ "weather": {
+  "valid": "2026-02-16 15:56Z",
+  "metar": "KLAS 161556Z 00000KT 10SM SCT180 OVC230 12/00 A2981 RMK AO2 SLP084 T01170000",
+  "altimeterInHg": 29.81,
+  "tempC": 11.666666666666666,
+  "windDir": 0.0,
+  "windKt": 0.0,
+  "visibilityMi": 10.0,
+  "ceilingFt": 23000.0
+ },
+ "source": {
+  "archive": "adsb.lol globe_history",
+  "release": "v2026.02.16-planes-readsb-prod-0",
+  "licence": "ODbL-1.0",
+  "attribution": "Flight track: adsb.lol contributors, ODbL 1.0 (https://www.adsb.lol/)"
+ }
+}

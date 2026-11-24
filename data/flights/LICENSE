@@ -1,0 +1,22 @@
+Flight tracks: Open Database License (ODbL) 1.0
+
+The ADS-B extracts in this folder (data/flights/<city>/raw/*.trace.json.gz) and the flight tracks derived from them
+(public/data/<city>/flights/*.json, *.bin) are made available under the Open Database License (ODbL) v1.0:
+https://opendatacommons.org/licenses/odbl/1-0/
+
+Source: the adsb.lol historical archive (globe_history), https://www.adsb.lol/docs/open-data/historical/ and
+https://github.com/adsblol/globe_history_2025 , https://github.com/adsblol/globe_history_2026 , published by adsb.lol
+under ODbL 1.0 ("use it freely, just keep it open"). Contains information from adsb.lol, made available under the ODbL.
+
+What was done to it (scripts/fetch_adsb_day.py, scripts/find_arrivals.py, scripts/bake_flight.py): one aircraft's
+trace_full file(s) for one UTC day were extracted unchanged; the tracks were filtered to ADS-B positions, gated for
+outliers, smoothed to 1 Hz, their heights calibrated on the runway, and attitude, configuration and lights inferred
+(each channel's provenance is in the track's header). The release tag and the aircraft's ICAO address of each track
+are in data/flights/<city>/selection.json.
+
+Share-alike: if you publicly use an adapted version of these tracks, you must also offer that adapted database under
+the ODbL. Keep this notice with the data.
+
+Other data that enter the bake: weather reports from the Iowa Environmental Mesonet ASOS archive
+(https://mesonet.agron.iastate.edu/), public domain, credit appreciated; runway data from the FAA NASR subscription,
+a US government work.

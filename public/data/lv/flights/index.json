@@ -1,0 +1,26 @@
+{
+ "format": "skyline-flight-index/1",
+ "flights": [
+  {
+   "id": "lv-19-day",
+   "runway": "19R",
+   "aircraftType": "B739",
+   "date": "2026-02-16",
+   "localTime": "08:04",
+   "touchdown": "2026-02-16T16:04:51Z",
+   "duration": 2212.0,
+   "samples": 2212,
+   "start": 1314,
+   "badges": {
+    "light": "day",
+    "weather": "clear",
+    "from": "north-east",
+    "stripSide": "right"
+   },
+   "header": "lv-19-day.json",
+   "data": "lv-19-day.bin",
+   "preview": null
+  }
+ ],
+ "attribution": "Flight tracks: adsb.lol contributors, ODbL 1.0 (https://www.adsb.lol/)"
+}
