@@ -25,6 +25,7 @@ import { buildSign, signFrame } from './geometry.js';
 import { selectVisible, bandOf, packSigns, nightWeight } from './batch.js';
 import { buildStructure } from './structures.js';
 import { createDelineators } from './delineators.js';
+import { lambert } from './lambert.js';
 
 const NIGHT_GLOW = [0.42, 0.14, 0.04]; // emissive intensity by band, near to far
 const BUILD_BUDGET = 48; // signs built per step; the rest follow on the next tick
@@ -44,7 +45,7 @@ function makeCanvas(w, h) {
  * @returns {{ update(car: { x: number, y: number }): void, setNight(on: boolean): void,
  *   whenSettled(): Promise<void>, stats(): object, dispose(): void }}
  */
-export function createRoadside({ signs, roadnet, base, earthR, parent, anisotropy = 1, barriers = null, ground = null }) {
+export function createRoadside({ signs, roadnet, base, earthR, parent, anisotropy = 1, barriers = null, ground = null, legacy = true }) {
   const roadsById = new Map(roadnet.roads.map((r) => [r.id, r]));
   const all = []; // { rec, tab, faces, road, map, built }
   const faceByKey = new Map();
@@ -81,11 +82,11 @@ export function createRoadside({ signs, roadnet, base, earthR, parent, anisotrop
   });
   // per page, one material per night band (identical by day)
   const faceMats = textures.map((map, p) => NIGHT_GLOW.map((_, band) => {
-    const m = new THREE.MeshLambertMaterial({ map, emissiveMap: map, emissive: map ? 0xffffff : 0x000000, emissiveIntensity: 0, color: map ? 0xffffff : 0x2f7a55 });
+    const m = lambert(legacy, { map, emissiveMap: map, emissive: map ? 0xffffff : 0x000000, emissiveIntensity: 0, color: map ? 0xffffff : 0x2f7a55 }, 'sign');
     m.name = `signs p${p} b${band}`;
     return m;
   }));
-  const supportMat = new THREE.MeshLambertMaterial({ vertexColors: true });
+  const supportMat = lambert(legacy, { vertexColors: true }, 'support');
   supportMat.name = 'sign supports';
 
   const group = new THREE.Group();
@@ -95,12 +96,14 @@ export function createRoadside({ signs, roadnet, base, earthR, parent, anisotrop
     const m = new THREE.Mesh(new THREE.BufferGeometry(), mats);
     m.matrixAutoUpdate = false;
     m.frustumCulled = false; // the batch spans 4 km around the car; one sphere test would rarely cull it
+    m.visible = false; // nothing to draw until the first assemble (an empty geometry is an error on WebGPU)
     group.add(m);
     return m;
   });
   const supportMesh = new THREE.Mesh(new THREE.BufferGeometry(), supportMat);
   supportMesh.matrixAutoUpdate = false;
   supportMesh.frustumCulled = false;
+  supportMesh.visible = false;
   group.add(supportMesh);
 
   const uvOf = (s) => (plate) => {
@@ -109,7 +112,7 @@ export function createRoadside({ signs, roadnet, base, earthR, parent, anisotrop
     return { page: r.page, u0: r.x / pg.w, v0: r.y / pg.h, u1: (r.x + r.w) / pg.w, v1: (r.y + r.h) / pg.h };
   };
 
-  const delineators = barriers ? createDelineators({ barriers, roadnet, base, earthR, parent: group, ground }) : null;
+  const delineators = barriers ? createDelineators({ barriers, roadnet, base, earthR, parent: group, ground, legacy }) : null;
   let night = false, disposed = false, car = null, origin = null, headlights = false, lastNight = 0;
   let shown = new Set(), bands = new Map(), wanted = [], dirty = false, timer = null;
   let waiters = [];
@@ -200,6 +203,8 @@ export function createRoadside({ signs, roadnet, base, earthR, parent, anisotrop
     setLook(look) { api.setNight(look.beams ?? look.night); },
     /** true while real headlights light the signs and delineators (lights/headlights.js): the stand-in glow is then off. */
     setHeadlights(on) { headlights = !!on; api.setNight(lastNight); },
+    /** The materials the lights part adds surface light to (plan 01's renderer): [material, kind] pairs. */
+    surfaces: () => [...faceMats.flat().map((m) => [m, 'sign']), [supportMat, 'support'], ...(delineators?.surfaces() ?? [])],
     /** Resolves when every sign wanted for the last update is built and on screen. */
     whenSettled: () => (isSettled() ? Promise.resolve() : new Promise((resolve) => waiters.push(resolve))),
     stats() {

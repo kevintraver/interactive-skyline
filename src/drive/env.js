@@ -1,13 +1,15 @@
-// Stand-ins for plan 01's EnvPort (plan 02, section 11.1): only what the drive's first phase needs.
-// Each member is deleted as plan 01 lands its real one. Pure maths, no DOM and no three.
+// The drive's environment port (plan 02, section 11.1), in one file, on both renderers.
 //
-// Present here: clock, ephemeris, quality (fixed 'high'), weather (rain presets the visitor picks; see the weather
-// stand-in below), and lighting's units and
-// ambientLux (stand-ins tied to today's fixed exposure; plan 01's exposure replaces both).
-// Plan 01 adds: transport (the shared timeline UI, attachJourney, slotAbove), the rest of lighting
-// (sunDirection, shadow focus, colour from CCT or spectrum), exposure, atmosphere,
-// pipeline (render stages, setActiveCamera), quality.caps and renderScale, and weather.on
-// with real states.
+// Classic renderer (the reference until the GLSL path is deleted): stand-ins for plan 01's EnvPort, pure maths, no DOM
+// and no three: the clock, the ephemeris (NOAA), quality (fixed 'high'), the weather (rain presets the visitor picks;
+// see the weather stand-in below), and lighting's units and ambientLux tied to the classic fixed exposure.
+//
+// Plan 01's renderer (third stretch, decisions 4, 5 and 9): the adapter of plan 01's section 11.10 (createEnv with
+// `app`). The clock is app.clock (one clock for the app), the ephemeris is app.env.ephemeris, the ambient light is
+// env.state.sky.horizontalLux, and `plan01`, `nodes` and `state` reach plan 01's environment itself. The members keep
+// the drive's names and shapes, so a part reads the same port on either renderer. The weather is still the stand-in
+// below on both (decision 9 moves it to env.state when the weather part is ported).
+import { zonedToUtc } from '../core/time.js';
 
 export const RATE_MIN = 0.25;
 export const RATE_MAX = 16;
@@ -358,17 +360,75 @@ export function createWeather({ preset = 'clear' } = {}) {
 }
 
 /**
- * The EnvPort stand-in.
- * @param {{ city: object, nowMs?: number, playing?: boolean, rate?: number }} opts
- *   city is an entry of data/cities.json (origin, tz)
+ * The drive's clock on plan 01's SimClock (section 11.2), with the drive clock's interface: now(), playing, rate, seek,
+ * play, pause, setRate (clamped to the drive's RATE_MIN..RATE_MAX), on(tick | seek | rate | play | pause). Time moves
+ * only in the app's frame loop (step 0): advance() here does nothing, so the drive never moves the app's clock twice.
+ * @param {import('../contracts.d.ts').SimClock} clock
  */
-export function createEnv({ city, nowMs, playing, rate } = {}) {
+export function clockOn(clock) {
+  return {
+    now: () => clock.timeMs,
+    get playing() { return clock.playing; },
+    get rate() { return clock.rate; },
+    seek(ms) { if (Number.isFinite(ms)) clock.set(ms); },
+    play() { clock.play(); },
+    pause() { clock.pause(); },
+    setRate(value) { const next = clampRate(value); if (next !== clock.rate) clock.setRate(next); },
+    /** The app's frame loop advances the clock (plan 01, frame step 0). */
+    advance() {},
+    on(type, fn) {
+      if (type === 'tick' || type === 'seek' || type === 'rate') return clock.on(type, (e) => fn({ simMs: e.simMs, dtSimMs: e.dtSimMs }));
+      if (type === 'play' || type === 'pause') {
+        let was = clock.playing;
+        return clock.on('state', (e) => {
+          const now = clock.playing;
+          if (now !== was && (now ? type === 'play' : type === 'pause')) fn({ simMs: e.simMs, dtSimMs: 0 });
+          was = now;
+        });
+      }
+      throw new Error(`clock: unknown event "${type}"`);
+    },
+  };
+}
+
+/**
+ * The drive's ephemeris on plan 01's (section 11.4): sun(ms) as { azimuth, elevation } in degrees (apparent),
+ * timeOfSunElevation(el, dayMs, evening) on the local calendar day of dayMs (NaN when the sun does not reach it that
+ * day), solarNoon(dayMs).
+ * @param {{ at(ms: number): { sun: { azDeg: number, altDeg: number } }, timeOfSunAltitude: Function, events?: Function }} eph
+ * @param {string} zone the city's IANA zone
+ */
+export function ephemerisOn(eph, zone) {
+  const dayStart = (ms) => { const d = localDate(ms, zone); return zonedToUtc({ year: d.y, month: d.m, day: d.d }, zone); };
+  return {
+    sun(simMs) { const s = eph.at(simMs).sun; return { azimuth: s.azDeg, elevation: s.altDeg }; },
+    timeOfSunElevation(elevationDeg, dayMs, evening = true) {
+      let t = null;
+      try { t = eph.timeOfSunAltitude(elevationDeg, dayStart(dayMs), evening ? 'setting' : 'rising'); } catch { t = null; } // an altitude it refuses
+      return Number.isFinite(t) ? t : NaN;
+    },
+    solarNoon(dayMs) {
+      const e = eph.events ? eph.events(dayStart(dayMs)) : null;
+      return e && Number.isFinite(e.noon) ? e.noon : NaN;
+    },
+  };
+}
+
+/**
+ * The drive's environment port.
+ * @param {{ city: object, app?: object, nowMs?: number, playing?: boolean, rate?: number }} opts
+ *   city is an entry of data/cities.json (origin, tz). With `app` (plan 01's renderer) the port adapts plan 01's clock
+ *   and environment (app.clock, app.env); without it, the classic renderer's stand-ins.
+ */
+export function createEnv({ city, app = null, nowMs, playing, rate } = {}) {
   if (!city?.origin) throw new Error('env: city with an origin is required');
+  if (app) return adapterEnv(city, app);
   const clock = createClock({ nowMs, playing, rate });
   const ephemeris = createEphemeris(city);
   const weather = createWeather();
   return {
     city,
+    legacy: true,
     clock,
     ephemeris,
     quality: { preset: 'high', onChange: () => () => {} },
@@ -380,6 +440,46 @@ export function createEnv({ city, nowMs, playing, rate } = {}) {
        * the vehicles' lamps and the headlights, which switch on this, come on earlier under a dark rainy sky.
        */
       ambientLux: (sunElevationDeg) => ambientLux(sunElevationDeg ?? ephemeris.sun(clock.now()).elevation) * (weather.state().skyDim ?? 1),
+    },
+    weather,
+  };
+}
+
+/** Plan 01's environment behind the drive's port (section 11.10). */
+function adapterEnv(city, app) {
+  const env = app.env;
+  const clock = clockOn(app.clock);
+  const ephemeris = ephemerisOn(env.ephemeris, city.tz || app.clock.zone || 'UTC');
+  const weather = createWeather();
+  const q = app.quality;
+  return {
+    city,
+    legacy: false,
+    clock,
+    ephemeris,
+    /** Plan 01's environment (section 11.4): state, nodes, lights, at(), freeze() ... */
+    plan01: env,
+    /** env.nodes (section 11.5): exposure, emissive(), pointSource(), switchOn ... */
+    nodes: env.nodes,
+    get state() { return env.state; },
+    quality: {
+      get preset() { return q?.level ?? 'high'; },
+      get caps() { return q?.caps ?? null; },
+      get renderScale() { return q?.renderScale ?? 1; },
+      onChange: (fn) => (q?.on ? q.on('change', fn) : () => {}),
+    },
+    lighting: {
+      /** Only at the classic display, where the exposure is held at 1 (decision 6); in the shipped look use env.nodes. */
+      units: LIGHTING_UNITS,
+      /**
+       * Horizontal illuminance (lux): plan 01's env.state.sky.horizontalLux for the sun now (with no argument, or the
+       * current sun's elevation), else the clear-sky table for that elevation; x the rain's sky dimming, as above.
+       */
+      ambientLux(sunElevationDeg) {
+        const s = env.state, dim = weather.state().skyDim ?? 1;
+        const now = s && (sunElevationDeg === undefined || Math.abs(sunElevationDeg - s.sun.altDeg) < 0.05);
+        return (now ? s.sky.horizontalLux : ambientLux(sunElevationDeg)) * dim;
+      },
     },
     weather,
   };

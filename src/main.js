@@ -39,7 +39,7 @@ import cities from '../data/cities.json';
 const app = await createApp(cities);
 const { cityId, city, pending, settings, scene, camera, renderer, controls, loop, invalidate } = app;
 // drive seam: Drive mode (src/drive/index.js) sets these while it is active; `night` is its look, never saved
-const drive = app.drive = { active: false, night: null, frame: null, render: null, focus: null };
+const drive = app.drive = { active: false, night: null, frame: null, render: null, focus: null, holding: null };
 app.nightNow = () => drive.night ?? settings.night; // drive seam
 app.format = createFormat(settings, city);
 app.sky = createLegacySky().init(app);
@@ -99,7 +99,8 @@ loop.start(renderer, {
   render(now) {
     // while the camera is still, so the extra frames cost nothing during a drag
     if (app.views.stale && !app.flying() && !app.dragging() && !drive.active) { app.views.stale = false; app.views.snap(); } // drive seam
-    if (drive.active) drive.render(); else pipeline.render(); // drive seam: while driving, the drive owns the draw
+    if (drive.active && drive.render) drive.render(); // drive seam: on the classic renderer the drive owns the draw
+    else if (!(drive.active && drive.holding && drive.holding())) pipeline.render(); // drive seam: on the new one the pipeline draws; a route switch holds the last frame
     if (app.look) app.look.afterRender();
     // the quality governor sees the interval between frames drawn back to back (section 7.14, T2.7)
     // (not in the first five seconds: shader compilation makes the first frames slow, and the governor never raises

@@ -194,14 +194,15 @@ The owner asked again for the build to be driven to completion, and for bugs to 
 | Work | State |
 | --- | --- |
 | Merge of plan 01 (phases 1, 2, 5, stability passes) | Done, e3c9cb1. Drive on the classic renderer; map on the new one. |
-| Foundation: parity tool, `?parts=`, session on the pipeline, the adapter, the clock, terrain, road, static roadside by day | Started. |
-| Light sprites and the surface-light helper as node modules | Started. |
+| Foundation: parity tool, `?parts=`, session on the pipeline, the adapter, the clock, terrain, road, static roadside | Done, 784bcf0. `?mode=drive&renderer=webgpu` runs the static world on the new renderer; 18 shots on three routes pass the parity tool on both backends (0.05 to 0.55 % by day, 0.40 to 1.17 % at night under plan 01's real Moon). Plan 01's apron rose above the wide ground inside the wide grid (up to 418 m): hidden while driving, and the same apron rings the wide grid. Reversed depth holds the road at 22 km and a 0.1 m near plane, so the depth pull and the moving near plane are dropped there. |
+| Light sprites, the surface-light helper and photometry as node modules | Done, 44bbc4e. Within 0.2 % of the GLSL layer on both backends; single lamps within 2 % of I/d². The classic renderer blended sprites after tone mapping and the new one adds them before, so lights are accepted by placement, by luminance probes (`pipeline.probe`) and by looking, not by image parity. |
 | Traffic materials, ribbons, pools and valley as node modules | Started. |
 | Road data defects: the deck over `i15s.main.out` at 4.62 m, the five recorded ground exceptions, a ramp against a lead-out | Started. |
-| Lamps, pools, poles, obstruction lights, headlights and retroreflection, screens' light, billboards on the new renderer | After the foundation. |
-| Cabin, mirrors, instruments, windshield | After the foundation. |
-| Wet road, rain, spray, glass rain; the weather adapter | After the foundation. |
-| Timeline, the drive's bar on `app.clock`, `#sky` while driving, quality levels | After the foundation. |
+| Lamps, pools, poles, obstruction lights, headlights and retroreflection on the new renderer | Started. |
+| Screens, the Sphere's light and billboards on the new renderer | Started. |
+| Cabin, mirrors, instruments, windshield, rain on the glass | Started. |
+| Wet road, rain, spray; the weather adapter | Started. |
+| The drive's bar by real input on `app.clock`, `#sky` while driving, traffic and valley wired in | After the traffic modules. Each part sets its own detail by quality level. |
 | Frame rate at device pixel ratio 2, diagnosed on the new renderer | After the port. |
 | Luminance probes of section 8.3 | After the port (plan 01's `pipeline.probe`). |
 | Delete the GLSL path, the interim seams and the stand-ins; goldens, budgets, CI | Last. |

@@ -7,6 +7,7 @@
 
 import * as THREE from 'three';
 import { curveDrop } from '../frame.js';
+import { waterMaterial } from './material.js';
 
 /** Metres the sheet floats above its level, over the flat ground the elevation source has there. */
 export const LIFT = 1.0;
@@ -55,9 +56,9 @@ export function waterTriangles(rings, maxEdge = MAX_EDGE) {
 /**
  * The water of one patch as one mesh, or null when it has none.
  * @param {{ bodies: Array<{ level: number, rings: number[][][] }> }} doc  water-<patch>.json
- * @param {{ base: number, name?: string }} opts
+ * @param {{ base: number, name?: string, legacy?: boolean }} opts  legacy false: a node material (plan 01's renderer)
  */
-export function buildWaterMesh(doc, { base, name = 'water' }) {
+export function buildWaterMesh(doc, { base, name = 'water', legacy = true }) {
   const bodies = doc?.bodies || [];
   const pos = [];
   for (const b of bodies) {
@@ -81,9 +82,9 @@ export function buildWaterMesh(doc, { base, name = 'water' }) {
   geo.setAttribute('normal', new THREE.BufferAttribute(nor, 3));
   geo.computeBoundingSphere();
   // plain, slightly glossy blue-green: lit by the look's lights, so it follows the day and goes dark at night
-  const material = new THREE.MeshPhongMaterial({
+  const material = waterMaterial({
     color: 0x24545a, specular: 0x3a4a4c, shininess: 40, side: THREE.DoubleSide, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2,
-  });
+  }, { legacy });
   const mesh = new THREE.Mesh(geo, material);
   mesh.position.set(cx, 0, -cy);
   mesh.name = name;
