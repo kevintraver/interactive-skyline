@@ -19,7 +19,7 @@ export function separateModels(models) {
     const before = model.pos.slice();
     if (separateCoplanarFaces(model)) model.outline = before;
   }
-  separateModels.ms = performance.now() - t0;
+  performance.measure?.('skyline: separate coplanar faces', { start: t0 });
   return models;
 }
 
@@ -35,8 +35,7 @@ export function separateModels(models) {
  * @param {{pos: number[], col: number[], glow: number[], win: number[], led: number[]}} model
  */
 export function separateCoplanarFaces(model, { step = SEPARATION } = {}) {
-  const { pos } = model, n = Math.floor(pos.length / 9);
-  const pairs = coplanarOverlaps(pos, appearance(model, n));
+  const { pos } = model, pairs = coplanarFaces(model);
   if (!pairs.length) return 0;
   // the later faces each face loses to; then how deep each face sits in its stack, latest first
   const over = new Map();
@@ -60,6 +59,14 @@ export function separateCoplanarFaces(model, { step = SEPARATION } = {}) {
     for (let v = 0; v < 9; v += 3) { pos[o + v] -= (nx / l) * k; pos[o + v + 1] -= (ny / l) * k; pos[o + v + 2] -= (nz / l) * k; }
   }
   return depth.size;
+}
+
+/**
+ * The pairs separateCoplanarFaces would move apart: faces of a flattened model in one plane, facing the same way,
+ * overlapping, drawn differently, not buried (coplanarOverlaps, with a triangle's look as its part).
+ */
+export function coplanarFaces(model) {
+  return coplanarOverlaps(model.pos, appearance(model, Math.floor(model.pos.length / 9)));
 }
 
 const f32 = new Float32Array(1), u32 = new Uint32Array(f32.buffer);
