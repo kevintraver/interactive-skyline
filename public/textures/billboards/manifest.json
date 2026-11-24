@@ -15,7 +15,8 @@
         "PLUMBLE BUFFET"
       ],
       "idea": "An extravagantly recursive buffet.",
-      "method": "generated artwork, type set in code"
+      "method": "generated artwork, lettering composed in code",
+      "layout": "top-band"
     },
     {
       "id": "bulletin-02",
@@ -30,7 +31,8 @@
         "VOWZA CHAPEL"
       ],
       "idea": "A wedding chapel built for impatience.",
-      "method": "generated artwork, type set in code"
+      "method": "generated artwork, lettering composed in code",
+      "layout": "bottom-band"
     },
     {
       "id": "bulletin-03",
@@ -45,7 +47,8 @@
         "BUMPET LEGAL"
       ],
       "idea": "A lawyer takes road bumps personally.",
-      "method": "generated artwork, type set in code"
+      "method": "generated artwork, lettering composed in code",
+      "layout": "slanted-panel"
     },
     {
       "id": "bulletin-04",
@@ -60,7 +63,8 @@
         "SLOSHNEST BEDS"
       ],
       "idea": "A waterbed promises an ocean voyage.",
-      "method": "generated artwork, type set in code"
+      "method": "generated artwork, lettering composed in code",
+      "layout": "outlined"
     },
     {
       "id": "bulletin-05",
@@ -75,7 +79,8 @@
         "FUZZLE CARPETS"
       ],
       "idea": "Carpet gets an outsized reaction.",
-      "method": "generated artwork, type set in code"
+      "method": "generated artwork, lettering composed in code",
+      "layout": "starburst"
     },
     {
       "id": "bulletin-06",
@@ -90,7 +95,8 @@
         "BEEPKIN PAGERS"
       ],
       "idea": "A pager is a fashion statement.",
-      "method": "generated artwork, type set in code"
+      "method": "generated artwork, lettering composed in code",
+      "layout": "ribbon"
     },
     {
       "id": "bulletin-07",
@@ -105,7 +111,8 @@
         "CHATTERDASH PHONES"
       ],
       "idea": "A car phone for stationary conversations.",
-      "method": "generated artwork, type set in code"
+      "method": "generated artwork, lettering composed in code",
+      "layout": "split-card"
     },
     {
       "id": "bulletin-08",
@@ -120,7 +127,8 @@
         "REWINDLE VIDEO"
       ],
       "idea": "An excessively courteous rental shop.",
-      "method": "generated artwork, type set in code"
+      "method": "generated artwork, lettering composed in code",
+      "layout": "top-stripe"
     },
     {
       "id": "bulletin-09",
@@ -135,7 +143,8 @@
         "SLOWZOOM ONLINE"
       ],
       "idea": "Dial-up waiting becomes the attraction.",
-      "method": "generated artwork, type set in code"
+      "method": "generated artwork, lettering composed in code",
+      "layout": "top-band"
     },
     {
       "id": "bulletin-10",
@@ -150,7 +159,8 @@
         "MYSTIQUIP READINGS"
       ],
       "idea": "A psychic predicts a roadside stop.",
-      "method": "generated artwork, type set in code"
+      "method": "generated artwork, lettering composed in code",
+      "layout": "bottom-band"
     },
     {
       "id": "bulletin-11",
@@ -165,7 +175,8 @@
         "ROAMBLE RV"
       ],
       "idea": "The RV is a couch with a trip.",
-      "method": "generated artwork, type set in code"
+      "method": "generated artwork, lettering composed in code",
+      "layout": "slanted-panel"
     },
     {
       "id": "bulletin-12",
@@ -180,7 +191,8 @@
         "DENTLE AUTOS"
       ],
       "idea": "A used car arrives with the hard part done.",
-      "method": "generated artwork, type set in code"
+      "method": "generated artwork, lettering composed in code",
+      "layout": "outlined"
     },
     {
       "id": "bulletin-13",
@@ -195,7 +207,8 @@
         "RUMBLEHOP SHOW"
       ],
       "idea": "Monster trucks have emotional depth.",
-      "method": "generated artwork, type set in code"
+      "method": "generated artwork, lettering composed in code",
+      "layout": "starburst"
     },
     {
       "id": "bulletin-14",
@@ -210,7 +223,8 @@
         "WAVEBOP RADIO"
       ],
       "idea": "A radio station qualifies its promise.",
-      "method": "generated artwork, type set in code"
+      "method": "generated artwork, lettering composed in code",
+      "layout": "ribbon"
     },
     {
       "id": "bulletin-15",
@@ -225,7 +239,8 @@
         "DUSTORB ATTRACTION"
       ],
       "idea": "A humble dustball becomes a landmark.",
-      "method": "generated artwork, type set in code"
+      "method": "generated artwork, lettering composed in code",
+      "layout": "split-card"
     },
     {
       "id": "bulletin-16",
@@ -240,7 +255,8 @@
         "CHILLFIZZ COOLING"
       ],
       "idea": "A repair shop states the obvious.",
-      "method": "generated artwork, type set in code"
+      "method": "generated artwork, lettering composed in code",
+      "layout": "top-stripe"
     },
     {
       "id": "bulletin-17",
@@ -255,7 +271,8 @@
         "SPARKLEPOP FIREWORKS"
       ],
       "idea": "Fireworks are sold as sky applause.",
-      "method": "generated artwork, type set in code"
+      "method": "generated artwork, lettering composed in code",
+      "layout": "top-band"
     },
     {
       "id": "bulletin-18",
@@ -270,7 +287,8 @@
         "POOFLE MAGIC"
       ],
       "idea": "A magician reveals lunch.",
-      "method": "generated artwork, type set in code"
+      "method": "generated artwork, lettering composed in code",
+      "layout": "bottom-band"
     },
     {
       "id": "bulletin-19",
@@ -285,7 +303,8 @@
         "ZAPNEST LASER TAG"
       ],
       "idea": "Laser tag described with odd urgency.",
-      "method": "generated artwork, type set in code"
+      "method": "generated artwork, lettering composed in code",
+      "layout": "slanted-panel"
     },
     {
       "id": "bulletin-20",
@@ -300,7 +319,8 @@
         "SNOOZLE MATTRESSES"
       ],
       "idea": "A mattress shop takes naps seriously.",
-      "method": "generated artwork, type set in code"
+      "method": "generated artwork, lettering composed in code",
+      "layout": "outlined"
     },
     {
       "id": "bulletin-21",
@@ -315,7 +335,8 @@
         "CRUNCHLE TACOS"
       ],
       "idea": "Tacos refuse to respect the calendar.",
-      "method": "generated artwork, type set in code"
+      "method": "generated artwork, lettering composed in code",
+      "layout": "starburst"
     },
     {
       "id": "bulletin-22",
@@ -330,7 +351,8 @@
         "WIGGLEWAX CAR WASH"
       ],
       "idea": "A very confident car wash.",
-      "method": "generated artwork, type set in code"
+      "method": "generated artwork, lettering composed in code",
+      "layout": "ribbon"
     },
     {
       "id": "bulletin-23",
@@ -345,7 +367,8 @@
         "MELTLE ICE CREAM"
       ],
       "idea": "A scoop dreams big in the desert.",
-      "method": "generated artwork, type set in code"
+      "method": "generated artwork, lettering composed in code",
+      "layout": "split-card"
     },
     {
       "id": "bulletin-24",
@@ -360,7 +383,8 @@
         "PUFFKIN PILLOWS"
       ],
       "idea": "A pillow welcomes grand plans.",
-      "method": "generated artwork, type set in code"
+      "method": "generated artwork, lettering composed in code",
+      "layout": "top-stripe"
     },
     {
       "id": "bulletin-25",
@@ -375,7 +399,8 @@
         "FLIPPLE PANCAKES"
       ],
       "idea": "Pancakes become self-improvement.",
-      "method": "generated artwork, type set in code"
+      "method": "generated artwork, lettering composed in code",
+      "layout": "top-band"
     },
     {
       "id": "bulletin-26",
@@ -390,7 +415,8 @@
         "GLOOPLE POOLS"
       ],
       "idea": "A pool seller diagnoses the yard.",
-      "method": "generated artwork, type set in code"
+      "method": "generated artwork, lettering composed in code",
+      "layout": "bottom-band"
     },
     {
       "id": "bulletin-27",
@@ -405,7 +431,8 @@
         "TWIRLUP HAIR"
       ],
       "idea": "A salon promises ambitious hair.",
-      "method": "generated artwork, type set in code"
+      "method": "generated artwork, lettering composed in code",
+      "layout": "slanted-panel"
     },
     {
       "id": "bulletin-28",
@@ -420,7 +447,8 @@
         "PATCHLE TIRES"
       ],
       "idea": "A tire shop makes a modest claim.",
-      "method": "generated artwork, type set in code"
+      "method": "generated artwork, lettering composed in code",
+      "layout": "outlined"
     },
     {
       "id": "bulletin-29",
@@ -435,7 +463,8 @@
         "DINGDLE DINER"
       ],
       "idea": "A diner extends the morning indefinitely.",
-      "method": "generated artwork, type set in code"
+      "method": "generated artwork, lettering composed in code",
+      "layout": "starburst"
     },
     {
       "id": "bulletin-30",
@@ -450,7 +479,8 @@
         "CLOUDLE LAUNDRY"
       ],
       "idea": "A laundry plays matchmaker for socks.",
-      "method": "generated artwork, type set in code"
+      "method": "generated artwork, lettering composed in code",
+      "layout": "ribbon"
     },
     {
       "id": "bulletin-31",
@@ -465,7 +495,8 @@
         "SANDWINK SOUVENIRS"
       ],
       "idea": "A tiny souvenir claims to contain the desert.",
-      "method": "generated artwork, type set in code"
+      "method": "generated artwork, lettering composed in code",
+      "layout": "split-card"
     },
     {
       "id": "bulletin-32",
@@ -480,7 +511,8 @@
         "PEPPLE PET WASH"
       ],
       "idea": "A pet wash celebrates its bubbles.",
-      "method": "generated artwork, type set in code"
+      "method": "generated artwork, lettering composed in code",
+      "layout": "top-stripe"
     },
     {
       "id": "poster-01",
@@ -495,7 +527,8 @@
         "MOONZLE DONUTS"
       ],
       "idea": "Donuts possess career ambitions.",
-      "method": "generated artwork, type set in code"
+      "method": "generated artwork, lettering composed in code",
+      "layout": "top-band"
     },
     {
       "id": "poster-02",
@@ -510,7 +543,8 @@
         "FLOOFLE FANS"
       ],
       "idea": "A fan shop offers effortless wind.",
-      "method": "generated artwork, type set in code"
+      "method": "generated artwork, lettering composed in code",
+      "layout": "bottom-band"
     },
     {
       "id": "poster-03",
@@ -525,7 +559,8 @@
         "BLOOPLE AQUARIUMS"
       ],
       "idea": "Aquarium decor is treated as furniture.",
-      "method": "generated artwork, type set in code"
+      "method": "generated artwork, lettering composed in code",
+      "layout": "slanted-panel"
     },
     {
       "id": "poster-04",
@@ -540,7 +575,8 @@
         "JINGLEJOT GIFTS"
       ],
       "idea": "Gift wrap promises a big reaction.",
-      "method": "generated artwork, type set in code"
+      "method": "generated artwork, lettering composed in code",
+      "layout": "outlined"
     },
     {
       "id": "poster-05",
@@ -555,7 +591,8 @@
         "CRANKLE CLOCKS"
       ],
       "idea": "A clock shop announces the obvious.",
-      "method": "generated artwork, type set in code"
+      "method": "generated artwork, lettering composed in code",
+      "layout": "starburst"
     },
     {
       "id": "poster-06",
@@ -570,7 +607,8 @@
         "BOUNZLE TRAMPOLINES"
       ],
       "idea": "A trampoline states a basic fact.",
-      "method": "generated artwork, type set in code"
+      "method": "generated artwork, lettering composed in code",
+      "layout": "ribbon"
     },
     {
       "id": "poster-07",
@@ -585,7 +623,8 @@
         "SNACKLE VENDING"
       ],
       "idea": "A vending machine makes dinner interactive.",
-      "method": "generated artwork, type set in code"
+      "method": "generated artwork, lettering composed in code",
+      "layout": "split-card"
     },
     {
       "id": "poster-08",
@@ -600,7 +639,8 @@
         "MOPPLE CLEANERS"
       ],
       "idea": "A cleaning service celebrates dust departing.",
-      "method": "generated artwork, type set in code"
+      "method": "generated artwork, lettering composed in code",
+      "layout": "top-stripe"
     }
   ]
 }

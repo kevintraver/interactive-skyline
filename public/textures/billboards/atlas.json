@@ -6,13 +6,13 @@
    "file": "atlas-high.webp",
    "w": 2048,
    "h": 1816,
-   "bytes": 816228
+   "bytes": 773694
   },
   "low": {
    "file": "atlas-low.webp",
    "w": 1440,
    "h": 1312,
-   "bytes": 487002
+   "bytes": 477568
   }
  },
  "images": [
@@ -35,11 +35,11 @@
     ]
    },
    "mean": [
-    0.35378,
-    0.186186,
-    0.10713
+    0.39035,
+    0.14688,
+    0.077995
    ],
-   "luminance": 0.216109
+   "luminance": 0.193668
   },
   {
    "id": "bulletin-02",
@@ -60,11 +60,11 @@
     ]
    },
    "mean": [
-    0.342122,
-    0.229381,
-    0.269584
+    0.538135,
+    0.127855,
+    0.151646
    ],
-   "luminance": 0.256253
+   "luminance": 0.216798
   },
   {
    "id": "bulletin-03",
@@ -85,11 +85,11 @@
     ]
    },
    "mean": [
-    0.411293,
-    0.266594,
-    0.099025
+    0.310929,
+    0.264164,
+    0.197513
    ],
-   "luminance": 0.285258
+   "luminance": 0.269294
   },
   {
    "id": "bulletin-04",
@@ -110,11 +110,11 @@
     ]
    },
    "mean": [
-    0.147741,
-    0.210105,
-    0.218128
+    0.21524,
+    0.326287,
+    0.343441
    ],
-   "luminance": 0.197426
+   "luminance": 0.303917
   },
   {
    "id": "bulletin-05",
@@ -135,11 +135,11 @@
     ]
    },
    "mean": [
-    0.115295,
-    0.127944,
-    0.135344
+    0.308664,
+    0.240862,
+    0.159856
    ],
-   "luminance": 0.125789
+   "luminance": 0.249428
   },
   {
    "id": "bulletin-06",
@@ -160,11 +160,11 @@
     ]
    },
    "mean": [
-    0.243287,
-    0.122563,
-    0.164926
+    0.537174,
+    0.232819,
+    0.340451
    ],
-   "luminance": 0.151288
+   "luminance": 0.305296
   },
   {
    "id": "bulletin-07",
@@ -185,11 +185,11 @@
     ]
    },
    "mean": [
-    0.375666,
-    0.226368,
-    0.15534
+    0.359444,
+    0.173621,
+    0.123875
    ],
-   "luminance": 0.25298
+   "luminance": 0.209535
   },
   {
    "id": "bulletin-08",
@@ -210,11 +210,11 @@
     ]
    },
    "mean": [
-    0.245218,
-    0.099263,
-    0.140039
+    0.582089,
+    0.173381,
+    0.18524
    ],
-   "luminance": 0.133237
+   "luminance": 0.261129
   },
   {
    "id": "bulletin-09",
@@ -235,11 +235,11 @@
     ]
    },
    "mean": [
-    0.232878,
-    0.286979,
-    0.325404
+    0.245898,
+    0.244282,
+    0.173759
    ],
-   "luminance": 0.278251
+   "luminance": 0.239534
   },
   {
    "id": "bulletin-10",
@@ -260,11 +260,11 @@
     ]
    },
    "mean": [
-    0.185564,
-    0.104826,
-    0.109731
+    0.356508,
+    0.120648,
+    0.146345
    ],
-   "luminance": 0.122345
+   "luminance": 0.172647
   },
   {
    "id": "bulletin-11",
@@ -285,11 +285,11 @@
     ]
    },
    "mean": [
-    0.225445,
-    0.179747,
-    0.175172
+    0.299647,
+    0.219074,
+    0.206891
    ],
-   "luminance": 0.189132
+   "luminance": 0.235324
   },
   {
    "id": "bulletin-12",
@@ -310,11 +310,11 @@
     ]
    },
    "mean": [
-    0.193319,
-    0.153404,
-    0.199476
+    0.310725,
+    0.273801,
+    0.27254
    ],
-   "luminance": 0.165216
+   "luminance": 0.28156
   },
   {
    "id": "bulletin-13",
@@ -335,11 +335,11 @@
     ]
    },
    "mean": [
-    0.252252,
-    0.119677,
-    0.138438
+    0.406516,
+    0.163525,
+    0.228522
    ],
-   "luminance": 0.149217
+   "luminance": 0.219877
   },
   {
    "id": "bulletin-14",
@@ -360,11 +360,11 @@
     ]
    },
    "mean": [
-    0.258235,
-    0.200767,
-    0.236282
+    0.251677,
+    0.428832,
+    0.447349
    ],
-   "luminance": 0.215549
+   "luminance": 0.392506
   },
   {
    "id": "bulletin-15",
@@ -385,11 +385,11 @@
     ]
    },
    "mean": [
-    0.298665,
-    0.223567,
-    0.18734
+    0.25586,
+    0.150191,
+    0.13213
    ],
-   "luminance": 0.236917
+   "luminance": 0.171352
   },
   {
    "id": "bulletin-16",
@@ -410,11 +410,11 @@
     ]
    },
    "mean": [
-    0.281634,
-    0.297461,
-    0.388398
+    0.525058,
+    0.391294,
+    0.417106
    ],
-   "luminance": 0.300662
+   "luminance": 0.421596
   },
   {
    "id": "bulletin-17",
@@ -435,11 +435,11 @@
     ]
    },
    "mean": [
-    0.236956,
-    0.175397,
-    0.268034
+    0.235817,
+    0.154081,
+    0.222816
    ],
-   "luminance": 0.195173
+   "luminance": 0.176421
   },
   {
    "id": "bulletin-18",
@@ -460,11 +460,11 @@
     ]
    },
    "mean": [
-    0.204307,
-    0.092425,
-    0.092323
+    0.379971,
+    0.10411,
+    0.090981
    ],
-   "luminance": 0.116204
+   "luminance": 0.16181
   },
   {
    "id": "bulletin-19",
@@ -485,11 +485,11 @@
     ]
    },
    "mean": [
-    0.28897,
-    0.178105,
-    0.230742
+    0.269116,
+    0.240764,
+    0.342444
    ],
-   "luminance": 0.205475
+   "luminance": 0.254133
   },
   {
    "id": "bulletin-20",
@@ -510,11 +510,11 @@
     ]
    },
    "mean": [
-    0.346297,
-    0.248836,
-    0.330083
+    0.53679,
+    0.338826,
+    0.520519
    ],
-   "luminance": 0.275422
+   "luminance": 0.394031
   },
   {
    "id": "bulletin-21",
@@ -535,11 +535,11 @@
     ]
    },
    "mean": [
-    0.314575,
-    0.263651,
-    0.186924
+    0.331924,
+    0.438835,
+    0.367016
    ],
-   "luminance": 0.268938
+   "luminance": 0.41092
   },
   {
    "id": "bulletin-22",
@@ -560,11 +560,11 @@
     ]
    },
    "mean": [
-    0.198855,
-    0.192637,
-    0.269305
+    0.257542,
+    0.331377,
+    0.526373
    ],
-   "luminance": 0.199494
+   "luminance": 0.329759
   },
   {
    "id": "bulletin-23",
@@ -585,11 +585,11 @@
     ]
    },
    "mean": [
-    0.358955,
-    0.317469,
-    0.302479
+    0.440366,
+    0.272767,
+    0.222756
    ],
-   "luminance": 0.325207
+   "luminance": 0.304788
   },
   {
    "id": "bulletin-24",
@@ -610,11 +610,11 @@
     ]
    },
    "mean": [
-    0.363472,
-    0.202241,
-    0.224715
+    0.652279,
+    0.332283,
+    0.355828
    ],
-   "luminance": 0.238141
+   "luminance": 0.402014
   },
   {
    "id": "bulletin-25",
@@ -635,11 +635,11 @@
     ]
    },
    "mean": [
-    0.322866,
-    0.21457,
-    0.181943
+    0.39641,
+    0.196747,
+    0.093388
    ],
-   "luminance": 0.235238
+   "luminance": 0.231733
   },
   {
    "id": "bulletin-26",
@@ -660,11 +660,11 @@
     ]
    },
    "mean": [
-    0.19369,
-    0.338928,
-    0.287038
+    0.381954,
+    0.215084,
+    0.198701
    ],
-   "luminance": 0.304304
+   "luminance": 0.249378
   },
   {
    "id": "bulletin-27",
@@ -685,11 +685,11 @@
     ]
    },
    "mean": [
-    0.481839,
-    0.165249,
-    0.199363
+    0.281013,
+    0.150891,
+    0.171432
    ],
-   "luminance": 0.235019
+   "luminance": 0.180038
   },
   {
    "id": "bulletin-28",
@@ -710,11 +710,11 @@
     ]
    },
    "mean": [
-    0.278429,
-    0.187141,
-    0.107941
+    0.488076,
+    0.338616,
+    0.218586
    ],
-   "luminance": 0.200831
+   "luminance": 0.361725
   },
   {
    "id": "bulletin-29",
@@ -735,11 +735,11 @@
     ]
    },
    "mean": [
-    0.290734,
-    0.175375,
-    0.128565
+    0.543299,
+    0.311591,
+    0.206678
    ],
-   "luminance": 0.196521
+   "luminance": 0.353277
   },
   {
    "id": "bulletin-30",
@@ -760,11 +760,11 @@
     ]
    },
    "mean": [
-    0.354594,
-    0.22759,
-    0.228046
+    0.557209,
+    0.361099,
+    0.382969
    ],
-   "luminance": 0.254624
+   "luminance": 0.404371
   },
   {
    "id": "bulletin-31",
@@ -785,11 +785,11 @@
     ]
    },
    "mean": [
-    0.504479,
-    0.18325,
-    0.076324
+    0.425153,
+    0.158617,
+    0.087471
    ],
-   "luminance": 0.243823
+   "luminance": 0.210146
   },
   {
    "id": "bulletin-32",
@@ -810,11 +810,11 @@
     ]
    },
    "mean": [
-    0.320392,
-    0.324646,
-    0.289449
+    0.408945,
+    0.45065,
+    0.464593
    ],
-   "luminance": 0.3212
+   "luminance": 0.44279
   },
   {
    "id": "poster-01",
@@ -835,11 +835,11 @@
     ]
    },
    "mean": [
-    0.449986,
-    0.213488,
-    0.193008
+    0.427155,
+    0.181545,
+    0.125509
    ],
-   "luminance": 0.262289
+   "luminance": 0.229716
   },
   {
    "id": "poster-02",
@@ -860,11 +860,11 @@
     ]
    },
    "mean": [
-    0.304193,
-    0.191925,
-    0.09263
+    0.420862,
+    0.166528,
+    0.127897
    ],
-   "luminance": 0.208624
+   "luminance": 0.21781
   },
   {
    "id": "poster-03",
@@ -885,11 +885,11 @@
     ]
    },
    "mean": [
-    0.165641,
-    0.212857,
-    0.179812
+    0.183839,
+    0.237993,
+    0.21339
    ],
-   "luminance": 0.200433
+   "luminance": 0.224703
   },
   {
    "id": "poster-04",
@@ -910,11 +910,11 @@
     ]
    },
    "mean": [
-    0.26482,
-    0.123675,
-    0.362086
+    0.313465,
+    0.225055,
+    0.508343
    ],
-   "luminance": 0.170896
+   "luminance": 0.264304
   },
   {
    "id": "poster-05",
@@ -935,11 +935,11 @@
     ]
    },
    "mean": [
-    0.212759,
-    0.169406,
-    0.08301
+    0.311485,
+    0.244677,
+    0.147149
    ],
-   "luminance": 0.172385
+   "luminance": 0.251839
   },
   {
    "id": "poster-06",
@@ -960,11 +960,11 @@
     ]
    },
    "mean": [
-    0.227479,
-    0.288654,
-    0.370112
+    0.388217,
+    0.458754,
+    0.462924
    ],
-   "luminance": 0.28153
+   "luminance": 0.444059
   },
   {
    "id": "poster-07",
@@ -985,11 +985,11 @@
     ]
    },
    "mean": [
-    0.355331,
-    0.243161,
-    0.225225
+    0.33265,
+    0.172362,
+    0.148958
    ],
-   "luminance": 0.265713
+   "luminance": 0.204749
   },
   {
    "id": "poster-08",
@@ -1010,54 +1010,54 @@
     ]
    },
    "mean": [
-    0.474325,
-    0.324179,
-    0.284366
+    0.611527,
+    0.454072,
+    0.487427
    ],
-   "luminance": 0.353225
+   "luminance": 0.489955
   }
  ],
  "sources": {
-  "manifest.json": "05dae06ea750f53630cd039f710b4d3a443657a0",
-  "bulletin-01.webp": "0d1c26efe6f505bff39545861ee85647512968e3",
-  "bulletin-02.webp": "76e196cf5a37e10f3d821d951bd33bb0736ef3ca",
-  "bulletin-03.webp": "53d82b8aff64118f02289c59d5c94a3fd27f93cc",
-  "bulletin-04.webp": "986e97824ab0437364ce8127e6bcc83b7e5e49e0",
-  "bulletin-05.webp": "e7ca45ad0f5769142a33a3ba8593d74deadd4108",
-  "bulletin-06.webp": "e6c65d4646d53f79f3dad9f14ba9c04745a95e5c",
-  "bulletin-07.webp": "90de226ad9a3d0bca8cf7797bf0078cf7a5eeb37",
-  "bulletin-08.webp": "329245553754089191374bab712c1485827d2323",
-  "bulletin-09.webp": "fc83f625824a95d05b6c714dc80695ca697a14a6",
-  "bulletin-10.webp": "32ae9b31e561ad168108a0424128f47d44d3c111",
-  "bulletin-11.webp": "e8fc184fd27b61ad4cde7bba5fa61f8033ebed7f",
-  "bulletin-12.webp": "764eb5e7e6b58d89e6680f372c6116078a55d690",
-  "bulletin-13.webp": "5beed84cf8d2859d516d8cc4c5c608e5139c6295",
-  "bulletin-14.webp": "244005084e00b455c8dc5572673127286af7c3f4",
-  "bulletin-15.webp": "9098f7287d23a04b61e0bbb9e3300a6650eb0569",
-  "bulletin-16.webp": "6fad6ea0c0ea55446393f738a3aed82041c3ea9b",
-  "bulletin-17.webp": "250d9cd13145ec9ad019ab2831ece781b3ccfc03",
-  "bulletin-18.webp": "191fcd2024c85eeb74471417413f6322042ddb0c",
-  "bulletin-19.webp": "2f5960a4b540ce965f1aab278a5cf8536c63547a",
-  "bulletin-20.webp": "5dfdfb04ff48729f64cfc4a41cf616da43b453ab",
-  "bulletin-21.webp": "796c81631d16b880366d77f2d6bc7274796b6449",
-  "bulletin-22.webp": "14402939fd4dfd3cca5836e9a36a915c0c5a539c",
-  "bulletin-23.webp": "ecb371d9b50489b7acb86bb35948cbccf7bc3881",
-  "bulletin-24.webp": "d9f982003008203823676c9bebe19088eb43bc8d",
-  "bulletin-25.webp": "fee90441e98167b929d5cd2fd4b4e0b8a7a23a6f",
-  "bulletin-26.webp": "d459d57b49c4ab1d7a18141998c55737e25783ab",
-  "bulletin-27.webp": "825cab55c3cea9123fb9707c676babe8ad21ea71",
-  "bulletin-28.webp": "402ca942e1e77828c01954fe265473b3cd40b241",
-  "bulletin-29.webp": "e932a831b287ed30688c0374f11d262084a37c30",
-  "bulletin-30.webp": "4d7c5422f6fa01e4b0c8daecd37fca9afd0b4d33",
-  "bulletin-31.webp": "d617fd16100cf90a996c7db1a6964254e9864ee2",
-  "bulletin-32.webp": "fda05c7a4fb81f54abbc03ec8bcc22a6cde885ef",
-  "poster-01.webp": "1c21d2a23d8b92dd8f3af1b33177aa057dc9ee83",
-  "poster-02.webp": "a8ccf0f2b4287fbd96ed4bdcbeb9b837fed4610a",
-  "poster-03.webp": "d1811f3f0772b0f19aeb890bd5d38f813ee332ae",
-  "poster-04.webp": "39e90d5810b6508023271579066ea65a12f967c5",
-  "poster-05.webp": "a4ad11741c0f7f0b52122f0ed12def72798133bc",
-  "poster-06.webp": "3ecbd6f22e392773a6a9f814c23dd4eed8565c84",
-  "poster-07.webp": "9a4ab600a1d8862c1ad73ec2843eb8a2581bd515",
-  "poster-08.webp": "df3016df2e95531691c188100694d2f308abf568"
+  "manifest.json": "32a49034e78d4d07184416aa88d57bd119c30904",
+  "bulletin-01.webp": "a7f720ccf0e95ba7afde6498e694d2e6630cdc18",
+  "bulletin-02.webp": "09f1bb69828fcf5f0272520dd28a8350c692c654",
+  "bulletin-03.webp": "585604ae5d870dc7839f513c2ec2fef5cc553f4c",
+  "bulletin-04.webp": "79cc81a0b86956c8141a61df30ec126972947d95",
+  "bulletin-05.webp": "f01c674c948e3f29d2809d4fa666ac4f9323f5bf",
+  "bulletin-06.webp": "a7fbddc252c96de097a4a805c773edbaf5d5a266",
+  "bulletin-07.webp": "12bcea849dc31cda66276e558b1e05615d9e84bb",
+  "bulletin-08.webp": "49bca41e5497487c1a49947dbb57038a05f983b6",
+  "bulletin-09.webp": "e5dc496ce728711582140dc9970474a30515ff23",
+  "bulletin-10.webp": "29d2d5cc3c5e1702c1cbe1ba7526ea3b0bee4273",
+  "bulletin-11.webp": "16fd33500f25393cb4aeab0ce643d802d218276c",
+  "bulletin-12.webp": "0d6893a0261ce39c694732e6f2a447d2de34eaf9",
+  "bulletin-13.webp": "6253c53b3238514ca39859747ed8ab9f2d5c3ebb",
+  "bulletin-14.webp": "cd36160c5979d32f41e1be7222e3eb28d585a831",
+  "bulletin-15.webp": "555dd276db8a77b31a52c4c4774fe2cff847960f",
+  "bulletin-16.webp": "8e1c6daf029ba5052415be35c592d98c0cdb0c3a",
+  "bulletin-17.webp": "57e09e8391602248858ad122439fdd8c671ac4cb",
+  "bulletin-18.webp": "82933fe9ed25d1161abae4981e7850b06d66c02f",
+  "bulletin-19.webp": "2bb33a4f1a3891532c279695fa189f2c936d9a54",
+  "bulletin-20.webp": "94885c3eea172e4e2c49485acc96e83e58a3d777",
+  "bulletin-21.webp": "aabcbafa9cbe8dc291f6691fe2308bcfb2a5cc3a",
+  "bulletin-22.webp": "f08c1c64f0587a3299547c23b010173a382053fd",
+  "bulletin-23.webp": "8849f0716055e7781c030f9278af71fc0ad90590",
+  "bulletin-24.webp": "42c53061a0c1009ef06345b2332c83e3c1741fce",
+  "bulletin-25.webp": "7cbf07266c7259a663e7e1053d02b50551448986",
+  "bulletin-26.webp": "530a40652c3702adb5ec74f6e0a1d119f5b69cbc",
+  "bulletin-27.webp": "068054d0f980240666d8c37aafe1f4483f3ab286",
+  "bulletin-28.webp": "a6fb097582dd2f4c2b0f94876148aa91b9160660",
+  "bulletin-29.webp": "94f2123aa07511c685be2d6b90d376b67b8fd4f5",
+  "bulletin-30.webp": "4a9890fcec715f99eea6233ba1b5ef0ac9f52b99",
+  "bulletin-31.webp": "c9199bbe1d939d9b35e51c606f842c14b5dd1e0d",
+  "bulletin-32.webp": "a1d1cb8f21876672125db16afec8f3f9658ed640",
+  "poster-01.webp": "640e463030962fc9afaf6abe82dc1b4033434e1d",
+  "poster-02.webp": "ca1b105a1313d5e0af3374639e720c4a036807b5",
+  "poster-03.webp": "988706e6ecc342867f8f6f2ca7bcf95eb5f65e28",
+  "poster-04.webp": "9eeac7bdeb00e76304e3757419e4799b23981e2b",
+  "poster-05.webp": "75e908d46b10bae226fbac70f36be4506b6d31a9",
+  "poster-06.webp": "c453037941b8131c042b70bd58cd150f74ae9041",
+  "poster-07.webp": "44f3b5ba89871b60759df7156b7a00244497db7c",
+  "poster-08.webp": "f6eb004427a0d576f5d0f8d32d1f2a48c4a1c0f9"
  }
 }
