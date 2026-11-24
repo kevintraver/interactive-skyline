@@ -57,7 +57,11 @@ test('Camera mode: a seek lands within 0.3 EV of the settled exposure; settled, 
   await boot(page, 'lv', 'backend=webgl');
   await page.evaluate(() => window.__skyline.setSetting('exposureMode', 'camera'));
   expect(await page.evaluate(() => window.__skyline.look.exposure.metering)).toBe(true);
-  const settle = () => page.waitForFunction(() => window.__skyline.look.exposure.state.settled, null, { timeout: 600_000 }); // software frames take seconds
+  // software frames take seconds; on a timeout, say where the exposure stood
+  const settle = () => page.waitForFunction(() => window.__skyline.look.exposure.state.settled, null, { timeout: 600_000 }).catch(async (e) => {
+    console.log('not settled', JSON.stringify(await page.evaluate(() => { const x = window.__skyline.look.exposure, st = x.state; return { ...st, biases: st.biases.length, reading: x.lastReadingEv, frames: window.__skyline.perf.frames(), tier: window.__skyline.loop.tier }; })));
+    throw e;
+  });
   await page.evaluate(() => {
     const s = window.__skyline;
     s.attractions.freeze(47);
