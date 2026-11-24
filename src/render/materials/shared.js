@@ -1,8 +1,14 @@
 // Uniforms every material of the new renderer shares (plan 01, T2.2 to T2.11). Each is a TSL uniform node whose
 // `.value` is also what the classic renderer's GLSL reads (src/render/legacy/materials.js), so the app sets one
 // value and both renderers follow.
+//
+// They live in the render group: one uniform buffer shared by every object, refreshed once per render call. In the
+// default (per-object) group a changed value reached an object only when the renderer refreshed that object in
+// full, which it then had to do for every building on every frame (buildingMaterial.js, setupObserver).
 import { Color } from 'three';
-import { uniform } from 'three/tsl';
+import { uniform as tslUniform, renderGroup } from 'three/tsl';
+
+const uniform = (value) => tslUniform(value).setGroup(renderGroup);
 
 /** 0 by day, 1 at night: the legacy look's night switch (T1.4's ramp in the clock state). */
 export const night = uniform(0).setName('uNight');

@@ -12,15 +12,16 @@
 //   physical  windows, glow and LED skins in cd/m2 (src/render/photometry.js) times the exposure and the
 //             lights-out factor; windows switch on one by one through dusk, each against its own threshold
 //             (switchOn.windows); the facade's reflected sky is a legacy surface, scaled like the dome
-import { MeshLambertNodeMaterial } from 'three/webgpu';
+import { MeshLambertNodeMaterial, LineBasicNodeMaterial } from 'three/webgpu';
 import {
-  attribute, varying, positionGeometry, normalGeometry, normalWorld, positionWorld, cameraPosition, materialColor,
-  materialEmissive, vec2, vec3, float, fract, floor, dot, normalize, step, smoothstep, mix, max, abs, fwidth, cos,
+  attribute, varying, positionGeometry, normalGeometry, normalWorld, positionWorld, cameraPosition,
+  materialEmissive, diffuseColor, vec2, vec3, float, fract, floor, dot, normalize, step, smoothstep, mix, max, abs, fwidth, cos,
   sin, pow, clamp, reflect,
 } from 'three/tsl';
 import { night as sharedNight, clock as sharedClock, haze as sharedHaze, exposure as sharedExposure, physical as sharedPhysical,
   switchOn as sharedSwitchOn, cityFactor as sharedCityFactor, legacyScale as sharedLegacyScale } from './shared.js';
 import { PHOTOMETRY } from '../photometry.js';
+import { steady } from './steady.js';
 
 /** fract-based hash of a 2D cell, as nightHash() in night.js v6 */
 // Pure (no mutable variable): TSL may emit a call's body more than once, in different branches, and a variable
@@ -125,23 +126,69 @@ export function buildingNodes({ variant = 'extruded', night = sharedNight, clock
 }
 
 /**
+ * A Lambert node material whose diffuse colour is scaled by `diffuseFactorNode` after the usual colour, vertex
+ * colours and opacity (the landmark variant's mullion grid). Not a `colorNode`: the shadow pass derives its own
+ * nodes from a material's `colorNode`, fresh ones for every material, and so would build a shader per building.
+ */
+class BuildingNodeMaterial extends steady(MeshLambertNodeMaterial) {
+  constructor() {
+    super();
+    /** Multiplies the diffuse colour (null: no change). */
+    this.diffuseFactorNode = null;
+  }
+
+  setupDiffuseColor(builder) {
+    super.setupDiffuseColor(builder);
+    if (this.diffuseFactorNode) diffuseColor.rgb.mulAssign(this.diffuseFactorNode);
+  }
+}
+
+// One node graph per variant, shared by every building material made with the default uniforms. WebGPURenderer
+// keys its node builds on the graph's node ids (Node.customCacheKey() is the id), so a graph made per building
+// costs a node build per building, on the first frame and again after every cutoff rebuild (measured: 344 builds,
+// about 3.5 s, before Las Vegas' first frame). With one graph a variant costs one build; what differs between
+// buildings (colour, emissive, emissive intensity) is read from each material as an ordinary per-object value.
+const sharedGraphs = new Map();
+
+function graphFor(variant, night, clock, haze) {
+  const custom = night !== undefined || clock !== undefined || haze !== undefined;
+  if (!custom && sharedGraphs.has(variant)) return sharedGraphs.get(variant);
+  const nodes = buildingNodes({ variant, night, clock, haze });
+  const graph = {
+    // extruded buildings leave the diffuse colour alone (their factor is the constant 1)
+    diffuseFactor: variant === 'landmark' ? nodes.color : null,
+    // the material's own emissive is the blue highlight of the removable towers and the selection tint: display-
+    // referred (it reads the same at noon and midnight), but in the physical look scaled by legacyScale, which is 1
+    // when the exposure sits where the prior puts it. Left unscaled, its share of the metered light moved against
+    // the exposure and the automatic exposure chased itself (measured: 15.5 down past 14.2 EV, still sliding)
+    emissive: materialEmissive.mul(mix(float(1), sharedLegacyScale, sharedPhysical)).add(nodes.emissive),
+  };
+  if (!custom) sharedGraphs.set(variant, graph);
+  return graph;
+}
+
+/**
  * A MeshLambertNodeMaterial for buildings, taking colour, emissive, vertex colours, blending and the like from
- * `from` (the MeshLambertMaterial the caller made, as night.js's lightAtNight() received it).
+ * `from` (the MeshLambertMaterial the caller made, as night.js's lightAtNight() received it). Each call returns its
+ * own material (edits.js paints one building's colour), all of them on the variant's one node graph.
  */
 export function createBuildingMaterial({ variant = 'extruded', from = null, night, clock, haze } = {}) {
-  const material = new MeshLambertNodeMaterial();
+  const material = new BuildingNodeMaterial();
   if (from) {
     for (const k of ['vertexColors', 'transparent', 'opacity', 'depthWrite', 'depthTest', 'blending', 'side', 'fog', 'name', 'emissiveIntensity']) material[k] = from[k];
     material.color.copy(from.color);
     material.emissive.copy(from.emissive);
   }
-  const nodes = buildingNodes({ variant, night, clock, haze });
-  material.colorNode = materialColor.mul(nodes.color);
-  // the material's own emissive is the blue highlight of the removable towers and the selection tint: display-
-  // referred (it reads the same at noon and midnight), but in the physical look scaled by legacyScale, which is 1
-  // when the exposure sits where the prior puts it. Left unscaled, its share of the metered light moved against
-  // the exposure and the automatic exposure chased itself (measured: 15.5 down past 14.2 EV, still sliding)
-  material.emissiveNode = materialEmissive.mul(mix(float(1), sharedLegacyScale, sharedPhysical)).add(nodes.emissive);
+  const graph = graphFor(variant, night, clock, haze);
+  material.diffuseFactorNode = graph.diffuseFactor;
+  material.emissiveNode = graph.emissive;
   material.userData.buildingVariant = variant;
   return material;
+}
+
+const EdgeNodeMaterial = steady(LineBasicNodeMaterial);
+
+/** The outline drawn along a removable tower's edges: a LineBasicMaterial with `params`, on the steady refresh. */
+export function createEdgeMaterial(params) {
+  return new EdgeNodeMaterial(params);
 }

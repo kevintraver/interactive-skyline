@@ -79,7 +79,26 @@ export function createPipeline({ renderer, scene, camera, legacy = false, exposu
     return result;
   };
 
+  // What the scene pass keeps of its multisampled buffers. Each frame the pass resolves its 4x colour into the
+  // texture everything after it reads; by default three also resolves the depth and stores both multisampled
+  // buffers to memory, for whatever might draw into them again or read the depth. Only stages can: a render
+  // stage after the scene draws into the multisampled buffers (it needs them stored), a node stage may read
+  // sceneDepth. With no stage registered (the app as it ships) the pass discards them, which on a tiled GPU (the
+  // reference Apple M4) keeps them in tile memory instead of writing about 48 MB a frame at 1280 x 800 and High.
+  // The picture is the same: nothing reads what is no longer kept.
+  function keepBuffers() {
+    const target = scenePass.renderTarget;
+    const store = stages.some((s) => s.render && s.at !== 'beforeScene' && s.at !== 'overlay');
+    const want = { storeMultisampledColorBuffer: store, storeMultisampledDepthBuffer: store, storeMultisampledStencilBuffer: store,
+      resolveDepthBuffer: stages.length > 0 };
+    if (Object.keys(want).every((k) => target[k] === want[k])) return;
+    Object.assign(target, want);
+    // the WebGPU backend makes discarded multisampled textures transient (they cannot be loaded): re-create them
+    target.dispose();
+  }
+
   function build() {
+    keepBuffers();
     let color = sceneColor;
     const inputs = () => ({ color, depth: sceneDepth, bloom: bloom ? bloom.node : vec4(0) });
     const nodeStages = (at) => { for (const s of stages) if (s.at === at && s.node) color = s.node(inputs()); };
