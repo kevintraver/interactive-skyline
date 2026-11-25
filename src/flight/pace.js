@@ -8,13 +8,13 @@ export const FINAL_LEAD_S = 150;
 const RATE_EPS = 0.005;
 
 /**
- * Seconds from the start of the track where playback begins: the `terrain` event (the aircraft enters the terrain
- * that exists today; until phase 6 nothing before it has ground under it), else the start of the track.
- * @param {{ events: { t: number, id: string }[] }} track
+ * Seconds from the start of the track where playback begins: the first sample (cruise, or `start` when the recording
+ * begins lower). The regional terrain reaches the horizon from cruise (F6.1), so the `terrain` event and the index's
+ * `start` field, which marked where the old 104 km grid began, are no longer used.
+ * @param {{ events: { t: number, id: string }[] }} _track
  */
-export function playStart(track) {
-  const e = track.events.find((ev) => ev.id === 'terrain');
-  return e && Number.isFinite(e.t) ? e.t : 0;
+export function playStart(_track) {
+  return 0;
 }
 
 /**

@@ -9,7 +9,8 @@
 // by changing the layers, not the meshes.
 
 import { Group, Vector3, Quaternion } from 'three';
-import { horizonDistance } from '../../core/earth.js';
+import { horizonDistance, altitudeOf } from '../../core/earth.js';
+import { HIGHEST } from '../terrain/nested.js';
 import { placeAirframe } from '../aircraft/airframe.js';
 import { CABIN_LAYER } from '../cabin/cabin.js';
 
@@ -18,18 +19,26 @@ export { CABIN_LAYER };
 /** The near plane: the eye comes within 5 cm of the trim and the pane, and the corner rays of the widest lens
  * (13 mm) are 59 degrees off axis, so a surface 4 cm away is still 2 cm deep. */
 export const NEAR = 0.02;
-/** Past the horizon, so terrain and haze beyond it are not cut (section 7.6's table). */
-export const FAR_MARGIN = 80000;
-/** The far plane's ceiling (section 7.6's table). */
-export const FAR_MAX = 480000;
+/** How far beyond the eye's horizon a summit can still show: the horizon of the region's highest ground (Mount
+ * Whitney, 4,421 m, src/flight/terrain/nested.js HIGHEST), 256 km. */
+export const SUMMIT_REACH = horizonDistance(HIGHEST);
+/**
+ * The far plane's ceiling: 700 km, reached at 41,500 ft (431 km + 256 km). Depth holds it on both backends (plan 01's
+ * schemes: reversed float depth on WebGPU, whose resolution does not depend on the far plane, and logarithmic depth on
+ * WebGL2, whose resolution scales with log2(far): 700 km costs it 3% against section 7.6's old 480 km cap;
+ * tests/unit/flight/layers.test.js works both through).
+ */
+export const FAR_MAX = 700000;
 
 /**
- * Near and far planes for an eye `height` metres above the ground: 2 cm, and the horizon distance plus 80 km, at
- * most 480 km. A height at or below the ground counts as 2 m (taxiing, or a terrain error), not as no horizon.
+ * Near and far planes for an eye `altitude` metres above sea level (on the app's refraction sphere, earth.js
+ * altitudeOf): 2 cm, and the eye's horizon plus SUMMIT_REACH, at most FAR_MAX (F6.2). That is everything that can be
+ * seen: ground nearer than the eye's horizon, and summits up to 4,421 m beyond it. At cruise the old horizon + 80 km
+ * cut the ranges beyond it off flat. An altitude below 2 m or not a number counts as 2 m.
  */
-export function nearFar(height) {
-  const h = Number.isFinite(height) ? Math.max(height, 2) : 2;
-  return { near: NEAR, far: Math.min(horizonDistance(h) + FAR_MARGIN, FAR_MAX) };
+export function nearFar(altitude) {
+  const h = Number.isFinite(altitude) ? Math.max(altitude, 2) : altitude === Infinity ? Infinity : 2;
+  return { near: NEAR, far: Math.min(horizonDistance(h) + SUMMIT_REACH, FAR_MAX) };
 }
 
 /**
@@ -68,7 +77,7 @@ function restore(camera, s) {
  *           airframe: { group: import('three').Object3D }, cabin?: { group: import('three').Object3D },
  *           rig: ReturnType<import('../cabin/headRig.js').createHeadRig> }} opts
  */
-export function createFlightLayers({ scene, camera, airframe, cabin = null, rig }) {
+export function createFlightLayers({ scene, camera, airframe, cabin = null, rig, base = 0 }) {
   const body = new Group();
   body.name = 'flight-body';
   body.add(airframe.group);
@@ -119,15 +128,13 @@ export function createFlightLayers({ scene, camera, airframe, cabin = null, rig 
      * Place the aircraft and the camera for an AircraftState. A pure function of (state, look, viewport): calling it
      * twice gives the same camera.
      * @param {{ position: Vector3, quaternion: Quaternion }} state
-     * @param {{ aspect: number, heightAboveGround?: number }} view  heightAboveGround of the main gear; without it the
-     *   gear's scene height is used (about its height above the city's base)
+     * @param {{ aspect: number, shake?: object }} view  shake: the head shake (headRig.headShake), passed to the rig
      */
-    update(state, { aspect, heightAboveGround } = {}) {
+    update(state, { aspect, shake } = {}) {
       placeAirframe(body, state);
-      rig.pose({ clean }, _pose);
+      rig.pose(shake ? { clean, shake } : { clean }, _pose);
       eyeInScene(state, _pose, camera.position, camera.quaternion);
-      const h = (Number.isFinite(heightAboveGround) ? heightAboveGround : state.position.y) + _pose.eye.y;
-      const { near, far } = nearFar(h);
+      const { near, far } = nearFar(altitudeOf(camera.position, { base }));
       camera.aspect = aspect > 0 ? aspect : camera.aspect;
       camera.fov = rig.fov(camera.aspect);
       camera.near = near;

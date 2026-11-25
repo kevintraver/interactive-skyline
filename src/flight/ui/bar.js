@@ -1,6 +1,7 @@
 // The flight's own bar, mounted in #transport-slot above plan 01's journey bar (plan 03, sections 4.4 and 4.9): the
 // status chip (phase, time to touchdown, altitude, ground speed, in the visitor's units; H hides it), the pace (the
-// condensed pace, or the rate the visitor chose; pressing it turns the condensed pace back on), the cabin frame (C),
+// condensed pace, or the rate the visitor chose; pressing it turns the condensed pace back on), the seat (opens the
+// seat map, ui/seatMap.js), the cabin frame (C),
 // a "Retimed" note when the departure is not the recorded one, and a line for loading.
 import { flightStatus } from './status.js';
 
@@ -8,22 +9,24 @@ const icon = (id) => `<svg class="icon" viewBox="0 0 20 20" aria-hidden="true"><
 const rateText = (r) => `${Math.round(r * 10) / 10}×`;
 
 /**
- * @param {{ slot: HTMLElement, units: () => 'ft'|'m', onPace: () => void, onFrame: () => void }} o
+ * @param {{ slot: HTMLElement, units: () => 'ft'|'m', onPace: () => void, onFrame: () => void, onSeat?: () => void }} o
  */
-export function createFlightBar({ slot, units, onPace, onFrame }) {
+export function createFlightBar({ slot, units, onPace, onFrame, onSeat = () => {} }) {
   const el = document.createElement('div');
   el.id = 'flightbar';
   el.setAttribute('role', 'group');
   el.setAttribute('aria-label', 'Flight');
   el.innerHTML = `<span class="status" title="Hide (H)"><b class="phase"></b><span class="ttd"></span><span class="alt"></span><span class="gs"></span></span>
     <button type="button" class="pace" aria-pressed="true" title="The condensed pace: cruise and descent fast, the last minutes in real time"></button>
+    <button type="button" class="seat" aria-haspopup="dialog" aria-expanded="false" aria-controls="seatmap" title="Choose a seat"><span class="seat-id"></span></button>
     <button type="button" class="frame" aria-pressed="true" title="Cabin frame (C)">${icon('i-eye')}<span>Frame</span></button>
     <span class="retimed" hidden title="The departure is not the recorded one">Retimed</span>
     <span class="note" hidden></span>`;
   const $ = (s) => el.querySelector(s);
   const status = $('.status'), phase = $('.phase'), ttd = $('.ttd'), alt = $('.alt'), gs = $('.gs');
-  const pace = $('.pace'), frame = $('.frame'), retimed = $('.retimed'), note = $('.note');
+  const pace = $('.pace'), frame = $('.frame'), retimed = $('.retimed'), note = $('.note'), seat = $('.seat'), seatId = $('.seat-id');
   pace.addEventListener('click', () => { pace.blur(); onPace(); });
+  seat.addEventListener('click', () => onSeat());
   frame.addEventListener('click', () => { frame.blur(); onFrame(); });
   const shown = { text: null, pace: null, frame: null, retimed: null, hud: null };
 
@@ -31,6 +34,11 @@ export function createFlightBar({ slot, units, onPace, onFrame }) {
     el,
     /** Into #transport-slot (the slot shows only while it has children) or out of it. */
     show(on) { if (on && el.parentNode !== slot) slot.append(el); else if (!on && el.parentNode) el.remove(); },
+    /** The seat shown on its button ('23F'), and whether the seat map is open. */
+    setSeat(id, open) {
+      if (id) { seatId.textContent = `Seat ${id}`; seat.setAttribute('aria-label', `Seat ${id}: choose a seat`); }
+      if (typeof open === 'boolean') seat.setAttribute('aria-expanded', String(open));
+    },
     /** Loading text in place of the readings, or null. */
     setNote(text) { note.hidden = !text; note.textContent = text || ''; },
     /** Write only what changed, so a frame costs no layout when nothing did. */

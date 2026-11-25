@@ -5,6 +5,7 @@
 import { createFlightSession } from './session.js';
 import { createFlightCards, defaultFlight } from './ui/cards.js';
 import { createFlightBar } from './ui/bar.js';
+import { createSeatMap } from './ui/seatMap.js';
 import { encodeFlightState, clearFlightState } from './url.js';
 import { playOptions, playStart } from './pace.js';
 import { whereText } from './lookAt.js';
@@ -26,9 +27,10 @@ const RETIMED_MS = 30000;
 const typing = (t) => !!t && typeof t.matches === 'function' && t.matches('input, textarea, select, [contenteditable=""], [contenteditable="true"]');
 
 /**
- * @param {{ app: object, fe: object, terrain: object, flights: object[], data: string, seam: object, showMode: (m: string) => void }} o
+ * @param {{ app: object, fe: object, terrain: object, meta: object, flights: object[], data: string, seam: object, showMode: (m: string) => void }} o
+ *   meta: terrain.json
  */
-export function createFlightMode({ app, fe, terrain, flights, data, seam, showMode }) {
+export function createFlightMode({ app, fe, terrain, meta, flights, data, seam, showMode }) {
   const { camera, controls, settings, city, canvas } = app;
   const { clock } = fe;
   const $ = (id) => document.getElementById(id);
@@ -38,8 +40,9 @@ export function createFlightMode({ app, fe, terrain, flights, data, seam, showMo
   fadeEl.setAttribute('aria-hidden', 'true');
   document.body.append(fadeEl);
 
-  const cards = createFlightCards({ parent: $('top'), flights, tz: city.tz || 'UTC', onPlay: (id, key) => play(id, key).catch(() => {}) });
-  const bar = createFlightBar({ slot: $('transport-slot'), units: () => settings.units, onPace: () => setPace(!session?.pace), onFrame: () => setFrame(!frameOn) });
+  const cards = createFlightCards({ parent: $('top'), flights, tz: city.tz || 'UTC', data, onPlay: (id, key) => play(id, key).catch(() => {}) });
+  const bar = createFlightBar({ slot: $('transport-slot'), units: () => settings.units, onPace: () => setPace(!session?.pace), onFrame: () => setFrame(!frameOn), onSeat: () => toggleSeatMap() });
+  let seatMap = null;
   let session = null, loading = null, token = 0, saved = null, hud = true, frameOn = true, lastWrite = 0, dragPaused = false, compassDeg = null;
   /** What the mode remembers for the visit (section 4.1): flight, seat, look and time, and whether it was playing. */
   const memory = { id: defaultFlight(flights).id, seat: null, look: null, at: {}, playing: false, pace: true };
@@ -55,7 +58,7 @@ export function createFlightMode({ app, fe, terrain, flights, data, seam, showMo
   function loadSession() {
     if (session) return Promise.resolve(session);
     if (!loading) {
-      loading = createFlightSession({ app, fe, terrain, data, onFrame, onLook: writeAddress })
+      loading = createFlightSession({ app, fe, terrain, meta, data, onFrame, onLook: writeAddress })
         .then((s) => (session = s))
         .catch((err) => { loading = null; throw err; });
     }
@@ -135,6 +138,8 @@ export function createFlightMode({ app, fe, terrain, flights, data, seam, showMo
     for (const m of document.querySelectorAll('#transport .marks span')) m.title = m.textContent;
     // the seat asked for, else the one kept for this flight, else the default on the side the Strip is on (4.3)
     session.setSeat(o.seat || (sameFlight && memory.seat) || { side: entry.badges?.stripSide === 'left' ? 'left' : 'right' });
+    bar.setSeat(session.seat.id);
+    if (seatMap) { seatMap.setStripSide(stripSideOf(id)); seatMap.setCurrent(session.seat.id); }
     if (memory.look && !wasActive) session.look(memory.look);
     session.look({ yaw: o.yaw, pitch: o.pitch, lens: o.lens });
     if (typeof o.frame === 'boolean') frameOn = o.frame;
@@ -172,6 +177,7 @@ export function createFlightMode({ app, fe, terrain, flights, data, seam, showMo
     memory.pace = session.pace;
     clock.pause();
     await fade(true);
+    seatMap?.close();
     session.show(false); // the camera back exactly (view/layers.js), the ground and the dome as the map has them
     session.end(); // the journey ends and plan 01's transport hides
     bar.show(false);
@@ -213,6 +219,28 @@ export function createFlightMode({ app, fe, terrain, flights, data, seam, showMo
     if (!on && clock.rate !== Number(el.speed?.value || 1)) clock.setRate(Number(el.speed?.value || 1));
     if (write) writeAddress();
     fe.invalidate();
+  }
+  /** Another seat (the seat map, the hook): the cabin and the eye move, the mode remembers it, the address follows. */
+  function setSeat(id) {
+    if (!session) throw new Error('Fly is not loaded');
+    const st = session.setSeat(id);
+    memory.seat = st.id;
+    if (seatMap && seatMap.model.currentId !== st.id) seatMap.setCurrent(st.id);
+    bar.setSeat(st.id);
+    writeAddress();
+    fe.invalidate();
+    return st;
+  }
+  const stripSideOf = (id) => (flights.find((f) => f.id === id)?.badges?.stripSide === 'left' ? 'left' : 'right');
+  /** The seat map (section 4.3), a popover above the bar: made the first time it is opened, kept for the visit. */
+  function toggleSeatMap(open = !(seatMap?.open)) {
+    if (!session) return;
+    if (!seatMap) {
+      seatMap = createSeatMap({ parent: document.body, stripSide: stripSideOf(memory.id), current: session.seat.id,
+        onChoose: (id) => setSeat(id), onClose: () => bar.setSeat(null, false) });
+    }
+    if (open) { seatMap.setStripSide(stripSideOf(memory.id)); seatMap.setCurrent(session.seat.id); seatMap.show(); } else seatMap.close();
+    bar.setSeat(null, seatMap.open);
   }
   function setFrame(on) {
     frameOn = !!on;
@@ -257,6 +285,7 @@ export function createFlightMode({ app, fe, terrain, flights, data, seam, showMo
   // popover's day-scale steps and speeds (60x to 3600x) do not throw the clock off the flight
   addEventListener('keydown', (ev) => {
     if (!seam.active || ev.defaultPrevented || ev.metaKey || ev.ctrlKey || typing(ev.target)) return;
+    if (seatMap?.el.contains(ev.target)) return; // the seat map's own keys (arrows, Enter, Space, Escape)
     const onControl = ev.target instanceof HTMLButtonElement || (ev.target instanceof HTMLInputElement && ev.target.type === 'range');
     const act = {
       Space: () => { if (!onControl) togglePlay(); else return false; },
@@ -324,7 +353,8 @@ export function createFlightMode({ app, fe, terrain, flights, data, seam, showMo
     get session() { return session; },
     get frame() { return frameOn; },
     get hud() { return hud; },
-    setFrame, setHud(on) { hud = !!on; onFrame(session); }, setPace,
+    setFrame, setHud(on) { hud = !!on; onFrame(session); }, setPace, setSeat, toggleSeatMap,
+    get seatMap() { return seatMap; },
     cards, bar, memory,
   };
 }

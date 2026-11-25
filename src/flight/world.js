@@ -1,139 +1,188 @@
-// The ground and sky for a flight (plan 03, sections 7.9 and 7.14, until the regional grids of phase 6 exist).
+// The ground, the airport and the sky for a flight (plan 03, sections 7.9, 7.10 and 7.14; F4.7, F4.8, F6.2).
 //
-//   wide grid       the coarse 160 m grid that reaches the drive routes, drawn as the drive draws it on plan 01's
-//                   renderer (src/world/terrain/widemesh.js), under the map's near and far grids
-//   virtual ground  beyond the wide grid, a plain surface in the mean colour of the wide photo's edge that falls with
-//                   the curve of the datum (src/city/apron.js's geometry, rings out to 500 km), so that from any
-//                   height nothing but ground is seen below the horizon
-//   map apron       the map's own apron rings the far grid and, inside the wide grid, rises above the wide ground in
-//                   places (as the drive found): hidden while flying
-//   sky dome        centred on the camera already (src/sky/legacySky.js); scaled while flying to just inside the far
-//                   plane, which the flight sets to the horizon plus 80 km (from 87 km on the runway to 480 km), so the
-//                   terrain to the horizon is in front of it and the dome is never cut by the far plane. Scale 1 again
-//                   on leaving
+//   regional terrain  region, approaches and valley (src/flight/terrain): ground to the horizon from cruise, drawn
+//                     under and around the map's near and far grids, which stay the map's own meshes
+//   the airport       pavement, paint and lights (src/flight/airport), built from airport.json during the entry
+//   airport ground    the map's near and far meshes moved onto the airport's height model while flying, and a 12 m
+//                     inset for the part of the airport outside the near grid (view/airportGround.js), so that the
+//                     wheels, the pavement and the ground around it agree; given back bit for bit on leaving
+//   map apron         the map's own apron ring around the far grid stands above the regional ground in places: hidden
+//                     while flying
+//   sky dome          centred on the camera already (src/sky/legacySky.js); scaled while flying to just inside the far
+//                     plane (view/layers.js nearFar: the eye's horizon plus the highest summit's, up to 700 km), so the
+//                     terrain is in front of it and the far plane never cuts it. Scale 1 again on leaving
 //
 // Everything here is added on show(true) and taken out on show(false); the map's look is untouched when not flying.
-import * as THREE from 'three';
-import { MeshLambertNodeMaterial } from 'three/webgpu';
-import { buildWideMesh } from '../world/terrain/widemesh.js';
-import { apronGeometry } from '../city/apron.js';
+import { Group, Mesh, BufferGeometry, BufferAttribute } from 'three';
+import { createRegionTerrain } from './terrain/index.js';
+import { createAirport } from './airport/index.js';
+import { createPavementIndex, EASE_M } from './airport/geometry.js';
+import { conformGround, applyConformed, buildInset, insetY, onInset, pavementBox, airportTerrain } from './view/airportGround.js';
 
-/** Rings of the virtual ground beyond the wide grid's edge, metres: tucked under it, then out to 500 km, 25 km apart
- * past 100 km so that the chords sag no more than about 10 m below the curve between rings. */
-export const VIRTUAL_RINGS = [-200, 0, 1500, 6000, 20000, 50000, 75000, 100000,
-  ...Array.from({ length: 16 }, (_, k) => 125000 + k * 25000)];
 /** The sky dome's radius in src/sky/legacySky.js. */
 const DOME_R = 120000;
 /** The dome sits at this fraction of the far plane. */
 const DOME_AT = 0.97;
-const srgbToLinear = (c) => (c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4);
+/** Ground beyond the pavement that is worked on (m): the runways' ease, and room for the inset's edges. */
+const AROUND = EASE_M + 200;
 
-/** The mean colour (linear RGB) of a band along the edge of an image, or a plain desert tan without one. */
-export function edgeTone(image, band = 0.04) {
-  const fallback = [0.38, 0.33, 0.27];
-  if (!image || typeof OffscreenCanvas === 'undefined') return fallback;
-  try {
-    const W = 128, H = 128, g = new OffscreenCanvas(W, H).getContext('2d', { willReadFrequently: true });
-    g.drawImage(image, 0, 0, W, H);
-    const px = g.getImageData(0, 0, W, H).data, b = Math.max(1, Math.round(W * band));
-    const sum = [0, 0, 0];
-    let n = 0;
-    for (let j = 0; j < H; j++) for (let i = 0; i < W; i++) {
-      if (i >= b && i < W - b && j >= b && j < H - b) continue;
-      const k = (j * W + i) * 4;
-      for (let c = 0; c < 3; c++) sum[c] += srgbToLinear(px[k + c] / 255);
-      n++;
-    }
-    return sum.map((v) => v / n);
-  } catch { return fallback; }
-}
-
-/** The virtual ground: plain, its colour following the wide ground's material (photo on or off) on every draw. */
-function virtualGround(wide, base, tone, wideMesh) {
-  const g = apronGeometry(wide, base, null, { rings: VIRTUAL_RINGS });
-  const geo = new THREE.BufferGeometry();
-  // positions are world metres out to 560 km; relative to the grid's centre they stay small enough for float32
-  const cx = wideMesh.position.x, cz = wideMesh.position.z;
-  for (let k = 0; k < g.pos.length; k += 3) { g.pos[k] -= cx; g.pos[k + 2] -= cz; }
-  geo.setAttribute('position', new THREE.BufferAttribute(g.pos, 3));
-  geo.setIndex(g.idx);
-  geo.computeVertexNormals();
-  geo.computeBoundingSphere();
-  const material = new MeshLambertNodeMaterial({ color: new THREE.Color(...tone) });
-  const mesh = new THREE.Mesh(geo, material);
-  mesh.position.set(cx, 0, cz);
-  mesh.name = 'flight virtual ground';
-  mesh.castShadow = mesh.receiveShadow = false;
-  mesh.raycast = () => {}; // never picked
-  mesh.frustumCulled = false; // it surrounds the camera
-  const photo = new THREE.Color(...tone), plain = new THREE.Color();
-  mesh.onBeforeRender = () => {
-    const m = wideMesh.material;
-    // without the aerial photo the ground is the material's plain colour, as the map's is
-    material.color.copy(m.map ? photo : plain.copy(m.color));
-  };
-  return mesh;
+/** Scene Y of a ground mesh's triangles at map (x, y), split as src/city/terrain.js indexes each cell. */
+function meshY(array, g, x, y) {
+  const fx = Math.min(Math.max((x - g.x0) / g.step, 0), g.nx - 1), fy = Math.min(Math.max((y - g.y0) / g.step, 0), g.ny - 1);
+  const i = Math.min(Math.floor(fx), g.nx - 2), j = Math.min(Math.floor(fy), g.ny - 2), ax = fx - i, ay = fy - j;
+  const at = (ii, jj) => array[(jj * g.nx + ii) * 3 + 1];
+  const a = at(i, j), b = at(i + 1, j), d = at(i, j + 1), e = at(i + 1, j + 1);
+  return ax + ay <= 1 ? a + ax * (b - a) + ay * (d - a) : e + (1 - ax) * (d - e) + (1 - ay) * (b - e);
 }
 
 /**
- * @param {{ scene: THREE.Scene, renderer: object, base: number, terrain: ReturnType<import('../world/terrain/index.js').createTerrain>,
- *           fetchImage: (file: string) => Promise<ImageBitmap>, sky: { dome: THREE.Mesh }, settings: { imagery: boolean },
- *           anisotropy?: number }} o
+ * The airport ground: conformed heights for the map's two meshes and the inset, worked out once (about 100 ms) and
+ * applied while flying.
  */
-export async function createFlightWorld({ scene, base, terrain, fetchImage, sky, settings, anisotropy = 1 }) {
-  const [wide, bitmap] = await Promise.all([
-    terrain.loadWide(),
-    terrain.hasWide ? fetchImage('ground-wide.jpg').catch(() => null) : null,
-  ]);
-  const group = new THREE.Group();
+function airportGround({ airport, data, provider, ground, base }) {
+  const near = provider.grid('near'), far = provider.grid('far');
+  const nearMesh = ground.near, farMesh = ground.far;
+  if (!near || !far || !nearMesh || !farMesh) return null;
+  const nearBox = { x0: near.x0, x1: near.x0 + (near.nx - 1) * near.step, y0: near.y0, y1: near.y0 + (near.ny - 1) * near.step };
+  const pave = createPavementIndex(data);
+  const onPavement = (x, y, tol) => pave.on(x, y, tol);
+  const box = pavementBox(data, AROUND);
+  const nearAttr = nearMesh.geometry.attributes.position, farAttr = farMesh.geometry.attributes.position;
+  const t0 = performance.now();
+  const cNear = conformGround({ positions: nearAttr, grid: near, base, heightModel: airport.heightAt, onPavement, box });
+  const nearCopy = nearAttr.array.slice();
+  for (let n = 0; n < cNear.index.length; n++) nearCopy[cNear.index[n] * 3 + 1] = cNear.conformed[n];
+  const farArray = farAttr.array;
+  const inset = buildInset({
+    far, farY: (x, y) => meshY(farArray, far, x, y), nearY: (x, y) => meshY(nearCopy, near, x, y), near: nearBox, box, base,
+    heightModel: airport.heightAt, onPavement,
+  });
+  const cFar = inset ? conformGround({ positions: farAttr, grid: far, base, hole: nearBox, heightModel: airport.heightAt, onPavement, box, under: inset }) : null;
+  let insetMesh = null;
+  if (inset) {
+    const geo = new BufferGeometry();
+    geo.setAttribute('position', new BufferAttribute(inset.position, 3));
+    geo.setAttribute('normal', new BufferAttribute(inset.normal, 3));
+    geo.setAttribute('uv', new BufferAttribute(inset.uv, 2));
+    geo.setIndex(new BufferAttribute(inset.index, 1));
+    geo.computeBoundingSphere();
+    insetMesh = new Mesh(geo, farMesh.material); // the far photo and the map's terrain material: imagery and night follow it
+    insetMesh.name = 'flight airport ground';
+    insetMesh.receiveShadow = farMesh.receiveShadow;
+    insetMesh.raycast = () => {}; // picking is for buildings
+  }
+  const buildMs = performance.now() - t0;
+  let on = false;
+  return {
+    insetMesh, box, nearBox,
+    /** On runway, taxiway or apron. */
+    paved: (x, y) => x >= box[0] && x <= box[2] && y >= box[1] && y <= box[3] && !!pave.classAt(x, y),
+    set(next) {
+      if (next === on) return;
+      on = next;
+      applyConformed(nearAttr, cNear, on);
+      if (cFar) applyConformed(farAttr, cFar, on);
+    },
+    /** Scene Y of the ground drawn at map (x, y), or null outside the airport's box. */
+    groundY(x, y) {
+      if (x < box[0] || x > box[2] || y < box[1] || y > box[3]) return null;
+      if (inset && onInset(inset, x, y)) return insetY(inset, x, y);
+      if (x >= nearBox.x0 && x <= nearBox.x1 && y >= nearBox.y0 && y <= nearBox.y1) return meshY(on ? nearAttr.array : nearCopy, near, x, y);
+      return null;
+    },
+    stats: () => ({ buildMs: +buildMs.toFixed(1), nearMoved: cNear.index.length, farMoved: cFar?.index.length ?? 0, insetTriangles: inset ? inset.index.length / 3 : 0, on }),
+    dispose() { this.set(false); insetMesh?.geometry.dispose(); },
+  };
+}
+
+/**
+ * @param {{ scene: import('three').Scene, fe: ReturnType<import('./env.js').createFlightEnv>, provider: object,
+ *   meta: object, data: string, ground: { near: import('three').Mesh, far: import('three').Mesh }, sky: { dome: import('three').Mesh },
+ *   settings: { imagery: boolean }, renderer?: object, fetchJson?: (file: string) => Promise<object> }} o
+ *   provider: the app's terrain provider (src/world/terrain createTerrain); meta: terrain.json; data: the city's data
+ *   folder (/data/<city>); ground: the map's own near and far meshes (main.js app.terrain)
+ */
+export async function createFlightWorld({ scene, fe, provider, meta, data, ground, sky, settings, renderer = null, fetchJson = null }) {
+  const base = fe.frame.base;
+  const getJson = fetchJson ?? (async (file) => {
+    const r = await fetch(`${data}/${file}`);
+    if (!r.ok) throw new Error(`${file}: HTTP ${r.status}`);
+    return r.json();
+  });
+  const group = new Group();
   group.name = 'flight world';
   group.visible = false;
-  let wideMesh = null, wideMap = null;
-  if (wide) {
-    if (bitmap) {
-      wideMap = new THREE.Texture(bitmap);
-      wideMap.flipY = false; // flipped while decoding, as main.js does for its grids
-      wideMap.colorSpace = THREE.SRGBColorSpace;
-      wideMap.anisotropy = anisotropy;
-      wideMap.needsUpdate = true;
-    }
-    wideMesh = buildWideMesh({ wide, hole: terrain.grid('far'), base, map: wideMap, legacy: false });
-    wideMesh.raycast = () => {}; // picking is for buildings
-    group.add(wideMesh, virtualGround(wide, base, edgeTone(bitmap), wideMesh));
+
+  const region = createRegionTerrain({ meta, baseUrl: data, frame: fe.frame, terrain: provider, nodes: fe.nodes, quality: fe.quality });
+  group.add(region.group);
+
+  // the airport costs about 350 ms on the main thread: built here, during the entry and before the fade-in
+  let airport = null, apGround = null, airportError = null;
+  try {
+    const airportData = await getJson('airport.json');
+    const near = provider.grid('near');
+    airport = createAirport({ data: airportData, frame: fe.frame, terrain: near ? airportTerrain(provider, near) : provider, nodes: fe.nodes, quality: fe.quality });
+    group.add(airport.group);
+    apGround = airportGround({ airport, data: airportData, provider, ground, base });
+    if (apGround?.insetMesh) group.add(apGround.insetMesh);
+  } catch (err) {
+    airportError = String(err?.message ?? err);
+    console.warn('Fly: the airport could not be built; the runway is the ground photograph.', err);
   }
   scene.add(group);
   const mapApron = scene.getObjectByName('terrain apron');
-  let apronWas = null;
+  let apronWas = null, shown = false;
 
   const world = {
-    group, wideMesh,
-    /** Add or take out the flight's ground; hides the map's apron while it is out. */
+    group, region, airport,
+    /** Add or take out the flight's ground; moves the map's ground under the airport, hides the map's apron. */
     show(on) {
-      group.visible = !!on;
-      if (on) {
+      shown = !!on;
+      group.visible = shown;
+      apGround?.set(shown);
+      if (shown) {
         if (mapApron && apronWas === null) { apronWas = mapApron.visible; mapApron.visible = false; }
       } else {
         if (mapApron && apronWas !== null) { mapApron.visible = apronWas; apronWas = null; }
         if (sky.dome) sky.dome.scale.setScalar(1);
       }
     },
-    /** Every frame while flying: the photo setting, and the dome just inside the far plane. */
-    update(camera) {
-      if (wideMesh) {
-        const want = settings.imagery ? wideMap : null;
-        if (wideMesh.material.map !== want) {
-          wideMesh.material.map = want;
-          wideMesh.material.color.set(want ? 0xffffff : 0xbdb9ad);
-          wideMesh.material.needsUpdate = true;
-        }
+    /**
+     * Scene Y of the ground the aircraft stands on, as drawn: the airport's pavement (its runway profile on a runway),
+     * the airport's conformed ground and inset around it, the regional terrain elsewhere.
+     */
+    surfaceY(x, y) {
+      if (apGround) {
+        if (apGround.paved(x, y)) return airport.groundY(x, y);
+        const g = apGround.groundY(x, y);
+        if (g !== null) return g;
       }
-      // either way: near the ground the far plane (the horizon plus 80 km) is closer than the dome's 120 km
+      return region.surfaceY(x, y);
+    },
+    /** Load the grids a position needs (before the first frame of a flight). */
+    preload: (o) => region.preload(o),
+    whenSettled: () => Promise.all([region.whenSettled(), provider.whenSettled?.()]),
+    /**
+     * Every frame while flying, after the camera is placed: the grids the eye can see, the photo setting, the airport's
+     * lights, and the dome just inside the far plane.
+     * @param {{ camera: import('three').PerspectiveCamera, position: { x: number, y: number, z: number }, simMs?: number,
+     *   wallS?: number, night?: boolean, reducedMotion?: boolean, visibilityM?: number }} o
+     */
+    update({ camera, position, simMs = 0, wallS = 0, night = false, reducedMotion = false, visibilityM = 80000 }) {
+      region.update({ camera, position, renderer });
+      region.setImagery(settings.imagery);
+      airport?.update({ camera, simMs, wallS, night, reducedMotion, visibilityM });
       if (sky.dome) sky.dome.scale.setScalar((camera.far * DOME_AT) / DOME_R);
     },
     stats() {
-      let triangles = 0;
-      group.traverse((o) => { if (o.isMesh && o.geometry.index) triangles += o.geometry.index.count / 3; });
-      return { triangles, wide: !!wideMesh };
+      return { region: region.stats(), airport: airport ? airport.stats() : null, airportError, airportGround: apGround?.stats() ?? null };
+    },
+    dispose() {
+      world.show(false);
+      apGround?.dispose();
+      airport?.dispose();
+      region.dispose();
+      group.removeFromParent();
     },
   };
   return world;

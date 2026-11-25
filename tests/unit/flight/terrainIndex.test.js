@@ -31,7 +31,7 @@ function make(level = 'high') {
 function camera(name, aspect = 16 / 9) {
   const v = VIEWS[name], c = new PerspectiveCamera(v.fov, aspect, 0.5, 1);
   placeCamera(c, v, { base: BASE, Quaternion, Euler });
-  const { near, far } = nearFar(v.agl);
+  const { near, far } = nearFar(v.altitude); // the eye's height above sea level (view/layers.js, F6.2)
   c.near = near; c.far = far;
   c.updateProjectionMatrix();
   return c;
@@ -59,12 +59,14 @@ describe('loading by what the eye can see', () => {
     region.dispose();
   });
 
-  it('on final loads approaches and valley but not region', async () => {
+  // With the far plane of F6.2 (the eye's horizon plus the highest summit's), a summit up to 375 km away could show above
+  // the horizon even on final, so region is needed there too; it is culled chunk by chunk against the horizon.
+  it('on final loads every grid, as far as a summit can show above the horizon', async () => {
     fetched.length = 0;
     const region = make();
     const s = await settle(region, camera('final'));
-    expect(s.needed).toEqual(['approaches', 'valley']);
-    expect(region.stats().loaded.region.state).toBe('idle');
+    expect(s.needed).toEqual(['region', 'approaches', 'valley']);
+    expect(region.stats().loaded.region.state).toBe('ready');
     expect(region.stats().loaded.approaches.holes[0].sink).toBe(0);
     region.dispose();
   });

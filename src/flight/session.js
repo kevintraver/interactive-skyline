@@ -1,5 +1,6 @@
 // A flight in the running app (plan 03, F1.4 and F1.6): loaded the first time Fly is entered (src/flight/index.js),
-// it owns the scene objects (the ground beyond the map, the airframe and cabin through view/layers.js), the head rig
+// it owns the scene objects (world.js: the regional terrain, the airport and the ground under it; the airframe and the
+// modelled cabin through view/layers.js), the head rig
 // and its input, and the one journey on plan 01's timeline. Each frame (loop order 20, before the environment) it
 // samples the track at the journey's progress, places the aircraft and the shared camera, and applies the condensed
 // pace through the clock's rate. Everything drawn is a pure function of the progress and the look, so scrubbing back
@@ -15,8 +16,8 @@ import { flightJourney } from './journey.js';
 import { createModelledAirframe } from './aircraft/airframe.js';
 import { RIG_URL } from './aircraft/model.js';
 import { applyGroundPitch } from './attitude.js';
-import { createCabin, cabinMaterials } from './cabin/cabin.js';
-import { createHeadRig, attachHeadInput, DEFAULT_LOOK, LIMITS } from './cabin/headRig.js';
+import { createModelledCabin } from './cabin/cabin.js';
+import { createHeadRig, attachHeadInput, headShake, DEFAULT_LOOK, LIMITS } from './cabin/headRig.js';
 import { seat as seatOf, defaultSeat } from './cabin/lopa.js';
 import { createFlightLayers } from './view/layers.js';
 import { createFlightWorld } from './world.js';
@@ -27,30 +28,27 @@ import { bodyDirection, lookToward } from './lookAt.js';
 const KEEP = 240;
 
 /**
- * @param {{ app: object, fe: ReturnType<import('./env.js').createFlightEnv>, terrain: object, data: string,
+ * @param {{ app: object, fe: ReturnType<import('./env.js').createFlightEnv>, terrain: object, meta: object, data: string,
  *           onFrame: (s: object) => void, onLook: () => void }} o
- *   data is the city's data folder (/data/<city>); onFrame runs after each placed frame, onLook after the head moved
+ *   terrain: the app's provider; meta: terrain.json; data is the city's data folder (/data/<city>); onFrame runs after
+ *   each placed frame, onLook after the head moved
  */
-export async function createFlightSession({ app, fe, terrain, data, onFrame, onLook }) {
+export async function createFlightSession({ app, fe, terrain, meta, data, onFrame, onLook }) {
   const { scene, camera, canvas, settings, city } = app;
   const { clock, loop } = fe;
-  const fetchImage = async (file) => {
-    const r = await fetch(`${data}/${file}`);
-    if (!r.ok) throw new Error(`${file}: HTTP ${r.status}`);
-    return createImageBitmap(await r.blob(), { imageOrientation: 'flipY', premultiplyAlpha: 'none', colorSpaceConversion: 'none' });
-  };
-  const world = await createFlightWorld({ scene, base: city.base, terrain, fetchImage, sky: app.sky, settings, anisotropy: 8 });
+  const ground = { far: app.terrain?.[0]?.mesh ?? null, near: app.terrain?.[1]?.mesh ?? null };
+  const world = await createFlightWorld({ scene, fe, provider: terrain, meta, data, ground, sky: app.sky, settings, renderer: app.renderer });
   const airframe = createModelledAirframe({ nodes: fe.nodes });
   airframe.ready.then(() => fe.invalidate());
   // the ground attitude comes from the same rig.json the model is built from (the model does not hand it out)
   let airRig = null;
   const rigLoad = fetch(RIG_URL).then((r) => (r.ok ? r.json() : null)).then((j) => { airRig = j; fe.invalidate(); }).catch(() => {});
   const reduce = typeof matchMedia === 'function' ? matchMedia('(prefers-reduced-motion: reduce)') : null;
-  const cabinMats = cabinMaterials();
   let seat = defaultSeat('right');
-  let cabin = createCabin({ seat, materials: cabinMats });
+  const cabin = createModelledCabin({ nodes: fe.nodes, seat });
+  cabin.ready.then(() => fe.invalidate());
   const rig = createHeadRig({ seat });
-  const layers = createFlightLayers({ scene, camera, airframe, cabin, rig });
+  const layers = createFlightLayers({ scene, camera, airframe, cabin, rig, base: city.base });
 
   const tracks = new Map();
   let track = null, journey = null, handle = null, active = false, pace = true;
@@ -75,19 +73,26 @@ export async function createFlightSession({ app, fe, terrain, data, onFrame, onL
     groundPitch = applyGroundPitch(s, airRig);
     return s;
   }
-  /** Sample the track now and place the aircraft, its moving parts and lights, and the camera. */
-  function place() {
+  /** Sample the track now and place the aircraft, its moving parts and lights, the cabin, the camera and the world.
+   * dtS: wall seconds since the last frame (the shade's travel); 0 outside the frame loop, so a hook moves nothing. */
+  function place(dtS = 0) {
     if (!track) return;
     const s = sampleAt(progress(), sample);
-    heightAboveGround = s.position.y - terrain.surfaceY(s.position.x, -s.position.z);
+    heightAboveGround = s.position.y - world.surfaceY(s.position.x, -s.position.z);
     const w = canvas.clientWidth || innerWidth, h = canvas.clientHeight || innerHeight;
-    layers.update(s, { aspect: w / h, heightAboveGround });
+    const reducedMotion = !!reduce?.matches, night = isNight();
+    const shake = headShake(s.t, { touchdown: track.touchdownT }, { reducedMotion });
+    layers.update(s, { aspect: w / h, shake });
     airframe.update(s, {
-      wallS, reducedMotion: !!reduce?.matches, hasLightsChannel: track.meta.channels.includes('lights'),
-      night: (fe.state?.sun?.altDeg ?? 90) < 0, shake: fe.quality?.level !== 'low', groundPitch: false,
+      wallS, reducedMotion, hasLightsChannel: track.meta.channels.includes('lights'),
+      night, shake: fe.quality?.level !== 'low', groundPitch: false,
     });
-    world.update(camera);
+    cabin.update(s, { cabinLight: s.cabinLight ?? 1, night, reducedMotion, dtS });
+    world.update({ camera, position: s.position, simMs: clock.timeMs, wallS, night, reducedMotion, visibilityM: fe.at(s.position).visibilityM });
   }
+  /** Night for the aircraft's lamps, the cabin's tint and the airport's lights: the Sun below the horizon (the
+   * airport's lights burn from sunset to sunrise, airport.json lightingSchedule SS-SR). */
+  const isNight = () => (fe.state?.sun?.altDeg ?? 90) < 0;
 
   const sub = {
     update(frame) {
@@ -96,7 +101,7 @@ export async function createFlightSession({ app, fe, terrain, data, onFrame, onL
       if (clock.playing) wallS += (frame?.dtWallMs || 0) / 1000; // presentation time: frozen while paused
       const r = paceRateFor({ pace, playing: clock.playing, progressS: progress(), rate: clock.rate }, journey);
       if (r !== null) clock.setRate(r);
-      place();
+      place((frame?.dtWallMs || 0) / 1000);
       onFrame(session);
       ms.push(performance.now() - t0);
       if (ms.length > KEEP) ms.shift();
@@ -108,6 +113,7 @@ export async function createFlightSession({ app, fe, terrain, data, onFrame, onL
 
   const detachInput = attachHeadInput(canvas, rig, {
     onChange: () => { fe.invalidate(); onLook(); },
+    onShade: () => { cabin.toggleShade(); fe.invalidate(); },
     enabled: () => active && !(app.dragging && app.dragging()),
   });
 
@@ -151,7 +157,7 @@ export async function createFlightSession({ app, fe, terrain, data, onFrame, onL
 
   const session = {
     rig, layers, world, airframe,
-    get cabin() { return cabin; },
+    cabin,
     get seat() { return seat; },
     get track() { return track; },
     get journey() { return journey; },
@@ -165,15 +171,12 @@ export async function createFlightSession({ app, fe, terrain, data, onFrame, onL
     sampleAt,
     trackOf,
 
-    /** Change seat (by id such as '22F', or the default for a side): a new cabin around it; the look is kept. */
+    /** Change seat (by id such as '23F', or the default for a side): the cabin re-placed round it; the look is kept. */
     setSeat(id) {
       const next = typeof id === 'string' ? seatOf(id) : defaultSeat(id?.side || 'right');
       if (next.id === seat.id) return seat;
       seat = next;
-      const c = createCabin({ seat, materials: cabinMats });
-      layers.setCabin(c);
-      cabin.dispose();
-      cabin = c;
+      cabin.setSeat(seat);
       rig.setSeat(seat);
       fe.invalidate();
       return seat;
@@ -188,6 +191,9 @@ export async function createFlightSession({ app, fe, terrain, data, onFrame, onL
       handle = fe.attachJourney(journey);
       if (Number.isFinite(startMs) && Math.abs(startMs - journey.recordedStartMs) > 1000) handle.setStart(startMs);
       handle.seek(Number.isFinite(at) ? at : playStart(track));
+      // the grids the first frame needs, coarsest first, while the fade is still black
+      const s0 = track.sample(progress());
+      world.preload({ x: s0.position.x, y: -s0.position.z, altitude: s0.altMsl, far: Infinity }).catch(() => {});
       return track;
     },
     /** End the journey (the transport bar hides). */
@@ -264,10 +270,16 @@ export async function createFlightSession({ app, fe, terrain, data, onFrame, onL
       caster.ray.direction.copy(d.normalize());
       return { x: r.left + ((v.x + 1) / 2) * r.width, y: r.top + ((1 - v.y) / 2) * r.height, onScreen, throughWindow: onScreen && !blocked(caster.ray, dist) };
     },
+    /** Scene Y of the ground the aircraft stands on, as drawn (world.js surfaceY). */
+    groundY: (x, n) => world.surfaceY(x, n),
     /** Resolves once the ground is in and a frame has been drawn since. */
     async whenSettled() {
-      // the ground, and the plan's own assets: the modelled airframe and its rig (a failed load leaves the stand-in)
-      await Promise.all([terrain.whenSettled(), airframe.ready, rigLoad]);
+      // the ground (place() asks for the grids this view needs), and the plan's own assets: the modelled airframe, its
+      // rig and the modelled cabin (a failed load leaves the stand-in)
+      if (active) place();
+      await Promise.all([world.whenSettled(), airframe.ready, cabin.ready, rigLoad]);
+      if (active) place();
+      await world.whenSettled();
       // the first time, the new materials (the wide ground, the aircraft) are compiled before the frame is waited for
       // (at most 8 s: it is only a head start, and under load it has been seen not to settle)
       if (!compiled && app.renderer.compileAsync) {
@@ -290,7 +302,8 @@ export async function createFlightSession({ app, fe, terrain, data, onFrame, onL
       return {
         drawCalls: info.calls ?? info.drawCalls ?? null, triangles: info.triangles ?? null, lightPoints: 0,
         layerMs: { mean: ms.reduce((a, b) => a + b, 0) / Math.max(1, ms.length), p50: q(0.5), p95: q(0.95), frames: ms.length },
-        aircraftTriangles: airframe.triangles + cabin.triangles, airframeModel: !!airframe.model, world: world.stats(),
+        aircraftTriangles: airframe.triangles + cabin.triangles, airframeModel: !!airframe.model, cabinModel: !!cabin.model,
+        cabinDrawCalls: cabin.drawCalls, shade: cabin.shade, world: world.stats(),
       };
     },
     dispose() { detachInput(); },

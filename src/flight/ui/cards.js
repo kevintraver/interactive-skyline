@@ -6,6 +6,20 @@ import { minutesText } from '../pace.js';
 
 const LIGHT_ORDER = { day: 0, dusk: 1, night: 2 };
 const SIDE = { left: 'Strip on the left', right: 'Strip on the right' };
+/** Where the Strip is seen from the window over the last three minutes (the header's badges.stripView, by the bake). */
+const VIEW = {
+  right: 'Strip on the right', left: 'Strip on the left',
+  'passes-right': 'Strip passes on the right', 'passes-left': 'Strip passes on the left',
+  'ahead-right': 'Strip ahead, to the right', 'ahead-left': 'Strip ahead, to the left',
+  ahead: 'Strip ahead', none: 'Strip out of sight',
+};
+
+/** The Strip badge's words: from stripView, else (a value this version does not know, or none) from stripSide. */
+export const stripText = (b = {}) => VIEW[b.stripView] ?? SIDE[b.stripSide] ?? null;
+
+/** The card's picture: `<id>.jpg` beside the flight (tests/e2e/flight/preview.gpu.spec.js renders it). Looked for by
+ * convention, since scripts/bake_flights.py writes the index afresh with `preview: null`; a missing one shows none. */
+export const previewUrl = (f, data) => `${String(data).replace(/\/$/, '')}/flights/${f.id}.jpg`;
 
 /** The card's title: the runway and where the flight came from, in plain words. */
 export const titleOf = (f) => f.label || `Runway ${f.runway ?? '?'}${f.badges?.from ? `, from the ${f.badges.from}` : ''}`;
@@ -22,24 +36,27 @@ export function whenText(touchdownIso, tz) {
 /** The badges: the light at touchdown, the runway, the weather as flown, the Strip's side. */
 export function badgesOf(f) {
   const b = f.badges || {};
-  return [b.light, f.runway, b.weather, SIDE[b.stripSide]].filter(Boolean).map((t) => String(t).toUpperCase());
+  return [b.light, f.runway, b.weather, stripText(b)].filter(Boolean).map((t) => String(t).toUpperCase());
 }
 
-/** Day, dusk, night (section 4.2), then by id. */
-export const sortFlights = (list) => [...list].sort((a, b) => (LIGHT_ORDER[a.badges?.light] ?? 3) - (LIGHT_ORDER[b.badges?.light] ?? 3) || String(a.id).localeCompare(String(b.id)));
+/** The flight Fly opens on (section 4.7): the index's first, which scripts/bake_flights.py writes in selection.json's
+ * order with the default first (the dusk arrival on runway 19). */
+export const defaultFlight = (flights) => flights[0];
 
-/** The flight Fly opens on (section 4.7): the dusk arrival on runway 19 if there is one, else the first day arrival. */
-export function defaultFlight(flights) {
-  const on19 = (f) => /^19/.test(String(f.runway));
-  const sorted = sortFlights(flights);
-  return sorted.find((f) => f.badges?.light === 'dusk' && on19(f)) || sorted.find((f) => f.badges?.light === 'day') || sorted[0];
+/** The default first, then day, dusk, night (section 4.2), each by runway, then by id. */
+export function sortFlights(list) {
+  const first = list[0];
+  const rest = list.slice(1).sort((a, b) => (LIGHT_ORDER[a.badges?.light] ?? 3) - (LIGHT_ORDER[b.badges?.light] ?? 3)
+    || String(a.runway).localeCompare(String(b.runway)) || String(a.id).localeCompare(String(b.id)));
+  return first ? [first, ...rest] : [];
 }
 
 /**
- * @param {{ parent: Element, flights: object[], tz: string, onPlay: (id: string, key: string) => void }} o
- *   flights are flights/index.json's entries; setOptions fills in the ways to play once a flight's track is in
+ * @param {{ parent: Element, flights: object[], tz: string, data?: string, onPlay: (id: string, key: string) => void }} o
+ *   flights are flights/index.json's entries; data the city's data folder (the previews are looked for there);
+ *   setOptions fills in the ways to play once a flight's track is in
  */
-export function createFlightCards({ parent, flights, tz, onPlay }) {
+export function createFlightCards({ parent, flights, tz, data = null, onPlay }) {
   const box = document.createElement('section');
   box.className = 'flights';
   box.setAttribute('aria-label', 'Flights');
@@ -65,6 +82,14 @@ export function createFlightCards({ parent, flights, tz, onPlay }) {
       <div class="plays" role="group" aria-label="Play this flight"></div>
       <p class="err" hidden>This flight could not be loaded.</p>`;
     card.querySelector('b').textContent = titleOf(f);
+    if (data) {
+      // the picture, when there is one: shown once it has loaded, dropped when it is missing (section 4.11)
+      const img = Object.assign(document.createElement('img'), { className: 'preview', alt: '', decoding: 'async', hidden: true });
+      img.addEventListener('load', () => { img.hidden = false; card.classList.add('has-preview'); }, { once: true });
+      img.addEventListener('error', () => img.remove(), { once: true });
+      img.src = previewUrl(f, data);
+      card.prepend(img);
+    }
     card.querySelector('.when').textContent = whenText(f.touchdown, tz);
     const badges = card.querySelector('.badges');
     for (const t of badgesOf(f)) badges.append(Object.assign(document.createElement('span'), { textContent: t }));

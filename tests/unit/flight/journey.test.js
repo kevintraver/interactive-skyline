@@ -1,5 +1,6 @@
 // Plan 03, F1.4 (journey.js) and section 8.2: a recorded flight as a journey on plan 01's timeline, with plan 02's
 // members and the condensed pace of sections 4.2 and 4.4.
+import fs from 'node:fs';
 import { describe, it, expect, vi } from 'vitest';
 import { createSimClock } from '../../../src/sim/clock.js';
 import { createTimeline } from '../../../src/sim/timeline.js';
@@ -122,7 +123,7 @@ describe('the condensed pace', () => {
     }
     expect(journey.paceRate(0)).toBe(8);
     expect(journey.paceRate(-50)).toBe(8);
-    expect(journey.paceRate(1e6)).toBe(1);
+    expect(journey.paceRate(1e6)).toBe(1); // no taxi-speed event in the fixture: real time to the end
   });
 
   it('plays a 27-minute flight in about 8 minutes', () => {
@@ -143,3 +144,28 @@ describe('the condensed pace', () => {
     expect(j.paceDurationS()).toBeGreaterThan(240);
   });
 });
+
+describe('the condensed pace on the baked flights (from cruise)', () => {
+  const ids = JSON.parse(fs.readFileSync('public/data/lv/flights/index.json', 'utf8')).flights.map((f) => f.id);
+  const load = (id) => parseTrack(JSON.parse(fs.readFileSync(`public/data/lv/flights/${id}.json`, 'utf8')),
+    new Uint8Array(fs.readFileSync(`public/data/lv/flights/${id}.bin`)).buffer, { frame });
+
+  it.each(ids)('%s: the rollout runs in real time, the taxi after the taxi-speed event runs fast again', (id) => {
+    const t = load(id), j = flightJourney(t, () => {});
+    const vacate = t.events.find((e) => e.id === 'vacate').t;
+    for (let p = t.touchdownT; p <= vacate; p += 2) expect(j.paceRate(p)).toBe(1);
+    expect(j.paceRate(vacate + PACE.rampS + 1)).toBe(PACE.maxRate);
+    // continuous: no jump the eye would see, in either direction
+    let last = j.paceRate(0);
+    for (let p = 0; p <= t.durationS; p += 0.5) { const r = j.paceRate(p); expect(Math.abs(r - last)).toBeLessThan(0.1); last = r; }
+  });
+
+  // F6.5 asks for 8 minutes give or take one. Every flight's first 30 minutes (cruise to touchdown) take the same 6.7
+  // minutes; what differs is the taxi after it, and lv-26-day's ten-minute taxi brings it to 9.2.
+  it.each(ids)('%s: plays from cruise to the end in about 8 minutes (F6.5)', (id) => {
+    const t = load(id), wall = flightJourney(t, () => {}).paceDurationS();
+    expect(wall / 60).toBeGreaterThan(7);
+    expect(wall / 60).toBeLessThan(9.5);
+  });
+});
+

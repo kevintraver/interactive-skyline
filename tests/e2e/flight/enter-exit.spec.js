@@ -9,7 +9,8 @@ test.describe.configure({ timeout: FLIGHT_TIMEOUT });
 for (const backend of ['webgpu', 'webgl2']) {
   test(`${backend}: enter, play, scrub both ways, pause, leave, and the map is as it was`, async ({ page }) => {
     const problems = watchConsole(page);
-    await openFlight(page, `city=lv&backend=${backend}`);
+    await openFlight(page, `city=lv&backend=${backend === 'webgl2' ? 'webgl' : backend}`); // the address says webgl
+    expect(await page.evaluate(() => window.__skyline.perf.gpu().backend)).toBe(backend);
     await page.evaluate(() => window.__skyline.setView('aerial'));
     await mapAtRest(page);
 

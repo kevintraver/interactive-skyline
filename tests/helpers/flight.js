@@ -14,6 +14,14 @@ const FIXTURES = path.join(ROOT, 'tests/fixtures/flight');
 /** The baked flight of phase 1 (another agent's work; may not exist yet). */
 export const REAL_FLIGHT = path.join(ROOT, 'public/data/lv/flights/lv-19-day.json');
 export const hasRealFlight = () => fs.existsSync(REAL_FLIGHT) && fs.existsSync(REAL_FLIGHT.replace(/\.json$/, '.bin'));
+/** Every baked flight in public/data/lv/flights/index.json whose files are there, in the index's order. */
+export function realFlights() {
+  const dir = path.join(ROOT, 'public/data/lv/flights');
+  const file = path.join(dir, 'index.json');
+  if (!fs.existsSync(file)) return [];
+  return JSON.parse(fs.readFileSync(file, 'utf8')).flights
+    .filter((f) => fs.existsSync(path.join(dir, f.header || `${f.id}.json`)) && fs.existsSync(path.join(dir, f.data || `${f.id}.bin`)));
+}
 
 /** A flight on the GPU still takes a while under load; the first one builds the wide ground. */
 export const FLIGHT_TIMEOUT = 600_000;
@@ -146,10 +154,12 @@ export function diffShots(page, a, b, { tol = 8 } = {}) {
   }, { a64: a.toString('base64'), b64: b.toString('base64'), tol });
 }
 
-/** Fail on console errors and warnings (WebGPU's own adapter notes aside, and the weather hosts playwright.config.js makes unresolvable). */
+/** Fail on console errors and warnings (WebGPU's own adapter notes aside, the weather hosts playwright.config.js makes
+ * unresolvable, and a flight's preview picture that does not exist: the picker looks for <id>.jpg and shows none). */
 export function watchConsole(page) {
   const problems = [];
   page.on('console', (m) => {
+    if (/\/flights\/[\w-]+\.jpg$/.test(m.location()?.url || '')) return;
     if ((m.type() === 'error' || m.type() === 'warning') && !/GL Driver Message|powerPreference|ERR_NAME_NOT_RESOLVED/.test(m.text())) problems.push(`[${m.type()}] ${m.text()}`);
   });
   page.on('pageerror', (e) => problems.push(`[pageerror] ${e.message}`));

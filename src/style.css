@@ -479,6 +479,8 @@ button { font: inherit; color: inherit; background: none; border: 0; padding: 0;
 .browsing .flight-list { display: none; }
 .flight-card { flex: none; padding: 11px 12px 12px; }
 .flight-card.current { outline: 2px solid var(--blue); outline-offset: -1px; }
+.flight-card .preview { float: right; width: 116px; aspect-ratio: 16 / 10; margin: 0 0 6px 10px; border-radius: 8px; object-fit: cover; background: var(--fill); }
+.flight-card .plays { clear: both; }
 .flight-card .head b { display: block; font-weight: 650; }
 .flight-card .when { display: block; color: var(--muted); font-size: 12.5px; font-variant-numeric: tabular-nums; }
 .flight-card .badges { display: flex; flex-wrap: wrap; align-items: center; gap: 5px; margin-top: 8px; }
@@ -503,6 +505,8 @@ button { font: inherit; color: inherit; background: none; border: 0; padding: 0;
 #flightbar .pace[aria-pressed="true"] { color: var(--blue); background: var(--blue-wash); }
 #flightbar .frame[aria-pressed="false"] { color: var(--muted); }
 #flightbar .retimed { padding: 2px 7px; border-radius: 6px; background: var(--accent); color: #fff; font-size: 11px; font-weight: 650; }
+#flightbar .seat[aria-expanded="true"] { color: var(--blue); background: var(--blue-wash); }
+#seatmap { left: 50%; bottom: 90px; transform: translateX(-50%); }
 #flightbar .note { color: var(--muted); font-size: 12.5px; padding-right: 6px; }
 
 #fly-fade { position: fixed; inset: 0; z-index: 2; background: #000; opacity: 0; pointer-events: none; transition: opacity 0.25s linear; }

@@ -1,108 +1,147 @@
-// Screenshots of Fly mode in the running app on this machine's GPU (plan 03, F1.4): the map before, the picker, then
-// the flight at the start of playback, mid-descent, in the turn to final, one minute out, at touchdown and on the
-// rollout, by day and at night (the departure moved to 21:00), plus the flight's bar; and the mode's own per-frame
-// JavaScript time while playing. Writes <prefix><backend>_<name>.png and timing.json into <out-dir>.
+// Pictures and measurements of Fly mode in the running app on this machine's GPU (plan 03, F4.7, F4.8, F6.2, F2.8,
+// section 9.1). For every baked flight in public/data/lv/flights/index.json (or those named with --flights): cruise
+// (the first sample, with the cabin frame and without it), through 18,000 ft, through 10,000 ft, the turn to final
+// (the largest bank between 10,000 ft and 1,000 ft above the runway), 60 s out, the threshold, touchdown and the
+// rollout (20 s after). At each: a picture with the interface hidden, and the renderer's draw calls and triangles and
+// the frame time (perf.throughput: frames drawn back to back, not capped by vsync), with the region terrain's and the
+// airport's own counts. Extras (--extras): the picker open, the flight's bar, the seat map, and the cabin by day and at
+// night with the shade half closed.
+// Writes <out>/<backend>/<flight>_<moment>.jpg and <out>/<backend>/measure.json.
 //
-// Serve the repo first:   pnpm exec vite --port 5341 --strictPort
-// then:                   node tests/manual/flight-mode-shots.mjs <out-dir> [port] [--backend webgpu|webgl2] [--synthetic] [--only day|night]
+// Serve a build first:  pnpm build --outDir dist-shots && pnpm exec vite preview --outDir dist-shots --port 5381 --strictPort
+// then:                 node tests/manual/flight-mode-shots.mjs <out> [--port 5381] [--backend webgpu|webgl2]
+//                         [--flights lv-19-dusk,lv-26-day] [--moments cruise,touchdown] [--extras]
+// From a normal shell on macOS (a sandboxed one gives the browser software rendering).
 import { chromium } from '@playwright/test';
 import { mkdirSync, writeFileSync, readFileSync } from 'node:fs';
 import path from 'node:path';
-import { syntheticIndex } from '../helpers/flight.js';
 
 const args = process.argv.slice(2);
 const opt = (k) => (args.includes(k) ? args[args.indexOf(k) + 1] : null);
-const positional = args.filter((a, i) => !a.startsWith('--') && !['--backend', '--only'].includes(args[i - 1]));
-const out = positional[0];
-const port = positional[1] || 5341;
+const out = args.find((a, i) => !a.startsWith('--') && !['--port', '--backend', '--flights', '--moments'].includes(args[i - 1]));
+if (!out) { console.error('usage: node tests/manual/flight-mode-shots.mjs <out> [--port 5381] [--backend webgpu|webgl2] [--flights a,b] [--moments a,b] [--extras]'); process.exit(2); }
+const port = opt('--port') || 5381;
 const backends = opt('--backend') ? [opt('--backend')] : ['webgpu', 'webgl2'];
-const synthetic = args.includes('--synthetic');
-const looks = opt('--only') ? [opt('--only')] : ['day', 'night'];
-if (!out) { console.error('usage: node tests/manual/flight-mode-shots.mjs <out-dir> [port] [--backend webgpu|webgl2] [--synthetic]'); process.exit(2); }
-mkdirSync(out, { recursive: true });
-const prefix = synthetic ? 'synthetic_' : '';
+const DIR = 'public/data/lv/flights';
+const index = JSON.parse(readFileSync(path.join(DIR, 'index.json'), 'utf8'));
+const ids = opt('--flights') ? opt('--flights').split(',') : index.flights.map((f) => f.id);
+const onlyMoments = opt('--moments') ? opt('--moments').split(',') : null;
+const extras = args.includes('--extras');
 
-// the track, read here to find the moments: the turn to final is where the bank is largest before the last minute
-const dir = synthetic ? 'tests/fixtures/flight' : 'public/data/lv/flights';
-const id = synthetic ? 'synthetic-19' : 'lv-19-day';
-const header = JSON.parse(readFileSync(path.join(dir, `${id}.json`), 'utf8'));
-const bin = new Float32Array(readFileSync(path.join(dir, `${id}.bin`)).buffer.slice(0));
-const ch = (name) => { const k = header.channels.indexOf(name); return bin.subarray(k * header.samples, (k + 1) * header.samples); };
-const ev = (k) => header.events.find((e) => e.id === k)?.t;
-const td = ev('touchdown');
-const start = ev('terrain') ?? 0;
-const roll = ch('roll');
-let turn = start, best = 0;
-for (let i = Math.ceil(start); i < td - 60; i++) if (Math.abs(roll[i]) > best) { best = Math.abs(roll[i]); turn = i; }
-const MOMENTS = { start, middescent: start + (turn - start) / 2, turn, oneminute: td - 60, touchdown: td, rollout: Math.min(header.samples - 1, td + 20) };
-console.log(id, JSON.stringify(MOMENTS), `max bank ${best.toFixed(1)} deg`);
+/** The moments of one flight, seconds from its start, read from its header and channels. */
+function momentsOf(id) {
+  const header = JSON.parse(readFileSync(path.join(DIR, `${id}.json`), 'utf8'));
+  const bin = new Float32Array(readFileSync(path.join(DIR, `${id}.bin`)).buffer.slice(0));
+  const ch = (name) => { const k = header.channels.indexOf(name); return bin.subarray(k * header.samples, (k + 1) * header.samples); };
+  const ev = (k) => header.events.find((e) => e.id === k)?.t;
+  const td = ev('touchdown'), roll = ch('roll');
+  const from = ev('10000') ?? 0, to = ev('ft1000') ?? td - 60;
+  let turn = from, best = 0;
+  for (let i = Math.ceil(from); i < to; i++) if (Math.abs(roll[i]) > best) { best = Math.abs(roll[i]); turn = i; }
+  const m = { cruise: 0, 'cruise-clean': 0, fl180: ev('fl180'), ft10000: ev('10000'), turn, 'sixty-out': td - 60, threshold: ev('threshold'), touchdown: td, rollout: Math.min(header.samples - 1, td + 20) };
+  return Object.fromEntries(Object.entries(m).filter(([k, v]) => Number.isFinite(v) && (!onlyMoments || onlyMoments.includes(k))));
+}
 
 const browser = await chromium.launch({
   channel: 'chromium', headless: true,
   args: ['--use-angle=metal', '--ignore-gpu-blocklist', '--enable-gpu', '--enable-unsafe-webgpu', '--enable-webgpu-developer-features'],
 });
-const timing = {};
-for (const backend of backends) {
-  const page = await browser.newPage({ viewport: { width: 1280, height: 800 } });
-  const problems = [];
-  page.on('console', (m) => { if (['error', 'warning'].includes(m.type())) problems.push(`[${m.type()}] ${m.text()}`); });
-  page.on('pageerror', (e) => problems.push(`[pageerror] ${e.message}`));
-  if (synthetic) {
-    await page.route('**/data/lv/flights/**', (route) => {
-      const name = new URL(route.request().url()).pathname.split('/').pop();
-      if (name === 'index.json') return route.fulfill({ contentType: 'application/json', body: JSON.stringify(syntheticIndex()) });
-      return route.fulfill({ body: readFileSync(path.join(dir, name)) });
-    });
-  }
-  await page.addInitScript(() => { try { localStorage.clear(); localStorage.setItem('slc-skyline-hinted', '1'); } catch { /* */ } });
-  await page.goto(`http://localhost:${port}/?city=lv&backend=${backend}`);
-  await page.waitForFunction(() => window.__skyline && window.__skyline.flight && window.__skyline.attractions && document.getElementById('loading').classList.contains('done'), null, { timeout: 240_000 });
-  await page.evaluate(async () => { const s = window.__skyline; await s.attractions.ready; s.attractions.freeze(47); await s.flight.ready; s.setView('aerial'); });
-  await page.waitForTimeout(1500);
-  const shot = (name, o) => page.screenshot({ path: path.join(out, `${prefix}${backend}_${name}.png`), ...o });
-  await shot('map-before');
-  await page.locator('#modes button[data-mode="flight"]').click();
-  await page.waitForFunction(() => window.__skyline.flight.active(), null, { timeout: 240_000 });
-  // the fade back from black ends once the first frame is settled
-  await page.waitForFunction(() => document.getElementById('fly-fade').hidden && document.querySelector('#flightbar .note').hidden, null, { timeout: 240_000 });
-  await page.waitForTimeout(500);
-  await shot('picker');
-  await page.keyboard.press('Escape');
+const hideUi = () => {
+  const canvas = document.querySelector('canvas');
+  for (const el of document.body.children) if (!el.contains(canvas)) el.dataset.shotHidden = el.style.visibility = 'hidden';
+};
+const showUi = () => { for (const el of document.body.querySelectorAll('[data-shot-hidden]')) { el.style.visibility = ''; delete el.dataset.shotHidden; } };
 
-  for (const look of looks) {
-    if (look === 'night') {
-      await page.evaluate(() => { const h = window.__skyline.timeline.active; h.setTimeOfDay(21, 0); });
-    }
-    for (const [name, t] of Object.entries(MOMENTS)) {
-      await page.evaluate(async (at) => { const f = window.__skyline.flight; f.pause(); await f.seek({ at }); }, t);
+for (const backend of backends) {
+  const dir = path.join(out, backend);
+  mkdirSync(dir, { recursive: true });
+  const page = await browser.newPage({ viewport: { width: 1280, height: 800 }, deviceScaleFactor: 1 });
+  const problems = [];
+  page.on('console', (m) => { if (['error', 'warning'].includes(m.type()) && !/flights\/[\w-]+\.jpg/.test(m.location()?.url || '')) problems.push(`[${m.type()}] ${m.text()}`); });
+  page.on('pageerror', (e) => problems.push(`[pageerror] ${e.message}`));
+  page.on('response', (r) => { if (r.status() >= 400) problems.push(`[http ${r.status()}] ${r.url()}`); });
+  await page.addInitScript(() => { try { localStorage.clear(); localStorage.setItem('slc-skyline-hinted', '1'); } catch { /* */ } });
+  await page.goto(`http://localhost:${port}/?city=lv&backend=${backend === 'webgl2' ? 'webgl' : backend}`); // the address says webgl
+  await page.waitForFunction(() => window.__skyline && window.__skyline.flight && window.__skyline.attractions && document.getElementById('loading').classList.contains('done'), null, { timeout: 240_000 });
+  await page.evaluate(async () => { const s = window.__skyline; await s.attractions.ready; s.attractions.freeze(47); await s.flight.ready; });
+  const gpu = await page.evaluate(() => window.__skyline.perf.gpu());
+  console.log(backend, JSON.stringify(gpu));
+  if (gpu.backend !== backend) throw new Error(`asked for ${backend}, drawing on ${gpu.backend}`);
+  const measure = { backend, gpu, date: new Date().toISOString(), flights: {} };
+
+  for (const id of ids) {
+    const moments = momentsOf(id);
+    measure.flights[id] = {};
+    await page.evaluate(async (fid) => { const f = window.__skyline.flight; await f.start(fid, { pace: false, play: false }); f.options({ hud: false }); }, id);
+    for (const [name, at] of Object.entries(moments)) {
+      const r = await page.evaluate(async ({ at, clean }) => {
+        const s = window.__skyline, f = s.flight;
+        f.options({ frame: !clean });
+        await f.seek({ at });
+        await f.whenSettled();
+        await f.whenSettled();
+        const info = s.perf.info();
+        const tp = await s.perf.throughput(40, 8);
+        const st = f.state(), stats = f.stats();
+        const region = stats.world.region;
+        return {
+          t: st.t, altMsl: Math.round(st.altMsl), heightAboveGround: +st.heightAboveGround.toFixed(2), headingDeg: +st.headingDeg.toFixed(1),
+          pitchDeg: +st.pitchDeg.toFixed(2), rollDeg: +st.rollDeg.toFixed(2), far: Math.round(s.camera.far), near: s.camera.near,
+          drawCalls: info.calls, triangles: info.triangles, msPerFrame: +tp.msPerFrame.toFixed(2),
+          region: { needed: region.needed, triangles: region.triangles, drawCalls: region.drawCalls, cpuMs: region.cpuMs },
+          airport: stats.world.airport && { drawCalls: stats.world.airport.drawCalls, lights: stats.world.airport.lights, night: stats.world.airport.night, updateMs: stats.world.airport.updateMs },
+          aircraftTriangles: stats.aircraftTriangles, cabinModel: stats.cabinModel, layerMsP50: +stats.layerMs.p50.toFixed(3),
+          sunAltDeg: s.env.state?.sun?.altDeg ?? null, exposure: s.look?.exposure?.state?.ev ?? s.look?.exposure?.state?.value ?? null,
+        };
+      }, { at, clean: name === 'cruise-clean' });
+      await page.evaluate(hideUi);
       await page.evaluate(() => window.__skyline.flight.whenSettled());
-      await page.waitForTimeout(300);
-      await shot(`${look}_${name}`);
-      if (name === 'oneminute') {
-        // Look at the Sphere (the card's action while flying), then back to the default look
-        const l = await page.evaluate(async () => { const f = window.__skyline.flight; const r = f.lookAtBuilding('w976405284'); await f.whenSettled(); return r; });
-        console.log(look, 'Look at the Sphere one minute out', JSON.stringify(l));
-        await page.waitForTimeout(300);
-        await shot(`${look}_oneminute-lookat-sphere`);
-        await page.evaluate(() => window.__skyline.flight.look({ yaw: 0, pitch: -8, lens: 26 }));
-      }
-      if (name === 'middescent' && look === 'day') await shot('bar', { clip: await page.locator('#dock').boundingBox() });
+      const buf = await page.screenshot({ path: path.join(dir, `${id}_${name}.jpg`), type: 'jpeg', quality: 85 });
+      // a blank frame (the page's grey through the canvas; see tests/e2e/flight/preview.gpu.spec.js) is about 3 KB
+      if (buf.length < 4000) console.log(backend, id, name, 'BLANK FRAME');
+      await page.evaluate(showUi);
+      measure.flights[id][name] = r;
+      console.log(backend, id, name, JSON.stringify(r));
+    }
+    await page.evaluate(() => window.__skyline.flight.options({ frame: true, hud: true }));
+  }
+
+  if (extras) {
+    const shot = (name) => page.screenshot({ path: path.join(dir, `extra_${name}.jpg`), type: 'jpeg', quality: 85 });
+    const first = index.flights[0].id;
+    await page.evaluate(async (fid) => { const f = window.__skyline.flight; await f.start(fid, { pace: false, play: false }); await f.seek({ at: f.state().touchdownT - 240 }); await f.whenSettled(); }, first);
+    await page.locator('.flight-chip').click();
+    await page.waitForTimeout(800); // the preview pictures load
+    await shot('picker');
+    await page.keyboard.press('Escape');
+    await shot('bar');
+    await page.locator('#flightbar .seat').click();
+    await page.waitForTimeout(300);
+    await shot('seatmap');
+    await page.keyboard.press('Escape');
+    for (const [night, fid] of [['day', 'lv-19-day'], ['night', 'lv-19-night']]) {
+      await page.evaluate(async (f2) => {
+        const f = window.__skyline.flight;
+        await f.start(f2, { pace: false, play: false });
+        await f.seek({ at: f.state().touchdownT - 300 });
+        f.look({ yaw: -25, pitch: -4, lens: 18 });
+        f.options({ hud: false });
+        await f.whenSettled();
+      }, fid);
+      await page.evaluate(hideUi);
+      await shot(`cabin-${night}`);
+      await page.evaluate(async () => {
+        const f = window.__skyline.flight;
+        f.shade(0.5); f.play(); await new Promise((r) => setTimeout(r, 1200)); f.pause(); await f.whenSettled();
+      });
+      await shot(`cabin-${night}-shade-half`);
+      await page.evaluate(showUi);
+      await page.evaluate(() => { const f = window.__skyline.flight; f.shade(0); f.look({ yaw: 0, pitch: -8, lens: 26 }); });
     }
   }
-  // timing: play from the start of playback for 8 s at the condensed pace
-  await page.evaluate(async (at) => { const f = window.__skyline.flight; await f.seek({ at }); f.play(); }, MOMENTS.start);
-  const t0 = await page.evaluate(() => window.__skyline.loop.frames);
-  await page.waitForTimeout(8000);
-  const t1 = await page.evaluate(() => window.__skyline.loop.frames);
-  const stats = await page.evaluate(() => window.__skyline.flight.stats());
-  timing[backend] = { fps: (t1 - t0) / 8, ...stats };
-  console.log(backend, JSON.stringify(timing[backend]));
-  await page.evaluate(() => window.__skyline.flight.exit());
-  await page.waitForTimeout(1200);
-  await shot('map-after');
-  if (problems.length) console.log(backend, 'console:', problems.slice(0, 20).join('\n'));
-  timing[backend].problems = problems;
+  measure.problems = problems;
+  writeFileSync(path.join(dir, 'measure.json'), JSON.stringify(measure, null, 1));
+  if (problems.length) console.log(backend, 'console problems', problems.slice(0, 20));
   await page.close();
 }
-writeFileSync(path.join(out, `${prefix}timing.json`), JSON.stringify(timing, null, 1));
 await browser.close();

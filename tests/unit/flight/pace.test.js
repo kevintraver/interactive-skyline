@@ -16,8 +16,8 @@ withTerrain.header.events = [{ t: 95, id: 'terrain', label: 'Over the valley' },
 const terrainTrack = parseTrack(withTerrain.header, withTerrain.buffer, { frame });
 
 describe('playStart', () => {
-  it('starts at the terrain event (the aircraft enters the terrain that exists), else at the start of the track', () => {
-    expect(playStart(terrainTrack)).toBe(95);
+  it('starts at the first sample (cruise, now that the terrain reaches the horizon), whatever events the track has', () => {
+    expect(playStart(terrainTrack)).toBe(0);
     expect(playStart(shortTrack)).toBe(0);
   });
 });
@@ -64,10 +64,11 @@ describe('playOptions', () => {
     expect(fin.wallS).toBeCloseTo(600 - fin.from, 6);
   });
 
-  it('starts the first two at the terrain event when there is one', () => {
+  it('starts the first two at the first sample even when the track has a terrain event, and Final as before', () => {
     const opts = playOptions(terrainTrack, flightJourney(terrainTrack, () => {}));
-    expect(opts[0].from).toBe(95);
-    expect(opts[1]).toMatchObject({ from: 95, wallS: 505 });
+    expect(opts[0].from).toBe(0);
+    expect(opts[1]).toMatchObject({ from: 0, wallS: 600 });
+    expect(opts[2].from).toBe(terrainTrack.touchdownT - FINAL_LEAD_S);
   });
 });
 

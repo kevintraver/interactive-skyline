@@ -58,7 +58,7 @@ export function initFlight(app, { terrainData }) {
     if (!loading) {
       btn.setAttribute('aria-busy', 'true');
       loading = import('./mode.js')
-        .then(({ createFlightMode }) => (mode = createFlightMode({ app, fe: createFlightEnv(app), terrain, flights, data: DATA, seam, showMode })))
+        .then(({ createFlightMode }) => (mode = createFlightMode({ app, fe: createFlightEnv(app), terrain, meta: terrainData.meta, flights, data: DATA, seam, showMode })))
         .catch((err) => { loading = null; throw err; })
         .finally(() => btn.removeAttribute('aria-busy'));
     }
@@ -150,14 +150,23 @@ export function initFlight(app, { terrainData }) {
       if (!entry) throw new Error(`no removable building "${id}"`);
       return seam.focus(entry);
     },
+    /**
+     * The aircraft and the view now. Units: metres and metres per second (x, y, z scene metres: x east, y up, z south;
+     * altMsl, heightAboveGround of the main wheels over the ground as drawn; gs, tas, ias, vs); angles in DEGREES:
+     * headingDeg clockwise from grid north (0 to 360), pitchDeg nose up positive, rollDeg right wing down positive
+     * (the attitude of the track, before the ground attitude: groundPitchDeg); t, durationS, touchdownT seconds from
+     * the start of the flight; simMs UTC milliseconds. look: the head rig's (yaw, pitch degrees; lens mm).
+     */
     state() {
       if (!mode?.session?.track || !seam.active) return null; // entering: the track is not in yet
       const s = mode.session, st = s.sampleAt(s.progressS), l = s.rig.state;
+      const deg = (r) => (r * 180) / Math.PI;
       return {
         id: mode.memory.id, runway: s.track.meta.runway, t: st.t, s: st.s, x: st.position.x, y: st.position.y, z: st.position.z,
-        heading: st.heading, pitch: st.pitch, roll: st.roll, altMsl: st.altMsl, gs: st.gs, tas: st.tas, ias: st.ias, vs: st.vs,
+        headingDeg: ((deg(st.heading) % 360) + 360) % 360, pitchDeg: deg(st.pitch), rollDeg: deg(st.roll),
+        altMsl: st.altMsl, gs: st.gs, tas: st.tas, ias: st.ias, vs: st.vs,
         flap: st.flap, slat: st.slat, gear: st.gear, speedbrake: st.speedbrake, groundSpoiler: st.groundSpoiler, reverser: st.reverser,
-        lights: st.lights, onGround: st.onGround, heightAboveGround: st.position.y - terrain.surfaceY(st.position.x, -st.position.z),
+        lights: st.lights, onGround: st.onGround, heightAboveGround: st.position.y - s.groundY(st.position.x, -st.position.z),
         playing: app.clock.playing, rate: app.clock.rate, pace: s.pace, seat: s.seat.id, look: l, frame: mode.frame, hud: mode.hud,
         durationS: s.track.durationS, touchdownT: s.track.touchdownT, simMs: app.clock.timeMs,
         groundPitchDeg: (s.groundPitch * 180) / Math.PI, airframeModel: !!s.airframe.model,
@@ -177,9 +186,14 @@ export function initFlight(app, { terrainData }) {
       return { frame: m.frame, hud: m.hud };
     },
     stats: () => (mode?.session ? { ...mode.session.stats(), active: !!seam.active } : null),
-    /** The terrain the flight stands on (heights as drawn), for checks. */
-    groundY: (x, n) => terrain.surfaceY(x, n),
-    orbit: later('Orbit'), setSeat: later('The seat map'), luminance: later('Luminance'),
+    /** Scene Y of the ground as drawn while flying at map (x east, n north): pavement, the airport's ground, the
+     * regional terrain. Before Fly is first entered, the map's provider. */
+    groundY: (x, n) => (mode?.session ? mode.session.groundY(x, n) : terrain.surfaceY(x, n)),
+    /** Change seat ('23F', '12A'...): the cabin and the eye move, the address follows. Returns the seat's id. */
+    setSeat(id) { const m = need(); const st = m.setSeat(id); return st.id; },
+    /** The own window's shade, 0 open to 1 closed (it slides there while the clock plays; at once when asked twice). */
+    shade(v) { const m = need(); m.session.cabin.setShade(v); app.invalidate(); return m.session.cabin.shade; },
+    orbit: later('Orbit'), luminance: later('Luminance'),
   };
   return hooks.flight;
 }

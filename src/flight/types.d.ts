@@ -39,8 +39,18 @@ export interface FlightMeta {
   reconstructed: { from: number; to: number; what: string }[];
   events: { t: number; s?: number; id: string; label: string }[];
   atmosphere: [altM: number, tempC: number, windEastMs: number, windNorthMs: number][];
-  badges: { light: 'day' | 'dusk' | 'night'; weather: string; from: string; stripSide: 'left' | 'right' };
-  qa: { glidePathDeg: number; crossingHeightM: number; touchdownPastThresholdM: number; altitudeOffsetM: number; datum: string };
+  badges: {
+    light: 'day' | 'dusk' | 'night'; weather: string; from: string; stripSide: 'left' | 'right';
+    /** Where the Strip is seen over the last three minutes: beside the aircraft on that side; ahead at first, then along
+     * that side and abeam before touchdown (passes-); mostly ahead, seen from that side only looking forward (ahead-);
+     * ahead; not at all. Shown on the card (ui/cards.js stripText); a value not listed falls back to stripSide. */
+    stripView?: 'right' | 'left' | 'passes-right' | 'passes-left' | 'ahead-right' | 'ahead-left' | 'ahead' | 'none';
+  };
+  qa: { glidePathDeg: number; crossingHeightM: number; touchdownPastThresholdM: number; altitudeOffsetM: number; datum: string; waived?: unknown[] };
+  /** The journey's chapters, each from its event to the next (the journey bar's markers, journey.js chapterMarkers). */
+  chapters?: { id: string; label: string; from: number; to: number }[];
+  /** What the bake inferred rather than recorded (weight, approach speed, flap selections...). */
+  inferred?: Record<string, unknown>;
   source: { archive: string; release?: string; licence: string; [k: string]: string | undefined };
 }
 
