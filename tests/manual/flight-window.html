@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Window pane</title>
+  <link rel="icon" href="data:,">
+  <style>
+    html, body { margin: 0; height: 100%; overflow: hidden; background: #000; color: #ccc; font: 12px monospace; }
+    canvas { display: block; width: 100vw; height: 100vh; touch-action: none; }
+    #log { position: fixed; left: 8px; bottom: 6px; pointer-events: none; text-shadow: 0 0 3px #000; }
+  </style>
+</head>
+<body>
+  <!--
+    The window-pane harness (plan 03, Phase 5): the modelled airframe and cabin with the pane of src/flight/window/ on
+    the app's renderer and pipeline (src/render/pipeline.js: the scene pass, ACES, sRGB), over a plain curved ground
+    and a gradient sky with a sun disc, posed from the synthetic arrival from cruise (tests/helpers/flightTrack.js), lit in
+    the app's units. By night the ground has a field of lamps round the runway. By hand: drag, wheel, W A S D Q E, the
+    arrows, R, V (shade), C (clean view: no cabin, no glass), G (pane on/off), F (focus far / on the pane), N (night),
+    1 to 4 (cruise, descent, approach, taxi).
+    Driven by flight-window-shots.mjs through window.__win:
+      __win.info                    { backend, reason, gpu, cabinModel, level }
+      await __win.view(o)           o: { state: 'cruise'|'descent'|'approach'|'taxi', seat, look, night, cabinLight,
+                                         sun: { angle, az } (degrees from the line of sight through the own window),
+                                         pane: { frost, fog, wet, mist, rainRateMmH } | null (null: the journey's),
+                                         paneOn, focus: 'far'|'pane', effects, wallS, reducedMotion, shade }
+                                    resolves after a frame with stats()
+      await __win.cost({ frames, paneOn })   { msPerFrame, method } (throughput: back-to-back frames, then a GPU sync)
+      __win.stats()                 the pane's stats() and the frame's draw calls
+    Address parameters: ?backend=webgl|webgpu&quality=low|high|ultra&state=cruise&night=1
+  -->
+  <canvas id="scene"></canvas>
+  <div id="log">loading</div>
+  <script type="module" src="./flight-window.js"></script>
+</body>
+</html>
