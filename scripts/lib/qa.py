@@ -108,6 +108,14 @@ def report(header, channels, end, cifp, true_north_grid_deg):
         "touchdownPoint": {"pastThresholdM": qa.get("touchdownPastThresholdM"), "offCentreM": qa.get("touchdownOffCentreM"),
                        "source": qa.get("touchdownSource"), "flare": qa.get("flare")},
         "inferred": header.get("inferred"),
-        "weather": header.get("weather"), "badges": header.get("badges"),
+        "weather": _weather_summary(header.get("weather")), "badges": header.get("badges"),
         "reconstructed": header.get("reconstructed"),
     }
+
+
+def _weather_summary(w):
+    """The as-flown weather for the QA report: what the reports said and what was derived (lib.flight_weather)."""
+    if not w or "format" not in w:
+        return w
+    return {"badge": w["badge"], "reports": [r["metar"] for r in w["reports"]], "surface": w["surface"],
+            "layers": w["layers"], "precipitation": w["precipitation"], "inCloud": w["inCloud"]}

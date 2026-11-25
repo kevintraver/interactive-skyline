@@ -13,7 +13,7 @@
    "start": 1349,
    "badges": {
     "light": "dusk",
-    "weather": "clear",
+    "weather": "wind",
     "from": "east",
     "stripSide": "right",
     "stripView": "passes-right"
@@ -34,7 +34,7 @@
    "start": 1314,
    "badges": {
     "light": "day",
-    "weather": "clear",
+    "weather": "overcast",
     "from": "north-east",
     "stripSide": "right",
     "stripView": "passes-right"
@@ -76,7 +76,7 @@
    "start": 1339,
    "badges": {
     "light": "day",
-    "weather": "clear",
+    "weather": "scattered",
     "from": "east",
     "stripSide": "right",
     "stripView": "ahead-right"
@@ -97,7 +97,7 @@
    "start": 1360,
    "badges": {
     "light": "night",
-    "weather": "clear",
+    "weather": "overcast",
     "from": "south-east",
     "stripSide": "right",
     "stripView": "ahead-right"
@@ -118,7 +118,7 @@
    "start": 1356,
    "badges": {
     "light": "day",
-    "weather": "weather",
+    "weather": "overcast",
     "from": "east",
     "stripSide": "right",
     "stripView": "ahead-right"

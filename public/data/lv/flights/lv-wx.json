@@ -362,7 +362,7 @@
  },
  "badges": {
   "light": "day",
-  "weather": "weather",
+  "weather": "overcast",
   "from": "east",
   "stripSide": "right",
   "stripView": "ahead-right"
@@ -519,14 +519,307 @@
   "pass": true
  },
  "weather": {
-  "valid": "2026-01-01 19:56Z",
-  "metar": "KLAS 011956Z 00000KT 7SM OVC005 08/07 A3012 RMK AO2 SLP201 T00830072",
-  "altimeterInHg": 30.12,
-  "tempC": 8.333333333333334,
-  "windDir": 0.0,
-  "windKt": 0.0,
-  "visibilityMi": 7.0,
-  "ceilingFt": 500.0
+  "format": "skyline-flight-weather/1",
+  "about": "The weather this flight was flown in, from the airport's reports and the GFS column at the airport (scripts/lib/flight_weather.py). Layer bases, visibility, present weather and the surface are observed; layer tops, the column and the visibility inside cloud are estimated. The layers are taken as the same over the whole track.",
+  "station": "KLAS",
+  "stationElevationM": 664.5,
+  "window": [
+   "2026-01-01T18:15Z",
+   "2026-01-01T20:45Z"
+  ],
+  "reports": [
+   {
+    "t": -2245,
+    "valid": "2026-01-01T18:38Z",
+    "metar": "KLAS 011838Z 09004KT 4SM BR BKN005 OVC009 08/07 A3016 RMK AO2 T00830072",
+    "tempC": 8.3,
+    "dewPointC": 7.2,
+    "windDir": 90.0,
+    "windKt": 4.0,
+    "gustKt": null,
+    "visibilityM": 6437.4,
+    "visibilityCensored": false,
+    "altimeterInHg": 30.16,
+    "layers": [
+     {
+      "cover": "BKN",
+      "baseFtAgl": 500
+     },
+     {
+      "cover": "OVC",
+      "baseFtAgl": 900
+     }
+    ],
+    "wx": [
+     "BR"
+    ]
+   },
+   {
+    "t": -1165,
+    "valid": "2026-01-01T18:56Z",
+    "metar": "KLAS 011856Z 10003KT 4SM BR OVC005 08/07 A3016 RMK AO2 SLP214 T00830072",
+    "tempC": 8.3,
+    "dewPointC": 7.2,
+    "windDir": 100.0,
+    "windKt": 3.0,
+    "gustKt": null,
+    "visibilityM": 6437.4,
+    "visibilityCensored": false,
+    "altimeterInHg": 30.16,
+    "layers": [
+     {
+      "cover": "OVC",
+      "baseFtAgl": 500
+     }
+    ],
+    "wx": [
+     "BR"
+    ]
+   },
+   {
+    "t": 2435,
+    "valid": "2026-01-01T19:56Z",
+    "metar": "KLAS 011956Z 00000KT 7SM OVC005 08/07 A3012 RMK AO2 SLP201 T00830072",
+    "tempC": 8.3,
+    "dewPointC": 7.2,
+    "windDir": 0.0,
+    "windKt": 0.0,
+    "gustKt": null,
+    "visibilityM": 11265.4,
+    "visibilityCensored": false,
+    "altimeterInHg": 30.12,
+    "layers": [
+     {
+      "cover": "OVC",
+      "baseFtAgl": 500
+     }
+    ],
+    "wx": []
+   }
+  ],
+  "surface": {
+   "tempC": 8.3,
+   "dewPointC": 7.2,
+   "rh": 0.928,
+   "windDir": 100.0,
+   "windKt": 0.5,
+   "gustKt": null,
+   "visibilityM": 10412.5,
+   "visibilityCensored": false,
+   "altimeterInHg": 30.127,
+   "pressureHPa": 942.46,
+   "wx": [],
+   "from": [
+    "2026-01-01T18:56Z",
+    "2026-01-01T19:56Z"
+   ]
+  },
+  "layers": [
+   {
+    "cover": "OVC",
+    "fraction": 1.0,
+    "genus": "st",
+    "baseM": 816.9,
+    "topM": 2460.9,
+    "base": "observed",
+    "top": "estimated: where the GFS cloud cover by level falls below 50 %",
+    "source": "METAR 2026-01-01T19:56Z"
+   }
+  ],
+  "precipitation": {
+   "rateMmH": 0.0,
+   "kind": "none",
+   "intensity": null,
+   "from": null
+  },
+  "visibility": {
+   "belowBaseM": 10412.5,
+   "belowBaseCensored": false,
+   "inCloudM": {
+    "st": 110.0,
+    "sc": 110.0,
+    "cu": 110.0,
+    "tcu": 110.0,
+    "cb": 110.0,
+    "ac": 230.0,
+    "as": 230.0,
+    "ci": 3000.0,
+    "cs": 3000.0
+   },
+   "clearM": 80000.0,
+   "note": "below the lowest base the report's (10 miles or more counts as clear); inside a broken or overcast layer an estimate by genus (Gultepe et al. 2006); clear elsewhere"
+  },
+  "inCloudCover": 0.5,
+  "inCloud": [
+   [
+    1428.0,
+    1752.0
+   ]
+  ],
+  "aloft": [
+   [
+    664.5,
+    942.46,
+    8.3,
+    92.78,
+    null
+   ],
+   [
+    815.9,
+    925,
+    7.13,
+    99.0,
+    76.0
+   ],
+   [
+    1040.9,
+    900,
+    5.55,
+    100.0,
+    100.0
+   ],
+   [
+    1507.2,
+    850,
+    4.78,
+    98.8,
+    76.8
+   ],
+   [
+    2003.2,
+    800,
+    5.55,
+    96.3,
+    62.6
+   ],
+   [
+    2529.9,
+    750,
+    3.8,
+    92.3,
+    48.1
+   ],
+   [
+    3087.9,
+    700,
+    0.65,
+    78.7,
+    14.9
+   ],
+   [
+    3679.2,
+    650,
+    -3.03,
+    58.2,
+    0.0
+   ],
+   [
+    4308.7,
+    600,
+    -6.23,
+    41.4,
+    0.0
+   ],
+   [
+    4983.2,
+    550,
+    -10.4,
+    54.3,
+    0.0
+   ],
+   [
+    5709.9,
+    500,
+    -15.4,
+    67.6,
+    1.5
+   ],
+   [
+    6496.9,
+    450,
+    -21.0,
+    63.3,
+    0.0
+   ],
+   [
+    7353.6,
+    400,
+    -27.47,
+    49.3,
+    0.0
+   ],
+   [
+    8299.2,
+    350,
+    -35.0,
+    48.8,
+    0.0
+   ],
+   [
+    9352.7,
+    300,
+    -44.0,
+    48.5,
+    0.0
+   ],
+   [
+    10553.3,
+    250,
+    -51.62,
+    17.9,
+    0.0
+   ],
+   [
+    11981.9,
+    200,
+    -55.88,
+    10.0,
+    0.0
+   ],
+   [
+    13796.9,
+    150,
+    -59.5,
+    3.0,
+    0.0
+   ]
+  ],
+  "aloftNote": "height m above sea level, pressure hPa, temperature C, relative humidity %, cloud cover % (GFS by level at touchdown, interpolated between the hours; the first row is the surface report)",
+  "model": {
+   "precipitation": 0.0,
+   "rain": 0.0,
+   "cloud_cover": 100.0,
+   "cloud_cover_low": 100.0,
+   "cloud_cover_mid": 3.78,
+   "cloud_cover_high": 0.0,
+   "visibility": 12578.33,
+   "freezing_level_height": 3199.73
+  },
+  "badge": "overcast",
+  "sources": [
+   {
+    "what": "surface reports",
+    "source": "Iowa Environmental Mesonet ASOS archive (public)",
+    "url": "https://mesonet.agron.iastate.edu/cgi-bin/request/asos.py?station=LAS&data=tmpf&data=alti&data=drct&data=sknt&data=gust&data=vsby&data=skyc1&data=skyl1&data=skyc2&data=skyl2&data=skyc3&data=skyl3&data=wxcodes&data=metar&year1=2026&month1=1&day1=1&year2=2026&month2=1&day2=1&tz=Etc/UTC&format=onlycomma&latlon=no&missing=M&trace=T&direct=no&report_type=3&report_type=4",
+    "fetched": "2026-11-25"
+   },
+   {
+    "what": "the column by level",
+    "source": "Open-Meteo historical forecast API, GFS pressure levels: relative humidity and cloud cover by level (CC BY 4.0; model data NOAA)",
+    "url": "https://historical-forecast-api.open-meteo.com/v1/forecast?latitude=36.08&longitude=-115.152&start_date=2026-01-01&end_date=2026-01-01&hourly=geopotential_height_1000hPa%2Ctemperature_1000hPa%2Crelative_humidity_1000hPa%2Ccloud_cover_1000hPa%2Cgeopotential_height_975hPa%2Ctemperature_975hPa%2Crelative_humidity_975hPa%2Ccloud_cover_975hPa%2Cgeopotential_height_950hPa%2Ctemperature_950hPa%2Crelative_humidity_950hPa%2Ccloud_cover_950hPa%2Cgeopotential_height_925hPa%2Ctemperature_925hPa%2Crelative_humidity_925hPa%2Ccloud_cover_925hPa%2Cgeopotential_height_900hPa%2Ctemperature_900hPa%2Crelative_humidity_900hPa%2Ccloud_cover_900hPa%2Cgeopotential_height_850hPa%2Ctemperature_850hPa%2Crelative_humidity_850hPa%2Ccloud_cover_850hPa%2Cgeopotential_height_800hPa%2Ctemperature_800hPa%2Crelative_humidity_800hPa%2Ccloud_cover_800hPa%2Cgeopotential_height_750hPa%2Ctemperature_750hPa%2Crelative_humidity_750hPa%2Ccloud_cover_750hPa%2Cgeopotential_height_700hPa%2Ctemperature_700hPa%2Crelative_humidity_700hPa%2Ccloud_cover_700hPa%2Cgeopotential_height_650hPa%2Ctemperature_650hPa%2Crelative_humidity_650hPa%2Ccloud_cover_650hPa%2Cgeopotential_height_600hPa%2Ctemperature_600hPa%2Crelative_humidity_600hPa%2Ccloud_cover_600hPa%2Cgeopotential_height_550hPa%2Ctemperature_550hPa%2Crelative_humidity_550hPa%2Ccloud_cover_550hPa%2Cgeopotential_height_500hPa%2Ctemperature_500hPa%2Crelative_humidity_500hPa%2Ccloud_cover_500hPa%2Cgeopotential_height_450hPa%2Ctemperature_450hPa%2Crelative_humidity_450hPa%2Ccloud_cover_450hPa%2Cgeopotential_height_400hPa%2Ctemperature_400hPa%2Crelative_humidity_400hPa%2Ccloud_cover_400hPa%2Cgeopotential_height_350hPa%2Ctemperature_350hPa%2Crelative_humidity_350hPa%2Ccloud_cover_350hPa%2Cgeopotential_height_300hPa%2Ctemperature_300hPa%2Crelative_humidity_300hPa%2Ccloud_cover_300hPa%2Cgeopotential_height_250hPa%2Ctemperature_250hPa%2Crelative_humidity_250hPa%2Ccloud_cover_250hPa%2Cgeopotential_height_200hPa%2Ctemperature_200hPa%2Crelative_humidity_200hPa%2Ccloud_cover_200hPa%2Cgeopotential_height_150hPa%2Ctemperature_150hPa%2Crelative_humidity_150hPa%2Ccloud_cover_150hPa%2Cprecipitation%2Crain%2Ccloud_cover%2Ccloud_cover_low%2Ccloud_cover_mid%2Ccloud_cover_high%2Cvisibility%2Cfreezing_level_height&models=gfs_seamless&timezone=GMT",
+    "fetched": "2026-11-25"
+   }
+  ],
+  "nearest": {
+   "valid": "2026-01-01 19:56Z",
+   "metar": "KLAS 011956Z 00000KT 7SM OVC005 08/07 A3012 RMK AO2 SLP201 T00830072",
+   "altimeterInHg": 30.12,
+   "tempC": 8.333333333333334,
+   "windDir": 0.0,
+   "windKt": 0.0,
+   "visibilityMi": 7.0,
+   "ceilingFt": 500.0
+  }
  },
  "source": {
   "archive": "adsb.lol globe_history",

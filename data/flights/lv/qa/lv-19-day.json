@@ -228,18 +228,67 @@
   "maxMach": 0.792
  },
  "weather": {
-  "valid": "2026-02-16 15:56Z",
-  "metar": "KLAS 161556Z 00000KT 10SM SCT180 OVC230 12/00 A2981 RMK AO2 SLP084 T01170000",
-  "altimeterInHg": 29.81,
-  "tempC": 11.666666666666666,
-  "windDir": 0.0,
-  "windKt": 0.0,
-  "visibilityMi": 10.0,
-  "ceilingFt": 23000.0
+  "badge": "overcast",
+  "reports": [
+   "KLAS 161456Z 00000KT 10SM SCT180 OVC230 11/00 A2980 RMK AO2 SLP082 T01060000 55003",
+   "KLAS 161556Z 00000KT 10SM SCT180 OVC230 12/00 A2981 RMK AO2 SLP084 T01170000",
+   "KLAS 161656Z 17003KT 10SM FEW180 OVC230 13/01 A2981 RMK AO2 SLP085 T01330006"
+  ],
+  "surface": {
+   "tempC": 11.94,
+   "dewPointC": 0.09,
+   "rh": 0.441,
+   "windDir": 170.0,
+   "windKt": 0.4,
+   "gustKt": null,
+   "visibilityM": 16093.4,
+   "visibilityCensored": true,
+   "altimeterInHg": 29.81,
+   "pressureHPa": 932.4,
+   "wx": [],
+   "from": [
+    "2026-02-16T15:56Z",
+    "2026-02-16T16:56Z"
+   ]
+  },
+  "layers": [
+   {
+    "cover": "SCT",
+    "fraction": 0.44,
+    "genus": "ac",
+    "baseM": 6150.9,
+    "topM": 6650.9,
+    "base": "observed",
+    "top": "estimated: plan 01's depth for the genus (the model column does not show it)",
+    "source": "METAR 2026-02-16T15:56Z"
+   },
+   {
+    "cover": "OVC",
+    "fraction": 1.0,
+    "genus": "cs",
+    "baseM": 7674.9,
+    "topM": 9174.9,
+    "base": "observed",
+    "top": "estimated: plan 01's depth for the genus (the model column does not show it)",
+    "source": "METAR 2026-02-16T15:56Z"
+   }
+  ],
+  "precipitation": {
+   "rateMmH": 0.0,
+   "kind": "none",
+   "intensity": null,
+   "from": null
+  },
+  "inCloud": [
+   [
+    461.0,
+    721.0
+   ]
+  ]
  },
  "badges": {
   "light": "day",
-  "weather": "clear",
+  "weather": "overcast",
   "from": "north-east",
   "stripSide": "right",
   "stripView": "passes-right"

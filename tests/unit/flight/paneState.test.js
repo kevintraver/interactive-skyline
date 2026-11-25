@@ -2,9 +2,10 @@
 // the panes, water on the outer face) as a function of the track and the air, so that scrubbing in either direction
 // gives the same pane.
 import { describe, it, expect } from 'vitest';
+import { readFileSync } from 'node:fs';
 import { createFrame } from '../../../src/world/frame.js';
 import { parseTrack } from '../../../src/flight/track.js';
-import { standardAtmosphere } from '../../../src/flight/env.js';
+import { standardAtmosphere, recordedAir } from '../../../src/flight/env.js';
 import { createPaneState, PANE, recoveryTempC, faceEquilibriumC } from '../../../src/flight/window/paneState.js';
 import { syntheticArrival } from '../../helpers/flightTrack.js';
 import cities from '../../../data/cities.json' with { type: 'json' };
@@ -132,6 +133,20 @@ describe('water on the outer face', () => {
     expect(pane.at(1050).mist).toBeGreaterThan(0.5);
   });
 
+  it('liquid cloud at speed wets the outer face too, and it dries within a minute or two after leaving it', () => {
+    const cloud = (a, b, tempC) => (s) => ({ ...stdAir(s), tempC: tempC ?? stdAir(s).tempC, inCloud: s.t >= a && s.t < b });
+    const pane = createPaneState(track, { airAt: cloud(1300, 1400, 6) });
+    expect(pane.at(1290).wet).toBe(0);
+    expect(pane.at(1390).wet).toBeGreaterThan(0.2);
+    expect(pane.at(1390).wet).toBeLessThanOrEqual(PANE.cloudWet + 1e-9);
+    expect(pane.at(1430).wet).toBeGreaterThan(0.05);
+    expect(pane.at(1560).wet).toBeLessThan(0.02);
+    // below freezing the cloud's water would freeze on the glass (rime), which is not modelled: no film
+    const cold = createPaneState(track, { airAt: cloud(1300, 1400, -12) });
+    expect(cold.at(1390).wet).toBe(0);
+    expect(cold.at(1390).mist).toBeGreaterThan(0.5);
+  });
+
   it('rebuild() takes new air (another weather) and gives a new history', () => {
     const pane = createPaneState(track, { airAt: stdAir });
     expect(pane.at(1350).wet).toBe(0);
@@ -149,6 +164,34 @@ describe('condensation between the panes', () => {
     expect(peak).toBeLessThan(0.8);
     expect(peakT).toBeLessThan(ev('ft1000'));
     expect(pane.at(ev('touchdown')).fog).toBeLessThan(0.02);
+  });
+});
+
+describe('the as-flown weather of a recorded flight (lv-wx: the overcast at 500 ft, 1 January 2026)', () => {
+  const dir = new URL('../../../public/data/lv/flights/', import.meta.url);
+  const header = JSON.parse(readFileSync(new URL('lv-wx.json', dir), 'utf8'));
+  const bin = readFileSync(new URL('lv-wx.bin', dir));
+  const wx = parseTrack(header, bin.buffer.slice(bin.byteOffset, bin.byteOffset + bin.byteLength), { frame });
+  const [from, to] = header.weather.inCloud.at(-1);
+  const air = recordedAir(header);
+
+  it('mists over in the cloud from its top to its base, as the record has it, and not before', () => {
+    const pane = createPaneState(wx, { airAt: (s) => air.at(s.altMsl) });
+    expect(pane.at(from - 30).mist).toBe(0);
+    expect(pane.at(from + 30).mist).toBeGreaterThan(0.9);
+    expect(pane.at(to - 10).mist).toBeGreaterThan(0.9);
+    expect(pane.at(from + 30).inCloud).toBe(true);
+    expect(pane.at(to + 5).inCloud).toBe(false);
+    // the glass carries water out of the base: wet and still misted on short final, drying toward touchdown
+    expect(pane.at(to + 10).wet).toBeGreaterThan(0.2);
+    expect(pane.at(header.touchdownT).mist).toBeLessThan(pane.at(to).mist);
+    expect(pane.at(header.touchdownT).rainRateMmH).toBe(0);
+  });
+
+  it('without airAt the pane reads the same record from the header', () => {
+    const a = createPaneState(wx, { airAt: (s) => air.at(s.altMsl) });
+    const b = createPaneState(wx);
+    for (const t of [0, from + 60, to + 10, header.touchdownT]) expect(b.at(t)).toEqual(a.at(t));
   });
 });
 

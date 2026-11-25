@@ -19,14 +19,19 @@
 //     the cabin takes in moister air low down; it evaporates once the face is warmer than that dew point. Melt water
 //     joins it.
 //   - Water on the outer face: rain wets the pane within seconds toward a level set by the rain rate; once the rain
-//     stops it dries over a minute in flight and a few minutes standing still. Inside cloud the pane mists over.
+//     stops it dries over a minute in flight and a few minutes standing still. Inside cloud the pane mists over, and
+//     inside liquid cloud at speed the droplets the pane sweeps up wet it too (the streaks seen after breaking out of
+//     a stratus deck); below freezing they would rime the glass, which is not modelled, so no film forms there.
+//   - The air: the session passes the environment's at(position), which for a recorded flight is the weather it was
+//     flown in (src/flight/env.js recordedAir: the header's GFS temperatures, the column's pressure, the cloud layers);
+//     without it, the same record from the header, else the header's atmosphere dry and clear, else the standard day.
 //   - A recording that starts at cruise starts with the frost of the cold soak before it: the first second's
 //     conditions held for PANE.soakS seconds, through the same equations.
 //
 // Honest limit (7.7): no published account of how cabin-window frost grows and retreats was found; the rates are
 // estimates to be tuned against window-seat footage, and the About text says so.
 
-import { standardAtmosphere } from '../env.js';
+import { standardAtmosphere, recordedAir } from '../env.js';
 
 const GAMMA = 1.4, R_AIR = 287.05287, K0 = 273.15;
 
@@ -68,6 +73,9 @@ export const PANE = Object.freeze({
   wetHalfMmH: 2, wetTauS: 6, dryTauS: 300, dryFastTauS: 45,
   /** Mist inside cloud: forms with mistTauS, dries as the water does (ESTIMATED). */
   mistTauS: 8,
+  /** Cloud water swept up at speed: the level the outer face wets to inside liquid cloud, approached with cloudWetTauS,
+   * above cloudWetMinTas (m/s) and cloudWetMinC (ESTIMATED: a stratus deck streaks the glass much as light rain does). */
+  cloudWet: 0.35, cloudWetTauS: 20, cloudWetMinTas: 40, cloudWetMinC: -1,
 });
 
 /** Recovery temperature, C, for a static temperature (C) and Mach number. */
@@ -107,8 +115,11 @@ function headerTempC(rows, altM) {
   return rows[rows.length - 1][1];
 }
 
-/** The default air: the flight file's atmosphere (or the standard day), dry and clear. */
+/** The default air: the flight's as-flown weather record when it has one (src/flight/env.js recordedAir), else its
+ * atmosphere (or the standard day), dry and clear. */
 export function headerAir(track) {
+  const rec = recordedAir(track.meta);
+  if (rec) return (s) => rec.at(s.altMsl ?? 0);
   const rows = track.meta?.atmosphere;
   return (s) => ({ tempC: headerTempC(rows, s.altMsl), rainRateMmH: 0, inCloud: false });
 }
@@ -145,9 +156,10 @@ function step(p, s, a, dt) {
   // water on the outer face
   const rain = Math.max(0, a.rainRateMmH || 0);
   const dryTau = PANE.dryTauS + (PANE.dryFastTauS - PANE.dryTauS) * smooth(0, 70, tas);
-  if (rain > 0) {
-    const level = rain / (rain + PANE.wetHalfMmH);
-    p.wet += (level - p.wet) * (1 - Math.exp(-dt / PANE.wetTauS));
+  const sweeps = a.inCloud && tas > PANE.cloudWetMinTas && a.tempC > PANE.cloudWetMinC;
+  if (rain > 0 || sweeps) {
+    const level = Math.max(rain > 0 ? rain / (rain + PANE.wetHalfMmH) : 0, sweeps ? PANE.cloudWet : 0);
+    p.wet += (level - p.wet) * (1 - Math.exp(-dt / (rain > 0 ? PANE.wetTauS : PANE.cloudWetTauS)));
   } else p.wet *= Math.exp(-dt / dryTau);
   if (a.inCloud) p.mist += (1 - p.mist) * (1 - Math.exp(-dt / PANE.mistTauS));
   else p.mist *= Math.exp(-dt / dryTau);

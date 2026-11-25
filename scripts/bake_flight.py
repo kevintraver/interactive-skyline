@@ -16,6 +16,9 @@ spoilers, reversers and lights from simple rules. Everything inferred is marked 
            public/data/<city>/terrain.json                the `wide` grid's extent (the "terrain" event)
            METAR for the hour (altimeter, temperature, wind, visibility, clouds): Iowa Environmental Mesonet ASOS
            archive, https://mesonet.agron.iastate.edu/cgi-bin/request/asos.py, cached under data/raw/iem/
+           the GFS column by level (temperature, wind; humidity and cloud cover for the as-flown weather):
+           Open-Meteo historical forecast API, cached under data/raw/openmeteo/; both kept per flight in
+           data/flights/<city>/weather/<id>.json, from which lib.flight_weather writes the header's `weather`
   Output   public/data/<city>/flights/<id>.json   header: channels, provenance, events, QA (no airline, flight
                                                   number, registration or ICAO address: assumption A2)
            public/data/<city>/flights/<id>.bin    Float32 little-endian, channel after channel, `samples` each
@@ -42,6 +45,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 from lib import flight_net  # noqa: E402,F401  (the generic client name for outside services)
 from lib import adsb, attitude, config_schedule, geodesy, smooth  # noqa: E402
 from lib import flight_view  # noqa: E402
+from lib import flight_weather  # noqa: E402
 from lib import qa as qa_lib  # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -774,7 +778,14 @@ def weather_inputs(city, airport, f, sel_dir, offline=False):
     path = sel_dir / "weather" / f"{f['id']}.json"
     td = datetime.fromisoformat(f["touchdown"].replace("Z", "+00:00")).timestamp()
     if path.exists():
-        return json.loads(path.read_text())
+        out = json.loads(path.read_text())
+        if "aloftClouds" not in out:
+            if offline:
+                raise SystemExit(f"{f['id']}: {path.relative_to(ROOT)} has no aloftClouds (run bake_flight.py once "
+                                 "without --offline)")
+            out["aloftClouds"] = aloft_clouds(airport, f)
+            path.write_text(json.dumps(out, indent=1) + "\n")
+        return out
     if offline:
         raise SystemExit(f"{f['id']}: no {path.relative_to(ROOT)} (run bake_flight.py without --offline once)")
     from datetime import date as _date
@@ -791,10 +802,34 @@ def weather_inputs(city, airport, f, sel_dir, offline=False):
                     "fetched": datetime.now(timezone.utc).date().isoformat(), "rows": near},
            "upperAir": {"source": "Open-Meteo historical forecast API, GFS pressure levels (CC BY 4.0; model data "
                                   "NOAA)", "url": om_url, "fetched": datetime.now(timezone.utc).date().isoformat(),
-                        "response": upper}}
+                        "response": upper},
+           "aloftClouds": aloft_clouds(airport, f)}
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(out, indent=1) + "\n")
     return out
+
+
+def aloft_clouds(airport, f):
+    """The day's GFS column with relative humidity and cloud cover by level, and the surface precipitation and cloud
+    cover (lib.flight_weather.fetch_aloft), as the weather inputs keep it."""
+    resp, url = flight_weather.fetch_aloft(airport["arp"]["lat"], airport["arp"]["lon"], f["touchdown"][:10],
+                                           ROOT / "data" / "raw" / "openmeteo")
+    return {"source": "Open-Meteo historical forecast API, GFS pressure levels: relative humidity and cloud cover by "
+                      "level (CC BY 4.0; model data NOAA)", "url": url,
+            "fetched": datetime.now(timezone.utc).date().isoformat(), "response": resp}
+
+
+def as_flown(baked, wx, city, airport, td):
+    """The header's `weather` record (lib.flight_weather) and the picker's weather badge from it; the report the
+    bake's calibration used is kept under `nearest`."""
+    w = flight_weather.record(wx["asos"], wx["aloftClouds"], start_epoch=float(baked.t_epoch[0]), td_epoch=td,
+                              end_epoch=float(baked.t_epoch[-1]), t=baked.t_epoch - baked.t_epoch[0],
+                              h=baked.channels["h"].astype(float),
+                              station_elev=city.get("stationElevationM", airport["arp"]["elevation"]),
+                              station=city["icao"])
+    w["nearest"] = baked.header["weather"]
+    baked.header["weather"] = w
+    baked.header["badges"]["weather"] = w["badge"]
 
 
 def bake_selected(city_id, ids=(), *, offline=False, write=True, out_dir=None):
@@ -841,6 +876,7 @@ def bake_selected(city_id, ids=(), *, offline=False, write=True, out_dir=None):
                      published=published, waivers=f.get("waivers"),
                      strip_towers=flight_view.load_strip(strip_path) if strip_path.exists() else None)
         baked.header["city"] = city_id
+        as_flown(baked, wx, city, airport, td)
         end = airport["ends"][baked.header["runway"]]
         lat_t, lon_t = frame.to_geodetic(*end["threshold"][:2])
         north = float(smooth.true_north_bearing(frame, np.array([lat_t]), np.array([lon_t]))[0])

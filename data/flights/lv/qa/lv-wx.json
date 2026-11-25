@@ -261,18 +261,57 @@
   "maxMach": 0.805
  },
  "weather": {
-  "valid": "2026-01-01 19:56Z",
-  "metar": "KLAS 011956Z 00000KT 7SM OVC005 08/07 A3012 RMK AO2 SLP201 T00830072",
-  "altimeterInHg": 30.12,
-  "tempC": 8.333333333333334,
-  "windDir": 0.0,
-  "windKt": 0.0,
-  "visibilityMi": 7.0,
-  "ceilingFt": 500.0
+  "badge": "overcast",
+  "reports": [
+   "KLAS 011838Z 09004KT 4SM BR BKN005 OVC009 08/07 A3016 RMK AO2 T00830072",
+   "KLAS 011856Z 10003KT 4SM BR OVC005 08/07 A3016 RMK AO2 SLP214 T00830072",
+   "KLAS 011956Z 00000KT 7SM OVC005 08/07 A3012 RMK AO2 SLP201 T00830072"
+  ],
+  "surface": {
+   "tempC": 8.3,
+   "dewPointC": 7.2,
+   "rh": 0.928,
+   "windDir": 100.0,
+   "windKt": 0.5,
+   "gustKt": null,
+   "visibilityM": 10412.5,
+   "visibilityCensored": false,
+   "altimeterInHg": 30.127,
+   "pressureHPa": 942.46,
+   "wx": [],
+   "from": [
+    "2026-01-01T18:56Z",
+    "2026-01-01T19:56Z"
+   ]
+  },
+  "layers": [
+   {
+    "cover": "OVC",
+    "fraction": 1.0,
+    "genus": "st",
+    "baseM": 816.9,
+    "topM": 2460.9,
+    "base": "observed",
+    "top": "estimated: where the GFS cloud cover by level falls below 50 %",
+    "source": "METAR 2026-01-01T19:56Z"
+   }
+  ],
+  "precipitation": {
+   "rateMmH": 0.0,
+   "kind": "none",
+   "intensity": null,
+   "from": null
+  },
+  "inCloud": [
+   [
+    1428.0,
+    1752.0
+   ]
+  ]
  },
  "badges": {
   "light": "day",
-  "weather": "weather",
+  "weather": "overcast",
   "from": "east",
   "stripSide": "right",
   "stripView": "ahead-right"

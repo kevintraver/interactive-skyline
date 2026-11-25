@@ -242,18 +242,52 @@
   "maxMach": 0.783
  },
  "weather": {
-  "valid": "2026-03-10 01:56Z",
-  "metar": "KLAS 100156Z 16010G21KT 10SM FEW140 23/03 A2983 RMK AO2 SLP088 T02280028",
-  "altimeterInHg": 29.83,
-  "tempC": 22.77777777777778,
-  "windDir": 160.0,
-  "windKt": 10.0,
-  "visibilityMi": 10.0,
-  "ceilingFt": null
+  "badge": "wind",
+  "reports": [
+   "KLAS 100056Z 15011G25KT 10SM FEW140 24/02 A2981 RMK AO2 SLP083 T02390017",
+   "KLAS 100105Z 16010G22KT 10SM FEW140 24/02 A2981 RMK AO2 T02390017",
+   "KLAS 100156Z 16010G21KT 10SM FEW140 23/03 A2983 RMK AO2 SLP088 T02280028"
+  ],
+  "surface": {
+   "tempC": 22.96,
+   "dewPointC": 2.64,
+   "rh": 0.264,
+   "windDir": 160.0,
+   "windKt": 10.0,
+   "gustKt": 21.0,
+   "visibilityM": 16093.4,
+   "visibilityCensored": true,
+   "altimeterInHg": 29.827,
+   "pressureHPa": 932.94,
+   "wx": [],
+   "from": [
+    "2026-03-10T01:05Z",
+    "2026-03-10T01:56Z"
+   ]
+  },
+  "layers": [
+   {
+    "cover": "FEW",
+    "fraction": 0.19,
+    "genus": "ac",
+    "baseM": 4931.7,
+    "topM": 5431.7,
+    "base": "observed",
+    "top": "estimated: plan 01's depth for the genus (the model column does not show it)",
+    "source": "METAR 2026-03-10T01:56Z"
+   }
+  ],
+  "precipitation": {
+   "rateMmH": 0.0,
+   "kind": "none",
+   "intensity": null,
+   "from": null
+  },
+  "inCloud": []
  },
  "badges": {
   "light": "dusk",
-  "weather": "clear",
+  "weather": "wind",
   "from": "east",
   "stripSide": "right",
   "stripView": "passes-right"
