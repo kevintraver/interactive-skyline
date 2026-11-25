@@ -1,0 +1,69 @@
+{
+ "format": "skyline-cabin/1",
+ "frame": "glTF axes: +x right (the model is the right side; mirror x for the left), +y up in body axes (metres above the main-gear contact plane), +z aft of each part's anchor station",
+ "anchors": {
+  "Bay": "the window's centre station",
+  "Filler": "the middle of the gap it fills; scale z to its length (its own length is 1 m)",
+  "Shade": "the window's centre station",
+  "PaneInner": "the window's centre station",
+  "PaneMiddle": "the window's centre station",
+  "PaneOuter": "the window's centre station",
+  "Seat": "the seat's front station, x on its centre",
+  "Armrest": "the seat's front station, x between two seats",
+  "Bin": "any station; scale z (1 m)"
+ },
+ "bay": {
+  "halfLength": 0.235,
+  "square": 0.29
+ },
+ "shade": {
+  "axis": [
+   -0.201779,
+   0.979431,
+   0.0
+  ],
+  "travel": 0.4
+ },
+ "panes": {
+  "PaneInner": 1.8368,
+  "PaneMiddle": 1.851,
+  "PaneOuter": 1.868
+ },
+ "seat": {
+  "backRake": 18.21,
+  "trayTop": 1.026
+ },
+ "bin": {
+  "washStrip": [
+   1.3419,
+   4.6119
+  ],
+  "lip": [
+   0.5778,
+   4.5274
+  ]
+ },
+ "attribute": {
+  "name": "_CABIN",
+  "r": "ambient occlusion within 0.6 m",
+  "g": "window-wash light, 1 at the brightest sidewall corner",
+  "b": "window form factor: share of the cosine-weighted hemisphere seeing out through a window",
+  "a": "1"
+ },
+ "materials": {
+  "Trim": "D8D5CE",
+  "Bezel": "E3E0D9",
+  "Reveal": "CFCBC3",
+  "Structure": "74787D",
+  "Grille": "3B3E42",
+  "Shade": "ECE9E2",
+  "Glass": "B9C6CF",
+  "Fabric": "3C4757",
+  "Shell": "8E9399",
+  "Tray": "777C82",
+  "Bin": "E1DED7",
+  "Psu": "C3C4C1",
+  "Wash": "FFFFFF"
+ },
+ "triangles": 1660
+}

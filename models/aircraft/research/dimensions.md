@@ -14,10 +14,63 @@ user agent; the downloads were kept out of the repository.
 | B5 | Aircraft Drafting Services ADS00021, 737-800 189Y study LOPA | Body stations: door 1L STA 328, service door STA 314, overwing exits STA 589.5 and 627.5, aft door STA 975; lettered plug stations ("STN 727F+17.95") |
 | B8 | 737 NG Systems Summary, Flight Controls (reposted) | "four flaps and eight slats: two flaps inboard and four slats outboard of each engine"; "Four flight spoilers ... on the upper surface of each wing"; "four ground spoilers, two on the upper surface of each wing"; detents "1, 2, 5, 10, 15, 25, 30 or 40"; slats to "extend" at 1, 2 and 5 and "full extended" beyond 5 |
 
-Not fetched: B2 (EASA data sheet; nothing here needed it), B6 and B7 (seat maps and the blank-window
-article: the window counts and blanks are taken from plan section 7.4, and every window station is tagged
-ESTIMATED), B9 (wing frequency quoted from the plan, tagged as such), B10 (light colours are the regulation's
-well-known red left, green right, white aft; positions are ESTIMATED).
+Not fetched: B2 (EASA data sheet; nothing here needed it), B7 (the blank-window article: it is cited only for
+why the blanks exist; where they are comes from B6), B9 (wing frequency quoted from the plan, tagged as such),
+B10 (light colours are the regulation's well-known red left, green right, white aft; positions are ESTIMATED).
+
+Fetched 24 November 2026 for the cabin (F3.5, F3.6), with a generic user agent, kept outside the repository:
+
+| Key | Document | What it gave |
+| --- | --- | --- |
+| B6 | aeroLOPA fr-738, the neutral to-scale seat map (`fr-738.neutral.webp`, 800 × 4213 px) | Every window centre station on both sides, both blanks, and the windows covered by the galley and lavatories (see below) |
+| B1 | p. 2-30, cabin cross-section, six abreast (traced at 300 dpi, 8.38 px/in) | Trim to trim 139.2 in; the trim's shape (a circle of half that about the line of max breadth, within 1.5 cm from 0.3 to 1.4 m above the floor; 3 cm inboard of it at the floor); bins: lip 62.2 in and underside at the wall 66 in above the floor, 45.5 in between the lips; ceiling 86.6 in; seat 17 in, triple 59 in, aisle 20 in |
+| B1 | p. 2-14, side view (1200 dpi, 148.8 px/m) | The overwing hatch's top 1.17 m and sill 2.08 m below the fuselage top: 0.41 to 1.32 m above the floor, the bound on the window's height |
+| B5 | view C-C (600 dpi, 10.56 px/in) | The seat: cushion top 17.2 in, armrest 24.3 in, back top 45.0 in above the floor; seat front to reference point 18.5 in; back shell about 3.8 in deep; exit-row pitch 38 in |
+
+## Window stations, traced from B6
+
+The seat map draws each window as a dark tick on the fuselage edge and each window that a monument covers as a
+faint outline. Tick centres were found by thresholding the two bands along the fuselage edges (dark runs 26 to
+34 px long; two wing-root artefacts and the exit-hatch arrows excluded by length and by eye). Both sides' ticks
+agree within 2 px wherever both have one, so each position is the mean of the two.
+
+The scale is set piecewise by four things the map also draws, with their published stations: door 1L's centre
+(y 692 px, 5.03 m, [B1] p. 2-33), the two overwing exit windows (y 2166.75 and 2287.75 px, 16.70 and 17.67 m,
+[B5]) and the aft doors' centre (y 4066 px, 31.88 m, [B1] p. 2-37): 126.3 px/m ahead of the exits and 125.1
+behind. A single straight fit through all five anchors (right door included, 4.76 m) leaves residuals of 0.6 to
+5.7 cm, mostly the doors' centres read by eye, so the stations are good to about 3 cm absolute; relative to
+each other, about 1 cm.
+
+Results (`spec.WINDOWS`):
+
+- **Right: 46 windows**, 5.588 to 30.470 m. The first two (5.59, 6.10 m) and the last (30.47 m) are the faint
+  outlines, behind the forward galley and the aft lavatory in that airline's layout; the fuselage has them.
+- **Left: 44 windows**, 6.102 to 30.470 m: no window at 5.59 m (door 1L is wider and further aft than the right
+  service door) and a blank at 13.58 m.
+- **Blanks**: 14.656 m on both sides (between 14.13 and 15.19 m, two pitches with nothing), and 13.58 m on the
+  left (between 13.03 and 14.13 m). Plan 7.4's "about 13.6 m (left) and 14.7 m (both)" and its counts of 44 and
+  46 are confirmed.
+- **Pitch**: 20.0 to 20.9 in (mean 20.3) over the original fuselage, 21.1 to 23.3 in (mean 21.6) through the
+  plugs (9.7 to 14.1 m and 17.7 to 22.7 m), and 18.9 to 19.2 in in the three bays just ahead of the exits, which
+  may be the map's drawing rather than the aircraft.
+- **Exits**: the two exit windows fall on [B5]'s exit stations within the fit (they are two of its anchors).
+
+With these stations the seats beside a blank are exactly 10A, 11A and 11F, as plan 7.4 said. The default-seat
+rule of plan 4.3 now gives **23F**, not 21F or 22F: 21F's window is 22.67 m aft of the nose, 1.19 m behind the
+traced trailing edge at the root (21.48 m), a centimetre short of the rule's 1.2 m, and 22F's window is 17 cm from
+the eye (the rule allows 15). The rule is the specification, so 23F stands; both misses are inside the
+stations' 3 cm uncertainty.
+
+## Still estimates (cabin)
+
+- The window's centre above the floor (0.97 m): no source prints it. Bounded by the overwing hatch traced on
+  [B1] p. 2-14 (0.41 to 1.32 m above the floor), with photographs putting the window in the hatch's upper half.
+- The corner radius, the reveal's flare (3.5 cm), the bezel (4.5 cm wide, 8 mm proud), the inner pane's depth
+  (6.7 cm behind the trim face) and the pane gaps; the shade's travel (0.40 m).
+- The seat layout itself (section 7.4's generic cabin: 30 rows at 31 in, the eye 0.55 m aft of the seat front
+  and 1.20 m above the floor, the back's face 0.72 m aft). The model rakes the seat back 18° so that its face at
+  the eye's height is at 0.72 m; [B5]'s drawn seat is more upright (about 12°).
+- The tray table's size; the bin's section between the published lip and wall heights.
 
 ## Tracing p. 2-14
 
@@ -71,8 +124,8 @@ nose; the aft door at STA 975 is 31.88 m. That makes the forward plug (from STA 
 
 ## Estimates worth checking first
 
-- Window stations (the rule is in `WINDOWS["right"]`'s note), window height above the floor (0.97 m), corner
-  radius.
+- Window height above the floor (0.97 m) and corner radius (the stations are traced since 24 November: see
+  "Window stations, traced from B6").
 - Flap travel and angle per detent; slat droop; Krueger rotation; spoiler panel spans and which are ground
   spoilers; flap-track fairing positions; aileron span.
 - Gear trunnion positions and retraction angles.

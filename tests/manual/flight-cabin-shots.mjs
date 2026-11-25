@@ -1,10 +1,12 @@
 // Screenshots of the window-seat harness (tests/manual/flight-cabin.html) on this machine's GPU, on both backends of
-// the new renderer: four seats (the default 22F, 9F ahead of the wing, 16F over it, 22A on the left) looking out,
-// forward, aft and down, in level flight and banked both ways; then the edges of the head's range (13 and 85 mm, the
-// eye at the pane, the clean view, a blank-wall seat) and the airframe from outside. Writes one PNG per view and a
-// contact sheet per backend and state, named <backend>_<state>_<seat>_<look>.png and sheet_<backend>_<state>.png.
+// the new renderer: the modelled cabin from the default seat and from a seat ahead of, over and behind the wing on
+// each side, by day and by night (each from its default look, the window centred); the default seat's head range
+// (forward, aft, down, up, 13 and 85 mm, at the pane, the clean view, the shade drawn, a blank-wall seat, an aisle
+// seat); the cabin and airframe from outside (nothing of the cabin may show through the skin); and the seat map.
+// Writes one PNG per view and contact sheets named sheet_<backend>_<day|night>.png, sheet_<backend>_range.png and
+// seatmap_<backend>.png, plus report.txt with each view's eye, look and triangle counts.
 //
-// Serve the repo first:   pnpm exec vite --port 5311 --strictPort
+// Serve the repo first:   pnpm exec vite --port 5361 --strictPort
 // then:                   node tests/manual/flight-cabin-shots.mjs <out-dir> [port] [--backend webgl|webgpu] [--quick]
 //                          [--query depth=log --prefix logdepth-]   (the WebGL2 path without clip control)
 // (keep the out dir outside the repo)
@@ -16,30 +18,31 @@ const positional = args.filter((a, i) => !a.startsWith('--') && !['--backend', '
 const query = args.includes('--query') ? `&${args[args.indexOf('--query') + 1]}` : '';
 const prefix = args.includes('--prefix') ? args[args.indexOf('--prefix') + 1] : '';
 const out = positional[0];
-const port = positional[1] || 5311;
+const port = positional[1] || 5361;
 const only = args.includes('--backend') ? [args[args.indexOf('--backend') + 1]] : ['webgpu', 'webgl'];
 const quick = args.includes('--quick');
 if (!out) { console.error('usage: node tests/manual/flight-cabin-shots.mjs <out-dir> [port] [--backend webgl|webgpu] [--quick]'); process.exit(2); }
 mkdirSync(out, { recursive: true });
 
-const SEATS = ['22F', '9F', '16F', '22A'];
-// aft and down lean into the window, as people do: sitting back, the seat's own back fills a look aft
-const LOOKS = { out: {}, fwd: { yaw: 60, pitch: -5 }, aft: { yaw: -60, pitch: -8, lean: 0.25 }, down: { pitch: -50, lean: 0.25 } };
-const STATES = quick ? ['level'] : ['level', 'bankLeft', 'bankRight20'];
-const EDGES = {
-  'fwd13-atpane': { seat: '22F', look: { yaw: 80, pitch: -10, lens: 13, lean: 0.25, slide: 0.18 } },
-  'aft13-down': { seat: '22F', look: { yaw: -80, pitch: -60, lens: 13, slide: -0.18 } },
-  'down13-atpane': { seat: '22F', look: { pitch: -60, lens: 13, lean: 0.25, rise: -0.1 } },
-  'up13': { seat: '22F', look: { pitch: 35, lens: 13, lean: 0.25 } },
-  'out85': { seat: '22F', look: { lens: 85 } },
-  'clean': { seat: '22F', look: {}, clean: true },
-  'blankwall-10A': { seat: '10A', look: {} },
-  'blankwall-10A-13mm': { seat: '10A', look: { lens: 13 } },
-  'over-16F-down13': { seat: '16F', look: { pitch: -45, lens: 13, lean: 0.25 } },
-  'ahead-9F-aft': { seat: '9F', look: { yaw: -45, pitch: -20, lens: 18, lean: 0.2 } },
+const RANGE = {
+  'default': {},
+  'fwd60': { look: { yaw: 60, pitch: -5 } },
+  'aft60-lean': { look: { yaw: -60, pitch: -8, lean: 0.25 } },
+  'down50-lean': { look: { pitch: -50, lean: 0.25 } },
+  'up30': { look: { pitch: 30 } },
+  '13mm': { look: { lens: 13 } },
+  '85mm': { look: { lens: 85 } },
+  'fwd80-13mm-atpane': { look: { yaw: 80, pitch: -10, lens: 13, lean: 0.25, slide: 0.18 } },
+  'shade-closed': { shade: 1 },
+  'shade-half': { shade: 0.5 },
+  'clean': { clean: true },
+  'blankwall-10A': { seat: '10A' },
+  'aisle-23D': { seat: '23D' },
+  'middle-23E': { seat: '23E' },
+  'night-lights-full': { night: true, cabinLight: 1 },
+  'night-lights-off': { night: true, cabinLight: 0 },
 };
-const OUTSIDE = { 'out-front34': { azimuth: 40, elevation: 12, distance: 70 }, 'out-side': { azimuth: 90, elevation: 4, distance: 55 },
-  'out-rear34': { azimuth: 150, elevation: 25, distance: 70 }, 'out-top': { azimuth: 0, elevation: 85, distance: 80 } };
+const OUTSIDE = { 'out-side': { azimuth: 90, elevation: 4, distance: 30 }, 'out-front34': { azimuth: 40, elevation: 12, distance: 50 } };
 
 const browser = await chromium.launch({
   channel: 'chromium', headless: true,
@@ -59,30 +62,37 @@ try {
     const info = await page.evaluate(() => window.__cabin.info);
     console.log(`${backend}: ${JSON.stringify(info)} (page ready in ${((Date.now() - t0) / 1000).toFixed(1)} s, machine loaded: inflated)`);
     const shoot = async (name) => { const f = `${out}/${prefix}${name}.png`; await page.screenshot({ path: f }); return f; };
-    for (const state of STATES) {
+    const seats = { right: await page.evaluate(() => window.__cabin.seats('right')), left: await page.evaluate(() => window.__cabin.seats('left')) };
+    const list = [];
+    for (const side of quick ? ['right'] : ['right', 'left']) for (const [where, id] of Object.entries(seats[side])) if (!list.some((x) => x.id === id)) list.push({ where: `${side}-${where}`, id });
+    for (const night of quick ? [false] : [false, true]) {
       const files = [];
-      for (const seat of SEATS) {
-        for (const [look, l] of Object.entries(LOOKS)) {
-          const st = await page.evaluate((o) => window.__cabin.view(o), { state, seat, look: l });
-          const name = `${backend}_${state}_${seat}_${look}`;
-          files.push([name, await shoot(name)]);
-          report.push(`${prefix}${name}: eye ${st.eye.join(', ')} near ${st.near} far ${(st.far / 1000).toFixed(1)} km fov ${st.fov.toFixed(1)}`);
-        }
+      for (const s of list) {
+        const st = await page.evaluate((o) => window.__cabin.view(o), { seat: s.id, night });
+        const name = `${backend}_${night ? 'night' : 'day'}_${s.where}_${s.id}`;
+        files.push([name, await shoot(name)]);
+        report.push(`${prefix}${name}: eye ${st.eye.join(', ')} look ${JSON.stringify(Object.fromEntries(Object.entries(st.look).map(([k, v]) => [k, +v.toFixed(3)])))} cabin ${st.cabinTriangles} tris ${st.cabinDrawCalls} draws, airframe ${st.airframeTriangles}, frame draws ${st.drawCalls}`);
       }
-      await sheet(`${prefix}sheet_${backend}_${state}`, files, 4);
+      await sheet(`${prefix}sheet_${backend}_${night ? 'night' : 'day'}`, files, 4);
     }
-    const edgeFiles = [];
-    for (const [name, o] of Object.entries(EDGES)) {
-      await page.evaluate((x) => window.__cabin.view(x), { state: 'level', ...o });
-      edgeFiles.push([`${backend}_edge_${name}`, await shoot(`${backend}_edge_${name}`)]);
+    const range = [];
+    for (const [name, o] of Object.entries(RANGE)) {
+      if (quick && !['default', 'fwd60', 'shade-closed', 'blankwall-10A'].includes(name)) continue;
+      const st = await page.evaluate((x) => window.__cabin.view(x), { seat: seats.right.default, ...o });
+      range.push([`${backend}_range_${name}`, await shoot(`${backend}_range_${name}`)]);
+      report.push(`${prefix}${backend}_range_${name}: seat ${st.seat} eye ${st.eye.join(', ')} look ${JSON.stringify(Object.fromEntries(Object.entries(st.look).map(([k, v]) => [k, +v.toFixed(3)])))}`);
     }
     for (const [name, o] of Object.entries(OUTSIDE)) {
-      await page.evaluate((x) => window.__cabin.outside(x), { state: 'level', ...o });
-      edgeFiles.push([`${backend}_${name}`, await shoot(`${backend}_${name}`)]);
+      await page.evaluate((x) => window.__cabin.outside(x), o);
+      range.push([`${backend}_${name}`, await shoot(`${backend}_${name}`)]);
     }
-    await sheet(`${prefix}sheet_${backend}_edges`, edgeFiles, 4);
+    await sheet(`${prefix}sheet_${backend}_range`, range, 4);
+    await page.evaluate((x) => window.__cabin.view(x), { seat: seats.right.default });
+    const m = await page.evaluate(() => window.__cabin.seatMap({ stripSide: 'right', focus: '16F' }));
+    await page.screenshot({ path: `${out}/${prefix}seatmap_${backend}.png` });
+    report.push(`${prefix}seatmap_${backend}: ${JSON.stringify(m)}`);
     const s = await page.evaluate(() => window.__cabin.stats());
-    console.log(`${backend}: airframe ${s.airframeTriangles} triangles, cabin ${s.cabinTriangles}; ${edgeFiles.length + STATES.length * 16} shots in ${((Date.now() - t0) / 1000).toFixed(0)} s`);
+    console.log(`${backend}: airframe ${s.airframeTriangles} triangles, cabin ${s.cabinTriangles} in ${s.cabinDrawCalls} draws; ${list.length * 2 + range.length + 1} shots in ${((Date.now() - t0) / 1000).toFixed(0)} s`);
     await page.close();
   }
 } finally {

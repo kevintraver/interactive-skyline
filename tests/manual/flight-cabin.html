@@ -3,26 +3,37 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Window seat v0</title>
+  <title>Window seat</title>
   <link rel="icon" href="data:,">
   <style>
+    :root { --gap: 12px; --surface: rgba(250, 250, 248, 0.92); --surface-strong: #fff; --line: rgba(0, 0, 0, 0.14); --ink: #1d2329;
+      --muted: #5b6570; --faint: #9aa3ab; --fill: rgba(0, 0, 0, 0.06); --fill-strong: rgba(0, 0, 0, 0.12); --blue: #2f6fdb;
+      --accent: #e0862d; --shadow: 0 6px 24px rgba(0, 0, 0, 0.25); }
     html, body { margin: 0; height: 100%; overflow: hidden; background: #000; color: #ccc; font: 12px monospace; }
     canvas { display: block; width: 100vw; height: 100vh; touch-action: none; }
     #log { position: fixed; left: 8px; bottom: 6px; pointer-events: none; text-shadow: 0 0 3px #000; }
+    button { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; }
+    /* the app's popover skin (src/style.css), so the seat map looks here as it will there */
+    .pop { position: fixed; z-index: 6; background: var(--surface); border: 1px solid var(--line); border-radius: 12px;
+      box-shadow: var(--shadow); backdrop-filter: blur(12px); font: 13px system-ui, sans-serif; }
+    #seatmap { left: 50%; top: 50%; transform: translate(-50%, -50%); }
   </style>
 </head>
 <body>
   <!--
-    F1.5's harness (plan 03): the airframe v0, the cabin v0 and the head rig on the new renderer (src/render/renderer.js,
-    ?backend=webgl|webgpu), over a plain curved ground and a gradient sky, posed from the synthetic track
-    (tests/fixtures/flight/synthetic-19.*) or a hand-written state. Drag, wheel, W A S D Q E, R and C work by hand.
+    The window-seat harness (plan 03; F1.5, then F3.5 to F3.7): the modelled airframe, the modelled cabin, the head rig
+    and the seat map on the new renderer (src/render/renderer.js, ?backend=webgl|webgpu), over a plain curved ground and
+    a gradient sky, posed from the synthetic track (tests/fixtures/flight/synthetic-19.*) or a hand-written state, lit
+    in the app's units by day or by night. By hand: drag, wheel, W A S D Q E, the arrows, R, V (shade), C (clean),
+    N (night), M (seat map), 1 2 3 (states).
     Driven by flight-cabin-shots.mjs through window.__cabin:
-      __cabin.ready                       resolves when the first frame is drawn
-      __cabin.info                        { backend, reason, reversedDepth, logDepth, gpu }
-      await __cabin.view({ state, seat, look, clean })   state: 'level' | 'bankLeft' | 'bankRight20'; resolves after a frame
-      await __cabin.outside({ state, azimuth, elevation, distance, lens })   a camera outside the aircraft
-      __cabin.stats()                     { airframeTriangles, cabinTriangles, near, far, eye }
-    Address parameters: ?backend=webgl|webgpu&state=level&seat=22F
+      __cabin.info                         { backend, reason, reversedDepth, logDepth, gpu, cabinModel, airframeModel }
+      __cabin.seats(side)                  { default, ahead, over, behind }
+      await __cabin.view({ state, seat, look, clean, night, cabinLight, shade, panes })   resolves after a frame
+      await __cabin.outside({ state, azimuth, elevation, distance, lens, night })        a camera outside
+      await __cabin.seatMap({ stripSide, current, focus })                               the seat map, open
+      __cabin.stats()                      { airframeTriangles, cabinTriangles, cabinDrawCalls, near, far, eye, look }
+    Address parameters: ?backend=webgl|webgpu&state=level&seat=23F&night=1&model=0 (model=0: the code-built stand-ins)
   -->
   <canvas id="scene"></canvas>
   <div id="log">loading</div>

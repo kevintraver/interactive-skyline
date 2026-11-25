@@ -270,8 +270,9 @@ CABIN = {
                         "bevelled reveal, from photographs of the type's sidewall"),
     "frame_width": est(0.045, "m", "the moulded bezel round the reveal on the trim face, from photographs"),
     "frame_relief": est(0.008, "m", "how far the bezel stands proud of the trim, from photographs"),
-    "inner_pane_inset": est(0.02, "m", "the non-structural inner pane [B4] sits this far outboard of the trim face "
-                            "at the reveal's inner edge (photographs)"),
+    "inner_pane_inset": est(0.067, "m", "the non-structural inner pane [B4] sits this far outboard of the trim face, "
+                            "at the outer end of the light plastic reveal liner, about 4.5 cm inside the skin "
+                            "(photographs of the type's windows)"),
     "pane_spacing": est(0.012, "m", "between the three panes [B4]: no source gives the gaps"),
     "shade_travel": est(0.40, "m", "the shade slides from its pocket above the reveal down over the inner pane; "
                         "open, its handle shows at the top of the opening, so it travels the opening's height plus "

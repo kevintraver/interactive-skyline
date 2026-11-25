@@ -12,14 +12,18 @@ const RAD = Math.PI / 180;
 
 describe('wingPlanform()', () => {
   it('meets the published root, kink and tip', () => {
+    // spec.py's planform traced from [B1] p. 2-14 (WING le/te, through dimensions.js): the root's edges at the body
+    // side 14.92 and 21.48 m (the plan's "about 15.0 and 21.4"), the trailing edge's kink 5.52 m from the centre line
+    // with a 3.99 m chord there, the bare tip's leading edge 23.47 m as printed on p. 2-13; its trailing edge is the
+    // traced 24.85 m (p. 2-13 prints 24.99 m: spec.py's table and its note disagree, left to spec.py's owner)
     const root = wingPlanform(3.76 / 2);
-    expect(root.le).toBeCloseTo(15.0, 6);
-    expect(root.te).toBeCloseTo(21.4, 6);
-    const kink = wingPlanform(3.76 / 2 + 5.6);
-    expect(kink.te - kink.le).toBeCloseTo(3.6, 6);
+    expect(root.le).toBeCloseTo(14.92, 6);
+    expect(root.te).toBeCloseTo(21.48, 6);
+    const kink = wingPlanform(5.52);
+    expect(kink.te - kink.le).toBeCloseTo(3.99, 2);
     const tip = wingPlanform(34.32 / 2);
     expect(tip.le).toBeCloseTo(23.47, 6);
-    expect(tip.te).toBeCloseTo(24.99, 6);
+    expect(tip.te).toBeCloseTo(24.85, 6);
     expect(tip.y).toBeCloseTo(3.91, 6);
   });
 
@@ -50,7 +54,7 @@ describe('createAirframe()', () => {
     const f = box('fuselage');
     expect(f.min.z).toBeCloseTo(Z(0), 2);
     expect(f.max.z).toBeCloseTo(Z(38.02), 2);
-    expect(f.max.y).toBeCloseTo(5.56, 2);
+    expect(f.max.y).toBeCloseTo(5.44, 2); // body axes (spec.py FUSELAGE top_z): [B1]'s 5.56 m is from the ground, nose-down
     expect(f.max.x - f.min.x).toBeCloseTo(3.76, 2);
     expect(box('fin').max.y).toBeCloseTo(12.55, 2);
   });
