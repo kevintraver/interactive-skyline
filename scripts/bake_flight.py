@@ -44,6 +44,7 @@ import numpy as np
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from lib import flight_net  # noqa: E402,F401  (the generic client name for outside services)
 from lib import adsb, attitude, config_schedule, geodesy, smooth  # noqa: E402
+from lib import flight_touchdown  # noqa: E402
 from lib import flight_view  # noqa: E402
 from lib import flight_weather  # noqa: E402
 from lib import qa as qa_lib  # noqa: E402
@@ -228,6 +229,50 @@ def calibrate(ob, td, airport, metar, frame, arp_xy, end):
     out["geoidM"] = None if n_geoid is None else round(n_geoid, 2)
     out["datum"] = geodesy.datum_from_offset(out["offsetM"], n_geoid if n_geoid is not None else -28.08)
     return out
+
+
+# How well the touchdown time is known (s, one sigma): the barometric rate's 64 ft/min steps at the flare's rate of
+# change (about 0.5 s), the half second between reports, and the spread of the independent geometric estimate about
+# it over the six selected flights (RMS 1.1 s; lv-wx 2.4 s later, the others within 1.0 s).
+TOUCHDOWN_SIGMA_S = 1.2
+SURFACE_FLAG_LAG_S = (14.0, 16.0)   # the surface flag after the touchdown, on the transponders of the selected flights
+
+
+def touchdown_evidence(ob, td, rwy, end, airport, cal, land, surface_rec):
+    """The touchdown time in use and what the trace's other channels say about it (lib.flight_touchdown), as the QA
+    report's `touchdownTime`: offsets in seconds from the time in use, positive later."""
+    method = ("barometric vertical rate levelling on the runway before the surface flag (adsb.refine_touchdown)"
+              if land.get("touchdownSource") == "levelled before the surface flag" else
+              "the surface flag" if surface_rec else "where the modelled flare meets the runway (no surface position)")
+    alt = {"geometricHeight": None, "brakingOnset": None, "surfaceFlag": None, "geometricRate": None}
+    airborne = ~ob.reported_ground & np.isfinite(ob.h)
+    if airborne.any():
+        ground = _profile_at(rwy, airport, ob.x, ob.n)[2] + ANTENNA_ABOVE_WHEELS_M
+        g = flight_touchdown.geometric_touchdown(ob.t[airborne], ob.h[airborne] - cal["offsetM"], ground[airborne],
+                                                 td)
+        if g:
+            alt["geometricHeight"] = {
+                "offsetS": round(g["t"] - td, 1), "sigmaS": round(g["sigmaS"], 1),
+                "crossingS": round(g["crossingT"] - td, 1), "crossingHeightM": round(g["crossingHeightM"], 1),
+                "basis": "the last 25 ft step of the geometric height below %.0f m over the runway, carried down at "
+                         "%.1f m/s (a flare's mean sink)" % (flight_touchdown.GEOMETRIC_MAX_CROSSING_M,
+                                                             flight_touchdown.FLARE_MEAN_SINK_MS)}
+    along, lat = adsb.runway_coords(end, ob.x, ob.n)
+    near = np.abs(lat) < 60
+    b = flight_touchdown.braking_onset(ob.t[near], along[near], td)
+    if b:
+        alt["brakingOnset"] = {"offsetS": round(b["t"] - td, 1), "decelBeforeMs2": round(b["decelBeforeMs2"], 2),
+                               "decelAfterMs2": round(b["decelAfterMs2"], 2),
+                               "basis": "onset of sustained deceleration in the raw positions alone; spoilers and "
+                                        "brakes act 0 to about 5 s after the wheels touch, so a late bound"}
+    if surface_rec and land.get("tFlag") is not None:
+        alt["surfaceFlag"] = {"offsetS": round(land["tFlag"] - td, 1),
+                              "basis": "first surface-format position; it lags the touchdown by %.0f to %.0f s on "
+                                       "these transponders, so it bounds the touchdown only loosely" % SURFACE_FLAG_LAG_S}
+    return {"method": method, "sigmaS": TOUCHDOWN_SIGMA_S, "alternatives": alt,
+            "decision": "kept: the geometric height agrees with the barometric time within 1 s on five of the six "
+                        "flights and braking begins after it on all six; the evidence of 25 November does not show "
+                        "the barometric rate levelling early by a consistent amount"}
 
 
 WAIVER_KEYS = ("gate", "value", "limit", "reason")
@@ -423,6 +468,7 @@ def bake(p, airport, frame, *, metar, runway=None, flight_id, lead_s=1800.0, wid
     # Touchdown on the 1 s grid (a shift under half a second, within the transition's own precision), so the loader's
     # touchdown, the touchdown sample and the ISO time agree
     td_recorded = td
+    td_evidence = touchdown_evidence(ob, td, rwy, end, airport, cal, land, surface_rec)
     td = float(t0 + round(td - t0))
 
     # 7 Ground: a constant deceleration to taxi speed along the centre line where the surface positions end early
@@ -785,7 +831,7 @@ def bake(p, airport, frame, *, metar, runway=None, flight_id, lead_s=1800.0, wid
             "sunAtTouchdownDeg": round(sun_td, 1), "adsbShare": round(share, 4), "gatedOut": dropped,
             "antennaAboveWheelsM": ANTENNA_ABOVE_WHEELS_M,
             "gates": gates, "waived": waived, "reported": report_only,
-            "stripView": strip_v, "pass": all(g["pass"] for g in gates.values()),
+            "stripView": strip_v, "touchdownTime": td_evidence, "pass": all(g["pass"] for g in gates.values()),
         },
         "weather": None if not metar else {k: metar.get(k) for k in ("valid", "metar", "altimeterInHg", "tempC",
                                                                  "windDir", "windKt", "visibilityMi", "ceilingFt")},

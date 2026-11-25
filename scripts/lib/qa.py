@@ -103,6 +103,7 @@ def report(header, channels, end, cifp, true_north_grid_deg):
         "antennaAboveWheelsM": qa.get("antennaAboveWheelsM"),
         "gates": gates, "waived": qa.get("waived", []), "pass": all(g["pass"] for g in gates.values()) and proc["pass"],
         "stripView": qa.get("stripView"),
+        "touchdownTime": qa.get("touchdownTime"),
         "recordedVersusDerived": qa.get("reported", {}),
         "procedure": proc,
         "touchdownPoint": {"pastThresholdM": qa.get("touchdownPastThresholdM"), "offCentreM": qa.get("touchdownOffCentreM"),

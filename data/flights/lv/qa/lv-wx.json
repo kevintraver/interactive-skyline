@@ -114,6 +114,31 @@
   "stripSide": "right",
   "stripView": "ahead-right"
  },
+ "touchdownTime": {
+  "method": "barometric vertical rate levelling on the runway before the surface flag (adsb.refine_touchdown)",
+  "sigmaS": 1.2,
+  "alternatives": {
+   "geometricHeight": {
+    "offsetS": 2.4,
+    "sigmaS": 2.0,
+    "crossingS": -2.3,
+    "crossingHeightM": 9.2,
+    "basis": "the last 25 ft step of the geometric height below 12 m over the runway, carried down at 2.0 m/s (a flare's mean sink)"
+   },
+   "brakingOnset": {
+    "offsetS": 5.2,
+    "decelBeforeMs2": 0.09,
+    "decelAfterMs2": 2.46,
+    "basis": "onset of sustained deceleration in the raw positions alone; spoilers and brakes act 0 to about 5 s after the wheels touch, so a late bound"
+   },
+   "surfaceFlag": {
+    "offsetS": 17.2,
+    "basis": "first surface-format position; it lags the touchdown by 14 to 16 s on these transponders, so it bounds the touchdown only loosely"
+   },
+   "geometricRate": null
+  },
+  "decision": "kept: the geometric height agrees with the barometric time within 1 s on five of the six flights and braking begins after it on all six; the evidence of 25 November does not show the barometric rate levelling early by a consistent amount"
+ },
  "recordedVersusDerived": {
   "heightBiasLast60sM": -0.23,
   "heightPointsLast60s": 67,
