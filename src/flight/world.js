@@ -8,6 +8,10 @@
 //                     wheels, the pavement and the ground around it agree; given back bit for bit on leaving
 //   map apron         the map's own apron ring around the far grid stands above the regional ground in places: hidden
 //                     while flying
+//   night ground      every street lamp of the valley and the region's towns as light points, the lit streets under
+//                     the eye in place of the map's orange street glow, the valley's traffic as ribbons of light and the
+//                     obstruction lights on tall buildings, all switched by the Sun (src/flight/ground; F6.4, 7.11);
+//                     the airport's lights cross the same air
 //   sky dome          centred on the camera already (src/sky/legacySky.js); scaled while flying to just inside the far
 //                     plane (view/layers.js nearFar: the eye's horizon plus the highest summit's, up to 700 km), so the
 //                     terrain is in front of it and the far plane never cuts it. Scale 1 again on leaving
@@ -18,6 +22,8 @@ import { createRegionTerrain } from './terrain/index.js';
 import { createAirport } from './airport/index.js';
 import { createPavementIndex, EASE_M } from './airport/geometry.js';
 import { conformGround, applyConformed, buildInset, insetY, onInset, pavementBox, airportTerrain } from './view/airportGround.js';
+import { createNightGround } from './ground/index.js';
+import { levelsFor } from './airport/lightLayout.js';
 
 /** The sky dome's radius in src/sky/legacySky.js. */
 const DOME_R = 120000;
@@ -98,11 +104,12 @@ function airportGround({ airport, data, provider, ground, base }) {
 /**
  * @param {{ scene: import('three').Scene, fe: ReturnType<import('./env.js').createFlightEnv>, provider: object,
  *   meta: object, data: string, ground: { near: import('three').Mesh, far: import('three').Mesh }, sky: { dome: import('three').Mesh },
- *   settings: { imagery: boolean }, renderer?: object, fetchJson?: (file: string) => Promise<object> }} o
+ *   settings: { imagery: boolean }, renderer?: object, fetchJson?: (file: string) => Promise<object>, tall?: object[] }} o
  *   provider: the app's terrain provider (src/world/terrain createTerrain); meta: terrain.json; data: the city's data
- *   folder (/data/<city>); ground: the map's own near and far meshes (main.js app.terrain)
+ *   folder (/data/<city>); ground: the map's own near and far meshes (main.js app.terrain); tall: the map's removable
+ *   towers (app.tall), for their obstruction lights (found in the scene when not given)
  */
-export async function createFlightWorld({ scene, fe, provider, meta, data, ground, sky, settings, renderer = null, fetchJson = null }) {
+export async function createFlightWorld({ scene, fe, provider, meta, data, ground, sky, settings, renderer = null, fetchJson = null, tall = null }) {
   const base = fe.frame.base;
   const getJson = fetchJson ?? (async (file) => {
     const r = await fetch(`${data}/${file}`);
@@ -129,17 +136,22 @@ export async function createFlightWorld({ scene, fe, provider, meta, data, groun
     airportError = String(err?.message ?? err);
     console.warn('Fly: the airport could not be built; the runway is the ground photograph.', err);
   }
+  // the night ground: its files load at the first frame the Sun is low enough for a lamp to be lit
+  const night = createNightGround({ fe, region, ground, data, renderer, scene, tall });
+  group.add(night.group);
+
   scene.add(group);
   const mapApron = scene.getObjectByName('terrain apron');
   let apronWas = null, shown = false;
 
   const world = {
-    group, region, airport,
+    group, region, airport, night,
     /** Add or take out the flight's ground; moves the map's ground under the airport, hides the map's apron. */
     show(on) {
       shown = !!on;
       group.visible = shown;
       apGround?.set(shown);
+      night.show(shown);
       if (shown) {
         if (mapApron && apronWas === null) { apronWas = mapApron.visible; mapApron.visible = false; }
       } else {
@@ -161,25 +173,30 @@ export async function createFlightWorld({ scene, fe, provider, meta, data, groun
     },
     /** Load the grids a position needs (before the first frame of a flight). */
     preload: (o) => region.preload(o),
-    whenSettled: () => Promise.all([region.whenSettled(), provider.whenSettled?.()]),
+    whenSettled: () => Promise.all([region.whenSettled(), provider.whenSettled?.(), night.whenSettled()]),
     /**
      * Every frame while flying, after the camera is placed: the grids the eye can see, the photo setting, the airport's
      * lights, and the dome just inside the far plane.
      * @param {{ camera: import('three').PerspectiveCamera, position: { x: number, y: number, z: number }, simMs?: number,
      *   wallS?: number, night?: boolean, reducedMotion?: boolean, visibilityM?: number }} o
      */
-    update({ camera, position, simMs = 0, wallS = 0, night = false, reducedMotion = false, visibilityM = 80000 }) {
+    update({ camera, position, simMs = 0, wallS = 0, night: isNight = false, reducedMotion = false, visibilityM = 80000 }) {
       region.update({ camera, position, renderer });
       region.setImagery(settings.imagery);
-      airport?.update({ camera, simMs, wallS, night, reducedMotion, visibilityM });
+      night.update({ camera, simMs, visibilityM });
+      // the airport's lights cross the same air as the city's (the extinction from the eye's height, given as the
+      // visibility that has it); their brightness steps follow the visibility on the ground, as the tower sets them
+      airport?.update({ camera, simMs, wallS, night: isNight, reducedMotion, visibilityM: night.airportVisibilityM,
+        levels: levelsFor({ night: isNight, visibilityM }) });
       if (sky.dome) sky.dome.scale.setScalar((camera.far * DOME_AT) / DOME_R);
     },
     stats() {
-      return { region: region.stats(), airport: airport ? airport.stats() : null, airportError, airportGround: apGround?.stats() ?? null };
+      return { region: region.stats(), airport: airport ? airport.stats() : null, airportError, airportGround: apGround?.stats() ?? null, ground: night.stats() };
     },
     dispose() {
       world.show(false);
       apGround?.dispose();
+      night.dispose();
       airport?.dispose();
       region.dispose();
       group.removeFromParent();
