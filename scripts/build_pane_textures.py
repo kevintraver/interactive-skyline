@@ -10,18 +10,19 @@ at 512 x 704; image rows run top to bottom (v = +0.19 m at row 0), columns forwa
 
   pane-surface.png   R, G  the scratches' direction as a doubled angle, premultiplied by their density:
                            0.5 + 0.5 cos(2a) d, 0.5 + 0.5 sin(2a) d (so mip averaging keeps a weighted direction)
-                     B     scratch density d (fine wipe marks on the inner pane: cleaning swirls and a few straight
-                           wipes, and the outer pane's pitting)
+                     B     scratch density d (fine wipe marks on the inner pane: cleaning swirls, fine arcs, three
+                           short faint straight wipes, and the outer pane's pitting; sparse)
                      A     dirt and smears (low-frequency blotches, finger smudges near the lower edge)
-  pane-frost.png     R, G, B, A  four frost growth maps (seeded variants): for every texel the step of Reiter's
-                           hexagonal automaton [R4] at which it froze, rank-normalised to 0..1, so the run-time test
-                           ice = smoothstep(a - w, a, cover) covers a share `cover` of the pane. Never frozen: 1.
-                     Seeds: a ring round the breather hole (low on the centre line), points along the scratch lines
-                           and along the lower edge, where the pane is coldest.
-  pane-facets.png    R, G, B, A  each variant's crystal id (0..255), for per-crystal glints (High and Ultra)
+  pane-frost.png     R, G, B, A  four frost growth maps (seeded variants) of fine fern frost (see "Fern frost" below):
+                           for every texel its arrival a = t + K_WIDTH d, t when the growth front passed the nearest
+                           fern line (0..1), d the distance from it; never frozen: 1. The run-time test
+                           ice = smoothstep(a - w, a, cover) grows the ferns from their seeds as `cover` rises.
+                     Seeds: round the breather hole (low on the centre line) first, the lower corners soon after, a few
+                           on the lower edge and on scratches last. Fully grown, about a tenth of the pane.
+  pane-facets.png    R, G, B, A  each variant's fern id (0..255), for per-crystal glints (High and Ultra)
 
 Plan 6.6 asks for 16-bit arrival values; these are 8-bit (one channel per variant, four variants in one texture),
-which leaves 256 growth steps, finer than the run-time smoothstep's width (0.04).
+which leaves 256 growth steps, finer than the run-time smoothstep's width (0.035).
 
   --check   build in memory and compare with the files on disk byte for byte (exit 1 if they differ)
   --sheet   also write a contact sheet of the maps (for review; keep it outside the repository)
@@ -102,27 +103,30 @@ def surface():
         acc_s[:] += w * math.sin(2 * a)
         dens[:] += w
 
+    # Reworked 24 Nov 2026: ten long straight fore-and-aft wipes made a band that flared over the winglet in low sun.
+    # Scratches on a cabin window's inner pane are mostly fine arcs from cleaning cloths, and sparse.
     # cleaning swirls: groups of nearly concentric arcs (a cloth's circular wipe), radii 2 to 12 cm
-    for g in range(9):
+    for g in range(6):
         cx, cy = r.uniform(-0.1, 1.1) * W, r.uniform(-0.1, 1.1) * H
         base = r.uniform(0.02, 0.12) / PANE_W * W
-        for k in range(int(r.integers(6, 16))):
+        for k in range(int(r.integers(4, 10))):
             rad = base * r.uniform(0.85, 1.25)
             a0 = r.uniform(0, 2 * math.pi)
-            stroke_arc(cx + r.normal(0, 4), cy + r.normal(0, 4), rad, a0, a0 + r.uniform(0.6, 2.6), r.uniform(0.45, 0.9), r.uniform(0.25, 0.8))
-    # a few long straight wipes, mostly fore and aft
-    for k in range(10):
+            stroke_arc(cx + r.normal(0, 4), cy + r.normal(0, 4), rad, a0, a0 + r.uniform(0.5, 2.0), r.uniform(0.35, 0.6), r.uniform(0.15, 0.45))
+    # a few short straight wipes, at any angle and faint
+    for k in range(3):
         y = r.uniform(0, H)
-        ang = r.normal(0, 0.25)
-        L = r.uniform(0.3, 1.0) * W
-        x = r.uniform(-0.2, 0.8) * W
-        stroke_line(x, y, x + L * math.cos(ang), y + L * math.sin(ang), r.uniform(0.4, 0.8), r.uniform(0.3, 0.7))
-    # fine random scratches everywhere
-    for k in range(220):
-        x, y = r.uniform(0, W), r.uniform(0, H)
         ang = r.uniform(0, math.pi)
-        L = r.uniform(4, 40)
-        stroke_line(x, y, x + L * math.cos(ang), y + L * math.sin(ang), 0.45, r.uniform(0.15, 0.5))
+        L = r.uniform(0.1, 0.35) * W
+        x = r.uniform(0.1, 0.9) * W
+        stroke_line(x, y, x + L * math.cos(ang), y + L * math.sin(ang), 0.35, r.uniform(0.1, 0.25))
+    # fine scratches here and there: short arcs of large radius
+    for k in range(90):
+        x, y = r.uniform(0, W), r.uniform(0, H)
+        rad = r.uniform(30, 200)
+        a0 = r.uniform(0, 2 * math.pi)
+        span = r.uniform(4, 30) / rad
+        stroke_arc(x - rad * math.cos(a0), y - rad * math.sin(a0), rad, a0, a0 + span, 0.4, r.uniform(0.1, 0.35))
 
     d = np.clip(dens, 0, 1)
     norm = np.maximum(dens, 1e-6)
@@ -153,114 +157,98 @@ def surface():
 
 
 # ------------------------------------------------------------------------------------------------ frost
-def reiter(seeds, beta, gamma, alpha, rows, cols, max_steps, r):
-    """Reiter's hexagonal automaton (Chaos, Solitons & Fractals 23, 2005) on an axial grid (q along columns, r down rows):
-    cells hold water s; a cell is receptive if frozen (s >= 1) or next to a frozen one; receptive cells gain gamma,
-    the others' water diffuses (alpha). Returns the step each cell froze at (inf if never) and its crystal id."""
-    s = np.full((rows, cols), beta, np.float64)
-    s += r.normal(0, 0.002, s.shape)  # a little noise in the vapour field: crystals not perfectly symmetric
-    arrival = np.full((rows, cols), np.inf)
-    ident = np.zeros((rows, cols), np.int32)
-    # seeds nucleate at their own steps (rr, qq, step): the hole first, then the cold lower edge, the scratches last
-    pending = sorted(((d, i, rr, qq) for i, (rr, qq, d) in enumerate(seeds)), reverse=True)
+# Fern frost (reworked 24 Nov 2026). The first maps grew Reiter's hexagonal automaton [R4] from seeds: filled six-armed
+# stars and dendrites over the lower third, which read as snowflakes. Frost on an airliner's cabin window is sparse,
+# fine and fern-like: thin feathery lines that start at the breather hole and in the lower corners (the coldest parts,
+# where vapour reaches first) and are often absent. So each fern is grown as a path: a slightly curving stem with side
+# branches at about 60 degrees on alternate sides, shorter toward the tip, the branches feathered once more.
+# Every texel stores its arrival  a = t + K_WIDTH * d  where t is when the growth front passed the nearest point of a
+# fern (0 at the first seed, 1 when the whole pattern has grown) and d its distance from that line in texels, out to
+# R_LINE texels (beyond: 1, never frozen). At run time ice = smoothstep(a - w, a, cover): the line's tip advances with
+# the cover and older parts thicken a little, and a defocused read (a mip) smears the lines into a faint haze instead
+# of erasing them.
+K_WIDTH = 0.08       # arrival per texel off the line: a line is about 2 texels (1.1 mm) wide 0.08 of cover after it passed
+R_LINE = 1.5         # how far off a line a texel can still freeze, texels: at most about 3 texels (1.7 mm) wide
 
-    def nucleate(step):
-        while pending and pending[-1][0] <= step:
-            _, i, rr, qq = pending.pop()
-            if s[rr, qq] < 1.0:
-                s[rr, qq] = 1.0
-                arrival[rr, qq] = step
-                ident[rr, qq] = 1 + (i % 255)
-    nucleate(0)
-    # axial neighbours: (0,+-1), (+-1,0), (+1,-1), (-1,+1)
-    shifts = [(0, 1), (0, -1), (1, 0), (-1, 0), (1, -1), (-1, 1)]
 
-    def nb(a, op):
-        out = None
-        for dr, dq in shifts:
-            v = np.roll(np.roll(a, dr, 0), dq, 1)
-            out = v if out is None else op(out, v)
-        return out
-
-    total = rows * cols
-    for step in range(1, max_steps + 1):
-        nucleate(step)
-        frozen = s >= 1.0
-        receptive = frozen | nb(frozen, np.logical_or)
-        u = np.where(receptive, 0.0, s)
-        v = np.where(receptive, s + gamma, s)
-        avg = nb(u, np.add) / 6.0
-        u = u + (alpha / 2.0) * (avg - u)
-        s = u + np.where(receptive, v, 0.0)
-        # the edges hold the background vapour (an open boundary)
-        s[0, :] = s[-1, :] = beta
-        s[:, 0] = s[:, -1] = beta
-        newly = (s >= 1.0) & ~frozen
-        if newly.any():
-            arrival[newly] = step
-            ident[newly] = nb(np.where(frozen, ident, 0), np.maximum)[newly]
-        if step % 50 == 0 and not pending and np.isfinite(arrival).sum() > 0.985 * total:
-            break
-    return arrival, ident
+def fern_paths(r, x, y, ang, length, depth, t0, speed, out, ident):
+    """A fern from (x, y) heading `ang` (radians, image axes: y down): append (x, y, t, id) samples every half texel."""
+    step = 0.5
+    n = max(2, int(length / step))
+    bend = r.normal(0, 0.004)
+    spacing = r.uniform(6.0, 10.0) if depth > 0 else 1e9
+    side = 1 if r.random() < 0.5 else -1
+    next_branch = spacing * r.uniform(0.6, 1.2)
+    t = t0
+    for i in range(n):
+        out.append((x, y, t, ident))
+        x += step * math.cos(ang)
+        y += step * math.sin(ang)
+        ang += bend + r.normal(0, 0.01)
+        t += step * speed
+        along = i * step
+        if along >= next_branch and along < length * 0.92:
+            taper = 1 - along / length
+            blen = length * r.uniform(0.3, 0.45) * (0.3 + 0.7 * taper)
+            if blen > 2:
+                fern_paths(r, x, y, ang + side * r.uniform(0.9, 1.2), blen, depth - 1, t, speed * r.uniform(1.0, 1.4), out, ident)
+            side = -side
+            next_branch += spacing * r.uniform(0.7, 1.3)
 
 
 def frost_variant(k, scratch_d):
     r = rng("frost", k)
-    S = 2  # the automaton runs at half resolution (about 1.1 mm a cell); at far focus the pane is blurred by 3.5 mm
-    w, h = W // S, H // S
-    rows = int(math.ceil(h / (math.sqrt(3) / 2))) + 2
-    cols = int(math.ceil(w + rows / 2)) + 2
+    samples = []   # (x, y, t, fern id), image pixels
+    fid = 0
 
-    def cell(x, y):  # half-res pixel -> axial (r, q)
-        rr = int(round(y / (math.sqrt(3) / 2)))
-        qq = int(round(x - rr / 2)) + rows // 2
-        return min(max(rr, 1), rows - 2), min(max(qq, 1), cols - 2)
+    def fern(x, y, ang, length_mm, delay, depth=2):
+        nonlocal fid
+        fid += 1
+        length = length_mm / 1000 / PANE_W * W
+        # the front crosses a whole fern in about a fifth of the growth: later ferns start later, all done by 1
+        speed = (1 - delay) * r.uniform(0.15, 0.3) / max(length, 1)
+        fern_paths(r, x, y, ang, length, depth, delay, speed, samples, fid)
 
-    seeds = []  # (row, q, nucleation step); positions kept in half-res pixels for the per-crystal rotation
-    where = []
     hx, hy = px(0, HOLE_V)
-    for i in range(int(r.integers(5, 9))):  # a ring round the hole, about 6 mm out: first
+    # round the breather hole, first: a few short ferns radiating from about 3 mm out (plan 7.7: frost starts there)
+    for i in range(int(r.integers(3, 6))):
         a = r.uniform(0, 2 * math.pi)
-        rad = r.uniform(5, 9) / 1000 / PANE_W * W
-        where.append(((hx + rad * math.cos(a)) / S, (hy + rad * math.sin(a)) / S, r.uniform(0, 60)))
-    for i in range(int(r.integers(8, 14))):  # along the lower edge and up the lower corners: soon after
-        t = r.uniform(0, 1)
-        x = t * w
-        y = h - 2 - r.exponential(5) - 50 * (1 - math.sin(math.pi * t)) * r.uniform(0, 1)
-        where.append((x, max(2, y), r.uniform(150, 900)))
-    ys, xs = np.nonzero(scratch_d > 0.5)
-    for i in r.choice(len(xs), size=min(len(xs), int(r.integers(10, 18))), replace=False):  # on scratches: later,
-        up = 1 - ys[i] / H                                                                    # the higher the later
-        where.append((xs[i] / S, ys[i] / S, r.uniform(700, 1800) + 2200 * up))
-    seeds = [(*cell(x, y), d) for x, y, d in where]
-    angles = r.uniform(-math.pi / 6, math.pi / 6, len(where))
-    beta = r.uniform(0.35, 0.45)
-    gamma = r.uniform(0.0006, 0.0015)
-    arrival, ident = reiter(seeds, beta, gamma, 1.0, rows, cols, 6000, r)
-    # resample the hex grid to the image (nearest cell for the id, the cell's own arrival smoothed below)
-    yy, xx = np.mgrid[0:h, 0:w].astype(np.float64)
-    # every crystal turned about its own seed (the lattice grows them all with the same axes): each pixel takes the
-    # nearest seed's frame, so the turns meet at the seeds' Voronoi borders, where crystals meet anyway
-    pts = np.array([(x, y) for x, y, _ in where])
-    d2 = (xx[..., None] - pts[:, 0]) ** 2 + (yy[..., None] - pts[:, 1]) ** 2
-    near = np.argmin(d2, -1)
-    ca, sa = np.cos(angles)[near], np.sin(angles)[near]
-    ox, oy = xx - pts[near, 0], yy - pts[near, 1]
-    xx, yy = pts[near, 0] + ca * ox - sa * oy, pts[near, 1] + sa * ox + ca * oy
-    rr = np.clip(np.rint(yy / (math.sqrt(3) / 2)).astype(int), 0, rows - 1)
-    qq = np.clip(np.rint(xx - rr / 2).astype(int) + rows // 2, 0, cols - 1)
-    a = arrival[rr, qq]
-    ids = ident[rr, qq]
-    # rank-normalise the finite arrivals to 0..1 (share of the pane frozen by then); never frozen -> 1. Cells that froze
-    # at the same step share one value (the middle of their run), so ties add no noise
-    fin = np.isfinite(a)
-    steps, inverse, counts = np.unique(a[fin], return_inverse=True, return_counts=True)
-    before = np.concatenate([[0], np.cumsum(counts)[:-1]])
-    out = np.ones_like(a)
-    out[fin] = ((before + counts / 2.0) / a.size)[inverse]
-    img = Image.fromarray(out.astype(np.float32), mode="F").resize((W, H), Image.BILINEAR)
-    ids_img = Image.fromarray((ids % 256).astype(np.uint8), mode="L").resize((W, H), Image.NEAREST)
-    return np.asarray(img), np.asarray(ids_img)
+        rad = r.uniform(3, 6) / 1000 / PANE_W * W
+        fern(hx + rad * math.cos(a), hy + rad * math.sin(a), a + r.normal(0, 0.3), r.uniform(12, 30), r.uniform(0.0, 0.12))
+    # the lower corners: ferns creeping in from the frame, up and inward, soon after
+    for corner in (-1, 1):
+        cx = W / 2 + corner * (W / 2 - r.uniform(14, 30))
+        for i in range(int(r.integers(2, 4))):
+            y = H - r.uniform(12, 70)
+            ang = math.atan2(-r.uniform(0.6, 1.2), -corner * r.uniform(0.5, 1.0))
+            fern(cx, y, ang, r.uniform(20, 48), r.uniform(0.12, 0.35))
+    # a few small ones on the lower edge, later
+    for i in range(int(r.integers(1, 4))):
+        fern(r.uniform(0.25, 0.75) * W, H - r.uniform(8, 20), -math.pi / 2 + r.normal(0, 0.5), r.uniform(5, 14), r.uniform(0.35, 0.6), 1)
+    # one or two on a scratch, late (nucleation on scratches, Caltech's frost page [R4]); never on the top half
+    ys, xs = np.nonzero(scratch_d[H // 2:] > 0.5)
+    for i in r.choice(len(xs), size=min(len(xs), int(r.integers(1, 3))), replace=False):
+        fern(xs[i], ys[i] + H // 2, r.uniform(0, 2 * math.pi), r.uniform(4, 10), r.uniform(0.6, 0.85), 1)
+
+    arrival = np.ones((H, W), np.float64)
+    ident = np.zeros((H, W), np.int32)
+    reach = int(math.ceil(R_LINE))
+    offs = np.arange(-reach, reach + 1)
+    ox, oy = np.meshgrid(offs, offs)
+    for x, y, t, i in samples:
+        cx, cy = int(round(x)), int(round(y))
+        if cx < -reach or cy < -reach or cx >= W + reach or cy >= H + reach:
+            continue
+        X, Y = cx + ox, cy + oy
+        ok = (X >= 0) & (X < W) & (Y >= 0) & (Y < H)
+        d = np.hypot(X - x, Y - y)
+        a = np.where(d <= R_LINE, min(t, 1.0) + K_WIDTH * d, 1.0)
+        Xs, Ys, As = X[ok], Y[ok], a[ok]
+        cur = arrival[Ys, Xs]
+        better = As < cur
+        arrival[Ys[better], Xs[better]] = As[better]
+        ident[Ys[better], Xs[better]] = i
+    return np.clip(arrival, 0, 1).astype(np.float32), (ident % 256).astype(np.uint8)
 
 
 def build():
@@ -270,7 +258,7 @@ def build():
         a, f = frost_variant(k, scratch_d)
         maps.append(a)
         facets.append(f)
-        print(f"  frost variant {k}: frozen share {np.mean(a < 1):.3f}", file=sys.stderr)
+        print(f"  frost variant {k}: frozen share fully grown {np.mean(a < 0.999):.3f}, at 0.3 {np.mean(a < 0.3):.3f}", file=sys.stderr)
     frost = (np.clip(np.stack(maps, -1), 0, 1) * 255 + 0.5).astype(np.uint8)
     fac = np.stack(facets, -1).astype(np.uint8)
     return {"pane-surface.png": surf, "pane-frost.png": frost, "pane-facets.png": fac}

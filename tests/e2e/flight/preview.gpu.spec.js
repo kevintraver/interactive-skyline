@@ -7,7 +7,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { test, expect } from '@playwright/test';
-import { openFlight, realFlights, frames, FLIGHT_TIMEOUT } from '../../helpers/flight.js';
+import { openFlight, realFlights, frames, pictureCheck, FLIGHT_TIMEOUT } from '../../helpers/flight.js';
 
 test.describe.configure({ timeout: FLIGHT_TIMEOUT });
 test.use({ viewport: { width: 640, height: 400 }, deviceScaleFactor: 1 });
@@ -32,10 +32,9 @@ for (const f of realFlights()) {
       for (const el of document.body.children) if (!el.contains(canvas)) el.style.visibility = 'hidden';
       return { state: fl.state(), td };
     }, { id: f.id, lead: LEAD_S });
-    // KNOWN DEFECT (24 Nov 2026, not diagnosed): under the Playwright runner about one run in five shows a blank frame
-    // here, the page's grey through a transparent canvas, and it stays blank through further drawn frames; the canvas
-    // is visible and sized, the exposure is sane, a quality change does not cause it, and ten runs of the same steps
-    // outside the runner did not show it. The spread check below fails such a run.
+    // A blank frame here (the page's grey through a transparent canvas) was a quality level drawing black, 24 Nov 2026:
+    // the fill-rate benchmark, run because the test clears localStorage, dropped High to Low under load
+    // (tests/e2e/flight/blank.gpu.spec.js). pictureCheck names it, with the renderer's state, if it comes back.
     await frames(page, 2);
     await page.evaluate(() => window.__skyline.flight.whenSettled());
     const jpg = await page.screenshot({ type: 'jpeg', quality: 80 });
@@ -56,6 +55,10 @@ for (const f of realFlights()) {
       return { mean, sd: Math.sqrt(sum2 / n - mean * mean) };
     }, jpg.toString('base64'));
     console.log(f.id, 'preview', JSON.stringify({ seat: info.state.seat, t: info.state.t, ...spread, bytes: jpg.length }));
+    if (spread.sd <= 8) {
+      const check = await pictureCheck(page);
+      expect(check.blank, `BLANK FRAME: ${JSON.stringify(check)}`).toBe(false);
+    }
     expect(spread.sd).toBeGreaterThan(8);
 
     if (WRITE) {

@@ -6,11 +6,16 @@
 // the frame time (perf.throughput: frames drawn back to back, not capped by vsync), with the region terrain's and the
 // airport's own counts. Extras (--extras): the picker open, the flight's bar, the seat map, and the cabin by day and at
 // night with the shade half closed.
-// Writes <out>/<backend>/<flight>_<moment>.jpg and <out>/<backend>/measure.json.
+// Writes <out>/<backend>/<flight>_<moment>.jpg (and _noglass.jpg with --glass both) and <out>/<backend>/measure.json.
+// --glass on|off|both (default on): the window's glass in the picture (plan 03, Phase 5); with `both` each moment is
+// taken with the glass and without it. At each moment it also records the light (cd/m^2, before exposure) on the
+// wall beside the window and through the middle of the window (__skyline.flight.luminance), the pane's condition and
+// the Sun on it, and the cabin's own light. --before: a build without these hooks (the luminance is then left out).
 //
 // Serve a build first:  pnpm build --outDir dist-shots && pnpm exec vite preview --outDir dist-shots --port 5381 --strictPort
 // then:                 node tests/manual/flight-mode-shots.mjs <out> [--port 5381] [--backend webgpu|webgl2]
-//                         [--flights lv-19-dusk,lv-26-day] [--moments cruise,touchdown] [--extras]
+//                         [--flights lv-19-dusk,lv-26-day] [--moments cruise,touchdown] [--extras] [--glass both]
+//                         [--frames 40]
 // From a normal shell on macOS (a sandboxed one gives the browser software rendering).
 import { chromium } from '@playwright/test';
 import { mkdirSync, writeFileSync, readFileSync } from 'node:fs';
@@ -18,7 +23,10 @@ import path from 'node:path';
 
 const args = process.argv.slice(2);
 const opt = (k) => (args.includes(k) ? args[args.indexOf(k) + 1] : null);
-const out = args.find((a, i) => !a.startsWith('--') && !['--port', '--backend', '--flights', '--moments'].includes(args[i - 1]));
+const out = args.find((a, i) => !a.startsWith('--') && !['--port', '--backend', '--flights', '--moments', '--glass', '--frames'].includes(args[i - 1]));
+const glassMode = opt('--glass') || 'on';
+const glassRuns = glassMode === 'both' ? [true, false] : [glassMode !== 'off'];
+const FRAMES = Number(opt('--frames') || 40);
 if (!out) { console.error('usage: node tests/manual/flight-mode-shots.mjs <out> [--port 5381] [--backend webgpu|webgl2] [--flights a,b] [--moments a,b] [--extras]'); process.exit(2); }
 const port = opt('--port') || 5381;
 const backends = opt('--backend') ? [opt('--backend')] : ['webgpu', 'webgl2'];
@@ -38,7 +46,7 @@ function momentsOf(id) {
   const from = ev('10000') ?? 0, to = ev('ft1000') ?? td - 60;
   let turn = from, best = 0;
   for (let i = Math.ceil(from); i < to; i++) if (Math.abs(roll[i]) > best) { best = Math.abs(roll[i]); turn = i; }
-  const m = { cruise: 0, 'cruise-clean': 0, fl180: ev('fl180'), ft10000: ev('10000'), turn, 'sixty-out': td - 60, threshold: ev('threshold'), touchdown: td, rollout: Math.min(header.samples - 1, td + 20) };
+  const m = { cruise: 0, 'cruise-clean': 0, tod: ev('tod'), fl180: ev('fl180'), ft10000: ev('10000'), turn, 'sixty-out': td - 60, threshold: ev('threshold'), touchdown: td, rollout: Math.min(header.samples - 1, td + 20) };
   return Object.fromEntries(Object.entries(m).filter(([k, v]) => Number.isFinite(v) && (!onlyMoments || onlyMoments.includes(k))));
 }
 
@@ -74,16 +82,27 @@ for (const backend of backends) {
     measure.flights[id] = {};
     await page.evaluate(async (fid) => { const f = window.__skyline.flight; await f.start(fid, { pace: false, play: false }); f.options({ hud: false }); }, id);
     for (const [name, at] of Object.entries(moments)) {
-      const r = await page.evaluate(async ({ at, clean }) => {
+     for (const glass of glassRuns) {
+      const r = await page.evaluate(async ({ at, clean, glass, frames }) => {
         const s = window.__skyline, f = s.flight;
         f.options({ frame: !clean });
+        if (f.window) f.window({ glass });
         await f.seek({ at });
         await f.whenSettled();
         await f.whenSettled();
         const info = s.perf.info();
-        const tp = await s.perf.throughput(40, 8);
+        const tp = await s.perf.throughput(frames, 8);
         const st = f.state(), stats = f.stats();
         const region = stats.world.region;
+        // the light on the wall beside the window and through its middle, before exposure (cd/m^2)
+        let light = null;
+        if (typeof f.luminance === 'function' && !clean) {
+          try {
+            const wall = await f.luminance({ x: -0.85, y: 0 }), win = await f.luminance({ x: 0, y: 0.1 });
+            light = { wall: +wall.composed.toPrecision(3), wallAlpha: +wall.cabinAlpha.toFixed(2), window: +win.composed.toPrecision(3), outsideBehindWindow: +win.outside.toPrecision(3), exposure: wall.exposure };
+          } catch (e) { light = String(e); }
+        }
+        const pane = stats.pane ? { ...stats.pane.pane, sunE: stats.pane.sunE, reflection: +(+stats.pane.reflection).toFixed(3), enabled: stats.pane.enabled } : null;
         return {
           t: st.t, altMsl: Math.round(st.altMsl), heightAboveGround: +st.heightAboveGround.toFixed(2), headingDeg: +st.headingDeg.toFixed(1),
           pitchDeg: +st.pitchDeg.toFixed(2), rollDeg: +st.rollDeg.toFixed(2), far: Math.round(s.camera.far), near: s.camera.near,
@@ -92,17 +111,21 @@ for (const backend of backends) {
           airport: stats.world.airport && { drawCalls: stats.world.airport.drawCalls, lights: stats.world.airport.lights, night: stats.world.airport.night, updateMs: stats.world.airport.updateMs },
           aircraftTriangles: stats.aircraftTriangles, cabinModel: stats.cabinModel, layerMsP50: +stats.layerMs.p50.toFixed(3),
           sunAltDeg: s.env.state?.sun?.altDeg ?? null, exposure: s.look?.exposure?.state?.ev ?? s.look?.exposure?.state?.value ?? null,
+          light, pane, cabinLight: stats.cabinLight ?? null, cabinStage: stats.cabinStage ?? null,
         };
-      }, { at, clean: name === 'cruise-clean' });
+      }, { at, clean: name === 'cruise-clean', glass, frames: FRAMES });
+      const file = `${id}_${name}${glass ? '' : '_noglass'}.jpg`;
       await page.evaluate(hideUi);
       await page.evaluate(() => window.__skyline.flight.whenSettled());
-      const buf = await page.screenshot({ path: path.join(dir, `${id}_${name}.jpg`), type: 'jpeg', quality: 85 });
-      // a blank frame (the page's grey through the canvas; see tests/e2e/flight/preview.gpu.spec.js) is about 3 KB
+      const buf = await page.screenshot({ path: path.join(dir, file), type: 'jpeg', quality: 85 });
+      // a blank frame (the page's grey through the canvas; see tests/e2e/flight/blank.gpu.spec.js) is about 3 KB
       if (buf.length < 4000) console.log(backend, id, name, 'BLANK FRAME');
       await page.evaluate(showUi);
-      measure.flights[id][name] = r;
-      console.log(backend, id, name, JSON.stringify(r));
+      measure.flights[id][glass ? name : `${name}_noglass`] = r;
+      console.log(backend, id, name, glass ? 'glass' : 'no glass', JSON.stringify(r));
+     }
     }
+    if (glassRuns.length) await page.evaluate(() => window.__skyline.flight.window?.({ glass: true }));
     await page.evaluate(() => window.__skyline.flight.options({ frame: true, hud: true }));
   }
 

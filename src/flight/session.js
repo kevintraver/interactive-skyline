@@ -16,10 +16,12 @@ import { flightJourney } from './journey.js';
 import { createModelledAirframe } from './aircraft/airframe.js';
 import { RIG_URL } from './aircraft/model.js';
 import { applyGroundPitch } from './attitude.js';
-import { createModelledCabin } from './cabin/cabin.js';
+import { createModelledCabin, windowLuminance, cabinLightLevel } from './cabin/cabin.js';
+import { createWindowPane } from './window/index.js';
 import { createHeadRig, attachHeadInput, headShake, DEFAULT_LOOK, LIMITS } from './cabin/headRig.js';
 import { seat as seatOf, defaultSeat } from './cabin/lopa.js';
 import { createFlightLayers } from './view/layers.js';
+import { createCabinStage } from './view/cabinStage.js';
 import { createFlightWorld } from './world.js';
 import { paceRateFor, playStart } from './pace.js';
 import { bodyDirection, lookToward } from './lookAt.js';
@@ -49,11 +51,19 @@ export async function createFlightSession({ app, fe, terrain, meta, data, onFram
   cabin.ready.then(() => fe.invalidate());
   const rig = createHeadRig({ seat });
   const layers = createFlightLayers({ scene, camera, airframe, cabin, rig, base: city.base });
+  // the cabin drawn after the world's anti-aliasing and composed over it (F3.9; view/cabinStage.js)
+  const cabinStage = createCabinStage({ renderer: app.renderer, pipeline: fe.pipeline, layers });
+  // the window's glass (Phase 5, window/index.js), reading the finished outside picture from the cabin stage
+  const pane = createWindowPane({ nodes: fe.nodes, cabin, quality: fe.quality, renderer: app.renderer, pipeline: fe.pipeline, outside: cabinStage.outside });
+  pane.ready.then(() => fe.invalidate());
+  cabinStage.useOutside(() => pane.enabled && !!pane.mesh);
+  const offWeather = fe.onWeather ? fe.onWeather(() => { if (track) { pane.setTrack(track, { airAt: (st) => fe.at(st.position) }); fe.invalidate(); } }) : () => {};
+  const offQuality = fe.quality?.on ? fe.quality.on('change', (q) => { pane.setQuality(q.level); fe.invalidate(); }) : () => {};
 
   const tracks = new Map();
   let track = null, journey = null, handle = null, active = false, pace = true;
   const sample = createState();
-  let heightAboveGround = NaN, compiled = false, groundPitch = 0, wallS = 0;
+  let heightAboveGround = NaN, compiled = false, groundPitch = 0, wallS = 0, stageOff = false;
   const ms = [];
 
   /** The track of a flight, loaded once (a failed load can be tried again). */
@@ -83,12 +93,29 @@ export async function createFlightSession({ app, fe, terrain, meta, data, onFram
     const reducedMotion = !!reduce?.matches, night = isNight();
     const shake = headShake(s.t, { touchdown: track.touchdownT }, { reducedMotion });
     layers.update(s, { aspect: w / h, shake });
+    cabinStage.setShown(layers.cabinShown && !stageOff);
     airframe.update(s, {
       wallS, reducedMotion, hasLightsChannel: track.meta.channels.includes('lights'),
       night, shake: fe.quality?.level !== 'low', groundPitch: false,
     });
-    cabin.update(s, { cabinLight: s.cabinLight ?? 1, night, reducedMotion, dtS });
+    cabin.update(s, { cabinLight: s.cabinLight ?? 1, night, reducedMotion, dtS, outside: outsideLight(s) });
+    // the glass: its reflection is the cabin drawn with the lamps at full, so it is weighted by the lamps' level now
+    pane.update(s, { env: fe, wallS, night, reducedMotion, cabinLight: cabinLightLevel(s.cabinLight ?? 1, night) / cabinLightLevel(1, night) });
     world.update({ camera, position: s.position, simMs: clock.timeMs, wallS, night, reducedMotion, visibilityM: fe.at(s.position).visibilityM });
+  }
+  /** The light that comes in through the windows (the cabin's own light, cabin.js createCabinLight): the window's
+   * mean luminance and the Sun, from plan 01's state at the aircraft. */
+  const _outside = { windowL: 0, sunLux: 0, sunColor: null, sunWorld: null };
+  function outsideLight(s) {
+    const sun = fe.state?.sun;
+    let L = null;
+    try { L = fe.lightAt(s.position); } catch { L = null; }
+    const sunLux = L?.sunLux ?? sun?.illuminanceLux ?? 0, ambientLux = L?.ambientLux ?? 0;
+    _outside.windowL = windowLuminance({ sunLux, ambientLux, sunAltDeg: sun?.altDeg ?? -90 });
+    _outside.sunLux = (sun?.altDeg ?? -90) > -1 ? sunLux : 0;
+    _outside.sunColor = L?.sunColor ?? sun?.color ?? null;
+    _outside.sunWorld = sun?.dir ?? null;
+    return _outside;
   }
   /** Night for the aircraft's lamps, the cabin's tint and the airport's lights: the Sun below the horizon (the
    * airport's lights burn from sunset to sunrise, airport.json lightingSchedule SS-SR). */
@@ -107,7 +134,7 @@ export async function createFlightSession({ app, fe, terrain, meta, data, onFram
       if (ms.length > KEEP) ms.shift();
     },
     // continuous frames while the clock plays the flight, none while paused (the timeline votes the same way)
-    demand: () => (active && clock.playing ? 'continuous' : 'idle'),
+    demand: () => (active && (clock.playing || pane.settling) ? 'continuous' : 'idle'),
   };
   loop.add(sub, 20);
 
@@ -121,10 +148,12 @@ export async function createFlightSession({ app, fe, terrain, meta, data, onFram
   // own layer, which picking's rays do not test)
   const caster = new Raycaster();
   caster.layers.enableAll();
+  // the window's glass is in the cabin's group but lets the eye through: never a blocker
+  const solid = (o) => { for (let p = o; p; p = p.parent) { if (!p.visible || p === pane.group) return false; } return true; };
   const blockers = () => {
     const list = [];
     for (const g of [airframe.group, cabin.group]) g.traverse((o) => { if (o.isMesh && o.visible && g.visible) list.push(o); });
-    return list.filter((o) => { for (let p = o; p; p = p.parent) if (!p.visible) return false; return true; });
+    return list.filter(solid);
   };
   /** True when the airframe or the cabin is hit before `distance` along `ray`. */
   function blocked(ray, distance) {
@@ -144,7 +173,7 @@ export async function createFlightSession({ app, fe, terrain, meta, data, onFram
     caster.near = 0;
     caster.far = dist;
     const parts = [];
-    cabin.group.traverse((o) => { if (o.isMesh && o.visible) parts.push(o); });
+    cabin.group.traverse((o) => { if (o.isMesh && o.visible && solid(o)) parts.push(o); });
     return caster.intersectObjects(parts, false).length > 0;
   }
 
@@ -157,7 +186,7 @@ export async function createFlightSession({ app, fe, terrain, meta, data, onFram
 
   const session = {
     rig, layers, world, airframe,
-    cabin,
+    cabin, cabinStage, pane,
     get seat() { return seat; },
     get track() { return track; },
     get journey() { return journey; },
@@ -177,6 +206,7 @@ export async function createFlightSession({ app, fe, terrain, meta, data, onFram
       if (next.id === seat.id) return seat;
       seat = next;
       cabin.setSeat(seat);
+      pane.setSeat(seat);
       rig.setSeat(seat);
       fe.invalidate();
       return seat;
@@ -187,6 +217,8 @@ export async function createFlightSession({ app, fe, terrain, meta, data, onFram
       const t = await trackOf(entry);
       if (handle) fe.attachJourney(null);
       track = t;
+      // the pane's frost, fog and water over the journey, from the air along it (again when the weather changes)
+      pane.setTrack(track, { airAt: (st) => fe.at(st.position) });
       journey = flightJourney(track, () => {}); // the frame samples the track itself, at the same progress
       handle = fe.attachJourney(journey);
       if (Number.isFinite(startMs) && Math.abs(startMs - journey.recordedStartMs) > 1000) handle.setStart(startMs);
@@ -206,14 +238,17 @@ export async function createFlightSession({ app, fe, terrain, meta, data, onFram
       if (on === active) return;
       active = !!on;
       world.show(active);
-      if (active) { layers.attach(); place(); } else layers.detach();
+      cabinStage.setStaged(active);
+      if (active) { layers.attach(); place(); } else { layers.detach(); cabinStage.setShown(false); }
       fe.invalidate();
     },
     setPace(on) { pace = !!on; fe.invalidate(); },
     seek(t) { if (handle) { handle.seek(t); place(); fe.invalidate(); } },
     look(l) { rig.look(l || {}); fe.invalidate(); },
     resetLook() { rig.reset(); fe.invalidate(); },
-    cleanView(on) { const c = layers.cleanView(on); fe.invalidate(); return c; },
+    cleanView(on) { const c = layers.cleanView(on); cabinStage.setShown(layers.cabinShown && !stageOff); fe.invalidate(); return c; },
+    /** For measurements only: the cabin stage idle (no cabin, no glass) with the eye where it is. */
+    setStageOff(on) { stageOff = !!on; cabinStage.setShown(layers.cabinShown && !stageOff); fe.invalidate(); },
     place,
     blocked,
 
@@ -303,10 +338,12 @@ export async function createFlightSession({ app, fe, terrain, meta, data, onFram
         drawCalls: info.calls ?? info.drawCalls ?? null, triangles: info.triangles ?? null, lightPoints: 0,
         layerMs: { mean: ms.reduce((a, b) => a + b, 0) / Math.max(1, ms.length), p50: q(0.5), p95: q(0.95), frames: ms.length },
         aircraftTriangles: airframe.triangles + cabin.triangles, airframeModel: !!airframe.model, cabinModel: !!cabin.model,
-        cabinDrawCalls: cabin.drawCalls, shade: cabin.shade, world: world.stats(),
+        cabinDrawCalls: cabin.drawCalls, shade: cabin.shade, world: world.stats(), cabinStage: cabinStage.stats(),
+        pane: pane.stats(),
+        cabinLight: cabin.light ? { level: cabin.light.level, night: cabin.light.night, windowL: +_outside.windowL.toPrecision(4), sunLux: Math.round(_outside.sunLux) } : null,
       };
     },
-    dispose() { detachInput(); },
+    dispose() { detachInput(); offWeather(); offQuality(); pane.dispose(); cabinStage.dispose(); },
     DEFAULT_LOOK,
   };
   return session;

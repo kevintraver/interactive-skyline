@@ -3,6 +3,10 @@
 // times the pre-exposure uniform the environment's nodes read; the sun 100,000 lux by day (its disc drawn in the sky
 // at the right luminance, so it can be looked at through the glass), a quarter moon's 0.1 lux by night, when the
 // ground has a field of lamps round the runway.
+//
+// The cabin and the pane are composed as in the app (F3.9): the cabin in its own scene through the cabin stage
+// (src/flight/view/cabinStage.js) after the scene pass, the pane reading the stage's finished outside picture. The
+// cabin is lit by its own light (cabin.js createCabinLight), fed here from the harness's sun and sky.
 import { Scene, PerspectiveCamera, PlaneGeometry, Mesh, DirectionalLight, HemisphereLight, Vector3, BoxGeometry, InstancedMesh, Matrix4, Color } from 'three';
 import { MeshStandardNodeMaterial, MeshBasicNodeMaterial } from 'three/webgpu';
 import { positionLocal, positionWorld, positionWorldDirection, vec2, vec3, float, floor, fract, sin, dot, mix, step, max, abs, pow, uniform, smoothstep, acos, exp, min } from 'three/tsl';
@@ -15,7 +19,8 @@ import { exposure } from '../../src/render/materials/shared.js';
 import { createEnvNodes } from '../../src/env/nodes.js';
 import { parseTrack } from '../../src/flight/track.js';
 import { createModelledAirframe } from '../../src/flight/aircraft/airframe.js';
-import { createModelledCabin } from '../../src/flight/cabin/cabin.js';
+import { createModelledCabin, windowLuminance } from '../../src/flight/cabin/cabin.js';
+import { createCabinStage } from '../../src/flight/view/cabinStage.js';
 import { createHeadRig, attachHeadInput } from '../../src/flight/cabin/headRig.js';
 import { seat as seatOf, defaultSeat } from '../../src/flight/cabin/lopa.js';
 import { createFlightLayers } from '../../src/flight/view/layers.js';
@@ -122,7 +127,9 @@ const cabin = createModelledCabin({ nodes, seat: currentSeat });
 const rig = createHeadRig({ seat: currentSeat });
 const layers = createFlightLayers({ scene, camera, airframe, cabin, rig }).attach();
 const level = q.get('quality') || 'high';
-const pane = createWindowPane({ nodes, cabin, quality: level, renderer, pipeline });
+const stage = createCabinStage({ renderer, pipeline, layers }).setStaged(true);
+const pane = createWindowPane({ nodes, cabin, quality: level, renderer, pipeline, outside: stage.outside });
+stage.useOutside(() => pane.enabled && !!pane.mesh);
 pane.setTrack(track);
 let stateName = q.get('state') || 'cruise';
 let state = track.sample(STATES[stateName]);
@@ -163,9 +170,13 @@ function draw() {
   const aspect = size();
   const cabinLight = view.cabinLight ?? (view.night ? 0.3 : 1);
   airframe.update(state, { night: view.night, hasLightsChannel: false });
-  cabin.update(state, { cabinLight, night: view.night, reducedMotion: true });
   layers.update(state, { aspect, heightAboveGround: state.position.y });
+  stage.setShown(layers.cabinShown);
   placeSun();
+  const sunAltDeg = Math.asin(Math.min(1, sunDir.y)) / RAD;
+  cabin.update(state, { cabinLight, night: view.night, reducedMotion: true, outside: view.night
+    ? { windowL: windowLuminance({ sunLux: 0, ambientLux: NIGHT_SKY_LUX, sunAltDeg: -30 }), sunLux: 0, sunWorld: sunDir }
+    : { windowL: windowLuminance({ sunLux: SUN_LUX, ambientLux: SKY_LUX, sunAltDeg }), sunLux: SUN_LUX, sunColor: { r: 1, g: 0.97, b: 0.92 }, sunWorld: sunDir } });
   setLight(view.night, sunDir);
   pane.setEnabled(view.paneOn);
   pane.update(state, {
@@ -198,7 +209,7 @@ await Promise.all([airframe.ready, cabin.ready, pane.ready, pane.textures.ready]
 draw();
 await frameDone();
 const perf = createPerf({ renderer, scene, camera, pipeline });
-window.__winParts = { cabin, rig, layers, pane, pipeline, renderer };
+window.__winParts = { cabin, rig, layers, pane, pipeline, renderer, stage };
 window.__win = {
   info: { backend, reason, gpu, level, cabinModel: !!cabin.model, textures: pane.textures.loaded, textureErrors: pane.textures.errors },
   async view({ state: s = 'cruise', t = null, seat: id = defaultSeat().id, look = null, night = false, cabinLight = null, sun: sn = { angle: 35, az: 0 }, pane: p = null,

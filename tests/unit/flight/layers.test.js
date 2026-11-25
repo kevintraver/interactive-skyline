@@ -7,7 +7,7 @@ import { createCabin } from '../../../src/flight/cabin/cabin.js';
 import { createAirframe } from '../../../src/flight/aircraft/airframe.js';
 import { createHeadRig, headPose } from '../../../src/flight/cabin/headRig.js';
 import { seat, defaultSeat, bodyZ, stationOf } from '../../../src/flight/cabin/lopa.js';
-import { createFlightLayers, nearFar, eyeInScene, CABIN_LAYER, FAR_MAX } from '../../../src/flight/view/layers.js';
+import { createFlightLayers, nearFar, eyeInScene, CABIN_LAYER, FAR_MAX, CABIN_NEAR, CABIN_FAR } from '../../../src/flight/view/layers.js';
 import { HIGHEST } from '../../../src/flight/terrain/nested.js';
 import { horizonDistance } from '../../../src/core/earth.js';
 import { FUSELAGE } from '../../../src/flight/aircraft/dimensions.js';
@@ -205,8 +205,44 @@ describe('createFlightLayers()', () => {
     // base 0: the eye's scene height is its altitude, near enough at the origin (the sphere's drop there is nil)
     expect(camera.far).toBeCloseTo(horizonDistance(600 + pose.eye.y) + horizonDistance(HIGHEST), 0);
     expect(camera.fov).toBeCloseTo(rig.fov(16 / 9), 9);
-    expect(camera.layers.isEnabled(CABIN_LAYER)).toBe(true);
+    // the cabin is not drawn by the scene pass (F3.9): the camera does not take its layer
+    expect(camera.layers.isEnabled(CABIN_LAYER)).toBe(false);
     expect(layers.body.position.equals(state.position)).toBe(true);
+  });
+
+  it('keeps the cabin out of the scene, in a scene of its own that follows the body (F3.9)', () => {
+    const { scene, cabin, layers } = setup();
+    layers.attach();
+    const turned = { position: new Vector3(12, 600, -40), quaternion: new Quaternion().setFromAxisAngle(new Vector3(0, 1, 0), 0.7) };
+    layers.update(turned, { aspect: 16 / 9 });
+    let inScene = false;
+    scene.traverse((o) => { if (o === cabin.group) inScene = true; });
+    expect(inScene).toBe(false);
+    let inCabinScene = false;
+    layers.cabinScene.traverse((o) => { if (o === cabin.group) inCabinScene = true; });
+    expect(inCabinScene).toBe(true);
+    // a cabin point lands where it would on the body
+    layers.body.updateMatrixWorld(true);
+    expect(cabin.group.matrixWorld.equals(layers.body.matrixWorld)).toBe(true);
+    layers.detach();
+    expect(layers.cabinScene.children[0].visible).toBe(false);
+  });
+
+  it('gives the cabin pass a camera at the eye with the cabin layer and its own near and far', () => {
+    const { camera, layers } = setup();
+    layers.attach();
+    layers.update(state, { aspect: 16 / 9 });
+    const c = layers.cabinCamera();
+    expect(c.position.equals(camera.position)).toBe(true);
+    expect(c.quaternion.equals(camera.quaternion)).toBe(true);
+    expect([c.fov, c.aspect, c.near, c.far]).toEqual([camera.fov, camera.aspect, CABIN_NEAR, CABIN_FAR]);
+    expect(c.layers.isEnabled(CABIN_LAYER)).toBe(true);
+    expect(c.layers.isEnabled(0)).toBe(false);
+    expect(c.matrixWorld.equals(camera.matrixWorld)).toBe(true);
+    // a view offset (the map's tiles) carries over
+    camera.setViewOffset(1600, 900, 100, 50, 800, 450);
+    expect(layers.cabinCamera().view).toEqual(camera.view);
+    camera.clearViewOffset();
   });
 
   it('passes the head shake to the rig: the eye drops and nods by it, and without it the camera is as before', () => {

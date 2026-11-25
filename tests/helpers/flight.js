@@ -165,3 +165,36 @@ export function watchConsole(page) {
   page.on('pageerror', (e) => problems.push(`[pageerror] ${e.message}`));
   return problems;
 }
+
+/**
+ * Whether the canvas shows a picture, and if not, what state it is in: { blank, spread, probe, state }. A blank frame
+ * (24 Nov 2026: the page's grey through a transparent canvas, every later frame too) had the scene pass's own light at
+ * 0 everywhere; it came from a quality level whose MSAA count drew black (src/render/pipeline.js bufferPolicy). The
+ * check reads the scene pass at five points (pipeline.probe, before exposure) and the canvas's pixel spread from a
+ * screenshot; `blank` is true when every probe is 0 or the picture is one flat colour.
+ */
+export async function pictureCheck(page) {
+  const png = await page.screenshot({ type: 'png' });
+  const spread = await page.evaluate(async (b64) => {
+    const bytes = Uint8Array.from(atob(b64), (c) => c.charCodeAt(0));
+    const bmp = await createImageBitmap(new Blob([bytes], { type: 'image/png' }));
+    const c = new OffscreenCanvas(bmp.width, bmp.height), g = c.getContext('2d');
+    g.drawImage(bmp, 0, 0);
+    const px = g.getImageData(0, 0, bmp.width, bmp.height).data;
+    let sum = 0, sum2 = 0, n = 0;
+    for (let i = 0; i < px.length; i += 16) { const l = (px[i] + px[i + 1] + px[i + 2]) / 3; sum += l; sum2 += l * l; n++; }
+    const mean = sum / n;
+    return { mean, sd: Math.sqrt(Math.max(0, sum2 / n - mean * mean)) };
+  }, png.toString('base64'));
+  const { probe, state } = await page.evaluate(async () => {
+    const s = window.__skyline, probe = [];
+    for (const [x, y] of [[0, 0], [0.5, 0.5], [-0.5, 0.5], [0.5, -0.5], [-0.5, -0.5]]) {
+      try { probe.push((await s.pipeline.probe(x, y)).luminanceCdM2); } catch { probe.push(null); }
+    }
+    const r = s.renderer, rt = s.pipeline.scenePass?.renderTarget;
+    return { probe, state: { backend: s.backend, quality: s.quality?.level, samples: r.samples, target: rt && { samples: rt.samples, storeColor: rt.storeMultisampledColorBuffer },
+      exposure: s.uniforms?.exposure?.value ?? null, frames: s.loop.frames, flight: s.flight?.active?.() ?? false } };
+  });
+  const blank = probe.every((v) => v === 0) || spread.sd < 2;
+  return { blank, spread, probe, state };
+}

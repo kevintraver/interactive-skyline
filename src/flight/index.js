@@ -191,9 +191,40 @@ export function initFlight(app, { terrainData }) {
     groundY: (x, n) => (mode?.session ? mode.session.groundY(x, n) : terrain.surfaceY(x, n)),
     /** Change seat ('23F', '12A'...): the cabin and the eye move, the address follows. Returns the seat's id. */
     setSeat(id) { const m = need(); const st = m.setSeat(id); return st.id; },
+    /**
+     * The window's glass (F5.7, the window panel): any of glass, frost, rain, scratches, reflections (booleans) and
+     * focus ('far' | 'pane', key F); `override`: the pane's condition for a check ({ frost, fog, wet, mist, rainRateMmH,
+     * inCloud }, null to follow the journey again). Returns the state now, with the pane's own stats.
+     */
+    window(o = {}) {
+      const m = need(), st = m.setWindow(o);
+      // a debug override of the pane's condition (frost, fog, wet, mist, rainRateMmH, inCloud), null to follow the journey
+      if ('override' in o) m.session.pane.setOverride(o.override);
+      // any of the pane's own effects directly (transmission too, which the panel does not offer), for checks
+      if (o.effects) m.session.pane.setEffects(o.effects);
+      // for measurements: `stage: false` leaves the cabin stage idle (no cabin, no glass) without moving the eye
+      if (typeof o.stage === 'boolean') m.session.setStageOff(!o.stage);
+      // the material's debug views (window/paneMaterial.js: 1 ice, 2 the frost front, 3 the growth map, 4 drops,
+      // 5 scratch density; 0 off)
+      if (Number.isFinite(o.debug) && m.session.pane.uniforms) m.session.pane.uniforms.debug.value = o.debug;
+      app.invalidate();
+      return { ...st, pane: m.session.pane.stats() };
+    },
     /** The own window's shade, 0 open to 1 closed (it slides there while the clock plays; at once when asked twice). */
     shade(v) { const m = need(); m.session.cabin.setShade(v); app.invalidate(); return m.session.cabin.shade; },
-    orbit: later('Orbit'), luminance: later('Luminance'),
+    /**
+     * The light at a point of the screen (NDC, -1..1), before exposure, cd/m^2: { outside, cabin, cabinAlpha, composed }.
+     * outside: the world behind (the scene pass, plan 01's probe); cabin: what the cabin layer adds there (premultiplied:
+     * 0 where it draws nothing) and its coverage; composed: outside x (1 - coverage) + cabin.
+     */
+    async luminance({ x = 0, y = 0 } = {}) {
+      const m = need(), k = app.env?.nodes?.exposure?.value ?? 1;
+      const outside = await app.pipeline.probe(x, y);
+      const cabin = await m.session.cabinStage.probe(x, y, k);
+      return { outside: outside.luminanceCdM2, cabin: cabin.luminanceCdM2, cabinAlpha: cabin.alpha,
+        composed: outside.luminanceCdM2 * (1 - cabin.alpha) + cabin.luminanceCdM2, exposure: k };
+    },
+    orbit: later('Orbit'),
   };
   return hooks.flight;
 }

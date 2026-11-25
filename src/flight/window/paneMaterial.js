@@ -7,10 +7,11 @@
 //     + Esun visible scatter(theta_sun) (dirt + scratches + frost + fog)        the sun on the pane itself
 //     + R_inner cabin(reflect) + R_outer cabin(reflect, from the outer pane)    the cabin, mirrored (twice above Low)
 //
-// `outside` is the frame behind the pane with a mip chain. Today (the cabin in the scene pass, decisions of 23 Nov) it
-// is three's viewportMipTexture, a copy of the scene pass's colour made when the pane is drawn; the pane is the last
-// transparent object, so the copy holds the world, the airframe and the opaque cabin. After F3.9 the cabin pass will
-// hand in the afterAA stage's input instead, through the `outside` option: (uv, level) => colour node.
+// `outside` is the frame behind the pane with a mip chain. In the app (F3.9) it is the cabin stage's copy of the
+// finished outside picture (view/cabinStage.js: world and airframe, no cabin), through the `outside` option:
+// (uv, level) => colour node. Without it (the standalone harness) it is three's viewportMipTexture, a copy of the pass's
+// colour made when the pane is drawn. The pane is laid under what is already drawn behind it (the window's structure),
+// so it shows only through the model's opening.
 //
 // Pane coordinates come from the geometry (instance-local, body axes): u aft along z, v up along the ring. The outer
 // pane's point is the view ray carried on across the gap (so the layers shift against each other as the head moves);
@@ -28,11 +29,11 @@
 // High 11 (+ two glare taps across the scratches, a drop's bent view, the facets, the second reflection); Ultra 14
 // (four glare taps, the ghost of bright lights between the panes). Low's drops show the wide blur, not a bent view (5).
 
-import { DoubleSide, NoBlending, Vector3, Vector2 } from 'three';
+import { DoubleSide, CustomBlending, NoBlending, OneMinusDstAlphaFactor, OneFactor, AddEquation, Vector3, Vector2 } from 'three';
 import { MeshBasicNodeMaterial } from 'three/webgpu';
 import {
   Fn, If, uniform, texture, cubeTexture, viewportMipTexture, screenUV, screenSize, positionGeometry, positionLocal, positionWorld,
-  cameraPosition, cameraProjectionMatrix, modelWorldMatrixInverse, instanceIndex, vec2, vec3, vec4, float, int,
+  positionView, cameraWorldMatrix, cameraPosition, cameraProjectionMatrix, modelWorldMatrixInverse, instanceIndex, vec2, vec3, vec4, float, int,
   normalize, dot, length, max, min, abs, clamp, mix, smoothstep, sqrt, atan, cos, sin, pow, exp, floor, fract, log2,
   reflect, select, dFdx, dFdy, luminance, hash, step,
 } from 'three/tsl';
@@ -43,14 +44,28 @@ import { TEXTURE_SPAN, TEXTURE_SIZE } from './paneTextures.js';
 
 /** The pane's look, ESTIMATED where not marked: tuned for restraint against window-seat photographs. */
 export const LOOK = Object.freeze({
-  /** Aperture of the eye or camera focused far, metres. */
-  apertureM: 0.0035,
-  /** The share of the pane frost covers at full frost (paneState's 1): a real window is mostly clear. */
-  frostCover: 0.38,
+  /** Aperture of the eye or camera focused far, metres: a phone's lens (f/1.8 at about 4 mm) or the eye by day, 2 to
+   * 3 mm. 3.5 mm (the first value) blurred drops and fern frost on the outer pane nearly away. */
+  apertureM: 0.0025,
+  /** How far the fern frost has grown at full frost (paneState's 1), in the growth maps' time (0 first seed .. 1 all
+   * grown): at cruise (frost about 0.8) the ferns round the breather hole and the start of those in the lower corners.
+   * The maps are sparse (fully grown about a hundredth of the pane, scripts/build_pane_textures.py). */
+  frostCover: 0.7,
   /** Width of the growth front in the growth maps' units, focused on the pane and focused far. */
-  frostFront: 0.035, frostFrontFar: 0.12,
+  frostFront: 0.035, frostFrontFar: 0.06,
+  /** Frost focused far: the maps are read at most this many levels blurrier than their own footprint (a fern line
+   * is a texel or two; read at the aperture's full blur it would average away), and drawn at this contrast instead,
+   * so it reads as a faint soft feathering rather than not at all. */
+  frostFarLods: 1, frostFarContrast: 0.5,
+  /** The share of windows with any frost: the rest of the run stays clear ("often absent"). */
+  frostPresence: 0.7,
   /** Scattered shares: scratches (at density 1), dirt (at 1), into the narrow glare; frost, fog and mist into the wide. */
-  scratchScatter: 0.05, dirtScatter: 0.035, iceScatter: 0.6, fogScatter: 0.5, mistScatter: 0.45,
+  scratchScatter: 0.05, dirtScatter: 0.035, iceScatter: 0.6, fogScatter: 0.7, mistScatter: 0.6,
+  /** Condensation and mist also send the outside's diffuse light toward the eye (a milky veil): its share at full
+   * fog. Without it, fog only mixed in a wide blur of the view, which over even ground looks the same. */
+  fogVeil: 0.5,
+  /** The least contrast a defocused drop or rivulet keeps (it is perceived even when blurred: the eye refocuses). */
+  dropFloor: 0.3,
   /** Glare of the sun off the pane per unit of each mask, times GLARE_K (the drive's 4 cd/m^2 per lux per deg^-2): set
    * so that dense scratches tangent to the sun 10 degrees away glow at about half the sky's luminance and a dirty patch
    * 5 degrees from it at a tenth, as photographs through airliner windows show them (judged, not measured). */
@@ -67,7 +82,7 @@ export const LOOK = Object.freeze({
    * copy holds the cabin round the window, and light through a drop on the outer face never comes from the cabin. */
   dropBendRad: 0.15,
   /** The share of the outside's diffuse light a drop's upper edge returns toward the eye. */
-  dropSky: 0.5,
+  dropSky: 1.2,
   /** The breather hole: radius, metres (7.7: about 1 mm across), and where it is (pane metres, low on the centre line). */
   holeR: 0.0005, holeV: -0.15,
   /** The cabin's interior as the reflection's proxy: a cylinder about the fuselage axis, metres. */
@@ -77,6 +92,11 @@ export const LOOK = Object.freeze({
 });
 
 const TEXEL_M = TEXTURE_SPAN[0] / TEXTURE_SIZE[0];
+
+/** three's hash() takes its seed as an unsigned integer: a negative seed becomes 0 (every drop on the lower half of
+ * the pane had the same hash, so a streak ran in every lane there) and fractions are cut off (seed + 1.3 hashed as
+ * seed + 1). This one shifts the seed positive and keeps a sixteenth. */
+const phash = (x) => hash(x.add(65536.0).mul(16.0));
 
 /**
  * @param {{ textures: ReturnType<typeof import('./paneTextures.js').loadPaneTextures>, level?: 'low'|'high'|'ultra',
@@ -100,7 +120,16 @@ export function createPaneMaterial({ textures, level = 'high', reflection = null
   const sampleOutside = outside ?? ((uv, lod) => viewport.sample(uv).level(lod));
 
   const material = new MeshBasicNodeMaterial({
-    name: 'window-pane', transparent: true, depthWrite: false, depthTest: true, blending: NoBlending, side: DoubleSide, fog: false,
+    // laid "under" what the cabin pass drew behind the inner pane (src x (1 - dst.a) + dst): the window's structure,
+    // drawn first, stays where the model has it, and the glass fills the opening (F3.9: the outside picture holds no
+    // cabin). The inner pane's own light (reflections, the sun on it) therefore shows in the opening only. That is the
+    // app's path (an `outside` from the cabin stage). Without `outside` (the harness: the pane in the scene pass,
+    // reading the mid-pass copy, which holds the cabin) it replaces what is behind it, as before
+    name: 'window-pane', transparent: true, depthWrite: false, depthTest: true, side: DoubleSide, fog: false,
+    ...(outside ? {
+      blending: CustomBlending, blendEquation: AddEquation, blendSrc: OneMinusDstAlphaFactor, blendDst: OneFactor,
+      blendEquationAlpha: AddEquation, blendSrcAlpha: OneMinusDstAlphaFactor, blendDstAlpha: OneFactor,
+    } : { blending: NoBlending }),
   });
 
   // drawn 4 mm inboard of the model's inner pane: the model puts it 2 mm outboard of the frame ring behind it, which
@@ -116,8 +145,11 @@ export function createPaneMaterial({ textures, level = 'high', reflection = null
   material.colorNode = Fn(() => {
     // ---- geometry: the inner pane's point, the view ray, pane coordinates on the three sheets
     const pg = positionGeometry; // instance-local, body axes (x outboard on the right, mirrored on the left)
-    const pm = modelWorldMatrixInverse.mul(vec4(positionWorld, 1)).xyz; // the cabin group's axes
-    const dirW = positionWorld.sub(cameraPosition);
+    // never through world coordinates: at cruise the aircraft is some 300 km from the scene's origin, where a float
+    // holds positionWorld to centimetres (the view ray 35 cm long would swing by several per cent from pixel to
+    // pixel). The model-view matrix is composed in double precision on the CPU, so positionView is exact
+    const pm = positionLocal; // the cabin group's axes (the pane's group is placed at identity in it)
+    const dirW = cameraWorldMatrix.mul(vec4(positionView, 0)).xyz;
     const eyeDist = length(dirW);
     const dir = normalize(modelWorldMatrixInverse.mul(vec4(dirW, 0)).xyz).toVar();
     const side = select(pg.x.lessThan(0), float(-1), float(1));
@@ -167,13 +199,16 @@ export function createPaneMaterial({ textures, level = 'high', reflection = null
     // frost: the variant and how much this window has, from the instance (windows differ)
     const inst = float(instanceIndex);
     const hv = hash(inst.add(17.0));
-    const fr = tFrost.sample(texUV(uvOut)).level(lodOut);
+    const lodFrost = min(lodOut, log2(max(footprint(uvOut), 1)).add(float(LOOK.frostFarLods).mul(float(1).sub(u.focus))));
+    const fr = tFrost.sample(texUV(uvOut)).level(lodFrost);
     const arrival = select(hv.lessThan(0.25), fr.r, select(hv.lessThan(0.5), fr.g, select(hv.lessThan(0.75), fr.b, fr.a)));
     const cover = u.frost.mul(LOOK.frostCover).mul(mix(float(0.55), float(1.35), hash(inst.add(3.0))));
     // defocus: the growth map is read blurred (lodOut), which lowers its slope, so a fixed front in its units widens
     // with the blur on the pane; wider still at far focus, where frost is a soft feathered haze
     const front = mix(float(LOOK.frostFrontFar), float(LOOK.frostFront), u.focus);
-    const ice = smoothstep(arrival.sub(front), arrival.add(front.mul(0.5)), cover).mul(step(0.0001, u.frost)).mul(throughOut).toVar();
+    const present = step(hash(inst.add(29.0)), float(LOOK.frostPresence));
+    const ice = smoothstep(arrival.sub(front), arrival.add(front.mul(0.5)), cover).mul(step(0.0001, u.frost)).mul(throughOut)
+      .mul(present).mul(mix(float(LOOK.frostFarContrast), float(1), u.focus)).toVar();
     // fog between the panes: low-frequency, heavier low down and at the edges (the coldest parts)
     const edge = max(abs(uvIn.x).div(0.145), abs(uvIn.y).div(0.19));
     const fogMask = u.fog.mul(clamp(float(0.45).add(smoothstep(0.55, 1.0, edge).mul(0.5)).add(uvIn.y.negate().mul(1.2)), 0, 1)).mul(throughOut).toVar();
@@ -197,7 +232,7 @@ export function createPaneMaterial({ textures, level = 'high', reflection = null
           const q = P.div(C).add(i * 0.37);
           const cell = floor(q);
           const seed = cell.x.mul(157.1).add(cell.y.mul(311.7)).add(ep.mul(47.3)).add(i * 91);
-          const h1 = hash(seed), h2 = hash(seed.add(1.3)), h3 = hash(seed.add(2.7)), h4 = hash(seed.add(4.1));
+          const h1 = phash(seed), h2 = phash(seed.add(1.3)), h3 = phash(seed.add(2.7)), h4 = phash(seed.add(4.1));
           const exists = step(h1, u.wet.mul(mix(float(0.2), float(0.5), rainK)));
           const creep = f.mul(min(speed, 0.004)).mul(w).mul(6).div(C);
           const r = mix(float(0.08), float(0.27), h4.mul(h4)); // in cells: 0.9 to 3 mm
@@ -206,19 +241,21 @@ export function createPaneMaterial({ textures, level = 'high', reflection = null
           const dl = length(d);
           const soft = blurM.div(C).div(r).add(0.08);
           // a blurred drop keeps its light: spread over the blur, its contrast falls as (size / blur)^2
-          const k = min(float(1), r.mul(C).mul(2).div(blurM).pow(2).add(0.1));
+          const k = min(float(1), r.mul(C).mul(2).div(blurM).pow(2).add(LOOK.dropFloor));
           const cov = smoothstep(float(1).add(soft.mul(0.5)), float(1).sub(soft.mul(0.5)), dl).mul(exists).mul(fade).mul(wS).mul(k);
           dropN.assign(select(cov.greaterThan(dropCover), d.mul(min(dl, 1).div(max(dl, 1e-3))).mul(k), dropN));
           dropCover.assign(max(dropCover, cov));
         }
       });
-      // running streaks at speed: lanes 11 mm apart along the flow, cells 12 cm long, two crossfaded generations of
-      // half a second; each drop is born in its cell and runs downstream, leaving a thin trail
+      // running streaks at speed: lanes 11 mm apart along the flow, cells 12 cm long (each lane's cells shifted by its
+      // own hash, so heads do not line up across lanes), two crossfaded generations of half a second; each drop is
+      // born in its cell and runs downstream, leaving a thin rivulet
       const wR = smoothstep(0.02, 0.2, speed);
       If(wR.greaterThan(0.01), () => {
         const A = dot(P, f), B = dot(P, fp);
         const CA = 0.12, CB = 0.011, LIFE = 0.5;
         const lane = floor(B.div(CB));
+        const Ao = A.add(phash(lane.mul(7.13).add(0.37)).mul(CA));
         for (let i = 0; i < 2; i++) {
           const ph = u.timeS.div(LIFE).add(i * 0.5);
           const ep = floor(ph), w = fract(ph);
@@ -226,26 +263,26 @@ export function createPaneMaterial({ textures, level = 'high', reflection = null
           const age = w.mul(LIFE);
           const travel = min(speed.mul(age), CA * 2.6);
           for (let k = 0; k < 3; k++) {
-            const ka = floor(A.div(CA)).sub(k);
+            const ka = floor(Ao.div(CA)).sub(k);
             const seed = ka.mul(73.1).add(lane.mul(19.7)).add(ep.mul(5.3)).add(i * 37 + 11);
-            const h1 = hash(seed), h2 = hash(seed.add(1.7)), h3 = hash(seed.add(3.1));
+            const h1 = phash(seed), h2 = phash(seed.add(1.7)), h3 = phash(seed.add(3.1));
             const exists = step(h1, u.wet.mul(mix(float(0.1), float(0.4), rainK)));
             const a0 = ka.add(h2).mul(CA);
             const head = a0.add(travel);
             const bc = lane.add(float(0.2).add(h3.mul(0.6))).mul(CB);
             const db = B.sub(bc);
             const rH = float(0.0007).add(h3.mul(0.0007));
-            const tw = float(0.0005);
-            const along = clamp(A.sub(a0).div(max(travel, 1e-4)), 0, 1);
-            const inTrail = step(a0, A).mul(step(A, head));
-            const kT = min(float(1), tw.mul(2).div(blurM).pow(2).add(0.08));
+            const tw = float(0.0008);
+            const along = clamp(Ao.sub(a0).div(max(travel, 1e-4)), 0, 1);
+            const inTrail = step(a0, Ao).mul(step(Ao, head));
+            const kT = min(float(1), tw.mul(2).div(blurM).pow(2).add(LOOK.dropFloor * 0.8));
             const trail = smoothstep(tw.add(blurM.mul(0.5)), tw.sub(blurM.mul(0.5)).max(0), abs(db)).mul(inTrail).mul(along.mul(0.6).add(0.4)).mul(kT);
-            const dh = vec2(A.sub(head), db).div(rH);
+            const dh = vec2(Ao.sub(head), db).div(rH);
             const dhl = length(dh);
-            const kH = min(float(1), rH.mul(2).div(blurM).pow(2).add(0.1));
+            const kH = min(float(1), rH.mul(2).div(blurM).pow(2).add(LOOK.dropFloor));
             const headCov = smoothstep(float(1).add(blurM.div(rH).mul(0.5)), float(1).sub(blurM.div(rH).mul(0.5)), dhl).mul(kH);
-            const cov = max(trail.mul(0.5), headCov).mul(exists).mul(fade).mul(wR);
-            const n = select(headCov.greaterThan(trail.mul(0.5)), dh.mul(min(dhl, 1).div(max(dhl, 1e-3))).mul(kH), vec2(0, db.div(tw).clamp(-1, 1).mul(0.8)));
+            const cov = max(trail.mul(0.85), headCov).mul(exists).mul(fade).mul(wR);
+            const n = select(headCov.greaterThan(trail.mul(0.85)), dh.mul(min(dhl, 1).div(max(dhl, 1e-3))).mul(kH), vec2(0, db.div(tw).clamp(-1, 1).mul(0.8)));
             // back into pane axes from the flow's
             const nP = f.mul(n.x).add(fp.mul(n.y));
             dropN.assign(select(cov.greaterThan(dropCover), nP, dropN));
@@ -291,7 +328,7 @@ export function createPaneMaterial({ textures, level = 'high', reflection = null
     }
     // a little loss, and a darker rim (light from the dark cabin, refracted at the steep edge)
     const nl = length(dropN);
-    const dropShade = mix(float(0.92), float(0.6), smoothstep(0.75, 1.0, nl));
+    const dropShade = mix(float(0.85), float(0.45), smoothstep(0.7, 1.0, nl));
     // and the sky caught along a drop's or a rivulet's upper edge (what makes thin water read on the glass by day)
     const skyEdge = vec3(u.ambient).mul(LOOK.dropSky).mul(smoothstep(0.2, 0.9, dot(dropN, vec2(0, 1))));
     const view = mix(sharp, (bent ?? wide).mul(dropShade).add(skyEdge), dropCover);
@@ -300,7 +337,8 @@ export function createPaneMaterial({ textures, level = 'high', reflection = null
     const sW = clamp(ice.mul(LOOK.iceScatter).add(fogMask.mul(LOOK.fogScatter)).add(u.mist.mul(LOOK.mistScatter).mul(throughOut)), 0, 0.95);
     const stack = stackNode(cosI);
     const tint = vec3(...PANE_TINT);
-    let Lview = view.mul(float(1).sub(sN).sub(sW)).add(glare.mul(sN)).add(wide.mul(sW));
+    let Lview = view.mul(float(1).sub(sN).sub(sW)).add(glare.mul(sN)).add(wide.mul(sW))
+      .add(vec3(u.ambient).mul(LOOK.fogVeil).mul(fogMask.add(u.mist.mul(throughOut).mul(0.6))));
     if (ultra) {
       // the ghost of bright lights: twice reflected between the outer panes, which are not quite parallel
       const g = sampleOutside(screenUV.add(vec2(0, LOOK.ghostRad).mul(ppr).mul(pxToUv)), float(1)).rgb;
@@ -332,7 +370,7 @@ export function createPaneMaterial({ textures, level = 'high', reflection = null
     let sunL = u.sunColor.mul(sunE.mul(scatterSun));
     if (!low) {
       // each crystal's own facet catches the sun when it lines up (a glint that moves with the head, never a clock)
-      const facet = tFacets.sample(texUV(uvOut)).level(lodOut);
+      const facet = tFacets.sample(texUV(uvOut)).level(lodFrost);
       const fid = select(hv.lessThan(0.25), facet.r, select(hv.lessThan(0.5), facet.g, select(hv.lessThan(0.75), facet.b, facet.a)));
       const fh = fid.mul(255).add(inst.mul(0.17));
       const tilt = vec2(hash(fh).sub(0.5), hash(fh.add(7.1)).sub(0.5)).mul(0.5);

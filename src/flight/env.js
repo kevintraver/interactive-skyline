@@ -8,6 +8,10 @@
 //                    density aloft, which come from the standard atmosphere. Where plan 01 is silent (before its first
 //                    state, or a field it lacks) the air is clear and standard.
 //   shadows          plan 01's camera-following shadows are not merged; null until app.shadows exists.
+//   temperature aloft  plan 01's env.at() (a stand-in itself) lapses the surface temperature by the scene's y, which
+//                    is the height above the field only near the city: the frame drops with the Earth's curve, so at
+//                    cruise 400 km out the scene's y is 4.5 km at 9.3 km above sea level, and the air came out 27 C
+//                    too warm (no frost on the window, 24 Nov 2026). The adapter re-lapses by the difference.
 // `standIns` lists what is stood in for, so the debug hooks and "About this flight" can say so.
 import { Vector3 } from 'three';
 import { createFrame } from '../world/frame.js';
@@ -43,6 +47,8 @@ export function createFlightEnv(app) {
   const frame = createFrame(city);
   const standIns = [];
   if (!app.shadows) standIns.push('shadows');
+  standIns.push('temperature aloft');
+  const LAPSE = 0.0065;
 
   const fe = {
     city,
@@ -79,7 +85,8 @@ export function createFlightEnv(app) {
       const pick = (k, fallback) => (local && local[k] !== undefined && local[k] !== null ? local[k] : fallback);
       return {
         altitudeM,
-        tempC: pick('tempC', std.tempC),
+        // plan 01 lapsed by the scene's y; the true height above the field is altitudeM - base (see the header)
+        tempC: local && Number.isFinite(local.tempC) ? local.tempC - LAPSE * (altitudeM - (city.base ?? 0) - Math.max(0, pos.y)) : std.tempC,
         pressureHPa: std.pressureHPa,
         densityKgM3: std.densityKgM3,
         wind: pick('wind', new Vector3()),
@@ -89,6 +96,9 @@ export function createFlightEnv(app) {
         visibilityM: pick('visibilityM', CLEAR_VISIBILITY_M),
       };
     },
+
+    /** Call fn when plan 01's weather data or settings change (env 'weather'); returns a function that stops it. */
+    onWeather(fn) { return typeof env.on === 'function' ? env.on('weather', fn) : () => {}; },
 
     /** Begin a journey: through the transport bar when it is mounted (it shows the markers), else on the timeline. */
     attachJourney(journey) {

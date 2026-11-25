@@ -8,12 +8,17 @@
 // look direction sees out through a gap; and the seats of the rows around, so the seat back ahead frames the view.
 // Dark and matte: the outside is what the picture is exposed for. No panes in v0 (Phase 5 adds them).
 //
-// Everything is on its own layer (CABIN_LAYER): rendered because the flight's camera enables that layer, ignored by
-// picking rays (layer 0), and ready for F3.9 to move the cabin into a pass of its own.
+// Everything is on its own layer (CABIN_LAYER) and in a scene of its own (view/layers.js), drawn by the cabin stage
+// after the world's anti-aliasing (view/cabinStage.js, F3.9): no scene light reaches it. Its light is its own
+// (createCabinLight below, F5.5): the outside through the windows, the sun patch, and the cabin's lamps.
 
 import { BufferGeometry, Float32BufferAttribute, FrontSide, Group, InstancedMesh, Matrix4, Mesh, Quaternion, Vector3 } from 'three';
 import { MeshStandardNodeMaterial } from 'three/webgpu';
-import { attribute, clamp, materialColor, mix, uniform, vec3 } from 'three/tsl';
+import {
+  Fn, Loop, attribute, clamp, materialColor, mix, uniform, uniformArray, vec2, vec3, vec4, float, max, min, abs, sqrt, atan, length,
+  smoothstep, dot, select, normalWorld, positionLocal,
+} from 'three/tsl';
+import { Vector4 } from 'three';
 import { FUSELAGE, WINDOW, CABIN, bodyZ } from '../aircraft/dimensions.js';
 import { windowStations, rowFront, seatCentreX, ROWS } from './lopa.js';
 
@@ -221,12 +226,15 @@ export function createCabin({ seat, materials = cabinMaterials() }) {
  * Dark, matte node materials for the cabin (both backends), shared by every cabin built with them. Dark, but not so
  * dark that a wall facing away from the sun, lit by sky light alone, falls into the tone curve's toe and goes black.
  */
-export function cabinMaterials() {
-  return {
+export function cabinMaterials(light = null) {
+  const m = {
     wall: new MeshStandardNodeMaterial({ color: 0x4a4d52, roughness: 0.95, metalness: 0 }),
     reveal: new MeshStandardNodeMaterial({ color: 0x5d6065, roughness: 0.9, metalness: 0 }),
     seat: new MeshStandardNodeMaterial({ color: 0x3a3e44, roughness: 1, metalness: 0 }),
   };
+  // the stand-in has no baked light: a mean form factor and occlusion stand for it (until the model has loaded)
+  if (light) for (const mat of Object.values(m)) mat.emissiveNode = light.emissive(materialColor, { formFactor: float(0.12), occlusion: float(0.8), wash: float(0.3) });
+  return m;
 }
 
 // ================================================================================================ the modelled cabin
@@ -305,22 +313,205 @@ export function mirrorGeometryX(g) {
   return m;
 }
 
-/** Light the materials stand for (lux at a baked 1.0, cd/m^2 for the strip), and the share of the outdoor ambient that
- * reaches a corner by bouncing round the cabin: `bounce` times its local occlusion plus a `floor` (ESTIMATED: a
- * typical cabin's 100 to 300 lux of its own light; for daylight, the light-coloured trim, the ceiling and the sunlit
- * floor and seats near some forty windows, judged against photographs rather than computed). */
-export const CABIN_LIGHT = Object.freeze({ washLux: 160, ambientLux: 70, stripCdM2: 450, bounce: 0.45, floor: 0.05 });
+/**
+ * The cabin's light (plan 03, section 7.7 "Light inside the cabin"; F5.5): ESTIMATED where not marked.
+ *   washLux, ambientLux  the cabin's lamps at full: the window-wash strip at its brightest corner and the ceiling wash
+ *                        (a typical cabin's 100 to 300 lux of its own light)
+ *   stripCdM2            the wash strip's own luminance at full
+ *   bounce, floor        how much of the window's light reaches a corner by bouncing round the cabin: bounce times the
+ *                        corner's openness (the baked occlusion), plus a floor (light trim, ceiling and floor near some
+ *                        forty windows; judged against photographs, not computed)
+ *   glass                what the three panes pass at near-normal incidence (window/paneOptics.js stackOptics: 0.85)
+ *                        with the tint
+ *   nightFull            the lamps at night at the channel's 1, as a share of the day's: crews dim the cabin after dark
+ *   nightGamma           the dimmer's curve at night: light = nightFull * channel^gamma, so the flight files' 0.3 for
+ *                        the approach (the lights dimmed for landing) is under 1 % of the day's: near dark
+ */
+export const CABIN_LIGHT = Object.freeze({ washLux: 160, ambientLux: 70, stripCdM2: 450, bounce: 0.9, floor: 0.12, glass: 0.83, nightFull: 0.15, nightGamma: 3 });
+/** The ground's albedo the window sees (desert and city from the air, ESTIMATED). */
+export const GROUND_ALBEDO = 0.2;
 const DAY_TINT = [1.0, 0.97, 0.92], NIGHT_TINT = [1.0, 0.84, 0.66];
+/** How many open windows the sun patch test takes (the run of a 10 m cabin has at most 20). */
+export const SUN_WINDOWS = 24;
+/** The outer pane's radius about the axis, metres (cabin.json panes.PaneOuter): where the sun enters. */
+const PANE_OUTER_R = 1.868;
+/** The Sun's angular radius, radians: the patch's penumbra widens with the distance to the window. */
+const SUN_RADIUS = 0.00465;
+/** The patch's narrowest penumbra (sunlight through three scratched panes is not perfectly sharp), and the window's own
+ * structure: a point within nearFrom of where its ray leaves gets no patch, fading in by nearTo, metres. On the frame
+ * round the opening "in the window or not" flipped from pixel to pixel (speckle, 24 Nov 2026). ESTIMATED. */
+const PATCH = Object.freeze({ minPenumbra: 0.006, nearFrom: 0.01, nearTo: 0.04 });
 
 /**
- * Node materials for the model, one per source material, relit through uniforms: the window's form factor and the
- * occlusion gate the scene's ambient (sky light only enters through the windows); the cabin's own light (the
- * window-wash strip and the ceiling wash) is emitted in cd/m^2 through the environment's emissive().
- * @param {{ emissive: (cdM2: any) => any }} nodes  @param {Iterable<import('three').Material>} sources
+ * The mean luminance the window shows from the side, cd/m^2: half sky (its diffuse light over pi) and half ground lit
+ * by the Sun and the sky (GROUND_ALBEDO). Pure.
+ * @param {{ sunLux: number, ambientLux: number, sunAltDeg: number }} o
  */
-export function modelledMaterials(nodes, sources) {
-  const uCabinLight = uniform(1), uNight = uniform(0);
-  const tint = mix(vec3(...DAY_TINT), vec3(...NIGHT_TINT), uNight);
+export function windowLuminance({ sunLux = 0, ambientLux = 0, sunAltDeg = -90 }) {
+  const sky = Math.max(0, ambientLux) / Math.PI;
+  const onGround = Math.max(0, sunLux) * Math.max(0, Math.sin((sunAltDeg * Math.PI) / 180)) + Math.max(0, ambientLux);
+  return 0.5 * (sky + (GROUND_ALBEDO * onGround) / Math.PI);
+}
+
+/** The lamps' level for the flight file's cabinLight channel (0..1): the channel by day, dimmed at night. Pure. */
+export function cabinLightLevel(channel, night) {
+  const c = Number.isFinite(channel) ? Math.min(1, Math.max(0, channel)) : 1;
+  return night ? CABIN_LIGHT.nightFull * c ** CABIN_LIGHT.nightGamma : c;
+}
+
+/**
+ * Illuminance at a cabin surface without the sun patch, lux: { window, lamps, total }. The CPU twin of the materials'
+ * shader. formFactor, occlusion and wash are the model's baked corners (cabin.json attribute b, r, g).
+ */
+export function cabinIlluminance({ formFactor, occlusion, wash, windowL, level }) {
+  const C = CABIN_LIGHT;
+  const window = C.glass * Math.PI * windowL * Math.min(1, formFactor + C.bounce * occlusion + C.floor);
+  const lamps = level * (wash * C.washLux + occlusion * C.ambientLux);
+  return { window, lamps, total: window + lamps };
+}
+
+const sdBox = (x, y, a, b, r) => {
+  const qx = Math.abs(x) - (a - r), qy = Math.abs(y) - (b - r);
+  return Math.hypot(Math.max(qx, 0), Math.max(qy, 0)) + Math.min(Math.max(qx, qy), 0) - r;
+};
+const sstep = (e0, e1, x) => { const t = Math.min(1, Math.max(0, (x - e0) / (e1 - e0))); return t * t * (3 - 2 * t); };
+
+/**
+ * The sun patch (F5.5, section 7.7: no shadow map): how much of the Sun a cabin point sees through the open windows of
+ * its side, 0..1. The ray from the point toward the Sun leaves the cabin at the outer pane's radius; it passes when it
+ * leaves through a window's rounded rectangle below that window's shade. The CPU twin of the materials' shader.
+ * @param {Vector3} p  the point, body axes  @param {Vector3} toSun  unit, body axes
+ * @param {{ z: number, closed: number }[]} windows  body z of each open window's centre, its shade 0 open .. 1 closed
+ * @param {'left'|'right'} side
+ */
+export function sunThroughWindow(p, toSun, windows, side, { radius = PANE_OUTER_R } = {}) {
+  const sign = side === 'left' ? -1 : 1;
+  const ox = p.x, oy = p.y - FUSELAGE.axisY;
+  // the window's structure reaches past the outer pane: such a point leaves from just beyond its own radius, so the
+  // ray always starts inside the cylinder it is tested against (else the far side's root was taken: speckle)
+  const R = Math.max(radius, Math.hypot(ox, oy) + 0.002);
+  const a = toSun.x * toSun.x + toSun.y * toSun.y;
+  if (a < 1e-9) return 0;
+  const b = ox * toSun.x + oy * toSun.y, c = ox * ox + oy * oy - R * R;
+  const disc = b * b - a * c;
+  if (disc < 0) return 0;
+  const t = (-b + Math.sqrt(disc)) / a;
+  if (!(t > 0)) return 0;
+  const hx = p.x + toSun.x * t, hy = p.y + toSun.y * t - FUSELAGE.axisY, hz = p.z + toSun.z * t;
+  if (hx * sign <= 0) return 0;
+  const v = R * (Math.atan2(hy, Math.abs(hx)) - THETA_WINDOW);
+  const pen = Math.max(PATCH.minPenumbra, t * SUN_RADIUS);
+  let lit = 0;
+  for (const w of windows) {
+    const inside = sstep(pen, -pen, sdBox(hz - w.z, v, WINDOW.width / 2, WINDOW.height / 2, WINDOW.cornerRadius));
+    const top = WINDOW.height / 2 - Math.min(1, Math.max(0, w.closed)) * WINDOW.height;
+    lit = Math.max(lit, inside * sstep(top + pen, top - pen, v));
+  }
+  lit *= sstep(PATCH.nearFrom, PATCH.nearTo, t);
+  return lit < 1e-6 ? 0 : lit;
+}
+
+/**
+ * The cabin's light as uniforms and node functions, shared by every material of one cabin (stand-in and model).
+ *   set({ cabinLight, night, windowL, sunLux, sunColor, sunBody, sunWorld, windows, side })   each frame
+ *   emissive(albedo, { formFactor, occlusion, wash })   a material's emissive node, buffer units
+ */
+export function createCabinLight(nodes) {
+  const u = {
+    level: uniform(1), night: uniform(0), windowL: uniform(0), sunLux: uniform(0), sunColor: uniform(vec3(1, 1, 1)),
+    sunBody: uniform(new Vector3(0, -1, 0)), sunWorld: uniform(new Vector3(0, -1, 0)), side: uniform(1),
+    windows: uniformArray(Array.from({ length: SUN_WINDOWS }, () => new Vector4(1e6, 0, 0, 0)), 'vec4'),
+  };
+  const state = { cabinLight: 1, night: false, level: 1 };
+  const tint = mix(vec3(...DAY_TINT), vec3(...NIGHT_TINT), u.night);
+  const C = CABIN_LIGHT;
+
+  /** The sun patch at this fragment (sunThroughWindow in TSL). */
+  const sunPatch = Fn(() => {
+    // body axes from the mesh's own frame (after instancing), never through the world: at cruise the aircraft is some
+    // 300 km from the scene's origin, where a float holds positionWorld to a few centimetres and the patch's edge
+    // speckled from pixel to pixel (24 Nov 2026)
+    const p = positionLocal;
+    const s = u.sunBody;
+    const ox = p.x, oy = p.y.sub(FUSELAGE.axisY);
+    const a = max(s.x.mul(s.x).add(s.y.mul(s.y)), 1e-9);
+    const b = ox.mul(s.x).add(oy.mul(s.y));
+    const R = max(float(PANE_OUTER_R), length(vec2(ox, oy)).add(0.002)); // see sunThroughWindow
+    const c = ox.mul(ox).add(oy.mul(oy)).sub(R.mul(R));
+    const disc = b.mul(b).sub(a.mul(c));
+    const t = b.negate().add(sqrt(max(disc, 0))).div(a);
+    const hx = p.x.add(s.x.mul(t)), hy = p.y.add(s.y.mul(t)).sub(FUSELAGE.axisY), hz = p.z.add(s.z.mul(t));
+    const v = atan(hy, abs(hx)).sub(THETA_WINDOW).mul(R);
+    const pen = max(t.mul(SUN_RADIUS), PATCH.minPenumbra);
+    const lit = float(0).toVar();
+    const hw = WINDOW.width / 2, hh = WINDOW.height / 2, r = WINDOW.cornerRadius;
+    Loop(SUN_WINDOWS, ({ i }) => {
+      const w = u.windows.element(i);
+      const q = abs(vec2(hz.sub(w.x), v)).sub(vec2(hw - r, hh - r));
+      const d = length(max(q, 0)).add(min(max(q.x, q.y), 0)).sub(r);
+      const inside = smoothstep(pen, pen.negate(), d);
+      const top = float(hh).sub(clamp(w.y, 0, 1).mul(WINDOW.height));
+      lit.assign(max(lit, inside.mul(smoothstep(top.add(pen), top.sub(pen), v))));
+    });
+    const ok = disc.greaterThan(0).and(t.greaterThan(0)).and(hx.mul(u.side).greaterThan(0)).and(a.greaterThan(1e-6));
+    return select(ok, lit.mul(smoothstep(PATCH.nearFrom, PATCH.nearTo, t)), float(0));
+  });
+
+  return {
+    uniforms: u,
+    /** A material's emissive node: albedo x illuminance / pi, in buffer units through env.nodes.emissive. */
+    emissive(albedo, { formFactor, occlusion, wash }) {
+      const windowLux = u.windowL.mul(Math.PI * C.glass).mul(clamp(formFactor.add(occlusion.mul(C.bounce)).add(C.floor), 0, 1));
+      const lampLux = u.level.mul(wash.mul(C.washLux).add(occlusion.mul(C.ambientLux)));
+      const lambert = max(dot(normalWorld, u.sunWorld), 0);
+      const sunLux = u.sunLux.mul(C.glass).mul(lambert).mul(sunPatch());
+      const E = vec3(windowLux).add(tint.mul(lampLux)).add(u.sunColor.mul(sunLux));
+      return nodes.emissive(albedo.mul(E).div(Math.PI));
+    },
+    /** The wash strip's own light (cd/m^2, buffer units). */
+    strip() { return nodes.emissive(tint.mul(u.level.mul(C.stripCdM2))); },
+    /**
+     * @param {{ cabinLight?: number, night?: boolean, windowL?: number, sunLux?: number, sunColor?: {r,g,b},
+     *   sunBody?: Vector3, sunWorld?: Vector3, windows?: { z: number, closed: number }[], side?: 'left'|'right' }} o
+     */
+    set(o = {}) {
+      if (o.cabinLight !== undefined || o.night !== undefined) {
+        if (o.cabinLight !== undefined) state.cabinLight = Number.isFinite(o.cabinLight) ? Math.min(1, Math.max(0, o.cabinLight)) : 1;
+        if (o.night !== undefined) state.night = !!o.night;
+        state.level = cabinLightLevel(state.cabinLight, state.night);
+        u.level.value = state.level;
+        u.night.value = state.night ? 1 : 0;
+      }
+      if (Number.isFinite(o.windowL)) u.windowL.value = Math.max(0, o.windowL);
+      if (Number.isFinite(o.sunLux)) u.sunLux.value = Math.max(0, o.sunLux);
+      if (o.sunColor) u.sunColor.value.set(o.sunColor.r, o.sunColor.g, o.sunColor.b);
+      if (o.sunBody) u.sunBody.value.copy(o.sunBody);
+      if (o.sunWorld) u.sunWorld.value.copy(o.sunWorld);
+      if (o.side) u.side.value = o.side === 'left' ? -1 : 1;
+      if (o.windows) {
+        const arr = u.windows.array;
+        for (let i = 0; i < SUN_WINDOWS; i++) {
+          const w = o.windows[i];
+          arr[i].set(w ? w.z : 1e6, w ? w.closed : 0, 0, 0);
+        }
+      }
+    },
+    get cabinLight() { return state.cabinLight; },
+    get night() { return state.night; },
+    get level() { return state.level; },
+    /** The outside's light in the cabin now: { windowL, sunLux } (the reflection's capture switches it off). */
+    get outside() { return { windowL: u.windowL.value, sunLux: u.sunLux.value }; },
+  };
+}
+
+/**
+ * Node materials for the model, one per source material, lit by the cabin's own light (createCabinLight): the window's
+ * form factor and the occlusion gate the outside's light, the sun patch, and the lamps (the window-wash strip and
+ * the ceiling wash), all emitted in cd/m^2 through the environment's emissive().
+ * @param {{ emissive: (cdM2: any) => any }} nodes  @param {Iterable<import('three').Material>} sources
+ * @param {ReturnType<typeof createCabinLight>} [light]
+ */
+export function modelledMaterials(nodes, sources, light = createCabinLight(nodes)) {
   const baked = attribute('_cabin', 'vec4');
   const made = new Map();
   for (const src of sources) {
@@ -328,24 +519,19 @@ export function modelledMaterials(nodes, sources) {
     const glass = src.name === 'Glass';
     const m = new MeshStandardNodeMaterial({
       name: `cabin-${src.name}`, color: src.color, roughness: src.roughness ?? 0.8, metalness: 0,
-      transparent: glass, opacity: glass ? 0.06 : 1, depthWrite: !glass, side: FrontSide,
+      transparent: glass, opacity: glass ? 0.06 : 1, depthWrite: !glass, side: FrontSide, fog: false,
     });
-    if (src.name === 'Wash') {
-      m.emissiveNode = nodes.emissive(tint.mul(uCabinLight.mul(CABIN_LIGHT.stripCdM2)));
-    } else if (!glass) {
-      m.aoNode = clamp(baked.z.add(baked.x.mul(CABIN_LIGHT.bounce)).add(CABIN_LIGHT.floor), 0, 1);
-      const lux = baked.y.mul(CABIN_LIGHT.washLux).add(baked.x.mul(CABIN_LIGHT.ambientLux)).mul(uCabinLight);
-      m.emissiveNode = nodes.emissive(tint.mul(materialColor).mul(lux).div(Math.PI));
-    }
+    if (src.name === 'Wash') m.emissiveNode = light.strip();
+    else if (!glass) m.emissiveNode = light.emissive(materialColor, { formFactor: baked.z, occlusion: baked.x, wash: baked.y });
     made.set(src.name, m);
   }
   return {
     byName: made,
-    set({ cabinLight = 1, night = false } = {}) {
-      uCabinLight.value = Number.isFinite(cabinLight) ? Math.min(1, Math.max(0, cabinLight)) : 1;
-      uNight.value = night ? 1 : 0;
-    },
-    get cabinLight() { return uCabinLight.value; },
+    light,
+    set(o = {}) { light.set(o); },
+    get cabinLight() { return light.cabinLight; },
+    get night() { return light.night; },
+    get outside() { return light.outside; },
     dispose() { for (const m of made.values()) m.dispose(); },
   };
 }
@@ -404,13 +590,13 @@ function shellGeometries(seat, from, to, binTopY) {
  * @param {{ nodes: object, materials?: ReturnType<typeof modelledMaterials>, shell?: object, panes?: boolean,
  *   halfLength?: number }} o
  */
-export function buildModelledCabin(model, seat, { nodes, materials, shellMaterials = cabinShellMaterials(), panes = false, halfLength = MODEL_HALF_LENGTH } = {}) {
+export function buildModelledCabin(model, seat, { nodes, materials, light = null, shellMaterials = cabinShellMaterials(light), panes = false, halfLength = MODEL_HALF_LENGTH } = {}) {
   const parts = partsOf(model.scene);
   const info = model.info || {};
   for (const need of ['Bay', 'Filler', 'Shade', 'Seat', 'Armrest', 'Bin']) if (!parts.has(need)) throw new Error(`cabin: node ${need} is missing from the model`);
   const sources = new Set();
   for (const list of parts.values()) for (const p of list) sources.add(p.material);
-  const mats = materials ?? modelledMaterials(nodes, sources);
+  const mats = materials ?? modelledMaterials(nodes, sources, light ?? createCabinLight(nodes));
   const ownMats = !materials;
   const group = new Group();
   group.name = 'cabin-model';
@@ -520,6 +706,8 @@ export function buildModelledCabin(model, seat, { nodes, materials, shellMateria
     },
     /** The own window's shade, 0 open to 1 closed; others keep their own. */
     get shade() { return shades.own >= 0 ? shades.closed[shades.own] : 0; },
+    /** The open windows of the run for the sun patch: { z (body), closed }. */
+    get sunWindows() { return layout.bays.map((b, i) => ({ z: bodyZ(b.station), closed: shades.closed[i] ?? 0 })); },
     setShade(v) {
       if (shades.own < 0) return api;
       shades.closed[shades.own] = Math.min(1, Math.max(0, Number.isFinite(v) ? v : 0));
@@ -543,11 +731,17 @@ export function buildModelledCabin(model, seat, { nodes, materials, shellMateria
 }
 
 /** The shell's materials: the trim's colour and a dark carpet. */
-export function cabinShellMaterials() {
-  return {
-    wall: new MeshStandardNodeMaterial({ color: 0xd8d5ce, roughness: 0.85, metalness: 0 }),
-    floor: new MeshStandardNodeMaterial({ color: 0x2e3238, roughness: 1, metalness: 0 }),
+export function cabinShellMaterials(light = null) {
+  const m = {
+    wall: new MeshStandardNodeMaterial({ color: 0xd8d5ce, roughness: 0.85, metalness: 0, fog: false }),
+    floor: new MeshStandardNodeMaterial({ color: 0x2e3238, roughness: 1, metalness: 0, fog: false }),
   };
+  // the far side, the ceiling and the floor: no baked corners; a mean openness, a little window light and the lamps
+  if (light) {
+    m.wall.emissiveNode = light.emissive(materialColor, { formFactor: float(0.05), occlusion: float(0.85), wash: float(0.15) });
+    m.floor.emissiveNode = light.emissive(materialColor, { formFactor: float(0.02), occlusion: float(0.7), wash: float(0.05) });
+  }
+  return m;
 }
 
 /**
@@ -574,7 +768,10 @@ export async function loadCabinModel({ url = CABIN_URL, infoUrl = CABIN_INFO_URL
  *   infoUrl?: string, materials?: object, panes?: boolean }} o  materials: the v0 cabin's (cabinMaterials())
  */
 export function createModelledCabin({ nodes, seat, load = null, url, infoUrl, materials, panes = false } = {}) {
-  const standInMats = materials ?? cabinMaterials();
+  // the cabin's own light, shared by the stand-in, the model and its shell (createCabinLight)
+  const cabinLight_ = nodes?.emissive ? createCabinLight(nodes) : null;
+  const _sunBody = new Vector3(), _qInv = new Quaternion();
+  const standInMats = materials ?? cabinMaterials(cabinLight_);
   let standIn = createCabin({ seat, materials: standInMats });
   const group = new Group();
   group.name = 'cabin';
@@ -598,7 +795,7 @@ export function createModelledCabin({ nodes, seat, load = null, url, infoUrl, ma
       .then(() => get())
       .then((loaded) => {
         if (disposed) return null;
-        const m = buildModelledCabin(loaded, current, { nodes, panes });
+        const m = buildModelledCabin(loaded, current, { nodes, panes, light: cabinLight_ });
         model = m;
         m.materials.set(light);
         m.setShade(shade);
@@ -610,20 +807,39 @@ export function createModelledCabin({ nodes, seat, load = null, url, infoUrl, ma
       }, (e) => { error = e; return null; })
       .catch((e) => { error = e; return null; }),
     /**
-     * Relight and animate. cabinLight 0..1 (the flight file's channel), night picks the warmer tint; the own shade
-     * slides toward its target at 0.8 of its travel a second (at once with reduced motion or without dtS).
-     * @param {object} [state]  @param {{ cabinLight?: number, night?: boolean, reducedMotion?: boolean, dtS?: number }} [o]
+     * Relight and animate. cabinLight 0..1 (the flight file's channel) and night set the lamps (cabinLightLevel: dim
+     * and warm at night, near dark at the approach's setting); `outside` the light through the windows: windowL
+     * (windowLuminance, cd/m^2), and the Sun (sunLux, sunColor, sunWorld: the unit direction toward it in the scene;
+     * the patch is worked in body axes from state.quaternion). The own shade slides toward its target at 0.8 of its
+     * travel a second (at once with reduced motion or without dtS).
+     * @param {object} [state]  @param {{ cabinLight?: number, night?: boolean, reducedMotion?: boolean, dtS?: number,
+     *   outside?: { windowL?: number, sunLux?: number, sunColor?: { r: number, g: number, b: number }, sunWorld?: Vector3 } }} [o]
      */
-    update(state, { cabinLight = 1, night = false, reducedMotion = false, dtS } = {}) {
+    update(state, { cabinLight = 1, night = false, reducedMotion = false, dtS, outside = null } = {}) {
       light = { cabinLight, night };
       if (model) model.materials.set(light);
+      else cabinLight_?.set(light);
       if (shade !== shadeTarget) {
         const step = reducedMotion || !Number.isFinite(dtS) ? 1 : 0.8 * dtS;
         shade = shade < shadeTarget ? Math.min(shadeTarget, shade + step) : Math.max(shadeTarget, shade - step);
         if (model) model.setShade(shade);
       }
+      if (cabinLight_ && outside) {
+        const o = { windowL: outside.windowL, sunLux: outside.sunLux, sunColor: outside.sunColor, side: current.side };
+        if (outside.sunWorld) {
+          o.sunWorld = outside.sunWorld;
+          o.sunBody = _sunBody.copy(outside.sunWorld);
+          if (state?.quaternion) o.sunBody.applyQuaternion(_qInv.copy(state.quaternion).invert());
+        }
+        o.windows = model ? model.sunWindows : (standIn?.windows || []).filter((w) => w.open).map((w) => ({ z: bodyZ(w.station), closed: 0 }));
+        cabinLight_.set(o);
+      }
       return api;
     },
+    /** The cabin's light (createCabinLight): its uniforms and state, for the window and the hooks. */
+    get light() { return cabinLight_; },
+    /** Night as the cabin's lamps have it (the warm, dimmed setting). */
+    get night() { return !!light.night; },
     /** Another seat: the same group, its contents placed round the new seat. */
     setSeat(s) {
       current = s;

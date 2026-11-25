@@ -109,6 +109,20 @@ describe('the air at a point', () => {
     expect(a.wind.x).toBe(3);
   });
 
+  it('far from the city, re-lapses plan 01\'s temperature by the true height: the scene\'s y drops with the curve', () => {
+    // plan 01's at() (a stand-in) lapses the surface temperature by the scene's y; 300 km out at 9,000 m above sea
+    // level the scene's y is some 7 km less than the height above the field, which made cruise 45 C too warm and kept
+    // frost off the window
+    const app = fakeApp();
+    const fe = createFlightEnv(app);
+    const pos = new Vector3(300000, fe.frame.sceneY(9000, 300000, 0), 0);
+    expect(pos.y).toBeLessThan(9000 - 620 - 6000);
+    const a = fe.at(pos);
+    expect(Math.abs(a.altitudeM - 9000)).toBeLessThan(10); // the app's refraction sphere against the frame's drop
+    expect(a.tempC).toBeCloseTo(25 - 0.0065 * (a.altitudeM - 620), 6);
+    expect(fe.standIns).toEqual(expect.arrayContaining(['temperature aloft']));
+  });
+
   it('works before plan 01 has built its first state, and with an env that has no at()', () => {
     const fe = createFlightEnv(fakeApp({ env: { state: null, at: undefined } }));
     const a = fe.at(new Vector3(0, 10668 - 620, 0));

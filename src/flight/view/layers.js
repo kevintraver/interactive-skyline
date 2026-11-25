@@ -1,20 +1,25 @@
-// The flight's view layers (plan 03, section 7.6; F1.5 on plan 1's renderer): puts the airframe and the cabin into the
-// scene on one body group, places the app's one camera at the passenger's eye each frame, sets its near and far, and
-// gives the camera back exactly as it was.
+// The flight's view layers (plan 03, section 7.6; F1.5 and F3.9 on plan 1's renderer): puts the airframe into the
+// scene on the body group, keeps the cabin in a scene of its own that follows the body, places the app's one camera at
+// the passenger's eye each frame, sets its near and far, and gives the camera back exactly as it was.
 //
-// One camera and one scene pass (decisions for the build, 2026-11-23): plan 1's depth buffer (reversed on WebGPU,
-// logarithmic on WebGL2 without clip control) holds 2 cm to the horizon in one pass, so the window frame, the wing and
-// the world are drawn together. The cabin's meshes sit on CABIN_LAYER only, which the camera enables while flying:
-// picking rays (layer 0) pass through the window to the city, and F3.9 can move the cabin into its own afterAA pass
-// by changing the layers, not the meshes.
+//   WORLD and AIRFRAME   the scene pass, the app's camera: plan 1's depth buffer (reversed on WebGPU, logarithmic on
+//                        WebGL2 without clip control) holds 2 cm to the horizon in one pass
+//   CABIN                its own scene (cabinScene) and camera (cabinCamera(): the app camera's pose and lens, the
+//                        cabin layer, 2 cm to 6 m), drawn by the cabin stage (view/cabinStage.js) after the world's
+//                        anti-aliasing and composed over it. Not in the scene: the scene pass, picking (layer 0), the
+//                        world's exposure and bloom's source never see it.
 
-import { Group, Vector3, Quaternion } from 'three';
+import { Group, Scene, Vector3, Quaternion, PerspectiveCamera } from 'three';
 import { horizonDistance, altitudeOf } from '../../core/earth.js';
 import { HIGHEST } from '../terrain/nested.js';
 import { placeAirframe } from '../aircraft/airframe.js';
 import { CABIN_LAYER } from '../cabin/cabin.js';
 
 export { CABIN_LAYER };
+
+/** The cabin pass's near and far planes (7.6's table): the eye comes within 5 cm of the trim, and nothing of the
+ * cabin drawn is further than its 5 m half length and the far side. */
+export const CABIN_NEAR = 0.02, CABIN_FAR = 6;
 
 /** The near plane: the eye comes within 5 cm of the trim and the pane, and the corner rays of the widest lens
  * (13 mm) are 59 degrees off axis, so a surface 4 cm away is still 2 cm deep. */
@@ -81,12 +86,31 @@ export function createFlightLayers({ scene, camera, airframe, cabin = null, rig,
   const body = new Group();
   body.name = 'flight-body';
   body.add(airframe.group);
-  if (cabin) body.add(cabin.group);
+  // the cabin's own scene: a root that copies the body's world matrix each frame (no sky, fog, lights or world in it)
+  const cabinScene = new Scene();
+  cabinScene.name = 'flight-cabin';
+  const cabinRoot = new Group();
+  cabinRoot.name = 'flight-cabin-root';
+  cabinRoot.matrixAutoUpdate = false;
+  cabinRoot.visible = false;
+  cabinScene.add(cabinRoot);
+  if (cabin) cabinRoot.add(cabin.group);
+  const cabinCam = new PerspectiveCamera();
+  cabinCam.layers.set(CABIN_LAYER);
   let saved = null, clean = false, currentCabin = cabin;
   const _pose = { eye: new Vector3(), quaternion: new Quaternion() };
 
+  /** The cabin's root at the body, as drawn (and as rays from the eye find it). */
+  function placeCabin() {
+    body.updateMatrixWorld(true);
+    cabinRoot.matrix.copy(body.matrixWorld);
+    cabinRoot.matrixWorldNeedsUpdate = true;
+    cabinScene.updateMatrixWorld(true);
+  }
+
   const layers = {
     body,
+    cabinScene,
     get clean() { return clean; },
     get attached() { return !!saved; },
 
@@ -95,13 +119,14 @@ export function createFlightLayers({ scene, camera, airframe, cabin = null, rig,
       if (saved) return layers;
       saved = snapshot(camera);
       scene.add(body);
-      camera.layers.enable(CABIN_LAYER);
+      cabinRoot.visible = true;
       return layers;
     },
     /** Remove the aircraft and give the camera back exactly. */
     detach() {
       if (!saved) return layers;
       scene.remove(body);
+      cabinRoot.visible = false;
       restore(camera, saved);
       saved = null;
       return layers;
@@ -111,9 +136,9 @@ export function createFlightLayers({ scene, camera, airframe, cabin = null, rig,
 
     /** Swap the cabin (another seat); the old one is returned to its owner to dispose. */
     setCabin(next) {
-      if (currentCabin) body.remove(currentCabin.group);
+      if (currentCabin) cabinRoot.remove(currentCabin.group);
       currentCabin = next;
-      if (next) { body.add(next.group); next.group.visible = !clean; }
+      if (next) { cabinRoot.add(next.group); next.group.visible = !clean; }
       return layers;
     },
 
@@ -124,14 +149,36 @@ export function createFlightLayers({ scene, camera, airframe, cabin = null, rig,
       return clean;
     },
 
+    /** Whether the cabin pass has anything to draw: attached, a cabin, not the clean view. */
+    get cabinShown() { return !!saved && !!currentCabin && !clean && currentCabin.group.visible; },
+
     /**
-     * Place the aircraft and the camera for an AircraftState. A pure function of (state, look, viewport): calling it
-     * twice gives the same camera.
+     * The cabin pass's camera for the app camera as it is now: its pose, lens and view offset, the cabin layer only,
+     * CABIN_NEAR to CABIN_FAR. The same object each call.
+     */
+    cabinCamera() {
+      camera.updateMatrixWorld();
+      cabinCam.position.copy(camera.position);
+      cabinCam.quaternion.copy(camera.quaternion);
+      cabinCam.scale.copy(camera.scale);
+      Object.assign(cabinCam, { fov: camera.fov, aspect: camera.aspect, zoom: camera.zoom, filmGauge: camera.filmGauge, filmOffset: camera.filmOffset, focus: camera.focus });
+      cabinCam.view = camera.view ? { ...camera.view } : null;
+      cabinCam.near = CABIN_NEAR;
+      cabinCam.far = CABIN_FAR;
+      cabinCam.updateProjectionMatrix();
+      cabinCam.updateMatrixWorld(true); // the app camera has no parent: its pose is its world pose
+      return cabinCam;
+    },
+
+    /**
+     * Place the aircraft, the cabin and the camera for an AircraftState. A pure function of (state, look, viewport):
+     * calling it twice gives the same camera.
      * @param {{ position: Vector3, quaternion: Quaternion }} state
      * @param {{ aspect: number, shake?: object }} view  shake: the head shake (headRig.headShake), passed to the rig
      */
     update(state, { aspect, shake } = {}) {
       placeAirframe(body, state);
+      placeCabin();
       rig.pose(shake ? { clean, shake } : { clean }, _pose);
       eyeInScene(state, _pose, camera.position, camera.quaternion);
       const { near, far } = nearFar(altitudeOf(camera.position, { base }));

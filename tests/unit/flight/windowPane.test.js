@@ -3,7 +3,7 @@
 // view, which hides the cabin, shows no glass), follows a seat change, takes the journey's pane state, and goes away
 // completely when disabled or disposed.
 import { describe, it, expect } from 'vitest';
-import { Group, InstancedMesh, BufferGeometry, Float32BufferAttribute, Matrix4, Vector3, Quaternion } from 'three';
+import { Group, InstancedMesh, BufferGeometry, Float32BufferAttribute, Matrix4, Vector3, Quaternion, CustomBlending, OneMinusDstAlphaFactor, OneFactor } from 'three';
 import { MeshBasicNodeMaterial } from 'three/webgpu';
 import { createWindowPane } from '../../../src/flight/window/index.js';
 import { CABIN_LAYER } from '../../../src/flight/cabin/cabin.js';
@@ -155,6 +155,28 @@ describe('createWindowPane', () => {
     expect(pane.uniforms.timeS.value).toBe(50);
   });
 
+  it('pulls focus on the wall clock, also while paused, and says while it is still moving', async () => {
+    const cabin = fakeCabin(2);
+    let now = 1000;
+    const pane = createWindowPane({ nodes: {}, cabin, textureLoader: noLoad, now: () => now });
+    await cabin.load();
+    await pane.ready;
+    pane.update(level, { wallS: 7, exposure: 1e-4 });
+    pane.setFocus('pane');
+    expect(pane.settling).toBe(true);
+    // the clock is paused: presentation time (wallS) stands still, the pull goes on
+    now += 100; pane.update(level, { wallS: 7, exposure: 1e-4 });
+    expect(pane.uniforms.focus.value).toBeGreaterThan(0.4);
+    expect(pane.uniforms.focus.value).toBeLessThan(1);
+    now += 2000; pane.update(level, { wallS: 7, exposure: 1e-4 });
+    expect(pane.uniforms.focus.value).toBe(1);
+    expect(pane.settling).toBe(false);
+    // reduced motion: at once
+    pane.setFocus('far');
+    pane.update(level, { wallS: 7, exposure: 1e-4, reducedMotion: true });
+    expect(pane.uniforms.focus.value).toBe(0);
+  });
+
   it('reports what it costs: draws, triangles, taps per pixel, texture memory', async () => {
     const cabin = fakeCabin(4);
     const pane = createWindowPane({ nodes: {}, cabin, quality: 'low', textureLoader: noLoad });
@@ -178,5 +200,21 @@ describe('createWindowPane', () => {
     cabin.group.traverse((o) => { if (o.name === 'window-pane') found = true; });
     expect(found).toBe(false);
     expect(() => pane.dispose()).not.toThrow();
+  });
+});
+
+describe('the pane over the cabin pass (F3.9)', () => {
+  it('is laid under what the cabin pass drew behind it: the window\'s structure stays, the glass fills the opening', async () => {
+    const cabin = fakeCabin(2);
+    // outside: the cabin stage's finished picture; not sampled until the material is built for a draw
+    const pane = createWindowPane({ cabin, textureLoader: noLoad, outside: () => null });
+    cabin.load();
+    await pane.ready;
+    const m = pane.mesh.material;
+    expect(m.transparent).toBe(true);
+    // "under": src x (1 - dst.a) + dst, for colour and alpha
+    expect([m.blending, m.blendSrc, m.blendDst, m.blendSrcAlpha, m.blendDstAlpha]).toEqual([CustomBlending, OneMinusDstAlphaFactor, OneFactor, OneMinusDstAlphaFactor, OneFactor]);
+    expect(m.depthWrite).toBe(false);
+    pane.dispose();
   });
 });

@@ -6,6 +6,7 @@ import { createFlightSession } from './session.js';
 import { createFlightCards, defaultFlight } from './ui/cards.js';
 import { createFlightBar } from './ui/bar.js';
 import { createSeatMap } from './ui/seatMap.js';
+import { createWindowPanel, paneSettings, WINDOW_DEFAULTS } from './ui/windowPanel.js';
 import { encodeFlightState, clearFlightState } from './url.js';
 import { playOptions, playStart } from './pace.js';
 import { whereText } from './lookAt.js';
@@ -41,8 +42,10 @@ export function createFlightMode({ app, fe, terrain, meta, flights, data, seam, 
   document.body.append(fadeEl);
 
   const cards = createFlightCards({ parent: $('top'), flights, tz: city.tz || 'UTC', data, onPlay: (id, key) => play(id, key).catch(() => {}) });
-  const bar = createFlightBar({ slot: $('transport-slot'), units: () => settings.units, onPace: () => setPace(!session?.pace), onFrame: () => setFrame(!frameOn), onSeat: () => toggleSeatMap() });
-  let seatMap = null;
+  const bar = createFlightBar({ slot: $('transport-slot'), units: () => settings.units, onPace: () => setPace(!session?.pace), onFrame: () => setFrame(!frameOn), onSeat: () => toggleSeatMap(), onWindow: () => toggleWindowPanel() });
+  let seatMap = null, windowPanel = null;
+  /** The window's glass switches and focus (F5.7), kept for the visit. */
+  let windowState = { ...WINDOW_DEFAULTS };
   let session = null, loading = null, token = 0, saved = null, hud = true, frameOn = true, lastWrite = 0, dragPaused = false, compassDeg = null;
   /** What the mode remembers for the visit (section 4.1): flight, seat, look and time, and whether it was playing. */
   const memory = { id: defaultFlight(flights).id, seat: null, look: null, at: {}, playing: false, pace: true };
@@ -144,6 +147,7 @@ export function createFlightMode({ app, fe, terrain, meta, flights, data, seam, 
     session.look({ yaw: o.yaw, pitch: o.pitch, lens: o.lens });
     if (typeof o.frame === 'boolean') frameOn = o.frame;
     session.cleanView(!frameOn);
+    applyWindow();
     setPace(o.pace ?? (Number.isFinite(o.rate) ? false : memory.pace), { write: false });
     clock.pause();
     if (Number.isFinite(o.rate) && o.rate > 0) clock.setRate(o.rate);
@@ -178,6 +182,7 @@ export function createFlightMode({ app, fe, terrain, meta, flights, data, seam, 
     clock.pause();
     await fade(true);
     seatMap?.close();
+    windowPanel?.close();
     session.show(false); // the camera back exactly (view/layers.js), the ground and the dome as the map has them
     session.end(); // the journey ends and plan 01's transport hides
     bar.show(false);
@@ -239,8 +244,35 @@ export function createFlightMode({ app, fe, terrain, meta, flights, data, seam, 
       seatMap = createSeatMap({ parent: document.body, stripSide: stripSideOf(memory.id), current: session.seat.id,
         onChoose: (id) => setSeat(id), onClose: () => bar.setSeat(null, false) });
     }
-    if (open) { seatMap.setStripSide(stripSideOf(memory.id)); seatMap.setCurrent(session.seat.id); seatMap.show(); } else seatMap.close();
+    if (open) { windowPanel?.close(); seatMap.setStripSide(stripSideOf(memory.id)); seatMap.setCurrent(session.seat.id); seatMap.show(); } else seatMap.close();
     bar.setSeat(null, seatMap.open);
+  }
+  /** The window's glass as the panel has it: enabled, effects, focus (window/index.js). */
+  function applyWindow() {
+    if (!session?.pane) return;
+    const p = paneSettings(windowState);
+    session.pane.setEnabled(p.enabled);
+    session.pane.setEffects(p.effects);
+    session.pane.setFocus(p.focus);
+    fe.invalidate();
+  }
+  /** Change any of glass, frost, rain, scratches, reflections, focus ('far' | 'pane'); returns the state now. */
+  function setWindow(o = {}) {
+    windowState = { ...windowState, ...Object.fromEntries(Object.entries(o).filter(([k, v]) => k in WINDOW_DEFAULTS && v !== undefined)) };
+    windowPanel?.set(windowState);
+    applyWindow();
+    return { ...windowState };
+  }
+  /** The window panel (F5.7), a popover above the bar: made the first time it is opened, kept for the visit. */
+  function toggleWindowPanel(open = !(windowPanel?.open)) {
+    if (!session) return;
+    if (!windowPanel) {
+      windowPanel = createWindowPanel({ parent: document.body, state: windowState,
+        onChange: (st) => { windowState = st; applyWindow(); },
+        onClose: () => { bar.setWindow(false); bar.windowButton.focus(); } });
+    }
+    if (open) { seatMap?.close(); windowPanel.set(windowState).show(); } else windowPanel.close();
+    bar.setWindow(windowPanel.open);
   }
   function setFrame(on) {
     frameOn = !!on;
@@ -286,12 +318,14 @@ export function createFlightMode({ app, fe, terrain, meta, flights, data, seam, 
   addEventListener('keydown', (ev) => {
     if (!seam.active || ev.defaultPrevented || ev.metaKey || ev.ctrlKey || typing(ev.target)) return;
     if (seatMap?.el.contains(ev.target)) return; // the seat map's own keys (arrows, Enter, Space, Escape)
+    if (windowPanel?.el.contains(ev.target)) return; // the window panel's (Tab, Space, Escape)
     const onControl = ev.target instanceof HTMLButtonElement || (ev.target instanceof HTMLInputElement && ev.target.type === 'range');
     const act = {
       Space: () => { if (!onControl) togglePlay(); else return false; },
       BracketLeft: () => stepRate(-1), BracketRight: () => stepRate(1),
       Comma: () => seekBy(ev.shiftKey ? -60 : -10), Period: () => seekBy(ev.shiftKey ? 60 : 10),
       KeyC: () => { if (!ev.altKey) setFrame(!frameOn); },
+      KeyF: () => { if (!ev.altKey) setWindow({ focus: windowState.focus === 'pane' ? 'far' : 'pane' }); },
       KeyH: () => { if (!ev.altKey) { hud = !hud; onFrame(session); } },
       KeyN: () => {}, // "now" would move the clock off the flight; the transport's Now retimes it instead
     }[ev.code];
@@ -353,7 +387,9 @@ export function createFlightMode({ app, fe, terrain, meta, flights, data, seam, 
     get session() { return session; },
     get frame() { return frameOn; },
     get hud() { return hud; },
-    setFrame, setHud(on) { hud = !!on; onFrame(session); }, setPace, setSeat, toggleSeatMap,
+    setFrame, setHud(on) { hud = !!on; onFrame(session); }, setPace, setSeat, toggleSeatMap, setWindow, toggleWindowPanel,
+    get window() { return { ...windowState }; },
+    get windowPanel() { return windowPanel; },
     get seatMap() { return seatMap; },
     cards, bar, memory,
   };

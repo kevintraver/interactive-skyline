@@ -18,12 +18,14 @@
 // The cabin's reflection needs the renderer, to draw its cube map on demand (reflection.js): pass `renderer` here or
 // in update(); without it the glass reflects nothing.
 //
-// Plan 01's pipeline (`pipeline`): while the pane is drawn in the scene pass, it reads a copy of that pass's colour
-// made half way through the pass (three's viewportMipTexture), so the pass must keep its multisampled buffers between
-// the opaque and the transparent objects. The pipeline discards them when no stage needs them (keepBuffers in
-// src/render/pipeline.js; on WebGPU they are then transient and cannot be loaded again, a validation error). The pane
-// therefore registers an empty render stage while it is shown, which tells the pipeline to keep them; it costs the
-// store of those buffers, counted in the pane's measured cost. F3.9's afterAA cabin pass removes the need.
+// In the app (F3.9) the cabin and its glass are drawn by the cabin stage after the world (src/flight/view/cabinStage.js)
+// and the session passes `outside`, the stage's finished outside picture with mips: nothing is copied mid-pass and the
+// pipeline keeps nothing for the pane. Without `outside` (the standalone harness of before F3.9) the pane reads a copy
+// of the scene pass's colour made half way through the pass (three's viewportMipTexture), which needs the pass to keep
+// its multisampled buffers (on WebGPU discarded ones are transient and cannot be loaded): the pane then registers an
+// empty render stage while it is shown, which tells plan 01's pipeline to keep them.
+//
+// Focus (key F) pulls over a third of a second of wall time, also while paused; `settling` is true until it is there.
 
 import { Group, InstancedMesh, Matrix4, Vector3 } from 'three';
 import { CABIN_LAYER } from '../cabin/cabin.js';
@@ -49,7 +51,7 @@ const NONE = Object.freeze({ frost: 0, fog: 0, wet: 0, mist: 0, rainRateMmH: 0, 
  *   cabin: createModelledCabin()'s; outside: the frame behind the pane, for F3.9's afterAA cabin pass (default: three's
  *   viewportMipTexture of the scene pass)
  */
-export function createWindowPane({ nodes = {}, cabin, quality = 'high', renderer = null, pipeline = null, outside = null, textureBaseUrl, textureLoader = null, effects = null } = {}) {
+export function createWindowPane({ nodes = {}, cabin, quality = 'high', renderer = null, pipeline = null, outside = null, textureBaseUrl, textureLoader = null, effects = null, now = () => performance.now() } = {}) {
   let level = typeof quality === 'string' ? quality : quality?.level ?? 'high';
   if (!LEVELS.includes(level)) level = 'high';
   const group = new Group();
@@ -60,7 +62,7 @@ export function createWindowPane({ nodes = {}, cabin, quality = 'high', renderer
   let made = null;
   let mesh = null, source = null, enabled = true, disposed = false;
   let paneState = null, override = null, fx = { ...(effects || {}) };
-  let focusTarget = 0, focus = 0, lastWall = null;
+  let focusTarget = 0, focus = 0, lastNow = null;
   let rend = renderer;
   let captureKey = '';
   let last = { pane: NONE, frame: null };
@@ -177,10 +179,13 @@ export function createWindowPane({ nodes = {}, cabin, quality = 'high', renderer
       u.ambient.value = f.ambient;
       u.timeS.value = f.timeS;
       u.flow.value.set(f.flow.u, f.flow.v, f.flow.speed);
-      // focus pulls over about a third of a second of presentation time; at once under reduced motion
-      const dt = lastWall === null || reducedMotion ? Infinity : Math.max(0, wallS - lastWall);
-      lastWall = wallS;
+      // focus pulls over about a third of a second of wall time (an answer to the visitor, not the flight's: it moves
+      // while paused too); at once under reduced motion. Settled within 1 % (settling, for the frame loop's demand)
+      const tNow = now();
+      const dt = lastNow === null || reducedMotion ? Infinity : Math.max(0, (tNow - lastNow) / 1000);
+      lastNow = tNow;
       focus = dt === Infinity ? focusTarget : focus + (focusTarget - focus) * (1 - Math.exp(-dt / 0.12));
+      if (Math.abs(focus - focusTarget) < 0.01) focus = focusTarget;
       u.focus.value = focus;
       // the cabin's reflection: drawn again for a new run, a change of night and day, or a moved shade
       const shade = Number.isFinite(cabin.shade) ? cabin.shade : 0;
@@ -200,6 +205,8 @@ export function createWindowPane({ nodes = {}, cabin, quality = 'high', renderer
     setSeat() { rebuild(); return api; },
     /** Key F: focused far (the default) or on the pane. */
     setFocus(where) { focusTarget = where === 'pane' ? 1 : 0; return api; },
+    /** True while the focus is still moving toward its target (the session asks for frames until it is not). */
+    get settling() { return Math.abs(focus - focusTarget) > 0 && !!made; },
     get focus() { return focusTarget ? 'pane' : 'far'; },
     /** Switch effects: { frost, condensation, droplets, scratches, reflections, transmission } (each true by default). */
     setEffects(o) { fx = { ...fx, ...(o || {}) }; return api; },
