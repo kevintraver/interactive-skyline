@@ -18,6 +18,7 @@ import { createTimePop } from './ui/timepop.js';
 import { createViewPop } from './ui/viewpop.js';
 import { stepRate, atLocalMinutes } from './ui/format.js';
 import { attachInput } from './input.js';
+import { saveMapPipeline } from './mapPipeline.js';
 
 /** The first-visit hint while driving (main.js keeps its own text for the map). */
 const DRIVE_HINT = 'Drag to look around. Scroll to zoom. Space to pause.';
@@ -296,6 +297,18 @@ export function initDrive(app, loaded) {
     const { clock, env } = plan01;
     mapClock = { mode: env.mode, night: !!settings.night, timeMs: clock.timeMs, rate: clock.rate, playing: clock.playing, live: clock.live, frozen: env.frozen };
   }
+  // The map's pipeline, as the clock: noted before the drive first adds a stage (its parts add theirs as the session
+  // loads), put back on leaving (mapPipeline.js)
+  let restoreMapPipeline = null;
+  function saveMapLook() {
+    saveMapClock();
+    restoreMapPipeline ||= saveMapPipeline(plan01.pipeline);
+  }
+  function restoreMapLook() {
+    restoreMapClock();
+    restoreMapPipeline?.();
+    restoreMapPipeline = null;
+  }
   function restoreMapClock() {
     if (!mapClock) return;
     const { clock, env } = plan01;
@@ -335,7 +348,7 @@ export function initDrive(app, loaded) {
    */
   async function enter(id, at = {}) {
     const token = ++entering;
-    if (!seam.active) saveMapClock();
+    if (!seam.active) saveMapLook();
     const switching = seam.active && !!session && id !== session.route;
     showMode('drive');
     bar.show(true);
@@ -354,7 +367,7 @@ export function initDrive(app, loaded) {
         cards.show(false);
         cards.setLoading(false);
         showMode('map');
-        if (!seam.active) restoreMapClock();
+        if (!seam.active) restoreMapLook();
         ctx.showToast('The drive could not be loaded.', false);
       }
       console.warn('Drive mode failed to load.', err);
@@ -445,7 +458,7 @@ export function initDrive(app, loaded) {
     seam.active = false;
     seam.focus = seam.holding = null;
     session.show(false);
-    restoreMapClock();
+    restoreMapLook();
     plan01.quality?.hold?.(false); // a level chosen while driving applies now
     if (el.transport) el.transport.style.display = '';
     ctx.applyNight();
