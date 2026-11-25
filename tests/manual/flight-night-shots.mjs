@@ -117,11 +117,56 @@ function regionsInPage({ side }) {
   const at = (dir) => { const w = cam.position.clone().add(dir.multiplyScalar(500)); const ndc = toNdc(w); if (!ndc) return null; const hit = firstHit(cam.position.clone().add(dir.normalize().multiplyScalar(500))); return hit && hit.dist < 450 ? null : ndc; };
   const g = at(dirAt(dip - 0.7 * deg));
   if (g) out.horizon = { ndc: g };
+  // the horizon as a line on the screen (two points 12 degrees either side of the view's azimuth), for the picture's
+  // statistics below it; null when it is off the screen
+  const across = new V().crossVectors(horiz, up).normalize();
+  const hz = (a) => { const d = horiz.clone().multiplyScalar(Math.cos(a)).add(across.clone().multiplyScalar(Math.sin(a))); const w = cam.position.clone().add(d.multiplyScalar(Math.cos(dip)).sub(up.clone().multiplyScalar(Math.sin(dip))).multiplyScalar(1000)); const p = w.project(cam); return p.z < 1 ? [p.x, p.y] : null; };
+  const h1 = hz(-12 * deg), h2 = hz(12 * deg);
+  const horizonLine = h1 && h2 ? [h1, h2] : null;
   for (const k of [2, 5, 10, 20]) { const v = at(dirAt(dip + k * deg)); if (v) out[`valley${k}`] = { ndc: v }; }
   // the cabin, at fixed places of the default look (the window centred): the wall beside it and the reveal
   out.wall = { ndc: [-0.81, 0.1], cabin: true };
   out.frame = { ndc: [-0.57, 0.0], cabin: true };
-  return { regions: out, dipDeg: dip / deg };
+  return { regions: out, dipDeg: dip / deg, horizonLine };
+}
+
+/**
+ * In the page: statistics of the picture's luma (sRGB 0..255, Rec. 709 weights) over the whole frame and below the
+ * horizon line (the ground, the wing where it is in front of it): median, 99th percentile and the share of pixels
+ * with a channel at 250 or more (clipped).
+ */
+function frameStatsInPage({ b64, line }) {
+  return (async () => {
+    const img = new Image();
+    img.src = `data:image/jpeg;base64,${b64}`;
+    await img.decode();
+    const W = img.width, H = img.height;
+    const c = new OffscreenCanvas(W, H), x = c.getContext('2d', { willReadFrequently: true });
+    x.drawImage(img, 0, 0);
+    const d = x.getImageData(0, 0, W, H).data;
+    const all = new Uint32Array(256), below = new Uint32Array(256);
+    let clipAll = 0, clipBelow = 0, nBelow = 0;
+    // the line in pixels: y = y0 + (px - x0) * slope
+    let x0 = 0, y0 = H, slope = 0;
+    if (line) {
+      const p = line.map(([u, v]) => [((u + 1) / 2) * W, ((1 - v) / 2) * H]);
+      slope = (p[1][1] - p[0][1]) / ((p[1][0] - p[0][0]) || 1e-6); x0 = p[0][0]; y0 = p[0][1];
+    }
+    for (let py = 0; py < H; py += 2) {
+      for (let px = 0; px < W; px += 2) {
+        const i = 4 * (py * W + px);
+        const l = Math.round(0.2126 * d[i] + 0.7152 * d[i + 1] + 0.0722 * d[i + 2]);
+        const clip = d[i] >= 250 || d[i + 1] >= 250 || d[i + 2] >= 250;
+        all[l]++; if (clip) clipAll++;
+        if (line && py > y0 + (px - x0) * slope + 4) { below[l]++; nBelow++; if (clip) clipBelow++; }
+      }
+    }
+    const pct = (h, n, q) => { let s = 0; for (let i = 0; i < 256; i++) { s += h[i]; if (s >= q * n) return i; } return 255; };
+    const nAll = (W >> 1) * (H >> 1);
+    const res = { median: pct(all, nAll, 0.5), p99: pct(all, nAll, 0.99), clipPct: +((100 * clipAll) / nAll).toFixed(2) };
+    if (nBelow > 0.02 * nAll) Object.assign(res, { groundMedian: pct(below, nBelow, 0.5), groundP99: pct(below, nBelow, 0.99), groundClipPct: +((100 * clipBelow) / nBelow).toFixed(2) });
+    return res;
+  })();
 }
 
 /** Hue (degrees) and saturation (0..1) of a linear RGB triple. */
@@ -179,7 +224,7 @@ const REGION_ORDER = ['wall', 'frame', 'winglet', 'wingMid', 'nacelle', 'valley2
 function table(measure) {
   const lines = [`# ${measure.backend}, ${measure.date}`, '',
     'Each region: the light before exposure in cd/m^2 (composed: the cabin over the outside), hue and saturation of that light, and the picture there (mean sRGB of a 41 x 41 box / its peak). "—" not in view; "cov" covered by the cabin.', ''];
-  const cols = ['flight', 'moment', 'seat', 'view', 'alt ft', 'sun°', 'k', 'lamps', 'lit', ...REGION_ORDER];
+  const cols = ['flight', 'moment', 'seat', 'view', 'alt ft', 'sun°', 'k', 'prior EV', 'lamps', 'lit', 'frame med/p99/clip%', 'ground med/p99/clip%', ...REGION_ORDER];
   lines.push(`| ${cols.join(' | ')} |`, `|${cols.map(() => '---').join('|')}|`);
   for (const [id, byCol] of Object.entries(measure.flights)) {
     for (const [col, byMoment] of Object.entries(byCol)) {
@@ -196,7 +241,10 @@ function table(measure) {
           const pic = g.picture ? ` [${Math.round((g.picture.mean[0] + g.picture.mean[1] + g.picture.mean[2]) / 3)}/${g.picture.peak}]` : '';
           return `${lum != null ? lum.toPrecision(2) : '?'}${hs}${pic}`;
         };
-        lines.push(`| ${id} | ${n} | ${seat} | ${view} | ${Math.round(r.altMsl * 3.28084)} | ${r.sunAltDeg?.toFixed(1)} | ${r.exposure?.toExponential(2)} | ${r.ground?.drawn ?? ''} | ${r.ground?.lit ?? ''} | ${REGION_ORDER.map(cell).join(' | ')} |`);
+        const f = r.frame || {};
+        const fr = f.median != null ? `${f.median}/${f.p99}/${f.clipPct}` : '';
+        const gr = f.groundMedian != null ? `${f.groundMedian}/${f.groundP99}/${f.groundClipPct}` : '—';
+        lines.push(`| ${id} | ${n} | ${seat} | ${view} | ${Math.round(r.altMsl * 3.28084)} | ${r.sunAltDeg?.toFixed(1)} | ${r.exposure?.toExponential(2)} | ${r.priorEv != null ? r.priorEv.toFixed(2) : ''} | ${r.ground?.drawn ?? ''} | ${r.ground?.lit ?? ''} | ${fr} | ${gr} | ${REGION_ORDER.map(cell).join(' | ')} |`);
       }
     }
   }
@@ -270,6 +318,9 @@ for (const backend of backends) {
               ground: w.ground ? { drawn: w.ground.drawn, lit: w.ground.lit, extinctionKm: w.ground.extinctionKm, ambientLux: w.ground.ambientLux, draws: w.ground.draws, updateMs: w.ground.updateMs, lampsInView: w.ground.lamps?.lampsInView } : null,
               sunAltDeg: s.env.state?.sun?.altDeg ?? null,
               exposure: s.env?.nodes?.exposure?.value ?? null,
+              // the prior's EV100 and, while the flight sets them (src/flight/exposure.js), the terms it used
+              priorEv: s.look?.current?.priorEv ?? null,
+              priorTerms: s.look?.current?.priorTerms ?? null,
             };
           }, { at, clean: view !== 'window', seatId: seat, measureCost });
           const side = /[A-C]$/.test(seat) ? 'left' : 'right';
@@ -301,8 +352,9 @@ for (const backend of backends) {
           const boxes = Object.fromEntries(Object.entries(regions).map(([k, g]) => [k, [((g.ndc[0] + 1) / 2) * W, ((1 - g.ndc[1]) / 2) * H]]));
           const pics = await page.evaluate(boxesInPage, { b64: buf.toString('base64'), boxes, half: 20 });
           for (const [k, p] of Object.entries(pics)) regions[k].picture = p;
+          r.frame = await page.evaluate(frameStatsInPage, { b64: buf.toString('base64'), line: found.horizonLine });
           (measure.flights[id][col] ??= {})[name] = r;
-          console.log(backend, id, name, col, JSON.stringify({ alt: r.altMsl, sun: r.sunAltDeg?.toFixed(2), k: r.exposure, ms: r.msPerFrame, lamps: r.ground?.drawn,
+          console.log(backend, id, name, col, JSON.stringify({ alt: r.altMsl, sun: r.sunAltDeg?.toFixed(2), k: r.exposure, prior: r.priorEv, frame: r.frame, ms: r.msPerFrame, lamps: r.ground?.drawn,
             regions: Object.fromEntries(Object.entries(regions).map(([k, g]) => [k, g.covered ? 'cov' : `${g.composed} ${g.hueSat.hue ?? ''}/${g.hueSat.sat} [${g.picture?.mean}|${g.picture?.peak}]`])) }));
         }
       }

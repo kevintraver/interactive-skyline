@@ -140,3 +140,73 @@ describe('the air at a point', () => {
     expect(withShadows.standIns).not.toContain('shadows');
   });
 });
+
+describe('the exposure while flying (exposure.js through plan 01\'s look.setPriorTerms)', () => {
+  const journey = { id: 'j', label: 'J', durationS: 60, recordedStartMs: Date.UTC(2025, 2, 15, 19) };
+  const night = { keyLux: 0, keyAltDeg: -30, ambientLux: 0.0006, cityLux: 1, emissionLux: 1, keyBody: 'moon', street: 1 };
+  function withLook() {
+    const look = { fn: null, current: {}, setPriorTerms: vi.fn((fn) => { look.fn = fn; }) };
+    const app = fakeApp({ look, camera: { position: new Vector3(0, 3000, 0) } });
+    return { app, look, fe: createFlightEnv(app) };
+  }
+
+  it('gives plan 01\'s look the flight\'s prior while a journey is attached, and the default back after', () => {
+    const { look, fe } = withLook();
+    expect(look.setPriorTerms).not.toHaveBeenCalled();
+    fe.attachJourney(journey);
+    expect(typeof look.fn).toBe('function');
+    expect(fe.exposure.on).toBe(true);
+    fe.attachJourney(journey); // a new flight: still on, not set twice
+    expect(look.setPriorTerms).toHaveBeenCalledTimes(1);
+    fe.attachJourney(null);
+    expect(look.fn).toBe(null);
+    expect(fe.exposure.on).toBe(false);
+  });
+
+  it('asks the night ground for the lamps\' light at the camera, the floor alone without one', () => {
+    const { look, fe, app } = withLook();
+    fe.attachJourney(journey);
+    const bare = look.fn(night);
+    expect(bare.lampLux).toBe(0);
+    expect(bare.groundLux).toBe(0);
+    expect(bare.cityLux).toBe(bare.floorLux);
+    const seen = [];
+    const { off } = fe.provideGroundLight({ lightAt: (p) => { seen.push(p); return { lampLux: 0.5, heightAboveGroundM: 0 }; } });
+    const t = look.fn(night);
+    expect(seen[0]).toBe(app.camera.position);
+    expect(t.lampLux).toBeGreaterThan(0.38);
+    expect(t.groundLux).toBeGreaterThan(0);
+    expect(t.emissionLux).toBe(0);
+    off();
+    expect(look.fn(night).lampLux).toBe(0);
+  });
+
+  it('is on while the night ground is shown, with no journey (Orbit), and off once neither holds', () => {
+    const { look, fe } = withLook();
+    const link = fe.provideGroundLight({ lightAt: () => ({ lampLux: 0, heightAboveGroundM: 9000 }) });
+    link.shown(true);
+    expect(typeof look.fn).toBe('function');
+    fe.attachJourney(journey);
+    fe.attachJourney(null); // a recorded flight gives way to an orbit: the ground is still shown
+    expect(typeof look.fn).toBe('function');
+    link.shown(false);
+    expect(look.fn).toBe(null);
+    link.shown(true);
+    link.off(); // disposed while shown
+    expect(look.fn).toBe(null);
+    expect(fe.exposure.on).toBe(false);
+  });
+
+  it('guards a grazing Sun only when the key is the Sun', () => {
+    const { look, fe } = withLook();
+    fe.attachJourney(journey);
+    expect(look.fn({ ...night, keyLux: 50000, keyAltDeg: 0.2, keyBody: 'sun' }).keyAltDeg).toBeGreaterThan(3); // asin(0.06): 3.4 degrees
+    expect(look.fn({ ...night, keyLux: 0.2, keyAltDeg: 0.2, keyBody: 'moon' }).keyAltDeg).toBe(0.2);
+  });
+
+  it('does nothing without plan 01\'s look (the classic renderer, tests)', () => {
+    const fe = createFlightEnv(fakeApp());
+    expect(() => fe.attachJourney(journey)).not.toThrow();
+    expect(fe.exposure.on).toBe(false);
+  });
+});

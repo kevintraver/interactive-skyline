@@ -27,6 +27,12 @@
 //                    overrides: src/weather/service.js setSource, setOverride), and the map's settings are put back
 //                    when the journey ends, unless the visitor changed them meanwhile. Plan 01's overrides have no
 //                    temperature, dew point, cloud top or mid-level cloud: planOneSettings() says what is left out.
+//   exposure        plan 01's prior is written for a camera standing in the lit city. While a journey is attached or
+//                    the night ground is shown (Orbit has no journey) the adapter gives plan 01's look the flight's own
+//                    prior terms (src/render/look.js setPriorTerms,
+//                    src/flight/exposure.js): the lamps' light at the eye (the night ground's lightAt, handed in by
+//                    provideGroundLight), a floor for the eye's adaptation, a share of plan 01's city terms near the
+//                    ground, and the key on lit terrain at a grazing Sun. The default is put back when it ends.
 // `standIns` lists what is stood in for, so the debug hooks and "About this flight" can say so.
 import { Vector3 } from 'three';
 import { createFrame } from '../world/frame.js';
@@ -34,6 +40,7 @@ import { altitudeOf } from '../core/earth.js';
 import { presetSample } from '../weather/presets.js';
 import { KOSCHMIEDER, rayleighExtinction, FREE_TROPOSPHERE_AOD, DUST_MEE_M2_PER_G } from '../weather/medium.js';
 import { haze } from '../render/materials/shared.js';
+import { flightPriorTerms } from './exposure.js';
 
 // International Standard Atmosphere (ICAO Doc 7488), to 20 km. Heights are taken as geopotential: at cruise the
 // difference from geometric height is 0.2%, far below what the window shows.
@@ -284,6 +291,22 @@ export function createFlightEnv(app) {
     }
   }
 
+  // ---- the exposure while flying (exposure.js, through plan 01's look.setPriorTerms while a journey is attached)
+  // on while a journey is attached or the flight's night ground is shown (Orbit flies with no journey on the timeline)
+  const exposure = { ground: null, on: false, journey: false, shown: false };
+  const eye = () => (app.camera ? app.camera.position : null);
+  function priorTermsWhileFlying(terms) {
+    const p = eye();
+    const g = exposure.ground && p ? exposure.ground.lightAt(p) : null;
+    return flightPriorTerms(terms, { lampLux: g ? g.lampLux : 0, heightAboveGroundM: g && Number.isFinite(g.heightAboveGroundM) ? g.heightAboveGroundM : Infinity,
+      keyIsSun: terms.keyBody === 'sun', cityFactor: env.nodes?.cityFactor?.value ?? 1 });
+  }
+  function exposeForFlight(on = exposure.journey || exposure.shown) {
+    if (!app.look || typeof app.look.setPriorTerms !== 'function' || on === exposure.on) return;
+    exposure.on = on;
+    app.look.setPriorTerms(on ? priorTermsWhileFlying : null);
+  }
+
   const fe = {
     city,
     cityId: app.cityId,
@@ -364,6 +387,21 @@ export function createFlightEnv(app) {
     /** Resolves once the flight's weather has reached plan 01's service (or been given back). */
     whenWeatherApplied: () => plan01.queue,
 
+    /**
+     * The night ground hands itself in here ({ lightAt(eye) -> { lampLux, heightAboveGroundM } }, ground/index.js), so
+     * the exposure while flying can ask for the lamps' light at the eye. Returns { shown(on), off() }: the ground says
+     * when it is shown (the flight's prior is on then, in Orbit too) and takes itself back.
+     */
+    provideGroundLight(source) {
+      exposure.ground = source;
+      return {
+        shown(on) { if (exposure.ground !== source) return; exposure.shown = !!on; exposeForFlight(); },
+        off() { if (exposure.ground !== source) return; exposure.ground = null; exposure.shown = false; exposeForFlight(); },
+      };
+    },
+    /** Whether the flight's prior is in use, and its terms of the last frame (plan 01's look.current.priorTerms). */
+    get exposure() { return { on: exposure.on, terms: exposure.on ? app.look?.current?.priorTerms ?? null : null }; },
+
     /** Call fn when the weather the flight flies in changes: plan 01's data or settings (env 'weather'), or a recorded
      * flight's own record coming or going. Returns a function that stops it. */
     onWeather(fn) {
@@ -383,6 +421,8 @@ export function createFlightEnv(app) {
       else if (had) release();
       const h = app.transport ? app.transport.attachJourney(journey) : app.timeline.begin(journey);
       showClouds(!!journey);
+      exposure.journey = !!journey;
+      exposeForFlight();
       if (had || air) tellWeather();
       return h;
     },

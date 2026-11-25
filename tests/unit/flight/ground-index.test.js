@@ -163,3 +163,36 @@ describe('a frame is a function of the moment', () => {
     expect(lists[1]).toEqual(lists[0]);
   });
 });
+
+describe('the lamps\' light at a point (for the exposure while flying)', () => {
+  it('is 0 by day and before the files load, then the lamps\' pools at the eye, more on final than at cruise', async () => {
+    const provided = [];
+    const { night, fe } = setup({ sunAltDeg: 30 });
+    const shownSaid = [];
+    const s2 = (() => { const f = { ...fe, provideGroundLight: (src) => { provided.push(src); return { shown: (on) => shownSaid.push(on), off: () => provided.splice(provided.indexOf(src), 1) }; } };
+      return createNightGround({ fe: f, region: { heightAt: () => GROUND, grid: () => null }, data: '/data/lv', renderer, fetchFile, level: 'high' }); })();
+    expect(provided).toEqual([s2]);
+    const over = new Vector3(0, 600 - (BASE - GROUND), 0); // 600 m above the ground over the Strip
+    s2.show(true);
+    expect(s2.lightAt(over).lampLux).toBe(0);
+    expect(s2.lightAt(over).heightAboveGroundM).toBeCloseTo(600, 0);
+    fe.state.sun.altDeg = -30;
+    const cam = camera({ x: 0, y: 0, alt: GROUND + 600, look: [0, -5000] });
+    s2.update({ camera: cam, simMs: NIGHT_MS, sunAltDeg: -30 });
+    await s2.whenSettled();
+    s2.update({ camera: cam, simMs: NIGHT_MS, sunAltDeg: -30 });
+    const final = s2.lightAt(cam.position).lampLux;
+    const cruise = camera({ x: 0, y: 120000, alt: 9300, look: [0, 0] });
+    s2.update({ camera: cruise, simMs: NIGHT_MS, sunAltDeg: -30 });
+    const far = s2.lightAt(cruise.position).lampLux;
+    expect(final).toBeGreaterThan(0.05);
+    expect(final).toBeLessThan(5);
+    expect(far).toBeLessThan(final / 20);
+    s2.show(false);
+    expect(s2.lightAt(cam.position).lampLux).toBe(0);
+    s2.dispose();
+    expect(provided).toEqual([]);
+    expect(shownSaid).toEqual([true, false, false]); // show(true), show(false), and dispose's show(false)
+    night.dispose();
+  });
+});

@@ -6,6 +6,7 @@
 //   night.show(true);                           // on entering a flight (false on leaving: the map's ground is given back)
 //   night.update({ camera, simMs, visibilityM });   // every frame, after the camera is placed
 //   await night.whenSettled();                  // nothing loading
+//   night.lightAt(eye);                         // the lamps' light at a point: the flight's exposure (../exposure.js)
 //   night.stats();  night.dispose();
 //
 // What is drawn, all of it switched by the Sun as the drive's lamps are (each lamp's photocell against the ambient light
@@ -27,9 +28,12 @@ import { vec3 } from 'three/tsl';
 import { createEphemeris } from '../../sky/ephemeris.js';
 import { ambientLux as ambientLuxAt, ephemerisOn } from '../../drive/env.js';
 import { createOnTable, litShare, SWITCH_MID_LUX, SWITCH_SPREAD, ON_TABLE } from '../../drive/lights/switching.js';
-import { EARTH_R } from '../../world/frame.js';
+import { EARTH_R, curveDrop } from '../../world/frame.js';
 import { altitudeOf } from '../../core/earth.js';
-import { createAirLamps, AIR_BUDGET } from './lamps.js';
+import { createAirLamps, AIR_BUDGET, GROUND_ALBEDO, ALL_LIGHT_FACTOR } from './lamps.js';
+import { decodeLampPack } from '../../drive/lights/pack.js';
+import { createLampTypes } from '../../drive/lights/lamps.js';
+import { mergeLampCells, placeLampCells, lampIlluminance } from '../exposure.js';
 import { extinctionLength, visibilityForLength } from './extinction.js';
 import { flightPartContext, loadDriveParts, collectTall } from './driveParts.js';
 
@@ -79,6 +83,9 @@ export function createNightGround({ fe, region, ground = {}, data, renderer = nu
   const light = { ambientLux: 1e5, extinctionM: 80000, sunAltDeg: 90, lit: 0 };
 
   let lamps = null, parts = { valley: null, obstruction: null }, loading = null, loadError = null;
+  // the lamps merged into their packs' cells (1 km in the valley, 4 km for the towns), for the light at a point
+  let cellSets = null, cells = null;
+  const placeCells = () => { if (cellSets) cells = placeLampCells(cellSets, { heightAt, base, curveDrop }); };
   let shown = false, heightKey = '', heightJob = null, lastHeightCheck = -Infinity;
   const towers = tall ?? [];
   const offRebuilt = !tall && scene && fe.events?.on ? fe.events.on('buildings:rebuilt', () => collectTall(scene, towers)) : null;
@@ -113,6 +120,11 @@ export function createNightGround({ fe, region, ground = {}, data, renderer = nu
       const [valley, regionPack] = await Promise.all([optionalPack(FILES.valley), optionalPack(FILES.region)]);
       const packs = [valley, regionPack].filter(Boolean);
       if (packs.length) {
+        cellSets = packs.map((p) => {
+          const pack = decodeLampPack(p.meta, p.buffer), types = createLampTypes(pack.lampTypes);
+          return mergeLampCells(pack, (t) => 1 - (types.byId.get(t) || types.list[0]).uplight);
+        });
+        placeCells();
         lamps = createAirLamps({ packs, heightAt, base, earthR: EARTH_R, nodes: fe.nodes, level: lvl() });
         await lamps.placeHeights();
         heightKey = heightSignature();
@@ -137,7 +149,7 @@ export function createNightGround({ fe, region, ground = {}, data, renderer = nu
     const k = heightSignature();
     if (k === heightKey) return;
     heightKey = k;
-    heightJob = lamps.placeHeights().finally(() => { heightJob = null; fe.invalidate?.(); });
+    heightJob = lamps.placeHeights().finally(() => { heightJob = null; placeCells(); fe.invalidate?.(); });
   }
 
   let updateMs = 0;
@@ -146,6 +158,7 @@ export function createNightGround({ fe, region, ground = {}, data, renderer = nu
     /** Switch the flight's ground on or off: the map's grids dark, the lamps and parts with the group. */
     show(on) {
       shown = !!on;
+      link?.shown(shown);
       group.visible = shown;
       darkenMapGround(shown);
     },
@@ -184,6 +197,18 @@ export function createNightGround({ fe, region, ground = {}, data, renderer = nu
       }
       updateMs = performance.now() - t0;
     },
+    /**
+     * The lamps' light at a point (scene metres), as their points are drawn this frame (the lit share, the air; not the
+     * lights-out slider, which the caller applies): `lampLux`, the scalar illuminance of their pools before the window's glass (0 until the files
+     * have loaded, and by day); and the point's height above the regional ground. For the exposure while flying.
+     * @param {{ x: number, y: number, z: number }} eye
+     */
+    lightAt(eye) {
+      const heightAboveGroundM = altitudeOf(eye, { base }) - heightAt(eye.x, -eye.z);
+      const on = shown && light.ambientLux < LIT_BELOW_LUX;
+      const lampLux = on && cells ? lampIlluminance(cells, eye, { extinctionM: light.extinctionM, albedo: GROUND_ALBEDO * ALL_LIGHT_FACTOR, lit: light.lit }) : 0;
+      return { lampLux, heightAboveGroundM };
+    },
     /** Load now (the shots and tests ask for it before the Sun is low). */
     load,
     whenSettled: async () => { if (loading) await loading; if (heightJob) await heightJob; },
@@ -203,11 +228,14 @@ export function createNightGround({ fe, region, ground = {}, data, renderer = nu
     dispose() {
       night.show(false);
       offRebuilt?.();
+      link?.off();
       lamps?.dispose();
       parts.valley?.dispose?.();
       parts.obstruction?.dispose?.();
       group.removeFromParent();
     },
   };
+  // the flight's exposure asks the ground for the lamps' light at the eye (src/flight/env.js)
+  const link = typeof fe.provideGroundLight === 'function' ? fe.provideGroundLight(night) : null;
   return night;
 }
