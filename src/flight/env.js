@@ -94,6 +94,27 @@ export function createFlightEnv(app) {
     attachJourney(journey) {
       return app.transport ? app.transport.attachJourney(journey) : app.timeline.begin(journey);
     },
+
+    // ---- the map's time, handed to the flight and given back (one clock, as the drive does in src/drive/index.js)
+    /** Enter plan 01's clock state: the sky follows the clock, so a scrub moves the Sun. */
+    enterClock: () => env.enterClock(),
+    /** What the map had: pinned or the clock state, its night look, the instant, the rate, playing, live. */
+    saveMapTime() {
+      const { clock } = app;
+      return { mode: env.mode, night: !!app.settings?.night, timeMs: clock.timeMs, rate: clock.rate, playing: clock.playing, live: clock.live };
+    },
+    /** Put back what saveMapTime() returned. Pinning pauses the clock, as a pinned map has it. */
+    restoreMapTime(m) {
+      const { clock } = app;
+      clock.pause();
+      if (m.live) clock.goLive();
+      else {
+        clock.set(m.timeMs);
+        if (clock.rate !== m.rate) clock.setRate(m.rate);
+      }
+      if (m.mode === 'pinned') { if (env.mode !== 'pinned' || !!app.settings?.night !== m.night) env.pin(m.night); return; }
+      if (m.playing && !m.live) clock.play();
+    },
   };
   return fe;
 }

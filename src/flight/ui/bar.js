@@ -1,0 +1,57 @@
+// The flight's own bar, mounted in #transport-slot above plan 01's journey bar (plan 03, sections 4.4 and 4.9): the
+// status chip (phase, time to touchdown, altitude, ground speed, in the visitor's units; H hides it), the pace (the
+// condensed pace, or the rate the visitor chose; pressing it turns the condensed pace back on), the cabin frame (C),
+// a "Retimed" note when the departure is not the recorded one, and a line for loading.
+import { flightStatus } from './status.js';
+
+const icon = (id) => `<svg class="icon" viewBox="0 0 20 20" aria-hidden="true"><use href="#${id}" /></svg>`;
+const rateText = (r) => `${Math.round(r * 10) / 10}×`;
+
+/**
+ * @param {{ slot: HTMLElement, units: () => 'ft'|'m', onPace: () => void, onFrame: () => void }} o
+ */
+export function createFlightBar({ slot, units, onPace, onFrame }) {
+  const el = document.createElement('div');
+  el.id = 'flightbar';
+  el.setAttribute('role', 'group');
+  el.setAttribute('aria-label', 'Flight');
+  el.innerHTML = `<span class="status" title="Hide (H)"><b class="phase"></b><span class="ttd"></span><span class="alt"></span><span class="gs"></span></span>
+    <button type="button" class="pace" aria-pressed="true" title="The condensed pace: cruise and descent fast, the last minutes in real time"></button>
+    <button type="button" class="frame" aria-pressed="true" title="Cabin frame (C)">${icon('i-eye')}<span>Frame</span></button>
+    <span class="retimed" hidden title="The departure is not the recorded one">Retimed</span>
+    <span class="note" hidden></span>`;
+  const $ = (s) => el.querySelector(s);
+  const status = $('.status'), phase = $('.phase'), ttd = $('.ttd'), alt = $('.alt'), gs = $('.gs');
+  const pace = $('.pace'), frame = $('.frame'), retimed = $('.retimed'), note = $('.note');
+  pace.addEventListener('click', () => { pace.blur(); onPace(); });
+  frame.addEventListener('click', () => { frame.blur(); onFrame(); });
+  const shown = { text: null, pace: null, frame: null, retimed: null, hud: null };
+
+  return {
+    el,
+    /** Into #transport-slot (the slot shows only while it has children) or out of it. */
+    show(on) { if (on && el.parentNode !== slot) slot.append(el); else if (!on && el.parentNode) el.remove(); },
+    /** Loading text in place of the readings, or null. */
+    setNote(text) { note.hidden = !text; note.textContent = text || ''; },
+    /** Write only what changed, so a frame costs no layout when nothing did. */
+    update({ state, touchdownT, events, pace: paceOn, rate, frame: frameOn, retimed: isRetimed, hud }) {
+      if (state) {
+        const s = flightStatus(state, { touchdownT, events, units: units() });
+        if (s.text !== shown.text) {
+          shown.text = s.text;
+          phase.textContent = s.phase;
+          ttd.textContent = s.toTouchdown;
+          ttd.hidden = !s.toTouchdown;
+          alt.textContent = s.altitude;
+          gs.textContent = s.speed;
+          status.setAttribute('aria-label', s.text);
+        }
+      }
+      const p = paceOn ? 'Condensed' : rateText(rate);
+      if (p !== shown.pace) { shown.pace = p; pace.textContent = p; pace.setAttribute('aria-pressed', String(!!paceOn)); }
+      if (frameOn !== shown.frame) { shown.frame = frameOn; frame.setAttribute('aria-pressed', String(!!frameOn)); }
+      if (isRetimed !== shown.retimed) { shown.retimed = isRetimed; retimed.hidden = !isRetimed; }
+      if (hud !== shown.hud) { shown.hud = hud; status.hidden = !hud; }
+    },
+  };
+}

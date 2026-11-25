@@ -462,3 +462,64 @@ button { font: inherit; color: inherit; background: none; border: 0; padding: 0;
   #sky { max-height: calc(100vh - 28px - 2 * var(--gap) - 54px); }
   .selecting #sky { max-height: calc(100vh - 190px - 2 * var(--gap) - 54px); }
 }
+
+/* ---- Fly (plan 03): the flight picker beside Map | Drive | Fly, the flight's bar above the journey bar, and the
+   fade through black between the map and the seat. Map-style like the drive's: a chip that opens cards. */
+.flights { flex: none; min-width: 0; }
+.flight-chip, .flight-card, #flightbar { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; box-shadow: var(--shadow); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); }
+.flight-chip { position: relative; display: flex; align-items: center; gap: 8px; height: 46px; max-width: 320px; padding: 0 10px 0 14px; overflow: hidden; font-weight: 600; }
+.flight-chip:hover { background-color: color-mix(in srgb, var(--surface), var(--ink) 9%); }
+.flight-chip .name { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.flight-chip .icon { width: 18px; height: 18px; color: var(--muted); transition: rotate 0.15s; }
+.flights.open .flight-chip .icon { rotate: 180deg; }
+.flights.open .flight-chip { color: var(--blue); }
+.flight-chip .progress { position: absolute; left: 0; right: 0; bottom: 0; height: 2px; overflow: hidden; background: var(--fill); }
+.flight-chip .progress i { display: block; width: 35%; height: 100%; background: var(--blue); animation: drive-loading 1.3s ease-in-out infinite; }
+.flight-list { position: fixed; z-index: 3; top: calc(var(--gap) + 54px); left: var(--gap); width: min(420px, calc(100vw - 2 * var(--gap))); max-height: calc(100vh - var(--gap) - 54px - 140px); overflow-y: auto; display: flex; flex-direction: column; gap: 8px; scrollbar-width: thin; }
+.browsing .flight-list { display: none; }
+.flight-card { flex: none; padding: 11px 12px 12px; }
+.flight-card.current { outline: 2px solid var(--blue); outline-offset: -1px; }
+.flight-card .head b { display: block; font-weight: 650; }
+.flight-card .when { display: block; color: var(--muted); font-size: 12.5px; font-variant-numeric: tabular-nums; }
+.flight-card .badges { display: flex; flex-wrap: wrap; align-items: center; gap: 5px; margin-top: 8px; }
+.flight-card .badges span { padding: 2px 7px; border-radius: 6px; background: var(--fill); color: var(--muted); font-size: 11px; font-weight: 650; letter-spacing: 0.03em; }
+.flight-card .badges .len { margin-left: auto; background: none; font-variant-numeric: tabular-nums; letter-spacing: 0; }
+.flight-card .plays { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+.flight-card .plays button { padding: 6px 10px; border-radius: 8px; background: var(--fill); font-size: 12.5px; font-weight: 600; white-space: nowrap; }
+.flight-card .plays button:hover { background: var(--fill-strong); }
+.flight-card .plays button.primary { background: var(--blue); color: var(--surface); }
+.flight-card .plays button.primary:hover { background: color-mix(in srgb, var(--blue), var(--ink) 15%); }
+.flight-card .err { margin: 8px 0 0; color: var(--accent); font-size: 12.5px; }
+.flight-card.failed .plays { display: none; }
+
+#flightbar { display: flex; align-items: center; gap: 6px; padding: 5px 6px 5px 12px; font-variant-numeric: tabular-nums; white-space: nowrap; }
+#flightbar .status { display: flex; align-items: baseline; gap: 10px; padding-right: 4px; font-size: 13px; }
+#flightbar .status .phase { font-weight: 650; }
+#flightbar .status span { color: var(--muted); }
+#flightbar .status .ttd { color: var(--ink); }
+#flightbar button { display: flex; align-items: center; gap: 5px; height: 32px; padding: 0 10px; border-radius: 8px; background: var(--fill); font-size: 12.5px; font-weight: 600; }
+#flightbar button:hover { background: var(--fill-strong); }
+#flightbar button .icon { width: 16px; height: 16px; }
+#flightbar .pace[aria-pressed="true"] { color: var(--blue); background: var(--blue-wash); }
+#flightbar .frame[aria-pressed="false"] { color: var(--muted); }
+#flightbar .retimed { padding: 2px 7px; border-radius: 6px; background: var(--accent); color: #fff; font-size: 11px; font-weight: 650; }
+#flightbar .note { color: var(--muted); font-size: 12.5px; padding-right: 6px; }
+
+#fly-fade { position: fixed; inset: 0; z-index: 2; background: #000; opacity: 0; pointer-events: none; transition: opacity 0.25s linear; }
+#fly-fade.on { opacity: 1; }
+.flying #dock { max-width: calc(100vw - 2 * var(--gap) - 56px); }
+/* the map's bold hint names blue buildings, which are not blue while flying; Fly's own line says how to pick one */
+.flying #hint b { display: none; }
+/* a flight has a dozen events, some seconds apart: on plan 01's journey bar they are ticks, named on hover */
+.flying #transport .track { width: 300px; }
+.flying #transport .marks span { width: 2px; height: 7px; margin-top: 2px; border-radius: 1px; background: var(--muted); font-size: 0; cursor: help; }
+.flying #transport:has(.marks span) { padding-bottom: 7px; }
+
+@media (max-width: 720px) {
+  #top:has(> .flights:not([hidden])) { flex-direction: row; flex-wrap: wrap; }
+  .flights { flex: 1; }
+  .flight-chip { height: 40px; max-width: none; width: 100%; }
+  .flight-list { top: calc(var(--gap) + 102px); right: var(--gap); width: auto; max-height: calc(100vh - var(--gap) - 102px - 170px); }
+  #flightbar { flex-wrap: wrap; white-space: normal; }
+  #flightbar .status { flex-basis: 100%; flex-wrap: wrap; gap: 4px 10px; }
+}

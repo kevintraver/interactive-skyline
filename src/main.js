@@ -34,6 +34,7 @@ import { initQuality } from './render/setupQuality.js';
 import { createBench } from './render/bench.js';
 import { warmUp } from './render/warmup.js';
 import { initDrive } from './drive/index.js'; // drive seam
+import { initFlight } from './flight/index.js'; // flight seam
 import cities from '../data/cities.json';
 
 const app = await createApp(cities);
@@ -41,6 +42,7 @@ const { cityId, city, pending, settings, scene, camera, renderer, controls, loop
 // drive seam: Drive mode (src/drive/index.js) sets these while it is active; `night` is its look, never saved
 const drive = app.drive = { active: false, night: null, frame: null, render: null, focus: null, holding: null };
 app.nightNow = () => drive.night ?? settings.night; // drive seam
+const fly = app.fly = { active: false, focus: null, blocked: null }; // flight seam: Fly mode (src/flight/index.js) sets these while it is active
 app.format = createFormat(settings, city);
 app.sky = createLegacySky().init(app);
 initSim(app);
@@ -94,11 +96,12 @@ let lastFrame = null;
 loop.start(renderer, {
   before(now) {
     if (drive.active) drive.frame(now); // drive seam: the drive moves the camera, not the map controls
+    else if (fly.active) return; // flight seam: the flight places the camera itself (loop order 20)
     else { app.stepFlight(now); controls.update(); } // drive seam
   },
   render(now) {
     // while the camera is still, so the extra frames cost nothing during a drag
-    if (app.views.stale && !app.flying() && !app.dragging() && !drive.active) { app.views.stale = false; app.views.snap(); } // drive seam
+    if (app.views.stale && !app.flying() && !app.dragging() && !drive.active && !fly.active) { app.views.stale = false; app.views.snap(); } // drive seam; flight seam
     if (drive.active && drive.render) drive.render(); // drive seam: on the classic renderer the drive owns the draw
     else if (!(drive.active && drive.holding && drive.holding())) pipeline.render(); // drive seam: on the new one the pipeline draws; a route switch holds the last frame
     if (app.look) app.look.afterRender();
@@ -125,3 +128,5 @@ initAttractions({ cityId, scene, camera, renderer, settings: new Proxy(settings,
 
 // drive seam: Drive mode, offered for cities with routes; it adds window.__skyline.drive and .terrain
 initDrive(app, { terrainData });
+// flight seam: Fly mode, offered for cities with an airport and recorded flights; it adds window.__skyline.flight
+initFlight(app, { terrainData });

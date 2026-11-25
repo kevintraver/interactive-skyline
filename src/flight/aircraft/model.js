@@ -172,7 +172,7 @@ export function buildAirframeModel(scene, rig, { nodes, lampPoints = true }) {
  */
 export async function loadAirframeModel({ url = AIRFRAME_URL, rigUrl = RIG_URL, rig = null, nodes, loader = null,
   fetch: get = globalThis.fetch, lampPoints = true }) {
-  const gltfLoader = loader ?? new (await import('three/examples/jsm/loaders/GLTFLoader.js')).GLTFLoader();
+  const gltfLoader = loader ?? new (await import('three/addons/loaders/GLTFLoader.js')).GLTFLoader();
   const [gltf, rigData] = await Promise.all([gltfLoader.loadAsync(url), rig ? rig : get(rigUrl).then((r) => {
     if (!r.ok) throw new Error(`airframe: ${rigUrl} ${r.status}`);
     return r.json();

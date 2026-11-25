@@ -29,6 +29,7 @@ export function initPicking(app) {
     const low = app.buildings.low;
     const blocker = low.geometry.boundsTree && ray.intersectObject(low, false)[0];
     if (blocker && blocker.distance < hit.distance) return null;
+    if (app.fly.active && app.fly.blocked(ray.ray, hit.distance)) return null; // flight seam: the cabin wall and the wing stop a click
     const entry = hit.object.userData.entry;
     return { entry, onMarker: hit.object === entry.marker, point: hit.point };
   }
@@ -91,7 +92,7 @@ export function initPicking(app) {
     if (move) {
       const { entry, start: from } = move;
       move = null;
-      controls.enabled = true;
+      controls.enabled = !app.fly.active; // flight seam: the map's controls stay off while flying
       canvas.classList.remove('grabbing');
       if (entry.offset.distanceTo(from) > 0.5) {
         app.remember(`Moved: ${label(entry.data)}`, `Put back: ${label(entry.data)}`, () => app.place(entry, from.x, from.z));
