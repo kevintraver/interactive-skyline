@@ -16,7 +16,8 @@ import { createTerrain } from '../world/terrain/index.js';
 import { createFlightEnv } from './env.js';
 
 /** Parameters of the address that belong to the flight (src/flight/url.js FLIGHT_KEYS) or to the drive. */
-const MODE_KEYS = ['mode', 'flight', 'at', 'seat', 'yaw', 'pitch', 'lens', 'frame', 't', 'route', 's', 'view', 'rain'];
+const MODE_KEYS = ['mode', 'flight', 'at', 'seat', 'yaw', 'pitch', 'lens', 'frame', 't', 'route', 's', 'view', 'rain',
+  'orbit', 'alt', 'r', 'phase', 'c', 'on', 'out', 'ias'];
 
 /**
  * @param {object} app the shared application context, with the city, terrain and buildings loaded, and app.fly
@@ -34,7 +35,7 @@ export function initFlight(app, { terrainData }) {
 
   const not = (why) => {
     const no = () => Promise.reject(new Error(why));
-    hooks.flight = { ready: Promise.resolve(false), list: () => [], active: () => false, start: no, whenSettled: no, seek: no, exit() {},
+    hooks.flight = { ready: Promise.resolve(false), list: () => [], active: () => false, start: no, orbit: no, whenSettled: no, seek: no, exit() {},
       state: () => null, stats: () => null, visible: () => false, why };
     return hooks.flight;
   };
@@ -65,11 +66,12 @@ export function initFlight(app, { terrainData }) {
     return loading;
   }
   /** On the classic renderer: the same address with mode=flight, on the new renderer. */
-  function reloadIntoFlight(id) {
+  function reloadIntoFlight(id, { orbit = false } = {}) {
     const q = new URLSearchParams(location.search);
     for (const k of MODE_KEYS) q.delete(k);
     q.set('mode', 'flight');
-    if (id) q.set('flight', id);
+    if (orbit) q.set('orbit', '1');
+    else if (id) q.set('flight', id);
     location.assign(`${location.pathname}?${q}`);
     return new Promise(() => {});
   }
@@ -78,6 +80,18 @@ export function initFlight(app, { terrainData }) {
   const enter = (id, o) => {
     if (legacy) return reloadIntoFlight(id);
     const p = load().then((m) => m.enter(id, o));
+    entering = p.catch(() => {});
+    return p;
+  };
+  /** A removable building by id, and the orbit's centre and label for it (where it stands now, moved or not). */
+  const building = (id) => app.tall.find((e) => e.data.id === id) ?? null;
+  const centreOf = (entry) => ({ x: entry.data.c[0] + (entry.offset?.x ?? 0), n: entry.data.c[1] - (entry.offset?.z ?? 0) });
+  /** Enter an orbit: decodeOrbitState's fields, `on` resolved to the building's centre and name when it exists. */
+  const enterOrbit = (o = {}) => {
+    if (legacy) return reloadIntoFlight(null, { orbit: true });
+    const b = o.on ? building(o.on) : null;
+    const resolved = b ? { ...o, center: centreOf(b), centerLabel: app.format.label(b.data) } : { ...o, on: undefined };
+    const p = load().then((m) => m.enterOrbit(resolved));
     entering = p.catch(() => {});
     return p;
   };
@@ -99,11 +113,15 @@ export function initFlight(app, { terrainData }) {
         btn.blur(); // Space plays and pauses while flying; it must not press this button again
         if (seam.active) { mode.cards.setOpen(!mode.cards.state.open); return; }
         const remembered = mode?.memory;
+        if (remembered?.kind === 'orbit' && remembered.orbit) { enterOrbit({ ...remembered.orbit, play: !!remembered.playing }).catch(() => {}); return; }
         enter(remembered?.id, { picker: !remembered?.at[remembered.id], play: !!remembered?.playing }).catch(() => {});
       });
       // ?mode=flight opens straight into the flight, paused on its moment
       if (params.get('mode') === 'flight' && !legacy) {
-        import('./url.js').then(({ decodeFlightState }) => {
+        Promise.all([import('./url.js'), import('./orbitUrl.js')]).then(([{ decodeFlightState }, { decodeOrbitState }]) => {
+          // ?orbit=1 opens the orbit of the link, on its circle at its phase, paused (4.10)
+          const o = decodeOrbitState(location.search);
+          if (o.orbit) return enterOrbit(o);
           const s = decodeFlightState(location.search);
           const id = flights.some((f) => f.id === s.id) ? s.id : undefined;
           return enter(id, { ...s, picker: !id });
@@ -113,7 +131,6 @@ export function initFlight(app, { terrainData }) {
     });
 
   const need = () => { if (!mode || !seam.active || !mode.session) throw new Error('Fly is not active'); return mode; };
-  const later = (what) => () => Promise.reject(new Error(`${what} comes in a later phase of plan 03`));
   hooks.flight = {
     /** Resolves true once Fly is offered (flights/index.json read), false when it is not. */
     ready,
@@ -161,6 +178,11 @@ export function initFlight(app, { terrainData }) {
       if (!mode?.session?.track || !seam.active) return null; // entering: the track is not in yet
       const s = mode.session, st = s.sampleAt(s.progressS), l = s.rig.state;
       const deg = (r) => (r * 180) / Math.PI;
+      const orbit = s.kind === 'orbit' ? {
+        id: 'orbit', kind: 'orbit', phaseDeg: s.track.phaseAt(s.progressS), orbit: { ...s.track.orbit, center: { ...s.track.orbit.center }, wind: { ...s.track.orbit.wind } },
+        bankDeg: deg(st.roll), joinT: s.track.joinT, lapS: s.track.lapS, steadyBankDeg: s.track.bankDeg, lastChange: mode.lastOrbitChange,
+        fromCentreM: Math.hypot(st.position.x - s.track.orbit.center.x, -st.position.z - s.track.orbit.center.n), on: mode.memory.orbitOn,
+      } : { kind: 'flight' };
       return {
         id: mode.memory.id, runway: s.track.meta.runway, t: st.t, s: st.s, x: st.position.x, y: st.position.y, z: st.position.z,
         headingDeg: ((deg(st.heading) % 360) + 360) % 360, pitchDeg: deg(st.pitch), rollDeg: deg(st.roll),
@@ -170,6 +192,7 @@ export function initFlight(app, { terrainData }) {
         playing: app.clock.playing, rate: app.clock.rate, pace: s.pace, seat: s.seat.id, look: l, frame: mode.frame, hud: mode.hud,
         durationS: s.track.durationS, touchdownT: s.track.touchdownT, simMs: app.clock.timeMs,
         groundPitchDeg: (s.groundPitch * 180) / Math.PI, airframeModel: !!s.airframe.model,
+        ...orbit,
       };
     },
     /** A scene point on the screen: { x, y, onScreen, throughWindow }. */
@@ -224,7 +247,37 @@ export function initFlight(app, { terrainData }) {
       return { outside: outside.luminanceCdM2, cabin: cabin.luminanceCdM2, cabinAlpha: cabin.alpha,
         composed: outside.luminanceCdM2 * (1 - cabin.alpha) + cabin.luminanceCdM2, exposure: k };
     },
-    orbit: later('Orbit'),
+    /**
+     * Enter Fly in an orbit (4.6, 7.12) on its circle at its phase; resolves when the first frame has settled. Plays
+     * unless `play: false`. center: { x, n } metres east and north of the city origin, or a removable building's id
+     * ("Orbit this"); the Strip by default. seat chooses the direction (right-hand seats clockwise); outward reverses it.
+     * @param {{ altitudeFt?: number, radiusKm?: number, center?: { x: number, n: number } | string, seat?: string,
+     *   phaseDeg?: number, outward?: boolean, iasKt?: number, play?: boolean, yaw?: number, pitch?: number, lens?: number }} [o]
+     */
+    async orbit({ altitudeFt, radiusKm, center, seat, phaseDeg, outward, iasKt, play, yaw, pitch, lens } = {}) {
+      await ready;
+      if (legacy) throw new Error('Fly is drawn by the new renderer');
+      const byId = typeof center === 'string';
+      if (byId && !building(center)) throw new Error(`no removable building "${center}"`);
+      await enterOrbit({ altFt: altitudeFt, radiusKm, phaseDeg, outward, iasKt, seat, yaw, pitch, lens,
+        center: byId ? undefined : center, on: byId ? center : undefined, play: play !== false });
+    },
+    /**
+     * Change the orbit as the panel does: any of altFt, radiusKm, center ({ x, n } or a building id), outward, seat,
+     * iasKt, direction; `cut: true` cuts as a preset does. Resolves after the change (a cut's fade included) with
+     * { params, cut, unchanged }.
+     */
+    async orbitChange(change = {}, { cut = false } = {}) {
+      const m = need();
+      if (typeof change.center === 'string') {
+        const b = building(change.center);
+        if (!b) throw new Error(`no removable building "${change.center}"`);
+        return pick(await m.orbitThis(b));
+      }
+      return pick(await m.changeOrbit(change, { cut }));
+    },
   };
+  /** What a hook hands back of a planned orbit change. */
+  function pick(plan) { return { params: plan.params, cut: plan.cut, unchanged: !!plan.unchanged, flownS: plan.flownS ?? null, estimateS: plan.estimateS }; }
   return hooks.flight;
 }

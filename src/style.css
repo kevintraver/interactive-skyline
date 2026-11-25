@@ -519,6 +519,13 @@ button { font: inherit; color: inherit; background: none; border: 0; padding: 0;
 #flightwindow kbd { margin-left: auto; padding: 0 5px; border: 1px solid var(--line); border-radius: 4px; color: var(--muted); font: 11px/1.5 inherit; }
 #flightbar .note { color: var(--muted); font-size: 12.5px; padding-right: 6px; }
 
+/* the orbit panel (ui/orbitPanel.js, section 4.9's #orbit-controls): under the top bar on the right while orbiting,
+   clear of the building list and the card on the left and of the time-of-day popover at the bottom right */
+#orbit-controls { position: fixed; z-index: 3; top: calc(var(--gap) + 54px); right: var(--gap); width: min(320px, calc(100vw - 2 * var(--gap))); max-height: calc(100vh - var(--gap) - 54px - 150px); overflow-y: auto;
+  background: var(--surface); border: 1px solid var(--line); border-radius: 12px; box-shadow: var(--shadow); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); }
+#orbit-controls[hidden] { display: none; }
+.orbit-card .when { margin-top: 2px; }
+
 #fly-fade { position: fixed; inset: 0; z-index: 2; background: #000; opacity: 0; pointer-events: none; transition: opacity 0.25s linear; }
 #fly-fade.on { opacity: 1; }
 .flying #dock { max-width: calc(100vw - 2 * var(--gap) - 56px); }
@@ -536,4 +543,7 @@ button { font: inherit; color: inherit; background: none; border: 0; padding: 0;
   .flight-list { top: calc(var(--gap) + 102px); right: var(--gap); width: auto; max-height: calc(100vh - var(--gap) - 102px - 170px); }
   #flightbar { flex-wrap: wrap; white-space: normal; }
   #flightbar .status { flex-basis: 100%; flex-wrap: wrap; gap: 4px 10px; }
+  #orbit-controls { top: calc(var(--gap) + 102px); max-height: calc(100vh - var(--gap) - 102px - 190px); }
+  /* one column of overlays at this width: the open picker or the card covers the panel's place */
+  body:has(.flights.open) #orbit-controls, body:has(#card:not([hidden])) #orbit-controls { display: none; }
 }

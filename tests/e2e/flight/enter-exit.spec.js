@@ -25,7 +25,7 @@ for (const backend of ['webgpu', 'webgl2']) {
     // enter by the button: the picker shows under #top; then play its first way (the condensed pace)
     await page.locator('#modes button[data-mode="flight"]').click();
     await expect(page.locator('#modes button[data-mode="flight"]')).toHaveAttribute('aria-pressed', 'true');
-    const card = page.locator('.flight-card').first();
+    const card = page.locator('.flight-card[data-flight="synthetic-19"]'); // the Orbit entry is first in the list
     await expect(card).toBeVisible();
     await expect(card).toContainText('Runway 19R, from the east');
     await card.locator('button[data-play="pace"]').click();

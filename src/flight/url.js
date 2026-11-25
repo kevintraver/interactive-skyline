@@ -7,6 +7,9 @@
 export const FLIGHT_KEYS = ['mode', 'flight', 'at', 'seat', 'yaw', 'pitch', 'lens', 'frame', 't'];
 /** Keys of the drive's address that mean nothing while flying (src/drive/url.js), dropped when the flight writes its own. */
 const DRIVE_ONLY = ['route', 's', 'view', 'rain'];
+/** The orbit's own keys (orbitUrl.js ORBIT_KEYS, listed here so this module stays free of the orbit's): moving from an
+ * orbit to a recorded flight, or out of Fly, drops them. */
+const ORBIT_ONLY = ['orbit', 'alt', 'r', 'phase', 'c', 'on', 'out', 'ias'];
 
 const num = (v) => {
   if (v == null || String(v).trim() === '') return undefined;
@@ -59,7 +62,7 @@ export function decodeFlightState(search) {
  */
 export function encodeFlightState(s, base) {
   const p = params(base);
-  for (const k of [...FLIGHT_KEYS, ...DRIVE_ONLY]) p.delete(k);
+  for (const k of [...FLIGHT_KEYS, ...DRIVE_ONLY, ...ORBIT_ONLY]) p.delete(k);
   p.set('mode', 'flight');
   if (s.id) p.set('flight', s.id);
   if (Number.isFinite(s.at)) p.set('at', round1(Math.max(0, s.at)));
@@ -70,10 +73,10 @@ export function encodeFlightState(s, base) {
   return p;
 }
 
-/** A copy of `base` without the flight's keys; another mode's address is left as it is. */
+/** A copy of `base` without the flight's keys (the orbit's too); another mode's address is left as it is. */
 export function clearFlightState(base) {
   const p = params(base);
   if (p.get('mode') !== 'flight') return p;
-  for (const k of FLIGHT_KEYS) p.delete(k);
+  for (const k of [...FLIGHT_KEYS, ...ORBIT_ONLY]) p.delete(k);
   return p;
 }

@@ -54,8 +54,30 @@ export interface FlightMeta {
   source: { archive: string; release?: string; licence: string; [k: string]: string | undefined };
 }
 
+/** The header of a generated orbit (orbit.js createOrbitTrack): the flight file's fields, filled for an orbit. */
+export interface OrbitMeta extends Omit<FlightMeta, 'format' | 'qa'> {
+  format: 'skyline-orbit/1';
+  kind: 'orbit';
+  qa: Record<string, never>;
+  orbit: OrbitParams;
+}
+
+/** orbit.js orbitParams: the orbit completed and held inside the limits (section 4.6, 7.12). */
+export interface OrbitParams {
+  center: { x: number; n: number };        // metres east and north of the city origin
+  altFt: number;                           // 4,500 to 41,000 ft above sea level
+  radiusKm: number;                        // the bank limit's smallest at this height and speed, to 60 km
+  phaseDeg: number;                        // the bearing from the centre where the circle starts, clockwise from north
+  seat: string | null; seatSide: 'left' | 'right'; outward: boolean;
+  direction: 'cw' | 'ccw'; directionSet: boolean;
+  iasKt: number | null;                    // a speed other than the schedule's
+  wind: { east: number; north: number };   // m/s toward east and north, one wind for the whole orbit
+  rollIn: boolean; turns: number; city: string; sunAltDeg: number; startMs: number; weightKg: number;
+  minRadiusKm: number; iasKtFlown: number; tasKt: number; mach: number;   // derived, for the panel
+}
+
 export interface Track {
-  meta: FlightMeta;
+  meta: FlightMeta | OrbitMeta;
   dt: number; samples: number;
   durationS: number; lengthM: number;
   recordedStartMs: number;
@@ -79,4 +101,21 @@ export interface FlightJourney extends Journey {
   timeAt(s: number): number;               // (plan 02)
   paceRate(progressS: number): number;     // the clock rate to use at this progress for the condensed pace
   paceDurationS(): number;                 // wall seconds of the whole flight at the condensed pace
+}
+
+/** orbit.js createOrbitTrack / changeOrbit / planChange: a Track with the orbit's own members. touchdownT is Infinity;
+ * the events are rollIn or change, join, lap2, lap3. */
+export interface OrbitTrack extends Track {
+  meta: OrbitMeta;
+  orbit: OrbitParams;
+  joinT: number;                           // seconds from the start at which the steady circle begins
+  lapS: number;                            // one lap of the steady circle
+  bankDeg: number;                         // the steady circle's bank (with a wind, its largest)
+  overLimit: boolean;
+  phaseAt(t: number): number;              // degrees, the bearing from the centre now
+  timeAtPhase(phaseDeg: number): number;
+  wrap(t: number): number;                 // a time past the end brought back onto the steady circle by whole laps
+  loadFactorAt(t: number): number;
+  kinAt(t: number, out?: object): object;
+  frame: { sceneY(h: number, x: number, y: number): number };
 }

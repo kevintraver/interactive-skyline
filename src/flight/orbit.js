@@ -64,6 +64,9 @@ export const ORBIT = Object.freeze({
   changeBankDeg: 27,
   /** s: the shortest change (ESTIMATED). */
   changeMinS: 20,
+  /** s: a change whose flown transition would take longer is made as a cut instead (the decision of 25 Nov 2026:
+   * airliner rates make a preset jump take up to 46 minutes); presets always cut. */
+  flownMaxS: 60,
 });
 
 /** Presets (4.6): altitudes from the plan; radii ESTIMATED (Overhead from 7.12's comfortable 10 deg at 35,000 ft is 31
@@ -729,6 +732,19 @@ export function createOrbitTrack(o = {}, { frame } = {}) {
 // ---------------------------------------------------------------------------------------------------- the controls
 
 /**
+ * The input for orbitParams after a change at track time tNow: the old parameters with the change over them. The side
+ * and the direction are stored as derived; a new seat or the outward switch derives them again, unless a direction
+ * was chosen (now, or before and nothing it depends on changed).
+ */
+function mergeChange(old, change, tNow) {
+  const merged = { ...old, ...change, rollIn: false, startMs: old.startMs + Math.max(0, tNow) * 1000 };
+  const touchesSide = 'seat' in change || 'seatSide' in change || 'outward' in change;
+  if ('seat' in change && !('seatSide' in change)) delete merged.seatSide;
+  if (!('direction' in change) && (!old.directionSet || touchesSide)) delete merged.direction;
+  return merged;
+}
+
+/**
  * The parts that take the aircraft from `from` at t0 onto the circle `end`, or null when it goes round the wrong way
  * for every centre tried (a reversal). Two ways are tried and the quicker taken: (A) about the centre the aircraft
  * circles now, that centre then moving to the new one; (B) about the new centre, leaving the old path at the first
@@ -776,14 +792,7 @@ function onto(from, t0, end, dir, p, frame) {
  * @param {{ frame?: object }} [opts] the city frame; by default the one the track was made with
  */
 export function changeOrbit(track, tNow, change = {}, { frame = track.frame } = {}) {
-  const old = track.orbit;
-  const merged = { ...old, ...change, rollIn: false, startMs: old.startMs + tNow * 1000 };
-  // the side and the direction are stored as derived; a new seat or the outward switch derives them again, unless a
-  // direction was chosen (now, or before and nothing it depends on changed)
-  const touchesSide = 'seat' in change || 'seatSide' in change || 'outward' in change;
-  if ('seat' in change && !('seatSide' in change)) delete merged.seatSide;
-  if (!('direction' in change) && (!old.directionSet || touchesSide)) delete merged.direction;
-  const p = orbitParams(merged);
+  const p = orbitParams(mergeChange(track.orbit, change, tNow));
   const end = endOf(p), dir = dirOf(p);
   const t0 = Math.max(0, tNow);
   let parts = onto(track, t0, end, dir, p, frame);
@@ -808,4 +817,72 @@ export function changeOrbit(track, tNow, change = {}, { frame = track.frame } = 
   const next = assemble(parts, p, frame);
   next.orbit.phaseDeg = next.phaseAt(next.joinT);
   return { params: next.orbit, track: next };
+}
+
+// ---------------------------------------------------------------------------------------------------- cuts
+
+/** True when two parameter sets fly the same circle the same way (the seat may differ, on the same side). */
+function sameOrbit(a, b) {
+  return Math.hypot(a.center.x - b.center.x, a.center.n - b.center.n) < 1e-6 && a.altFt === b.altFt
+    && Math.abs(a.radiusKm - b.radiusKm) < 1e-9 && a.direction === b.direction && a.iasKt === b.iasKt
+    && Math.hypot(a.wind.east - b.wind.east, a.wind.north - b.wind.north) < 1e-6;
+}
+
+/**
+ * A quick lower bound (s) on how long changeOrbit would take to put the aircraft on the new circle, without flying it:
+ * the longest of the shortest change, the climb at ORBIT.climbFpm, the roll to the new bank at ORBIT.rollRateDegS and
+ * the move sideways (radius and centre, about the centre circled now or about the new one, whichever is less) at
+ * 0.6 V, each stretched by the quintic blend's peak rate as transition() does before its first trial. A reversal of
+ * direction adds the S-turn's move of the circle by two radii. The exact duration is the flown track's joinT.
+ * @param {ReturnType<typeof createOrbitTrack>} track  @param {number} tNow  @param {object} change a change for changeOrbit
+ */
+export function estimateChangeS(track, tNow, change = {}) {
+  return estimateFor(track, tNow, orbitParams(mergeChange(track.orbit, change, tNow)));
+}
+/** estimateChangeS for the new parameters already completed (orbitParams). */
+function estimateFor(track, tNow, p) {
+  const kin = track.kinAt(Math.max(0, tNow), {});
+  const end = endOf(p), dir = dirOf(p);
+  const V = Math.min(end.V, kin.Vk[0]);
+  const rhoNow = Math.hypot(kin.x - kin.cx[0], kin.n - kin.cn[0]);
+  const aboutOld = Math.abs(end.rho - rhoNow) + Math.hypot(end.cx - kin.cx[0], end.cn - kin.cn[0]);
+  const aboutNew = Math.abs(end.rho - Math.hypot(kin.x - end.cx, kin.n - end.cn));
+  const reversal = p.direction !== track.orbit.direction;
+  const sideways = Math.min(aboutOld, aboutNew) + (reversal ? 2 * end.rho : 0);
+  const bankTo = dir * Math.atan((end.V * end.V) / (G * end.rho));
+  return Math.max(ORBIT.changeMinS,
+    (QUINTIC_PEAK * Math.abs(end.h - kin.h)) / ((ORBIT.climbFpm * FT) / 60),
+    (QUINTIC_PEAK * sideways) / (0.6 * V),
+    (QUINTIC_PEAK * Math.abs(bankTo - kin.bank)) / (ORBIT.rollRateDegS * DEG));
+}
+
+/**
+ * The change made as a cut: the new orbit already established on its circle, at the bearing from its centre nearest
+ * the aircraft at tNow (no roll-in), its clock going on from that moment. The mode hides the jump under its fade.
+ */
+export function cutOrbit(track, tNow, change = {}, { frame = track.frame } = {}) {
+  const merged = mergeChange(track.orbit, change, tNow);
+  const p = orbitParams(merged);
+  const kin = track.kinAt(Math.max(0, tNow), {});
+  const phaseDeg = mod(Math.atan2(kin.x - p.center.x, kin.n - p.center.n) / DEG, 360);
+  const next = createOrbitTrack({ ...merged, phaseDeg, rollIn: false }, { frame });
+  return { params: next.orbit, track: next };
+}
+
+/**
+ * A change to the orbit, flown when it is short and cut when it is long (the decision of 25 Nov 2026). The quick
+ * estimate decides first; when it allows flying, the change is flown and its real duration (the new track's joinT)
+ * decides. `cut: true` (a preset) always cuts. A change that leaves the circle as it is (another seat on the same side)
+ * returns the track unchanged.
+ * @returns {{ params: object, track: object, cut: boolean, unchanged?: boolean, flownS?: number, estimateS: number }}
+ */
+export function planChange(track, tNow, change = {}, { cut = false, maxFlownS = ORBIT.flownMaxS, frame = track.frame } = {}) {
+  const p = orbitParams(mergeChange(track.orbit, change, tNow));
+  if (sameOrbit(p, track.orbit)) return { params: track.orbit, track, cut: false, unchanged: true, estimateS: 0 };
+  const estimateS = estimateFor(track, tNow, p);
+  if (cut || estimateS > maxFlownS) return { ...cutOrbit(track, tNow, change, { frame }), cut: true, estimateS };
+  const flown = changeOrbit(track, tNow, change, { frame });
+  const flownS = flown.track.joinT;
+  if (flownS > maxFlownS) return { ...cutOrbit(track, tNow, change, { frame }), cut: true, estimateS, flownS };
+  return { ...flown, cut: false, estimateS, flownS };
 }

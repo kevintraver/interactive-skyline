@@ -66,3 +66,16 @@ describe('journey markers', () => {
     expect(chapterMarkers({ events: [{ id: 'x', t: 3, label: 'X' }] })).toEqual([{ progressS: 3, label: 'X', id: 'x' }]);
   });
 });
+
+describe('the Orbit entry beside the flights (4.6, 4.9)', async () => {
+  const { chipTitle, ORBIT_ID, orbitPresetText } = await import('../../../src/flight/ui/cards.js');
+  it('names the chip "Orbit" while orbiting, the flight while flying one, and asks for a choice otherwise', () => {
+    const flights = [f('a', 'dusk')];
+    expect(chipTitle(ORBIT_ID, flights)).toBe('Orbit');
+    expect(chipTitle('a', flights)).toBe('Runway 19R, from the north-east');
+    expect(chipTitle(null, flights)).toBe('Choose a flight');
+  });
+  it('labels each preset with its height', () => {
+    expect(orbitPresetText({ label: 'The valley', altFt: 12000 })).toBe('The valley · 12,000 ft');
+  });
+});

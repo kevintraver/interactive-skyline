@@ -10,6 +10,13 @@
 // has loaded), posed each frame from the state and a presentation time (wall seconds that run only while the clock
 // plays: flashing lights and wing shake, plan 7.5). On the wheels the state itself is turned nose-down by the ground
 // attitude before the layers place anything (attitude.js), so the cabin and the camera tilt with the airframe.
+//
+// Or an orbit (plan 03, 4.6 and 7.12; orbit.js): a generated track that is not put on the timeline (scrubbing the day
+// would fling the aircraft round the circle). The session keeps its own time along it, orbitT, advanced by wall time
+// times min(rate, 8) while the clock plays and wrapped onto the steady circle by whole laps; the Sun's height sets
+// its lights and cabin light each frame (applySun), since the hour can change under it. A change of the orbit is
+// planned (orbit.js planChange: flown when short, a cut when long) and then used: the track is replaced and orbitT
+// starts again at 0, where the new track begins at the aircraft (a flown change) or on the new circle (a cut).
 import { Vector3, Raycaster } from 'three';
 import { loadTrack, createState } from './track.js';
 import { flightJourney } from './journey.js';
@@ -25,6 +32,11 @@ import { createCabinStage } from './view/cabinStage.js';
 import { createFlightWorld } from './world.js';
 import { paceRateFor, playStart } from './pace.js';
 import { bodyDirection, lookToward } from './lookAt.js';
+import { createOrbitTrack, planChange, applySun } from './orbit.js';
+
+/** The orbit runs at the clock's rate up to this (7.12: playing at 60x moves the Sun 60 times faster and the aircraft 8). */
+const ORBIT_RATE_MAX = 8;
+const FT = 0.3048;
 
 /** Frames of the mode's own JavaScript time kept for stats(). */
 const KEEP = 240;
@@ -62,6 +74,8 @@ export async function createFlightSession({ app, fe, terrain, meta, data, onFram
 
   const tracks = new Map();
   let track = null, journey = null, handle = null, active = false, pace = true;
+  /** 'flight' (a recorded arrival on the timeline) or 'orbit' (a generated track on the session's own time). */
+  let kind = 'flight', orbitT = 0;
   const sample = createState();
   let heightAboveGround = NaN, compiled = false, groundPitch = 0, wallS = 0, stageOff = false;
   const ms = [];
@@ -76,12 +90,32 @@ export async function createFlightSession({ app, fe, terrain, meta, data, onFram
     return tracks.get(entry.id);
   }
 
-  const progress = () => (handle ? handle.progressS : 0);
-  /** The aircraft at a progress, turned to its ground attitude when it stands on its wheels. */
+  const progress = () => (kind === 'orbit' ? orbitT : handle ? handle.progressS : 0);
+  /** The Sun's height now (degrees; 90, day, before plan 01's first state). */
+  const sunAltDeg = () => fe.state?.sun?.altDeg ?? 90;
+  /** The aircraft at a progress, turned to its ground attitude when it stands on its wheels; an orbit's lights and
+   * cabin light for the Sun now. */
   function sampleAt(t, out = createState()) {
     const s = track.sample(t, out);
+    if (kind === 'orbit') applySun(s, sunAltDeg());
     groundPitch = applyGroundPitch(s, airRig);
     return s;
+  }
+  /** The wind the orbit flies in: plan 01's at the orbit's centre and height (env.at() gives the surface wind at every
+   * height today), toward east and north; calm when it says nothing. */
+  function orbitWind(center, altFt) {
+    const x = center?.x ?? 0, n = center?.n ?? 0, h = (altFt ?? 12000) * FT;
+    let w = null;
+    try { w = fe.at(new Vector3(x, fe.frame.sceneY(h, x, n), -n))?.wind; } catch { w = null; }
+    const east = Number.isFinite(w?.x) ? w.x : 0, north = Number.isFinite(w?.z) ? -w.z : 0;
+    return { east, north };
+  }
+  /** A new track in place of the old: the pane's journey and the grids its first frame needs. */
+  function useTrack(t) {
+    track = t;
+    pane.setTrack(track, { airAt: (st) => fe.at(st.position) });
+    const s0 = track.sample(progress());
+    world.preload({ x: s0.position.x, y: -s0.position.z, altitude: s0.altMsl, far: Infinity }).catch(() => {});
   }
   /** Sample the track now and place the aircraft, its moving parts and lights, the cabin, the camera and the world.
    * dtS: wall seconds since the last frame (the shade's travel); 0 outside the frame loop, so a hook moves nothing. */
@@ -126,8 +160,13 @@ export async function createFlightSession({ app, fe, terrain, meta, data, onFram
       if (!active || !track) return;
       const t0 = performance.now();
       if (clock.playing) wallS += (frame?.dtWallMs || 0) / 1000; // presentation time: frozen while paused
-      const r = paceRateFor({ pace, playing: clock.playing, progressS: progress(), rate: clock.rate }, journey);
-      if (r !== null) clock.setRate(r);
+      if (kind === 'orbit') {
+        // the orbit's own time: wall time at the clock's rate, at most 8x, while the clock plays (7.12)
+        if (clock.playing) orbitT = track.wrap(orbitT + ((frame?.dtWallMs || 0) / 1000) * Math.min(ORBIT_RATE_MAX, Math.max(0, clock.rate)));
+      } else {
+        const r = paceRateFor({ pace, playing: clock.playing, progressS: progress(), rate: clock.rate }, journey);
+        if (r !== null) clock.setRate(r);
+      }
       place((frame?.dtWallMs || 0) / 1000);
       onFrame(session);
       ms.push(performance.now() - t0);
@@ -193,6 +232,8 @@ export async function createFlightSession({ app, fe, terrain, meta, data, onFram
     get handle() { return handle; },
     get active() { return active; },
     get pace() { return pace; },
+    /** 'flight' or 'orbit'. */
+    get kind() { return kind; },
     get heightAboveGround() { return heightAboveGround; },
     get progressS() { return progress(); },
     /** The ground attitude applied to the last sample, radians (0 in the air). */
@@ -216,6 +257,7 @@ export async function createFlightSession({ app, fe, terrain, meta, data, onFram
     async begin(entry, { at, startMs } = {}) {
       const t = await trackOf(entry);
       if (handle) fe.attachJourney(null);
+      kind = 'flight';
       track = t;
       // the pane's frost, fog and water over the journey, from the air along it (again when the weather changes)
       pane.setTrack(track, { airAt: (st) => fe.at(st.position) });
@@ -228,6 +270,44 @@ export async function createFlightSession({ app, fe, terrain, meta, data, onFram
       world.preload({ x: s0.position.x, y: -s0.position.z, altitude: s0.altMsl, far: Infinity }).catch(() => {});
       return track;
     },
+    /**
+     * Begin an orbit (orbit.js createOrbitTrack) on the session's own time, `at` seconds along it: no journey on the
+     * timeline (the transport hides, the day can be scrubbed under it), no condensed pace. The clock's time is its
+     * start; the wind is plan 01's.
+     * @param {object} input createOrbitTrack's parameters (orbitUrl.js orbitInput)
+     */
+    beginOrbit(input = {}, { at = 0 } = {}) {
+      if (handle) fe.attachJourney(null);
+      handle = null;
+      journey = null;
+      const t = createOrbitTrack({ wind: orbitWind(input.center, input.altFt), sunAltDeg: sunAltDeg(), ...input, startMs: clock.timeMs }, { frame: fe.frame });
+      kind = 'orbit';
+      orbitT = t.wrap(Math.max(0, at));
+      pace = false;
+      useTrack(t);
+      fe.invalidate();
+      return track;
+    },
+    /**
+     * Plan a change of the orbit from where the aircraft is now (orbit.js planChange: flown when short, a cut when
+     * long; `cut: true` always cuts). Nothing changes until useOrbit(plan). The wind is plan 01's again.
+     */
+    planOrbit(change = {}, { cut = false } = {}) {
+      if (kind !== 'orbit' || !track) throw new Error('not orbiting');
+      const p = track.orbit;
+      return planChange(track, orbitT, { wind: orbitWind(change.center ?? p.center, change.altFt ?? p.altFt), ...change }, { cut, frame: fe.frame });
+    },
+    /** Fly a planned change: the new track from its start (the aircraft now, or on the new circle after a cut). */
+    useOrbit(plan) {
+      if (kind !== 'orbit' || !plan || plan.unchanged) return track?.orbit ?? null;
+      orbitT = 0;
+      useTrack(plan.track);
+      if (active) place();
+      fe.invalidate();
+      return track.orbit;
+    },
+    /** planOrbit and useOrbit at once; returns the new parameters. */
+    changeOrbit(change = {}, o = {}) { const plan = session.planOrbit(change, o); session.useOrbit(plan); return plan.params; },
     /** End the journey (the transport bar hides). */
     end() {
       if (handle) fe.attachJourney(null);
@@ -243,7 +323,10 @@ export async function createFlightSession({ app, fe, terrain, meta, data, onFram
       fe.invalidate();
     },
     setPace(on) { pace = !!on; fe.invalidate(); },
-    seek(t) { if (handle) { handle.seek(t); place(); fe.invalidate(); } },
+    seek(t) {
+      if (kind === 'orbit' && track) { orbitT = track.wrap(Math.max(0, t)); place(); fe.invalidate(); return; }
+      if (handle) { handle.seek(t); place(); fe.invalidate(); }
+    },
     look(l) { rig.look(l || {}); fe.invalidate(); },
     resetLook() { rig.reset(); fe.invalidate(); },
     cleanView(on) { const c = layers.cleanView(on); cabinStage.setShown(layers.cabinShown && !stageOff); fe.invalidate(); return c; },

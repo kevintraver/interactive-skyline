@@ -2,7 +2,8 @@
 // status chip (phase, time to touchdown, altitude, ground speed, in the visitor's units; H hides it), the pace (the
 // condensed pace, or the rate the visitor chose; pressing it turns the condensed pace back on), the seat (opens the
 // seat map, ui/seatMap.js), the cabin frame (C), the window's glass (the window panel, ui/windowPanel.js),
-// a "Retimed" note when the departure is not the recorded one, and a line for loading.
+// a "Retimed" note when the departure is not the recorded one, and a line for loading. In an orbit (setKind('orbit'))
+// the pace has no meaning and hides, and the chip names the orbit's phase ("Orbiting", "Changing the orbit").
 import { flightStatus } from './status.js';
 
 const icon = (id) => `<svg class="icon" viewBox="0 0 20 20" aria-hidden="true"><use href="#${id}" /></svg>`;
@@ -48,10 +49,13 @@ export function createFlightBar({ slot, units, onPace, onFrame, onSeat = () => {
     windowButton: win,
     /** Loading text in place of the readings, or null. */
     setNote(text) { note.hidden = !text; note.textContent = text || ''; },
-    /** Write only what changed, so a frame costs no layout when nothing did. */
-    update({ state, touchdownT, events, pace: paceOn, rate, frame: frameOn, retimed: isRetimed, hud }) {
+    /** 'flight' (the pace shows) or 'orbit' (it hides: the orbit runs at the clock's rate). */
+    setKind(kind) { pace.hidden = kind === 'orbit'; },
+    /** Write only what changed, so a frame costs no layout when nothing did. `phase` overrides the chip's phase words. */
+    update({ state, touchdownT, events, pace: paceOn, rate, frame: frameOn, retimed: isRetimed, hud, phase: phaseText }) {
       if (state) {
         const s = flightStatus(state, { touchdownT, events, units: units() });
+        if (phaseText) { s.phase = phaseText; s.text = [s.phase, s.toTouchdown, s.altitude, s.speed].filter(Boolean).join(' · '); }
         if (s.text !== shown.text) {
           shown.text = s.text;
           phase.textContent = s.phase;

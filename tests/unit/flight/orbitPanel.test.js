@@ -169,4 +169,34 @@ describe('createOrbitPanel', () => {
     expect(find((n) => n.textContent === 'Back to the Strip').hidden).toBe(false);
     expect(find((n) => n.textContent === 'Circling Sphere')).toBeTruthy();
   });
+
+  it('says which control made each change, so the mode can cut a preset', () => {
+    const doc = fakeDocument(), kinds = [];
+    const p = orbitParams({ altFt: 12000, radiusKm: 9, seat: '22F' });
+    const panel = createOrbitPanel({ parent: doc.body, params: p, onChange: (c, info) => kinds.push(info?.kind), doc });
+    const all = panel.el.all();
+    all.find((n) => n.getAttribute('data-preset') === 'strip').dispatch('click');
+    const [alt, rad] = all.filter((n) => n.type === 'range');
+    alt.value = '13000'; alt.dispatch('change');
+    rad.value = '500'; rad.dispatch('change');
+    all.find((n) => n.getAttribute('role') === 'switch').dispatch('click');
+    expect(kinds).toEqual(['preset', 'altitude', 'radius', 'outward']);
+  });
+
+  it('collapses to its title and opens again (on a phone it starts collapsed)', () => {
+    const doc = fakeDocument();
+    const panel = createOrbitPanel({ parent: doc.body, params: orbitParams({}), onChange: () => {}, doc, collapsed: true });
+    const all = panel.el.all();
+    const title = all.find((n) => n.getAttribute('class') === 'op-title' || n.className === 'op-title');
+    const body = all.find((n) => n.className === 'op-body');
+    expect(title.tagName).toBe('BUTTON');
+    expect(title.getAttribute('aria-expanded')).toBe('false');
+    expect(body.hidden).toBe(true);
+    title.dispatch('click');
+    expect(title.getAttribute('aria-expanded')).toBe('true');
+    expect(body.hidden).toBe(false);
+    panel.setCollapsed(true);
+    expect(body.hidden).toBe(true);
+    expect(panel.collapsed).toBe(true);
+  });
 });

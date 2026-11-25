@@ -83,3 +83,24 @@ describe('clearFlightState', () => {
     expect(clearFlightState('?city=lv&mode=drive&route=i15n').toString()).toBe('city=lv&mode=drive&route=i15n');
   });
 });
+
+describe('moving between an orbit and a recorded flight (F7.2)', () => {
+  const orbitLink = '?city=lv&mode=flight&orbit=1&alt=12000&r=9&phase=140&c=-3000,2500&on=bellagio&out=1&ias=250&seat=22F&backend=webgl';
+  it('a recorded flight written over an orbit drops every orbit key', () => {
+    const p = encodeFlightState({ id: 'lv-19-day', at: 12, seat: '22F' }, orbitLink);
+    for (const k of ['orbit', 'alt', 'r', 'phase', 'c', 'on', 'out', 'ias']) expect(p.has(k), k).toBe(false);
+    expect(p.toString()).toBe('city=lv&backend=webgl&mode=flight&flight=lv-19-day&at=12&seat=22F');
+  });
+
+  it('leaving Fly from an orbit drops every orbit key', () => {
+    expect(clearFlightState(orbitLink).toString()).toBe('city=lv&backend=webgl');
+  });
+});
+
+describe('the orbit keys listed in url.js', () => {
+  it('are orbitUrl.js ORBIT_KEYS', async () => {
+    const { ORBIT_KEYS } = await import('../../../src/flight/orbitUrl.js');
+    const p = clearFlightState(`?mode=flight&${ORBIT_KEYS.map((k) => `${k}=1`).join('&')}`);
+    expect(p.toString()).toBe('');
+  });
+});
