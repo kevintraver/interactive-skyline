@@ -32,6 +32,201 @@
    "y0": -64000,
    "step": 160,
    "scale": 0.1
+  },
+  "region": {
+   "file": "terrain-region.bin.gz",
+   "nx": 1025,
+   "ny": 1025,
+   "x0": -524288,
+   "y0": -524288,
+   "step": 1024,
+   "scale": 1.0,
+   "offset": -500.0,
+   "encoding": "delta-gzip",
+   "encodingSpec": "delta-gzip v1: the file is one gzip member (RFC 1952; DecompressionStream('gzip') reads it). Inflated, it is 2*nx*ny bytes: the low bytes of nx*ny 16-bit words, then their high bytes, word k = lo[k] + 256*hi[k], the words in row-major order, row 0 = south, column 0 = west. Heights are quantised to q = round((h - offset) / scale), an integer 0..65535, so h = q * scale + offset (scale and offset are in the grid's entry). Each word is d = (q - p) mod 65536, where the prediction p from the posts already decoded is: 0 at (i=0, j=0); q[j][i-1] (left) along row 0; q[j-1][i] (up: the row before, to the south) down column 0; and q[j][i-1] + q[j-1][i] - q[j-1][i-1] everywhere else, all mod 65536. Decode in order with q = (d + p) mod 65536 (a Uint16Array wraps by itself).",
+   "priority": 0,
+   "priorityNote": "nesting rank, coarsest 0: where grids overlap the higher one is drawn and answers heightAt, and the lower ones load first; far and near, which carry none, rank above",
+   "parent": null,
+   "conform": [],
+   "image": {
+    "file": "ground-region.webp",
+    "format": "webp",
+    "mpp": 512,
+    "width": 2048,
+    "height": 2048,
+    "quality": 88,
+    "rows": "row 0 = north",
+    "source": "NASA Blue Marble Next Generation (2004) through NASA GIBS, layer BlueMarble_NextGeneration",
+    "licence": "NASA open data",
+    "credit": "We acknowledge the use of imagery provided by services from NASA's Global Imagery Browse Services (GIBS), part of NASA's Earth Science Data and Information System (ESDIS)",
+    "fetched": "2026-11-24",
+    "requests": [
+     "https://gibs.earthdata.nasa.gov/wms/epsg4326/best/wms.cgi?SERVICE=WMS&VERSION=1.1.1&REQUEST=GetMap&LAYERS=BlueMarble_NextGeneration&STYLES=&SRS=EPSG%3A4326&FORMAT=image%2Fjpeg&BBOX=-121.392328%2C31.252422%2C-108.948334%2C40.854458&WIDTH=2417&HEIGHT=2302"
+    ],
+    "colourMatch": {
+     "to": "approaches",
+     "featherM": 32000,
+     "blurM": 1536,
+     "overlapMeanBefore": [
+      127.4,
+      107.1,
+      75.9
+     ],
+     "overlapMeanFiner": [
+      127.8,
+      126.9,
+      125.4
+     ]
+    }
+   },
+   "source": {
+    "heights": "AWS Terrain Tiles (Terrarium) zoom 9, https://s3.amazonaws.com/elevation-tiles-prod/terrarium/{z}/{x}/{y}.png, fetched 2026-11-24",
+    "credit": "United States 3DEP (formerly NED) and global GMTED2010 and SRTM terrain data courtesy of the U.S. Geological Survey; INEGI, Continuo de Elevaciones Mexicano 3.0; ETOPO1 courtesy of NOAA",
+    "downsample": "summit-preserving (lib/grids.py keep_summits): ridges and summits keep the highest of the post's footprint, valleys and lakes its mean, 4x4 samples a post"
+   },
+   "edgeColor": {
+    "srgb8": [
+     84,
+     92,
+     105
+    ],
+    "linear": [
+     0.1382,
+     0.1428,
+     0.1578
+    ],
+    "ringPx": 16,
+    "note": "mean colour of the image's outermost 16 pixels, for plan 1's virtual ground beyond the terrain (P1-f)"
+   }
+  },
+  "approaches": {
+   "file": "terrain-approaches.bin.gz",
+   "nx": 1025,
+   "ny": 1025,
+   "x0": -262144,
+   "y0": -262144,
+   "step": 512,
+   "scale": 0.5,
+   "offset": -500.0,
+   "encoding": "delta-gzip",
+   "encodingSpec": "delta-gzip v1: the file is one gzip member (RFC 1952; DecompressionStream('gzip') reads it). Inflated, it is 2*nx*ny bytes: the low bytes of nx*ny 16-bit words, then their high bytes, word k = lo[k] + 256*hi[k], the words in row-major order, row 0 = south, column 0 = west. Heights are quantised to q = round((h - offset) / scale), an integer 0..65535, so h = q * scale + offset (scale and offset are in the grid's entry). Each word is d = (q - p) mod 65536, where the prediction p from the posts already decoded is: 0 at (i=0, j=0); q[j][i-1] (left) along row 0; q[j-1][i] (up: the row before, to the south) down column 0; and q[j][i-1] + q[j-1][i] - q[j-1][i-1] everywhere else, all mod 65536. Decode in order with q = (d + p) mod 65536 (a Uint16Array wraps by itself).",
+   "priority": 1,
+   "priorityNote": "nesting rank, coarsest 0: where grids overlap the higher one is drawn and answers heightAt, and the lower ones load first; far and near, which carry none, rank above",
+   "parent": "region",
+   "conform": [],
+   "image": {
+    "file": "ground-approaches.webp",
+    "format": "webp",
+    "mpp": 128,
+    "width": 4096,
+    "height": 4096,
+    "quality": 92,
+    "rows": "row 0 = north",
+    "source": "Sentinel-2 cloudless 2016 by EOX, WMS layer s2cloudless",
+    "licence": "CC BY 4.0",
+    "credit": "EOxCloudless https://cloudless.eox.at by EOX IT Services GmbH (Contains modified Copernicus Sentinel data 2016 & 2017)",
+    "fetched": "2026-11-24",
+    "requests": [
+     "https://tiles.maps.eox.at/wms?service=WMS&version=1.1.1&request=GetMap&layers=s2cloudless&styles=&srs=EPSG%3A4326&format=image%2Fjpeg&bbox=-118.179302%2C36.097471%2C-115.172116%2C38.480174&width=2817&height=2755",
+     "https://tiles.maps.eox.at/wms?service=WMS&version=1.1.1&request=GetMap&layers=s2cloudless&styles=&srs=EPSG%3A4326&format=image%2Fjpeg&bbox=-115.172116%2C36.097471%2C-112.164931%2C38.480174&width=2817&height=2755",
+     "https://tiles.maps.eox.at/wms?service=WMS&version=1.1.1&request=GetMap&layers=s2cloudless&styles=&srs=EPSG%3A4326&format=image%2Fjpeg&bbox=-118.179302%2C33.714768%2C-115.172116%2C36.097471&width=2817&height=2755",
+     "https://tiles.maps.eox.at/wms?service=WMS&version=1.1.1&request=GetMap&layers=s2cloudless&styles=&srs=EPSG%3A4326&format=image%2Fjpeg&bbox=-115.172116%2C33.714768%2C-112.164931%2C36.097471&width=2817&height=2755"
+    ],
+    "colourMatch": {
+     "to": "valley",
+     "featherM": 8000,
+     "blurM": 512,
+     "overlapMeanBefore": [
+      198.8,
+      163.2,
+      122.0
+     ],
+     "overlapMeanFiner": [
+      136.2,
+      133.8,
+      132.6
+     ]
+    }
+   },
+   "source": {
+    "heights": "AWS Terrain Tiles (Terrarium) zoom 11, https://s3.amazonaws.com/elevation-tiles-prod/terrarium/{z}/{x}/{y}.png, fetched 2026-11-24",
+    "credit": "United States 3DEP (formerly NED) and global GMTED2010 and SRTM terrain data courtesy of the U.S. Geological Survey",
+    "downsample": "summit-preserving (lib/grids.py keep_summits): ridges and summits keep the highest of the post's footprint, valleys and lakes its mean, 8x8 samples a post",
+    "stitched": {
+     "to": "region",
+     "posts": 8,
+     "largestChangeM": 394.8
+    }
+   }
+  },
+  "valley": {
+   "file": "terrain-valley.bin.gz",
+   "nx": 1021,
+   "ny": 893,
+   "x0": -60416,
+   "y0": -64000,
+   "step": 128,
+   "scale": 0.1,
+   "offset": -500.0,
+   "encoding": "delta-gzip",
+   "encodingSpec": "delta-gzip v1: the file is one gzip member (RFC 1952; DecompressionStream('gzip') reads it). Inflated, it is 2*nx*ny bytes: the low bytes of nx*ny 16-bit words, then their high bytes, word k = lo[k] + 256*hi[k], the words in row-major order, row 0 = south, column 0 = west. Heights are quantised to q = round((h - offset) / scale), an integer 0..65535, so h = q * scale + offset (scale and offset are in the grid's entry). Each word is d = (q - p) mod 65536, where the prediction p from the posts already decoded is: 0 at (i=0, j=0); q[j][i-1] (left) along row 0; q[j-1][i] (up: the row before, to the south) down column 0; and q[j][i-1] + q[j-1][i] - q[j-1][i-1] everywhere else, all mod 65536. Decode in order with q = (d + p) mod 65536 (a Uint16Array wraps by itself).",
+   "priority": 2,
+   "priorityNote": "nesting rank, coarsest 0: where grids overlap the higher one is drawn and answers heightAt, and the lower ones load first; far and near, which carry none, rank above",
+   "parent": "approaches",
+   "conform": [
+    "far"
+   ],
+   "image": {
+    "file": "ground-valley.webp",
+    "format": "webp",
+    "mpp": 32,
+    "width": 4080,
+    "height": 3568,
+    "quality": 92,
+    "rows": "row 0 = north",
+    "source": "Sentinel-2 cloudless 2016 by EOX, WMS layer s2cloudless",
+    "licence": "CC BY 4.0",
+    "credit": "EOxCloudless https://cloudless.eox.at by EOX IT Services GmbH (Contains modified Copernicus Sentinel data 2016 & 2017)",
+    "fetched": "2026-11-24",
+    "requests": [
+     "https://tiles.maps.eox.at/wms?service=WMS&version=1.1.1&request=GetMap&layers=s2cloudless&styles=&srs=EPSG%3A4326&format=image%2Fjpeg&bbox=-115.848780%2C36.050985%2C-115.118334%2C36.567742&width=2737&height=2390",
+     "https://tiles.maps.eox.at/wms?service=WMS&version=1.1.1&request=GetMap&layers=s2cloudless&styles=&srs=EPSG%3A4326&format=image%2Fjpeg&bbox=-115.118334%2C36.050985%2C-114.387888%2C36.567742&width=2737&height=2390",
+     "https://tiles.maps.eox.at/wms?service=WMS&version=1.1.1&request=GetMap&layers=s2cloudless&styles=&srs=EPSG%3A4326&format=image%2Fjpeg&bbox=-115.848780%2C35.534229%2C-115.118334%2C36.050985&width=2737&height=2390",
+     "https://tiles.maps.eox.at/wms?service=WMS&version=1.1.1&request=GetMap&layers=s2cloudless&styles=&srs=EPSG%3A4326&format=image%2Fjpeg&bbox=-115.118334%2C35.534229%2C-114.387888%2C36.050985&width=2737&height=2390"
+    ],
+    "colourMatch": {
+     "to": "far",
+     "featherM": 3000,
+     "blurM": 256,
+     "overlapMeanBefore": [
+      202.8,
+      167.9,
+      125.8
+     ],
+     "overlapMeanFiner": [
+      137.5,
+      136.0,
+      135.2
+     ]
+    }
+   },
+   "source": {
+    "heights": "AWS Terrain Tiles (Terrarium) zoom 11, https://s3.amazonaws.com/elevation-tiles-prod/terrarium/{z}/{x}/{y}.png, fetched 2026-11-24",
+    "credit": "United States 3DEP (formerly NED) and global GMTED2010 and SRTM terrain data courtesy of the U.S. Geological Survey",
+    "downsample": "the mean of the post's footprint, 2x2 samples a post",
+    "stitched": {
+     "to": "approaches",
+     "posts": 8,
+     "largestChangeM": 167.9
+    },
+    "conformedTo": [
+     {
+      "grid": "far",
+      "posts": 8,
+      "largestChangeM": 24.6
+     }
+    ]
+   }
   }
  },
  "patches": {

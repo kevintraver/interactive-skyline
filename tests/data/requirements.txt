@@ -3,3 +3,4 @@ numpy
 pyproj
 scipy
 shapely
+pillow

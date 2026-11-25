@@ -38,6 +38,8 @@ def test_sample_is_main_js_arithmetic(lv):
     rng = np.random.default_rng(3)
     folder = ROOT / "public" / "data" / "lv"
     for name, g in lv.meta["grids"].items():
+        if g.get("encoding") == "delta-gzip":
+            continue  # the flight's nested grids (plan 03); lib.heights serves the raw ones only
         ref = dict(g, raw=np.fromfile(folder / g["file"], dtype="<u2"))
         grid = lv.grid(name)
         x = rng.uniform(grid.x0 - 300, grid.x1 + 300, 300)
