@@ -1,0 +1,1 @@
+FAA NASR airport CSV bundle, cycle effective 2026-10-29: https://nfdc.faa.gov/webContent/28DaySub/extra/29_Oct_2026_APT_CSV.zip (downloaded 2026-11-23). The header and the rows with ARPT_ID LAS of APT_BASE.csv, APT_RWY.csv and APT_RWY_END.csv. US government work.

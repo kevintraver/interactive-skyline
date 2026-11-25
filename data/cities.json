@@ -110,6 +110,22 @@
     "iemNetwork": "NV_ASOS",
     "stationElevationM": 664.5,
     "stationNote": "Harry Reid International Airport; elevation 2,180 ft from NOAA station metadata (api.weather.gov/stations/KLAS, read 21 Nov 2026)",
+    "airport": {
+      "faa": "LAS",
+      "box": [
+        -500,
+        -5200,
+        5200,
+        -1400
+      ],
+      "boxNote": "Map metres [x0, y0, x1, y1]: every runway end (FAA NASR, cycle of 29 Oct 2026, as projected by scripts/build_airport.py; the 19R end at 1,474, -1,668 is the nearest to an edge) and the terminals, gates and cargo apron, with at least 250 m to spare",
+      "arrivals": [
+        "19L",
+        "19R",
+        "26L",
+        "26R"
+      ]
+    },
     "bbox": [
       36.085,
       -115.2,
@@ -151,6 +167,63 @@
         "step": 160,
         "mpp": 32,
         "quality": 78
+      },
+      "region": {
+        "zoom": 9,
+        "x0": -524288,
+        "y0": -524288,
+        "x1": 524288,
+        "y1": 524288,
+        "step": 1024,
+        "mpp": 512,
+        "encoding": "delta-gzip",
+        "scale": 1.0,
+        "supersample": 4,
+        "downsample": "summits",
+        "imagery": "bluemarble",
+        "quality": 88,
+        "featherM": 32000,
+        "blurM": 1536,
+        "priority": 0
+      },
+      "approaches": {
+        "zoom": 11,
+        "x0": -262144,
+        "y0": -262144,
+        "x1": 262144,
+        "y1": 262144,
+        "step": 512,
+        "mpp": 128,
+        "encoding": "delta-gzip",
+        "scale": 0.5,
+        "supersample": 8,
+        "downsample": "summits",
+        "parent": "region",
+        "imagery": "s2cloudless-2016",
+        "quality": 92,
+        "featherM": 8000,
+        "blurM": 512,
+        "priority": 1
+      },
+      "valley": {
+        "zoom": 11,
+        "x0": -60416,
+        "y0": -64000,
+        "x1": 70144,
+        "y1": 50176,
+        "step": 128,
+        "mpp": 32,
+        "encoding": "delta-gzip",
+        "scale": 0.1,
+        "supersample": 2,
+        "downsample": "mean",
+        "parent": "approaches",
+        "conform": ["far"],
+        "imagery": "s2cloudless-2016",
+        "quality": 92,
+        "featherM": 3000,
+        "blurM": 256,
+        "priority": 2
       },
       "patches": [
         {

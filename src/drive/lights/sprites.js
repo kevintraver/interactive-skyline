@@ -452,8 +452,10 @@ export function createSpriteLayer({ capacity, name = 'sprites', minPx = 1.5, hal
   const indexArray = new Float32Array(capacity * 2);
   const identity = () => { for (let i = 0; i < capacity; i++) { indexArray[2 * i] = i; indexArray[2 * i + 1] = 1; } };
   identity();
+  // Static usage, though it is rewritten: three's renderers upload a DynamicDrawUsage attribute on every render, whole
+  // once its update ranges are spent (Attributes.update), and this list is capacity x 8 bytes (2.6 MB for the flight's
+  // 326,466 lamps: 3.2 ms of the main thread a frame on WebGPU, F8.2). Every write below sets needsUpdate with a range.
   const indexAttr = new THREE.InstancedBufferAttribute(indexArray, 2);
-  indexAttr.setUsage(THREE.DynamicDrawUsage);
   geometry.setAttribute('spriteIndex', indexAttr);
   geometry.instanceCount = 0;
 
@@ -488,8 +490,7 @@ export function createSpriteLayer({ capacity, name = 'sprites', minPx = 1.5, hal
     tg.setAttribute('position', geometry.getAttribute('position'));
     tg.setIndex(geometry.getIndex());
     const list = new Float32Array(capacity * 2);
-    const listAttr = new THREE.InstancedBufferAttribute(list, 2);
-    listAttr.setUsage(THREE.DynamicDrawUsage);
+    const listAttr = new THREE.InstancedBufferAttribute(list, 2); // static usage, as indexAttr: uploaded by twinCommit
     tg.setAttribute('spriteIndex', listAttr);
     tg.instanceCount = 0;
     const tm = spriteMaterial(`${name}-twins`, twinVertexNode(u, gain), twinColorNode());

@@ -1,0 +1,15 @@
+Flight tracks: Open Database License (ODbL) 1.0
+
+The recorded arrivals in this folder (<id>.json, <id>.bin and index.json) are derived from the adsb.lol historical
+archive (globe_history, https://www.adsb.lol/docs/open-data/historical/), published by adsb.lol under the Open
+Database License v1.0: https://opendatacommons.org/licenses/odbl/1-0/
+
+Contains information from adsb.lol, made available under the ODbL.
+
+Share-alike: if you publicly use an adapted version of these tracks, you must also offer that adapted database under
+the ODbL. Keep this notice with the data.
+
+What was done to the recordings (filtering to ADS-B positions, smoothing to 1 Hz, calibrating heights on the runway,
+inferring attitude, configuration and lights; each channel's provenance is in its file's header), the single-aircraft
+extracts they were baked from, and the other sources that entered the bake are listed in the repository's
+data/flights/LICENSE and data/flights/lv/selection.json.

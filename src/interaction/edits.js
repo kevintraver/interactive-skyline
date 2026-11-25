@@ -24,7 +24,7 @@ export function initEdits(app) {
   function paint(e) {
     const { hovered, selected } = app;
     const m = e.mesh.material;
-    const highlight = settings.highlight && !app.drive.active; // drive seam: natural colours, no edge lines while driving
+    const highlight = settings.highlight && !app.drive.active && !app.fly.active; // drive seam: natural colours, no edge lines while driving; flight seam: and while flying
     m.color.copy(e === selected ? SELECT : e === hovered ? (highlight ? HOVER : WHITE) : highlight ? REMOVABLE : GRAY); // drive seam
     m.emissiveIntensity = highlight && e !== selected ? sky.tint(settings.night) : 0; // drive seam
     e.mesh.children[0].visible = highlight; // drive seam

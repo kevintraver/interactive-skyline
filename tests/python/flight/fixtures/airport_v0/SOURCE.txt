@@ -1,0 +1,1 @@
+public/data/lv/airport.json as committed at 8730827 (build_airport.py v0, NASR cycle of 2026-10-29): its faa, icao, name, arp, magneticVariation, beacon, runways and ends, the fields other code already reads. test_airport_nasr.py holds the complete build to every one of them.

@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Airport surfaces and lights</title>
+  <link rel="icon" href="data:,">
+  <style>
+    html, body { margin: 0; height: 100%; overflow: hidden; background: #000; color: #ccc; font: 12px monospace; }
+    canvas { display: block; width: 100vw; height: 100vh; touch-action: none; }
+    #log { position: fixed; left: 8px; bottom: 6px; pointer-events: none; text-shadow: 0 0 3px #000; }
+  </style>
+</head>
+<body>
+  <!--
+    F4.2 to F4.4's harness (plan 03): the drawn airport (src/flight/airport/index.js) from public/data/lv/airport.json,
+    alone on a planar ground (the plane through the runway ends' elevations), on the new renderer
+    (?backend=webgl|webgpu) in the app's light units, as flight-airframe.html does. Keys 1-7 step through the views,
+    N toggles night, R toggles reduced motion.
+    Driven by flight-airport-shots.mjs through window.__ap:
+      __ap.ready                         resolves when the airport is built and a frame is drawn
+      __ap.info                          { backend, reason, gpu }
+      await __ap.view({ view, night, wallS, reducedMotion, flash })
+          view: a name of VIEWS (final-19R, final-26L, ...) or { eye: [x, y, z] map metres and m above sea level,
+          target: [x, y, z] }; flash: true searches presentation time for a moment when a flasher in view fires;
+          resolves after a frame with stats()
+      await __ap.cost({ n })             GPU throughput with and without the airport, ms per frame (perf.js)
+      __ap.stats()                       airport.stats(), draws and triangles of the view with and without the airport
+  -->
+  <canvas id="scene"></canvas>
+  <div id="log">loading</div>
+  <script type="module" src="./flight-airport.js"></script>
+</body>
+</html>

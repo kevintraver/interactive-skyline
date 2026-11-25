@@ -34,11 +34,13 @@ import { initQuality } from './render/setupQuality.js';
 import { createBench } from './render/bench.js';
 import { warmUp } from './render/warmup.js';
 import { initDrive } from './drive/index.js'; // drive seam
+import { initFlight } from './flight/index.js'; // flight seam
 import cities from '../data/cities.json';
 
 const app = await createApp(cities);
 const { cityId, city, pending, settings, scene, camera, renderer, controls, loop, invalidate } = app;
 const drive = app.drive = { active: false, focus: null, holding: null }; // drive seam: set by Drive mode (src/drive/index.js) while it is active
+const fly = app.fly = { active: false, focus: null, blocked: null }; // flight seam: Fly mode (src/flight/index.js) sets these while it is active
 app.format = createFormat(settings, city);
 app.sky = createLegacySky().init(app);
 initSim(app);
@@ -91,11 +93,12 @@ const readyAt = performance.now();
 let lastFrame = null;
 loop.start(renderer, {
   before(now) {
+    if (fly.active) return; // flight seam: the flight places the camera itself (loop order 20)
     if (!drive.active) { app.stepFlight(now); controls.update(); } // drive seam: while driving the drive moves the camera
   },
   render(now) {
     // while the camera is still, so the extra frames cost nothing during a drag
-    if (app.views.stale && !app.flying() && !app.dragging() && !drive.active) { app.views.stale = false; app.views.snap(); } // drive seam
+    if (app.views.stale && !app.flying() && !app.dragging() && !drive.active && !fly.active) { app.views.stale = false; app.views.snap(); } // drive seam; flight seam
     if (!(drive.active && drive.holding())) pipeline.render(); // drive seam: a route switch holds the last frame
     if (app.look) app.look.afterRender();
     // the quality governor sees the interval between frames drawn back to back (section 7.14, T2.7)
@@ -120,3 +123,5 @@ initAttractions({ cityId, scene, camera, renderer, settings, invalidate, groundY
 
 // drive seam: Drive mode, offered for cities with routes; it adds window.__skyline.drive and .terrain
 initDrive(app, { terrainData });
+// flight seam: Fly mode, offered for cities with an airport and recorded flights; it adds window.__skyline.flight
+initFlight(app, { terrainData });

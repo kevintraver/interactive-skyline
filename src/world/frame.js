@@ -21,6 +21,40 @@ export { curveDrop };
 /** True vertical at a map position, in scene axes. `out` is any object with set(x, y, z) and normalize(). */
 export const localUp = (x, z, out) => out.set(x, EARTH_R, z).normalize();
 
+/**
+ * Rotation taking the scene axes to the level frame at scene (x, z) (plan 03, section 5.5): +y goes to localUp, and
+ * north (-z) to the level direction in the vertical plane through localUp and -z (grid north, levelled). A flight
+ * 250 km out is levelled to the curved datum this way; levelled to the XZ plane its horizon would be 2 degrees off.
+ * `out` is any object with set(x, y, z, w), such as a three.js Quaternion.
+ */
+export function levelQuaternion(x, z, out) {
+  const l = Math.hypot(x, EARTH_R, z);
+  const ux = x / l, uy = EARTH_R / l, uz = z / l;
+  // south: +z with its component along up removed (north is its opposite)
+  let sx = -uz * ux, sy = -uz * uy, sz = 1 - uz * uz;
+  const ls = Math.hypot(sx, sy, sz);
+  sx /= ls; sy /= ls; sz /= ls;
+  // east = up x south (that is, north x up)
+  const ex = uy * sz - uz * sy, ey = uz * sx - ux * sz, ez = ux * sy - uy * sx;
+  // the rotation matrix has columns east, up, south; to a quaternion as three.js does (Shepperd's method)
+  const m11 = ex, m12 = ux, m13 = sx, m21 = ey, m22 = uy, m23 = sy, m31 = ez, m32 = uz, m33 = sz;
+  const trace = m11 + m22 + m33;
+  if (trace > 0) {
+    const s = 0.5 / Math.sqrt(trace + 1);
+    return out.set((m32 - m23) * s, (m13 - m31) * s, (m21 - m12) * s, 0.25 / s);
+  }
+  if (m11 > m22 && m11 > m33) {
+    const s = 2 * Math.sqrt(1 + m11 - m22 - m33);
+    return out.set(0.25 * s, (m12 + m21) / s, (m13 + m31) / s, (m32 - m23) / s);
+  }
+  if (m22 > m33) {
+    const s = 2 * Math.sqrt(1 + m22 - m11 - m33);
+    return out.set((m12 + m21) / s, 0.25 * s, (m23 + m32) / s, (m13 - m31) / s);
+  }
+  const s = 2 * Math.sqrt(1 + m33 - m11 - m22);
+  return out.set((m13 + m31) / s, (m23 + m32) / s, 0.25 * s, (m21 - m12) / s);
+}
+
 // WGS84
 const A_AXIS = 6378137;
 const F = 1 / 298.257223563;

@@ -1,0 +1,347 @@
+{
+ "format": "skyline-flight-qa/1",
+ "id": "lv-26-day",
+ "runway": "26L",
+ "aircraftType": "B738",
+ "touchdown": "2026-03-10T15:20:00Z",
+ "recordedStart": "2026-03-10T14:50:00Z",
+ "samples": 2434,
+ "calibration": {
+  "offsetM": -25.49,
+  "datum": "ellipsoid",
+  "barometricOffsetM": -18.89,
+  "barometricPoints": 110,
+  "method": "rollout",
+  "points": 8,
+  "geoidM": -28.07
+ },
+ "antennaAboveWheelsM": 5.6,
+ "gates": {
+  "positionRmsAirM": {
+   "value": 5.16,
+   "max": 12.0,
+   "pass": true
+  },
+  "positionRmsLowM": {
+   "value": 3.21,
+   "max": 5.0,
+   "pass": true
+  },
+  "heightRmsAirM": {
+   "value": 3.43,
+   "max": 8.0,
+   "pass": true
+  },
+  "heightRmsLast60sM": {
+   "value": 2.34,
+   "max": 3.0,
+   "pass": true
+  },
+  "glidePathDeg": {
+   "value": 3.12,
+   "nearest": 3.0,
+   "maxDiff": 0.35,
+   "warnDiff": 0.2,
+   "pass": true,
+   "warn": false
+  },
+  "crossingHeightM": {
+   "value": 20.8,
+   "min": 12.0,
+   "max": 32.0,
+   "pass": true
+  },
+  "touchdownPastThresholdM": {
+   "value": 381.8,
+   "min": 250.0,
+   "max": 1000.0,
+   "pass": true
+  },
+  "touchdownOffCentreM": {
+   "value": -0.0,
+   "maxAbs": 8.0,
+   "pass": true
+  },
+  "bankDeg": {
+   "value": 26.3,
+   "maxAbs": 35.0,
+   "pass": true
+  },
+  "pitchDeg": {
+   "value": [
+    -3.7,
+    4.6
+   ],
+   "min": -6.0,
+   "max": 12.0,
+   "pass": true
+  },
+  "decelerationMs2": {
+   "value": 2.51,
+   "max": 3.5,
+   "pass": true
+  },
+  "flapPlacard": {
+   "value": 0,
+   "max": 0,
+   "pass": true
+  },
+  "flapsMonotonic": {
+   "value": 0,
+   "max": 0,
+   "pass": true
+  },
+  "gearBeforeLandingFlapS": {
+   "value": 39.0,
+   "min": 0.1,
+   "pass": true
+  },
+  "landingLightBy10000ft": {
+   "value": true,
+   "pass": true
+  }
+ },
+ "waived": [],
+ "pass": true,
+ "stripView": {
+  "rightShare": 0.27,
+  "leftShare": 0.0,
+  "aheadShare": 0.73,
+  "rightShareLastMinute": 0.616,
+  "leftShareLastMinute": 0.0,
+  "meanRelativeBearingDeg": 28.462,
+  "maxAbsBearingLastMinuteDeg": 52.171,
+  "stripSide": "right",
+  "stripView": "ahead-right"
+ },
+ "touchdownTime": {
+  "method": "barometric vertical rate levelling on the runway before the surface flag (adsb.refine_touchdown)",
+  "sigmaS": 1.2,
+  "alternatives": {
+   "geometricHeight": {
+    "offsetS": 0.4,
+    "sigmaS": 2.0,
+    "crossingS": -3.5,
+    "crossingHeightM": 7.7,
+    "basis": "the last 25 ft step of the geometric height below 12 m over the runway, carried down at 2.0 m/s (a flare's mean sink)"
+   },
+   "brakingOnset": {
+    "offsetS": 2.9,
+    "decelBeforeMs2": 0.07,
+    "decelAfterMs2": 1.88,
+    "basis": "onset of sustained deceleration in the raw positions alone; spoilers and brakes act 0 to about 5 s after the wheels touch, so a late bound"
+   },
+   "surfaceFlag": {
+    "offsetS": 17.6,
+    "basis": "first surface-format position; it lags the touchdown by 14 to 16 s on these transponders, so it bounds the touchdown only loosely"
+   },
+   "geometricRate": null
+  },
+  "decision": "kept: the geometric height agrees with the barometric time within 1 s on five of the six flights and braking begins after it on all six; the evidence of 25 November does not show the barometric rate levelling early by a consistent amount"
+ },
+ "recordedVersusDerived": {
+  "heightBiasLast60sM": -0.25,
+  "heightPointsLast60s": 76,
+  "roll": {
+   "rms": null,
+   "points": 0,
+   "limit": 4.0,
+   "within": null
+  },
+  "iasKt": {
+   "rms": null,
+   "points": 0,
+   "limit": 8.0,
+   "within": null
+  },
+  "heading": {
+   "rms": null,
+   "points": 0,
+   "limit": 3.0,
+   "within": null
+  }
+ },
+ "procedure": {
+  "runway": "26L",
+  "cifpCycle": "2611",
+  "glidePathDeg": 3.12,
+  "nearestPublishedDeg": 3.0,
+  "diffDeg": 0.12,
+  "pass": true,
+  "warn": false,
+  "finalCourseFlownGridDeg": 269.71,
+  "finalCourseFlownTrueDeg": 269.73,
+  "crossingHeightAntennaM": 20.8,
+  "crossingHeightAntennaFt": 68.2,
+  "published": [
+   {
+    "source": "CIFP H26L",
+    "type": "RNAV (RNP)",
+    "angle": 3.0,
+    "crossingHeightFt": 60.0,
+    "finalCourseTrue": 270.02,
+    "lastFix": "RELIN",
+    "courseDiffDeg": -0.29,
+    "angleDiffDeg": 0.12,
+    "crossingHeightDiffFt": 8.2
+   },
+   {
+    "source": "CIFP I26LY",
+    "type": "ILS",
+    "angle": 3.0,
+    "crossingHeightFt": 60.0,
+    "finalCourseTrue": 270.02,
+    "lastFix": "RELIN",
+    "courseDiffDeg": -0.29,
+    "angleDiffDeg": 0.12,
+    "crossingHeightDiffFt": 8.2
+   },
+   {
+    "source": "CIFP I26LZ",
+    "type": "ILS",
+    "angle": 3.0,
+    "crossingHeightFt": 60.0,
+    "finalCourseTrue": 270.02,
+    "lastFix": "RELIN",
+    "courseDiffDeg": -0.29,
+    "angleDiffDeg": 0.12,
+    "crossingHeightDiffFt": 8.2
+   },
+   {
+    "source": "CIFP L26LY",
+    "type": "LOC",
+    "angle": 3.0,
+    "crossingHeightFt": 60.0,
+    "finalCourseTrue": 270.02,
+    "lastFix": "RELIN",
+    "courseDiffDeg": -0.29,
+    "angleDiffDeg": 0.12,
+    "crossingHeightDiffFt": 8.2
+   },
+   {
+    "source": "CIFP L26LZ",
+    "type": "LOC",
+    "angle": 3.0,
+    "crossingHeightFt": 60.0,
+    "finalCourseTrue": 270.02,
+    "lastFix": "RELIN",
+    "courseDiffDeg": -0.29,
+    "angleDiffDeg": 0.12,
+    "crossingHeightDiffFt": 8.2
+   },
+   {
+    "source": "PAPI (NASR)",
+    "type": "PAPI",
+    "angle": 3.0,
+    "crossingHeightFt": 84,
+    "finalCourseTrue": null,
+    "lastFix": null,
+    "angleDiffDeg": 0.12,
+    "crossingHeightDiffFt": -15.8
+   }
+  ]
+ },
+ "touchdownPoint": {
+  "pastThresholdM": 381.8,
+  "offCentreM": -0.0,
+  "source": "levelled before the surface flag",
+  "flare": {
+   "entryHeightM": 9.97,
+   "entrySinkMs": 4.01,
+   "touchdownSinkMs": 0.3,
+   "lastSecondSinkMs": 0.98,
+   "durationS": 4.0,
+   "nominal": true,
+   "touchdownRunwayElevationM": 628.04
+  }
+ },
+ "inferred": {
+  "weightKg": 52119,
+  "approachSpeedKt": 137.4,
+  "landingFlap": 30,
+  "flapSelections": [
+   {
+    "flap": 1,
+    "t": 1186,
+    "why": "speed"
+   },
+   {
+    "flap": 5,
+    "t": 1308,
+    "why": "before joining final"
+   },
+   {
+    "flap": 15,
+    "t": 1588,
+    "why": "speed"
+   },
+   {
+    "flap": 30,
+    "t": 1627,
+    "why": "speed"
+   }
+  ],
+  "gearDownT": 1588,
+  "joinFinalT": 1338,
+  "maxCrabDeg": 5.2,
+  "maxMach": 0.781
+ },
+ "weather": {
+  "badge": "scattered",
+  "reports": [
+   "KLAS 101356Z 00000KT 10SM FEW250 13/03 A2993 RMK AO2 SLP120 T01330028",
+   "KLAS 101456Z 00000KT 10SM SCT250 14/03 A2996 RMK AO2 SLP132 T01440028 53018",
+   "KLAS 101556Z 00000KT 10SM SCT250 16/03 A2999 RMK AO2 SLP142 T01560033"
+  ],
+  "surface": {
+   "tempC": 14.88,
+   "dewPointC": 3.0,
+   "rh": 0.448,
+   "windDir": 0.0,
+   "windKt": 0.0,
+   "gustKt": null,
+   "visibilityM": 16093.4,
+   "visibilityCensored": true,
+   "altimeterInHg": 29.972,
+   "pressureHPa": 937.54,
+   "wx": [],
+   "from": [
+    "2026-03-10T14:56Z",
+    "2026-03-10T15:56Z"
+   ]
+  },
+  "layers": [
+   {
+    "cover": "SCT",
+    "fraction": 0.44,
+    "genus": "ci",
+    "baseM": 8284.5,
+    "topM": 9284.5,
+    "base": "observed",
+    "top": "estimated: plan 01's depth for the genus (the model column does not show it)",
+    "source": "METAR 2026-03-10T14:56Z"
+   }
+  ],
+  "precipitation": {
+   "rateMmH": 0.0,
+   "kind": "none",
+   "intensity": null,
+   "from": null
+  },
+  "inCloud": []
+ },
+ "badges": {
+  "light": "day",
+  "weather": "scattered",
+  "from": "east",
+  "stripSide": "right",
+  "stripView": "ahead-right"
+ },
+ "reconstructed": [
+  {
+   "from": 1796,
+   "to": 1800,
+   "what": "flare: wheel height modelled from 10.0 m to the runway"
+  }
+ ]
+}

@@ -1,10 +1,13 @@
-// About the data: every source the map and the drive are built from, with its licence as the repository records it
-// (README.md, the reports in data/derived/lv/ and the sidecars in public/data/lv/). Opened from the Settings popover
-// and from the corner label, in Map and in Drive. Loaded by its own script tag in index.html; it needs nothing from
-// the app, so main.js does not know about it.
+// About the data: every source the map, the drive and Fly are built from, with its licence as the repository records
+// it (README.md, the reports in data/derived/lv/ and the sidecars in public/data/lv/). Opened from the Settings popover
+// and from the corner label, in Map, Drive and Fly. Loaded by its own script tag in index.html; it needs nothing from
+// the app, so main.js does not know about it. Fly's group is the one its "About this flight" panel shows
+// (src/flight/ui/about.js, which has no imports and no side effects).
 //
 // `licence` is null where the repository names no licence for a source: the source is credited and nothing is
 // claimed for it.
+
+import { FLY_CREDITS } from '../flight/ui/about.js';
 
 const OSM_COPYRIGHT = 'https://www.openstreetmap.org/copyright';
 const ODBL = 'https://opendatacommons.org/licenses/odbl/';
@@ -38,11 +41,12 @@ export const CREDITS = [
       { name: 'Billboard advertisements, made for this project', use: 'The forty advertisements on the billboards: pictures generated with an image model through OpenAI’s Codex, lettering set in code; every business is fictional, and any resemblance to a real business is unintended', url: 'https://openai.com/codex/', licence: null },
     ],
   },
+  ...FLY_CREDITS,
 ];
 
-/** What the drive draws by rule rather than from data, said once under the list. */
-export const MADE_HERE = 'Sign faces, billboard and screen faces, vehicles and the cabin are drawn by this project. '
-  + 'They carry no trade names or logos.';
+/** What is drawn by rule rather than from data, said once under the list. */
+export const MADE_HERE = 'Sign faces, billboard and screen faces, vehicles, the drive\u2019s cabin, and Fly\u2019s airliner, cabin and window '
+  + 'are drawn by this project. They carry no trade names or logos.';
 
 const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
 const link = (href, text) => `<a href="${esc(href)}" target="_blank" rel="noopener">${esc(text)}</a>`;

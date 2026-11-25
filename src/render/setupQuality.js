@@ -45,6 +45,32 @@ export async function fillRateBench(renderer, width, height) {
   return ms;
 }
 
+/**
+ * A light's shadow map at a new size (a level change). Only the size is set and a redraw asked for: on WebGPURenderer
+ * the light's ShadowNode owns the render target (`shadow.map` is the node's own) and resizes it from shadow.mapSize
+ * when it next draws (ShadowNode.renderShadow). Disposing it here left the node and the materials' bind groups on a
+ * destroyed depth texture, every later submit failed validation and the canvas stayed blank for the rest of the visit
+ * (plan 03's "blank frame": High to Low under the fill-rate benchmark or the governor). Returns whether it changed.
+ */
+export function resizeShadowMap(renderer, light, size) {
+  if (light.shadow.mapSize.x === size && light.shadow.mapSize.y === size) return false;
+  light.shadow.mapSize.set(size, size);
+  renderer.shadowMap.needsUpdate = true;
+  return true;
+}
+
+/**
+ * The sun's shadow map sized once, by the first level applied (start-up, before any shadow map exists), and kept
+ * through later level changes for the visit: a resize in the frame the pipeline rebuilds for a new MSAA count still
+ * left a destroyed depth texture bound inside three 0.187 (WebGPU, Low to High: "Destroyed texture
+ * [ShadowDepthTexture] used in a submit"; WebGL2, High to Low: "bindTexture: attempt to use a deleted object"), and the
+ * canvas blank. Costs at most a 4096 map kept after a drop to Low (64 MB), or 2048 shadows after a rise, until reload.
+ */
+export function createShadowSizer(renderer, light) {
+  let sized = false;
+  return (size) => { if (sized) return false; sized = true; return resizeShadowMap(renderer, light, size); };
+}
+
 export function initQuality(app) {
   const { renderer, pipeline, sky, settings, backend, invalidate } = app;
   const classic = !app.look || app.look.display === 'classic';
@@ -55,21 +81,16 @@ export function initQuality(app) {
   const env = { backend, gpu, deviceMemory: navigator.deviceMemory, cores: navigator.hardwareConcurrency, userAgent: navigator.userAgent,
     canvasPixels: innerWidth * innerHeight * devicePixelRatio ** 2, fillRateMs };
   const detected = detectLevel(env);
-  let lastShadow = sky.sun.shadow.mapSize.x;
+  const sizeShadow = createShadowSizer(renderer, sky.sun);
 
   function apply(profile, scale) {
     if (classic || pipeline.legacy) return; // the classic display keeps the classic renderer's settings
     const pixels = innerWidth * innerHeight;
     const ratio = Math.min(devicePixelRatio || 1, profile.maxPixelRatio, Math.sqrt(profile.maxPixels / Math.max(pixels, 1)));
     renderer.setPixelRatio(Math.max(0.25, ratio * scale));
-    renderer._samples = profile.msaa; // WebGPURenderer has no setter; the scene pass reads renderer.samples each frame
+    renderer._samples = profile.msaa; // WebGPURenderer has no setter; the pipeline rebuilds its graph when the count changes
     pipeline.configure({ bloomScale: profile.bloomScale });
-    if (profile.shadowMapSize !== lastShadow) {
-      lastShadow = profile.shadowMapSize;
-      sky.sun.shadow.mapSize.set(lastShadow, lastShadow);
-      if (sky.sun.shadow.map) { sky.sun.shadow.map.dispose(); sky.sun.shadow.map = null; }
-      renderer.shadowMap.needsUpdate = true;
-    }
+    sizeShadow(profile.shadowMapSize);
     if (app.views) app.views.resize();
     invalidate();
   }

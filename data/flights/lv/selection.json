@@ -1,0 +1,273 @@
+{
+ "about": "Which recorded flights the bake makes (plan 03, F1.2 and F2.2). Kept in the repository, not served: the ICAO address and archive release make each bake reproducible from raw/<id>.trace.json.gz, weather/<id>.json and cifp-KLAS.json without the archive or the network. Edit and run `uv run scripts/bake_flight.py lv` once (it fetches the weather of a new flight), then `uv run scripts/bake_flights.py lv` (offline; --check proves the committed files are what it makes).",
+ "daysScanned": [
+  {
+   "day": "2025-10-14",
+   "release": "v2025.10.14-planes-readsb-staging-0",
+   "why": "IEM ASOS for LAS: 16Z to 23Z winds 150 to 190 deg at 12 to 19 kt, a tailwind on 26 and a headwind on 19 all daylight (fetch_adsb_day.py --wind-days ranked it first of 2025-01-01 to 2026-11-23)",
+   "candidates": "candidates-2025-10-14.csv",
+   "found": "248 arrivals (26L 132, 19L 59, 8R 36, 26R 12, 19R 8, 8L 1); none qualifies. Receiver coverage ended 20 to 60 s before touchdown on every arrival, and 194 of them have no surface position at all. Best 737-800 on 19 by day was abec6c (19L, 16:24 local): no surface position and a 19 s gap in the last 5 km"
+  },
+  {
+   "day": "2026-02-16",
+   "release": "v2026.02.16-planes-readsb-prod-0",
+   "why": "second-ranked by the same wind test (150 to 170 deg at 11 to 21 kt from 17Z)",
+   "candidates": "candidates-2026-02-16.csv",
+   "found": "318 arrivals (26L 227, 19L 39, 8R 27, 19R 25); 63 qualify. On runway 19 by day: one 737-800 (abc7e9) and, among others, the 737-900 ac5488"
+  },
+  {
+   "day": "2026-02-17",
+   "release": "v2026.02.17-planes-readsb-prod-0",
+   "why": "the UTC day after 2026-02-16: the dusk and night of 16 February local fall in it",
+   "candidates": "candidates-2026-02-17.csv",
+   "found": "347 arrivals (26L 283, 19R 63, 26R 1); 30 qualify. Runway 19R was in use from 16:00 local on the 16th, but every 19R arrival of the evening was a short hop (under 30,000 ft 24 min out) or had gaps; the one qualifying 19R night 737-800 (ab64b8, 00:28 local on the 17th, gusting 30 kt) misses the last-minute height gate (3.17 m)"
+  },
+  {
+   "day": "2026-09-18",
+   "release": "v2026.09.18-planes-readsb-staging-0",
+   "why": "fetch_adsb_day.py --wind-days --light dusk --evening ranked it among the evenings with a runway 19 wind at dusk (150 to 170 deg at 11 to 14 kt from 00Z to 03Z, southerly through the night): the evening of 17 September local",
+   "candidates": "candidates-2026-09-18.csv",
+   "found": "359 arrivals (26L 251, 19L 53, 8R 41, 19R 14); 123 qualify. Runway 19L through dusk and the evening: one qualifying dusk arrival on 19 (a46d26, a 737-900, 18:51 local) and five 737-800s on 19L at night, but on a 31 C, gusty evening every one of them misses the last-minute height gate by 0.1 to 0.8 m (the GNSS heights' own scatter; the smoother's bias there is under 0.4 m). None selected"
+  },
+  {
+   "day": "2026-03-10",
+   "release": "v2026.03.10-planes-readsb-staging-0",
+   "why": "--wind-days --light dusk --evening ranked 2026-03-10 (160/10 at dusk, 200/10 to 12 into the night, a few clouds at 14,000 ft, mild): the evening of 9 March and the morning of 10 March local",
+   "candidates": "candidates-2026-03-10.csv",
+   "found": "331 arrivals (26L 301, 19R 22, 19L 6, 26R 2); 90 qualify. Gave lv-19-night (abec03) and lv-26-day (abc504). The one qualifying dusk arrival on 19 (ac4ffb, a 737 MAX 8, 18:48 local) misses the last-minute height gate (3.62 m)"
+  },
+  {
+   "day": "2026-05-23",
+   "release": "v2026.05.23-planes-readsb-prod-0",
+   "why": "--wind-days --light dusk --evening: 140 to 160 deg at 9 to 10 kt through dusk on the evening of 22 May local, a few clouds at 15,000 ft",
+   "candidates": "candidates-2026-05-23.csv",
+   "found": "306 arrivals (26L 214, 19L 40, 8R 28, 19R 23, 26R 1); 69 qualify. Runway 19L through dusk and the evening, but the one qualifying arrival in the dusk band (abda54, a 737-900, 19:36 local, sun 0.8 deg up) and the qualifying 19L 737-800s after it (abb172, aa4c42) each fail two or three gates on a 32 C evening gusting 17 to 19 kt: position RMS below 300 m 5.5 to 6.7 m against 5, the last-minute height RMS, deceleration, and finals of 3.35 to 3.87 deg against 19L's published 3.00. None selected"
+  },
+  {
+   "day": "2026-01-01",
+   "release": "v2026.01.01-planes-readsb-prod-0",
+   "why": "for lv-wx: the ASOS archive's day with the most hours of a broken or overcast layer below 8,000 ft since June 2025 (overcast 400 to 600 ft, drizzle, rain and mist from 15Z to 19Z, the morning of New Year's Day)",
+   "candidates": "candidates-2026-01-01.csv",
+   "found": "247 arrivals (26L 223, 1L 19, 19R 5); 43 qualify. Gave lv-wx (ab6247)"
+  }
+ ],
+ "flights": [
+  {
+   "id": "lv-19-dusk",
+   "icao": "ac4ffb",
+   "type": "B38M",
+   "runway": "19R",
+   "touchdown": "2026-03-10T01:48:34Z",
+   "day": "2026-03-10",
+   "release": "v2026.03.10-planes-readsb-staging-0",
+   "raw": "raw/lv-19-dusk.trace.json.gz",
+   "fetched": "2026-11-24, from https://github.com/adsblol/globe_history_2026/releases/tag/v2026.03.10-planes-readsb-staging-0 (the release PREFERRED_RELEASES.txt names for the day), streamed by fetch_adsb_day.py",
+   "reason": "A 737 MAX 8 (B38M, the 737-800's cabin cross-section and windows, acceptable under section 6.2 when no 737-800 qualifies) landing on 19R at 18:48 local on 9 March 2026, the sun 2.0 deg below the horizon: the default flight, the Strip's lights against the afterglow on the right in the last minute. It meets every selection criterion of 6.2: trace from 108 min before touchdown, 30,575 ft at 24 min out; 100% ADS-B positions and geometric altitude; longest gaps 26.5 s above 18,000 ft, 8.6 s below 10,000 ft, 4.3 s in the last 5 km; 189 s of surface positions; one approach, no go-around; wind 160 at 10 kt gusting 21, visibility 10 mi, no ceiling (FEW140); arrives from the east. Glide path 3.37 deg, 0.13 from the published 3.24. It passes every quality gate of 7.2 but one, waived (see waivers): it is the only flight found in three dusk evenings with runway 19 in use (2026-03-10, 2026-05-23, 2026-09-18 UTC) that meets every selection criterion; the one 737-800 in the dusk band on 19 that evening (abc058) was incomplete before 24 min out and had gaps. Accepted with the waiver by the orchestrating session on 2026-11-25.",
+   "criteria": {
+    "traceMin": 108.3,
+    "alt24Ft": 30575,
+    "adsbShare": 1.0,
+    "geomShare": 1.0,
+    "gapAbove18kS": 26.5,
+    "gapBelow10kS": 8.6,
+    "gapLast5kmS": 4.3,
+    "groundS": 189.1,
+    "goAround": false,
+    "sunDeg": -2.0,
+    "visibilityMi": 10.0,
+    "ceilingFt": null,
+    "windDir": 160.0,
+    "windKt": 10.0,
+    "from": "east",
+    "localTime": "18:48"
+   },
+   "waivers": [
+    {
+     "gate": "heightRmsLast60sM",
+     "value": 3.62,
+     "limit": 3.0,
+     "reason": "Smoothed minus raw height RMS over the last 60 s is 3.62 m against 3 m. The plan notes this gate sits at the noise floor of altitudes reported in 25 ft steps (7.6 m steps alone give 2.2 m RMS); the remaining bias over that minute is under 0.4 m (0.08 m on this flight), so the residual is the GNSS heights' own scatter, not an error of the track; and this is the only flight found in three dusk evenings that meets every selection criterion. Waived for this flight and this gate only, decided 2026-11-25."
+    }
+   ]
+  },
+  {
+   "id": "lv-19-day",
+   "icao": "ac5488",
+   "type": "B739",
+   "runway": "19R",
+   "touchdown": "2026-02-16T16:04:51Z",
+   "day": "2026-02-16",
+   "release": "v2026.02.16-planes-readsb-prod-0",
+   "raw": "raw/lv-19-day.trace.json.gz",
+   "fetched": "2026-11-24, from https://github.com/adsblol/globe_history_2026/releases/tag/v2026.02.16-planes-readsb-prod-0 (the release PREFERRED_RELEASES.txt names for the day)",
+   "reason": "A 737-900 (B739, the 737-800's cabin cross-section and windows, acceptable under section 6.2) landing on 19R at 08:05 local with the sun 17.6 deg up. It meets every selection criterion of 6.2 that one flight can: trace from 65 min before touchdown, 30,316 ft at 24 min out; 100% ADS-B positions and geometric altitude; longest gaps 20.0 s above 18,000 ft, 14.4 s below 10,000 ft, 3.3 s in the last 5 km; 397 s of surface positions; one approach, no go-around; calm, visibility 10 mi, no ceiling below 23,000 ft; a winter day; arrives from the north-east (the CHOWW side). It also passes every quality gate of section 7.2. The one 737-800 on 19 by day that met the selection criteria (abc7e9, below) fails three gates on the flight as recorded, so section 6.2's substitute rule applies: a B738 meeting the whole of both could not be found in the days scanned.",
+   "note": "The transponder reported the surface format only from 16:05:05Z, 14 s after the wheels touched; the touchdown is where the vertical rate levelled on the runway (adsb.refine_touchdown).",
+   "criteria": {
+    "traceMin": 65.4,
+    "alt24Ft": 30316,
+    "adsbShare": 1.0,
+    "geomShare": 1.0,
+    "gapAbove18kS": 20.0,
+    "gapBelow10kS": 14.4,
+    "gapLast5kmS": 3.3,
+    "groundS": 397.3,
+    "goAround": false,
+    "sunDeg": 17.6,
+    "visibilityMi": 10.0,
+    "ceilingFt": 23000,
+    "windDir": 0,
+    "windKt": 0
+   }
+  },
+  {
+   "id": "lv-19-night",
+   "icao": "abec03",
+   "type": "B738",
+   "runway": "19R",
+   "touchdown": "2026-03-10T06:42:46Z",
+   "day": "2026-03-10",
+   "release": "v2026.03.10-planes-readsb-staging-0",
+   "raw": "raw/lv-19-night.trace.json.gz",
+   "fetched": "2026-11-24, from https://github.com/adsblol/globe_history_2026/releases/tag/v2026.03.10-planes-readsb-staging-0 (the release PREFERRED_RELEASES.txt names for the day), streamed by fetch_adsb_day.py",
+   "reason": "A 737-800 (B738) landing on 19R at 23:42 local on 9 March 2026, the sun 54 deg below the horizon: runway 19 at night with the Strip to the right. It meets every selection criterion of 6.2: trace from 6.5 h before touchdown, 30,475 ft at 24 min out; 100% ADS-B positions and geometric altitude; longest gaps 20.0 s above 18,000 ft, 8.5 s below 10,000 ft, 3.3 s in the last 5 km; 344 s of surface positions; one approach, no go-around; calm, visibility 10 mi, no ceiling (FEW250); a spring night, a different month from lv-19-day; arrives from the east. It passes every quality gate of 7.2 and the procedure check (glide path 3.00 deg over 3 to 1 km, 0.04 deg from the PAPI's 3.04). Chosen over the other 737-800s on 19R that night (abb8a0, abefdd, abec26, abaa0e, aaf5a9, ab5bd4: incomplete before 24 min out or gaps) and over the 19L night 737-800s of 2026-09-18 (abc432, abadd6, abd559, abae62), which each miss the last-minute height gate by 0.3 to 0.6 m on a 31 C, gusty evening.",
+   "criteria": {
+    "traceMin": 391.5,
+    "alt24Ft": 30475,
+    "adsbShare": 1.0,
+    "geomShare": 1.0,
+    "gapAbove18kS": 20.0,
+    "gapBelow10kS": 8.5,
+    "gapLast5kmS": 3.3,
+    "groundS": 343.8,
+    "goAround": false,
+    "sunDeg": -54.4,
+    "visibilityMi": 10.0,
+    "ceilingFt": null,
+    "windDir": 0.0,
+    "windKt": 0.0,
+    "from": "east",
+    "localTime": "23:42"
+   }
+  },
+  {
+   "id": "lv-26-day",
+   "icao": "abc504",
+   "type": "B738",
+   "runway": "26L",
+   "touchdown": "2026-03-10T15:19:59Z",
+   "day": "2026-03-10",
+   "release": "v2026.03.10-planes-readsb-staging-0",
+   "raw": "raw/lv-26-day.trace.json.gz",
+   "fetched": "2026-11-24, from https://github.com/adsblol/globe_history_2026/releases/tag/v2026.03.10-planes-readsb-staging-0 (the release PREFERRED_RELEASES.txt names for the day), streamed by fetch_adsb_day.py",
+   "reason": "A 737-800 (B738) landing on 26L at 08:19 local on 10 March 2026, the sun 15.4 deg up in the east behind the aircraft: straight in from the east over Lake Mead and Henderson, as section 6.2 wants for this flight. It meets every selection criterion of 6.2: trace from 3.5 h before touchdown, 30,600 ft at 24 min out; 100% ADS-B positions and geometric altitude; longest gaps 25.5 s above 18,000 ft, 13.2 s below 10,000 ft, 6.3 s in the last 5 km; 616 s of surface positions; one approach, no go-around; calm, visibility 10 mi, no ceiling. It passes every quality gate of 7.2 and the procedure check (glide path 3.12 deg, 0.12 from the published 3.00). The sun is only just above the 15 deg the criterion asks; the later March mornings from the east fail a gate (ad6116 09:05, deceleration 3.75 m/s2; ac066b 10:34, last-minute height RMS 3.59 m), as do the February mornings (abd559 crossing height 35.3 m, abe7c5 deceleration 4.4 m/s2, ab93a5 deceleration 3.5 m/s2) and the September 26L mornings (abae62 height RMS 3.18 m). a12378 (2026-09-18 13:12, from the east) passes every gate but flew its final at 165 to 170 kt indicated with flaps 30 or less, too fast for any 737-800 weight, and is afternoon.",
+   "criteria": {
+    "traceMin": 208.2,
+    "alt24Ft": 30600,
+    "adsbShare": 1.0,
+    "geomShare": 1.0,
+    "gapAbove18kS": 25.5,
+    "gapBelow10kS": 13.2,
+    "gapLast5kmS": 6.3,
+    "groundS": 616.1,
+    "goAround": false,
+    "sunDeg": 15.4,
+    "visibilityMi": 10.0,
+    "ceilingFt": null,
+    "windDir": 0.0,
+    "windKt": 0.0,
+    "from": "east",
+    "localTime": "08:19"
+   }
+  },
+  {
+   "id": "lv-26-night",
+   "icao": "acee50",
+   "type": "B738",
+   "runway": "26L",
+   "touchdown": "2026-02-16T03:56:30Z",
+   "day": "2026-02-16",
+   "release": "v2026.02.16-planes-readsb-prod-0",
+   "raw": "raw/lv-26-night.trace.json.gz",
+   "fetched": "2026-11-24, from https://github.com/adsblol/globe_history_2026/releases/tag/v2026.02.16-planes-readsb-prod-0 (the release PREFERRED_RELEASES.txt names for the day), streamed by fetch_adsb_day.py",
+   "reason": "A 737-800 (B738) landing on 26L at 19:56 local on 15 February 2026 (03:56:30Z on the 16th), the sun 32 deg below the horizon. It meets every selection criterion of 6.2: trace from 2.5 h before touchdown, 30,725 ft at 24 min out; 100% ADS-B positions and geometric altitude; longest gaps 20.0 s above 18,000 ft, 14.4 s below 10,000 ft, 5.6 s in the last 5 km; 399 s of surface positions; one approach, no go-around; wind 190 at 5 kt, visibility 10 mi, lowest ceiling 20,000 ft (BKN200); a winter evening; arrives from the south-east. It passes every quality gate of 7.2 and the procedure check (glide path 3.06 deg, 0.06 from the published 3.00). Its rollout passed the gates only once the bake stopped trusting the stale airborne ground speed the transponder repeats after touchdown (smooth.stale_velocity). Chosen over abc49b (2026-03-10 21:15, from the east), which also passes but flew a 2.70 deg final, near the 0.35 deg limit, and over the other February night 737-800s (abd135, abd17b, abad6c, ab6247: last-minute height RMS 3.6 m or deceleration over 3.5 m/s2).",
+   "criteria": {
+    "traceMin": 152.0,
+    "alt24Ft": 30725,
+    "adsbShare": 1.0,
+    "geomShare": 1.0,
+    "gapAbove18kS": 20.0,
+    "gapBelow10kS": 14.4,
+    "gapLast5kmS": 5.6,
+    "groundS": 398.9,
+    "goAround": false,
+    "sunDeg": -31.7,
+    "visibilityMi": 10.0,
+    "ceilingFt": 20000.0,
+    "windDir": 190.0,
+    "windKt": 5.0,
+    "from": "south-east",
+    "localTime": "19:56"
+   }
+  },
+  {
+   "id": "lv-wx",
+   "icao": "ab6247",
+   "type": "B738",
+   "runway": "26L",
+   "touchdown": "2026-01-01T19:45:24Z",
+   "day": "2026-01-01",
+   "release": "v2026.01.01-planes-readsb-prod-0",
+   "raw": "raw/lv-wx.trace.json.gz",
+   "fetched": "2026-11-24, from https://github.com/adsblol/globe_history_2026/releases/tag/v2026.01.01-planes-readsb-prod-0 (the release PREFERRED_RELEASES.txt names for the day), streamed by fetch_adsb_day.py",
+   "reason": "A 737-800 (B738) landing on 26L at 11:45 local on 1 January 2026 under an overcast at 500 ft (KLAS 011956Z 00000KT 7SM OVC005 08/07), after a morning of drizzle, light rain and mist with visibility down to 1.5 mi: the weather flight of section 6.2 (a broken or overcast layer below 8,000 ft), flown on the 26L ILS and in cloud until short final. It meets every selection criterion of 6.2: trace from 70 min before touchdown, 30,800 ft at 24 min out; 100% ADS-B positions and geometric altitude; longest gaps 22.1 s above 18,000 ft, 9.3 s below 10,000 ft, 5.4 s in the last 5 km; 155 s of surface positions; one approach, no go-around; winter; arrives from the east. It passes every quality gate of 7.2 and the procedure check (glide path 3.13 deg, 0.13 from the ILS's 3.00). Chosen over the morning's rain arrivals, which each miss the last-minute height gate (abd4e7 09:04, 3.71 m; abe030 09:20 in 1.5 mi, 3.62 m; abc40d 06:54 at dawn, 4.27 m), and 0d071b (12:18), whose position RMS below 300 m is 5.01 m against 5.",
+   "criteria": {
+    "traceMin": 70.5,
+    "alt24Ft": 30800,
+    "adsbShare": 1.0,
+    "geomShare": 1.0,
+    "gapAbove18kS": 22.1,
+    "gapBelow10kS": 9.3,
+    "gapLast5kmS": 5.4,
+    "groundS": 155.3,
+    "goAround": false,
+    "sunDeg": 31.0,
+    "visibilityMi": 7.0,
+    "ceilingFt": 500.0,
+    "windDir": 0.0,
+    "windKt": 0.0,
+    "from": "east",
+    "localTime": "11:45"
+   }
+  }
+ ],
+ "alternatives": [
+  {
+   "icao": "abc7e9",
+   "type": "B738",
+   "runway": "19L",
+   "touchdown": "2026-02-16T20:30:19Z",
+   "day": "2026-02-16",
+   "release": "v2026.02.16-planes-readsb-prod-0",
+   "why not": "Meets every selection criterion (12:30 local, sun 41 deg, from the south-east, 160 s on the surface) but fails three of section 7.2's gates on what was recorded: glide path 3.44 deg from 3 km to 1 km against 3.00 published for 19L (the raw points alone give 3.40: it came down to the path from above and crossed under it); deceleration 3.69 m/s2 against 3.5 (97 to 77 kt in 2.3 s in the recording); height RMS 3.65 m in the last 60 s against 3, the jitter of its 25 ft altitudes. To use it, put it in `flights` with id lv-19-day (raw: `uv run scripts/find_arrivals.py lv 2026-02-16 --extract abc7e9 --id lv-19-day`, from data/raw/adsb) and bake with --allow-fail."
+  },
+  {
+   "icao": "abc49b",
+   "type": "B738",
+   "runway": "26L",
+   "touchdown": "2026-03-10T04:15:40Z",
+   "day": "2026-03-10",
+   "release": "v2026.03.10-planes-readsb-staging-0",
+   "why not": "A 737-800 on 26L at 21:15 local on 9 March from the east; passes every gate, but its final is 2.70 deg, 0.30 from the published 3.00 (warn beyond 0.2). The alternative to lv-26-night if a night from the east (over Lake Mead) matters more than the angle: `uv run scripts/find_arrivals.py lv 2026-03-10 --extract abc49b --id lv-26-night` (from data/raw/adsb), update the entry in `flights`, run bake_flight.py once."
+  },
+  {
+   "icao": "a12378",
+   "type": "B738",
+   "runway": "26L",
+   "touchdown": "2026-09-18T20:12:25Z",
+   "day": "2026-09-18",
+   "release": "v2026.09.18-planes-readsb-staging-0",
+   "why not": "Passes every gate (26L at 13:12 local on 17 September, from the east), but flew its final at 165 to 170 kt indicated, too fast for flaps 30 at any 737-800 landing weight (the weight inference hits its 72 t limit), and in the afternoon rather than the morning section 6.2 asks for."
+  }
+ ],
+ "dusk": "lv-19-dusk is ac4ffb with one gate waived (its entry's `waivers`). No runway 19 dusk flight passing every gate of section 7.2 was found in the three dusk evenings scanned (2026-03-10, 2026-05-23, 2026-09-18 UTC)."
+}

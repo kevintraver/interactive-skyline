@@ -52,8 +52,14 @@ export function createLook(app, { display = displayFromSearch(globalThis.locatio
     const ambientLux = c.pinned ? (c.keyBody === 'sun' ? 15000 : s.sky.ambientLux) : s.sky.ambientLux;
     const street = s ? s.lights.street : 0;
     Object.assign(current, physicalLights(c, { pinned: c.pinned, moonLux: s ? s.moon.illuminanceLux : 0, ambientLux, street }));
-    current.priorEv = priorEv100(current);
+    if (!priorTerms) { current.priorEv = priorEv100(current); return; }
+    // a mode whose camera is not standing in the lit city (the flight) gives the prior its own terms (and the city light its lux)
+    current.priorTerms = priorTerms({ keyLux: current.keyLux, keyAltDeg: current.keyAltDeg, ambientLux: current.ambientLux,
+      cityLux: current.cityLux, emissionLux: current.emissionLux, keyBody: c.keyBody, street });
+    current.priorEv = priorEv100(current.priorTerms);
   }
+  /** setPriorTerms(fn): fn(terms) -> the terms the prior is computed from (null: the lights' own, as by default). */
+  let priorTerms = null;
 
   // The physical, pre-exposed intensities are put on the lights only while the pipeline draws, and the classic
   // values the legacy sky set are put back after: window.__skyline.sun and the landmark checker read them, and
@@ -72,7 +78,8 @@ export function createLook(app, { display = displayFromSearch(globalThis.locatio
     const k = exposureUniform.value, c = sky.classic;
     sky.sun.intensity = (current.keyLux * k) / lumOf(sky.sun.color);
     sky.hemi.intensity = (current.ambientLux * k) / lumOf(sky.hemi.color);
-    cityLight.intensity = (current.cityLux * k * env.nodes.cityFactor.value) / lumOf(cityLight.color);
+    const cityLux = current.priorTerms && Number.isFinite(current.priorTerms.cityLightLux) ? current.priorTerms.cityLightLux : current.cityLux;
+    cityLight.intensity = (cityLux * k * env.nodes.cityFactor.value) / lumOf(cityLight.color);
     terrain.forEach((t, i) => {
       const m = t.mesh.material;
       m.emissiveIntensity = (streetCdM2(c.street[i] || 0) * (c.imagery ? 1 : 0.3) * k * env.nodes.cityFactor.value) / lumOf(m.emissive);
@@ -97,6 +104,18 @@ export function createLook(app, { display = displayFromSearch(globalThis.locatio
     demand() { return classicDisplay ? 'idle' : exposure.demand(); },
     /** A seek for the exposure: a new view, a pinned look, a new city (`newView` forgets the meter's offsets). */
     seek(newView = true) { exposure.snap(newView); },
+    /**
+     * Replace the terms the prior is computed from, while a mode needs it (the flight: the light at the aircraft, not
+     * in the lit city), or put the default back with null. `fn({ keyLux, keyAltDeg, ambientLux, cityLux, emissionLux,
+     * keyBody, street })` returns { keyLux, keyAltDeg, ambientLux, cityLux, emissionLux } for photometry.js
+     * priorEv100, every frame, and optionally cityLightLux: the lux of the city's ambient light where the camera is
+     * (omitted: plan 01's cityLux); the other lights are not changed. Without it everything is exactly as before.
+     */
+    setPriorTerms(fn) {
+      priorTerms = typeof fn === 'function' ? fn : null;
+      if (!priorTerms) delete current.priorTerms;
+      exposure.snap(false); // Camera mode: a new prior is a seek (Eye mode follows the prior every frame anyway)
+    },
   };
   return look;
 }

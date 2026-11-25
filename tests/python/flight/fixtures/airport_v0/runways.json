@@ -1,0 +1,465 @@
+{
+ "faa": "LAS",
+ "icao": "KLAS",
+ "name": "HARRY REID INTL",
+ "arp": {
+  "lat": 36.08034277,
+  "lon": -115.15244861,
+  "x": 1833.09,
+  "y": -3812.11,
+  "elevation": 665.41
+ },
+ "magneticVariation": 11.0,
+ "beacon": {
+  "colors": "WG",
+  "schedule": "SS-SR"
+ },
+ "runways": [
+  {
+   "id": "01L/19R",
+   "ends": [
+    "1L",
+    "19R"
+   ],
+   "length": 2977.9,
+   "surveyedLength": 2977.58,
+   "width": 45.72,
+   "surface": "CONC",
+   "treatment": "GRVD",
+   "edgeLights": "HIGH",
+   "direction": [
+    0.421255,
+    0.906942
+   ],
+   "profile": [
+    [
+     0.0,
+     664.83
+    ],
+    [
+     178.71,
+     663.28
+    ],
+    [
+     2738.9,
+     636.57
+    ],
+    [
+     2977.58,
+     634.69
+    ]
+   ]
+  },
+  {
+   "id": "01R/19L",
+   "ends": [
+    "1R",
+    "19L"
+   ],
+   "length": 2977.59,
+   "surveyedLength": 2977.19,
+   "width": 45.72,
+   "surface": "CONC",
+   "treatment": "GRVD",
+   "edgeLights": "MED",
+   "direction": [
+    0.421246,
+    0.906946
+   ],
+   "profile": [
+    [
+     0.0,
+     662.97
+    ],
+    [
+     149.44,
+     661.36
+    ],
+    [
+     2709.91,
+     634.01
+    ],
+    [
+     2977.19,
+     633.25
+    ]
+   ]
+  },
+  {
+   "id": "08L/26R",
+   "ends": [
+    "8L",
+    "26R"
+   ],
+   "length": 4521.71,
+   "surveyedLength": 4521.0,
+   "width": 45.72,
+   "surface": "CONC",
+   "treatment": "GRVD",
+   "edgeLights": "HIGH",
+   "direction": [
+    0.999999,
+    0.001276
+   ],
+   "profile": [
+    [
+     0.0,
+     665.41
+    ],
+    [
+     749.46,
+     656.81
+    ],
+    [
+     4094.64,
+     622.86
+    ],
+    [
+     4521.0,
+     619.66
+    ]
+   ]
+  },
+  {
+   "id": "08R/26L",
+   "ends": [
+    "8R",
+    "26L"
+   ],
+   "length": 3208.32,
+   "surveyedLength": 3207.72,
+   "width": 45.72,
+   "surface": "CONC",
+   "treatment": "GRVD",
+   "edgeLights": "HIGH",
+   "direction": [
+    0.999999,
+    0.001294
+   ],
+   "profile": [
+    [
+     0.0,
+     657.42
+    ],
+    [
+     3207.72,
+     624.35
+    ]
+   ]
+  }
+ ],
+ "ends": {
+  "19L": {
+   "id": "19L",
+   "nasrId": "19L",
+   "runway": "01R/19L",
+   "lat": 36.09857558,
+   "lon": -115.15355816,
+   "end": [
+    1732.75,
+    -1789.01,
+    633.25
+   ],
+   "thresholdLat": 36.096391,
+   "thresholdLon": -115.15480877,
+   "threshold": [
+    1620.18,
+    -2031.43,
+    634.01
+   ],
+   "displacedM": 267.31,
+   "trueHeading": 205.0,
+   "tdzElevation": 643.71,
+   "thresholdCrossingHeightFt": 75.0,
+   "papi": {
+    "type": "PAPI",
+    "lights": 4,
+    "side": "left",
+    "angle": 3.0,
+    "crossingHeightFt": 75,
+    "code": "P4L"
+   },
+   "approachLights": null,
+   "ils": null,
+   "marking": "NPI",
+   "endIdentifierLights": true,
+   "centerlineLights": false,
+   "tdzLights": false,
+   "landingDistanceFt": 8807.0,
+   "gridHeading": 204.913
+  },
+  "19R": {
+   "id": "19R",
+   "nasrId": "19R",
+   "runway": "01L/19R",
+   "lat": 36.09966322,
+   "lon": -115.15643405,
+   "end": [
+    1473.76,
+    -1668.37,
+    634.69
+   ],
+   "thresholdLat": 36.0977128,
+   "thresholdLon": -115.15755166,
+   "threshold": [
+    1373.15,
+    -1884.81,
+    636.57
+   ],
+   "displacedM": 238.66,
+   "trueHeading": 205.0,
+   "tdzElevation": 645.08,
+   "thresholdCrossingHeightFt": 80.0,
+   "papi": {
+    "type": "PAPI",
+    "lights": 4,
+    "side": "left",
+    "angle": 3.04,
+    "crossingHeightFt": 80,
+    "code": "P4L"
+   },
+   "approachLights": null,
+   "ils": null,
+   "marking": "NPI",
+   "endIdentifierLights": true,
+   "centerlineLights": false,
+   "tdzLights": false,
+   "landingDistanceFt": 8416.0,
+   "gridHeading": 204.914
+  },
+  "1L": {
+   "id": "1L",
+   "nasrId": "01L",
+   "runway": "01L/19R",
+   "lat": 36.07532694,
+   "lon": -115.17036386,
+   "end": [
+    219.44,
+    -4368.86,
+    664.83
+   ],
+   "thresholdLat": 36.07678761,
+   "thresholdLon": -115.16952811,
+   "threshold": [
+    294.72,
+    -4206.78,
+    663.28
+   ],
+   "displacedM": 178.61,
+   "trueHeading": 25.0,
+   "tdzElevation": 663.28,
+   "thresholdCrossingHeightFt": 63.0,
+   "papi": {
+    "type": "PAPI",
+    "lights": 4,
+    "side": "left",
+    "angle": 3.4,
+    "crossingHeightFt": 63,
+    "code": "P4L"
+   },
+   "approachLights": "MALSF",
+   "ils": "ILS/DME",
+   "marking": "PIR",
+   "endIdentifierLights": false,
+   "centerlineLights": false,
+   "tdzLights": false,
+   "landingDistanceFt": 8402.0,
+   "gridHeading": 24.914
+  },
+  "1R": {
+   "id": "1R",
+   "nasrId": "01R",
+   "runway": "01R/19L",
+   "lat": 36.07424266,
+   "lon": -115.16748669,
+   "end": [
+    478.62,
+    -4489.16,
+    662.97
+   ],
+   "thresholdLat": 36.07546408,
+   "thresholdLon": -115.16678777,
+   "threshold": [
+    541.57,
+    -4353.63,
+    661.36
+   ],
+   "displacedM": 149.35,
+   "trueHeading": 25.0,
+   "tdzElevation": 661.36,
+   "thresholdCrossingHeightFt": 76.0,
+   "papi": {
+    "type": "PAPI",
+    "lights": 4,
+    "side": "left",
+    "angle": 3.0,
+    "crossingHeightFt": 76,
+    "code": "P4L"
+   },
+   "approachLights": null,
+   "ils": null,
+   "marking": "NPI",
+   "endIdentifierLights": true,
+   "centerlineLights": false,
+   "tdzLights": false,
+   "landingDistanceFt": 8784.0,
+   "gridHeading": 24.913
+  },
+  "26L": {
+   "id": "26L",
+   "nasrId": "26L",
+   "runway": "08R/26L",
+   "lat": 36.07365752,
+   "lon": -115.12582402,
+   "end": [
+    4231.59,
+    -4553.08,
+    624.35
+   ],
+   "thresholdLat": 36.07365752,
+   "thresholdLon": -115.12582402,
+   "threshold": [
+    4231.59,
+    -4553.08,
+    624.35
+   ],
+   "displacedM": 0.0,
+   "trueHeading": 270.0,
+   "tdzElevation": 630.54,
+   "thresholdCrossingHeightFt": 84.0,
+   "papi": {
+    "type": "PAPI",
+    "lights": 4,
+    "side": "left",
+    "angle": 3.0,
+    "crossingHeightFt": 84,
+    "code": "P4L"
+   },
+   "approachLights": "MALSF",
+   "ils": "ILS/DME",
+   "marking": "PIR",
+   "endIdentifierLights": false,
+   "centerlineLights": false,
+   "tdzLights": false,
+   "landingDistanceFt": 10526.0,
+   "gridHeading": 269.926
+  },
+  "26R": {
+   "id": "26R",
+   "nasrId": "26R",
+   "runway": "08L/26R",
+   "lat": 36.07640647,
+   "lon": -115.12108302,
+   "end": [
+    4658.49,
+    -4247.84,
+    619.66
+   ],
+   "thresholdLat": 36.0764035,
+   "thresholdLon": -115.12581636,
+   "threshold": [
+    4232.13,
+    -4248.39,
+    622.86
+   ],
+   "displacedM": 426.42,
+   "trueHeading": 270.0,
+   "tdzElevation": 629.99,
+   "thresholdCrossingHeightFt": 84.0,
+   "papi": {
+    "type": "PAPI",
+    "lights": 4,
+    "side": "left",
+    "angle": 3.0,
+    "crossingHeightFt": 84,
+    "code": "P4L"
+   },
+   "approachLights": "MALS",
+   "ils": "ILS/DME",
+   "marking": "PIR",
+   "endIdentifierLights": false,
+   "centerlineLights": false,
+   "tdzLights": false,
+   "landingDistanceFt": 12638.0,
+   "gridHeading": 269.927
+  },
+  "8L": {
+   "id": "8L",
+   "nasrId": "08L",
+   "runway": "08L/26R",
+   "lat": 36.07636566,
+   "lon": -115.17127366,
+   "end": [
+    137.49,
+    -4253.61,
+    665.41
+   ],
+   "thresholdLat": 36.076374,
+   "thresholdLon": -115.16295338,
+   "threshold": [
+    886.95,
+    -4252.64,
+    656.81
+   ],
+   "displacedM": 749.5,
+   "trueHeading": 90.0,
+   "tdzElevation": 656.81,
+   "thresholdCrossingHeightFt": 76.0,
+   "papi": {
+    "type": "PAPI",
+    "lights": 4,
+    "side": "left",
+    "angle": 3.0,
+    "crossingHeightFt": 76,
+    "code": "P4L"
+   },
+   "approachLights": null,
+   "ils": null,
+   "marking": "NPI",
+   "endIdentifierLights": false,
+   "centerlineLights": false,
+   "tdzLights": false,
+   "landingDistanceFt": 11960.0,
+   "gridHeading": 89.927
+  },
+  "8R": {
+   "id": "8R",
+   "nasrId": "08R",
+   "runway": "08R/26L",
+   "lat": 36.0736288,
+   "lon": -115.1614338,
+   "end": [
+    1023.87,
+    -4557.23,
+    657.42
+   ],
+   "thresholdLat": 36.0736288,
+   "thresholdLon": -115.1614338,
+   "threshold": [
+    1023.87,
+    -4557.23,
+    657.42
+   ],
+   "displacedM": 0.0,
+   "trueHeading": 90.0,
+   "tdzElevation": 657.42,
+   "thresholdCrossingHeightFt": 61.0,
+   "papi": {
+    "type": "PAPI",
+    "lights": 4,
+    "side": "left",
+    "angle": 3.0,
+    "crossingHeightFt": 61,
+    "code": "P4L"
+   },
+   "approachLights": null,
+   "ils": null,
+   "marking": "NPI",
+   "endIdentifierLights": true,
+   "centerlineLights": false,
+   "tdzLights": false,
+   "landingDistanceFt": 10526.0,
+   "gridHeading": 89.926
+  }
+ }
+}

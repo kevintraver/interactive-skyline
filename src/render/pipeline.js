@@ -21,6 +21,28 @@ const ORDER = ['afterScene', 'afterWorld', 'beforeBloom', 'afterAA', 'afterBloom
 /** Rec. 709 luminance of linear RGB (the working space) */
 export const lum = (r, g, b) => 0.2126 * r + 0.7152 * g + 0.0722 * b;
 
+/**
+ * What the scene pass keeps of its multisampled buffers. Each frame the pass resolves its multisampled colour into the
+ * texture everything after it reads; by default three also resolves the depth and stores both multisampled buffers to
+ * memory, for whatever might draw into them again or read the depth. Only stages can: a render stage after the scene
+ * draws into the multisampled buffers (it needs them stored), a node stage may read sceneDepth. With no stage
+ * registered (the app as it ships) the pass discards them, which on a tiled GPU (the reference Apple M4) keeps them in
+ * tile memory instead of writing about 48 MB a frame at 1280 x 800 and High. The picture is the same: nothing reads
+ * what is no longer kept.
+ *
+ * Except on WebGPU below 4x: a 2-sample colour attachment whose data are discarded (three makes it a transient
+ * attachment) resolved to black in Chrome on the reference M4, so Low drew a blank canvas from its first frame and a
+ * drop from High to Low blanked the app (plan 03's "blank frame", 24 Nov 2026). There the colour is stored; the depth
+ * may still be discarded (measured). Pure.
+ * @param {{ stages: { at: string, render?: Function, node?: Function }[], samples: number, webgpu: boolean }} o
+ */
+export function bufferPolicy({ stages, samples, webgpu }) {
+  const store = stages.some((s) => s.render && s.at !== 'beforeScene' && s.at !== 'overlay');
+  const colorMustStore = webgpu && samples > 1 && samples < 4;
+  return { storeMultisampledColorBuffer: store || colorMustStore, storeMultisampledDepthBuffer: store, storeMultisampledStencilBuffer: store,
+    resolveDepthBuffer: stages.length > 0 };
+}
+
 /** The classic renderer's stand-in: no post, the renderer draws the scene as it always has. */
 function legacyPipeline({ renderer, scene, camera }) {
   let cam = camera;
@@ -79,25 +101,21 @@ export function createPipeline({ renderer, scene, camera, legacy = false, exposu
     return result;
   };
 
-  // What the scene pass keeps of its multisampled buffers. Each frame the pass resolves its 4x colour into the
-  // texture everything after it reads; by default three also resolves the depth and stores both multisampled
-  // buffers to memory, for whatever might draw into them again or read the depth. Only stages can: a render
-  // stage after the scene draws into the multisampled buffers (it needs them stored), a node stage may read
-  // sceneDepth. With no stage registered (the app as it ships) the pass discards them, which on a tiled GPU (the
-  // reference Apple M4) keeps them in tile memory instead of writing about 48 MB a frame at 1280 x 800 and High.
-  // The picture is the same: nothing reads what is no longer kept.
+  // What the scene pass keeps of its multisampled buffers (bufferPolicy, below). The WebGPU backend makes discarded
+  // multisampled textures transient (they cannot be loaded): a change re-creates them.
+  let builtSamples = renderer.samples;
   function keepBuffers() {
     const target = scenePass.renderTarget;
-    const store = stages.some((s) => s.render && s.at !== 'beforeScene' && s.at !== 'overlay');
-    const want = { storeMultisampledColorBuffer: store, storeMultisampledDepthBuffer: store, storeMultisampledStencilBuffer: store,
-      resolveDepthBuffer: stages.length > 0 };
+    const want = bufferPolicy({ stages, samples: renderer.samples, webgpu: !!renderer.backend?.isWebGPUBackend });
     if (Object.keys(want).every((k) => target[k] === want[k])) return;
     Object.assign(target, want);
-    // the WebGPU backend makes discarded multisampled textures transient (they cannot be loaded): re-create them
     target.dispose();
   }
 
   function build() {
+    // a new MSAA count: the target is made again (the WebGL2 backend kept the old framebuffer and drew black)
+    if (renderer.samples !== builtSamples) scenePass.renderTarget.dispose();
+    builtSamples = renderer.samples;
     keepBuffers();
     let color = sceneColor;
     const inputs = () => ({ color, depth: sceneDepth, bloom: bloom ? bloom.node : vec4(0) });
@@ -137,6 +155,9 @@ export function createPipeline({ renderer, scene, camera, legacy = false, exposu
     legacy: false,
     /** Draw one frame of the current view. */
     render() {
+      // three applies the MSAA count to the scene pass's target only when the graph is built (PassNode.setup): a
+      // change of renderer.samples (a quality level) takes effect through a rebuild
+      if (renderer.samples !== builtSamples) build();
       token.value++;
       for (const fn of pipeline.around) fn(true);
       renderer.toneMapping = NoToneMapping; // the graph tone-maps; the renderer must not do it again
@@ -161,9 +182,10 @@ export function createPipeline({ renderer, scene, camera, legacy = false, exposu
     /** Change the display: { toneMapping: 'aces' | 'agx' | 'neutral', bloom: 0..1, contrast, saturation }. */
     configure(o) {
       const rebuild = (o.toneMapping && o.toneMapping !== settings.toneMapping) || (o.bloom !== undefined && (o.bloom > 0) !== (settings.bloom > 0))
-        || (o.contrast !== undefined && !!o.contrast !== !!settings.contrast) || (o.saturation !== undefined && !!o.saturation !== !!settings.saturation)
-        || (o.bloomScale !== undefined && o.bloomScale !== settings.bloomScale);
-      if (o.bloomScale !== undefined && bloom) { bloom.dispose(); bloom = null; }
+        || (o.contrast !== undefined && !!o.contrast !== !!settings.contrast) || (o.saturation !== undefined && !!o.saturation !== !!settings.saturation);
+      // the bloom's resolution changes in place: disposing it and rebuilding the graph in the same level change as the
+      // MSAA count left a deleted texture bound on WebGL2 and the canvas blank (tests/unit/render/pipelineBuffers.test.js)
+      if (o.bloomScale !== undefined && bloom && o.bloomScale !== settings.bloomScale) bloom.setScale(o.bloomScale);
       Object.assign(settings, o);
       bloomStrength.value = settings.bloom;
       contrast.value = settings.contrast;

@@ -1,0 +1,257 @@
+{
+ "about": "The published instrument approaches of KLAS from the FAA's CIFP (plan 03, F2.6): final approach course (true, from the fix before the runway to the threshold), glide path angle and threshold crossing height. Read by scripts/lib/qa.py and bake_flight.py.",
+ "source": "FAA Coded Instrument Flight Procedures (public domain), https://www.faa.gov/air_traffic/flight_info/aeronav/digital_products/cifp/download/",
+ "zip": "https://aeronav.faa.gov/Upload_313-d/cifp/CIFP_261029.zip",
+ "file": "FAACIFP18",
+ "cycle": "2611",
+ "header": "HDR01FAACIFP18      001P013203973042611  07-OCT-202615:55:03  U.S.A. DOT FAA                                            ",
+ "fetched": "2026-11-24",
+ "approaches": {
+  "H08R": {
+   "runway": "08R",
+   "type": "RNAV (RNP)",
+   "faf": "BHARP",
+   "lastFix": "BHARP",
+   "glidePathDeg": 3.15,
+   "crossingHeightFt": 60.0,
+   "finalCourseTrue": 89.88
+  },
+  "H19LZ": {
+   "runway": "19L",
+   "type": "RNAV (RNP)",
+   "faf": "KOOPA",
+   "lastFix": "GIFTT",
+   "glidePathDeg": 3.0,
+   "crossingHeightFt": 75.0,
+   "finalCourseTrue": 204.84
+  },
+  "H19RZ": {
+   "runway": "19R",
+   "type": "RNAV (RNP)",
+   "faf": "GIMBL",
+   "lastFix": "CEGIL",
+   "glidePathDeg": 3.24,
+   "crossingHeightFt": 75.0,
+   "finalCourseTrue": 204.84
+  },
+  "H26L": {
+   "runway": "26L",
+   "type": "RNAV (RNP)",
+   "faf": "RELIN",
+   "lastFix": "RELIN",
+   "glidePathDeg": 3.0,
+   "crossingHeightFt": 60.0,
+   "finalCourseTrue": 270.02
+  },
+  "H26R": {
+   "runway": "26R",
+   "type": "RNAV (RNP)",
+   "faf": "CONDY",
+   "lastFix": "CONDY",
+   "glidePathDeg": 3.0,
+   "crossingHeightFt": 60.0,
+   "finalCourseTrue": 270.02
+  },
+  "I01L": {
+   "runway": "01L",
+   "type": "ILS",
+   "faf": "NODIY",
+   "lastFix": "NODIY",
+   "glidePathDeg": 3.4,
+   "crossingHeightFt": 59.0,
+   "finalCourseTrue": 24.78
+  },
+  "I26LY": {
+   "runway": "26L",
+   "type": "ILS",
+   "faf": "RELIN",
+   "lastFix": "RELIN",
+   "glidePathDeg": 3.0,
+   "crossingHeightFt": 60.0,
+   "finalCourseTrue": 270.02
+  },
+  "I26LZ": {
+   "runway": "26L",
+   "type": "ILS",
+   "faf": "RELIN",
+   "lastFix": "RELIN",
+   "glidePathDeg": 3.0,
+   "crossingHeightFt": 60.0,
+   "finalCourseTrue": 270.02
+  },
+  "I26RY": {
+   "runway": "26R",
+   "type": "ILS",
+   "faf": "CONDY",
+   "lastFix": "CONDY",
+   "glidePathDeg": 3.0,
+   "crossingHeightFt": 60.0,
+   "finalCourseTrue": 270.02
+  },
+  "I26RZ": {
+   "runway": "26R",
+   "type": "ILS",
+   "faf": "CONDY",
+   "lastFix": "CONDY",
+   "glidePathDeg": 3.0,
+   "crossingHeightFt": 60.0,
+   "finalCourseTrue": 270.02
+  },
+  "L01L": {
+   "runway": "01L",
+   "type": "LOC",
+   "faf": "NODIY",
+   "lastFix": "ZABES",
+   "glidePathDeg": 3.4,
+   "crossingHeightFt": 59.0,
+   "finalCourseTrue": 24.8
+  },
+  "L26LY": {
+   "runway": "26L",
+   "type": "LOC",
+   "faf": "RELIN",
+   "lastFix": "RELIN",
+   "glidePathDeg": 3.0,
+   "crossingHeightFt": 60.0,
+   "finalCourseTrue": 270.02
+  },
+  "L26LZ": {
+   "runway": "26L",
+   "type": "LOC",
+   "faf": "RELIN",
+   "lastFix": "RELIN",
+   "glidePathDeg": 3.0,
+   "crossingHeightFt": 60.0,
+   "finalCourseTrue": 270.02
+  },
+  "L26RY": {
+   "runway": "26R",
+   "type": "LOC",
+   "faf": "CONDY",
+   "lastFix": "CONDY",
+   "glidePathDeg": 3.0,
+   "crossingHeightFt": 60.0,
+   "finalCourseTrue": 270.02
+  },
+  "L26RZ": {
+   "runway": "26R",
+   "type": "LOC",
+   "faf": "CONDY",
+   "lastFix": "CONDY",
+   "glidePathDeg": 3.0,
+   "crossingHeightFt": 60.0,
+   "finalCourseTrue": 270.02
+  },
+  "R01R": {
+   "runway": "01R",
+   "type": "RNAV (GPS)",
+   "faf": "KIBSE",
+   "lastFix": "MOLME",
+   "glidePathDeg": 3.0,
+   "crossingHeightFt": 60.0,
+   "finalCourseTrue": 24.8,
+   "fas": {
+    "angle": 3.0,
+    "tchFt": 60.0,
+    "ltpEllipsoidM": 633.3,
+    "runway": "01R"
+   }
+  },
+  "R19LY": {
+   "runway": "19L",
+   "type": "RNAV (GPS)",
+   "faf": "DIRDE",
+   "lastFix": "DIRDE",
+   "glidePathDeg": 3.0,
+   "crossingHeightFt": 60.0,
+   "finalCourseTrue": 204.86,
+   "fas": {
+    "angle": 3.0,
+    "tchFt": 60.0,
+    "ltpEllipsoidM": 606.0,
+    "runway": "19L"
+   }
+  },
+  "R19RY": {
+   "runway": "19R",
+   "type": "RNAV (GPS)",
+   "faf": "WAKSI",
+   "lastFix": "WAKSI",
+   "glidePathDeg": 3.24,
+   "crossingHeightFt": 60.0,
+   "finalCourseTrue": 204.86,
+   "fas": {
+    "angle": 3.24,
+    "tchFt": 60.0,
+    "ltpEllipsoidM": 608.5,
+    "runway": "19R"
+   }
+  }
+ },
+ "runways": {
+  "01L": {
+   "lat": 36.07678888888889,
+   "lon": -115.16952777777779,
+   "magneticBearing": 14.0,
+   "thresholdElevationFt": 2176.0,
+   "displacedFt": 586.0,
+   "crossingHeightFt": 59.0
+  },
+  "01R": {
+   "lat": 36.07546388888889,
+   "lon": -115.16678888888889,
+   "magneticBearing": 14.0,
+   "thresholdElevationFt": 2170.0,
+   "displacedFt": 490.0,
+   "crossingHeightFt": 60.0
+  },
+  "08L": {
+   "lat": 36.076375000000006,
+   "lon": -115.16295277777779,
+   "magneticBearing": 79.0,
+   "thresholdElevationFt": 2155.0,
+   "displacedFt": 2459.0,
+   "crossingHeightFt": 76.0
+  },
+  "08R": {
+   "lat": 36.07362777777778,
+   "lon": -115.16143333333333,
+   "magneticBearing": 79.0,
+   "thresholdElevationFt": 2157.0,
+   "displacedFt": 0.0,
+   "crossingHeightFt": 60.0
+  },
+  "19L": {
+   "lat": 36.09639166666667,
+   "lon": -115.15480833333334,
+   "magneticBearing": 194.0,
+   "thresholdElevationFt": 2080.0,
+   "displacedFt": 877.0,
+   "crossingHeightFt": 60.0
+  },
+  "19R": {
+   "lat": 36.09771388888889,
+   "lon": -115.15755277777778,
+   "magneticBearing": 194.0,
+   "thresholdElevationFt": 2089.0,
+   "displacedFt": 783.0,
+   "crossingHeightFt": 60.0
+  },
+  "26L": {
+   "lat": 36.073658333333334,
+   "lon": -115.12582499999999,
+   "magneticBearing": 259.0,
+   "thresholdElevationFt": 2048.0,
+   "displacedFt": 0.0,
+   "crossingHeightFt": 60.0
+  },
+  "26R": {
+   "lat": 36.07640277777778,
+   "lon": -115.12581666666667,
+   "magneticBearing": 259.0,
+   "thresholdElevationFt": 2044.0,
+   "displacedFt": 1399.0,
+   "crossingHeightFt": 60.0
+  }
+ }
+}

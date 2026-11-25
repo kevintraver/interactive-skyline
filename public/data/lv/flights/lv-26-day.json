@@ -1,0 +1,843 @@
+{
+ "format": "skyline-flight/1",
+ "id": "lv-26-day",
+ "city": "lv",
+ "airport": "KLAS",
+ "runway": "26L",
+ "aircraftType": "B738",
+ "recordedStart": "2026-03-10T14:50:00Z",
+ "touchdown": "2026-03-10T15:20:00Z",
+ "touchdownT": 1800.0,
+ "dt": 1.0,
+ "samples": 2434,
+ "channels": [
+  "x",
+  "n",
+  "h",
+  "s",
+  "gs",
+  "vs",
+  "tas",
+  "ias",
+  "hdg",
+  "pitch",
+  "roll",
+  "flap",
+  "slat",
+  "gear",
+  "speedbrake",
+  "groundSpoiler",
+  "reverser",
+  "lights",
+  "cabinLight",
+  "turbulence"
+ ],
+ "units": {
+  "x": "m east of the city origin",
+  "n": "m north of the city origin",
+  "h": "m above sea level of the main-gear contact point (on the ground: the surface)",
+  "s": "m flown along the ground track since the first sample",
+  "gs": "m/s",
+  "vs": "m/s, up positive",
+  "tas": "m/s",
+  "ias": "m/s",
+  "hdg": "deg clockwise from grid north (+n)",
+  "pitch": "deg, nose up positive",
+  "roll": "deg, right wing down positive",
+  "flap": "deg (trailing-edge detent: 0, 1, 2, 5, 10, 15, 25, 30, 40)",
+  "slat": "0 retracted, 1 extend, 2 full extend",
+  "gear": "0 up and locked, 1 down and locked",
+  "speedbrake": "0..1 of flight-detent travel",
+  "groundSpoiler": "0..1",
+  "reverser": "0 stowed, 1 deployed",
+  "lights": "bit field (section 5.5): NAV 1, BEACON 2, STROBE 4, LANDING 8, TAXI 16, TURNOFF 32, LOGO 64, WING 128; every lamp that is on has its bit",
+  "cabinLight": "0..1",
+  "turbulence": "0..1"
+ },
+ "provenance": {
+  "x": "recorded",
+  "n": "recorded",
+  "h": "recorded",
+  "s": "derived",
+  "gs": "recorded",
+  "vs": "recorded",
+  "tas": "derived",
+  "ias": "derived",
+  "hdg": "derived",
+  "pitch": "inferred",
+  "roll": "derived",
+  "flap": "inferred",
+  "slat": "inferred",
+  "gear": "inferred",
+  "speedbrake": "inferred",
+  "groundSpoiler": "inferred",
+  "reverser": "inferred",
+  "lights": "inferred",
+  "cabinLight": "inferred",
+  "turbulence": "derived"
+ },
+ "provenanceNotes": {
+  "h": "ADS-B geometric altitude, calibrated on the runway; wheels = antenna - 5.6 m (estimate); the flare (last seconds before the recorded air-to-ground transition) is modelled",
+  "tas": "ground velocity minus the wind of `atmosphere` (Open-Meteo GFS pressure levels for the hour (section 6.4))",
+  "ias": "calibrated airspeed for the true airspeed in the profile's temperature and the standard pressure",
+  "hdg": "direction of the air velocity: the crab into the wind, taken off over the last 5 s before touchdown; the track on the ground",
+  "roll": "coordinated turn, atan(V w / g), from the turn rate of the air velocity; limited to 30 deg and 5 deg/s",
+  "pitch": "flight-path angle through the air plus angle of attack from lift, CL = n W / (q S) with alpha = alpha0(flap) + CL / CLalpha fitted to the reference attitudes of section 7.3; weight 52.1 t from the approach speed; the flare raises the nose at most 3 deg; the nose comes down over 5 s after touchdown",
+  "turbulence": "30 s RMS of the recorded minus the smoothed vertical rate, 2 m/s = 1",
+  "flap": "selected 1, 5, 15, 30 by speed (within 10 kt of the current setting's manoeuvring speed for 52 t) or gate (1 by 22 km, 5 before joining final, 15 with the gear, landing flap by 300 m), never while the rest of the approach exceeds the new setting's placard; travel 1 lever unit/s (estimate); selected: 1 at 1186s (speed), 5 at 1308s (before joining final), 15 at 1588s (speed), 30 at 1627s (speed)",
+  "slat": "extend with flaps 1 to 5, full extend beyond 5 (spec.py SLATS schedule)",
+  "gear": "down with flaps 15, never above 270 kt, before the landing flap; 10 s travel (estimate)",
+  "speedbrake": "low confidence: only where the descent, in energy terms, is more than 25% steeper than clean idle explains, clean and above 600 m; 0 on the ground (the ground spoilers carry it there)",
+  "groundSpoiler": "0.5 s after touchdown until taxi speed",
+  "reverser": "sleeves from 2 s after touchdown until taxi speed (idle reverse from 60 kt)",
+  "lights": "section 7.8: position and beacon throughout, strobes until vacating, landing below 10,000 ft until vacating, turn-off from gear down, taxi after vacating, wing and logo at night below 10,000 ft",
+  "cabinLight": "dimmed to 0.3 from 10,000 ft when the sun is more than 6 deg below the horizon"
+ },
+ "reconstructed": [
+  {
+   "from": 1796,
+   "to": 1800,
+   "what": "flare: wheel height modelled from 10.0 m to the runway"
+  }
+ ],
+ "events": [
+  {
+   "t": 0,
+   "s": 0.0,
+   "id": "cruise",
+   "label": "Cruise, 31,000 ft"
+  },
+  {
+   "t": 467,
+   "s": 104218.5,
+   "id": "tod",
+   "label": "Top of descent"
+  },
+  {
+   "t": 836,
+   "s": 180598.7,
+   "id": "fl180",
+   "label": "Through 18,000 ft"
+  },
+  {
+   "t": 1304,
+   "s": 247266.5,
+   "id": "10000",
+   "label": "Through 10,000 ft"
+  },
+  {
+   "t": 1339,
+   "s": 251437.6,
+   "id": "terrain",
+   "label": "Over the valley's terrain"
+  },
+  {
+   "t": 1588,
+   "s": 279497.7,
+   "id": "gear",
+   "label": "Gear down"
+  },
+  {
+   "t": 1720,
+   "s": 290053.0,
+   "id": "ft1000",
+   "label": "1,000 ft above the runway"
+  },
+  {
+   "t": 1795,
+   "s": 295587.8,
+   "id": "threshold",
+   "label": "Runway 26L threshold"
+  },
+  {
+   "t": 1800,
+   "s": 295955.1,
+   "id": "touchdown",
+   "label": "Touchdown"
+  },
+  {
+   "t": 1840,
+   "s": 297635.6,
+   "id": "vacate",
+   "label": "Taxi speed"
+  },
+  {
+   "t": 2433,
+   "s": 299068.5,
+   "id": "end",
+   "label": "End of recording"
+  }
+ ],
+ "chapters": [
+  {
+   "id": "cruise",
+   "label": "Cruise, 31,000 ft",
+   "from": 0,
+   "to": 467
+  },
+  {
+   "id": "tod",
+   "label": "Top of descent",
+   "from": 467,
+   "to": 836
+  },
+  {
+   "id": "fl180",
+   "label": "Through 18,000 ft",
+   "from": 836,
+   "to": 1304
+  },
+  {
+   "id": "10000",
+   "label": "Through 10,000 ft",
+   "from": 1304,
+   "to": 1339
+  },
+  {
+   "id": "terrain",
+   "label": "Over the valley's terrain",
+   "from": 1339,
+   "to": 1588
+  },
+  {
+   "id": "gear",
+   "label": "Gear down",
+   "from": 1588,
+   "to": 1720
+  },
+  {
+   "id": "ft1000",
+   "label": "1,000 ft above the runway",
+   "from": 1720,
+   "to": 1795
+  },
+  {
+   "id": "threshold",
+   "label": "Runway 26L threshold",
+   "from": 1795,
+   "to": 1800
+  },
+  {
+   "id": "touchdown",
+   "label": "Touchdown",
+   "from": 1800,
+   "to": 1840
+  },
+  {
+   "id": "vacate",
+   "label": "Taxi speed",
+   "from": 1840,
+   "to": 2433
+  }
+ ],
+ "atmosphere": [
+  [
+   664.5,
+   14.44,
+   0.0,
+   -0.0
+  ],
+  [
+   674.5,
+   14.38,
+   0.0,
+   -0.0
+  ],
+  [
+   694.5,
+   14.25,
+   0.0,
+   -0.0
+  ],
+  [
+   764.5,
+   13.79,
+   0.0,
+   -0.0
+  ],
+  [
+   964.5,
+   12.49,
+   0.0,
+   -0.0
+  ],
+  [
+   1264.5,
+   10.54,
+   0.0,
+   -0.0
+  ],
+  [
+   1483.0,
+   10.9,
+   2.3,
+   2.31
+  ],
+  [
+   1986.0,
+   8.0,
+   1.51,
+   1.15
+  ],
+  [
+   3072.7,
+   1.67,
+   3.88,
+   -5.28
+  ],
+  [
+   4299.7,
+   -5.63,
+   4.24,
+   -5.33
+  ],
+  [
+   5701.0,
+   -15.53,
+   4.88,
+   -5.28
+  ],
+  [
+   7347.3,
+   -26.4,
+   5.73,
+   -12.79
+  ],
+  [
+   9353.2,
+   -43.17,
+   7.62,
+   -22.61
+  ],
+  [
+   10553.0,
+   -53.5,
+   11.05,
+   -27.88
+  ],
+  [
+   11948.8,
+   -63.67,
+   15.03,
+   -32.59
+  ],
+  [
+   13727.4,
+   -59.17,
+   17.36,
+   -3.58
+  ]
+ ],
+ "atmosphereNote": "altitude m above sea level, temperature degC, wind toward grid east and grid north m/s (true north turned into the city grid at the airport); Open-Meteo GFS pressure levels for the hour (section 6.4), with the airport's surface report blended in below 600 m above it",
+ "inferred": {
+  "weightKg": 52119,
+  "approachSpeedKt": 137.4,
+  "landingFlap": 30,
+  "flapSelections": [
+   {
+    "flap": 1,
+    "t": 1186,
+    "why": "speed"
+   },
+   {
+    "flap": 5,
+    "t": 1308,
+    "why": "before joining final"
+   },
+   {
+    "flap": 15,
+    "t": 1588,
+    "why": "speed"
+   },
+   {
+    "flap": 30,
+    "t": 1627,
+    "why": "speed"
+   }
+  ],
+  "gearDownT": 1588,
+  "joinFinalT": 1338,
+  "maxCrabDeg": 5.2,
+  "maxMach": 0.781
+ },
+ "badges": {
+  "light": "day",
+  "weather": "scattered",
+  "from": "east",
+  "stripSide": "right",
+  "stripView": "ahead-right"
+ },
+ "qa": {
+  "glidePathDeg": 3.12,
+  "crossingHeightM": 20.8,
+  "touchdownPastThresholdM": 381.8,
+  "touchdownRecorded": true,
+  "touchdownSource": "levelled before the surface flag",
+  "touchdownOffCentreM": -0.0,
+  "altitudeOffsetM": -25.49,
+  "datum": "ellipsoid",
+  "calibration": {
+   "barometricOffsetM": -18.89,
+   "barometricPoints": 110,
+   "method": "rollout",
+   "offsetM": -25.49,
+   "points": 8,
+   "geoidM": -28.07,
+   "datum": "ellipsoid"
+  },
+  "flare": {
+   "entryHeightM": 9.97,
+   "entrySinkMs": 4.01,
+   "touchdownSinkMs": 0.3,
+   "lastSecondSinkMs": 0.98,
+   "durationS": 4.0,
+   "nominal": true,
+   "touchdownRunwayElevationM": 628.04
+  },
+  "sunAtTouchdownDeg": 15.4,
+  "adsbShare": 1.0,
+  "gatedOut": 0,
+  "antennaAboveWheelsM": 5.6,
+  "gates": {
+   "positionRmsAirM": {
+    "value": 5.16,
+    "max": 12.0,
+    "pass": true
+   },
+   "positionRmsLowM": {
+    "value": 3.21,
+    "max": 5.0,
+    "pass": true
+   },
+   "heightRmsAirM": {
+    "value": 3.43,
+    "max": 8.0,
+    "pass": true
+   },
+   "heightRmsLast60sM": {
+    "value": 2.34,
+    "max": 3.0,
+    "pass": true
+   },
+   "glidePathDeg": {
+    "value": 3.12,
+    "nearest": 3.0,
+    "maxDiff": 0.35,
+    "warnDiff": 0.2,
+    "pass": true,
+    "warn": false
+   },
+   "crossingHeightM": {
+    "value": 20.8,
+    "min": 12.0,
+    "max": 32.0,
+    "pass": true
+   },
+   "touchdownPastThresholdM": {
+    "value": 381.8,
+    "min": 250.0,
+    "max": 1000.0,
+    "pass": true
+   },
+   "touchdownOffCentreM": {
+    "value": -0.0,
+    "maxAbs": 8.0,
+    "pass": true
+   },
+   "bankDeg": {
+    "value": 26.3,
+    "maxAbs": 35.0,
+    "pass": true
+   },
+   "pitchDeg": {
+    "value": [
+     -3.7,
+     4.6
+    ],
+    "min": -6.0,
+    "max": 12.0,
+    "pass": true
+   },
+   "decelerationMs2": {
+    "value": 2.51,
+    "max": 3.5,
+    "pass": true
+   },
+   "flapPlacard": {
+    "value": 0,
+    "max": 0,
+    "pass": true
+   },
+   "flapsMonotonic": {
+    "value": 0,
+    "max": 0,
+    "pass": true
+   },
+   "gearBeforeLandingFlapS": {
+    "value": 39.0,
+    "min": 0.1,
+    "pass": true
+   },
+   "landingLightBy10000ft": {
+    "value": true,
+    "pass": true
+   }
+  },
+  "waived": [],
+  "reported": {
+   "heightBiasLast60sM": -0.25,
+   "heightPointsLast60s": 76,
+   "roll": {
+    "rms": null,
+    "points": 0,
+    "limit": 4.0,
+    "within": null
+   },
+   "iasKt": {
+    "rms": null,
+    "points": 0,
+    "limit": 8.0,
+    "within": null
+   },
+   "heading": {
+    "rms": null,
+    "points": 0,
+    "limit": 3.0,
+    "within": null
+   }
+  },
+  "stripView": {
+   "rightShare": 0.27,
+   "leftShare": 0.0,
+   "aheadShare": 0.73,
+   "rightShareLastMinute": 0.616,
+   "leftShareLastMinute": 0.0,
+   "meanRelativeBearingDeg": 28.462,
+   "maxAbsBearingLastMinuteDeg": 52.171,
+   "stripSide": "right",
+   "stripView": "ahead-right"
+  },
+  "touchdownTime": {
+   "method": "barometric vertical rate levelling on the runway before the surface flag (adsb.refine_touchdown)",
+   "sigmaS": 1.2,
+   "alternatives": {
+    "geometricHeight": {
+     "offsetS": 0.4,
+     "sigmaS": 2.0,
+     "crossingS": -3.5,
+     "crossingHeightM": 7.7,
+     "basis": "the last 25 ft step of the geometric height below 12 m over the runway, carried down at 2.0 m/s (a flare's mean sink)"
+    },
+    "brakingOnset": {
+     "offsetS": 2.9,
+     "decelBeforeMs2": 0.07,
+     "decelAfterMs2": 1.88,
+     "basis": "onset of sustained deceleration in the raw positions alone; spoilers and brakes act 0 to about 5 s after the wheels touch, so a late bound"
+    },
+    "surfaceFlag": {
+     "offsetS": 17.6,
+     "basis": "first surface-format position; it lags the touchdown by 14 to 16 s on these transponders, so it bounds the touchdown only loosely"
+    },
+    "geometricRate": null
+   },
+   "decision": "kept: the geometric height agrees with the barometric time within 1 s on five of the six flights and braking begins after it on all six; the evidence of 25 November does not show the barometric rate levelling early by a consistent amount"
+  },
+  "pass": true
+ },
+ "weather": {
+  "format": "skyline-flight-weather/1",
+  "about": "The weather this flight was flown in, from the airport's reports and the GFS column at the airport (scripts/lib/flight_weather.py). Layer bases, visibility, present weather and the surface are observed; layer tops, the column and the visibility inside cloud are estimated. The layers are taken as the same over the whole track.",
+  "station": "KLAS",
+  "stationElevationM": 664.5,
+  "window": [
+   "2026-03-10T13:50Z",
+   "2026-03-10T16:19Z"
+  ],
+  "reports": [
+   {
+    "t": -3240,
+    "valid": "2026-03-10T13:56Z",
+    "metar": "KLAS 101356Z 00000KT 10SM FEW250 13/03 A2993 RMK AO2 SLP120 T01330028",
+    "tempC": 13.3,
+    "dewPointC": 2.8,
+    "windDir": 0.0,
+    "windKt": 0.0,
+    "gustKt": null,
+    "visibilityM": 16093.4,
+    "visibilityCensored": true,
+    "altimeterInHg": 29.93,
+    "layers": [
+     {
+      "cover": "FEW",
+      "baseFtAgl": 25000
+     }
+    ],
+    "wx": []
+   },
+   {
+    "t": 360,
+    "valid": "2026-03-10T14:56Z",
+    "metar": "KLAS 101456Z 00000KT 10SM SCT250 14/03 A2996 RMK AO2 SLP132 T01440028 53018",
+    "tempC": 14.4,
+    "dewPointC": 2.8,
+    "windDir": 0.0,
+    "windKt": 0.0,
+    "gustKt": null,
+    "visibilityM": 16093.4,
+    "visibilityCensored": true,
+    "altimeterInHg": 29.96,
+    "layers": [
+     {
+      "cover": "SCT",
+      "baseFtAgl": 25000
+     }
+    ],
+    "wx": []
+   },
+   {
+    "t": 3960,
+    "valid": "2026-03-10T15:56Z",
+    "metar": "KLAS 101556Z 00000KT 10SM SCT250 16/03 A2999 RMK AO2 SLP142 T01560033",
+    "tempC": 15.6,
+    "dewPointC": 3.3,
+    "windDir": 0.0,
+    "windKt": 0.0,
+    "gustKt": null,
+    "visibilityM": 16093.4,
+    "visibilityCensored": true,
+    "altimeterInHg": 29.99,
+    "layers": [
+     {
+      "cover": "SCT",
+      "baseFtAgl": 25000
+     }
+    ],
+    "wx": []
+   }
+  ],
+  "surface": {
+   "tempC": 14.88,
+   "dewPointC": 3.0,
+   "rh": 0.448,
+   "windDir": 0.0,
+   "windKt": 0.0,
+   "gustKt": null,
+   "visibilityM": 16093.4,
+   "visibilityCensored": true,
+   "altimeterInHg": 29.972,
+   "pressureHPa": 937.54,
+   "wx": [],
+   "from": [
+    "2026-03-10T14:56Z",
+    "2026-03-10T15:56Z"
+   ]
+  },
+  "layers": [
+   {
+    "cover": "SCT",
+    "fraction": 0.44,
+    "genus": "ci",
+    "baseM": 8284.5,
+    "topM": 9284.5,
+    "base": "observed",
+    "top": "estimated: plan 01's depth for the genus (the model column does not show it)",
+    "source": "METAR 2026-03-10T14:56Z"
+   }
+  ],
+  "precipitation": {
+   "rateMmH": 0.0,
+   "kind": "none",
+   "intensity": null,
+   "from": null
+  },
+  "visibility": {
+   "belowBaseM": 16093.4,
+   "belowBaseCensored": true,
+   "inCloudM": {
+    "st": 110.0,
+    "sc": 110.0,
+    "cu": 110.0,
+    "tcu": 110.0,
+    "cb": 110.0,
+    "ac": 230.0,
+    "as": 230.0,
+    "ci": 3000.0,
+    "cs": 3000.0
+   },
+   "clearM": 80000.0,
+   "note": "below the lowest base the report's (10 miles or more counts as clear); inside a broken or overcast layer an estimate by genus (Gultepe et al. 2006); clear elsewhere"
+  },
+  "inCloudCover": 0.5,
+  "inCloud": [],
+  "aloft": [
+   [
+    664.5,
+    937.54,
+    14.88,
+    44.85,
+    null
+   ],
+   [
+    774.0,
+    925,
+    14.3,
+    45.3,
+    0.0
+   ],
+   [
+    1005.0,
+    900,
+    13.2,
+    45.7,
+    0.0
+   ],
+   [
+    1483.0,
+    850,
+    10.9,
+    49.0,
+    0.0
+   ],
+   [
+    1986.0,
+    800,
+    8.0,
+    51.0,
+    0.0
+   ],
+   [
+    2515.0,
+    750,
+    4.17,
+    59.7,
+    0.0
+   ],
+   [
+    3072.7,
+    700,
+    1.67,
+    39.3,
+    0.0
+   ],
+   [
+    3667.3,
+    650,
+    -1.0,
+    23.0,
+    0.0
+   ],
+   [
+    4299.7,
+    600,
+    -5.63,
+    28.3,
+    0.0
+   ],
+   [
+    4975.0,
+    550,
+    -10.23,
+    33.7,
+    0.0
+   ],
+   [
+    5701.0,
+    500,
+    -15.53,
+    39.7,
+    0.0
+   ],
+   [
+    6486.6,
+    450,
+    -21.03,
+    30.0,
+    0.0
+   ],
+   [
+    7347.3,
+    400,
+    -26.4,
+    11.0,
+    0.0
+   ],
+   [
+    8295.1,
+    350,
+    -34.2,
+    29.0,
+    0.0
+   ],
+   [
+    9353.2,
+    300,
+    -43.17,
+    41.3,
+    0.0
+   ],
+   [
+    10553.0,
+    250,
+    -53.5,
+    46.0,
+    0.0
+   ],
+   [
+    11948.8,
+    200,
+    -63.67,
+    38.3,
+    0.0
+   ],
+   [
+    13727.4,
+    150,
+    -59.17,
+    4.0,
+    0.0
+   ]
+  ],
+  "aloftNote": "height m above sea level, pressure hPa, temperature C, relative humidity %, cloud cover % (GFS by level at touchdown, interpolated between the hours; the first row is the surface report)",
+  "model": {
+   "precipitation": 0.0,
+   "rain": 0.0,
+   "cloud_cover": 5.0,
+   "cloud_cover_low": 0.0,
+   "cloud_cover_mid": 0.0,
+   "cloud_cover_high": 5.0,
+   "visibility": 40832.64,
+   "freezing_level_height": 3526.66
+  },
+  "badge": "scattered",
+  "sources": [
+   {
+    "what": "surface reports",
+    "source": "Iowa Environmental Mesonet ASOS archive (public)",
+    "url": "https://mesonet.agron.iastate.edu/cgi-bin/request/asos.py?station=LAS&data=tmpf&data=alti&data=drct&data=sknt&data=gust&data=vsby&data=skyc1&data=skyl1&data=skyc2&data=skyl2&data=skyc3&data=skyl3&data=wxcodes&data=metar&year1=2026&month1=3&day1=10&year2=2026&month2=3&day2=10&tz=Etc/UTC&format=onlycomma&latlon=no&missing=M&trace=T&direct=no&report_type=3&report_type=4",
+    "fetched": "2026-11-25"
+   },
+   {
+    "what": "the column by level",
+    "source": "Open-Meteo historical forecast API, GFS pressure levels: relative humidity and cloud cover by level (CC BY 4.0; model data NOAA)",
+    "url": "https://historical-forecast-api.open-meteo.com/v1/forecast?latitude=36.08&longitude=-115.152&start_date=2026-03-10&end_date=2026-03-10&hourly=geopotential_height_1000hPa%2Ctemperature_1000hPa%2Crelative_humidity_1000hPa%2Ccloud_cover_1000hPa%2Cgeopotential_height_975hPa%2Ctemperature_975hPa%2Crelative_humidity_975hPa%2Ccloud_cover_975hPa%2Cgeopotential_height_950hPa%2Ctemperature_950hPa%2Crelative_humidity_950hPa%2Ccloud_cover_950hPa%2Cgeopotential_height_925hPa%2Ctemperature_925hPa%2Crelative_humidity_925hPa%2Ccloud_cover_925hPa%2Cgeopotential_height_900hPa%2Ctemperature_900hPa%2Crelative_humidity_900hPa%2Ccloud_cover_900hPa%2Cgeopotential_height_850hPa%2Ctemperature_850hPa%2Crelative_humidity_850hPa%2Ccloud_cover_850hPa%2Cgeopotential_height_800hPa%2Ctemperature_800hPa%2Crelative_humidity_800hPa%2Ccloud_cover_800hPa%2Cgeopotential_height_750hPa%2Ctemperature_750hPa%2Crelative_humidity_750hPa%2Ccloud_cover_750hPa%2Cgeopotential_height_700hPa%2Ctemperature_700hPa%2Crelative_humidity_700hPa%2Ccloud_cover_700hPa%2Cgeopotential_height_650hPa%2Ctemperature_650hPa%2Crelative_humidity_650hPa%2Ccloud_cover_650hPa%2Cgeopotential_height_600hPa%2Ctemperature_600hPa%2Crelative_humidity_600hPa%2Ccloud_cover_600hPa%2Cgeopotential_height_550hPa%2Ctemperature_550hPa%2Crelative_humidity_550hPa%2Ccloud_cover_550hPa%2Cgeopotential_height_500hPa%2Ctemperature_500hPa%2Crelative_humidity_500hPa%2Ccloud_cover_500hPa%2Cgeopotential_height_450hPa%2Ctemperature_450hPa%2Crelative_humidity_450hPa%2Ccloud_cover_450hPa%2Cgeopotential_height_400hPa%2Ctemperature_400hPa%2Crelative_humidity_400hPa%2Ccloud_cover_400hPa%2Cgeopotential_height_350hPa%2Ctemperature_350hPa%2Crelative_humidity_350hPa%2Ccloud_cover_350hPa%2Cgeopotential_height_300hPa%2Ctemperature_300hPa%2Crelative_humidity_300hPa%2Ccloud_cover_300hPa%2Cgeopotential_height_250hPa%2Ctemperature_250hPa%2Crelative_humidity_250hPa%2Ccloud_cover_250hPa%2Cgeopotential_height_200hPa%2Ctemperature_200hPa%2Crelative_humidity_200hPa%2Ccloud_cover_200hPa%2Cgeopotential_height_150hPa%2Ctemperature_150hPa%2Crelative_humidity_150hPa%2Ccloud_cover_150hPa%2Cprecipitation%2Crain%2Ccloud_cover%2Ccloud_cover_low%2Ccloud_cover_mid%2Ccloud_cover_high%2Cvisibility%2Cfreezing_level_height&models=gfs_seamless&timezone=GMT",
+    "fetched": "2026-11-25"
+   }
+  ],
+  "nearest": {
+   "valid": "2026-03-10 14:56Z",
+   "metar": "KLAS 101456Z 00000KT 10SM SCT250 14/03 A2996 RMK AO2 SLP132 T01440028 53018",
+   "altimeterInHg": 29.96,
+   "tempC": 14.444444444444445,
+   "windDir": 0.0,
+   "windKt": 0.0,
+   "visibilityMi": 10.0,
+   "ceilingFt": null
+  }
+ },
+ "source": {
+  "archive": "adsb.lol globe_history",
+  "release": "v2026.03.10-planes-readsb-staging-0",
+  "licence": "ODbL-1.0",
+  "attribution": "Flight track: adsb.lol contributors, ODbL 1.0 (https://www.adsb.lol/)"
+ }
+}

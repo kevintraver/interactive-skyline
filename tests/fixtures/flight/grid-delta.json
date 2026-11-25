@@ -1,0 +1,134 @@
+{
+ "about": "A tiny grid in the delta-gzip encoding of the nested terrain grids (plan 03, F6.1), for the browser's decoder. Made with encode_delta_gzip in scripts/lib/grids.py; tested in tests/python/flight/test_grids.py.",
+ "encoding": "delta-gzip",
+ "encodingSpec": "delta-gzip v1: the file is one gzip member (RFC 1952; DecompressionStream('gzip') reads it). Inflated, it is 2*nx*ny bytes: the low bytes of nx*ny 16-bit words, then their high bytes, word k = lo[k] + 256*hi[k], the words in row-major order, row 0 = south, column 0 = west. Heights are quantised to q = round((h - offset) / scale), an integer 0..65535, so h = q * scale + offset (scale and offset are in the grid's entry). Each word is d = (q - p) mod 65536, where the prediction p from the posts already decoded is: 0 at (i=0, j=0); q[j][i-1] (left) along row 0; q[j-1][i] (up: the row before, to the south) down column 0; and q[j][i-1] + q[j-1][i] - q[j-1][i-1] everywhere else, all mod 65536. Decode in order with q = (d + p) mod 65536 (a Uint16Array wraps by itself).",
+ "nx": 5,
+ "ny": 4,
+ "scale": 0.1,
+ "offset": -500.0,
+ "words": [
+  11123,
+  27,
+  51,
+  65522,
+  65349,
+  58553,
+  65514,
+  804,
+  44227,
+  65510,
+  10860,
+  65530,
+  1150,
+  45639,
+  64434,
+  59087,
+  50,
+  63733,
+  57418,
+  41315
+ ],
+ "q": [
+  [
+   11123,
+   11150,
+   11201,
+   11187,
+   11000
+  ],
+  [
+   4140,
+   4145,
+   5000,
+   49213,
+   49000
+  ],
+  [
+   15000,
+   14999,
+   17004,
+   41320,
+   40005
+  ],
+  [
+   8551,
+   8600,
+   8802,
+   25000,
+   65000
+  ]
+ ],
+ "heights": [
+  [
+   612.3,
+   615.0,
+   620.1,
+   618.7,
+   600.0
+  ],
+  [
+   -86.0,
+   -85.5,
+   0.0,
+   4421.3,
+   4400.0
+  ],
+  [
+   1000.0,
+   999.9,
+   1200.4,
+   3632.0,
+   3500.5
+  ],
+  [
+   355.1,
+   360.0,
+   380.2,
+   2000.0,
+   6000.0
+  ]
+ ],
+ "rows": "row 0 = south, column 0 = west",
+ "inflated": [
+  115,
+  27,
+  51,
+  242,
+  69,
+  185,
+  234,
+  36,
+  195,
+  230,
+  108,
+  250,
+  126,
+  71,
+  178,
+  207,
+  50,
+  245,
+  74,
+  99,
+  43,
+  0,
+  0,
+  255,
+  255,
+  228,
+  255,
+  3,
+  172,
+  255,
+  42,
+  255,
+  4,
+  178,
+  251,
+  230,
+  0,
+  248,
+  224,
+  161
+ ]
+}

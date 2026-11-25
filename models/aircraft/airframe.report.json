@@ -1,0 +1,1601 @@
+{
+ "parts": {
+  "Body": {
+   "object": "Body",
+   "verts": 3977,
+   "faces": 4450,
+   "tris": 6106,
+   "bbox_min": [
+    -7.175,
+    -19.78,
+    1.43
+   ],
+   "bbox_max": [
+    7.175,
+    19.69,
+    12.262
+   ],
+   "islands": 99,
+   "open_islands": 96,
+   "inside_out_islands": 0,
+   "nonmanifold_edges": 1644,
+   "degenerate_faces": 0,
+   "loose_verts": 0,
+   "nonplanar_ngons": 0,
+   "materials": {
+    "Paint": 2217,
+    "PaintGrey": 162,
+    "Window": 1440,
+    "Windscreen": 630,
+    "Exhaust": 1
+   },
+   "errors": [],
+   "warnings": [
+    "1644 open or non-manifold edges in 96 islands (fine for a deliberate single-sided detail, otherwise a hole)"
+   ],
+   "role": "part",
+   "pivot": [
+    0.0,
+    0.0,
+    0.0
+   ]
+  },
+  "Wing_R": {
+   "object": "Wing_R",
+   "verts": 1083,
+   "faces": 1084,
+   "tris": 2114,
+   "bbox_min": [
+    -0.68,
+    -11.09,
+    -0.564
+   ],
+   "bbox_max": [
+    15.993,
+    0.0,
+    4.37
+   ],
+   "islands": 13,
+   "open_islands": 0,
+   "inside_out_islands": 0,
+   "nonmanifold_edges": 0,
+   "degenerate_faces": 0,
+   "loose_verts": 0,
+   "nonplanar_ngons": 0,
+   "materials": {
+    "Paint": 216,
+    "PaintGrey": 868
+   },
+   "errors": [],
+   "warnings": [],
+   "role": "part",
+   "pivot": [
+    1.88,
+    4.77,
+    2.2558
+   ]
+  },
+  "Engine_R": {
+   "object": "Engine_R",
+   "verts": 410,
+   "faces": 323,
+   "tris": 796,
+   "bbox_min": [
+    -1.03,
+    -5.54,
+    -0.87
+   ],
+   "bbox_max": [
+    1.03,
+    0.03,
+    1.15
+   ],
+   "islands": 6,
+   "open_islands": 0,
+   "inside_out_islands": 0,
+   "nonmanifold_edges": 0,
+   "degenerate_faces": 0,
+   "loose_verts": 0,
+   "nonplanar_ngons": 0,
+   "materials": {
+    "Paint": 123,
+    "BareMetal": 48,
+    "Fan": 51,
+    "Exhaust": 75,
+    "Cascade": 26
+   },
+   "errors": [],
+   "warnings": [],
+   "role": "part",
+   "pivot": [
+    4.83,
+    6.33,
+    1.5835
+   ]
+  },
+  "ReverserSleeve_R": {
+   "object": "ReverserSleeve_R",
+   "verts": 120,
+   "faces": 98,
+   "tris": 236,
+   "bbox_min": [
+    -1.015,
+    -1.2,
+    -0.857
+   ],
+   "bbox_max": [
+    1.015,
+    0.0,
+    1.015
+   ],
+   "islands": 1,
+   "open_islands": 0,
+   "inside_out_islands": 0,
+   "nonmanifold_edges": 0,
+   "degenerate_faces": 0,
+   "loose_verts": 0,
+   "nonplanar_ngons": 0,
+   "materials": {
+    "Paint": 98
+   },
+   "errors": [],
+   "warnings": [],
+   "role": "part",
+   "pivot": [
+    4.83,
+    4.69,
+    1.5835
+   ]
+  },
+  "FlapInboard_R": {
+   "object": "FlapInboard_R",
+   "verts": 141,
+   "faces": 175,
+   "tris": 274,
+   "bbox_min": [
+    0.0,
+    -3.582,
+    -0.49
+   ],
+   "bbox_max": [
+    4.04,
+    -0.002,
+    0.555
+   ],
+   "islands": 2,
+   "open_islands": 0,
+   "inside_out_islands": 0,
+   "nonmanifold_edges": 0,
+   "degenerate_faces": 0,
+   "loose_verts": 0,
+   "nonplanar_ngons": 0,
+   "materials": {
+    "PaintGrey": 175
+   },
+   "errors": [],
+   "warnings": [],
+   "role": "part",
+   "pivot": [
+    1.98,
+    0.158,
+    2.1821
+   ]
+  },
+  "FlapInboardAft_R": {
+   "object": "FlapInboardAft_R",
+   "verts": 51,
+   "faces": 42,
+   "tris": 98,
+   "bbox_min": [
+    0.0,
+    -0.867,
+    -0.059
+   ],
+   "bbox_max": [
+    4.04,
+    -0.001,
+    0.41
+   ],
+   "islands": 1,
+   "open_islands": 0,
+   "inside_out_islands": 0,
+   "nonmanifold_edges": 0,
+   "degenerate_faces": 0,
+   "loose_verts": 0,
+   "nonplanar_ngons": 0,
+   "materials": {
+    "PaintGrey": 42
+   },
+   "errors": [],
+   "warnings": [],
+   "role": "part",
+   "pivot": [
+    1.98,
+    -1.0674,
+    2.161
+   ]
+  },
+  "FlapOutboard_R": {
+   "object": "FlapOutboard_R",
+   "verts": 271,
+   "faces": 360,
+   "tris": 526,
+   "bbox_min": [
+    0.0,
+    -4.646,
+    -0.437
+   ],
+   "bbox_max": [
+    6.28,
+    -0.0,
+    0.73
+   ],
+   "islands": 4,
+   "open_islands": 0,
+   "inside_out_islands": 0,
+   "nonmanifold_edges": 0,
+   "degenerate_faces": 0,
+   "loose_verts": 0,
+   "nonplanar_ngons": 0,
+   "materials": {
+    "PaintGrey": 360
+   },
+   "errors": [],
+   "warnings": [],
+   "role": "part",
+   "pivot": [
+    6.12,
+    -0.7124,
+    2.481
+   ]
+  },
+  "FlapOutboardAft_R": {
+   "object": "FlapOutboardAft_R",
+   "verts": 51,
+   "faces": 36,
+   "tris": 98,
+   "bbox_min": [
+    0.0,
+    -2.277,
+    -0.031
+   ],
+   "bbox_max": [
+    6.28,
+    -0.0,
+    0.662
+   ],
+   "islands": 1,
+   "open_islands": 0,
+   "inside_out_islands": 0,
+   "nonmanifold_edges": 0,
+   "degenerate_faces": 0,
+   "loose_verts": 0,
+   "nonplanar_ngons": 0,
+   "materials": {
+    "PaintGrey": 36
+   },
+   "errors": [],
+   "warnings": [],
+   "role": "part",
+   "pivot": [
+    6.12,
+    -1.5047,
+    2.4748
+   ]
+  },
+  "Aileron_R": {
+   "object": "Aileron_R",
+   "verts": 51,
+   "faces": 36,
+   "tris": 98,
+   "bbox_min": [
+    0.0,
+    -1.684,
+    -0.044
+   ],
+   "bbox_max": [
+    3.5,
+    0.0,
+    0.405
+   ],
+   "islands": 1,
+   "open_islands": 0,
+   "inside_out_islands": 0,
+   "nonmanifold_edges": 0,
+   "degenerate_faces": 0,
+   "loose_verts": 0,
+   "nonplanar_ngons": 0,
+   "materials": {
+    "PaintGrey": 36
+   },
+   "errors": [],
+   "warnings": [],
+   "role": "part",
+   "pivot": [
+    12.45,
+    -3.1254,
+    3.0935
+   ]
+  },
+  "Spoiler1_R": {
+   "object": "Spoiler1_R",
+   "verts": 36,
+   "faces": 38,
+   "tris": 68,
+   "bbox_min": [
+    0.0,
+    -1.221,
+    -0.213
+   ],
+   "bbox_max": [
+    1.4,
+    0.001,
+    0.029
+   ],
+   "islands": 1,
+   "open_islands": 0,
+   "inside_out_islands": 0,
+   "nonmanifold_edges": 0,
+   "degenerate_faces": 0,
+   "loose_verts": 0,
+   "nonplanar_ngons": 0,
+   "materials": {
+    "PaintGrey": 38
+   },
+   "errors": [],
+   "warnings": [],
+   "role": "part",
+   "pivot": [
+    2.05,
+    1.0826,
+    2.6865
+   ]
+  },
+  "Spoiler2_R": {
+   "object": "Spoiler2_R",
+   "verts": 36,
+   "faces": 42,
+   "tris": 68,
+   "bbox_min": [
+    0.0,
+    -1.204,
+    -0.16
+   ],
+   "bbox_max": [
+    2.45,
+    0.0,
+    0.065
+   ],
+   "islands": 1,
+   "open_islands": 0,
+   "inside_out_islands": 0,
+   "nonmanifold_edges": 0,
+   "degenerate_faces": 0,
+   "loose_verts": 0,
+   "nonplanar_ngons": 0,
+   "materials": {
+    "PaintGrey": 42
+   },
+   "errors": [],
+   "warnings": [],
+   "role": "part",
+   "pivot": [
+    3.5,
+    0.9209,
+    2.7169
+   ]
+  },
+  "Spoiler3_R": {
+   "object": "Spoiler3_R",
+   "verts": 36,
+   "faces": 26,
+   "tris": 68,
+   "bbox_min": [
+    0.0,
+    -1.273,
+    -0.121
+   ],
+   "bbox_max": [
+    1.55,
+    0.0,
+    0.122
+   ],
+   "islands": 1,
+   "open_islands": 0,
+   "inside_out_islands": 0,
+   "nonmanifold_edges": 0,
+   "degenerate_faces": 0,
+   "loose_verts": 0,
+   "nonplanar_ngons": 0,
+   "materials": {
+    "PaintGrey": 26
+   },
+   "errors": [],
+   "warnings": [],
+   "role": "part",
+   "pivot": [
+    6.2,
+    -0.1879,
+    2.7665
+   ]
+  },
+  "Spoiler4_R": {
+   "object": "Spoiler4_R",
+   "verts": 36,
+   "faces": 26,
+   "tris": 68,
+   "bbox_min": [
+    0.0,
+    -1.205,
+    -0.11
+   ],
+   "bbox_max": [
+    1.55,
+    0.0,
+    0.122
+   ],
+   "islands": 1,
+   "open_islands": 0,
+   "inside_out_islands": 0,
+   "nonmanifold_edges": 0,
+   "degenerate_faces": 0,
+   "loose_verts": 0,
+   "nonplanar_ngons": 0,
+   "materials": {
+    "PaintGrey": 26
+   },
+   "errors": [],
+   "warnings": [],
+   "role": "part",
+   "pivot": [
+    7.8,
+    -0.8197,
+    2.8922
+   ]
+  },
+  "Spoiler5_R": {
+   "object": "Spoiler5_R",
+   "verts": 36,
+   "faces": 26,
+   "tris": 68,
+   "bbox_min": [
+    0.0,
+    -1.137,
+    -0.1
+   ],
+   "bbox_max": [
+    1.55,
+    0.0,
+    0.122
+   ],
+   "islands": 1,
+   "open_islands": 0,
+   "inside_out_islands": 0,
+   "nonmanifold_edges": 0,
+   "degenerate_faces": 0,
+   "loose_verts": 0,
+   "nonplanar_ngons": 0,
+   "materials": {
+    "PaintGrey": 26
+   },
+   "errors": [],
+   "warnings": [],
+   "role": "part",
+   "pivot": [
+    9.4,
+    -1.4516,
+    3.0184
+   ]
+  },
+  "Spoiler6_R": {
+   "object": "Spoiler6_R",
+   "verts": 36,
+   "faces": 26,
+   "tris": 68,
+   "bbox_min": [
+    0.0,
+    -0.999,
+    -0.09
+   ],
+   "bbox_max": [
+    1.35,
+    0.0,
+    0.107
+   ],
+   "islands": 1,
+   "open_islands": 0,
+   "inside_out_islands": 0,
+   "nonmanifold_edges": 0,
+   "degenerate_faces": 0,
+   "loose_verts": 0,
+   "nonplanar_ngons": 0,
+   "materials": {
+    "PaintGrey": 26
+   },
+   "errors": [],
+   "warnings": [],
+   "role": "part",
+   "pivot": [
+    11.0,
+    -2.0838,
+    3.1447
+   ]
+  },
+  "Slat1_R": {
+   "object": "Slat1_R",
+   "verts": 30,
+   "faces": 22,
+   "tris": 56,
+   "bbox_min": [
+    0.0,
+    -1.308,
+    -0.395
+   ],
+   "bbox_max": [
+    2.73,
+    0.603,
+    0.208
+   ],
+   "islands": 1,
+   "open_islands": 0,
+   "inside_out_islands": 0,
+   "nonmanifold_edges": 0,
+   "degenerate_faces": 0,
+   "loose_verts": 0,
+   "nonplanar_ngons": 0,
+   "materials": {
+    "BareMetal": 22
+   },
+   "errors": [],
+   "warnings": [],
+   "role": "part",
+   "pivot": [
+    6.12,
+    1.2836,
+    2.752
+   ]
+  },
+  "Slat2_R": {
+   "object": "Slat2_R",
+   "verts": 30,
+   "faces": 22,
+   "tris": 56,
+   "bbox_min": [
+    0.0,
+    -1.319,
+    -0.326
+   ],
+   "bbox_max": [
+    2.75,
+    0.503,
+    0.213
+   ],
+   "islands": 1,
+   "open_islands": 0,
+   "inside_out_islands": 0,
+   "nonmanifold_edges": 0,
+   "degenerate_faces": 0,
+   "loose_verts": 0,
+   "nonplanar_ngons": 0,
+   "materials": {
+    "BareMetal": 22
+   },
+   "errors": [],
+   "warnings": [],
+   "role": "part",
+   "pivot": [
+    8.9,
+    -0.0488,
+    2.9636
+   ]
+  },
+  "Slat3_R": {
+   "object": "Slat3_R",
+   "verts": 30,
+   "faces": 22,
+   "tris": 56,
+   "bbox_min": [
+    0.0,
+    -1.295,
+    -0.259
+   ],
+   "bbox_max": [
+    2.7,
+    0.403,
+    0.213
+   ],
+   "islands": 1,
+   "open_islands": 0,
+   "inside_out_islands": 0,
+   "nonmanifold_edges": 0,
+   "degenerate_faces": 0,
+   "loose_verts": 0,
+   "nonplanar_ngons": 0,
+   "materials": {
+    "BareMetal": 22
+   },
+   "errors": [],
+   "warnings": [],
+   "role": "part",
+   "pivot": [
+    11.7,
+    -1.3913,
+    3.1805
+   ]
+  },
+  "Slat4_R": {
+   "object": "Slat4_R",
+   "verts": 30,
+   "faces": 22,
+   "tris": 56,
+   "bbox_min": [
+    0.0,
+    -1.176,
+    -0.194
+   ],
+   "bbox_max": [
+    2.45,
+    0.306,
+    0.196
+   ],
+   "islands": 1,
+   "open_islands": 0,
+   "inside_out_islands": 0,
+   "nonmanifold_edges": 0,
+   "degenerate_faces": 0,
+   "loose_verts": 0,
+   "nonplanar_ngons": 0,
+   "materials": {
+    "BareMetal": 22
+   },
+   "errors": [],
+   "warnings": [],
+   "role": "part",
+   "pivot": [
+    14.45,
+    -2.7103,
+    3.3971
+   ]
+  },
+  "Krueger1_R": {
+   "object": "Krueger1_R",
+   "verts": 20,
+   "faces": 16,
+   "tris": 36,
+   "bbox_min": [
+    0.0,
+    -1.304,
+    -0.125
+   ],
+   "bbox_max": [
+    1.1,
+    0.0,
+    0.118
+   ],
+   "islands": 1,
+   "open_islands": 0,
+   "inside_out_islands": 0,
+   "nonmanifold_edges": 0,
+   "degenerate_faces": 0,
+   "loose_verts": 0,
+   "nonplanar_ngons": 0,
+   "materials": {
+    "PaintGrey": 16
+   },
+   "errors": [],
+   "warnings": [],
+   "role": "part",
+   "pivot": [
+    2.3,
+    4.2885,
+    2.0778
+   ]
+  },
+  "Krueger2_R": {
+   "object": "Krueger2_R",
+   "verts": 20,
+   "faces": 16,
+   "tris": 36,
+   "bbox_min": [
+    0.0,
+    -0.961,
+    -0.11
+   ],
+   "bbox_max": [
+    0.6,
+    0.0,
+    0.081
+   ],
+   "islands": 1,
+   "open_islands": 0,
+   "inside_out_islands": 0,
+   "nonmanifold_edges": 0,
+   "degenerate_faces": 0,
+   "loose_verts": 0,
+   "nonplanar_ngons": 0,
+   "materials": {
+    "PaintGrey": 16
+   },
+   "errors": [],
+   "warnings": [],
+   "role": "part",
+   "pivot": [
+    3.45,
+    3.499,
+    2.1661
+   ]
+  },
+  "Wing_L": {
+   "object": "Wing_L",
+   "verts": 1083,
+   "faces": 1084,
+   "tris": 2114,
+   "bbox_min": [
+    -15.993,
+    -11.09,
+    -0.564
+   ],
+   "bbox_max": [
+    0.68,
+    0.0,
+    4.37
+   ],
+   "islands": 13,
+   "open_islands": 0,
+   "inside_out_islands": 0,
+   "nonmanifold_edges": 0,
+   "degenerate_faces": 0,
+   "loose_verts": 0,
+   "nonplanar_ngons": 0,
+   "materials": {
+    "Paint": 216,
+    "PaintGrey": 868
+   },
+   "errors": [],
+   "warnings": [],
+   "role": "part",
+   "pivot": [
+    -1.88,
+    4.77,
+    2.2558
+   ]
+  },
+  "Engine_L": {
+   "object": "Engine_L",
+   "verts": 410,
+   "faces": 323,
+   "tris": 796,
+   "bbox_min": [
+    -1.03,
+    -5.54,
+    -0.87
+   ],
+   "bbox_max": [
+    1.03,
+    0.03,
+    1.15
+   ],
+   "islands": 6,
+   "open_islands": 0,
+   "inside_out_islands": 0,
+   "nonmanifold_edges": 0,
+   "degenerate_faces": 0,
+   "loose_verts": 0,
+   "nonplanar_ngons": 0,
+   "materials": {
+    "Paint": 123,
+    "BareMetal": 48,
+    "Fan": 51,
+    "Exhaust": 75,
+    "Cascade": 26
+   },
+   "errors": [],
+   "warnings": [],
+   "role": "part",
+   "pivot": [
+    -4.83,
+    6.33,
+    1.5835
+   ]
+  },
+  "ReverserSleeve_L": {
+   "object": "ReverserSleeve_L",
+   "verts": 120,
+   "faces": 98,
+   "tris": 236,
+   "bbox_min": [
+    -1.015,
+    -1.2,
+    -0.857
+   ],
+   "bbox_max": [
+    1.015,
+    0.0,
+    1.015
+   ],
+   "islands": 1,
+   "open_islands": 0,
+   "inside_out_islands": 0,
+   "nonmanifold_edges": 0,
+   "degenerate_faces": 0,
+   "loose_verts": 0,
+   "nonplanar_ngons": 0,
+   "materials": {
+    "Paint": 98
+   },
+   "errors": [],
+   "warnings": [],
+   "role": "part",
+   "pivot": [
+    -4.83,
+    4.69,
+    1.5835
+   ]
+  },
+  "FlapInboard_L": {
+   "object": "FlapInboard_L",
+   "verts": 141,
+   "faces": 175,
+   "tris": 274,
+   "bbox_min": [
+    -4.04,
+    -3.582,
+    -0.49
+   ],
+   "bbox_max": [
+    0.0,
+    -0.002,
+    0.555
+   ],
+   "islands": 2,
+   "open_islands": 0,
+   "inside_out_islands": 0,
+   "nonmanifold_edges": 0,
+   "degenerate_faces": 0,
+   "loose_verts": 0,
+   "nonplanar_ngons": 0,
+   "materials": {
+    "PaintGrey": 175
+   },
+   "errors": [],
+   "warnings": [],
+   "role": "part",
+   "pivot": [
+    -1.98,
+    0.158,
+    2.1821
+   ]
+  },
+  "FlapInboardAft_L": {
+   "object": "FlapInboardAft_L",
+   "verts": 51,
+   "faces": 42,
+   "tris": 98,
+   "bbox_min": [
+    -4.04,
+    -0.867,
+    -0.059
+   ],
+   "bbox_max": [
+    0.0,
+    -0.001,
+    0.41
+   ],
+   "islands": 1,
+   "open_islands": 0,
+   "inside_out_islands": 0,
+   "nonmanifold_edges": 0,
+   "degenerate_faces": 0,
+   "loose_verts": 0,
+   "nonplanar_ngons": 0,
+   "materials": {
+    "PaintGrey": 42
+   },
+   "errors": [],
+   "warnings": [],
+   "role": "part",
+   "pivot": [
+    -1.98,
+    -1.0674,
+    2.161
+   ]
+  },
+  "FlapOutboard_L": {
+   "object": "FlapOutboard_L",
+   "verts": 271,
+   "faces": 360,
+   "tris": 526,
+   "bbox_min": [
+    -6.28,
+    -4.646,
+    -0.437
+   ],
+   "bbox_max": [
+    0.0,
+    -0.0,
+    0.73
+   ],
+   "islands": 4,
+   "open_islands": 0,
+   "inside_out_islands": 0,
+   "nonmanifold_edges": 0,
+   "degenerate_faces": 0,
+   "loose_verts": 0,
+   "nonplanar_ngons": 0,
+   "materials": {
+    "PaintGrey": 360
+   },
+   "errors": [],
+   "warnings": [],
+   "role": "part",
+   "pivot": [
+    -6.12,
+    -0.7124,
+    2.481
+   ]
+  },
+  "FlapOutboardAft_L": {
+   "object": "FlapOutboardAft_L",
+   "verts": 51,
+   "faces": 36,
+   "tris": 98,
+   "bbox_min": [
+    -6.28,
+    -2.277,
+    -0.031
+   ],
+   "bbox_max": [
+    0.0,
+    -0.0,
+    0.662
+   ],
+   "islands": 1,
+   "open_islands": 0,
+   "inside_out_islands": 0,
+   "nonmanifold_edges": 0,
+   "degenerate_faces": 0,
+   "loose_verts": 0,
+   "nonplanar_ngons": 0,
+   "materials": {
+    "PaintGrey": 36
+   },
+   "errors": [],
+   "warnings": [],
+   "role": "part",
+   "pivot": [
+    -6.12,
+    -1.5047,
+    2.4748
+   ]
+  },
+  "Aileron_L": {
+   "object": "Aileron_L",
+   "verts": 51,
+   "faces": 36,
+   "tris": 98,
+   "bbox_min": [
+    -3.5,
+    -1.684,
+    -0.044
+   ],
+   "bbox_max": [
+    0.0,
+    0.0,
+    0.405
+   ],
+   "islands": 1,
+   "open_islands": 0,
+   "inside_out_islands": 0,
+   "nonmanifold_edges": 0,
+   "degenerate_faces": 0,
+   "loose_verts": 0,
+   "nonplanar_ngons": 0,
+   "materials": {
+    "PaintGrey": 36
+   },
+   "errors": [],
+   "warnings": [],
+   "role": "part",
+   "pivot": [
+    -12.45,
+    -3.1254,
+    3.0935
+   ]
+  },
+  "Spoiler1_L": {
+   "object": "Spoiler1_L",
+   "verts": 36,
+   "faces": 38,
+   "tris": 68,
+   "bbox_min": [
+    -1.4,
+    -1.221,
+    -0.213
+   ],
+   "bbox_max": [
+    0.0,
+    0.001,
+    0.029
+   ],
+   "islands": 1,
+   "open_islands": 0,
+   "inside_out_islands": 0,
+   "nonmanifold_edges": 0,
+   "degenerate_faces": 0,
+   "loose_verts": 0,
+   "nonplanar_ngons": 0,
+   "materials": {
+    "PaintGrey": 38
+   },
+   "errors": [],
+   "warnings": [],
+   "role": "part",
+   "pivot": [
+    -2.05,
+    1.0826,
+    2.6865
+   ]
+  },
+  "Spoiler2_L": {
+   "object": "Spoiler2_L",
+   "verts": 36,
+   "faces": 42,
+   "tris": 68,
+   "bbox_min": [
+    -2.45,
+    -1.204,
+    -0.16
+   ],
+   "bbox_max": [
+    0.0,
+    0.0,
+    0.065
+   ],
+   "islands": 1,
+   "open_islands": 0,
+   "inside_out_islands": 0,
+   "nonmanifold_edges": 0,
+   "degenerate_faces": 0,
+   "loose_verts": 0,
+   "nonplanar_ngons": 0,
+   "materials": {
+    "PaintGrey": 42
+   },
+   "errors": [],
+   "warnings": [],
+   "role": "part",
+   "pivot": [
+    -3.5,
+    0.9209,
+    2.7169
+   ]
+  },
+  "Spoiler3_L": {
+   "object": "Spoiler3_L",
+   "verts": 36,
+   "faces": 26,
+   "tris": 68,
+   "bbox_min": [
+    -1.55,
+    -1.273,
+    -0.121
+   ],
+   "bbox_max": [
+    0.0,
+    0.0,
+    0.122
+   ],
+   "islands": 1,
+   "open_islands": 0,
+   "inside_out_islands": 0,
+   "nonmanifold_edges": 0,
+   "degenerate_faces": 0,
+   "loose_verts": 0,
+   "nonplanar_ngons": 0,
+   "materials": {
+    "PaintGrey": 26
+   },
+   "errors": [],
+   "warnings": [],
+   "role": "part",
+   "pivot": [
+    -6.2,
+    -0.1879,
+    2.7665
+   ]
+  },
+  "Spoiler4_L": {
+   "object": "Spoiler4_L",
+   "verts": 36,
+   "faces": 26,
+   "tris": 68,
+   "bbox_min": [
+    -1.55,
+    -1.205,
+    -0.11
+   ],
+   "bbox_max": [
+    0.0,
+    0.0,
+    0.122
+   ],
+   "islands": 1,
+   "open_islands": 0,
+   "inside_out_islands": 0,
+   "nonmanifold_edges": 0,
+   "degenerate_faces": 0,
+   "loose_verts": 0,
+   "nonplanar_ngons": 0,
+   "materials": {
+    "PaintGrey": 26
+   },
+   "errors": [],
+   "warnings": [],
+   "role": "part",
+   "pivot": [
+    -7.8,
+    -0.8197,
+    2.8922
+   ]
+  },
+  "Spoiler5_L": {
+   "object": "Spoiler5_L",
+   "verts": 36,
+   "faces": 26,
+   "tris": 68,
+   "bbox_min": [
+    -1.55,
+    -1.137,
+    -0.1
+   ],
+   "bbox_max": [
+    0.0,
+    0.0,
+    0.122
+   ],
+   "islands": 1,
+   "open_islands": 0,
+   "inside_out_islands": 0,
+   "nonmanifold_edges": 0,
+   "degenerate_faces": 0,
+   "loose_verts": 0,
+   "nonplanar_ngons": 0,
+   "materials": {
+    "PaintGrey": 26
+   },
+   "errors": [],
+   "warnings": [],
+   "role": "part",
+   "pivot": [
+    -9.4,
+    -1.4516,
+    3.0184
+   ]
+  },
+  "Spoiler6_L": {
+   "object": "Spoiler6_L",
+   "verts": 36,
+   "faces": 26,
+   "tris": 68,
+   "bbox_min": [
+    -1.35,
+    -0.999,
+    -0.09
+   ],
+   "bbox_max": [
+    0.0,
+    0.0,
+    0.107
+   ],
+   "islands": 1,
+   "open_islands": 0,
+   "inside_out_islands": 0,
+   "nonmanifold_edges": 0,
+   "degenerate_faces": 0,
+   "loose_verts": 0,
+   "nonplanar_ngons": 0,
+   "materials": {
+    "PaintGrey": 26
+   },
+   "errors": [],
+   "warnings": [],
+   "role": "part",
+   "pivot": [
+    -11.0,
+    -2.0838,
+    3.1447
+   ]
+  },
+  "Slat1_L": {
+   "object": "Slat1_L",
+   "verts": 30,
+   "faces": 22,
+   "tris": 56,
+   "bbox_min": [
+    -2.73,
+    -1.308,
+    -0.395
+   ],
+   "bbox_max": [
+    0.0,
+    0.603,
+    0.208
+   ],
+   "islands": 1,
+   "open_islands": 0,
+   "inside_out_islands": 0,
+   "nonmanifold_edges": 0,
+   "degenerate_faces": 0,
+   "loose_verts": 0,
+   "nonplanar_ngons": 0,
+   "materials": {
+    "BareMetal": 22
+   },
+   "errors": [],
+   "warnings": [],
+   "role": "part",
+   "pivot": [
+    -6.12,
+    1.2836,
+    2.752
+   ]
+  },
+  "Slat2_L": {
+   "object": "Slat2_L",
+   "verts": 30,
+   "faces": 22,
+   "tris": 56,
+   "bbox_min": [
+    -2.75,
+    -1.319,
+    -0.326
+   ],
+   "bbox_max": [
+    0.0,
+    0.503,
+    0.213
+   ],
+   "islands": 1,
+   "open_islands": 0,
+   "inside_out_islands": 0,
+   "nonmanifold_edges": 0,
+   "degenerate_faces": 0,
+   "loose_verts": 0,
+   "nonplanar_ngons": 0,
+   "materials": {
+    "BareMetal": 22
+   },
+   "errors": [],
+   "warnings": [],
+   "role": "part",
+   "pivot": [
+    -8.9,
+    -0.0488,
+    2.9636
+   ]
+  },
+  "Slat3_L": {
+   "object": "Slat3_L",
+   "verts": 30,
+   "faces": 22,
+   "tris": 56,
+   "bbox_min": [
+    -2.7,
+    -1.295,
+    -0.259
+   ],
+   "bbox_max": [
+    0.0,
+    0.403,
+    0.213
+   ],
+   "islands": 1,
+   "open_islands": 0,
+   "inside_out_islands": 0,
+   "nonmanifold_edges": 0,
+   "degenerate_faces": 0,
+   "loose_verts": 0,
+   "nonplanar_ngons": 0,
+   "materials": {
+    "BareMetal": 22
+   },
+   "errors": [],
+   "warnings": [],
+   "role": "part",
+   "pivot": [
+    -11.7,
+    -1.3913,
+    3.1805
+   ]
+  },
+  "Slat4_L": {
+   "object": "Slat4_L",
+   "verts": 30,
+   "faces": 22,
+   "tris": 56,
+   "bbox_min": [
+    -2.45,
+    -1.176,
+    -0.194
+   ],
+   "bbox_max": [
+    0.0,
+    0.306,
+    0.196
+   ],
+   "islands": 1,
+   "open_islands": 0,
+   "inside_out_islands": 0,
+   "nonmanifold_edges": 0,
+   "degenerate_faces": 0,
+   "loose_verts": 0,
+   "nonplanar_ngons": 0,
+   "materials": {
+    "BareMetal": 22
+   },
+   "errors": [],
+   "warnings": [],
+   "role": "part",
+   "pivot": [
+    -14.45,
+    -2.7103,
+    3.3971
+   ]
+  },
+  "Krueger1_L": {
+   "object": "Krueger1_L",
+   "verts": 20,
+   "faces": 16,
+   "tris": 36,
+   "bbox_min": [
+    -1.1,
+    -1.304,
+    -0.125
+   ],
+   "bbox_max": [
+    0.0,
+    0.0,
+    0.118
+   ],
+   "islands": 1,
+   "open_islands": 0,
+   "inside_out_islands": 0,
+   "nonmanifold_edges": 0,
+   "degenerate_faces": 0,
+   "loose_verts": 0,
+   "nonplanar_ngons": 0,
+   "materials": {
+    "PaintGrey": 16
+   },
+   "errors": [],
+   "warnings": [],
+   "role": "part",
+   "pivot": [
+    -2.3,
+    4.2885,
+    2.0778
+   ]
+  },
+  "Krueger2_L": {
+   "object": "Krueger2_L",
+   "verts": 20,
+   "faces": 16,
+   "tris": 36,
+   "bbox_min": [
+    -0.6,
+    -0.961,
+    -0.11
+   ],
+   "bbox_max": [
+    0.0,
+    0.0,
+    0.081
+   ],
+   "islands": 1,
+   "open_islands": 0,
+   "inside_out_islands": 0,
+   "nonmanifold_edges": 0,
+   "degenerate_faces": 0,
+   "loose_verts": 0,
+   "nonplanar_ngons": 0,
+   "materials": {
+    "PaintGrey": 16
+   },
+   "errors": [],
+   "warnings": [],
+   "role": "part",
+   "pivot": [
+    -3.45,
+    3.499,
+    2.1661
+   ]
+  },
+  "MainGear_R": {
+   "object": "MainGear_R",
+   "verts": 324,
+   "faces": 248,
+   "tris": 620,
+   "bbox_min": [
+    -0.64,
+    -1.015,
+    -2.091
+   ],
+   "bbox_max": [
+    0.64,
+    0.637,
+    0.037
+   ],
+   "islands": 7,
+   "open_islands": 0,
+   "inside_out_islands": 0,
+   "nonmanifold_edges": 0,
+   "degenerate_faces": 0,
+   "loose_verts": 0,
+   "nonplanar_ngons": 0,
+   "materials": {
+    "Tyre": 184,
+    "Hub": 28,
+    "Strut": 36
+   },
+   "errors": [],
+   "warnings": [],
+   "role": "part",
+   "pivot": [
+    2.86,
+    0.45,
+    2.1
+   ]
+  },
+  "MainGear_L": {
+   "object": "MainGear_L",
+   "verts": 324,
+   "faces": 248,
+   "tris": 620,
+   "bbox_min": [
+    -0.64,
+    -1.015,
+    -2.091
+   ],
+   "bbox_max": [
+    0.64,
+    0.637,
+    0.037
+   ],
+   "islands": 7,
+   "open_islands": 0,
+   "inside_out_islands": 0,
+   "nonmanifold_edges": 0,
+   "degenerate_faces": 0,
+   "loose_verts": 0,
+   "nonplanar_ngons": 0,
+   "materials": {
+    "Tyre": 184,
+    "Hub": 28,
+    "Strut": 36
+   },
+   "errors": [],
+   "warnings": [],
+   "role": "part",
+   "pivot": [
+    -2.86,
+    0.45,
+    2.1
+   ]
+  },
+  "NoseGear": {
+   "object": "NoseGear",
+   "verts": 256,
+   "faces": 196,
+   "tris": 488,
+   "bbox_min": [
+    -0.303,
+    -0.493,
+    -1.591
+   ],
+   "bbox_max": [
+    0.303,
+    0.193,
+    0.009
+   ],
+   "islands": 6,
+   "open_islands": 0,
+   "inside_out_islands": 0,
+   "nonmanifold_edges": 0,
+   "degenerate_faces": 0,
+   "loose_verts": 0,
+   "nonplanar_ngons": 0,
+   "materials": {
+    "Tyre": 144,
+    "Hub": 28,
+    "Strut": 24
+   },
+   "errors": [],
+   "warnings": [],
+   "role": "part",
+   "pivot": [
+    0.0,
+    15.75,
+    1.82
+   ]
+  },
+  "ShadowProxy": {
+   "object": "ShadowProxy",
+   "verts": 234,
+   "faces": 323,
+   "tris": 416,
+   "bbox_min": [
+    -17.857,
+    -19.756,
+    0.0
+   ],
+   "bbox_max": [
+    17.857,
+    19.39,
+    12.04
+   ],
+   "islands": 13,
+   "open_islands": 0,
+   "inside_out_islands": 0,
+   "nonmanifold_edges": 0,
+   "degenerate_faces": 0,
+   "loose_verts": 0,
+   "nonplanar_ngons": 0,
+   "materials": {
+    "Paint": 253,
+    "PaintGrey": 52,
+    "Tyre": 18
+   },
+   "errors": [],
+   "warnings": [],
+   "role": "proxy",
+   "pivot": [
+    0.0,
+    0.0,
+    0.0
+   ]
+  }
+ },
+ "tris": 17722,
+ "proxy_tris": 416,
+ "errors": [],
+ "light_channels": {
+  "NAV": {
+   "lit_corners": 8602,
+   "scale": 3.18843
+  },
+  "BEACON": {
+   "lit_corners": 7974,
+   "scale": 2.42378
+  },
+  "STROBE": {
+   "lit_corners": 12696,
+   "scale": 40.5525
+  },
+  "LANDING": {
+   "lit_corners": 330,
+   "scale": 0.000893739
+  },
+  "TAXI": {
+   "lit_corners": 1938,
+   "scale": 5.93267
+  },
+  "TURNOFF": {
+   "lit_corners": 1880,
+   "scale": 0.0825431
+  },
+  "LOGO": {
+   "lit_corners": 1721,
+   "scale": 0.073241
+  },
+  "WING": {
+   "lit_corners": 7553,
+   "scale": 0.0389876
+  }
+ },
+ "light_encoding": "sqrt: E (lux per candela) = v^2 x scale, per channel; see rig.json lightBake",
+ "files": {
+  "glb": "airframe.glb",
+  "rig": "rig.json",
+  "glb_bytes": 804496
+ }
+}

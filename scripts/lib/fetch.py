@@ -7,7 +7,7 @@ from pathlib import Path
 
 import requests
 
-UA = {"User-Agent": "interactive-skyline-data/1.0"}
+UA = {"User-Agent": "skyline-data/1.0"}
 PAUSE_S = 1.0
 OVERPASS = "https://overpass-api.de/api/interpreter"
 

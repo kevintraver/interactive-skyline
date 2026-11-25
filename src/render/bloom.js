@@ -72,6 +72,9 @@ export function createBloom(source, resolutionScale = 0.5) {
     renderer.getDrawingBufferSize(size);
     if (size.x === w && size.y === h) return;
     w = size.x; h = size.y;
+    sizeLevels();
+  }
+  function sizeLevels() {
     srcTexel.value.set(1 / w, 1 / h);
     let x = Math.max(1, Math.round(w * resolutionScale)), y = Math.max(1, Math.round(h * resolutionScale));
     for (let i = 0; i < MIPS; i++) {
@@ -92,6 +95,10 @@ export function createBloom(source, resolutionScale = 0.5) {
       for (let i = MIPS - 2; i >= 0; i--) { renderer.setRenderTarget(up[i]); upQuads[i].render(renderer); }
       renderer.setRenderTarget(previous);
     },
+    /** Another resolution (a quality level): the levels are resized on the next run; the node stays the same. */
+    setScale(s) { if (s !== resolutionScale) { resolutionScale = s; w = h = 0; } },
+    /** The levels' sizes, largest first (tests). */
+    get levels() { return down.map((t) => [t.width, t.height]); },
     dispose() {
       for (const t of [...down, ...up]) t.dispose();
       for (const q of [...downQuads, ...upQuads]) q.material.dispose();

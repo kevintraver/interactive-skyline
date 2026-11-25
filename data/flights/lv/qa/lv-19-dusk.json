@@ -1,0 +1,328 @@
+{
+ "format": "skyline-flight-qa/1",
+ "id": "lv-19-dusk",
+ "runway": "19R",
+ "aircraftType": "B38M",
+ "touchdown": "2026-03-10T01:48:34Z",
+ "recordedStart": "2026-03-10T01:18:35Z",
+ "samples": 2002,
+ "calibration": {
+  "offsetM": -29.69,
+  "datum": "ellipsoid",
+  "barometricOffsetM": -20.67,
+  "barometricPoints": 114,
+  "method": "rollout",
+  "points": 14,
+  "geoidM": -28.07
+ },
+ "antennaAboveWheelsM": 5.6,
+ "gates": {
+  "positionRmsAirM": {
+   "value": 6.78,
+   "max": 12.0,
+   "pass": true
+  },
+  "positionRmsLowM": {
+   "value": 4.01,
+   "max": 5.0,
+   "pass": true
+  },
+  "heightRmsAirM": {
+   "value": 3.17,
+   "max": 8.0,
+   "pass": true
+  },
+  "heightRmsLast60sM": {
+   "value": 3.62,
+   "max": 3.0,
+   "pass": true,
+   "waived": true,
+   "waiver": {
+    "gate": "heightRmsLast60sM",
+    "value": 3.62,
+    "limit": 3.0,
+    "reason": "Smoothed minus raw height RMS over the last 60 s is 3.62 m against 3 m. The plan notes this gate sits at the noise floor of altitudes reported in 25 ft steps (7.6 m steps alone give 2.2 m RMS); the remaining bias over that minute is under 0.4 m (0.08 m on this flight), so the residual is the GNSS heights' own scatter, not an error of the track; and this is the only flight found in three dusk evenings that meets every selection criterion. Waived for this flight and this gate only, decided 2026-11-25."
+   }
+  },
+  "glidePathDeg": {
+   "value": 3.38,
+   "nearest": 3.24,
+   "maxDiff": 0.35,
+   "warnDiff": 0.2,
+   "pass": true,
+   "warn": false
+  },
+  "crossingHeightM": {
+   "value": 19.2,
+   "min": 12.0,
+   "max": 32.0,
+   "pass": true
+  },
+  "touchdownPastThresholdM": {
+   "value": 363.5,
+   "min": 250.0,
+   "max": 1000.0,
+   "pass": true
+  },
+  "touchdownOffCentreM": {
+   "value": 0.3,
+   "maxAbs": 8.0,
+   "pass": true
+  },
+  "bankDeg": {
+   "value": 29.3,
+   "maxAbs": 35.0,
+   "pass": true
+  },
+  "pitchDeg": {
+   "value": [
+    -1.6,
+    6.0
+   ],
+   "min": -6.0,
+   "max": 12.0,
+   "pass": true
+  },
+  "decelerationMs2": {
+   "value": 3.36,
+   "max": 3.5,
+   "pass": true
+  },
+  "flapPlacard": {
+   "value": 0,
+   "max": 0,
+   "pass": true
+  },
+  "flapsMonotonic": {
+   "value": 0,
+   "max": 0,
+   "pass": true
+  },
+  "gearBeforeLandingFlapS": {
+   "value": 14.0,
+   "min": 0.1,
+   "pass": true
+  },
+  "landingLightBy10000ft": {
+   "value": true,
+   "pass": true
+  }
+ },
+ "waived": [
+  {
+   "gate": "heightRmsLast60sM",
+   "value": 3.62,
+   "limit": 3.0,
+   "reason": "Smoothed minus raw height RMS over the last 60 s is 3.62 m against 3 m. The plan notes this gate sits at the noise floor of altitudes reported in 25 ft steps (7.6 m steps alone give 2.2 m RMS); the remaining bias over that minute is under 0.4 m (0.08 m on this flight), so the residual is the GNSS heights' own scatter, not an error of the track; and this is the only flight found in three dusk evenings that meets every selection criterion. Waived for this flight and this gate only, decided 2026-11-25."
+  }
+ ],
+ "pass": true,
+ "stripView": {
+  "rightShare": 0.244,
+  "leftShare": 0.0,
+  "aheadShare": 0.723,
+  "rightShareLastMinute": 0.709,
+  "leftShareLastMinute": 0.0,
+  "meanRelativeBearingDeg": 11.568,
+  "maxAbsBearingLastMinuteDeg": 126.413,
+  "stripSide": "right",
+  "stripView": "passes-right"
+ },
+ "touchdownTime": {
+  "method": "barometric vertical rate levelling on the runway before the surface flag (adsb.refine_touchdown)",
+  "sigmaS": 1.2,
+  "alternatives": {
+   "geometricHeight": {
+    "offsetS": 0.8,
+    "sigmaS": 2.0,
+    "crossingS": -2.3,
+    "crossingHeightM": 6.3,
+    "basis": "the last 25 ft step of the geometric height below 12 m over the runway, carried down at 2.0 m/s (a flare's mean sink)"
+   },
+   "brakingOnset": {
+    "offsetS": -0.2,
+    "decelBeforeMs2": -0.12,
+    "decelAfterMs2": 2.54,
+    "basis": "onset of sustained deceleration in the raw positions alone; spoilers and brakes act 0 to about 5 s after the wheels touch, so a late bound"
+   },
+   "surfaceFlag": {
+    "offsetS": 12.8,
+    "basis": "first surface-format position; it lags the touchdown by 14 to 16 s on these transponders, so it bounds the touchdown only loosely"
+   },
+   "geometricRate": null
+  },
+  "decision": "kept: the geometric height agrees with the barometric time within 1 s on five of the six flights and braking begins after it on all six; the evidence of 25 November does not show the barometric rate levelling early by a consistent amount"
+ },
+ "recordedVersusDerived": {
+  "heightBiasLast60sM": -0.04,
+  "heightPointsLast60s": 73,
+  "roll": {
+   "rms": null,
+   "points": 0,
+   "limit": 4.0,
+   "within": null
+  },
+  "iasKt": {
+   "rms": null,
+   "points": 0,
+   "limit": 8.0,
+   "within": null
+  },
+  "heading": {
+   "rms": null,
+   "points": 0,
+   "limit": 3.0,
+   "within": null
+  }
+ },
+ "procedure": {
+  "runway": "19R",
+  "cifpCycle": "2611",
+  "glidePathDeg": 3.38,
+  "nearestPublishedDeg": 3.24,
+  "diffDeg": 0.14,
+  "pass": true,
+  "warn": false,
+  "finalCourseFlownGridDeg": 205.32,
+  "finalCourseFlownTrueDeg": 205.33,
+  "crossingHeightAntennaM": 19.2,
+  "crossingHeightAntennaFt": 63.0,
+  "published": [
+   {
+    "source": "CIFP H19RZ",
+    "type": "RNAV (RNP)",
+    "angle": 3.24,
+    "crossingHeightFt": 75.0,
+    "finalCourseTrue": 204.84,
+    "lastFix": "CEGIL",
+    "courseDiffDeg": 0.49,
+    "angleDiffDeg": 0.14,
+    "crossingHeightDiffFt": -12.0
+   },
+   {
+    "source": "CIFP R19RY",
+    "type": "RNAV (GPS)",
+    "angle": 3.24,
+    "crossingHeightFt": 60.0,
+    "finalCourseTrue": 204.86,
+    "lastFix": "WAKSI",
+    "courseDiffDeg": 0.47,
+    "angleDiffDeg": 0.14,
+    "crossingHeightDiffFt": 3.0
+   },
+   {
+    "source": "PAPI (NASR)",
+    "type": "PAPI",
+    "angle": 3.04,
+    "crossingHeightFt": 80,
+    "finalCourseTrue": null,
+    "lastFix": null,
+    "angleDiffDeg": 0.34,
+    "crossingHeightDiffFt": -17.0
+   }
+  ]
+ },
+ "touchdownPoint": {
+  "pastThresholdM": 363.5,
+  "offCentreM": 0.3,
+  "source": "levelled before the surface flag",
+  "flare": {
+   "entryHeightM": 9.95,
+   "entrySinkMs": 3.56,
+   "touchdownSinkMs": 1.41,
+   "lastSecondSinkMs": 1.96,
+   "durationS": 3.5,
+   "nominal": true,
+   "touchdownRunwayElevationM": 640.48
+  }
+ },
+ "inferred": {
+  "weightKg": 69702,
+  "approachSpeedKt": 158.3,
+  "landingFlap": 30,
+  "flapSelections": [
+   {
+    "flap": 1,
+    "t": 1487,
+    "why": "speed"
+   },
+   {
+    "flap": 5,
+    "t": 1563,
+    "why": "speed"
+   },
+   {
+    "flap": 15,
+    "t": 1647,
+    "why": "speed"
+   },
+   {
+    "flap": 30,
+    "t": 1661,
+    "why": "placard"
+   }
+  ],
+  "gearDownT": 1647,
+  "joinFinalT": 1741,
+  "maxCrabDeg": 5.7,
+  "maxMach": 0.783
+ },
+ "weather": {
+  "badge": "wind",
+  "reports": [
+   "KLAS 100056Z 15011G25KT 10SM FEW140 24/02 A2981 RMK AO2 SLP083 T02390017",
+   "KLAS 100105Z 16010G22KT 10SM FEW140 24/02 A2981 RMK AO2 T02390017",
+   "KLAS 100156Z 16010G21KT 10SM FEW140 23/03 A2983 RMK AO2 SLP088 T02280028"
+  ],
+  "surface": {
+   "tempC": 22.96,
+   "dewPointC": 2.64,
+   "rh": 0.264,
+   "windDir": 160.0,
+   "windKt": 10.0,
+   "gustKt": 21.0,
+   "visibilityM": 16093.4,
+   "visibilityCensored": true,
+   "altimeterInHg": 29.827,
+   "pressureHPa": 932.94,
+   "wx": [],
+   "from": [
+    "2026-03-10T01:05Z",
+    "2026-03-10T01:56Z"
+   ]
+  },
+  "layers": [
+   {
+    "cover": "FEW",
+    "fraction": 0.19,
+    "genus": "ac",
+    "baseM": 4931.7,
+    "topM": 5431.7,
+    "base": "observed",
+    "top": "estimated: plan 01's depth for the genus (the model column does not show it)",
+    "source": "METAR 2026-03-10T01:56Z"
+   }
+  ],
+  "precipitation": {
+   "rateMmH": 0.0,
+   "kind": "none",
+   "intensity": null,
+   "from": null
+  },
+  "inCloud": []
+ },
+ "badges": {
+  "light": "dusk",
+  "weather": "wind",
+  "from": "east",
+  "stripSide": "right",
+  "stripView": "passes-right"
+ },
+ "reconstructed": [
+  {
+   "from": 1795,
+   "to": 1799,
+   "what": "flare: wheel height modelled from 10.0 m to the runway"
+  }
+ ]
+}
