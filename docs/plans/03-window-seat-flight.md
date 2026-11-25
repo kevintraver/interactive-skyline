@@ -97,6 +97,31 @@ Section 6.2 gives the layout of `skyline-flight/1` but not its units or the valu
 - **The winglet's green is faint over a lit city and clear in dark sky.** That is the app's night exposure, not the lamp, and is left as it is.
 - **Moving parts carry the light of their rest pose.** A lowered flap's upper surface, hidden at rest, stays dark.
 
+### State at the end of the build (25 November)
+
+The validation of section 8 (F8.1) is `docs/validation/03-window-seat-flight.md`: of its 50 checks 35 pass, 6 pass in
+part or with a defect found, 2 fail (the bearing of two summits within 35 km; the served heights in the last minute,
+which the QA's gates measure before the flare fit shifts them by up to 10.75 m), and 7 are not done (photographs,
+videos, plan 01's night-lights product, recorded roll and airspeed, which these traces lack, and the goldens). Per
+phase, at `cba1fe2`:
+
+- **Phase 0, 1.** Built: the adapter, the track sampler and kinematics, the mode with its address, what-if from the air.
+- **Phase 2.** Built: six flights (19 and 26, day and night, dusk with one waived gate, an overcast day), each with its
+  QA, weather as flown and a preview; one command re-bakes them byte for byte. "About this flight" (F2.6's report in
+  the app) opens from each card and from the bar.
+- **Phase 3.** Built: the modelled 737-800 with moving parts and baked lamp light, the cabin, the seat map, the head
+  rig. `lv-19-day` is a 737-900 and `lv-19-dusk` a 737 MAX 8; the one airframe is drawn for all.
+- **Phase 4.** Built: F4.1 to F4.4 (airport data, pavement and paint, 3,043 lights) and the nested grids in the
+  flight's own provider. Not built: F4.5 (buildings under the approaches), F4.6 (props), F4.8's inset grids (the map's
+  ground is moved under the pavement instead).
+- **Phase 5.** Built: the pane, its state and the window panel.
+- **Phase 6.** Built: regional grids to the horizon, the far plane, 326,466 lamps from the air, the pace. The flight
+  draws its own minimal clouds (plan 01 has none yet); the ground under an overcast is still sunlit.
+- **Phase 7.** Built: Orbit with presets and links.
+- **Phase 8.** F8.1 written. F8.2 (performance) and the night cabin's look are in progress; budgets and goldens are
+  not recorded; the software-rendered suites have not been run for this plan. F8.3 (Salt Lake City) and the stretch
+  tasks F8.4 to F8.6 are not done. Phase 9 stays deferred. Nothing is pushed.
+
 ### Order of work
 
 1. Phase 0 with Phase 1's three independent starts, in parallel: the track sampler and kinematics on a synthetic track with the adapter and the airport block (F0.1, F0.2, F1.3); the runway ends and the bake of one real runway 19 arrival (F0.3, F1.1, F1.2); the window, wing and head (F1.5). The airframe's dimensions and kit (F3.1, F3.2) start at the same time because nothing blocks them.

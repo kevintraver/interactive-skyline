@@ -526,6 +526,55 @@ button { font: inherit; color: inherit; background: none; border: 0; padding: 0;
 #orbit-controls[hidden] { display: none; }
 .orbit-card .when { margin-top: 2px; }
 
+/* "About this flight" (ui/about.js, section 4.2): from a card's About button and the bar's; under the top bar on the
+   right, clear of the open picker on the left; one column at phone width */
+.flight-card .plays button.about { margin-left: auto; background: none; color: var(--blue); padding: 6px 4px; }
+.flight-card .plays button.about:hover { background: none; text-decoration: underline; }
+#flightbar .about[aria-expanded="true"] { color: var(--blue); background: var(--blue-wash); }
+#flightabout { top: calc(var(--gap) + 54px); right: var(--gap); width: min(460px, calc(100vw - 2 * var(--gap))); max-height: calc(100vh - var(--gap) - 54px - 150px); display: flex; flex-direction: column; overflow: hidden;
+  background: var(--surface); border: 1px solid var(--line); border-radius: 12px; box-shadow: var(--shadow); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); }
+#flightabout[hidden] { display: none; }
+#flightabout .head { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; padding: 10px 8px 8px 14px; border-bottom: 1px solid var(--line); }
+#flightabout h2 { margin: 0; font-size: 14px; font-weight: 650; }
+#flightabout .sub { display: block; color: var(--muted); font-size: 12.5px; }
+#flightabout .x { width: 30px; height: 30px; border-radius: 8px; color: var(--muted); display: grid; place-items: center; flex: none; }
+#flightabout .x:hover { background: var(--fill); color: var(--ink); }
+#flightabout .x .icon { width: 16px; height: 16px; }
+#flightabout .body { overflow-y: auto; padding: 0 14px 12px; font-size: 12.5px; line-height: 1.45; scrollbar-width: thin; scrollbar-color: var(--fill-strong) transparent; }
+#flightabout .body:focus { outline: none; }
+#flightabout h3 { margin: 12px 0 4px; color: var(--muted); font-size: 11.5px; font-weight: 650; text-transform: uppercase; letter-spacing: 0.04em; }
+#flightabout p { margin: 4px 0; }
+#flightabout .small { color: var(--muted); font-size: 11.5px; }
+#flightabout .err { color: var(--accent); }
+#flightabout dl { display: grid; grid-template-columns: max-content 1fr; gap: 2px 12px; margin: 4px 0; }
+#flightabout dt { color: var(--muted); }
+#flightabout dd { margin: 0; }
+#flightabout .type-note { padding: 6px 8px; border-radius: 8px; background: var(--blue-wash); }
+#flightabout a { color: var(--blue); }
+#flightabout code { font-size: 11px; overflow-wrap: anywhere; }
+#flightabout ul { margin: 4px 0; padding-left: 16px; }
+#flightabout ul.credits { padding: 0; list-style: none; }
+#flightabout ul.credits li { padding: 4px 0; }
+#flightabout ul.credits li + li { border-top: 1px solid var(--line); }
+#flightabout ul.credits a { color: var(--ink); font-weight: 600; text-decoration: none; }
+#flightabout ul.credits a:hover { color: var(--blue); text-decoration: underline; }
+#flightabout .use { display: block; color: var(--muted); font-size: 12px; }
+#flightabout .use a { color: var(--blue); font-weight: 500; }
+#flightabout details summary { cursor: pointer; color: var(--blue); margin: 4px 0; }
+#flightabout .notes .kind { color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: 0.03em; }
+#flightabout table.gates { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+#flightabout .gates th, #flightabout .gates td { padding: 4px 4px; text-align: left; vertical-align: top; border-top: 1px solid var(--line); font-weight: 400; }
+#flightabout .gates thead th { border-top: 0; color: var(--muted); font-size: 11px; font-weight: 650; }
+#flightabout .gates td:last-child { text-align: right; white-space: nowrap; }
+#flightabout .gates .state { padding: 1px 6px; border-radius: 5px; background: var(--fill); color: var(--muted); font-size: 11px; font-weight: 650; }
+#flightabout .gates .waived .state { background: var(--blue-wash); color: var(--ink); }
+#flightabout .gates .fail .state { background: var(--accent); color: #fff; }
+#flightabout .gates tr.reason td { border-top: 0; padding-top: 0; color: var(--muted); font-size: 11.5px; text-align: left; white-space: normal; }
+#flightabout .vh { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+/* the corner label adds the flight tracks' licence while flying; its dialog lists every source (src/ui/credits.js) */
+#credit .fly-credit { display: none; }
+.flying #credit .fly-credit { display: inline; }
+
 #fly-fade { position: fixed; inset: 0; z-index: 2; background: #000; opacity: 0; pointer-events: none; transition: opacity 0.25s linear; }
 #fly-fade.on { opacity: 1; }
 .flying #dock { max-width: calc(100vw - 2 * var(--gap) - 56px); }
@@ -544,6 +593,7 @@ button { font: inherit; color: inherit; background: none; border: 0; padding: 0;
   #flightbar { flex-wrap: wrap; white-space: normal; }
   #flightbar .status { flex-basis: 100%; flex-wrap: wrap; gap: 4px 10px; }
   #orbit-controls { top: calc(var(--gap) + 102px); max-height: calc(100vh - var(--gap) - 102px - 190px); }
+  #flightabout { top: calc(var(--gap) + 102px); left: var(--gap); right: var(--gap); width: auto; max-height: calc(100vh - var(--gap) - 102px - 170px); }
   /* one column of overlays at this width: the open picker or the card covers the panel's place */
   body:has(.flights.open) #orbit-controls, body:has(#card:not([hidden])) #orbit-controls { display: none; }
 }

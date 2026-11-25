@@ -21,6 +21,10 @@ import { flightJourney } from './journey.js';
 import { PRESETS } from './orbit.js';
 import { encodeOrbitState, orbitLinkState, orbitInput } from './orbitUrl.js';
 import { createOrbitPanel } from './ui/orbitPanel.js';
+import { createAboutPanel } from './ui/about.js';
+
+/** Each airport's published approaches (F2.6, scripts/fetch_cifp.py), for "About this flight": a few kilobytes. */
+const CIFP = import.meta.glob('../../data/flights/*/cifp-*.json', { eager: true, import: 'default' });
 
 /** The first-visit hint while flying (main.js keeps its own text for the map; the map's bold line about blue buildings
  * is hidden in style.css, since the settings panel rewrites it whenever the settings apply). */
@@ -64,9 +68,11 @@ export function createFlightMode({ app, fe, terrain, meta, flights, data, seam, 
         const p = { altFt: PRESETS[key].altFt, radiusKm: PRESETS[key].radiusKm };
         // already orbiting: the preset as the panel's (a cut through black); else into the orbit, playing
         (seam.active && session?.kind === 'orbit' ? changeOrbit(p, { cut: true }) : enterOrbit({ ...p, play: true })).catch(() => {});
-      } } });
-  const bar = createFlightBar({ slot: $('transport-slot'), units: () => settings.units, onPace: () => setPace(!session?.pace), onFrame: () => setFrame(!frameOn), onSeat: () => toggleSeatMap(), onWindow: () => toggleWindowPanel() });
-  let seatMap = null, windowPanel = null, orbitPanel = null;
+      } },
+    onAbout: (id, button) => toggleAbout(id, button) });
+  const bar = createFlightBar({ slot: $('transport-slot'), units: () => settings.units, onPace: () => setPace(!session?.pace), onFrame: () => setFrame(!frameOn), onSeat: () => toggleSeatMap(), onWindow: () => toggleWindowPanel(),
+    onAbout: (button) => toggleAbout(memory.id, button) });
+  let seatMap = null, windowPanel = null, orbitPanel = null, aboutPanel = null;
   /** The orbit's changes, one at a time (a cut's fade must finish before the next is planned). */
   let orbitQueue = Promise.resolve();
   /** How the last orbit change was made: 'flown', 'cut' or 'none' (another seat on the same side). */
@@ -341,6 +347,7 @@ export function createFlightMode({ app, fe, terrain, meta, flights, data, seam, 
     await fade(true);
     seatMap?.close();
     windowPanel?.close();
+    aboutPanel?.close();
     if (orbitPanel) orbitPanel.el.hidden = true;
     if (el.orbitThis) el.orbitThis.hidden = true;
     document.body.classList.remove('orbiting');
@@ -426,6 +433,18 @@ export function createFlightMode({ app, fe, terrain, meta, flights, data, seam, 
     applyWindow();
     return { ...windowState };
   }
+  /** "About this flight" (section 4.2, ui/about.js), from a card or the bar; again on the same flight closes it. */
+  function toggleAbout(id, button) {
+    if (!aboutPanel) {
+      const cifp = Object.entries(CIFP).find(([file]) => file.includes(`/flights/${cityId}/`))?.[1] ?? null;
+      aboutPanel = createAboutPanel({ parent: document.body, data, tz: city.tz || 'UTC', flights, cifp, onToggle: (open) => bar.setAbout(open && aboutPanel?.flight === memory.id) });
+    }
+    if (!aboutPanel.open || aboutPanel.flight !== id) { seatMap?.close(); windowPanel?.close(); }
+    const r = aboutPanel.toggle(id, button);
+    bar.setAbout(aboutPanel.open && aboutPanel.flight === memory.id);
+    return r;
+  }
+
   /** The window panel (F5.7), a popover above the bar: made the first time it is opened, kept for the visit. */
   function toggleWindowPanel(open = !(windowPanel?.open)) {
     if (!session) return;
@@ -489,6 +508,7 @@ export function createFlightMode({ app, fe, terrain, meta, flights, data, seam, 
     if (!seam.active || ev.defaultPrevented || ev.metaKey || ev.ctrlKey || typing(ev.target)) return;
     if (seatMap?.el.contains(ev.target)) return; // the seat map's own keys (arrows, Enter, Space, Escape)
     if (windowPanel?.el.contains(ev.target)) return; // the window panel's (Tab, Space, Escape)
+    if (aboutPanel?.el.contains(ev.target)) return; // "About this flight": its links and buttons, Tab and Escape
     if (orbitPanel?.el.contains(ev.target) && ev.code !== 'Space') return; // the orbit panel's sliders and buttons
     const onControl = ev.target instanceof HTMLButtonElement || (ev.target instanceof HTMLInputElement && ev.target.type === 'range');
     // in an orbit the clock moves only the light: seeking and the rate keys are plan 01's, as on the map
@@ -574,6 +594,7 @@ export function createFlightMode({ app, fe, terrain, meta, flights, data, seam, 
     setFrame, setHud(on) { hud = !!on; onFrame(session); }, setPace, setSeat, toggleSeatMap, setWindow, toggleWindowPanel,
     get window() { return { ...windowState }; },
     get windowPanel() { return windowPanel; },
+    get aboutPanel() { return aboutPanel; }, toggleAbout,
     get seatMap() { return seatMap; },
     cards, bar, memory,
   };

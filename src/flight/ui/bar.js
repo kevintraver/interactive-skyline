@@ -1,9 +1,10 @@
 // The flight's own bar, mounted in #transport-slot above plan 01's journey bar (plan 03, sections 4.4 and 4.9): the
 // status chip (phase, time to touchdown, altitude, ground speed, in the visitor's units; H hides it), the pace (the
 // condensed pace, or the rate the visitor chose; pressing it turns the condensed pace back on), the seat (opens the
-// seat map, ui/seatMap.js), the cabin frame (C), the window's glass (the window panel, ui/windowPanel.js),
-// a "Retimed" note when the departure is not the recorded one, and a line for loading. In an orbit (setKind('orbit'))
-// the pace has no meaning and hides, and the chip names the orbit's phase ("Orbiting", "Changing the orbit").
+// seat map, ui/seatMap.js), the cabin frame (C), the window's glass (the window panel, ui/windowPanel.js), "About
+// this flight" (ui/about.js), a "Retimed" note when the departure is not the recorded one, and a line for loading. In
+// an orbit (setKind('orbit')) the pace and About have no meaning and hide, and the chip names the orbit's phase
+// ("Orbiting", "Changing the orbit").
 import { flightStatus } from './status.js';
 
 const icon = (id) => `<svg class="icon" viewBox="0 0 20 20" aria-hidden="true"><use href="#${id}" /></svg>`;
@@ -12,7 +13,7 @@ const rateText = (r) => `${Math.round(r * 10) / 10}×`;
 /**
  * @param {{ slot: HTMLElement, units: () => 'ft'|'m', onPace: () => void, onFrame: () => void, onSeat?: () => void }} o
  */
-export function createFlightBar({ slot, units, onPace, onFrame, onSeat = () => {}, onWindow = () => {} }) {
+export function createFlightBar({ slot, units, onPace, onFrame, onSeat = () => {}, onWindow = () => {}, onAbout = () => {} }) {
   const el = document.createElement('div');
   el.id = 'flightbar';
   el.setAttribute('role', 'group');
@@ -22,12 +23,15 @@ export function createFlightBar({ slot, units, onPace, onFrame, onSeat = () => {
     <button type="button" class="seat" aria-haspopup="dialog" aria-expanded="false" aria-controls="seatmap" title="Choose a seat"><span class="seat-id"></span></button>
     <button type="button" class="frame" aria-pressed="true" title="Cabin frame (C)">${icon('i-eye')}<span>Frame</span></button>
     <button type="button" class="window" aria-haspopup="dialog" aria-expanded="false" aria-controls="flightwindow" title="The window's glass: frost, rain, scratches, reflections, focus (F)">Window</button>
+    <button type="button" class="about" data-about aria-haspopup="dialog" aria-expanded="false" aria-controls="flightabout" title="About this flight: where the track comes from, what is recorded and what is inferred, the weather, the quality report, the data credits">About</button>
     <span class="retimed" hidden title="The departure is not the recorded one">Retimed</span>
     <span class="note" hidden></span>`;
   const $ = (s) => el.querySelector(s);
   const status = $('.status'), phase = $('.phase'), ttd = $('.ttd'), alt = $('.alt'), gs = $('.gs');
   const win = $('.window');
   win.addEventListener('click', () => onWindow());
+  const about = $('.about');
+  about.addEventListener('click', () => onAbout(about));
   const pace = $('.pace'), frame = $('.frame'), retimed = $('.retimed'), note = $('.note'), seat = $('.seat'), seatId = $('.seat-id');
   pace.addEventListener('click', () => { pace.blur(); onPace(); });
   seat.addEventListener('click', () => onSeat());
@@ -47,10 +51,12 @@ export function createFlightBar({ slot, units, onPace, onFrame, onSeat = () => {
     setWindow(open) { win.setAttribute('aria-expanded', String(!!open)); },
     /** The Window button (focus goes back to it when the panel closes). */
     windowButton: win,
+    /** Whether "About this flight" is open (the button's state). */
+    setAbout(open) { about.setAttribute('aria-expanded', String(!!open)); },
     /** Loading text in place of the readings, or null. */
     setNote(text) { note.hidden = !text; note.textContent = text || ''; },
     /** 'flight' (the pace shows) or 'orbit' (it hides: the orbit runs at the clock's rate). */
-    setKind(kind) { pace.hidden = kind === 'orbit'; },
+    setKind(kind) { pace.hidden = kind === 'orbit'; about.hidden = kind === 'orbit'; },
     /** Write only what changed, so a frame costs no layout when nothing did. `phase` overrides the chip's phase words. */
     update({ state, touchdownT, events, pace: paceOn, rate, frame: frameOn, retimed: isRetimed, hud, phase: phaseText }) {
       if (state) {

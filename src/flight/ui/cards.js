@@ -66,11 +66,13 @@ export function sortFlights(list) {
 
 /**
  * @param {{ parent: Element, flights: object[], tz: string, data?: string, onPlay: (id: string, key: string) => void,
- *   orbit?: { presets: { key: string, label: string, altFt: number }[], primary?: string, onPlay: (preset: string) => void } }} o
+ *   orbit?: { presets: { key: string, label: string, altFt: number }[], primary?: string, onPlay: (preset: string) => void },
+ *   onAbout?: (id: string, button: HTMLElement) => void }} o
  *   flights are flights/index.json's entries; data the city's data folder (the previews are looked for there);
- *   setOptions fills in the ways to play once a flight's track is in; orbit adds the Orbit entry, one button a preset
+ *   setOptions fills in the ways to play once a flight's track is in; orbit adds the Orbit entry, one button a preset;
+ *   onAbout opens "About this flight" (ui/about.js) from the card's About button
  */
-export function createFlightCards({ parent, flights, tz, data = null, onPlay, orbit = null }) {
+export function createFlightCards({ parent, flights, tz, data = null, onPlay, orbit = null, onAbout = null }) {
   const box = document.createElement('section');
   box.className = 'flights';
   box.setAttribute('aria-label', 'Flights');
@@ -119,6 +121,18 @@ export function createFlightCards({ parent, flights, tz, data = null, onPlay, or
       b.addEventListener('click', () => { b.blur(); setOpen(false); onPlay(f.id, key); });
       plays.append(b);
     }
+    if (onAbout) {
+      // the flight's provenance (section 4.2): where the track comes from, what is inferred, its quality report
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'about';
+      b.dataset.about = f.id;
+      b.setAttribute('aria-haspopup', 'dialog');
+      b.setAttribute('aria-controls', 'flightabout');
+      b.textContent = 'About this flight';
+      b.addEventListener('click', () => onAbout(f.id, b));
+      plays.append(b);
+    }
     list.append(card);
     cards.set(f.id, { card, flight: f });
   }
@@ -145,8 +159,9 @@ export function createFlightCards({ parent, flights, tz, data = null, onPlay, or
 
   chip.addEventListener('click', () => setOpen(!state.open));
   // Escape and a press elsewhere collapse the open picker (a look-drag on the picture starts with a press too)
-  document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && state.open) setOpen(false); });
-  document.addEventListener('pointerdown', (e) => { if (state.open && !box.contains(e.target)) setOpen(false); }, true);
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && state.open && !e.target.closest?.('#flightabout')) setOpen(false); });
+  // (not a press in "About this flight", opened from a card: the picker stays open behind it)
+  document.addEventListener('pointerdown', (e) => { if (state.open && !box.contains(e.target) && !e.target.closest?.('#flightabout')) setOpen(false); }, true);
 
   function render() {
     box.hidden = !state.shown;
