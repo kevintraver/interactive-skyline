@@ -59,6 +59,57 @@ def vgsi(code):
             "side": {"L": "left", "R": "right"}.get(code[-1], code[-1].lower())}
 
 
+MARKING_KINDS = {"PIR": "precision", "NPI": "non-precision", "BSC": "basic", "NRS": "numbers-only",
+                 "NSTD": "non-standard", "BUOY": "buoys", "STOL": "stol", "NONE": None}
+INTENSITY = {"HIGH": "high", "MED": "medium", "LOW": "low", "NSTD": "non-standard", "PERI": "perimeter",
+             "STRB": "strobe", "FLD": "flood", "NONE": None}
+PAVEMENT = {"R": "rigid", "F": "flexible"}
+# Approach light systems: base system and length (ft) from FAA Order JO 6850.2C; F = sequenced flashers,
+# R = runway alignment indicator lights (RAIL), which carry the system out to its longer length.
+APPROACH = {"ALSAF": ("ALSF", 3000, True, False), "ALSF1": ("ALSF-1", 2400, True, False),
+            "ALSF2": ("ALSF-2", 2400, True, False), "MALS": ("MALS", 1400, False, False),
+            "MALSF": ("MALS", 1400, True, False), "MALSR": ("MALS", 2400, True, True),
+            "SSALS": ("SSALS", 1400, False, False), "SSALF": ("SSALS", 1400, True, False),
+            "SSALR": ("SSALS", 2400, True, True), "SALS": ("SALS", 1500, False, False),
+            "SALSF": ("SALS", 1500, True, False), "ODALS": ("ODALS", 1500, True, False)}
+BEACON = {"W": "white", "G": "green", "Y": "yellow"}
+
+
+def marking_kind(code):
+    """A runway end's marking type code (PIR, NPI, BSC, ...) as a word; None for none or unknown."""
+    return MARKING_KINDS.get((code or "").strip().upper())
+
+
+def light_intensity(code):
+    """A runway's edge light code (HIGH, MED, LOW, ...) as a word; None for none or unknown."""
+    return INTENSITY.get((code or "").strip().upper())
+
+
+def approach_lights(code):
+    """An approach light system code as {code, system, lengthFt, flashers, rail}; None for none.
+
+    MALSR is listed with its flashers because the FAA's MALSR has sequenced flashers on the RAIL. An unknown code
+    gives the code with the rest unknown (None)."""
+    code = (code or "").strip().upper()
+    if not code or code == "NONE":
+        return None
+    system, length, flashers, rail = APPROACH.get(code, (None, None, None, None))
+    return {"code": code, "system": system, "lengthFt": length, "flashers": flashers, "rail": rail}
+
+
+def beacon_colours(code):
+    """A beacon lens colour code ('WG', 'SWG', 'WY', ...) as the colours of one rotation; 'S' (split white, the
+    military's two-peaked white) adds a second white."""
+    code = (code or "").strip().upper()
+    out = ["white"] if code.startswith("S") else []
+    return out + [BEACON[c] for c in code.lstrip("S") if c in BEACON]
+
+
+def beacon_rate(code):
+    """Flashes a minute, [low, high], of a land airport's beacon (AIM 2-1-9: 24 to 30); None if not one."""
+    return [24, 30] if beacon_colours(code) in (["white", "green"], ["white", "white", "green"]) else None
+
+
 def end_name(nasr_id):
     """'01L' -> '1L', '19R' -> '19R'."""
     nasr_id = nasr_id.strip()

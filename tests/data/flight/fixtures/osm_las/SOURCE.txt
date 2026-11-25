@@ -1,0 +1,6 @@
+OpenStreetMap through the Overpass API (https://overpass-api.de/api/interpreter), one request on 2026-11-24
+(snapshot 2026-11-24T15:06:06Z): nwr[aeroway] in the lat/lon envelope of data/cities.json's lv airport box,
+"out tags geom" (lib/airport_fetch.py overpass_query). © OpenStreetMap contributors, ODbL 1.0.
+
+Extract: the elements with a node inside the two map boxes of ../faa_las/SOURCE.txt, plus every runway way,
+without the aerodrome boundary, helipads and apron entrance markings. Cut by ../faa_las/cut.py.
