@@ -864,9 +864,9 @@ function pick(ev) {
   return { entry, onMarker: hit.object === entry.marker, point: hit.point };
 }
 
-const dragPlane = new THREE.Plane(), dragPoint = new THREE.Vector3();
+const dragPlane = new THREE.Plane(), sidePlane = new THREE.Plane(), dragPoint = new THREE.Vector3();
 let down = null, dragging = false;
-let move = null; // a building being dragged: { entry, start, grab }
+let move = null; // a building being dragged: { entry, start, grab, right, fwd, mpp, pin, y0 }
 canvas.addEventListener('contextmenu', (ev) => ev.preventDefault());
 // Capture phase, so this runs before the camera controls and can claim the drag for a building.
 canvas.addEventListener('pointerdown', (ev) => {
@@ -875,9 +875,18 @@ canvas.addEventListener('pointerdown', (ev) => {
   if (ev.button !== 0 || ev.ctrlKey || ev.metaKey || ev.shiftKey || !selected) return;
   const hit = pick(ev);
   if (!hit || hit.entry !== selected || hit.onMarker) return;
-  // slide the building on a level plane through the point where it was grabbed
+  // up/down follows the cursor on a level plane when looking down, and pushes away at a steady rate as the view flattens
   dragPlane.set(new THREE.Vector3(0, 1, 0), -hit.point.y);
-  move = { entry: selected, start: selected.offset.clone(), grab: hit.point.clone() };
+  const dir = camera.getWorldDirection(new THREE.Vector3());
+  const right = new THREE.Vector3().setFromMatrixColumn(camera.matrixWorld, 0).setY(0).normalize();
+  const topBelowHorizon = THREE.MathUtils.radToDeg(Math.asin(-dir.y)) - camera.fov / 2;
+  move = {
+    entry: selected, start: selected.offset.clone(), grab: hit.point.clone(),
+    right, fwd: new THREE.Vector3(0, 1, 0).cross(right),
+    mpp: (hit.point.clone().sub(camera.position).dot(dir) * 2 * Math.tan(THREE.MathUtils.degToRad(camera.fov) / 2)) / canvas.getBoundingClientRect().height,
+    pin: THREE.MathUtils.smoothstep(topBelowHorizon, 5, 25),
+    y0: ev.clientY,
+  };
   controls.enabled = false;
   canvas.setPointerCapture(ev.pointerId);
   canvas.classList.add('grabbing');
@@ -891,8 +900,15 @@ canvas.addEventListener('pointermove', (ev) => {
     const r = canvas.getBoundingClientRect();
     ndc.set(((ev.clientX - r.left) / r.width) * 2 - 1, -((ev.clientY - r.top) / r.height) * 2 + 1);
     ray.setFromCamera(ndc, camera);
-    if (ray.ray.intersectPlane(dragPlane, dragPoint)) {
-      place(move.entry, move.start.x + dragPoint.x - move.grab.x, move.start.z + dragPoint.z - move.grab.z);
+    const { grab: G, right: R, fwd: F } = move;
+    const ahead = G.dot(F) - camera.position.dot(F);
+    const steady = Math.max((move.y0 - ev.clientY) * move.mpp, Math.min(0, 50 - ahead));
+    const pinned = ray.ray.intersectPlane(dragPlane, dragPoint) ? dragPoint.sub(G).dot(F) : steady;
+    const depth = lerp(steady, pinned, move.pin);
+    sidePlane.set(F, -(G.dot(F) + depth));
+    if (ray.ray.intersectPlane(sidePlane, dragPoint)) {
+      const side = dragPoint.sub(G).dot(R);
+      place(move.entry, move.start.x + R.x * side + F.x * depth, move.start.z + R.z * side + F.z * depth);
       renderer.shadowMap.needsUpdate = true;
       invalidate();
     }
