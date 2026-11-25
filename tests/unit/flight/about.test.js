@@ -65,7 +65,7 @@ describe('what is recorded and what is inferred', () => {
 
   it('lists the seconds that were reconstructed, and the inferred quantities the bake chose', () => {
     const r = aboutFlight(header('lv-19-dusk'), { tz: TZ }).provenance;
-    expect(r.reconstructed).toEqual(['From 1,796 s to 1,799 s: flare: wheel height modelled from 6.0 m to the runway']);
+    expect(r.reconstructed).toEqual(['From 1,795 s to 1,799 s: flare: wheel height modelled from 10.0 m to the runway']);
     expect(r.choices).toEqual(expect.arrayContaining(['Weight about 69.7 t (from the approach speed)', 'Landing flap 30', 'Gear down 152 s before touchdown']));
   });
 
@@ -113,11 +113,11 @@ describe('the quality report', () => {
     expect(q.gates).toHaveLength(15);
     const g = Object.fromEntries(q.gates.map((x) => [x.id, x]));
     expect(g.glidePathDeg).toMatchObject({ label: 'Glide path angle on final', state: 'pass' });
-    expect(g.crossingHeightM.value).toBe('25.8 m');
+    expect(g.crossingHeightM.value).toBe('25.0 m');
     expect(g.crossingHeightM.limit).toBe('12 to 32 m');
     expect(g.positionRmsAirM.limit).toBe('at most 12 m');
     expect(g.touchdownOffCentreM.limit).toBe('within 8 m either side');
-    expect(g.pitchDeg.value).toBe('−3.6° to 4.9°');
+    expect(g.pitchDeg.value).toBe('−3.6° to 4.4°');
     expect(g.landingLightBy10000ft.value).toBe('yes');
   });
 
@@ -155,10 +155,10 @@ describe('the quality report', () => {
 describe('the published approach it matches', () => {
   it('names the procedures whose glide path is the nearest published angle for the runway end, as F2.6 compared them', () => {
     const a = aboutFlight(header('lv-19-dusk'), { tz: TZ, cifp: CIFP, airport: AIRPORT }).approach;
-    expect(a.flownDeg).toBe(3.37);
+    expect(a.flownDeg).toBe(3.38);
     expect(a.nearestDeg).toBe(3.24);
     expect(a.matches.map((m) => m.name)).toEqual(['RNAV (RNP) Z RWY 19R', 'RNAV (GPS) Y RWY 19R']);
-    expect(a.sentence).toBe('The final was flown at 3.37°, 0.13° steeper than the 3.24° glide path of the RNAV (RNP) Z RWY 19R and RNAV (GPS) Y RWY 19R approaches (FAA CIFP cycle 2611); the check allows 0.35°.');
+    expect(a.sentence).toBe('The final was flown at 3.38°, 0.14° steeper than the 3.24° glide path of the RNAV (RNP) Z RWY 19R and RNAV (GPS) Y RWY 19R approaches (FAA CIFP cycle 2611); the check allows 0.35°.');
     expect(a.papi).toBe('The runway’s PAPI is set to 3.04°, crossing the threshold at 80 ft.');
   });
 

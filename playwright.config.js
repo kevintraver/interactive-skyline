@@ -156,6 +156,14 @@ export default defineConfig({
       // Fly mode on this machine's GPU: every flight spec, and the timing ones (*.gpu.spec.js)
       name: 'flight-gpu',
       testMatch: /e2e\/flight\/.*\.spec\.js$/,
+      testIgnore: /timing\.gpu\.spec\.js$/,
+      use: { ...devices['Desktop Chrome'], viewport: { width: 1280, height: 800 }, deviceScaleFactor: 1,
+        launchOptions: { args: [...GPU, ...WEBGPU] } },
+    },
+    {
+      // Fly's own per-frame JavaScript, a frame's counts and the flight chunk's size, on this machine's GPU, alone
+      name: 'flight-timing',
+      testMatch: /e2e\/flight\/timing\.gpu\.spec\.js$/,
       use: { ...devices['Desktop Chrome'], viewport: { width: 1280, height: 800 }, deviceScaleFactor: 1,
         launchOptions: { args: [...GPU, ...WEBGPU] } },
     },

@@ -17,6 +17,7 @@
     "test:e2e:gpu": "playwright test --project=gpu-functional --project=drive-gpu",
     "test:e2e:flight": "playwright test --project=flight-software",
     "test:flight:gpu": "playwright test --project=flight-gpu --workers=1",
+    "test:perf:flight": "playwright test --project=flight-timing --workers=1",
     "test:goldens:update": "playwright test --project=webgl2-software baseline --update-snapshots=all",
     "test:goldens:drive:update": "playwright test --project=drive-software drive.spec --update-snapshots=changed",
     "test:perf": "playwright test --project=gpu --workers=1",

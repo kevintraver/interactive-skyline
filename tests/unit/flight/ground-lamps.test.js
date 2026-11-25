@@ -2,7 +2,7 @@
 // where each lamp is drawn, what is drawn from a camera, that thinning keeps the light, the budget, and day.
 import { readFileSync } from 'node:fs';
 import { describe, it, expect, beforeAll } from 'vitest';
-import { PerspectiveCamera, Vector3 } from 'three';
+import { PerspectiveCamera, Vector3, DynamicDrawUsage } from 'three';
 import { createAirLamps, AIR_BUDGET, HEAD_LIFT_M, ALL_LIGHT_FACTOR } from '../../../src/flight/ground/lamps.js';
 import { decodeLampPack } from '../../../src/drive/lights/pack.js';
 import { curveDrop, EARTH_R } from '../../../src/world/frame.js';
@@ -170,3 +170,19 @@ describe("all the city's outdoor light over its street lamps (F8.1)", () => {
     expect(ALL_LIGHT_FACTOR).toBeLessThanOrEqual(1 / 0.15);
   });
 });
+
+describe('the draw list on the GPU (F8.2)', () => {
+  // three's renderers upload an attribute marked DynamicDrawUsage on every render, whole (its update ranges are spent
+  // after the first upload): the 326,466 lamps' list is 2.6 MB, measured at 3.2 ms of the main thread a frame on WebGPU
+  // whether 0 or 26,000 lamps were drawn. The list is written only when the cull changes it, with needsUpdate and a range.
+  it('is uploaded when the cull rewrites it, not on every render', () => {
+    const attr = lamps.mesh.geometry.getAttribute('spriteIndex');
+    expect(attr.usage).not.toBe(DynamicDrawUsage);
+    const v = attr.version;
+    lamps.update({ camera: cameraAt({ x: 0, y: 2000, alt: 1500, look: [0, -3000] }), renderer, heightAboveGround: 900, extinctionM: 80000, ambientLux: 0, on: true });
+    expect(attr.version).toBeGreaterThan(v);
+    expect(attr.updateRanges.length).toBe(1);
+    expect(attr.updateRanges[0].count).toBeLessThanOrEqual(2 * lamps.stats().drawn + 2);
+  });
+});
+

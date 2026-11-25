@@ -50,6 +50,8 @@ export const LIT_BELOW_LUX = SWITCH_MID_LUX * ((1 - 1e-4) / 1e-4) ** SWITCH_SPRE
 export const OBSTRUCTION_ON_LUX = 377;
 /** The files, in the city's data folder. */
 export const FILES = Object.freeze({ valley: 'lamps-drive', region: 'lights-region' });
+/** The first files the night's traffic and obstruction lights read (src/drive/traffic/valleyCore.js, lights/obstruction.js). */
+export const PART_FILES = Object.freeze({ traffic: 'traffic/valley.json', corridor: 'corridor/index.json' });
 
 /**
  * The share of the lamps lit at a Sun elevation (degrees): 0 by day, 1 at night, through civil twilight between.
@@ -113,9 +115,36 @@ export function createNightGround({ fe, region, ground = {}, data, renderer = nu
     }
   };
 
+  // The traffic's and the obstruction lights' files and modules are asked for while the lamps load (they took the
+  // night's first settled frame to 3.3 s when asked for after; F8.2). The parts are still built after the lamps, as
+  // before: the obstruction lights are a sprite layer of the lamps' render order at the same depth, which three orders
+  // by object id, so the order they are made in is part of the picture.
+  const early = new Map();
+  /** getFile, each file fetched once while it is wanted: its bytes kept, each caller given its own response of them. */
+  const fetchEarly = (name) => {
+    if (!early.has(name)) {
+      const p = Promise.resolve(getFile(name)).then(async (r) => ({ ok: r.ok, status: r.status, body: r.ok ? await r.arrayBuffer() : null }));
+      early.set(name, p);
+      p.catch(() => early.delete(name));
+    }
+    return early.get(name).then((e) => ({
+      ok: e.ok, status: e.status,
+      json: async () => { if (!e.body) throw new Error(`${name}: HTTP ${e.status}`); return JSON.parse(new TextDecoder().decode(e.body)); },
+      arrayBuffer: async () => (e.body ? e.body.slice(0) : new ArrayBuffer(0)),
+    }));
+  };
+  function prefetchParts() {
+    const follow = (name, next) => fetchEarly(name).then((r) => (r.ok ? r.json() : null)).then((d) => { const f = d && next(d); if (f) fetchEarly(f).catch(() => {}); }).catch(() => {});
+    follow(PART_FILES.traffic, (d) => d.file || 'traffic/valley.bin');
+    follow(PART_FILES.corridor, (d) => (d.tall?.file ? `corridor/${d.tall.file}` : null));
+    import('../../drive/traffic/valley.js').catch(() => {});
+    import('../../drive/lights/obstruction.js').catch(() => {});
+  }
+
   /** Fetch and build everything (once). */
   function load() {
     if (loading) return loading;
+    prefetchParts();
     loading = (async () => {
       const [valley, regionPack] = await Promise.all([optionalPack(FILES.valley), optionalPack(FILES.region)]);
       const packs = [valley, regionPack].filter(Boolean);
@@ -132,10 +161,11 @@ export function createNightGround({ fe, region, ground = {}, data, renderer = nu
       }
       onTable = createOnTable(ephemeris);
       const ctx = flightPartContext({
-        fetchFile: getFile, nodes: fe.nodes, city, heightAt, base, earthR: EARTH_R, renderer, invalidate: fe.invalidate,
+        fetchFile: fetchEarly, nodes: fe.nodes, city, heightAt, base, earthR: EARTH_R, renderer, invalidate: fe.invalidate,
         quality, tall: towers, events: fe.events, group, light,
       });
       parts = await loadDriveParts(ctx);
+      early.clear();
       fe.invalidate?.();
     })().catch((err) => { loadError = String(err?.message ?? err); console.warn('Fly: the night ground could not be built.', err); });
     return loading;

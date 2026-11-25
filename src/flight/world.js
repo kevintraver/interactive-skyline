@@ -8,6 +8,8 @@
 //                     wheels, the pavement and the ground around it agree; given back bit for bit on leaving
 //   map apron         the map's own apron ring around the far grid stands above the regional ground in places: hidden
 //                     while flying
+//   map ground        the map's near and far meshes drawn as chunks while flying, the same triangles with the ones out
+//                     of view left out (terrain/mapChunks.js); the map's meshes and their index given back on leaving
 //   night ground      every street lamp of the valley and the region's towns as light points, the lit streets under
 //                     the eye in place of the map's orange street glow, the valley's traffic as ribbons of light and the
 //                     obstruction lights on tall buildings, all switched by the Sun (src/flight/ground; F6.4, 7.11);
@@ -24,6 +26,7 @@ import { createPavementIndex, EASE_M } from './airport/geometry.js';
 import { conformGround, applyConformed, buildInset, insetY, onInset, pavementBox, airportTerrain } from './view/airportGround.js';
 import { createNightGround } from './ground/index.js';
 import { levelsFor } from './airport/lightLayout.js';
+import { createMapGroundChunks } from './terrain/mapChunks.js';
 
 /** The sky dome's radius in src/sky/legacySky.js. */
 const DOME_R = 120000;
@@ -123,34 +126,56 @@ export async function createFlightWorld({ scene, fe, provider, meta, data, groun
   const region = createRegionTerrain({ meta, baseUrl: data, frame: fe.frame, terrain: provider, nodes: fe.nodes, quality: fe.quality });
   group.add(region.group);
 
-  // the airport costs about 350 ms on the main thread: built here, during the entry and before the fade-in
-  let airport = null, apGround = null, airportError = null;
-  try {
+  // the airport costs about 350 ms on the main thread. It is built after this returns (a task later), so that the
+  // flight's track and grids are asked for first and the airport is built while they download; whenSettled() waits
+  // for it, and the first frame waits for that. Until then the ground under the wheels is the regional terrain's.
+  let airport = null, apGround = null, airportError = null, shown = false, disposed = false;
+  const airportReady = (async () => {
     const airportData = await getJson('airport.json');
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    if (disposed) return;
     const near = provider.grid('near');
     airport = createAirport({ data: airportData, frame: fe.frame, terrain: near ? airportTerrain(provider, near) : provider, nodes: fe.nodes, quality: fe.quality });
     group.add(airport.group);
     apGround = airportGround({ airport, data: airportData, provider, ground, base });
     if (apGround?.insetMesh) group.add(apGround.insetMesh);
-  } catch (err) {
+    if (shown) {
+      apGround?.set(true);
+      for (const c of mapChunks) c.refit(); // the ground under the airport moved
+    }
+  })().catch((err) => {
     airportError = String(err?.message ?? err);
     console.warn('Fly: the airport could not be built; the runway is the ground photograph.', err);
-  }
+  });
   // the night ground: its files load at the first frame the Sun is low enough for a lamp to be lit
   const night = createNightGround({ fe, region, ground, data, renderer, scene, tall });
   group.add(night.group);
 
+  // the map's near and far ground in chunks while flying (null for a mesh not in the map's layout: drawn as it is)
+  const mapChunks = [['far', ground.far], ['near', ground.near]].map(([name, mesh]) => {
+    const grid = provider.grid?.(name);
+    if (!mesh || !grid) return null;
+    const c = createMapGroundChunks(mesh, { grid });
+    if (c) group.add(c.group);
+    return c;
+  }).filter(Boolean);
+
   scene.add(group);
   const mapApron = scene.getObjectByName('terrain apron');
-  let apronWas = null, shown = false;
+  let apronWas = null;
 
   const world = {
-    group, region, airport, night,
+    group, region, night, mapChunks,
+    /** The airport (airport/index.js), or null until it is built (a task after the world is made) or when it failed. */
+    get airport() { return airport; },
+    /** Resolves when the airport has been built, or has failed (airportError in stats()). */
+    airportReady,
     /** Add or take out the flight's ground; moves the map's ground under the airport, hides the map's apron. */
     show(on) {
       shown = !!on;
       group.visible = shown;
       apGround?.set(shown);
+      for (const c of mapChunks) c.show(shown); // after the airport has moved the ground: their bounds fit it
       night.show(shown);
       if (shown) {
         if (mapApron && apronWas === null) { apronWas = mapApron.visible; mapApron.visible = false; }
@@ -173,7 +198,7 @@ export async function createFlightWorld({ scene, fe, provider, meta, data, groun
     },
     /** Load the grids a position needs (before the first frame of a flight). */
     preload: (o) => region.preload(o),
-    whenSettled: () => Promise.all([region.whenSettled(), provider.whenSettled?.(), night.whenSettled()]),
+    whenSettled: () => Promise.all([airportReady, region.whenSettled(), provider.whenSettled?.(), night.whenSettled()]),
     /**
      * Every frame while flying, after the camera is placed: the grids the eye can see, the photo setting, the airport's
      * lights, and the dome just inside the far plane.
@@ -182,6 +207,7 @@ export async function createFlightWorld({ scene, fe, provider, meta, data, groun
      */
     update({ camera, position, simMs = 0, wallS = 0, night: isNight = false, reducedMotion = false, visibilityM = 80000 }) {
       region.update({ camera, position, renderer });
+      for (const c of mapChunks) c.update(camera);
       region.setImagery(settings.imagery);
       night.update({ camera, simMs, visibilityM });
       // the airport's lights cross the same air as the city's (the extinction from the eye's height, given as the
@@ -191,10 +217,13 @@ export async function createFlightWorld({ scene, fe, provider, meta, data, groun
       if (sky.dome) sky.dome.scale.setScalar((camera.far * DOME_AT) / DOME_R);
     },
     stats() {
-      return { region: region.stats(), airport: airport ? airport.stats() : null, airportError, airportGround: apGround?.stats() ?? null, ground: night.stats() };
+      return { region: region.stats(), airport: airport ? airport.stats() : null, airportError, airportGround: apGround?.stats() ?? null, ground: night.stats(),
+        mapChunks: mapChunks.map((c) => c.stats()) };
     },
     dispose() {
       world.show(false);
+      disposed = true;
+      for (const c of mapChunks) c.dispose();
       apGround?.dispose();
       night.dispose();
       airport?.dispose();

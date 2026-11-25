@@ -90,6 +90,8 @@ for (const backend of backends) {
         await f.seek({ at });
         await f.whenSettled();
         await f.whenSettled();
+        // three resets its counters per animation frame, not per render: reset them, or the app's own frame is counted too
+        s.renderer.info.reset();
         const info = s.perf.info();
         const tp = await s.perf.throughput(frames, 8);
         const st = f.state(), stats = f.stats();

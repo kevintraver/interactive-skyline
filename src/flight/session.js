@@ -40,6 +40,15 @@ const FT = 0.3048;
 
 /** Frames of the mode's own JavaScript time kept for stats(). */
 const KEEP = 240;
+/** The steps of a frame's own JavaScript, timed separately for stats().steps (the flight-timing measurement). */
+export const STEPS = Object.freeze(['sample', 'layers', 'airframe', 'cabin', 'pane', 'world', 'ui']);
+
+/** { mean, p50, p95, max, frames } of a list of milliseconds. */
+export function summarize(list) {
+  const sorted = [...list].sort((a, b) => a - b);
+  const q = (k) => (sorted.length ? sorted[Math.min(sorted.length - 1, Math.floor(k * sorted.length))] : 0);
+  return { mean: list.reduce((a, b) => a + b, 0) / Math.max(1, list.length), p50: q(0.5), p95: q(0.95), max: sorted.length ? sorted[sorted.length - 1] : 0, frames: list.length };
+}
 
 /**
  * @param {{ app: object, fe: ReturnType<import('./env.js').createFlightEnv>, terrain: object, meta: object, data: string,
@@ -58,6 +67,15 @@ export async function createFlightSession({ app, fe, terrain, meta, data, onFram
   let airRig = null;
   const rigLoad = fetch(RIG_URL).then((r) => (r.ok ? r.json() : null)).then((j) => { airRig = j; fe.invalidate(); }).catch(() => {});
   const reduce = typeof matchMedia === 'function' ? matchMedia('(prefers-reduced-motion: reduce)') : null;
+  // the canvas's size in CSS pixels, kept by a ResizeObserver: reading clientWidth in the frame forced a layout there
+  // whenever earlier work in the frame had written to the page (0.6 ms a frame while playing, measured 25 Nov 2026)
+  const view = { w: canvas.clientWidth || innerWidth, h: canvas.clientHeight || innerHeight };
+  const sizeWatch = typeof ResizeObserver === 'function' ? new ResizeObserver((entries) => {
+    const r = entries[entries.length - 1]?.contentRect;
+    if (r && r.width > 0 && r.height > 0) { view.w = r.width; view.h = r.height; fe.invalidate(); }
+  }) : null;
+  sizeWatch?.observe(canvas);
+  const viewSize = () => (sizeWatch ? view : { w: canvas.clientWidth || innerWidth, h: canvas.clientHeight || innerHeight });
   let seat = defaultSeat('right');
   const cabin = createModelledCabin({ nodes: fe.nodes, seat });
   cabin.ready.then(() => fe.invalidate());
@@ -79,6 +97,24 @@ export async function createFlightSession({ app, fe, terrain, meta, data, onFram
   const sample = createState();
   let heightAboveGround = NaN, compiled = false, groundPitch = 0, wallS = 0, stageOff = false;
   const ms = [];
+  /** Per step of the frame (STEPS), the last KEEP frames' milliseconds. */
+  const stepMs = Object.fromEntries(STEPS.map((k) => [k, []]));
+  const lap = { t: 0, marks: null };
+  /** Time since the last mark, filed under step `k` (only for frames the loop draws: hooks call place() too). */
+  const mark = (k) => {
+    if (!lap.marks) return;
+    const n = performance.now();
+    lap.marks[k] = (lap.marks[k] || 0) + n - lap.t;
+    lap.t = n;
+  };
+  /** The draws and triangles of the last frame drawn while flying: the scene pass alone, and everything up to the end
+   * of the cabin stage (renderer.info counts from the animation frame's start; three resets it per animation frame,
+   * so reading it between frames gives 0 or a measurement's own draw added to the app's). */
+  const counted = { scene: null, total: null };
+  const countInfo = () => { const r = app.renderer.info?.render || {}; return { drawCalls: r.drawCalls ?? r.calls ?? null, triangles: r.triangles ?? null }; };
+  let sceneAfterWas = null;
+  const onSceneRendered = (renderer, sc, cam) => { if (cam === camera) { counted.scene = countInfo(); counted.total = counted.scene; } };
+  layers.cabinScene.onAfterRender = () => { if (active) counted.total = countInfo(); };
 
   /** The track of a flight, loaded once (a failed load can be tried again). */
   function trackOf(entry) {
@@ -123,19 +159,25 @@ export async function createFlightSession({ app, fe, terrain, meta, data, onFram
     if (!track) return;
     const s = sampleAt(progress(), sample);
     heightAboveGround = s.position.y - world.surfaceY(s.position.x, -s.position.z);
-    const w = canvas.clientWidth || innerWidth, h = canvas.clientHeight || innerHeight;
+    const { w, h } = viewSize();
     const reducedMotion = !!reduce?.matches, night = isNight();
+    mark('sample');
     const shake = headShake(s.t, { touchdown: track.touchdownT }, { reducedMotion });
     layers.update(s, { aspect: w / h, shake });
     cabinStage.setShown(layers.cabinShown && !stageOff);
+    mark('layers');
     airframe.update(s, {
       wallS, reducedMotion, hasLightsChannel: track.meta.channels.includes('lights'),
       night, shake: fe.quality?.level !== 'low', groundPitch: false,
     });
-    cabin.update(s, { cabinLight: s.cabinLight ?? 1, night, reducedMotion, dtS, outside: outsideLight(s) });
+    mark('airframe');
+    cabin.update(s, { cabinLight: s.cabinLight ?? 1, night, reducedMotion, dtS, outside: outsideLight(s), exposure: fe.exposure });
+    mark('cabin');
     // the glass: its reflection is the cabin drawn with the lamps at full, so it is weighted by the lamps' level now
     pane.update(s, { env: fe, wallS, night, reducedMotion, cabinLight: cabinLightLevel(s.cabinLight ?? 1, night) / cabinLightLevel(1, night) });
+    mark('pane');
     world.update({ camera, position: s.position, simMs: clock.timeMs, wallS, night, reducedMotion, visibilityM: fe.at(s.position).visibilityM });
+    mark('world');
   }
   /** The light that comes in through the windows (the cabin's own light, cabin.js createCabinLight): the window's
    * mean luminance and the Sun, from plan 01's state at the aircraft. */
@@ -159,6 +201,8 @@ export async function createFlightSession({ app, fe, terrain, meta, data, onFram
     update(frame) {
       if (!active || !track) return;
       const t0 = performance.now();
+      lap.t = t0;
+      lap.marks = {};
       if (clock.playing) wallS += (frame?.dtWallMs || 0) / 1000; // presentation time: frozen while paused
       if (kind === 'orbit') {
         // the orbit's own time: wall time at the clock's rate, at most 8x, while the clock plays (7.12)
@@ -167,10 +211,14 @@ export async function createFlightSession({ app, fe, terrain, meta, data, onFram
         const r = paceRateFor({ pace, playing: clock.playing, progressS: progress(), rate: clock.rate }, journey);
         if (r !== null) clock.setRate(r);
       }
+      mark('sample'); // the clock's rate and the orbit's time: with the track's sample
       place((frame?.dtWallMs || 0) / 1000);
       onFrame(session);
+      mark('ui');
       ms.push(performance.now() - t0);
       if (ms.length > KEEP) ms.shift();
+      for (const k of STEPS) { const a = stepMs[k]; a.push(lap.marks[k] || 0); if (a.length > KEEP) a.shift(); }
+      lap.marks = null;
     },
     // continuous frames while the clock plays the flight, none while paused (the timeline votes the same way)
     demand: () => (active && (clock.playing || pane.settling) ? 'continuous' : 'idle'),
@@ -317,6 +365,8 @@ export async function createFlightSession({ app, fe, terrain, meta, data, onFram
     show(on) {
       if (on === active) return;
       active = !!on;
+      // the frame's counts, read when the scene pass is done (the app's scene: its callback saved and given back)
+      if (active) { sceneAfterWas = scene.onAfterRender; scene.onAfterRender = onSceneRendered; } else if (scene.onAfterRender === onSceneRendered) { scene.onAfterRender = sceneAfterWas; sceneAfterWas = null; }
       world.show(active);
       cabinStage.setStaged(active);
       if (active) { layers.attach(); place(); } else { layers.detach(); cabinStage.setShown(false); }
@@ -413,20 +463,24 @@ export async function createFlightSession({ app, fe, terrain, meta, data, onFram
         if (loop.frames <= n + 1) fe.invalidate();
       }
     },
+    /**
+     * What the flight draws and costs. drawCalls and triangles: the last frame drawn while flying, everything to the end
+     * of the cabin stage (scenePass: the world and the airframe alone); null before a frame has been drawn. layerMs: the
+     * flight's own JavaScript per frame (loop order 20, the last KEEP frames), and `steps` the same split by STEPS.
+     */
     stats() {
-      const info = app.renderer.info?.render || {};
-      const sorted = [...ms].sort((a, b) => a - b);
-      const q = (k) => (sorted.length ? sorted[Math.min(sorted.length - 1, Math.floor(k * sorted.length))] : 0);
+      const { p95, max, ...layer } = summarize(ms);
       return {
-        drawCalls: info.calls ?? info.drawCalls ?? null, triangles: info.triangles ?? null, lightPoints: 0,
-        layerMs: { mean: ms.reduce((a, b) => a + b, 0) / Math.max(1, ms.length), p50: q(0.5), p95: q(0.95), frames: ms.length },
+        drawCalls: counted.total?.drawCalls ?? null, triangles: counted.total?.triangles ?? null, scenePass: counted.scene ? { ...counted.scene } : null, lightPoints: 0,
+        layerMs: { ...layer, p95, max },
+        steps: Object.fromEntries(STEPS.map((k) => { const v = summarize(stepMs[k]); return [k, { mean: +v.mean.toFixed(4), p95: +v.p95.toFixed(4) }]; })),
         aircraftTriangles: airframe.triangles + cabin.triangles, airframeModel: !!airframe.model, cabinModel: !!cabin.model,
         cabinDrawCalls: cabin.drawCalls, shade: cabin.shade, world: world.stats(), cabinStage: cabinStage.stats(),
         pane: pane.stats(),
         cabinLight: cabin.light ? { level: cabin.light.level, night: cabin.light.night, windowL: +_outside.windowL.toPrecision(4), sunLux: Math.round(_outside.sunLux) } : null,
       };
     },
-    dispose() { detachInput(); offWeather(); offQuality(); pane.dispose(); cabinStage.dispose(); },
+    dispose() { sizeWatch?.disconnect(); if (scene.onAfterRender === onSceneRendered) scene.onAfterRender = sceneAfterWas; detachInput(); offWeather(); offQuality(); pane.dispose(); cabinStage.dispose(); },
     DEFAULT_LOOK,
   };
   return session;
