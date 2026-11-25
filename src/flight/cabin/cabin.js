@@ -16,11 +16,13 @@ import { BufferGeometry, Float32BufferAttribute, FrontSide, Group, InstancedMesh
 import { MeshStandardNodeMaterial } from 'three/webgpu';
 import {
   Fn, Loop, attribute, clamp, materialColor, mix, uniform, uniformArray, vec2, vec3, vec4, float, max, min, abs, sqrt, atan, length,
-  smoothstep, dot, select, normalWorld, positionLocal,
+  smoothstep, dot, select, normalWorld, positionLocal, renderGroup, mx_noise_float, fwidth, interleavedGradientNoise, screenCoordinate,
 } from 'three/tsl';
 import { Vector4 } from 'three';
 import { FUSELAGE, WINDOW, CABIN, bodyZ } from '../aircraft/dimensions.js';
 import { windowStations, rowFront, seatCentreX, ROWS } from './lopa.js';
+import { priorLuminance } from '../../render/photometry.js';
+import { GUARD_DEG } from '../exposure.js';
 
 /** The cabin's layer (plan 7.6's table: CABIN 11). */
 export const CABIN_LAYER = 11;
@@ -275,7 +277,7 @@ export function cabinLayout(seat, { halfLength = MODEL_HALF_LENGTH } = {}) {
   if (to > at + 1e-6) fillers.push({ from: at, to });
   const own = seat.nearest.find((w) => !w.blank && bays.some((b) => b.station === w.station));
   const letters = seat.side === 'right' ? ['D', 'E', 'F'] : ['A', 'B', 'C'];
-  const seats = [], armrests = [];
+  const seats = [], armrests = [], psus = [];
   const arm = (CABIN.tripleWidth - 3 * CABIN.seatWidth) / 4;
   const inner = CABIN.aisle / 2;
   for (let r = 1; r <= ROWS; r++) {
@@ -285,8 +287,9 @@ export function cabinLayout(seat, { halfLength = MODEL_HALF_LENGTH } = {}) {
     // would fill the view aft
     for (const l of letters) if (!(r === seat.row && l === seat.letter)) seats.push({ row: r, letter: l, front, x: seatCentreX(l) });
     for (let k = 0; k < 4; k++) armrests.push({ row: r, front, x: seat.sign * (inner + arm / 2 + k * (CABIN.seatWidth + arm)) });
+    psus.push({ row: r, front });
   }
-  return { side: seat.side, sign: seat.sign, from, to, bays, fillers, seats, armrests, own: own ? own.station : null };
+  return { side: seat.side, sign: seat.sign, from, to, bays, fillers, seats, armrests, psus, own: own ? own.station : null };
 }
 
 /** A geometry mirrored across x = 0 (the left side's parts from the right side's), its winding kept outward. */
@@ -352,7 +355,44 @@ const SUN_RADIUS = 0.00465;
 /** The patch's narrowest penumbra (sunlight through three scratched panes is not perfectly sharp), and the window's own
  * structure: a point within nearFrom of where its ray leaves gets no patch, fading in by nearTo, metres. On the frame
  * round the opening "in the window or not" flipped from pixel to pixel (speckle, 24 Nov 2026). ESTIMATED. */
-const PATCH = Object.freeze({ minPenumbra: 0.006, nearFrom: 0.01, nearTo: 0.04 });
+const PATCH = Object.freeze({ minPenumbra: 0.012, nearFrom: 0.01, nearTo: 0.04 });
+/**
+ * The sun patch's light bounced round the bay (ESTIMATED): a window's sunlight (its area, about 0.097 m^2, times the
+ * Sun's illuminance across it) falls on the bevel and the wall and about half of it is reflected over the few square
+ * metres of cabin round that window, so every surface there takes SUN_BOUNCE of the Sun's illuminance across the
+ * window, times its openness. Without it the patch stood stark in an unlit bay (review of the app's pictures, 25 Nov
+ * 2026): a real patch lifts the whole bay.
+ */
+export const SUN_BOUNCE = 0.012;
+/** What the shade's plastic lets through, diffusely (ESTIMATED: shades glow from behind in the type's cabins). */
+export const SHADE_T = 0.03;
+/**
+ * The passenger signs (ESTIMATED): their diffusers' luminance lit, cd/m^2, and when the fasten-seat-belt sign is on:
+ * below FASTEN_BELOW_M above sea level (the crew switches it on through about 10,000 ft on the descent) and on the
+ * ground. The no-smoking sign is always lit. (The sign's halves are told apart by the model's attribute: a < 0.75 the
+ * no-smoking half.)
+ */
+export const SIGNS = Object.freeze({ litCdM2: 60, fastenBelowM: 3048, bandM: 60, tint: [1.0, 0.93, 0.8] });
+/** Whether the fasten-seat-belt sign is on, 0..1, for a state (smooth over SIGNS.bandM). Pure. */
+export function fastenSeatBelt(state) {
+  if (!state) return 1;
+  if (state.onGround) return 1;
+  const h = state.altMsl;
+  if (!Number.isFinite(h)) return 1;
+  const t = Math.min(1, Math.max(0, (SIGNS.fastenBelowM + SIGNS.bandM / 2 - h) / SIGNS.bandM));
+  return t * t * (3 - 2 * t);
+}
+/**
+ * The surfaces' grain, made in the shader from the body-axes position (no texture): a fine stipple (the moulded
+ * plastic's orange peel, the fabric's weave) and a broad mottle, as albedo x (1 + amplitude x noise). The fine one
+ * fades out where a pixel spans its period, so it never shimmers. ESTIMATED amplitudes and periods, from photographs.
+ */
+export const GRAIN = Object.freeze({
+  plastic: { fine: 520, fineAmp: 0.035, broad: 9, broadAmp: 0.025 },
+  fabric: { fine: 900, fineAmp: 0.1, broad: 40, broadAmp: 0.05 },
+  none: null,
+});
+const GRAIN_OF = { Trim: 'plastic', Bezel: 'plastic', Reveal: 'plastic', Shade: 'plastic', Shell: 'plastic', Tray: 'plastic', Bin: 'plastic', Psu: 'plastic', Fabric: 'fabric' };
 
 /**
  * The mean luminance the window shows from the side, cd/m^2: half sky (its diffuse light over pi) and half ground lit
@@ -398,6 +438,111 @@ export function cabinIlluminance({ formFactor, occlusion, wash, windowL, level }
   const lamps = level * (wash * C.washLux + occlusion * C.ambientLux);
   return { window, lamps, total: window + lamps };
 }
+
+// ================================================================================================ the cabin's adaptation
+//
+// The cabin is drawn in a stage of its own and laid over the finished outside picture (view/cabinStage.js), so it can
+// be shown with an adaptation of its own, as the eye and a camera's range show it, while the outside keeps the
+// exposure the window's light sets (src/flight/exposure.js). Two things darken the cabin that a passenger does not
+// see darkened:
+//
+//   the guard   at dusk the exposure is lowered to keep sunlit slopes outside from clipping (exposure.js LIT_TERRAIN_SIN:
+//               up to 1.4 EV at 10,000 ft on lv-19-dusk, wall 101 -> 55 of 255). The slopes are outside; the cabin is
+//               lit by the window's diffuse light, not by the grazing Sun on a slope, so the cabin takes the guard's
+//               EV back, exactly and no more: it shows as it did before the guard.
+//   the dim     at night, dimmed for landing, the cabin (wall 0.07 to 0.19 cd/m^2) sits 1.5 to 3 EV below an exposure set
+//   cabin       by the valley's lamps, and drew at 0 to 18 of 255. Local adaptation: an eye that turns to the wall
+//               adapts part of the way toward it. Below a knee (the level the day's cabin is shown at beside its
+//               window), the cabin's level relative to the outside's is compressed toward the knee by a share:
+//                   ev' = knee + (1 - share) (ev - knee)
+//               so a dimmer cabin still shows dimmer (the order of levels is kept), it never reaches the knee (a dimmed
+//               cabin never shows as bright as a day cabin beside its window, nor as bright as the lit city), and the
+//               lift is capped (maxLiftEv). It applies as far as the cabin is lit by its own lamps rather than by the
+//               window (lampShare, smoothly between gate[0] and gate[1]): by day the window lights the cabin and the
+//               camera already shows it right, so the day is exactly unchanged.
+//   the ceiling neither lift takes the cabin above ceilEv (about a stop and a half under the outside's mid-grey, 100 of
+//               255 for the wall): a cabin shown beside its window is never as bright as what the window shows. At
+//               dusk the guard alone would lift the wall to 117 of 255 at 10,000 ft on lv-19-dusk, over the ground in
+//               the window (51); with the ceiling it shows at about 100, as before the guard (101).
+//
+// ev is log2(L k / 0.18): the cabin's representative luminance L (cd/m^2: the sidewall beside the window,
+// REPRESENTATIVE_CORNER through cabinIlluminance, without the sun patch) times the pre-exposure k, over the buffer's
+// mid-grey. The lift multiplies everything the cabin's surfaces emit (not its lamps: the wash strip, the reading lights
+// and the signs are light sources, which local adaptation does not lift) and the cabin's reflection in the glass. It
+// follows the inputs smoothly in time (tauS) and jumps on a cut (a seek, a paused frame). ESTIMATED: knee, share, gate
+// and the cap, tuned by measuring the displayed frame (tests/manual/flight-cabin-app-shots.mjs, flight-night-shots.mjs).
+export const CABIN_ADAPT = Object.freeze({ keyBuffer: 0.18, kneeEv: -2.0, share: 0.75, ceilEv: -0.8, maxLiftEv: 3, guardMaxEv: 2, gate: [0.25, 0.75], tauS: 0.6 });
+/** The sidewall corner the adaptation reads (cabin.json attribute: the trim beside the window, ESTIMATED). */
+export const REPRESENTATIVE_CORNER = Object.freeze({ formFactor: 0.05, occlusion: 0.5, wash: 0.05 });
+/** The trim's albedo (cabin.json Trim D8D5CE, linear luminance). */
+export const TRIM_ALBEDO = 0.66;
+
+/**
+ * How much the dusk guard lowered the exposure, EV (>= 0): the prior's luminance with the guarded key altitude over the
+ * same with the Sun where it is. Pure.
+ * @param {{ keyLux: number, keyAltDeg: number, ambientLux: number, cityLux?: number, emissionLux?: number } | null} terms
+ *   the prior's terms as the look used them (src/flight/env.js exposure.terms)
+ * @param {number} sunAltDeg  the Sun's altitude (the key's before the guard)
+ */
+export function guardEv(terms, sunAltDeg) {
+  if (!terms || !Number.isFinite(sunAltDeg) || !(terms.keyAltDeg > sunAltDeg) || sunAltDeg <= -GUARD_DEG) return 0;
+  const guarded = priorLuminance(terms), raw = priorLuminance({ ...terms, keyAltDeg: sunAltDeg });
+  return guarded > 0 && raw > 0 ? Math.max(0, Math.log2(guarded / raw)) : 0;
+}
+
+const smooth01 = (a, b, x) => { const t = Math.min(1, Math.max(0, (x - a) / (b - a))); return t * t * (3 - 2 * t); };
+
+/**
+ * The cabin's own adaptation (see above): { liftEv, gain, ev, evShown, guardEv, dimEv }. Pure.
+ * @param {{ cabinCdM2: number, exposure: number, lampShare?: number, guardEv?: number }} o
+ *   cabinCdM2: the representative luminance (cabinCdM2()); exposure: the pre-exposure k; lampShare: the share of that
+ *   luminance from the cabin's lamps (0 by day, 1 at night); guardEv: guardEv()
+ */
+export function cabinAdaptation({ cabinCdM2, exposure, lampShare = 1, guardEv: g = 0 }, c = CABIN_ADAPT) {
+  const none = { liftEv: 0, gain: 1, ev: NaN, evShown: NaN, guardEv: 0, dimEv: 0 };
+  if (!(cabinCdM2 > 0) || !(exposure > 0)) return none;
+  const ev = Math.log2((cabinCdM2 * exposure) / c.keyBuffer);
+  const guard = Math.min(c.guardMaxEv, Math.max(0, Number.isFinite(g) ? g : 0));
+  const ev1 = ev + guard;
+  const gate = smooth01(c.gate[0], c.gate[1], Number.isFinite(lampShare) ? lampShare : 1);
+  const dim = ev1 < c.kneeEv ? gate * c.share * (c.kneeEv - ev1) : 0;
+  const liftEv = Math.max(0, Math.min(c.maxLiftEv, guard + dim, c.ceilEv - ev));
+  return { liftEv, gain: 2 ** liftEv, ev, evShown: ev + liftEv, guardEv: guard, dimEv: liftEv - guard };
+}
+
+/**
+ * The representative luminance of the cabin (cd/m^2) and the share of it from its lamps: the sidewall corner beside the
+ * window (REPRESENTATIVE_CORNER), as the materials light it without the sun patch. Pure.
+ * @param {{ windowL: number, level: number }} o
+ */
+export function cabinCdM2({ windowL = 0, level = 0 }) {
+  const E = cabinIlluminance({ ...REPRESENTATIVE_CORNER, windowL: Math.max(0, windowL || 0), level: Math.max(0, level || 0) });
+  return { cdM2: (TRIM_ALBEDO * E.total) / Math.PI, lampShare: E.total > 0 ? E.lamps / E.total : 1 };
+}
+
+/**
+ * One step of the lift toward its target: exponential with tauS over dtS seconds; at once without a frame's time
+ * (dtS 0 or missing: a seek, a paused frame) or after a long one (over a second: a cut). Pure.
+ */
+export function stepLift(prev, target, dtS, tauS = CABIN_ADAPT.tauS) {
+  if (!Number.isFinite(prev) || !(dtS > 0) || dtS > 1) return target;
+  return prev + (target - prev) * (1 - Math.exp(-dtS / tauS));
+}
+
+/**
+ * The cabin's adaptation as one uniform shared by its surfaces and the glass's reflection of it (one cabin is shown at
+ * a time): its gain multiplies what the cabin's surfaces emit. `CABIN_GAIN.value` is 1 when nothing lifts it.
+ */
+export const CABIN_GAIN = uniform(1).setGroup(renderGroup);
+/**
+ * Where the cabin reads the prior's terms when its update is not handed them (`exposure`): null, or a function
+ * returning { on, terms } as src/flight/env.js's `exposure`. A seam for the measurement harness until the session hands
+ * them in; without either, the dusk guard is not taken back.
+ */
+let exposureSource = null;
+export function setExposureSource(fn) { exposureSource = typeof fn === 'function' ? fn : null; }
+/** The adaptation of the last cabin update (for stats and the harness). */
+export const cabinAdaptationNow = { liftEv: 0, gain: 1, ev: NaN, evShown: NaN, guardEv: 0, dimEv: 0, exact: false };
 
 const sdBox = (x, y, a, b, r) => {
   const qx = Math.abs(x) - (a - r), qy = Math.abs(y) - (b - r);
@@ -450,6 +595,7 @@ export function createCabinLight(nodes) {
     level: uniform(1), night: uniform(0), windowL: uniform(0), sunLux: uniform(0), sunColor: uniform(vec3(1, 1, 1)),
     sunBody: uniform(new Vector3(0, -1, 0)), sunWorld: uniform(new Vector3(0, -1, 0)), side: uniform(1),
     windows: uniformArray(Array.from({ length: SUN_WINDOWS }, () => new Vector4(1e6, 0, 0, 0)), 'vec4'),
+    belt: uniform(1),
   };
   const state = { cabinLight: 1, night: 0, level: 1 };
   const tint = mix(vec3(...DAY_TINT), vec3(...NIGHT_TINT), u.night);
@@ -488,20 +634,52 @@ export function createCabinLight(nodes) {
 
   return {
     uniforms: u,
-    /** A material's emissive node: albedo x illuminance / pi, in buffer units through env.nodes.emissive. */
-    emissive(albedo, { formFactor, occlusion, wash }) {
+    /**
+     * A material's emissive node: albedo x illuminance / pi, in buffer units through env.nodes.emissive. `grain`: one
+     * of GRAIN's (the surface's texture), or null.
+     */
+    emissive(albedo, { formFactor, occlusion, wash }, grain = null) {
       const windowLux = u.windowL.mul(Math.PI * C.glass).mul(clamp(formFactor.add(occlusion.mul(C.bounce)).add(C.floor), 0, 1));
       const lampLux = u.level.mul(wash.mul(C.washLux).add(occlusion.mul(C.ambientLux)));
       const lambert = max(dot(normalWorld, u.sunWorld), 0);
       const sunLux = u.sunLux.mul(C.glass).mul(lambert).mul(sunPatch());
-      const E = vec3(windowLux).add(tint.mul(lampLux)).add(u.sunColor.mul(sunLux));
-      return nodes.emissive(albedo.mul(E).div(Math.PI));
+      // the patch's light bounced round the bay: the Sun across the window on the seat's side (SUN_BOUNCE)
+      const across = max(u.sunBody.x.mul(u.side).mul(Math.cos(THETA_WINDOW)).add(u.sunBody.y.mul(Math.sin(THETA_WINDOW))), 0);
+      const bounceLux = u.sunLux.mul(C.glass * SUN_BOUNCE).mul(across).mul(occlusion);
+      const E = vec3(windowLux.add(bounceLux)).add(tint.mul(lampLux)).add(u.sunColor.mul(sunLux));
+      let a = albedo;
+      if (grain) {
+        const p = positionLocal;
+        const fineP = p.mul(grain.fine);
+        const fade = float(1).sub(smoothstep(0.35, 0.9, length(fwidth(fineP))));
+        const g = mx_noise_float(fineP).mul(grain.fineAmp).mul(fade).add(mx_noise_float(p.mul(grain.broad)).mul(grain.broadAmp));
+        a = albedo.mul(g.add(1));
+      }
+      // a dither of a third of a display level where the cabin is dim (8-bit steps drew the wash light in bands)
+      const dither = interleavedGradientNoise(screenCoordinate.xy).sub(0.5).mul(0.03).add(1);
+      // the cabin's own adaptation (cabinAdaptation): its surfaces, not its lamps
+      return nodes.emissive(a.mul(E).mul(dither).div(Math.PI)).mul(CABIN_GAIN);
+    },
+    /**
+     * The light the shade lets through from the window behind it (cd/m^2, buffer units): a diffuse share SHADE_T of the
+     * window's light on its back, the sky's and the Sun's across the window. Real shades glow, and by day a drawn shade
+     * is the brightest thing in the bay.
+     */
+    through() {
+      const across = max(u.sunBody.x.mul(u.side).mul(Math.cos(THETA_WINDOW)).add(u.sunBody.y.mul(Math.sin(THETA_WINDOW))), 0);
+      return nodes.emissive(vec3(u.windowL.add(u.sunLux.mul(across).div(Math.PI)).mul(C.glass * SHADE_T)));
+    },
+    /** The passenger signs' own light (cd/m^2, buffer units): the no-smoking half always, the belt half when on. */
+    sign(half) {
+      const on = select(half.lessThan(0.75), float(1), u.belt);
+      return nodes.emissive(vec3(...SIGNS.tint).mul(on.mul(SIGNS.litCdM2)));
     },
     /** The wash strip's own light (cd/m^2, buffer units). */
     strip() { return nodes.emissive(tint.mul(u.level.mul(C.stripCdM2))); },
     /**
      * @param {{ cabinLight?: number, night?: boolean, windowL?: number, sunLux?: number, sunColor?: {r,g,b},
-     *   sunBody?: Vector3, sunWorld?: Vector3, windows?: { z: number, closed: number }[], side?: 'left'|'right' }} o
+     *   sunBody?: Vector3, sunWorld?: Vector3, windows?: { z: number, closed: number }[], side?: 'left'|'right',
+     *   belt?: number }} o
      */
     set(o = {}) {
       if (o.cabinLight !== undefined || o.night !== undefined) {
@@ -518,6 +696,7 @@ export function createCabinLight(nodes) {
       if (o.sunBody) u.sunBody.value.copy(o.sunBody);
       if (o.sunWorld) u.sunWorld.value.copy(o.sunWorld);
       if (o.side) u.side.value = o.side === 'left' ? -1 : 1;
+      if (Number.isFinite(o.belt)) u.belt.value = Math.min(1, Math.max(0, o.belt));
       if (o.windows) {
         const arr = u.windows.array;
         for (let i = 0; i < SUN_WINDOWS; i++) {
@@ -551,8 +730,13 @@ export function modelledMaterials(nodes, sources, light = createCabinLight(nodes
       name: `cabin-${src.name}`, color: src.color, roughness: src.roughness ?? 0.8, metalness: 0,
       transparent: glass, opacity: glass ? 0.06 : 1, depthWrite: !glass, side: FrontSide, fog: false,
     });
+    const corner = { formFactor: baked.z, occlusion: baked.x, wash: baked.y };
+    const grain = GRAIN[GRAIN_OF[src.name]] ?? null;
     if (src.name === 'Wash') m.emissiveNode = light.strip();
-    else if (!glass) m.emissiveNode = light.emissive(materialColor, { formFactor: baked.z, occlusion: baked.x, wash: baked.y });
+    // the signs' diffuser: lit from behind (its own light, not lifted by the adaptation) over what the cabin gives it
+    else if (src.name === 'SignLit') m.emissiveNode = light.emissive(materialColor, corner).add(light.sign(baked.w));
+    else if (src.name === 'Shade') m.emissiveNode = light.emissive(materialColor, corner, grain).add(light.through());
+    else if (!glass) m.emissiveNode = light.emissive(materialColor, corner, grain);
     made.set(src.name, m);
   }
   return {
@@ -632,6 +816,7 @@ export function buildModelledCabin(model, seat, { nodes, materials, light = null
   group.name = 'cabin-model';
   const travel = info.shade?.travel ?? CABIN.shadeTravel;
   const axisR = info.shade?.axis ?? RIGHT_SHADE_AXIS;
+  const shadeRadius = info.shade?.radius ?? 0;
   const meshes = new Map(); // part name -> InstancedMesh[]
   const made = []; // geometries this cabin owns (mirrors)
   let layout = null, shells = null;
@@ -668,13 +853,23 @@ export function buildModelledCabin(model, seat, { nodes, materials, light = null
 
   const at = (x, y, z, sz = 1) => _m.compose(_p.set(x, y, z), _q.identity(), _s.set(1, 1, sz));
 
+  /**
+   * The shades on their tracks: each slides round the circle of its track (radius about the fuselage's axis) by its
+   * open share of the travel, up behind the trim. (A straight slide along the track's direction at the window's centre
+   * brought the shade's upper part out in front of the curved trim as it opened: 25 Nov 2026.) Without a radius in
+   * the model's info, along the axis as before.
+   */
+  const _r = new Matrix4(), _t = new Matrix4();
   function placeShades() {
     const list = meshes.get('Shade') || [];
     const axis = [layout.sign * axisR[0], axisR[1], axisR[2]];
     for (const mesh of list) {
       layout.bays.forEach((b, i) => {
         const open = (1 - shades.closed[i]) * travel;
-        mesh.setMatrixAt(i, at(axis[0] * open, axis[1] * open, bodyZ(b.station) + axis[2] * open));
+        if (shadeRadius > 0) {
+          _m.makeTranslation(0, AXIS, bodyZ(b.station)).multiply(_r.makeRotationZ((layout.sign * open) / shadeRadius)).multiply(_t.makeTranslation(0, -AXIS, 0));
+          mesh.setMatrixAt(i, _m);
+        } else mesh.setMatrixAt(i, at(axis[0] * open, axis[1] * open, bodyZ(b.station) + axis[2] * open));
       });
       mesh.instanceMatrix.needsUpdate = true;
     }
@@ -688,6 +883,8 @@ export function buildModelledCabin(model, seat, { nodes, materials, light = null
     instance('Bin', 1, (i, m) => at(0, 0, bodyZ((layout.from + layout.to) / 2), layout.to - layout.from));
     instance('Seat', seats.length, (i, m) => at(seats[i].x, 0, bodyZ(seats[i].front)), { mirror: false });
     instance('Armrest', armrests.length, (i, m) => at(armrests[i].x, 0, bodyZ(armrests[i].front)), { mirror: false });
+    // the passenger service units over the rows (cabin.glb Psu; a model without them has none)
+    if (parts.has('Psu')) instance('Psu', layout.psus.length, (i, m) => at(0, 0, bodyZ(layout.psus[i].front)));
     for (const pane of ['PaneInner', 'PaneMiddle', 'PaneOuter']) if (parts.has(pane)) instance(pane, bays.length, (i, m) => at(0, 0, bodyZ(bays[i].station)), { visible: panes });
     // shades: the passenger's own open; the others as a cabin's are, a few half or wholly closed (a fixed pattern)
     shades.closed = bays.map((b) => { const h = Math.abs(Math.sin(b.station * 12.9898) * 43758.5453) % 1; return h > 0.86 ? 1 : h > 0.74 ? 0.45 : 0; });
@@ -768,8 +965,8 @@ export function cabinShellMaterials(light = null) {
   };
   // the far side, the ceiling and the floor: no baked corners; a mean openness, a little window light and the lamps
   if (light) {
-    m.wall.emissiveNode = light.emissive(materialColor, { formFactor: float(0.05), occlusion: float(0.85), wash: float(0.15) });
-    m.floor.emissiveNode = light.emissive(materialColor, { formFactor: float(0.02), occlusion: float(0.7), wash: float(0.05) });
+    m.wall.emissiveNode = light.emissive(materialColor, { formFactor: float(0.05), occlusion: float(0.85), wash: float(0.15) }, GRAIN.plastic);
+    m.floor.emissiveNode = light.emissive(materialColor, { formFactor: float(0.02), occlusion: float(0.7), wash: float(0.05) }, GRAIN.fabric);
   }
   return m;
 }
@@ -809,6 +1006,33 @@ export function createModelledCabin({ nodes, seat, load = null, url, infoUrl, ma
   let model = null, error = null, disposed = false, current = seat;
   let shadeTarget = 0, shade = 0, light = { cabinLight: 1, night: 0 };
   const get = load ?? (() => loadCabinModel({ ...(url ? { url } : {}), ...(infoUrl ? { infoUrl } : {}) }));
+  /**
+   * The cabin's adaptation this frame (cabinAdaptation): from the cabin's own light now (its lamps' level and the
+   * window's luminance), the pre-exposure (nodes.exposure) and the dusk guard, from the prior's terms when the session
+   * hands them in (`exposure`: src/flight/env.js's exposure, { on, terms }) or setExposureSource() gives them; without
+   * them the guard is not taken back (the Sun and sky at the aircraft are not plan 01's key and sky, and do not give
+   * it). Without the outside's light (the harness), nothing is lifted.
+   */
+  let lift = NaN;
+  function adapt(outside, exposure, dtS) {
+    const k = nodes?.exposure?.value;
+    if (!cabinLight_ || !outside || !Number.isFinite(outside.windowL) || !(k > 0)) {
+      lift = 0; CABIN_GAIN.value = 1;
+      Object.assign(cabinAdaptationNow, { liftEv: 0, gain: 1, ev: NaN, evShown: NaN, guardEv: 0, dimEv: 0, exact: false });
+      return;
+    }
+    const sunAltDeg = outside.sunWorld ? (Math.asin(Math.max(-1, Math.min(1, outside.sunWorld.y))) * 180) / Math.PI : -90;
+    const src = exposure ?? (exposureSource ? exposureSource() : null);
+    const terms = src && typeof src === 'object' ? (src.terms !== undefined ? (src.on === false ? null : src.terms) : src) : undefined;
+    const exact = terms !== undefined;
+    const g = exact ? guardEv(terms, sunAltDeg) : 0;
+    const rep = cabinCdM2({ windowL: outside.windowL, level: cabinLight_.level });
+    const a = cabinAdaptation({ cabinCdM2: rep.cdM2, exposure: k, lampShare: rep.lampShare, guardEv: g });
+    lift = stepLift(lift, a.liftEv, dtS);
+    CABIN_GAIN.value = 2 ** lift;
+    Object.assign(cabinAdaptationNow, a, { liftEv: +lift.toFixed(3), gain: +(2 ** lift).toFixed(4), target: +a.liftEv.toFixed(3), cdM2: +rep.cdM2.toPrecision(3),
+      lampShare: +rep.lampShare.toFixed(3), sunAltDeg: +sunAltDeg.toFixed(2), exact });
+  }
   const api = {
     group,
     get seat() { return current; },
@@ -846,7 +1070,7 @@ export function createModelledCabin({ nodes, seat, load = null, url, infoUrl, ma
      * @param {object} [state]  @param {{ cabinLight?: number, night?: boolean, reducedMotion?: boolean, dtS?: number,
      *   outside?: { windowL?: number, sunLux?: number, sunColor?: { r: number, g: number, b: number }, sunWorld?: Vector3 } }} [o]
      */
-    update(state, { cabinLight = 1, night = false, reducedMotion = false, dtS, outside = null } = {}) {
+    update(state, { cabinLight = 1, night = false, reducedMotion = false, dtS, outside = null, exposure = null } = {}) {
       // the night setting follows the light outside when it is known (nightShare), else the flag
       light = { cabinLight, night: Number.isFinite(outside?.windowL) ? nightShare(outside.windowL) : night ? 1 : 0 };
       if (model) model.materials.set(light);
@@ -856,6 +1080,7 @@ export function createModelledCabin({ nodes, seat, load = null, url, infoUrl, ma
         shade = shade < shadeTarget ? Math.min(shadeTarget, shade + step) : Math.max(shadeTarget, shade - step);
         if (model) model.setShade(shade);
       }
+      cabinLight_?.set({ belt: fastenSeatBelt(state) });
       if (cabinLight_ && outside) {
         const o = { windowL: outside.windowL, sunLux: outside.sunLux, sunColor: outside.sunColor, side: current.side };
         if (outside.sunWorld) {
@@ -866,8 +1091,11 @@ export function createModelledCabin({ nodes, seat, load = null, url, infoUrl, ma
         o.windows = model ? model.sunWindows : (standIn?.windows || []).filter((w) => w.open).map((w) => ({ z: bodyZ(w.station), closed: 0 }));
         cabinLight_.set(o);
       }
+      adapt(outside, exposure, dtS);
       return api;
     },
+    /** The cabin's own adaptation now (cabinAdaptation): liftEv, gain and what they came from. */
+    get adaptation() { return { ...cabinAdaptationNow }; },
     /** The cabin's light (createCabinLight): its uniforms and state, for the window and the hooks. */
     get light() { return cabinLight_; },
     /** Night as the cabin's lamps have it (the warm, dimmed setting): true once the night setting is more than half in. */
@@ -884,8 +1112,17 @@ export function createModelledCabin({ nodes, seat, load = null, url, infoUrl, ma
       }
       return api;
     },
-    /** The own window's shade target, 0 open to 1 closed. */
-    setShade(v) { shadeTarget = Math.min(1, Math.max(0, Number.isFinite(v) ? v : 0)); return api; },
+    /**
+     * The own window's shade target, 0 open to 1 closed; it slides there as frames pass. Asked for the same target
+     * twice, it is put there at once (the hook's promise: a paused flight draws its frames without time passing, so
+     * the shade would never get there).
+     */
+    setShade(v) {
+      const t = Math.min(1, Math.max(0, Number.isFinite(v) ? v : 0));
+      if (t === shadeTarget && shade !== t) { shade = t; if (model) model.setShade(shade); }
+      shadeTarget = t;
+      return api;
+    },
     /** Key V: close an open shade, open a closed one. */
     toggleShade() { return api.setShade(shadeTarget > 0.5 ? 0 : 1); },
     dispose() {

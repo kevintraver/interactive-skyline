@@ -32,13 +32,14 @@
 //   node tests/manual/flight-night-shots.mjs <out> [--port 5441] [--backend webgpu|webgl2]
 //     [--flights lv-19-dusk,lv-19-night,lv-26-night] [--moments cruise,threshold] [--seats 23F,23A]
 //     [--views window,clean] [--size 1280x800] [--cost on|off] [--ev 0]   (--ev: exposure compensation, EV)
+//     [--cabin-terms on]   (the cabin's dusk guard from the prior's terms through cabin.js's seam; a dev server only)
 // From a normal shell on macOS (a sandboxed one gives the browser software rendering).
 import { chromium } from '@playwright/test';
 import { mkdirSync, writeFileSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 
 const args = process.argv.slice(2);
-const VALUED = ['--port', '--backend', '--flights', '--moments', '--views', '--size', '--seats', '--cost', '--ev'];
+const VALUED = ['--port', '--backend', '--flights', '--moments', '--views', '--size', '--seats', '--cost', '--ev', '--cabin-terms'];
 const opt = (k) => (args.includes(k) ? args[args.indexOf(k) + 1] : null);
 const out = args.find((a, i) => !a.startsWith('--') && !VALUED.includes(args[i - 1]));
 if (!out) {
@@ -55,6 +56,9 @@ const seatsAsked = opt('--seats') ? opt('--seats').split(',') : null;
 const cost = opt('--cost') !== 'off';
 // exposure compensation in EV (the app's setting exposureComp): to show what a brighter night exposure would give
 const ev = Number(opt('--ev') || 0);
+// --cabin-terms on: hand the cabin the prior's terms through cabin.js's seam (setExposureSource) until the session does;
+// needs a dev server (the module is imported by its URL)
+const cabinTerms = opt('--cabin-terms') === 'on';
 const [W, H] = (opt('--size') || '1280x800').split('x').map(Number);
 const ORDER = ['cruise', 'fl180', 'ft10000', 'turn', 'base', 'sixty-out', 'threshold', 'touchdown', 'rollout'];
 
@@ -224,7 +228,7 @@ const REGION_ORDER = ['wall', 'frame', 'winglet', 'wingMid', 'nacelle', 'valley2
 function table(measure) {
   const lines = [`# ${measure.backend}, ${measure.date}`, '',
     'Each region: the light before exposure in cd/m^2 (composed: the cabin over the outside), hue and saturation of that light, and the picture there (mean sRGB of a 41 x 41 box / its peak). "—" not in view; "cov" covered by the cabin.', ''];
-  const cols = ['flight', 'moment', 'seat', 'view', 'alt ft', 'sun°', 'k', 'prior EV', 'lamps', 'lit', 'frame med/p99/clip%', 'ground med/p99/clip%', ...REGION_ORDER];
+  const cols = ['flight', 'moment', 'seat', 'view', 'alt ft', 'sun°', 'k', 'prior EV', 'cabin lift EV', 'lamps', 'lit', 'frame med/p99/clip%', 'ground med/p99/clip%', ...REGION_ORDER];
   lines.push(`| ${cols.join(' | ')} |`, `|${cols.map(() => '---').join('|')}|`);
   for (const [id, byCol] of Object.entries(measure.flights)) {
     for (const [col, byMoment] of Object.entries(byCol)) {
@@ -244,7 +248,7 @@ function table(measure) {
         const f = r.frame || {};
         const fr = f.median != null ? `${f.median}/${f.p99}/${f.clipPct}` : '';
         const gr = f.groundMedian != null ? `${f.groundMedian}/${f.groundP99}/${f.groundClipPct}` : '—';
-        lines.push(`| ${id} | ${n} | ${seat} | ${view} | ${Math.round(r.altMsl * 3.28084)} | ${r.sunAltDeg?.toFixed(1)} | ${r.exposure?.toExponential(2)} | ${r.priorEv != null ? r.priorEv.toFixed(2) : ''} | ${r.ground?.drawn ?? ''} | ${r.ground?.lit ?? ''} | ${fr} | ${gr} | ${REGION_ORDER.map(cell).join(' | ')} |`);
+        lines.push(`| ${id} | ${n} | ${seat} | ${view} | ${Math.round(r.altMsl * 3.28084)} | ${r.sunAltDeg?.toFixed(1)} | ${r.exposure?.toExponential(2)} | ${r.priorEv != null ? r.priorEv.toFixed(2) : ''} | ${r.cabinAdaptation ? r.cabinAdaptation.liftEv : ''} | ${r.ground?.drawn ?? ''} | ${r.ground?.lit ?? ''} | ${fr} | ${gr} | ${REGION_ORDER.map(cell).join(' | ')} |`);
       }
     }
   }
@@ -269,7 +273,7 @@ for (const backend of backends) {
   page.on('console', (m) => { if (['error', 'warning'].includes(m.type()) && !/flights\/[\w-]+\.jpg/.test(m.location()?.url || '')) problems.push(`[${m.type()}] ${m.text()}`); });
   page.on('pageerror', (e) => problems.push(`[pageerror] ${e.message}`));
   page.on('response', (r) => { if (r.status() >= 400) problems.push(`[http ${r.status()}] ${r.url()}`); });
-  await page.addInitScript(() => { try { localStorage.clear(); localStorage.setItem('slc-skyline-hinted', '1'); } catch { /* */ } });
+  await page.addInitScript(() => { try { localStorage.clear(); localStorage.setItem('slc-skyline-hinted', '1'); } catch { /* */ } performance.setResourceTimingBufferSize(100000); });
   await page.goto(`http://localhost:${port}/?city=lv&backend=${backend === 'webgl2' ? 'webgl' : backend}`);
   await page.waitForFunction(() => window.__skyline && window.__skyline.flight && document.getElementById('loading').classList.contains('done'), null, { timeout: 240_000 });
   await page.evaluate(async () => { const s = window.__skyline; if (s.attractions) { await s.attractions.ready; s.attractions.freeze(47); } await s.flight.ready; });
@@ -283,6 +287,12 @@ for (const backend of backends) {
     const moments = momentsOf(id);
     measure.flights[id] = {};
     const own = await page.evaluate(async (fid) => { const f = window.__skyline.flight; await f.start(fid, { pace: false, play: false }); f.options({ hud: false }); return f.state().seat; }, id);
+    if (cabinTerms) {
+      await page.evaluate(async () => {
+        const url = performance.getEntriesByType('resource').map((e) => e.name).filter((n) => /\/src\/flight\/cabin\/cabin\.js/.test(n)).pop() || '/src/flight/cabin/cabin.js';
+        (await import(url)).setExposureSource(() => ({ on: !!window.__skyline.look?.current?.priorTerms, terms: window.__skyline.look?.current?.priorTerms ?? null }));
+      });
+    }
     const seats = seatsAsked ?? [own, own.replace(/[A-Z]$/, (c) => (c <= 'C' ? 'F' : 'A'))];
     const cols = [];
     for (const seat of seats) for (const view of views) cols.push(`${seat}_${view}`);
@@ -321,6 +331,8 @@ for (const backend of backends) {
               // the prior's EV100 and, while the flight sets them (src/flight/exposure.js), the terms it used
               priorEv: s.look?.current?.priorEv ?? null,
               priorTerms: s.look?.current?.priorTerms ?? null,
+              // the cabin's own adaptation (src/flight/cabin/cabin.js cabinAdaptation): its lift in EV over the outside's
+              cabinAdaptation: stats.cabinStage?.adaptation ?? null,
             };
           }, { at, clean: view !== 'window', seatId: seat, measureCost });
           const side = /[A-C]$/.test(seat) ? 'left' : 'right';

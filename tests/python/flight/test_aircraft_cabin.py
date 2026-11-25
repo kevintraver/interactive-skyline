@@ -173,3 +173,53 @@ def test_drift_is_caught(tmp_path, monkeypatch):
     assert mod.main(["--check"]) == 1
     assert mod.main([]) == 0
     assert mod.main(["--check"]) == 0
+
+
+# ---------------------------------------------------------------------------------------------- the cabin pass (25 Nov)
+def test_bay_surround_is_smooth_and_moulded(spec, glb):
+    """The window's surround (the bezel's cove, flat top and rolled lip, the reveal) is a ring of at least 64 samples,
+    shaded smooth: no facets at the wide lens, a lip standing proud of the trim by the spec's relief."""
+    doc, binary = glb
+    axis = spec.FUSELAGE["top_z"].value - spec.FUSELAGE["half_width"].value
+    r = spec.CABIN["trim_radius"].value
+    relief = spec.CABIN["frame_relief"].value
+    pts = node_points(doc, binary, "Bay")
+    top = [p for p in pts if abs(math.hypot(p[0], p[1] - axis) - (r - relief)) < 2e-4]
+    assert len(top) >= 2 * 64                       # the bezel's flat top: two rings of the surround's samples
+    node = next(n for n in doc["nodes"] if n.get("name") == "Bay")
+    for prim in doc["meshes"][node["mesh"]]["primitives"]:
+        assert "NORMAL" in prim["attributes"]
+    # smooth: on the bezel, corners at one position share one normal (no flat-shaded facets)
+    bezel = next(p for p in doc["meshes"][node["mesh"]]["primitives"]
+                 if doc["materials"][p["material"]]["name"] == "Bezel")
+    pos = accessor(doc, binary, bezel["attributes"]["POSITION"])
+    nor = accessor(doc, binary, bezel["attributes"]["NORMAL"])
+    seen = {}
+    for p, n in zip(pos, nor):
+        seen.setdefault(tuple(round(c, 5) for c in p), set()).add(tuple(round(c, 2) for c in n))
+    split = sum(1 for v in seen.values() if len(v) > 1)
+    assert split <= 0.02 * len(seen)
+
+
+def test_psu_and_seat_back_details(glb):
+    """A passenger service unit for the rows (reading lights, gaspers, the signs' lit face with its no-smoking half
+    marked in the baked attribute's a), and a seat back with its tray, latch and pocket."""
+    doc, binary = glb
+    names = {n.get("name") for n in doc["nodes"]}
+    assert "Psu" in names
+    mats = lambda node: {doc["materials"][p["material"]]["name"] for p in doc["meshes"][next(n for n in doc["nodes"] if n.get("name") == node)["mesh"]]["primitives"]}  # noqa: E731
+    assert {"Psu", "Lens", "SignLit", "Grille"} <= mats("Psu")
+    assert {"Fabric", "Shell", "Tray", "Grille"} <= mats("Seat")
+    node = next(n for n in doc["nodes"] if n.get("name") == "Psu")
+    lit = next(p for p in doc["meshes"][node["mesh"]]["primitives"] if doc["materials"][p["material"]]["name"] == "SignLit")
+    halves = {round(v[3], 2) for v in accessor(doc, binary, lit["attributes"]["_CABIN"])}
+    assert halves == {0.5, 1.0}
+
+
+def test_shade_slides_round_its_track(spec):
+    """cabin.json gives the shade's track as a circle about the fuselage axis (the app turns it, not slides it
+    straight, so it never comes out in front of the trim), just behind the trim."""
+    info = json.loads((PUBLIC / "cabin.json").read_text())
+    r = spec.CABIN["trim_radius"].value
+    assert r < info["shade"]["radius"] < r + 0.01
+    assert "psu" in info and info["psu"]["to"] > info["psu"]["from"]

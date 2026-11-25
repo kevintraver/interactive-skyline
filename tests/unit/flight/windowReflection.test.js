@@ -56,3 +56,23 @@ describe('createCabinReflection().capture at dusk', () => {
     r.dispose();
   });
 });
+
+describe("createCabinReflection().capture and the cabin's adaptation", () => {
+  it('draws the cube without the lift and puts the gain back (the pane applies the gain of each frame)', async () => {
+    const { CABIN_GAIN } = await import('../../../src/flight/cabin/cabin.js');
+    const seen = [];
+    const mats = { cabinLight: 0.3, night: 1, outside: { windowL: 0, sunLux: 0 }, set() {} };
+    const renderer = {
+      coordinateSystem: 2000, xr: { enabled: false }, getRenderTarget: () => null, getActiveCubeFace: () => 0, getActiveMipmapLevel: () => 0,
+      setRenderTarget() {}, autoClear: true, getClearAlpha: () => 1, getClearColor: (c) => c, setClearColor() {},
+      render: () => seen.push(CABIN_GAIN.value),
+    };
+    CABIN_GAIN.value = 2.5;
+    const r = createCabinReflection({ size: 4 });
+    r.capture({ renderer, cabin: { group: new Group(), model: { materials: mats } }, position: new Vector3(), night: true });
+    expect(seen).toEqual([1, 1, 1, 1, 1, 1]);
+    expect(CABIN_GAIN.value).toBe(2.5);
+    CABIN_GAIN.value = 1;
+    r.dispose();
+  });
+});

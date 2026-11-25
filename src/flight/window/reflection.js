@@ -6,11 +6,12 @@
 // Rendered on demand, not every frame: when the model arrives, on a new seat, when night turns to day or back (the
 // lights' tint), and when the own shade moves. The cabin's group is lent to a scene of its own for the six renders
 // (so no sky, no world and no scene lights get in: what the cube holds is the cabin's own light, in body axes) and
-// handed straight back to its parent.
+// handed straight back to its parent. The cube is drawn without the cabin's own adaptation (its gain at 1); the pane
+// multiplies by the gain of each frame.
 
 import { Scene, CubeCamera, Vector3, Color, HalfFloatType } from 'three';
 import { CubeRenderTarget } from 'three/webgpu';
-import { CABIN_LAYER } from '../cabin/cabin.js';
+import { CABIN_LAYER, CABIN_GAIN } from '../cabin/cabin.js';
 
 /**
  * @param {{ size?: number }} [o]  size: the cube's face, texels (128 on High and Ultra, 64 on Low)
@@ -55,6 +56,9 @@ export function createCabinReflection({ size = 128 } = {}) {
       // while it is drawn, or a cube drawn by day, rescaled by the exposure at dusk, mirrors a daylit cabin forty times over
       const outsideBefore = mats?.outside ?? null;
       const shown = hide.map((o) => o.visible);
+      // the cube holds the cabin without its adaptation (cabin.js cabinAdaptation): the pane applies the gain of the
+      // frame it draws (paneMaterial.js), so the reflection follows the cabin's look as it changes, without a capture
+      const gainBefore = CABIN_GAIN.value;
       const auto = renderer.autoClear, alpha = renderer.getClearAlpha();
       renderer.getClearColor(_clear);
       try {
@@ -62,6 +66,7 @@ export function createCabinReflection({ size = 128 } = {}) {
         scene.add(g);
         for (const o of hide) o.visible = false;
         if (mats) mats.set({ cabinLight: 1, night: nightNow, ...(outsideBefore ? { windowL: 0, sunLux: 0 } : {}) });
+        CABIN_GAIN.value = 1;
         renderer.autoClear = true;
         renderer.setClearColor(0x000000, 1);
         camera.position.copy(position);
@@ -74,6 +79,7 @@ export function createCabinReflection({ size = 128 } = {}) {
         scene.remove(g);
         if (parent) { parent.add(g); if (index >= 0) { parent.children.splice(parent.children.indexOf(g), 1); parent.children.splice(index, 0, g); } }
         hide.forEach((o, i) => { o.visible = shown[i]; });
+        CABIN_GAIN.value = gainBefore;
         if (mats) mats.set({ cabinLight: before, night: nightNow, ...(outsideBefore ?? {}) });
         renderer.autoClear = auto;
         renderer.setClearColor(_clear, alpha);

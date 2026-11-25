@@ -17,6 +17,13 @@
 // Light is in buffer units throughout: the input is pre-exposed, the cabin's materials emit through env.nodes.emissive
 // (pre-exposed). Exposure and tone mapping follow the stage.
 //
+// The cabin's own adaptation. Laid over the finished outside, the cabin can be shown with an adaptation of its own (the
+// eye's local adaptation, a camera's range): its surfaces' light is multiplied by a gain (src/flight/cabin/cabin.js
+// cabinAdaptation, CABIN_GAIN) that takes back the dusk guard and lifts a dimmed cabin at night part of the way toward
+// the day's level. It is applied in the cabin's materials, not here: this composite also carries the glass, which
+// shows the outside through itself and must not be lifted with the wall. The glass's reflection of the cabin takes the
+// same gain (window/paneMaterial.js), so the cabin and its reflection agree. stats().adaptation reports it.
+//
 // Bloom. Plan 01's bloom blurs the scene pass's colour, which holds the world behind the cabin at full brightness (the
 // cabin is not in it): composed at afterAA, the hidden world's blur came through the wall as a ghost (sunlit ground at
 // 9,200 cd/m^2 behind a 386 cd/m^2 wall at bloom 0.06, measured by day on lv-19-day). Composed after the bloom, the
@@ -26,6 +33,7 @@
 import { RenderTarget, QuadMesh, MeshBasicNodeMaterial, HalfFloatType, LinearFilter, LinearMipmapLinearFilter, Node, NodeUpdateType, FloatType, NearestFilter, RGBAFormat } from 'three/webgpu';
 import { Fn, If, texture, screenUV, uniform, vec2, vec4, float } from 'three/tsl';
 import { Vector2, Color } from 'three';
+import { cabinAdaptationNow } from '../cabin/cabin.js';
 
 /** The cabin target's multisampling (7.6: the cabin brings its own edge smoothing, a 4x target). */
 export const CABIN_SAMPLES = 4;
@@ -113,6 +121,18 @@ export function createCabinStage({ renderer, pipeline, layers }) {
   probeMat.fragmentNode = Fn(() => texture(cabinTarget.texture, probeUv))();
   const probeQuad = new QuadMesh(probeMat);
 
+  /** What the cabin pass draws: its visible meshes (each a draw) and their triangles, instances counted. */
+  function drawnCabin() {
+    let draws = 0, triangles = 0;
+    layers.cabinScene?.traverseVisible?.((o) => {
+      if (!o.isMesh) return;
+      const g = o.geometry, n = g.index ? g.index.count : g.getAttribute('position')?.count ?? 0;
+      draws++;
+      triangles += (n / 3) * (o.isInstancedMesh ? o.count : 1);
+    });
+    return { draws, triangles: Math.round(triangles) };
+  }
+
   const api = {
     stage,
     /** The finished outside picture with mips, for the pane: (uv, level) => colour node (buffer units). */
@@ -133,7 +153,8 @@ export function createCabinStage({ renderer, pipeline, layers }) {
     setShown(v) { shown = !!v && !!staged; on.value = shown ? 1 : 0; return api; },
     /**
      * The cabin's light at a point of the screen (NDC, -1..1), before exposure: { rgb, alpha, luminanceCdM2 }, from the
-     * last drawn cabin layer (premultiplied: rgb is what the cabin adds there). Draws a frame first.
+     * last drawn cabin layer (premultiplied: rgb is what the cabin adds there). Draws a frame first. On the cabin's
+     * surfaces this includes the cabin's own adaptation (stats().adaptation.gain: divide by it for the light itself).
      */
     async probe(ndcX, ndcY, exposure = 1) {
       pipeline.render();
@@ -149,6 +170,7 @@ export function createCabinStage({ renderer, pipeline, layers }) {
       return { rgb, alpha: px[3], luminanceCdM2: 0.2126 * rgb[0] + 0.7152 * rgb[1] + 0.0722 * rgb[2] };
     },
     stats: () => ({ staged: !!staged, shown, drawn, outsideCopies: copies, samples: CABIN_SAMPLES, size: [outsideTarget.width, outsideTarget.height],
+      adaptation: { ...cabinAdaptationNow }, ...drawnCabin(),
       cpuMs: cpuN ? +(cpuMs / cpuN).toFixed(3) : 0, lastMs: +lastMs.toFixed(3) }),
     dispose() {
       api.setStaged(false);

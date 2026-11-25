@@ -38,6 +38,7 @@ import {
   reflect, select, dFdx, dFdy, luminance, hash, step,
 } from 'three/tsl';
 import { FUSELAGE, WINDOW } from '../aircraft/dimensions.js';
+import { CABIN_GAIN } from '../cabin/cabin.js';
 import { RING } from './paneFrame.js';
 import { stackNode, glarePhaseNode, scratchGlintNode, PANE_TINT, GLARE_K } from './paneOptics.js';
 import { TEXTURE_SPAN, TEXTURE_SIZE } from './paneTextures.js';
@@ -401,10 +402,11 @@ export function createPaneMaterial({ textures, level = 'high', reflection = null
         const c2 = cube.sample(lookup(pOutM, rDir)).rgb;
         mirrored = c1.mul(stack.y).add(c2.mul(stack.z));
       }
-      mirrored = mirrored.mul(u.reflection);
+      // the cabin as it is shown: with its own adaptation (cabin.js cabinAdaptation; the cube is drawn without it)
+      mirrored = mirrored.mul(u.reflection).mul(CABIN_GAIN);
     }
     // frost and fog also scatter the cabin's own light back toward the eye (faint, at night)
-    const cabinBack = cube ? cube.sample(nOut.negate()).rgb.mul(u.reflection).mul(ice.mul(0.08).add(fogMask.mul(0.04))) : vec3(0);
+    const cabinBack = cube ? cube.sample(nOut.negate()).rgb.mul(u.reflection).mul(CABIN_GAIN).mul(ice.mul(0.08).add(fogMask.mul(0.04))) : vec3(0);
 
     const out = transmitted.add(sunL).add(mirrored).add(cabinBack);
     // debug views (the harness): 1 ice, 2 the frost front's width x 10, 3 the growth map, 4 drops, 5 scratch density

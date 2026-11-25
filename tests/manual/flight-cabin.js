@@ -14,7 +14,7 @@ import { createEnvNodes } from '../../src/env/nodes.js';
 import { parseTrack } from '../../src/flight/track.js';
 import { bodyQuaternion } from '../../src/flight/kinematics.js';
 import { createModelledAirframe } from '../../src/flight/aircraft/airframe.js';
-import { createModelledCabin } from '../../src/flight/cabin/cabin.js';
+import { createModelledCabin, windowLuminance } from '../../src/flight/cabin/cabin.js';
 import { createHeadRig, attachHeadInput, lensToHfov, verticalFov } from '../../src/flight/cabin/headRig.js';
 import { seat as seatOf, defaultSeat, seatFor } from '../../src/flight/cabin/lopa.js';
 import { createSeatMap } from '../../src/flight/ui/seatMap.js';
@@ -131,7 +131,14 @@ function draw() {
   setNight(view.night);
   const cabinLight = view.cabinLight ?? (view.night ? 0.3 : 1);
   airframe.update(state, { night: view.night, hasLightsChannel: false });
-  cabin.update(state, { cabinLight, night: view.night, reducedMotion: true });
+  // the light through the windows, as the app hands it in (session.js outsideLight): the harness's sun and sky by day, a
+  // quarter moon and starlight by night, so the cabin is lit as in the app (it was lit by its lamps alone)
+  const sunAltDeg = (Math.asin(sun.position.clone().normalize().y) * 180) / Math.PI;
+  const outside = view.night
+    ? { windowL: windowLuminance({ sunLux: 0, ambientLux: NIGHT_SKY_LUX, sunAltDeg: -30 }), sunLux: 0, sunWorld: new Vector3(0, -1, 0) }
+    : { windowL: windowLuminance({ sunLux: SUN_LUX, ambientLux: SKY_LUX, sunAltDeg }), sunLux: SUN_LUX, sunColor: { r: 1, g: 0.96, b: 0.9 },
+      sunWorld: sun.position.clone().normalize() };
+  cabin.update(state, { cabinLight, night: view.night, reducedMotion: true, outside });
   if (outsideCam) {
     outsideCam.aspect = aspect;
     outsideCam.updateProjectionMatrix();
@@ -140,6 +147,15 @@ function draw() {
   } else {
     layers.update(state, { aspect, heightAboveGround: state.position.y });
     renderer.render(scene, camera);
+    // the cabin is in a scene of its own since F3.9 (the app's cabin stage draws it over the finished outside): draw it
+    // over the frame here, with its own camera and a cleared depth
+    if (layers.cabinShown) {
+      const auto = renderer.autoClear;
+      renderer.autoClear = false;
+      renderer.clearDepth();
+      renderer.render(layers.cabinScene, layers.cabinCamera());
+      renderer.autoClear = auto;
+    }
   }
   const l = rig.state;
   log.textContent = `${backend} · ${stateName} · ${view.night ? 'night' : 'day'} · ${currentSeat.id} · ${cabin.model ? 'cabin model' : 'cabin v0'} · yaw ${l.yaw.toFixed(1)} pitch ${l.pitch.toFixed(1)} ${l.lens.toFixed(0)} mm · lean ${l.lean.toFixed(2)} slide ${l.slide.toFixed(2)} rise ${l.rise.toFixed(2)}${layers.clean ? ' · clean' : ''} · shade ${cabin.shade.toFixed(2)}`;

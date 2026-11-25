@@ -2,9 +2,9 @@
  "parts": {
   "Bay": {
    "object": "Bay",
-   "verts": 548,
-   "faces": 484,
-   "tris": 960,
+   "verts": 1749,
+   "faces": 1657,
+   "tris": 3314,
    "bbox_min": [
     1.412,
     -0.235,
@@ -18,20 +18,20 @@
    "islands": 1,
    "open_islands": 1,
    "inside_out_islands": 0,
-   "nonmanifold_edges": 136,
+   "nonmanifold_edges": 184,
    "degenerate_faces": 0,
    "loose_verts": 0,
    "nonplanar_ngons": 0,
    "materials": {
-    "Trim": 188,
-    "Bezel": 112,
-    "Reveal": 60,
-    "Structure": 112,
-    "Grille": 12
+    "Trim": 500,
+    "Bezel": 544,
+    "Reveal": 408,
+    "Grille": 15,
+    "Seam": 190
    },
    "errors": [],
    "warnings": [
-    "136 open or non-manifold edges in 1 islands (fine for a deliberate single-sided detail, otherwise a hole)"
+    "184 open or non-manifold edges in 1 islands (fine for a deliberate single-sided detail, otherwise a hole)"
    ],
    "role": "part",
    "pivot": [
@@ -42,9 +42,9 @@
   },
   "Filler": {
    "object": "Filler",
-   "verts": 58,
-   "faces": 28,
-   "tris": 56,
+   "verts": 264,
+   "faces": 215,
+   "tris": 430,
    "bbox_min": [
     1.412,
     -0.5,
@@ -58,17 +58,18 @@
    "islands": 1,
    "open_islands": 1,
    "inside_out_islands": 0,
-   "nonmanifold_edges": 58,
+   "nonmanifold_edges": 96,
    "degenerate_faces": 0,
    "loose_verts": 0,
    "nonplanar_ngons": 0,
    "materials": {
-    "Trim": 27,
-    "Grille": 1
+    "Trim": 166,
+    "Grille": 5,
+    "Seam": 44
    },
    "errors": [],
    "warnings": [
-    "58 open or non-manifold edges in 1 islands (fine for a deliberate single-sided detail, otherwise a hole)"
+    "96 open or non-manifold edges in 1 islands (fine for a deliberate single-sided detail, otherwise a hole)"
    ],
    "role": "part",
    "pivot": [
@@ -79,9 +80,9 @@
   },
   "Shade": {
    "object": "Shade",
-   "verts": 122,
-   "faces": 174,
-   "tris": 236,
+   "verts": 146,
+   "faces": 210,
+   "tris": 284,
    "bbox_min": [
     1.683,
     -0.155,
@@ -100,7 +101,7 @@
    "loose_verts": 0,
    "nonplanar_ngons": 0,
    "materials": {
-    "Shade": 174
+    "Shade": 210
    },
    "errors": [],
    "warnings": [],
@@ -116,9 +117,9 @@
   },
   "PaneInner": {
    "object": "PaneInner",
-   "verts": 57,
-   "faces": 56,
-   "tris": 56,
+   "verts": 69,
+   "faces": 68,
+   "tris": 68,
    "bbox_min": [
     1.754,
     -0.145,
@@ -132,16 +133,16 @@
    "islands": 1,
    "open_islands": 1,
    "inside_out_islands": 0,
-   "nonmanifold_edges": 56,
+   "nonmanifold_edges": 68,
    "degenerate_faces": 0,
    "loose_verts": 0,
    "nonplanar_ngons": 0,
    "materials": {
-    "Glass": 56
+    "Glass": 68
    },
    "errors": [],
    "warnings": [
-    "56 open or non-manifold edges in 1 islands (fine for a deliberate single-sided detail, otherwise a hole)"
+    "68 open or non-manifold edges in 1 islands (fine for a deliberate single-sided detail, otherwise a hole)"
    ],
    "role": "part",
    "pivot": [
@@ -152,9 +153,9 @@
   },
   "PaneMiddle": {
    "object": "PaneMiddle",
-   "verts": 57,
-   "faces": 56,
-   "tris": 56,
+   "verts": 69,
+   "faces": 68,
+   "tris": 68,
    "bbox_min": [
     1.771,
     -0.138,
@@ -168,16 +169,16 @@
    "islands": 1,
    "open_islands": 1,
    "inside_out_islands": 0,
-   "nonmanifold_edges": 56,
+   "nonmanifold_edges": 68,
    "degenerate_faces": 0,
    "loose_verts": 0,
    "nonplanar_ngons": 0,
    "materials": {
-    "Glass": 56
+    "Glass": 68
    },
    "errors": [],
    "warnings": [
-    "56 open or non-manifold edges in 1 islands (fine for a deliberate single-sided detail, otherwise a hole)"
+    "68 open or non-manifold edges in 1 islands (fine for a deliberate single-sided detail, otherwise a hole)"
    ],
    "role": "part",
    "pivot": [
@@ -188,9 +189,9 @@
   },
   "PaneOuter": {
    "object": "PaneOuter",
-   "verts": 57,
-   "faces": 56,
-   "tris": 56,
+   "verts": 69,
+   "faces": 68,
+   "tris": 68,
    "bbox_min": [
     1.79,
     -0.133,
@@ -204,16 +205,16 @@
    "islands": 1,
    "open_islands": 1,
    "inside_out_islands": 0,
-   "nonmanifold_edges": 56,
+   "nonmanifold_edges": 68,
    "degenerate_faces": 0,
    "loose_verts": 0,
    "nonplanar_ngons": 0,
    "materials": {
-    "Glass": 56
+    "Glass": 68
    },
    "errors": [],
    "warnings": [
-    "56 open or non-manifold edges in 1 islands (fine for a deliberate single-sided detail, otherwise a hole)"
+    "68 open or non-manifold edges in 1 islands (fine for a deliberate single-sided detail, otherwise a hole)"
    ],
    "role": "part",
    "pivot": [
@@ -224,12 +225,12 @@
   },
   "Seat": {
    "object": "Seat",
-   "verts": 112,
-   "faces": 107,
-   "tris": 190,
+   "verts": 468,
+   "faces": 460,
+   "tris": 904,
    "bbox_min": [
     -0.221,
-    -0.767,
+    -0.753,
     2.948
    ],
    "bbox_max": [
@@ -237,43 +238,45 @@
     -0.0,
     4.088
    ],
-   "islands": 7,
-   "open_islands": 3,
+   "islands": 8,
+   "open_islands": 0,
    "inside_out_islands": 0,
-   "nonmanifold_edges": 12,
+   "nonmanifold_edges": 0,
    "degenerate_faces": 0,
    "loose_verts": 0,
    "nonplanar_ngons": 0,
    "materials": {
-    "Fabric": 42,
-    "Shell": 55,
-    "Tray": 10
+    "Grille": 6,
+    "Fabric": 184,
+    "Shell": 194,
+    "Tray": 76
    },
    "errors": [],
-   "warnings": [
-    "12 open or non-manifold edges in 3 islands (fine for a deliberate single-sided detail, otherwise a hole)"
-   ],
+   "warnings": [],
    "role": "part",
    "pivot": [
     0.0,
     0.0,
     0.0
+   ],
+   "notes": [
+    "the kit's inside-out count is its rounding: every closed island has a positive volume (smallest 6.05e-06 m^3)"
    ]
   },
   "Armrest": {
    "object": "Armrest",
-   "verts": 20,
-   "faces": 14,
-   "tris": 32,
+   "verts": 48,
+   "faces": 40,
+   "tris": 88,
    "bbox_min": [
-    -0.025,
+    -0.026,
     -0.44,
     3.268
    ],
    "bbox_max": [
-    0.025,
+    0.026,
     -0.06,
-    3.568
+    3.567
    ],
    "islands": 2,
    "open_islands": 0,
@@ -283,7 +286,7 @@
    "loose_verts": 0,
    "nonplanar_ngons": 0,
    "materials": {
-    "Shell": 14
+    "Shell": 40
    },
    "errors": [],
    "warnings": [],
@@ -331,74 +334,121 @@
     0.0,
     0.0
    ]
+  },
+  "Psu": {
+   "object": "Psu",
+   "verts": 568,
+   "faces": 360,
+   "tris": 984,
+   "bbox_min": [
+    0.857,
+    -0.76,
+    4.545
+   ],
+   "bbox_max": [
+    1.232,
+    -0.1,
+    4.59
+   ],
+   "islands": 38,
+   "open_islands": 0,
+   "inside_out_islands": 0,
+   "nonmanifold_edges": 0,
+   "degenerate_faces": 0,
+   "loose_verts": 0,
+   "nonplanar_ngons": 0,
+   "materials": {
+    "Grille": 138,
+    "Psu": 156,
+    "Lens": 60,
+    "SignLit": 6
+   },
+   "errors": [],
+   "warnings": [],
+   "role": "part",
+   "pivot": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "notes": [
+    "the kit's inside-out count is its rounding: every closed island has a positive volume (smallest 3.09e-09 m^3)"
+   ]
   }
  },
- "tris": 1660,
+ "tris": 6226,
  "proxy_tris": 0,
  "errors": [],
  "bake": {
   "Bay": {
-   "ao_min": 0.014,
-   "ao_mean": 0.542,
+   "ao_min": 0.193,
+   "ao_mean": 0.583,
    "wash_max": 1.0,
-   "window_ff_max": 0.486,
-   "window_ff_mean": 0.0861
+   "window_ff_max": 0.425,
+   "window_ff_mean": 0.0799
   },
   "Filler": {
-   "ao_min": 0.188,
-   "ao_mean": 0.6,
-   "wash_max": 0.975,
+   "ao_min": 0.194,
+   "ao_mean": 0.587,
+   "wash_max": 0.994,
    "window_ff_max": 0.035,
-   "window_ff_mean": 0.0076
+   "window_ff_mean": 0.0083
   },
   "Shade": {
-   "ao_min": 0.0,
-   "ao_mean": 0.296,
-   "wash_max": 0.196,
+   "ao_min": 0.035,
+   "ao_mean": 0.339,
+   "wash_max": 0.144,
    "window_ff_max": 0.743,
-   "window_ff_mean": 0.1255
-  },
-  "Seat": {
-   "ao_min": 0.0,
-   "ao_mean": 0.363,
-   "wash_max": 0.43,
-   "window_ff_max": 0.965,
-   "window_ff_mean": 0.0487
-  },
-  "Armrest": {
-   "ao_min": 0.0,
-   "ao_mean": 0.224,
-   "wash_max": 0.15,
-   "window_ff_max": 0.986,
-   "window_ff_mean": 0.0725
+   "window_ff_mean": 0.1271
   },
   "Bin": {
    "ao_min": 0.285,
-   "ao_mean": 0.771,
+   "ao_mean": 0.767,
    "wash_max": 0.0,
    "window_ff_max": 0.264,
-   "window_ff_mean": 0.0363
+   "window_ff_mean": 0.0366
   },
   "PaneInner": {
    "ao_min": 0.021,
-   "ao_mean": 0.346,
-   "wash_max": 0.086,
+   "ao_mean": 0.422,
+   "wash_max": 0.068,
    "window_ff_max": 0.021,
-   "window_ff_mean": 0.0043
+   "window_ff_mean": 0.0049
   },
   "PaneMiddle": {
-   "ao_min": 0.021,
-   "ao_mean": 0.212,
-   "wash_max": 0.047,
-   "window_ff_max": 0.028,
-   "window_ff_mean": 0.0131
+   "ao_min": 0.316,
+   "ao_mean": 0.463,
+   "wash_max": 0.052,
+   "window_ff_max": 0.007,
+   "window_ff_mean": 0.0021
   },
   "PaneOuter": {
-   "ao_min": 0.188,
-   "ao_mean": 0.359,
-   "wash_max": 0.057,
-   "window_ff_max": 0.007,
-   "window_ff_mean": 0.0011
+   "ao_min": 0.302,
+   "ao_mean": 0.448,
+   "wash_max": 0.051,
+   "window_ff_max": 0.005,
+   "window_ff_mean": 0.0019
+  },
+  "Seat": {
+   "ao_min": 0.0,
+   "ao_mean": 0.634,
+   "wash_max": 0.361,
+   "window_ff_max": 0.965,
+   "window_ff_mean": 0.0405
+  },
+  "Armrest": {
+   "ao_min": 0.089,
+   "ao_mean": 0.483,
+   "wash_max": 0.122,
+   "window_ff_max": 0.986,
+   "window_ff_mean": 0.0299
+  },
+  "Psu": {
+   "ao_min": 0.054,
+   "ao_mean": 0.615,
+   "wash_max": 0.0,
+   "window_ff_max": 0.597,
+   "window_ff_mean": 0.0531
   }
  },
  "measured": {
@@ -408,7 +458,7 @@
   ],
   "window_centre_above_floor_m": 0.97,
   "trim_opening_m": [
-   0.3967
+   0.3767
   ],
   "trim_radius_m": 1.7678,
   "seat_back_top_m": 1.14,
@@ -417,6 +467,6 @@
  "files": {
   "glb": "cabin.glb",
   "json": "cabin.json",
-  "glb_bytes": 86568
+  "glb_bytes": 275636
  }
 }

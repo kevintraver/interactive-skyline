@@ -21,21 +21,27 @@ Nodes (glTF: +Y up, nose -Z, right +X; every rest rotation identity, every trans
                        air-return grille. z = 0 at the window's centre station; heights in body axes
     Filler             plain sidewall, the bay's profile without a window, 1 m long (z -0.5..0.5); stretched
     Shade              the window shade, closed (over the inner pane); it opens by sliding cabin.json's
-                       shade.travel along shade.axis
+                       shade.travel round its track, the circle of shade.radius about the fuselage's axis (shade.axis is
+                       the track's direction at the window's centre)
     PaneInner, PaneMiddle, PaneOuter   the three panes as separate curved quads (for plan 03's Phase 5 material)
-    Seat               one economy seat, centred on x = 0, its front at z = 0: cushion, back (cushion face, shell,
-                       tray table and its latch, literature pocket), pan and leg
+    Seat               one economy seat, centred on x = 0, its front at z = 0: cushion, back (cushion face, a shell
+                       rounded over its sides and top, the stowed tray table and its latch, the literature pocket
+                       under its elastic lip), pan and leg
     Armrest            one armrest centred on x = 0, the seat front at z = 0
     Bin                the bins' lower part over the window side, 1 m long: the underside from the sidewall to the
                        lip, the lip, the door's face, the passenger-service rail and the window-wash light strip
+    Psu                the passenger service unit over one row, its front at z = 0: panel, reading lights, gaspers,
+                       call button, the signs' box with its lit face (material SignLit) and pictograms
 
 Per corner, one baked attribute `_CABIN` (float RGBA), from ray casting against a context of five bays with their
 fillers, the bin, the floor, the shell over the top and the seats of three rows:
-  r  ambient occlusion: the cosine-weighted share of the hemisphere with nothing within 0.6 m
+  r  ambient occlusion: the cosine-weighted share of the hemisphere with nothing within 0.6 m; on the seats, the
+     armrests and the PSUs a hit at d counts as (d / 0.6)^0.7 open (the seat back faces the next row's seat 0.3 m
+     off, and closed outright it drew near black)
   g  the window-wash light strip's illuminance, 1.0 at the brightest corner of the sidewall
   b  the cosine-weighted share of the hemisphere that sees out through a window (a form factor): the app multiplies
      the sky's light by it, as light that reaches the point through the windows
-  a  1
+  a  1 (0.5 on the PSU's forward half: the signs' face there is the no-smoking sign, always lit)
 The materials are plain colours; the app relights them for day, dusk and night (cabinLight).
 """
 from __future__ import annotations
@@ -77,19 +83,21 @@ SHADE_R = R + 0.004                           # the shade's track: 4 mm behind t
 COLORS = {
     "Trim": "D8D5CE",       # sidewall: warm light grey plastic
     "Bezel": "E3E0D9",      # the moulded window surround
-    "Reveal": "CFCBC3",     # the reveal liner
-    "Structure": "74787D",  # the window frame behind the inner pane
-    "Grille": "3B3E42",     # air-return grille at the floor
+    "Reveal": "CFCBC3",     # the reveal liner, out to the middle pane
+    "Grille": "3B3E42",     # air-return grille at the floor; the gaspers' throats; the latch; the pictograms
+    "Seam": "8E8B85",       # the panel seams and the panes' rubber seals: a mid grey (the gap's shadow, seen at a metre)
     "Shade": "ECE9E2",
     "Glass": "B9C6CF",
-    "Fabric": "3C4757",     # seat covers: dark blue-grey
-    "Shell": "8E9399",      # seat back shell, frame, armrests
-    "Tray": "777C82",
+    "Fabric": "55607A",     # seat covers and the literature pocket: dark blue-grey
+    "Shell": "BCBFC3",      # seat back shell, frame, armrests: light grey plastic (photographs of the type's seats)
+    "Tray": "8C9096",
     "Bin": "E1DED7",
-    "Psu": "C3C4C1",
+    "Psu": "D2D3CF",        # the passenger service unit's panels, gaspers and sign box
+    "Lens": "F2F0E8",       # reading-light lenses (off)
+    "SignLit": "FFFFFF",    # the passenger signs' diffusers (the app lights them)
     "Wash": "FFFFFF",       # the light strip's diffuser
 }
-ROUGH = {"Glass": 0.05, "Shade": 0.7, "Fabric": 0.95, "Shell": 0.55, "Tray": 0.6, "Grille": 0.8, "Structure": 0.6}
+ROUGH = {"Glass": 0.05, "Shade": 0.7, "Fabric": 0.95, "Shell": 0.5, "Tray": 0.45, "Grille": 0.8, "Lens": 0.3, "SignLit": 0.4}
 
 
 def builder():
@@ -146,7 +154,7 @@ def rect(phi, a, b):
 
 
 CABIN_TRIS = 20000  # section 6.5: 'cabin segment at most 20,000' triangles
-N_RING = 52
+N_RING = 64  # smooth-shaded, 5.6 degrees a step: no facets at 13 mm (52 flat-shaded showed them)
 PHIS = sorted({round(2 * math.pi * k / N_RING - math.pi, 12) for k in range(N_RING)}
               | {round(math.atan2(sy * SQUARE_V, sx * HALF), 12) for sx in (1, -1) for sy in (1, -1)})
 
@@ -180,12 +188,26 @@ def fan(b, pts, centre, material, flip=False):
 # the sidewall's rows, developed height from the window centre, shared by the bay's edges and the filler
 V_BIN = v_of_height(FLOOR + F(CA["bin_outboard_above_floor"]))
 V_DADO = v_of_height(FLOOR + 0.30)
-STEP = 0.10  # m of developed height between rows on the plain trim
+STEP = 0.05  # m of developed height between rows on the plain trim (0.10 drew the wash light in diagonal bands)
+SEAM_W = 0.003  # the panel seams: a 3 mm line (ESTIMATED, photographs of the type's sidewall)
+SEAM_H = 0.62   # the joint of the lower sidewall panel and the window panel, above the floor (ESTIMATED, photographs)
+V_SEAM = (v_of_height(FLOOR + SEAM_H - SEAM_W / 2), v_of_height(FLOOR + SEAM_H + SEAM_W / 2))
 
 
 def plain_rows(v0, v1):
     n = max(1, math.ceil((v1 - v0) / STEP))
     return [v0 + (v1 - v0) * i / n for i in range(n + 1)]
+
+
+def lower_rows():
+    """The rows from the dado's top to the square's bottom, with the lower panel's seam in them."""
+    a, b = V_SEAM
+    return plain_rows(V_DADO, a)[:-1] + [a, b] + plain_rows(b, -SQUARE_V)[1:]
+
+
+def row_material(v0, v1):
+    """The material of the band between two rows of the plain trim: the seam's band, or trim."""
+    return "Seam" if abs(v0 - V_SEAM[0]) < 1e-9 and abs(v1 - V_SEAM[1]) < 1e-9 else "Trim"
 
 
 def edge_rows():
@@ -195,7 +217,7 @@ def edge_rows():
 
 
 ROWS_ABOVE = plain_rows(SQUARE_V, V_BIN)
-ROWS_BELOW = plain_rows(V_DADO, -SQUARE_V)
+ROWS_BELOW = lower_rows()
 SIDE_ROWS = ROWS_BELOW[:-1] + edge_rows() + ROWS_ABOVE[1:]
 # the dado: from the circle 0.30 m above the floor straight down to the floor, 3 cm inboard of the circle there;
 # the grille from 4 to 12 cm above the floor
@@ -211,51 +233,97 @@ def dado_point(h):
 def wall_column(u):
     """The sidewall's profile at u, from the floor up to the bin: (point, material of the band above it)."""
     pts = [(bl(*dado_point(h), u), m) for h, m in ((0.0, "Trim"), (0.04, "Grille"), (0.12, "Trim"))]
-    pts += [(cyl(u, v, R), "Trim") for v in SIDE_ROWS]  # SIDE_ROWS[0] is the dado's top, 0.30 m above the floor
+    # SIDE_ROWS[0] is the dado's top, 0.30 m above the floor
+    pts += [(cyl(u, v, R), row_material(v, SIDE_ROWS[i + 1]) if i + 1 < len(SIDE_ROWS) else "Trim") for i, v in enumerate(SIDE_ROWS)]
     return pts
 
 
-def strip(b, u0, u1):
-    """Plain sidewall between u0 and u1 on the shared rows (the filler, and the bay outside its square)."""
-    a, c = wall_column(u0), wall_column(u1)
-    va = [b.bm.verts.new(p) for p, _ in a]
-    vc = [b.bm.verts.new(p) for p, _ in c]
-    for i in range(len(va) - 1):
-        b.face((va[i], vc[i], vc[i + 1], va[i + 1]), a[i][1])
+def strip(b, u0, u1, columns=4):
+    """Plain sidewall between u0 and u1 on the shared rows (the filler, and the bay outside its square), in `columns`
+    columns: the filler is stretched to fill a gap, and one quad across a long gap drew the baked light in bands."""
+    cols = [[b.bm.verts.new(p) for p, _ in wall_column(u0 + (u1 - u0) * k / columns)] for k in range(columns + 1)]
+    mats = [m for _, m in wall_column(u0)]
+    for k in range(columns):
+        va, vc = cols[k], cols[k + 1]
+        for i in range(len(va) - 1):
+            b.face((va[i], vc[i], vc[i + 1], va[i + 1]), mats[i])
 
 
 # ------------------------------------------------------------------------------------------------ parts
+# The window surround's section, from the trim out to the skin, as (beyond the window's edge e, inboard of the trim h)
+# in metres: the bezel rises from the trim in a cove, runs flat and rolls over a rounded lip into the reveal; the reveal
+# liner runs out to the inner pane; a dark seal holds the inner pane; the liner continues to the middle pane and a seal
+# to the outer pane at the skin. ESTIMATED from photographs of the type's windows (no drawing gives the moulding).
+def bezel_profile():
+    fl, bz, rl = FLARE, BEZEL, RELIEF
+    prof = [  # (e, h, material of the band from this point to the next)
+        (fl + bz, 0.0, "Bezel"),
+        (fl + bz - 0.006, 0.18 * rl, "Bezel"),
+        (fl + bz - 0.012, 0.55 * rl, "Bezel"),
+        (fl + bz - 0.018, 0.88 * rl, "Bezel"),
+        (fl + bz - 0.025, rl, "Bezel"),          # the flat top, RELIEF proud of the trim
+        (fl + 0.012, rl, "Bezel"),
+        (fl + 0.006, 0.93 * rl, "Bezel"),        # the lip rolls over (about a 6 mm radius)
+        (fl + 0.002, 0.72 * rl, "Bezel"),
+        (fl, 0.40 * rl, "Reveal"),
+    ]
+    # the reveal: from the lip's foot out to the inner pane, slightly concave
+    e0, h0, e1, h1 = fl, 0.40 * rl, 0.012, -PANE_IN
+    for t in (0.3, 0.6, 0.85):
+        prof.append((e0 + (e1 - e0) * t, h0 + (h1 - h0) * (t ** 1.12), "Reveal"))
+    prof.append((e1, h1, "Seam"))                                     # the inner pane's seal, 2 mm
+    prof.append((0.010, h1 - 0.002, "Reveal"))                        # the light liner on out between the panes
+    prof.append((0.006, -(RS - 0.03 - R), "Reveal"))
+    prof.append((0.003, -(RS - 0.012 - R), "Seam"))                   # the outer pane's seal at the skin
+    prof.append((0.0, -(RS - 0.002 - R), None))                       # the opening in the skin
+    return prof
+
+
 def build_bay(model):
     b = builder()
-    fl = FLARE
-    lip = ring(WW / 2 + fl, WH / 2 + fl, CR + fl, R - RELIEF)
-    bez = ring(WW / 2 + fl + 0.03, WH / 2 + fl + 0.03, CR + fl + 0.03, R - RELIEF)
-    foot = ring(WW / 2 + fl + BEZEL, WH / 2 + fl + BEZEL, CR + fl + BEZEL, R)
-    square = [cyl(*rect(phi, HALF, SQUARE_V), R) for phi in PHIS]
-    pane = ring(WW / 2 + 0.012, WH / 2 + 0.012, CR + 0.012, R + PANE_IN)
-    mid = ring(WW / 2 + 0.005, WH / 2 + 0.005, CR + 0.005, RS - 0.035)
-    skin = ring(WW / 2, WH / 2, CR, RS - 0.002)
-    # from the square inward to the lip (trim and bezel), then out through the reveal to the skin
-    loft(b, [square, foot, bez, lip, pane, mid, skin], ["Trim", "Bezel", "Bezel", "Reveal", "Structure", "Structure"])
-    # outside the square: plain trim above and below, then the dado, on the shared rows
-    if True:
-        us_top = sorted({round(rect(p, HALF, SQUARE_V)[0], 9) for p in PHIS if abs(rect(p, HALF, SQUARE_V)[1] - SQUARE_V) < 1e-9})
-        us_bot = sorted({round(rect(p, HALF, SQUARE_V)[0], 9) for p in PHIS if abs(rect(p, HALF, SQUARE_V)[1] + SQUARE_V) < 1e-9})
-        # above the square: columns at the square's top-edge samples, rows up to the bin
-        grid = [[b.bm.verts.new(cyl(u, v, R)) for u in us_top] for v in ROWS_ABOVE]
-        for i in range(len(ROWS_ABOVE) - 1):
-            for k in range(len(us_top) - 1):
-                b.face((grid[i][k], grid[i][k + 1], grid[i + 1][k + 1], grid[i + 1][k]), "Trim")
-        # below the square: down to the dado's top, then the dado's three bands
-        rows = ROWS_BELOW
-        grid = [[b.bm.verts.new(cyl(u, v, R)) for u in us_bot] for v in rows]
-        for i in range(len(rows) - 1):
-            for k in range(len(us_bot) - 1):
-                b.face((grid[i][k], grid[i][k + 1], grid[i + 1][k + 1], grid[i + 1][k]), "Trim")
-        dado = [[b.bm.verts.new(bl(*dado_point(h), u)) for u in us_bot] for h in (0.0, 0.04, 0.12)] + [grid[0]]
-        for i, m in enumerate(("Trim", "Grille", "Trim")):
-            for k in range(len(us_bot) - 1):
-                b.face((dado[i][k], dado[i][k + 1], dado[i + 1][k + 1], dado[i + 1][k]), m)
+    seam_u = HALF - SEAM_W
+    # the square of trim round the window, its aft edge short of the bay's edge by the seam
+    def square_pt(phi):
+        u, v = rect(phi, HALF, SQUARE_V)
+        return (seam_u if u > HALF - 1e-9 else u), v
+    sq = [square_pt(phi) for phi in PHIS]
+    prof = bezel_profile()
+    foot = [round_rect(phi, WW / 2 + prof[0][0], WH / 2 + prof[0][0], CR + prof[0][0]) for phi in PHIS]
+    rings, mats = [], []
+    # from the square in to the bezel's foot in four steps on the trim: no long triangles for the baked light to band on
+    for t in (0.0, 0.4, 0.75):
+        rings.append([cyl(us + (uf - us) * t, vs + (vf - vs) * t, R) for (us, vs), (uf, vf) in zip(sq, foot)])
+        mats.append("Trim")
+    for e, h, m in prof:
+        r = R - h
+        rings.append([cyl(*round_rect(phi, WW / 2 + e, WH / 2 + e, CR + e), r) for phi in PHIS])
+        if m is not None:
+            mats.append(m)
+    loft(b, rings, mats)
+    # the seam beside the square: a 4 mm band at the bay's aft edge, on the square's edge rows
+    edge = edge_rows()
+    a = [b.bm.verts.new(cyl(seam_u, v, R)) for v in edge]
+    c = [b.bm.verts.new(cyl(HALF, v, R)) for v in edge]
+    for i in range(len(edge) - 1):
+        b.face((a[i], c[i], c[i + 1], a[i + 1]), "Seam")
+    # outside the square: plain trim above and below, then the dado, on the shared rows; the seam's column at the aft
+    us_top = sorted({round(square_pt(p)[0], 9) for p in PHIS if abs(square_pt(p)[1] - SQUARE_V) < 1e-9} | {HALF})
+    us_bot = sorted({round(square_pt(p)[0], 9) for p in PHIS if abs(square_pt(p)[1] + SQUARE_V) < 1e-9} | {HALF})
+    def col_mat(us, k, base):
+        return "Seam" if us[k] >= seam_u - 1e-9 else base
+    grid = [[b.bm.verts.new(cyl(u, v, R)) for u in us_top] for v in ROWS_ABOVE]
+    for i in range(len(ROWS_ABOVE) - 1):
+        for k in range(len(us_top) - 1):
+            b.face((grid[i][k], grid[i][k + 1], grid[i + 1][k + 1], grid[i + 1][k]), col_mat(us_top, k, "Trim"))
+    rows = ROWS_BELOW
+    grid = [[b.bm.verts.new(cyl(u, v, R)) for u in us_bot] for v in rows]
+    for i in range(len(rows) - 1):
+        for k in range(len(us_bot) - 1):
+            b.face((grid[i][k], grid[i][k + 1], grid[i + 1][k + 1], grid[i + 1][k]), col_mat(us_bot, k, row_material(rows[i], rows[i + 1])))
+    dado = [[b.bm.verts.new(bl(*dado_point(h), u)) for u in us_bot] for h in (0.0, 0.04, 0.12)] + [grid[0]]
+    for i, m in enumerate(("Trim", "Grille", "Trim")):
+        for k in range(len(us_bot) - 1):
+            b.face((dado[i][k], dado[i][k + 1], dado[i + 1][k + 1], dado[i + 1][k]), m)
     b.bm.verts.ensure_lookup_table()
     import bmesh
     bmesh.ops.remove_doubles(b.bm, verts=b.bm.verts[:], dist=1e-6)
@@ -263,8 +331,19 @@ def build_bay(model):
 
 
 def build_filler(model):
+    """Plain trim 1 m long, stretched by the app to each gap: in its middle the seam between two panels (a 1 m filler
+    is a blank position's panel; across a 5 cm gap between bays the seam is thinner than a pixel)."""
     b = builder()
-    strip(b, -0.5, 0.5)
+    w = SEAM_W / 2
+    strip(b, -0.5, -w, columns=2)
+    a, c = wall_column(-w), wall_column(w)
+    va = [b.bm.verts.new(p) for p, _ in a]
+    vc = [b.bm.verts.new(p) for p, _ in c]
+    for i in range(len(va) - 1):
+        b.face((va[i], vc[i], vc[i + 1], va[i + 1]), "Seam" if i >= 3 else a[i][1])
+    strip(b, w, 0.5, columns=2)
+    import bmesh
+    bmesh.ops.remove_doubles(b.bm, verts=b.bm.verts[:], dist=1e-7)
     model.part(b, "Filler")
 
 
@@ -298,7 +377,7 @@ def build_shade(model):
     model.part(b, "Shade")
     t = angle_at(SHADE_R, 0)
     return {"axis": list(ak.to_gltf((math.cos(t + math.pi / 2), 0.0, math.sin(t + math.pi / 2)))),
-            "travel": round(F(CA["shade_travel"]), 4)}
+            "travel": round(F(CA["shade_travel"]), 4), "radius": round(SHADE_R, 4)}
 
 
 def build_panes(model):
@@ -356,14 +435,22 @@ def build_seat(model):
 
     def back(x, h, d):
         return bl(x, srp_y + h * math.cos(alpha) - d * math.sin(alpha), srp_u + h * math.sin(alpha) + d * math.cos(alpha))
-    xs = [-hw, -hw + 0.06, 0.0, hw - 0.06, hw]
-    hs = [0.0, 0.12, 0.35, 0.52, h_top - 0.04, h_top]
+
+    def ramp(t):
+        t = min(1.0, max(0.0, t))
+        return t * t * (3 - 2 * t)
+    # the shell wraps round its sides and over its top (rounded about 3 cm): the rear face's depth falls toward the edges
+    def rear_d(h, x=0.0):
+        edge = ramp((abs(x) - (hw - 0.045)) / 0.045)
+        crown = ramp((h - (h_top - 0.06)) / 0.06)
+        return thick - 0.03 * (h / h_top) - 0.028 * edge * edge - 0.03 * crown * crown
+
     def bulge(x, h):  # the cushion face bulges 2 cm forward in its middle
         return -0.02 * (1 - (abs(x) / hw) ** 2) * math.sin(math.pi * min(1.0, h / h_top))
-    def rear_d(h):    # the shell is thinner at the top
-        return thick - 0.03 * (h / h_top)
+    xs = [-hw, -hw + 0.012, -hw + 0.03, -hw + 0.06, -0.12, 0.0, 0.12, hw - 0.06, hw - 0.03, hw - 0.012, hw]
+    hs = [0.0, 0.06, 0.12, 0.2, 0.28, 0.35, 0.43, 0.52, h_top - 0.1, h_top - 0.06, h_top - 0.035, h_top - 0.015, h_top]
     front = [[b.bm.verts.new(back(x, h, bulge(x, h))) for x in xs] for h in hs]
-    rear = [[b.bm.verts.new(back(x, h, rear_d(h))) for x in xs] for h in hs]
+    rear = [[b.bm.verts.new(back(x, h, rear_d(h, x))) for x in xs] for h in hs]
     for i in range(len(hs) - 1):
         for k in range(len(xs) - 1):
             b.face((front[i][k], front[i + 1][k], front[i + 1][k + 1], front[i][k + 1]), "Fabric")
@@ -374,37 +461,63 @@ def build_seat(model):
     for k in range(len(xs) - 1):  # top and bottom
         b.face((front[-1][k], front[-1][k + 1], rear[-1][k + 1], rear[-1][k]), "Shell")
         b.face((front[0][k], rear[0][k], rear[0][k + 1], front[0][k + 1]), "Shell")
-    # on the shell: the tray table (stowed), its latch and the literature pocket, standing proud of the shell
+    # on the shell: the tray table (stowed, chamfered corners, 7 mm proud), its latch above it, and the literature
+    # pocket below, bulging and open at its top under an elastic lip (photographs of the type's economy seats)
     tw, th = CA["tray_size"].value
-    def panel(x0, x1, h0, h1, d0, d1, material):
-        P = [b.bm.verts.new(back(x, h, d)) for x in (x0, x1) for h in (h0, h1) for d in (d0, d1)]
-        def v(i, j, k):
-            return P[i * 4 + j * 2 + k]
-        for f in (((0, 0, 1), (1, 0, 1), (1, 1, 1), (0, 1, 1)), ((0, 0, 0), (0, 0, 1), (0, 1, 1), (0, 1, 0)),
-                  ((1, 0, 0), (1, 1, 0), (1, 1, 1), (1, 0, 1)), ((0, 1, 0), (0, 1, 1), (1, 1, 1), (1, 1, 0)),
-                  ((0, 0, 0), (1, 0, 0), (1, 0, 1), (0, 0, 1))):
-            b.face([v(*c) for c in f], material)
-    tray_top = h_top - 0.12
-    d_at = rear_d(tray_top) - 0.004
-    panel(-tw / 2, tw / 2, tray_top - th, tray_top, d_at, d_at + 0.014, "Tray")
-    panel(-0.03, 0.03, tray_top + 0.005, tray_top + 0.03, d_at, d_at + 0.02, "Shell")
-    panel(-tw / 2 + 0.01, tw / 2 - 0.01, 0.06, tray_top - th - 0.03, rear_d(0.2) - 0.004, rear_d(0.2) + 0.016, "Tray")
+    def slab(x0, x1, h0, h1, d_of, depth, material, chamfer=0.0, nx=4, ny=3, side=None):
+        """A closed slab on the shell over [x0, x1] x [h0, h1], its face `depth` proud of the shell at d_of(x, h), its
+        corners chamfered: the face on a grid of nx x ny cells (one n-gon drew the baked light as one big triangle)."""
+        xs_ = [x0 + (x1 - x0) * i / nx for i in range(nx + 1)]
+        hs_ = [h0 + (h1 - h0) * j / ny for j in range(ny + 1)]
+        def pull(i, j, x, h):  # the four corners pulled in along the diagonal
+            if (i in (0, nx)) and (j in (0, ny)) and chamfer > 0:
+                x += chamfer * 0.5 * (1 if i == 0 else -1)
+                h += chamfer * 0.5 * (1 if j == 0 else -1)
+            return x, h
+        grid = [[pull(i, j, xs_[i], hs_[j]) for i in range(nx + 1)] for j in range(ny + 1)]
+        face_v = [[b.bm.verts.new(back(x, h, d_of(x, h) + depth(x, h))) for x, h in row] for row in grid]
+        for j in range(ny):
+            for i in range(nx):
+                b.face((face_v[j][i], face_v[j][i + 1], face_v[j + 1][i + 1], face_v[j + 1][i]), material)
+        ring = [(i, 0) for i in range(nx)] + [(nx, j) for j in range(ny)] + [(i, ny) for i in range(nx, 0, -1)] + [(0, j) for j in range(ny, 0, -1)]
+        top = [face_v[j][i] for i, j in ring]
+        # the back on the same grid, 3 mm inside the shell (one n-gon there was triangulated through the face)
+        back_v = [[b.bm.verts.new(back(x, h, d_of(x, h) - 0.003)) for x, h in row] for row in grid]
+        for j in range(ny):
+            for i in range(nx):
+                b.face((back_v[j][i], back_v[j + 1][i], back_v[j + 1][i + 1], back_v[j][i + 1]), side or material)
+        base = [back_v[j][i] for i, j in ring]
+        n = len(ring)
+        for k in range(n):
+            m = (k + 1) % n
+            b.face((base[k], base[m], top[m], top[k]), side or material)
+    shell_d = lambda x, h: rear_d(h, x)  # noqa: E731  the shell's rear face at (x, h)
+    tray_top = h_top - 0.13
+    slab(-tw / 2, tw / 2, tray_top - th, tray_top, shell_d, lambda x, h: 0.007, "Tray", chamfer=0.03, nx=6, ny=4)
+    slab(-0.022, 0.022, tray_top + 0.006, tray_top + 0.026, shell_d, lambda x, h: 0.011, "Grille", chamfer=0.008, nx=1, ny=1)
+    p_top, p_bot = tray_top - th - 0.035, 0.07
+    slab(-tw / 2 + 0.01, tw / 2 - 0.01, p_bot, p_top, shell_d, lambda x, h: 0.006 + 0.012 * ((h - p_bot) / (p_top - p_bot)), "Fabric",
+         chamfer=0.02, nx=6, ny=3)
+    slab(-tw / 2 + 0.012, tw / 2 - 0.012, p_top - 0.018, p_top, shell_d, lambda x, h: 0.021, "Shell", nx=4, ny=1)
     model.part(b, "Seat")
     return {"backRake": round(math.degrees(alpha), 2), "trayTop": round(cush + tray_top * math.cos(alpha), 4)}
 
 
 def build_armrest(model):
+    """One armrest: its side profile lofted across four widths, so its top is rounded; a strut under its back."""
     b = builder()
     top = F(CA["armrest_top"])
     y0 = FLOOR
-    prof = [(0.06, top - 0.03), (0.075, top), (0.42, top), (0.44, top - 0.05), (0.40, top - 0.07), (0.08, top - 0.07)]
-    xs = (-0.025, 0.025)
-    vs = [[b.bm.verts.new(bl(x, y0 + h, u)) for (u, h) in prof] for x in xs]
+    prof = [(0.06, top - 0.035), (0.064, top - 0.012), (0.075, top - 0.002), (0.09, top), (0.40, top), (0.425, top - 0.008),
+            (0.44, top - 0.03), (0.435, top - 0.055), (0.40, top - 0.07), (0.08, top - 0.07)]
+    across = ((-0.026, -0.009), (-0.02, -0.001), (0.02, -0.001), (0.026, -0.009))   # (x, drop of the top's edge)
+    vs = [[b.bm.verts.new(bl(x, y0 + h + (dh if h > top - 0.02 else 0.0), u)) for (u, h) in prof] for x, dh in across]
     n = len(prof)
-    for k in range(n):
-        j = (k + 1) % n
-        b.face((vs[0][k], vs[0][j], vs[1][j], vs[1][k]), "Shell")
-    b.face(vs[1], "Shell")
+    for c in range(len(across) - 1):
+        for k in range(n):
+            j = (k + 1) % n
+            b.face((vs[c][k], vs[c][j], vs[c + 1][j], vs[c + 1][k]), "Shell")
+    b.face(vs[-1], "Shell")
     b.face(vs[0][::-1], "Shell")
     box(b, -0.02, 0.02, y0 + F(CA["cushion_top"]) - 0.12, y0 + top - 0.07, 0.30, 0.42, "Shell")  # the support
     model.part(b, "Armrest")
@@ -442,6 +555,91 @@ def build_bin(model):
     x, h, _ = sec[1]
     return {"washStrip": [round(x, 4), round(FLOOR + h, 4)], "lip": [round(F(CA["bin_clearance"]) / 2, 4),
                                                                       round(FLOOR + F(CA["bin_lip_above_floor"]), 4)]}
+
+
+# The passenger service unit (PSU) under the bin over each row: a panel on the bin's underside with three reading lights
+# and three gaspers in a fore-and-aft line, the call button, and the passenger signs (no smoking, fasten seat belt)
+# with their pictograms. On the type the signs are in some rows' units only; here every row has them. Positions along
+# the panel and sizes are ESTIMATED from photographs of the type's cabins (no drawing gives them).
+PSU = {"from": 0.10, "to": 0.76, "lights_s": 0.16, "gaspers_s": 0.29, "along": (0.22, 0.38, 0.54), "light_r": 0.03,
+       "gasper_r": 0.021, "sign": {"s": 0.27, "z": 0.67, "size": (0.13, 0.06), "proud": 0.016}}
+
+
+def psu_frame():
+    """The bin's underside band the PSU sits on: origin (x, height above the floor), the unit vector along it (from
+    the sidewall toward the lip) and the unit normal into the cabin (down)."""
+    sec = bin_section()
+    (x1, h1, _), (x2, h2, _) = sec[3], sec[4]
+    L = math.hypot(x2 - x1, h2 - h1)
+    a = ((x2 - x1) / L, (h2 - h1) / L)
+    n = (a[1], -a[0])
+    if n[1] > 0:  # into the cabin is down
+        n = (-n[0], -n[1])
+    return (x1, h1), a, n, L
+
+
+def build_psu(model):
+    b = builder()
+    (x0, h0), a, n, L = psu_frame()
+
+    def P(s, z, d):
+        return bl(x0 + a[0] * s + n[0] * d, FLOOR + h0 + a[1] * s + n[1] * d, z)
+
+    def prism(outline, d0, d1, top, side=None):
+        """A closed prism on the panel: an outline of (s, z) from d0 to d1 into the cabin."""
+        lo = [b.bm.verts.new(P(s_, z, d0)) for s_, z in outline]
+        hi = [b.bm.verts.new(P(s_, z, d1)) for s_, z in outline]
+        b.face(hi, top)
+        b.face(lo[::-1], side or top)
+        for k in range(len(outline)):
+            j = (k + 1) % len(outline)
+            b.face((lo[k], lo[j], hi[j], hi[k]), side or top)
+
+    def circle(s, z, r, seg=14):
+        return [(s + r * math.cos(2 * math.pi * k / seg), z + r * math.sin(2 * math.pi * k / seg)) for k in range(seg)]
+
+    def rect_(s0, s1, z0, z1):
+        return [(s0, z0), (s1, z0), (s1, z1), (s0, z1)]
+    # the panel, proud of the bin's underside by 6 mm, its edges inset 2 cm from the band's
+    prism(rect_(0.04, L - 0.04, PSU["from"], PSU["to"]), -0.004, 0.006, "Psu")
+    for z in PSU["along"]:
+        # a reading light: a lens in a bezel
+        prism(circle(PSU["lights_s"], z, PSU["light_r"] + 0.008), 0.0, 0.010, "Psu")
+        prism(circle(PSU["lights_s"], z, PSU["light_r"]), 0.008, 0.012, "Lens")
+        # a gasper: a ball nozzle standing 15 mm out of its socket, its throat dark
+        prism(circle(PSU["gaspers_s"], z, PSU["gasper_r"]), 0.0, 0.014, "Psu")
+        prism(circle(PSU["gaspers_s"], z, PSU["gasper_r"] * 0.62, 10), 0.010, 0.022, "Psu")
+        prism(circle(PSU["gaspers_s"], z, PSU["gasper_r"] * 0.3, 8), 0.018, 0.0235, "Grille")
+    # the call button
+    prism(circle(PSU["lights_s"], PSU["sign"]["z"], 0.011, 10), 0.0, 0.012, "Psu")
+    prism(circle(PSU["lights_s"], PSU["sign"]["z"], 0.007, 10), 0.010, 0.0135, "Lens")
+    # the signs' box and its lit face, with the two pictograms standing 0.6 mm off it
+    sg = PSU["sign"]
+    zs, ss = sg["size"]
+    c_s, c_z, pr = sg["s"], sg["z"], sg["proud"]
+    prism(rect_(c_s - ss / 2 - 0.006, c_s + ss / 2 + 0.006, c_z - zs / 2 - 0.006, c_z + zs / 2 + 0.006), 0.0, pr - 0.001, "Psu")
+    prism(rect_(c_s - ss / 2, c_s + ss / 2, c_z - zs / 2, c_z + zs / 2), pr - 0.002, pr, "SignLit")
+    g0, g1 = pr - 0.0005, pr + 0.0006
+    # no smoking (forward half): a ring and its bar
+    zc = c_z - zs / 4
+    ring_r, ring_w, seg = 0.019, 0.004, 14
+    for k in range(seg):
+        t0, t1 = 2 * math.pi * k / seg, 2 * math.pi * (k + 1) / seg
+        pts = [(c_s + (ring_r - ring_w) * math.cos(t0), zc + (ring_r - ring_w) * math.sin(t0)),
+               (c_s + ring_r * math.cos(t0), zc + ring_r * math.sin(t0)),
+               (c_s + ring_r * math.cos(t1), zc + ring_r * math.sin(t1)),
+               (c_s + (ring_r - ring_w) * math.cos(t1), zc + (ring_r - ring_w) * math.sin(t1))]
+        prism(pts, g0, g1, "Grille")
+    d = (ring_r - ring_w / 2) * math.sqrt(0.5)
+    prism([(c_s - d - 0.002, zc - d + 0.002), (c_s - d + 0.002, zc - d - 0.002), (c_s + d + 0.002, zc + d - 0.002), (c_s + d - 0.002, zc + d + 0.002)],
+          g0, g1, "Grille")
+    # fasten seat belt (aft half): the two halves of the belt and the buckle between them
+    zc = c_z + zs / 4
+    prism(rect_(c_s - 0.004, c_s + 0.004, zc - 0.026, zc - 0.007), g0, g1, "Grille")
+    prism(rect_(c_s - 0.004, c_s + 0.004, zc + 0.007, zc + 0.026), g0, g1, "Grille")
+    prism(rect_(c_s - 0.009, c_s + 0.009, zc - 0.007, zc + 0.007), g0, g1, "Grille")
+    model.part(b, "Psu")
+    return {"from": PSU["from"], "to": PSU["to"], "sign": {"s": c_s, "z": c_z, "size": [zs, ss]}}
 
 
 # ------------------------------------------------------------------------------------------------ orientation
@@ -540,8 +738,11 @@ def shell_tris(u0, u1):
     return verts, tris
 
 
-def build_context(model, seat_x):
-    """Triangles of a stretch of cabin round the window at u = 0: (placement of each baked part, BVH)."""
+def build_context(model, seat_x, seats=True, offset=0.0):
+    """Triangles of a stretch of cabin round the window at u = 0, as a BVH, the seats' rows moved `offset` aft. The
+    parts every window shares (the bay, the filler, the shade, the panes, the bin) are baked against four of these, the
+    seats a quarter of a pitch apart, and the results averaged: the seats stand somewhere else beside each window, and
+    one placement baked into the bay drew that seat's shadow on every bezel."""
     pitch = 20.5 * 0.0254
     windows = [-2 * pitch, -pitch, 0.0, pitch, 2 * pitch]
     placed = []
@@ -555,9 +756,9 @@ def build_context(model, seat_x):
     # three rows: the eye's row with its window beside the eye (seat front 0.55 m ahead of the window)
     row_pitch = F(CA["pitch"])
     seat_xs = [seat_x - k * (F(CA["seat_width"]) + 0.0508) for k in range(3)]
-    for r in (-1, 0, 1):
+    for r in (-1, 0, 1, 2) if seats else ():
         for sx in seat_xs:
-            placed.append(("Seat", translation(-0.55 + r * row_pitch, sx)))
+            placed.append(("Seat", translation(-0.55 + offset + (r - 1 if offset > 0 else r) * row_pitch, sx)))
     verts, tris = shell_tris(-1.6, 1.6)
     for name, m in placed:
         v, t = mesh_tris(parts[name].obj, m)
@@ -599,7 +800,15 @@ def far_window(p):
     return ((-p.y) % FAR_PITCH) / FAR_PITCH < WW / FAR_PITCH
 
 
-def bake(model, placements, tree, lamps, rays=144):
+def bake(model, placements, trees, lamps, rays=144, peak=None, soft=False):
+    """Each corner's values against each context in `trees`, averaged."""
+    runs = [bake_one(model, placements, t, lamps, rays, soft) for t in trees]
+    raw = {name: [tuple(sum(r[name][i][c] for r in runs) / len(runs) for c in range(3)) for i in range(len(runs[0][name]))]
+           for name in runs[0]}
+    return write_bake(model, raw, peak)
+
+
+def bake_one(model, placements, tree, lamps, rays=144, soft=False):
     dirs = hemisphere(rays)
     stats = {}
     raw = {}
@@ -629,6 +838,11 @@ def bake(model, placements, tree, lamps, rays=144):
                 if hit[0] is None or far_window(hit[0]):
                     out += 1
                     open_near += 1
+                elif soft:
+                    # a surface near by closes the direction, one further off less so: open by the share of the
+                    # 0.6 m a hit leaves (the seat back facing the next row's seat 0.3 m off was closed outright and
+                    # drew near black; the cabin's diffuse light reaches it round that seat)
+                    open_near += min(1.0, hit[3] / 0.6) ** 0.7
                 elif hit[3] > 0.6:
                     open_near += 1
             wash = 0.0
@@ -647,13 +861,22 @@ def bake(model, placements, tree, lamps, rays=144):
             cache[key] = v
             vals.append(v)
         raw[name] = vals
-    peak = max(v[1] for name in ("Bay", "Filler") for v in raw[name]) or 1.0
+    return raw
+
+
+def write_bake(model, raw, peak=None):
+    stats = {}
+    if peak is None:
+        peak = max(v[1] for name in ("Bay", "Filler") for v in raw[name]) or 1.0
+    stats["_peak"] = peak
     for name, vals in raw.items():
         me = model.parts[name].obj.data
         layer = me.color_attributes.new("_CABIN", "FLOAT_COLOR", "CORNER")
         flat = []
-        for ao, wash, ff in vals:
-            flat += [ao, min(1.0, wash / peak), ff, 1.0]
+        # a: 1, but 0.5 on the PSU's forward half (the no-smoking sign's half of the signs' face: always lit)
+        half = [0.5 if name == "Psu" and -me.vertices[lp.vertex_index].co.y < PSU["sign"]["z"] else 1.0 for lp in me.loops]
+        for (ao, wash, ff), a in zip(vals, half):
+            flat += [ao, min(1.0, wash / peak), ff, a]
         layer.data.foreach_set("color", flat)
         stats[name] = {"ao_min": round(min(v[0] for v in vals), 3), "ao_mean": round(sum(v[0] for v in vals) / len(vals), 3),
                        "wash_max": round(max(min(1.0, v[1] / peak) for v in vals), 3),
@@ -742,11 +965,13 @@ def main():
     seat_info = build_seat(model)
     build_armrest(model)
     bin_info = build_bin(model)
+    psu_info = build_psu(model)
     orient_all(model)
     # the seats' lateral centre for the bake: the F seat (spec's seat and triple widths, aisle)
     arm = (F(CA["triple_width"]) - 3 * F(CA["seat_width"])) / 4
     seat_x = F(CA["aisle"]) / 2 + F(CA["triple_width"]) - arm - F(CA["seat_width"]) / 2
     tree = build_context(model, seat_x)
+    wall_trees = [build_context(model, seat_x, offset=k * F(CA["pitch"]) / 4) for k in range(4)]
     pitch = 20.5 * 0.0254
     placements = {"Bay": translation(0.0), "Filler": translation(pitch / 2) @ Matrix.Diagonal(Vector((1, pitch - 2 * HALF, 1, 1))),
                   "Shade": translation(0.0),
@@ -754,7 +979,13 @@ def main():
                   "Bin": translation(0.0)}
     for p in panes:
         placements[p] = translation(0.0)
-    stats = bake(model, placements, tree, wash_lamps(bin_info), rays=rays)
+    placements["Psu"] = translation(-0.55)
+    shared = {"Bay", "Filler", "Shade", "Bin", "PaneInner", "PaneMiddle", "PaneOuter"}
+    stats = bake(model, {k: v for k, v in placements.items() if k in shared}, wall_trees, wash_lamps(bin_info), rays=rays)
+    rest = bake(model, {k: v for k, v in placements.items() if k not in shared}, [tree], wash_lamps(bin_info), rays=rays,
+                peak=stats.pop("_peak"), soft=True)
+    rest.pop("_peak")
+    stats.update(rest)
     report = recheck_small_islands(model, model.check(max_tris=CABIN_TRIS))
     report["bake"] = stats
     report["measured"] = measured(model)
@@ -769,15 +1000,18 @@ def main():
                         "length (its own length is 1 m)", "Shade": "the window's centre station",
                         "PaneInner": "the window's centre station", "PaneMiddle": "the window's centre station",
                         "PaneOuter": "the window's centre station", "Seat": "the seat's front station, x on its centre",
-                        "Armrest": "the seat's front station, x between two seats", "Bin": "any station; scale z (1 m)"},
+                        "Armrest": "the seat's front station, x between two seats", "Bin": "any station; scale z (1 m)",
+                        "Psu": "each row's front station on the seat's side (its panel runs from psu.from to psu.to aft)"},
             "bay": {"halfLength": HALF, "square": SQUARE_V},
             "shade": shade,
             "panes": panes,
             "seat": seat_info,
             "bin": bin_info,
-            "attribute": {"name": "_CABIN", "r": "ambient occlusion within 0.6 m", "g": "window-wash light, 1 at "
+            "psu": psu_info,
+            "attribute": {"name": "_CABIN", "r": "ambient occlusion within 0.6 m (on Seat, Armrest and Psu a hit at d open by (d / 0.6)^0.7)", "g": "window-wash light, 1 at "
                           "the brightest sidewall corner", "b": "window form factor: share of the cosine-weighted "
-                          "hemisphere seeing out through a window", "a": "1"},
+                          "hemisphere seeing out through a window", "a": "1; 0.5 on the PSU's forward half (the always-lit "
+                          "no-smoking sign)"},
             "materials": COLORS,
             "triangles": report["tris"],
         }

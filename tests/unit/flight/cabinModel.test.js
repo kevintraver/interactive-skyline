@@ -144,6 +144,31 @@ describe('buildModelledCabin()', () => {
     c.dispose();
   });
 
+  it('slides the own shade round its track about the fuselage axis, up behind the trim', async () => {
+    const model = fakeModel();
+    model.info.shade.radius = FUSELAGE.trimRadius + 0.004;
+    const c = buildModelledCabin(model, seat('23F'), { nodes });
+    const mesh = c.meshes.get('Shade')[0], own = c.layout.bays.findIndex((b) => b.station === c.layout.own);
+    const m = new Matrix4();
+    const centre = (k) => { mesh.getMatrixAt(own, m); return new Vector3(k * Math.cos(0.5), FUSELAGE.axisY + k * Math.sin(0.5), 0).applyMatrix4(m); };
+    const r = model.info.shade.radius;
+    const open = centre(r);
+    // every point of the track stays on its circle, moved up it by the travel
+    expect(Math.hypot(open.x, open.y - FUSELAGE.axisY)).toBeCloseTo(r, 6);
+    expect(Math.atan2(open.y - FUSELAGE.axisY, open.x) - 0.5).toBeCloseTo(0.4 / r, 6);
+    c.setShade(1);
+    const shut = centre(r);
+    expect(shut.x).toBeCloseTo(r * Math.cos(0.5), 6);
+    expect(shut.z).toBeCloseTo(bodyZ(c.layout.own), 6);
+    // the left side's goes up its own side
+    c.setSeat(seat('23A'));
+    const ownL = c.layout.bays.findIndex((b) => b.station === c.layout.own);
+    c.meshes.get('Shade')[0].getMatrixAt(ownL, m);
+    const p = new Vector3(-r * Math.cos(0.5), FUSELAGE.axisY + r * Math.sin(0.5), 0).applyMatrix4(m);
+    expect(Math.atan2(p.y - FUSELAGE.axisY, -p.x) - 0.5).toBeCloseTo(0.4 / r, 6);
+    c.dispose();
+  });
+
   it('moves only the own shade, along its track, closed at 1', async () => {
     const model = fakeModel();
     const c = buildModelledCabin(model, seat('23F'), { nodes });
