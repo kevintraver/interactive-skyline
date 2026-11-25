@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Regional terrain</title>
+  <link rel="icon" href="data:,">
+  <style>
+    html, body { margin: 0; height: 100%; overflow: hidden; background: #000; color: #ccc; font: 12px monospace; }
+    canvas { display: block; width: 100vw; height: 100vh; touch-action: none; }
+    #log { position: fixed; left: 8px; bottom: 6px; pointer-events: none; text-shadow: 0 0 3px #000; white-space: pre; }
+  </style>
+</head>
+<body>
+  <!--
+    The regional terrain's harness (plan 03, F4.7 and F6.1): src/flight/terrain (region, approaches and valley, the
+    ground beyond region) with the map's near and far grids as the map draws them (src/city/terrain.js), alone: a sky
+    colour, the sun and sky light in the app's units, no city. The new renderer on either backend (?backend=webgl|webgpu).
+    Views from the recorded arrival (flight-terrain-views.js): ?view=cruise|cruise-right|fl180|lake-mead|east-valley|final.
+    Keys 1-6 step through them; G tints each grid; H toggles a haze (the legacy sky's density); P the photos.
+    Driven by flight-terrain-shots.mjs through window.__ft:
+      __ft.ready                      resolves when the map's grids are drawn
+      __ft.info                       { backend, reason, gpu }
+      await __ft.view(name, { tint, haze, photo, frames })
+                                      places the camera, loads what it needs, draws; resolves with stats():
+                                      the region's update stats, the renderer's draw calls and triangles with and without
+                                      the region terrain, and the frame cost (CPU ms of update + render, GPU ms where the
+                                      backend has timestamps)
+  -->
+  <canvas id="scene"></canvas>
+  <div id="log">loading</div>
+  <script type="module" src="./flight-terrain.js"></script>
+</body>
+</html>
