@@ -176,13 +176,13 @@ class Track:
 
 
 def smooth_track(ob, t_out, h_obs=None, sigma_h=None, sigma_pos=None, q_h=Q_HORIZONTAL, q_v=Q_VERTICAL,
-                 sigma_v=None):
+                 sigma_v=None, sigma_vz=None):
     """Smoothed position and velocity at `t_out` (epoch seconds). Heights from `h_obs` (default: ob.h)."""
     h_obs = ob.h if h_obs is None else h_obs
     sp = np.where(ob.ground, SIGMA_POS_GROUND, SIGMA_POS_AIR) if sigma_pos is None else sigma_pos
     sh = np.full(len(ob.t), SIGMA_H) if sigma_h is None else sigma_h
     sv = np.full(len(ob.t), SIGMA_V) if sigma_v is None else sigma_v
-    svz = np.full(len(ob.t), SIGMA_VZ)
+    svz = np.full(len(ob.t), SIGMA_VZ) if sigma_vz is None else sigma_vz
     x, vx, ax = rts(ob.t, ob.x, sp, ob.vx, sv, t_out, q_h)
     n, vn, an = rts(ob.t, ob.n, sp, ob.vn, sv, t_out, q_h)
     h, vz, _ = rts(ob.t, h_obs, sh, ob.vz, svz, t_out, q_v)
@@ -312,3 +312,100 @@ def stale_velocity(ob, td, lead_s=2.0, speed_tol=0.05, track_tol=0.05):
                 and abs((trk[i] - trk[i - 1] + 180) % 360 - 180) < track_tol:
             out[i] = True
     return out
+
+
+# --- the flare, blended into the smoothed path (validation of plan 03, section 4) ---------------------------------
+#
+# The smoothed path is kept as it is down to the flare's entry; from there a cubic Hermite carries the wheels to the
+# runway at the recorded touchdown, leaving with the path's own height and sink rate (so the vertical speed is
+# continuous) and arriving at a touchdown sink rate. The entry is chosen 6 to 10 m above the runway and 3 to 5 s
+# before touchdown, as a 737's flare begins [B8, B11], and so that the sink only decreases through the flare: for a
+# cubic between sink rates a (entry) and s (touchdown) over T seconds that holds exactly when the mean sink y_e / T lies
+# between (a + 2s) / 3 and (2a + s) / 3. Nothing above the entry is moved.
+
+FLARE_ENTRY_M = (6.0, 10.0)
+FLARE_LEAD_S = (3.0, 5.0)
+FLARE_TD_SINK = (0.3, 1.5)        # m/s at the wheels: 1 to 5 ft/s
+FLARE_TD_SINK_NOMINAL = 0.7
+_WIDE = {"lead": (1.5, 8.0), "sink": (0.1, 2.5)}
+
+
+def flare_curve(info, t):
+    """The blend's wheel height at times t in [tf, tf + duration]."""
+    T = info["duration"]
+    u = (np.asarray(t, dtype=float) - info["tf"]) / T
+    h00 = 2 * u**3 - 3 * u**2 + 1
+    h10 = u**3 - 2 * u**2 + u
+    h11 = u**3 - u**2
+    return h00 * info["y0"] + h10 * T * (-info["sink0"]) + h11 * T * (-info["tdSink"])
+
+
+def _flare_candidates(t, y, vz, t_td, lead, sink_rng, step=0.1):
+    out = []
+    for t_e in np.arange(t_td - lead[1], t_td - lead[0] + 1e-9, step):
+        y_e = float(np.interp(t_e, t, y))
+        a = -float(np.interp(t_e, t, vz))
+        T = float(t_td - t_e)
+        if y_e <= 0 or a <= 0:
+            continue
+        D = y_e / T
+        s_lo, s_hi = max(sink_rng[0], 3 * D - 2 * a), min(sink_rng[1], (3 * D - a) / 2)
+        # the touchdown sink within the allowed range whose last second is gentlest: the app shows the wheels' sink
+        # at touchdown as the drop over the last 1 s sample (src/flight/track.js), not the instantaneous rate
+        best_s, best_eff, info = None, None, None
+        for s in np.linspace(min(s_lo, s_hi), max(s_lo, s_hi), 13):
+            cand = {"tf": float(t_e), "y0": y_e, "sink0": a, "tdSink": float(s), "duration": T}
+            eff = float(flare_curve(cand, np.array([max(t_td - 1.0, t_e)]))[0]) / min(1.0, T)
+            if best_eff is None or abs(eff - FLARE_TD_SINK_NOMINAL) < abs(best_eff - FLARE_TD_SINK_NOMINAL):
+                best_s, best_eff, info = s, eff, cand
+        yy = flare_curve(info, np.linspace(t_e, t_td, 60)[:-1])
+        if (yy <= 0).any():
+            continue
+        info["lastSecondSinkMs"] = best_eff
+        dist = lambda v, rng: max(rng[0] - v, 0.0, v - rng[1])  # noqa: E731
+        cost = abs(best_eff - FLARE_TD_SINK_NOMINAL) + 0.5 * dist(y_e, FLARE_ENTRY_M) + 0.5 * dist(T, FLARE_LEAD_S)
+        out.append((s_lo <= s_hi, max(0.0, s_lo - s_hi), cost, info,
+                    dist(y_e, FLARE_ENTRY_M) == 0 and dist(T, FLARE_LEAD_S) == 0 and s_lo <= s_hi))
+    return out
+
+
+def flare_blend(t, y, vz, t_td):
+    """Replace the last seconds of a wheel-height series y(t) (m above the landing runway, with its vertical speed
+    vz) by a flare that leaves the series at a point 6 to 10 m up and 3 to 5 s before `t_td` (both continuous: height
+    and vertical speed) and puts the wheels on the runway at t_td with a decreasing sink rate. The series above the
+    entry is returned unchanged; after t_td the wheels are on the runway. If no entry in the nominal ranges gives a
+    flare whose sink only decreases, the ranges are widened, and failing that the entry with the least violation is
+    used; `info["nominal"]` says which. Returns (y_new, info)."""
+    t = np.asarray(t, dtype=float)
+    y = np.asarray(y, dtype=float)
+    vz = np.asarray(vz, dtype=float)
+    cands = _flare_candidates(t, y, vz, t_td, FLARE_LEAD_S, FLARE_TD_SINK)
+    good = [c for c in cands if c[4]]
+    nominal = bool(good)
+    if not good:
+        cands = _flare_candidates(t, y, vz, t_td, _WIDE["lead"], _WIDE["sink"])
+        good = [c for c in cands if c[0]]
+    if good:
+        info = min(good, key=lambda c: c[2])[3]
+    elif cands:
+        info = min(cands, key=lambda c: (c[1], c[2]))[3]
+    else:
+        raise ValueError("no flare fits the recorded touchdown")
+    info["nominal"] = nominal
+    out = y.copy()
+    fl = (t > info["tf"]) & (t <= t_td)
+    out[fl] = flare_curve(info, t[fl])
+    out[t >= t_td] = 0.0
+    return out, info
+
+
+def with_pseudo_height(ob, t, h):
+    """The observations with one more: a height `h` at time `t` and nothing else (no position, no velocity). Used
+    to tell the vertical smoother where the wheels met the runway. Returns (obs, index of the new one)."""
+    nan = np.array([np.nan])
+    extra = {"t": np.array([float(t)]), "x": nan, "n": nan, "h": np.array([float(h)]), "hb": nan, "vx": nan,
+             "vn": nan, "vz": nan, "ground": np.array([False]), "src": np.array(["touchdown"]),
+             "reported_ground": np.array([False])}
+    fields = {k: np.concatenate([getattr(ob, k), extra[k].astype(getattr(ob, k).dtype, copy=False)
+                                 if k not in ("src",) else extra[k]]) for k in ob.__dataclass_fields__}
+    return Obs(**fields), len(ob.t)

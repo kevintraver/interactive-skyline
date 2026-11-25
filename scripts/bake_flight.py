@@ -77,6 +77,9 @@ PUBLISHED = {"19R": {"angles": [3.24], "tchFt": [60]}, "19L": {"angles": [3.00],
              "26L": {"angles": [3.00], "tchFt": [60]}, "26R": {"angles": [3.00], "tchFt": [60]},
              "1L": {"angles": [3.40], "tchFt": [59]}}
 TCH_GATE_M = (12.0, 32.0)
+BARO_RATE_GROUND_M = 30.0    # m of wheel height: about the wingspan (35.8 m), where ground effect begins (estimate)
+SIGMA_VZ_GROUND_EFFECT = 2.0  # m/s for a barometric vertical rate below that (estimate)
+SIGMA_TOUCHDOWN_M = 0.5      # m: the antenna's height over the runway profile at the recorded touchdown
 SIGMA_V_GROUND = 3.0         # m/s: recorded ground velocity after touchdown (section 7.2 gives 1 m/s in the air)
 FLAP_LIMIT_KT = config_schedule.FLAP_LIMIT_KT
 # Section 5.5's bits, as settled on 24 November and read by src/flight/track.js.
@@ -362,7 +365,30 @@ def bake(p, airport, frame, *, metar, runway=None, flight_id, lead_s=1800.0, wid
     # on the runway the recorded speed lags and steps through the change to the surface format; the positions
     # (sigma 3 m there) lead
     sig_v = np.where(ob.ground, SIGMA_V_GROUND, smooth.SIGMA_V)
-    trk = smooth.smooth_track(ob, t_out, h_obs=h_obs, sigma_h=sig_h, sigma_pos=sig_pos, sigma_v=sig_v)
+    # The recorded touchdown is an observation too: at that moment the wheels are on the landing runway's profile,
+    # the antenna ANTENNA_ABOVE_WHEELS_M above it. Without it the vertical smoother, which sees no height after the
+    # touchdown, can arrive there metres high, and the flare must then either move the path or land late.
+    ob_s = ob
+    td_pin = None
+    if surface_rec:
+        x_td, n_td = float(np.interp(td, ob.t, ob.x)), float(np.interp(td, ob.t, ob.n))
+        z_td = float(_profile_at(rwy, airport, np.array([x_td]), np.array([n_td]))[2][0])
+        td_pin = z_td + ANTENNA_ABOVE_WHEELS_M
+        ob_s, j = smooth.with_pseudo_height(ob, td, td_pin)
+        h_obs = np.concatenate([h_obs, [td_pin]])
+        sig_h = np.concatenate([sig_h, [SIGMA_TOUCHDOWN_M]])
+        sig_pos = np.concatenate([sig_pos, [smooth.SIGMA_POS_GROUND]])
+        sig_v = np.concatenate([sig_v, [smooth.SIGMA_V]])
+    # A barometric vertical rate in the last tens of metres over the runway is the least reliable observation there:
+    # in ground effect the pressure at the static ports shifts, and the rate eases off before the height does. Below
+    # BARO_RATE_GROUND_M over the landing runway's profile it is weighted down, so the heights lead.
+    sig_vz = np.full(len(ob_s.t), smooth.SIGMA_VZ)
+    z_obs = _profile_at(rwy, airport, np.nan_to_num(ob_s.x), np.nan_to_num(ob_s.n))[2]
+    near_ground = np.isfinite(h_obs) & (h_obs - ANTENNA_ABOVE_WHEELS_M - z_obs < BARO_RATE_GROUND_M) \
+        & np.concatenate([baro_rate, np.zeros(len(ob_s.t) - len(baro_rate), bool)])
+    sig_vz = np.where(near_ground, SIGMA_VZ_GROUND_EFFECT, sig_vz)
+    trk = smooth.smooth_track(ob_s, t_out, h_obs=h_obs, sigma_h=sig_h, sigma_pos=sig_pos, sigma_v=sig_v,
+                              sigma_vz=sig_vz)
     x, n, vx, vn, vz = trk.x.copy(), trk.n.copy(), trk.vx.copy(), trk.vn.copy(), trk.vz.copy()
     elev = surface_elevation(airport, x, n)
     ant = trk.h.copy()
@@ -431,13 +457,21 @@ def bake(p, airport, frame, *, metar, runway=None, flight_id, lead_s=1800.0, wid
         reconstructed.append({"from": int(round(tt[0] - t0)), "to": int(round(tt[-1] - t0)),
                               "what": "rollout: constant deceleration of %.1f m/s2 to taxi speed along the centre line"
                                       % decel})
-    win = (t_out >= td - 150) & (t_out <= td + 3)
-    y_new, flare_info = smooth.flare(t_out[win], wheels[win], td)
-    wheels[win] = y_new
-    wheels[t_out > td] = 0.0
+    # The flare (smooth.flare_blend): the smoothed path is kept down to the flare's entry, 6 to 10 m over the landing
+    # runway and 3 to 5 s before the recorded touchdown, and blended from there onto the runway at that moment, with
+    # the height and the vertical speed continuous. Worked in height over the landing runway's own profile (held level
+    # before its threshold), so the nearest-runway surface does not step under the final.
     air = t_out < td
-    wheels = np.where(air, np.maximum(wheels, 0.0), 0.0)
-    h = elev + wheels
+    k_td = int(np.searchsorted(t_out, td))
+    z_rwy = _profile_at(rwy, airport, x, n)[2]
+    y_rwy = ant - ANTENNA_ABOVE_WHEELS_M - z_rwy
+    win = (t_out >= td - 150) & (t_out <= td + 3)
+    y_new, flare_info = smooth.flare_blend(t_out[win], y_rwy[win], np.gradient(y_rwy[win], t_out[win]), td)
+    h = np.where(air, ant - ANTENNA_ABOVE_WHEELS_M, elev)            # above the flare: the smoothed antenna, as is
+    blend = win & air & (t_out > flare_info["tf"])
+    h[blend] = z_rwy[blend] + y_new[np.flatnonzero(blend) - np.flatnonzero(win)[0]]
+    h = np.where(air, np.maximum(h, elev), elev)                     # never under the ground before touchdown
+    wheels = h - elev
 
     # 8 Air data: wind from the upper-air rows with the surface report blended in underneath (or the surface report on
     # a power-law profile), turned from true north into the grid; air velocity = ground velocity - wind
@@ -527,12 +561,18 @@ def bake(p, airport, frame, *, metar, runway=None, flight_id, lead_s=1800.0, wid
                 "turbulence": turbulence}
     channels = {k: np.asarray(channels[k], dtype=np.float32) for k in CHANNELS}
 
-    # --- QA (section 7.2's gates) ---
-    sx, sn = np.interp(ob.t, t_out, x), np.interp(ob.t, t_out, n)
+    # --- QA (section 7.2's gates), every one computed on the arrays as served: the float32 channels written to the
+    # .bin, the antenna ANTENNA_ABOVE_WHEELS_M over the served wheels. (The validation of 25 November found the
+    # height gates measuring the path before the flare fit moved it.) ---
+    srv = {k: v.astype(np.float64) for k, v in channels.items()}
+    ant_srv = srv["h"] + ANTENNA_ABOVE_WHEELS_M
+    along_thr, lat_thr = adsb.runway_coords(end, srv["x"], srv["n"])
+    sx, sn = np.interp(ob.t, t_out, srv["x"]), np.interp(ob.t, t_out, srv["n"])
     in_range = (ob.t >= t_out[0]) & (ob.t <= t_out[-1])
     perr = np.hypot(sx - ob.x, sn - ob.n)
-    s_ant = np.interp(ob.t, t_out, ant)
-    s_elev_obs = np.interp(ob.t, t_out, elev)
+    s_ant = np.interp(ob.t, t_out, ant_srv)
+    s_elev_obs = surface_elevation(airport, sx, sn)
+    final_seg = (np.arange(len(s)) >= (i_thr - 400)) & (np.abs(lat_thr) < 600)
     obs_air = in_range & ~ob.ground & (ob.t < td)
     low300 = obs_air & (s_ant - ANTENNA_ABOVE_WHEELS_M - s_elev_obs < 300)
     raw_h = ob.h - cal["offsetM"]
@@ -543,7 +583,7 @@ def bake(p, airport, frame, *, metar, runway=None, flight_id, lead_s=1800.0, wid
 
     fin = air & final_seg & (np.arange(len(s)) <= i_thr) & (along_thr > -3000) & (along_thr < -1000)
     if fin.sum() >= 5:
-        slope = np.polyfit(along_thr[fin], ant[fin], 1)[0]
+        slope = np.polyfit(along_thr[fin], ant_srv[fin], 1)[0]
         gp = float(math.degrees(math.atan(-slope)))   # height falls as the along-runway distance grows
     else:
         gp = None
@@ -553,13 +593,13 @@ def bake(p, airport, frame, *, metar, runway=None, flight_id, lead_s=1800.0, wid
     if 0 < i_thr < len(s):
         a0, a1 = along_thr[i_thr - 1], along_thr[i_thr]
         f = -a0 / (a1 - a0) if a1 != a0 else 0.0
-        ant_at_thr = float(ant[i_thr - 1] + f * (ant[i_thr] - ant[i_thr - 1]))
+        ant_at_thr = float(ant_srv[i_thr - 1] + f * (ant_srv[i_thr] - ant_srv[i_thr - 1]))
     else:
         ant_at_thr = None
     tch = None if ant_at_thr is None else ant_at_thr - end["threshold"][2]
     i_td = min(int(np.searchsorted(t_out, td)), len(t_out) - 1)
     td_along, td_lat = float(along_thr[i_td]), float(lat_thr[i_td])
-    decel = -np.gradient(gs, t_out)
+    decel = -np.gradient(srv["gs"], t_out)
     gates = {
         "positionRmsAirM": {"value": rms(perr[obs_air]), "max": 12.0},
         "positionRmsLowM": {"value": rms(perr[low300]), "max": 5.0},
@@ -571,8 +611,9 @@ def bake(p, airport, frame, *, metar, runway=None, flight_id, lead_s=1800.0, wid
                             "max": TCH_GATE_M[1]},
         "touchdownPastThresholdM": {"value": round(td_along, 1), "min": 250.0, "max": 1000.0},
         "touchdownOffCentreM": {"value": round(td_lat, 1), "maxAbs": 8.0},
-        "bankDeg": {"value": round(float(np.abs(roll).max()), 1), "maxAbs": 35.0},
-        "pitchDeg": {"value": [round(float(pitch.min()), 1), round(float(pitch.max()), 1)], "min": -6.0, "max": 12.0},
+        "bankDeg": {"value": round(float(np.abs(srv["roll"]).max()), 1), "maxAbs": 35.0},
+        "pitchDeg": {"value": [round(float(srv["pitch"].min()), 1), round(float(srv["pitch"].max()), 1)],
+                     "min": -6.0, "max": 12.0},
         "decelerationMs2": {"value": round(float(decel[after].max()) if after.any() else 0.0, 2), "max": 3.5},
     }
     for k, gt in gates.items():
@@ -735,8 +776,12 @@ def bake(p, airport, frame, *, metar, runway=None, flight_id, lead_s=1800.0, wid
             "touchdownSource": land.get("touchdownSource", "estimated") if surface_rec else "modelled flare",
             "touchdownOffCentreM": gates["touchdownOffCentreM"]["value"],
             "altitudeOffsetM": cal["offsetM"], "datum": cal["datum"], "calibration": cal,
-            "flare": {k: round(v, 3) if isinstance(v, float) else v for k, v in flare_info.items()
-                      if k in ("y0", "tdSink", "sink0", "duration", "shift", "err")},
+            "flare": {"entryHeightM": round(flare_info["y0"], 2), "entrySinkMs": round(flare_info["sink0"], 2),
+                      "touchdownSinkMs": round(flare_info["tdSink"], 2),
+                      "lastSecondSinkMs": round(flare_info["lastSecondSinkMs"], 2),
+                      "durationS": round(flare_info["duration"], 2),
+                      "nominal": flare_info["nominal"],
+                      "touchdownRunwayElevationM": None if td_pin is None else round(td_pin - ANTENNA_ABOVE_WHEELS_M, 2)},
             "sunAtTouchdownDeg": round(sun_td, 1), "adsbShare": round(share, 4), "gatedOut": dropped,
             "antennaAboveWheelsM": ANTENNA_ABOVE_WHEELS_M,
             "gates": gates, "waived": waived, "reported": report_only,

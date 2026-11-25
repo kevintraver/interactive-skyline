@@ -17,18 +17,63 @@ def test_the_flare_profile_reaches_the_runway_at_the_chosen_sink_rate():
     assert 3.0 < dur < 6.0
 
 
-def test_flare_ends_on_the_transition_time():
+def _check_blend(t, y, vz, t_td, out, info, nominal=True):
+    i_e = np.searchsorted(t, info["tf"])                    # first sample at or after the flare's entry
+    # above the flare the path is the input, untouched
+    assert np.array_equal(out[:i_e], y[:i_e])
+    # wheels on the runway at the recorded moment, nothing below it before
+    k = int(np.flatnonzero(t == t_td)[0])
+    assert out[k] == pytest.approx(0.0, abs=1e-9)
+    assert (out[:k] > 0).all()
+    if nominal:
+        assert info["nominal"] is True
+        assert 6.0 <= info["y0"] <= 10.0 and 3.0 <= info["duration"] <= 5.0
+        assert 0.3 <= info["tdSink"] <= 1.5
+    # the vertical speed is continuous at the entry: the blend leaves with the path's own sink rate
+    assert info["sink0"] == pytest.approx(-np.interp(info["tf"], t, vz), abs=1e-6)
+    # and the sink only decreases through the flare (sampled finely from the blend itself)
+    tt = np.linspace(info["tf"], t_td, 200)
+    yy = smooth.flare_curve(info, tt)
+    sink = -np.gradient(yy, tt)
+    assert np.all(np.diff(sink) <= 1e-6)
+    assert sink[-1] == pytest.approx(info["tdSink"], abs=0.05)
+    assert yy[0] == pytest.approx(np.interp(info["tf"], t, y), abs=1e-6)
+    assert "shift" not in info
+
+
+def test_the_flare_meets_the_runway_at_the_recorded_moment_without_moving_the_path_above_it():
     # a 3-degree glide at 72 m/s whose straight line would reach the runway 2 s before the recorded transition
-    t = np.arange(0, 60.0, 0.5)
+    t = np.arange(0, 60.0, 1.0)
     t_td = 50.0
-    y = np.maximum(3.77 * (48.0 - t), 0.0)
-    out, info = smooth.flare(t, y, t_td)
-    assert 6.0 <= info["y0"] <= 9.0 and 0.5 <= info["tdSink"] <= 1.0
-    i = np.searchsorted(t, t_td)
-    assert out[i] == pytest.approx(0.0, abs=0.3)
-    sink = -np.gradient(out, t)
-    assert 0.3 <= sink[i - 1] <= 1.2
-    assert (out >= 0).all()
+    y = 3.77 * (48.0 - t)
+    vz = np.full(len(t), -3.77)
+    out, info = smooth.flare_blend(t, y, vz, t_td)
+    _check_blend(t, y, vz, t_td, out, info)
+
+
+def test_the_flare_from_a_path_already_rounding_out():
+    # as smoothed on lv-26-night (the recorded vertical rate levels in the last 3 s, the smoother is tied to the
+    # runway at the recorded touchdown): 16.0, 11.5, 7.6, 4.3, 1.8 and 0.0 m at 5 to 0 s before touchdown
+    t = np.arange(-60.0, 10.0, 1.0)
+    known_t = np.array([-60.0, -5, -4, -3, -2, -1, 0, 9])
+    known_y = np.array([16.0 + 4.4 * 55, 16.0, 11.5, 7.6, 4.3, 1.8, 0.0, 0.0])
+    y = np.interp(t, known_t, known_y)
+    vz = np.gradient(y, t)
+    out, info = smooth.flare_blend(t, y, vz, 0.0)
+    _check_blend(t, y, vz, 0.0, out, info)
+
+
+def test_a_path_too_high_for_a_nominal_flare_still_lands_on_time_and_says_so():
+    # 5 m up at touchdown and barely sinking: no flare of 6 to 10 m in 3 to 5 s fits; the blend still ends on the
+    # runway at the recorded moment, never below it, and the info says the fit is outside the nominal ranges
+    t = np.arange(-60.0, 10.0, 1.0)
+    vz = np.full(len(t), -1.0)
+    y = 5.0 - 1.0 * t
+    out, info = smooth.flare_blend(t, y, vz, 0.0)
+    k = int(np.flatnonzero(t == 0)[0])
+    assert info["nominal"] is False
+    assert out[k] == pytest.approx(0.0, abs=1e-9) and (out[:k] > 0).all()
+    assert np.array_equal(out[:np.searchsorted(t, info["tf"])], y[:np.searchsorted(t, info["tf"])])
 
 
 def test_the_baked_flight_lands_on_the_runway_at_the_recorded_moment(synthetic, lv_frame, lv_airport):

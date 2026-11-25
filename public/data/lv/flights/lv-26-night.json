@@ -84,7 +84,7 @@
   "roll": "coordinated turn, atan(V w / g), from the turn rate of the air velocity; limited to 30 deg and 5 deg/s",
   "pitch": "flight-path angle through the air plus angle of attack from lift, CL = n W / (q S) with alpha = alpha0(flap) + CL / CLalpha fitted to the reference attitudes of section 7.3; weight 64.3 t from the approach speed; the flare raises the nose at most 3 deg; the nose comes down over 5 s after touchdown",
   "turbulence": "30 s RMS of the recorded minus the smoothed vertical rate, 2 m/s = 1",
-  "flap": "selected 1, 5, 15, 30 by speed (within 10 kt of the current setting's manoeuvring speed for 64 t) or gate (1 by 22 km, 5 before joining final, 15 with the gear, landing flap by 300 m), never while the rest of the approach exceeds the new setting's placard; travel 1 lever unit/s (estimate); selected: 1 at 1205s (speed), 5 at 1313s (before joining final), 15 at 1602s (speed), 30 at 1648s (speed)",
+  "flap": "selected 1, 5, 15, 30 by speed (within 10 kt of the current setting's manoeuvring speed for 64 t) or gate (1 by 22 km, 5 before joining final, 15 with the gear, landing flap by 300 m), never while the rest of the approach exceeds the new setting's placard; travel 1 lever unit/s (estimate); selected: 1 at 1205s (speed), 5 at 1313s (before joining final), 15 at 1603s (speed), 30 at 1648s (speed)",
   "slat": "extend with flaps 1 to 5, full extend beyond 5 (spec.py SLATS schedule)",
   "gear": "down with flaps 15, never above 270 kt, before the landing flap; 10 s travel (estimate)",
   "speedbrake": "low confidence: only where the descent, in energy terms, is more than 25% steeper than clean idle explains, clean and above 600 m; 0 on the ground (the ground spoilers carry it there)",
@@ -95,9 +95,9 @@
  },
  "reconstructed": [
   {
-   "from": 1794,
+   "from": 1795,
    "to": 1799,
-   "what": "flare: wheel height modelled from 9.0 m to the runway"
+   "what": "flare: wheel height modelled from 9.7 m to the runway"
   }
  ],
  "events": [
@@ -132,14 +132,14 @@
    "label": "Over the valley's terrain"
   },
   {
-   "t": 1602,
-   "s": 287440.9,
+   "t": 1603,
+   "s": 287540.5,
    "id": "gear",
    "label": "Gear down"
   },
   {
-   "t": 1726,
-   "s": 298584.5,
+   "t": 1727,
+   "s": 298665.1,
    "id": "ft1000",
    "label": "1,000 ft above the runway"
   },
@@ -197,18 +197,18 @@
    "id": "terrain",
    "label": "Over the valley's terrain",
    "from": 1360,
-   "to": 1602
+   "to": 1603
   },
   {
    "id": "gear",
    "label": "Gear down",
-   "from": 1602,
-   "to": 1726
+   "from": 1603,
+   "to": 1727
   },
   {
    "id": "ft1000",
    "label": "1,000 ft above the runway",
-   "from": 1726,
+   "from": 1727,
    "to": 1794
   },
   {
@@ -330,8 +330,8 @@
  ],
  "atmosphereNote": "altitude m above sea level, temperature degC, wind toward grid east and grid north m/s (true north turned into the city grid at the airport); Open-Meteo GFS pressure levels for the hour (section 6.4), with the airport's surface report blended in below 600 m above it",
  "inferred": {
-  "weightKg": 64316,
-  "approachSpeedKt": 152.2,
+  "weightKg": 64290,
+  "approachSpeedKt": 152.1,
   "landingFlap": 30,
   "flapSelections": [
    {
@@ -346,7 +346,7 @@
    },
    {
     "flap": 15,
-    "t": 1602,
+    "t": 1603,
     "why": "speed"
    },
    {
@@ -355,7 +355,7 @@
     "why": "speed"
    }
   ],
-  "gearDownT": 1602,
+  "gearDownT": 1603,
   "joinFinalT": 1343,
   "maxCrabDeg": 11.4,
   "maxMach": 0.794
@@ -369,7 +369,7 @@
  },
  "qa": {
   "glidePathDeg": 3.06,
-  "crossingHeightM": 23.7,
+  "crossingHeightM": 23.2,
   "touchdownPastThresholdM": 440.2,
   "touchdownRecorded": true,
   "touchdownSource": "levelled before the surface flag",
@@ -386,12 +386,13 @@
    "datum": "ellipsoid"
   },
   "flare": {
-   "err": -0.017,
-   "y0": 9.0,
-   "tdSink": 0.5,
-   "sink0": 4.364,
-   "duration": 5.047,
-   "shift": -7.25
+   "entryHeightM": 9.68,
+   "entrySinkMs": 3.79,
+   "touchdownSinkMs": 0.48,
+   "lastSecondSinkMs": 1.32,
+   "durationS": 3.6,
+   "nominal": true,
+   "touchdownRunwayElevationM": 628.89
   },
   "sunAtTouchdownDeg": -31.7,
   "adsbShare": 1.0,
@@ -409,12 +410,12 @@
     "pass": true
    },
    "heightRmsAirM": {
-    "value": 2.48,
+    "value": 2.49,
     "max": 8.0,
     "pass": true
    },
    "heightRmsLast60sM": {
-    "value": 2.29,
+    "value": 2.31,
     "max": 3.0,
     "pass": true
    },
@@ -427,7 +428,7 @@
     "warn": false
    },
    "crossingHeightM": {
-    "value": 23.7,
+    "value": 23.2,
     "min": 12.0,
     "max": 32.0,
     "pass": true
@@ -451,7 +452,7 @@
    "pitchDeg": {
     "value": [
      -2.0,
-     5.4
+     4.5
     ],
     "min": -6.0,
     "max": 12.0,
@@ -473,7 +474,7 @@
     "pass": true
    },
    "gearBeforeLandingFlapS": {
-    "value": 46.0,
+    "value": 45.0,
     "min": 0.1,
     "pass": true
    },
@@ -484,7 +485,7 @@
   },
   "waived": [],
   "reported": {
-   "heightBiasLast60sM": -0.09,
+   "heightBiasLast60sM": -0.17,
    "heightPointsLast60s": 67,
    "roll": {
     "rms": null,
@@ -511,8 +512,8 @@
    "aheadShare": 0.7,
    "rightShareLastMinute": 0.665,
    "leftShareLastMinute": 0.0,
-   "meanRelativeBearingDeg": 30.13,
-   "maxAbsBearingLastMinuteDeg": 52.613,
+   "meanRelativeBearingDeg": 30.138,
+   "maxAbsBearingLastMinuteDeg": 52.596,
    "stripSide": "right",
    "stripView": "ahead-right"
   },

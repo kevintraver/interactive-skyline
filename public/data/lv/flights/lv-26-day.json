@@ -95,9 +95,9 @@
  },
  "reconstructed": [
   {
-   "from": 1797,
+   "from": 1796,
    "to": 1800,
-   "what": "flare: wheel height modelled from 6.5 m to the runway"
+   "what": "flare: wheel height modelled from 10.0 m to the runway"
   }
  ],
  "events": [
@@ -369,7 +369,7 @@
  },
  "qa": {
   "glidePathDeg": 3.12,
-  "crossingHeightM": 20.5,
+  "crossingHeightM": 20.8,
   "touchdownPastThresholdM": 381.8,
   "touchdownRecorded": true,
   "touchdownSource": "levelled before the surface flag",
@@ -386,12 +386,13 @@
    "datum": "ellipsoid"
   },
   "flare": {
-   "err": -0.022,
-   "y0": 6.5,
-   "tdSink": 1.0,
-   "sink0": 3.616,
-   "duration": 3.194,
-   "shift": 0.0
+   "entryHeightM": 9.97,
+   "entrySinkMs": 4.01,
+   "touchdownSinkMs": 0.3,
+   "lastSecondSinkMs": 0.98,
+   "durationS": 4.0,
+   "nominal": true,
+   "touchdownRunwayElevationM": 628.04
   },
   "sunAtTouchdownDeg": 15.4,
   "adsbShare": 1.0,
@@ -409,12 +410,12 @@
     "pass": true
    },
    "heightRmsAirM": {
-    "value": 3.42,
+    "value": 3.43,
     "max": 8.0,
     "pass": true
    },
    "heightRmsLast60sM": {
-    "value": 2.35,
+    "value": 2.34,
     "max": 3.0,
     "pass": true
    },
@@ -427,7 +428,7 @@
     "warn": false
    },
    "crossingHeightM": {
-    "value": 20.5,
+    "value": 20.8,
     "min": 12.0,
     "max": 32.0,
     "pass": true
@@ -451,7 +452,7 @@
    "pitchDeg": {
     "value": [
      -3.7,
-     4.7
+     4.6
     ],
     "min": -6.0,
     "max": 12.0,
@@ -484,7 +485,7 @@
   },
   "waived": [],
   "reported": {
-   "heightBiasLast60sM": -0.32,
+   "heightBiasLast60sM": -0.25,
    "heightPointsLast60s": 76,
    "roll": {
     "rms": null,
@@ -512,7 +513,7 @@
    "rightShareLastMinute": 0.616,
    "leftShareLastMinute": 0.0,
    "meanRelativeBearingDeg": 28.462,
-   "maxAbsBearingLastMinuteDeg": 52.172,
+   "maxAbsBearingLastMinuteDeg": 52.171,
    "stripSide": "right",
    "stripView": "ahead-right"
   },

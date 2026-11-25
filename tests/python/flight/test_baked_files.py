@@ -108,6 +108,10 @@ def test_sizes():
     for f in _selection():
         assert (ROOT / "data" / "flights" / "lv" / f["raw"]).stat().st_size < 600_000
     assert (ROOT / "data" / "flights" / "LICENSE").exists()
+    # and the served folder carries the ODbL notice itself (the validation of 25 November found it missing)
+    notice = (FLIGHTS / "LICENSE").read_text()
+    for need in ("adsb.lol", "Open Database License", "ODbL", "share-alike", "https://opendatacommons.org/licenses/odbl/1-0/"):
+        assert need.lower() in notice.lower(), need
 
 
 @pytest.mark.parametrize("fid", _ids())

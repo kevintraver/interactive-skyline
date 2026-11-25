@@ -28,12 +28,12 @@
    "pass": true
   },
   "heightRmsAirM": {
-   "value": 2.48,
+   "value": 2.49,
    "max": 8.0,
    "pass": true
   },
   "heightRmsLast60sM": {
-   "value": 2.29,
+   "value": 2.31,
    "max": 3.0,
    "pass": true
   },
@@ -46,7 +46,7 @@
    "warn": false
   },
   "crossingHeightM": {
-   "value": 23.7,
+   "value": 23.2,
    "min": 12.0,
    "max": 32.0,
    "pass": true
@@ -70,7 +70,7 @@
   "pitchDeg": {
    "value": [
     -2.0,
-    5.4
+    4.5
    ],
    "min": -6.0,
    "max": 12.0,
@@ -92,7 +92,7 @@
    "pass": true
   },
   "gearBeforeLandingFlapS": {
-   "value": 46.0,
+   "value": 45.0,
    "min": 0.1,
    "pass": true
   },
@@ -109,13 +109,13 @@
   "aheadShare": 0.7,
   "rightShareLastMinute": 0.665,
   "leftShareLastMinute": 0.0,
-  "meanRelativeBearingDeg": 30.13,
-  "maxAbsBearingLastMinuteDeg": 52.613,
+  "meanRelativeBearingDeg": 30.138,
+  "maxAbsBearingLastMinuteDeg": 52.596,
   "stripSide": "right",
   "stripView": "ahead-right"
  },
  "recordedVersusDerived": {
-  "heightBiasLast60sM": -0.09,
+  "heightBiasLast60sM": -0.17,
   "heightPointsLast60s": 67,
   "roll": {
    "rms": null,
@@ -146,8 +146,8 @@
   "warn": false,
   "finalCourseFlownGridDeg": 269.95,
   "finalCourseFlownTrueDeg": 269.98,
-  "crossingHeightAntennaM": 23.7,
-  "crossingHeightAntennaFt": 77.8,
+  "crossingHeightAntennaM": 23.2,
+  "crossingHeightAntennaFt": 76.1,
   "published": [
    {
     "source": "CIFP H26L",
@@ -158,7 +158,7 @@
     "lastFix": "RELIN",
     "courseDiffDeg": -0.04,
     "angleDiffDeg": 0.06,
-    "crossingHeightDiffFt": 17.8
+    "crossingHeightDiffFt": 16.1
    },
    {
     "source": "CIFP I26LY",
@@ -169,7 +169,7 @@
     "lastFix": "RELIN",
     "courseDiffDeg": -0.04,
     "angleDiffDeg": 0.06,
-    "crossingHeightDiffFt": 17.8
+    "crossingHeightDiffFt": 16.1
    },
    {
     "source": "CIFP I26LZ",
@@ -180,7 +180,7 @@
     "lastFix": "RELIN",
     "courseDiffDeg": -0.04,
     "angleDiffDeg": 0.06,
-    "crossingHeightDiffFt": 17.8
+    "crossingHeightDiffFt": 16.1
    },
    {
     "source": "CIFP L26LY",
@@ -191,7 +191,7 @@
     "lastFix": "RELIN",
     "courseDiffDeg": -0.04,
     "angleDiffDeg": 0.06,
-    "crossingHeightDiffFt": 17.8
+    "crossingHeightDiffFt": 16.1
    },
    {
     "source": "CIFP L26LZ",
@@ -202,7 +202,7 @@
     "lastFix": "RELIN",
     "courseDiffDeg": -0.04,
     "angleDiffDeg": 0.06,
-    "crossingHeightDiffFt": 17.8
+    "crossingHeightDiffFt": 16.1
    },
    {
     "source": "PAPI (NASR)",
@@ -212,7 +212,7 @@
     "finalCourseTrue": null,
     "lastFix": null,
     "angleDiffDeg": 0.06,
-    "crossingHeightDiffFt": -6.2
+    "crossingHeightDiffFt": -7.9
    }
   ]
  },
@@ -221,17 +221,18 @@
   "offCentreM": -0.0,
   "source": "levelled before the surface flag",
   "flare": {
-   "err": -0.017,
-   "y0": 9.0,
-   "tdSink": 0.5,
-   "sink0": 4.364,
-   "duration": 5.047,
-   "shift": -7.25
+   "entryHeightM": 9.68,
+   "entrySinkMs": 3.79,
+   "touchdownSinkMs": 0.48,
+   "lastSecondSinkMs": 1.32,
+   "durationS": 3.6,
+   "nominal": true,
+   "touchdownRunwayElevationM": 628.89
   }
  },
  "inferred": {
-  "weightKg": 64316,
-  "approachSpeedKt": 152.2,
+  "weightKg": 64290,
+  "approachSpeedKt": 152.1,
   "landingFlap": 30,
   "flapSelections": [
    {
@@ -246,7 +247,7 @@
    },
    {
     "flap": 15,
-    "t": 1602,
+    "t": 1603,
     "why": "speed"
    },
    {
@@ -255,7 +256,7 @@
     "why": "speed"
    }
   ],
-  "gearDownT": 1602,
+  "gearDownT": 1603,
   "joinFinalT": 1343,
   "maxCrabDeg": 11.4,
   "maxMach": 0.794
@@ -328,9 +329,9 @@
  },
  "reconstructed": [
   {
-   "from": 1794,
+   "from": 1795,
    "to": 1799,
-   "what": "flare: wheel height modelled from 9.0 m to the runway"
+   "what": "flare: wheel height modelled from 9.7 m to the runway"
   }
  ]
 }

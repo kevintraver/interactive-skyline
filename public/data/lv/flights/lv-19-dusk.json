@@ -95,9 +95,9 @@
  },
  "reconstructed": [
   {
-   "from": 1796,
+   "from": 1795,
    "to": 1799,
-   "what": "flare: wheel height modelled from 6.0 m to the runway"
+   "what": "flare: wheel height modelled from 10.0 m to the runway"
   }
  ],
  "events": [
@@ -330,7 +330,7 @@
  ],
  "atmosphereNote": "altitude m above sea level, temperature degC, wind toward grid east and grid north m/s (true north turned into the city grid at the airport); Open-Meteo GFS pressure levels for the hour (section 6.4), with the airport's surface report blended in below 600 m above it",
  "inferred": {
-  "weightKg": 69693,
+  "weightKg": 69702,
   "approachSpeedKt": 158.3,
   "landingFlap": 30,
   "flapSelections": [
@@ -368,8 +368,8 @@
   "stripView": "passes-right"
  },
  "qa": {
-  "glidePathDeg": 3.37,
-  "crossingHeightM": 18.2,
+  "glidePathDeg": 3.38,
+  "crossingHeightM": 19.2,
   "touchdownPastThresholdM": 363.5,
   "touchdownRecorded": true,
   "touchdownSource": "levelled before the surface flag",
@@ -386,12 +386,13 @@
    "datum": "ellipsoid"
   },
   "flare": {
-   "err": 0.002,
-   "y0": 6.0,
-   "tdSink": 0.7,
-   "sink0": 3.483,
-   "duration": 3.459,
-   "shift": -2.75
+   "entryHeightM": 9.95,
+   "entrySinkMs": 3.56,
+   "touchdownSinkMs": 1.41,
+   "lastSecondSinkMs": 1.96,
+   "durationS": 3.5,
+   "nominal": true,
+   "touchdownRunwayElevationM": 640.48
   },
   "sunAtTouchdownDeg": -2.0,
   "adsbShare": 1.0,
@@ -409,7 +410,7 @@
     "pass": true
    },
    "heightRmsAirM": {
-    "value": 3.16,
+    "value": 3.17,
     "max": 8.0,
     "pass": true
    },
@@ -426,7 +427,7 @@
     }
    },
    "glidePathDeg": {
-    "value": 3.37,
+    "value": 3.38,
     "nearest": 3.24,
     "maxDiff": 0.35,
     "warnDiff": 0.2,
@@ -434,7 +435,7 @@
     "warn": false
    },
    "crossingHeightM": {
-    "value": 18.2,
+    "value": 19.2,
     "min": 12.0,
     "max": 32.0,
     "pass": true
@@ -498,7 +499,7 @@
    }
   ],
   "reported": {
-   "heightBiasLast60sM": 0.08,
+   "heightBiasLast60sM": -0.04,
    "heightPointsLast60s": 73,
    "roll": {
     "rms": null,
@@ -526,7 +527,7 @@
    "rightShareLastMinute": 0.709,
    "leftShareLastMinute": 0.0,
    "meanRelativeBearingDeg": 11.568,
-   "maxAbsBearingLastMinuteDeg": 126.33,
+   "maxAbsBearingLastMinuteDeg": 126.413,
    "stripSide": "right",
    "stripView": "passes-right"
   },

@@ -82,7 +82,7 @@
   "ias": "calibrated airspeed for the true airspeed in the profile's temperature and the standard pressure",
   "hdg": "direction of the air velocity: the crab into the wind, taken off over the last 5 s before touchdown; the track on the ground",
   "roll": "coordinated turn, atan(V w / g), from the turn rate of the air velocity; limited to 30 deg and 5 deg/s",
-  "pitch": "flight-path angle through the air plus angle of attack from lift, CL = n W / (q S) with alpha = alpha0(flap) + CL / CLalpha fitted to the reference attitudes of section 7.3; weight 64.6 t from the approach speed; the flare raises the nose at most 3 deg; the nose comes down over 5 s after touchdown",
+  "pitch": "flight-path angle through the air plus angle of attack from lift, CL = n W / (q S) with alpha = alpha0(flap) + CL / CLalpha fitted to the reference attitudes of section 7.3; weight 64.5 t from the approach speed; the flare raises the nose at most 3 deg; the nose comes down over 5 s after touchdown",
   "turbulence": "30 s RMS of the recorded minus the smoothed vertical rate, 2 m/s = 1",
   "flap": "selected 1, 5, 15, 30 by speed (within 10 kt of the current setting's manoeuvring speed for 65 t) or gate (1 by 22 km, 5 before joining final, 15 with the gear, landing flap by 300 m), never while the rest of the approach exceeds the new setting's placard; travel 1 lever unit/s (estimate); selected: 1 at 1257s (speed), 5 at 1397s (before joining final), 15 at 1566s (speed), 30 at 1582s (speed)",
   "slat": "extend with flaps 1 to 5, full extend beyond 5 (spec.py SLATS schedule)",
@@ -95,9 +95,9 @@
  },
  "reconstructed": [
   {
-   "from": 1794,
+   "from": 1796,
    "to": 1799,
-   "what": "flare: wheel height modelled from 9.0 m to the runway"
+   "what": "flare: wheel height modelled from 10.2 m to the runway"
   }
  ],
  "events": [
@@ -330,7 +330,7 @@
  ],
  "atmosphereNote": "altitude m above sea level, temperature degC, wind toward grid east and grid north m/s (true north turned into the city grid at the airport); Open-Meteo GFS pressure levels for the hour (section 6.4), with the airport's surface report blended in below 600 m above it",
  "inferred": {
-  "weightKg": 64609,
+  "weightKg": 64547,
   "approachSpeedKt": 152.5,
   "landingFlap": 30,
   "flapSelections": [
@@ -368,8 +368,8 @@
   "stripView": "ahead-right"
  },
  "qa": {
-  "glidePathDeg": 3.13,
-  "crossingHeightM": 24.1,
+  "glidePathDeg": 3.14,
+  "crossingHeightM": 23.2,
   "touchdownPastThresholdM": 367.0,
   "touchdownRecorded": true,
   "touchdownSource": "levelled before the surface flag",
@@ -386,12 +386,13 @@
    "datum": "ellipsoid"
   },
   "flare": {
-   "err": 0.005,
-   "y0": 9.0,
-   "tdSink": 0.5,
-   "sink0": 4.566,
-   "duration": 4.895,
-   "shift": -10.75
+   "entryHeightM": 10.17,
+   "entrySinkMs": 4.24,
+   "touchdownSinkMs": 1.69,
+   "lastSecondSinkMs": 2.44,
+   "durationS": 3.0,
+   "nominal": false,
+   "touchdownRunwayElevationM": 628.3
   },
   "sunAtTouchdownDeg": 31.0,
   "adsbShare": 1.0,
@@ -409,17 +410,17 @@
     "pass": true
    },
    "heightRmsAirM": {
-    "value": 2.73,
+    "value": 2.74,
     "max": 8.0,
     "pass": true
    },
    "heightRmsLast60sM": {
-    "value": 2.28,
+    "value": 2.29,
     "max": 3.0,
     "pass": true
    },
    "glidePathDeg": {
-    "value": 3.13,
+    "value": 3.14,
     "nearest": 3.0,
     "maxDiff": 0.35,
     "warnDiff": 0.2,
@@ -427,7 +428,7 @@
     "warn": false
    },
    "crossingHeightM": {
-    "value": 24.1,
+    "value": 23.2,
     "min": 12.0,
     "max": 32.0,
     "pass": true
@@ -451,7 +452,7 @@
    "pitchDeg": {
     "value": [
      -3.4,
-     5.6
+     4.0
     ],
     "min": -6.0,
     "max": 12.0,
@@ -484,7 +485,7 @@
   },
   "waived": [],
   "reported": {
-   "heightBiasLast60sM": 0.07,
+   "heightBiasLast60sM": -0.23,
    "heightPointsLast60s": 67,
    "roll": {
     "rms": null,
@@ -512,7 +513,7 @@
    "rightShareLastMinute": 0.59,
    "leftShareLastMinute": 0.0,
    "meanRelativeBearingDeg": 27.361,
-   "maxAbsBearingLastMinuteDeg": 51.908,
+   "maxAbsBearingLastMinuteDeg": 51.883,
    "stripSide": "right",
    "stripView": "ahead-right"
   },
@@ -653,7 +654,7 @@
   "inCloud": [
    [
     1428.0,
-    1752.0
+    1754.0
    ]
   ],
   "aloft": [
