@@ -24,6 +24,18 @@ import { GROUPS, CANDELA, COLOURS, lampLevels } from './lights.js';
 
 const NAV = GROUPS.indexOf('NAV'), TAXI = GROUPS.indexOf('TAXI');
 
+/**
+ * Light on the skin per candela, over what the bake holds, by group (the lamp points keep their candela). ESTIMATED,
+ * a stand-in for a lamp shape the bake lacks: it takes the forward position light as a hemisphere about the outboard
+ * axis, which leaves the winglet's inner face, above and inboard of the lamp, 0.035 lux (median) of green per 100 cd.
+ * Window-seat photographs at night show that face clearly green the whole flight: the lens wraps round the wingtip and
+ * its spill reaches the winglet. 30 gives it 0.85 lux (median: a green 0.24 cd/m^2, three times the night sky behind)
+ * and 14 lux near its foot. F8.1, 25 Nov 2026; to go when
+ * models/aircraft bakes the position light's spill.
+ */
+export const SKIN_GAIN = Object.freeze({ NAV: 30 });
+const gain = GROUPS.map((g) => SKIN_GAIN[g] ?? 1);
+
 /** A stored code (0..1) back to lux per candela: v^2 x the channel's scale. The CPU twin of the vertex stage. */
 export function decodeBaked(v, scale) {
   return v * v * scale;
@@ -42,14 +54,15 @@ export function bakeTable(bake) {
 }
 
 /**
- * Each channel's multiplier for the squared codes, lux per unit code^2: scale x candela x level, GROUPS order; and
+ * Each channel's multiplier for the squared codes, lux per unit code^2: scale x candela x SKIN_GAIN x level, GROUPS
+ * order; and
  * `aft`, the TAXI channel's multiplier outboard of the split (the white aft position lights).
  * @param {ArrayLike<number>} levels  GROUPS order, 0..1  @param {object} bake  rig.json lightBake
  * @param {{ channels: number[], aft: number }} [out]
  */
 export function lampIntensities(levels, bake, out = { channels: new Array(GROUPS.length), aft: 0 }) {
   const { scale } = bakeTable(bake);
-  for (let i = 0; i < GROUPS.length; i++) out.channels[i] = scale[i] * CANDELA[GROUPS[i]] * levels[i];
+  for (let i = 0; i < GROUPS.length; i++) out.channels[i] = scale[i] * CANDELA[GROUPS[i]] * gain[i] * levels[i];
   out.aft = scale[TAXI] * CANDELA.NAV_AFT * levels[NAV];
   return out;
 }

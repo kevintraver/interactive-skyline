@@ -4,7 +4,10 @@
 //     the map's orange street glow (before the night ground, 71 % of it was, measured on the frame of a265056);
 //   - the lamps switch with the Sun (each lamp's photocell, as in the drive: 2 % lit at -3 degrees, 17 % at -4, 74 % at
 //     -5, 98 % at -6): none at cruise on the dusk flight (the Sun 4 degrees up), the first few at its threshold (1.3
-//     degrees down, about a hundred of the valley's lamps), all on the night flights; the same moment, the same lamps.
+//     degrees down, about a hundred of the valley's lamps), all on the night flights; the same moment, the same lamps;
+//   - F8.1: on the night final the cabin, dimmed for landing, is a dim shape (its sidewall at least 0.09 cd/m^2, the
+//     cabin's emergency lighting alone), not black; on the dusk final the cabin is part way into its night setting and
+//     the obstruction lights burn (their own photocell), though almost no street lamp is lit yet.
 // Frame times and counts are printed and attached; they are not judged here (section 9.1 is F8.2's).
 import { test, expect } from '@playwright/test';
 import { openFlight, frames, realFlights, FLIGHT_TIMEOUT } from '../../helpers/flight.js';
@@ -26,7 +29,10 @@ async function at(page, where, { clean = true, otherSide = false } = {}) {
     for (const el of document.body.children) if (!el.contains(s.renderer.domElement)) el.style.visibility = 'hidden';
     const g = f.stats().world.ground;
     const tp = await s.perf.throughput(20, 4);
-    return { ground: g, msPerFrame: +tp.msPerFrame.toFixed(2), calls: s.perf.info().calls, sunAltDeg: s.env.state?.sun?.altDeg, backend: s.perf.gpu().backend, t: f.state().t };
+    // the cabin's sidewall beside the window (the default look centres the window), through the window view only
+    const wall = clean ? null : (await f.luminance({ x: -0.81, y: 0.1 })).composed;
+    return { ground: g, msPerFrame: +tp.msPerFrame.toFixed(2), calls: s.perf.info().calls, sunAltDeg: s.env.state?.sun?.altDeg, backend: s.perf.gpu().backend, t: f.state().t,
+      cabinLight: f.stats().cabinLight, wall };
   }, { where, clean, otherSide });
 }
 
@@ -79,6 +85,13 @@ for (const backend of ['webgpu', 'webgl2']) {
     const share = await orangeShare(page, b);
     console.log(backend, 'threshold: orange share of the lower frame', share.toFixed(4), JSON.stringify({ ms: th.msPerFrame, calls: th.calls }));
     expect(share).toBeLessThan(0.02);
+
+    // through the window: the cabin dimmed for landing (cabinLight 0.3) is dark but not black (0.031 cd/m^2 before F8.1)
+    const cab = await at(page, { chapter: 'threshold' }, { clean: false });
+    console.log(backend, 'night threshold: cabin', JSON.stringify({ wall: cab.wall, light: cab.cabinLight }));
+    expect(cab.cabinLight.night).toBeGreaterThan(0.99);
+    expect(cab.wall).toBeGreaterThan(0.09);
+    expect(cab.wall).toBeLessThan(0.6);
   });
 
   test(`${backend}: lamps follow the Sun through civil twilight, and the same moment draws the same lamps`, async ({ page }) => {
@@ -94,6 +107,13 @@ for (const backend of ['webgpu', 'webgl2']) {
     expect(th.sunAltDeg).toBeLessThan(0);
     expect(th.ground.lit).toBeGreaterThan(1e-4);
     expect(th.ground.lit).toBeLessThan(0.01);
+    // F8.1: the obstruction lights by their own photocell, and the cabin part way into its night setting (the day's
+    // full setting until the Sun set, then 15 % at once, before)
+    expect(th.ground.obstruction?.on).toBe(true);
+    console.log(backend, 'dusk threshold: cabin', JSON.stringify(th.cabinLight));
+    expect(th.cabinLight.night).toBeGreaterThan(0.3);
+    expect(th.cabinLight.night).toBeLessThan(0.9);
+    expect(cruise.cabinLight.night).toBeLessThan(0.05);
 
     await page.evaluate(async () => { await window.__skyline.flight.start('lv-19-night', { pace: false, play: false }); });
     const where = await page.evaluate(() => ({ at: window.__skyline.flight.state().touchdownT - 200 }));

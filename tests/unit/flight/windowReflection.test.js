@@ -31,3 +31,28 @@ describe('createCabinReflection().capture', () => {
     r.dispose();
   });
 });
+
+describe('createCabinReflection().capture at dusk', () => {
+  it("draws the cube on the cabin's night setting now (a share through the twilight), and leaves it so", () => {
+    const seen = [];
+    const light = { cabinLight: 1, night: 0.4, windowL: 50, sunLux: 0 };
+    const mats = {
+      get cabinLight() { return light.cabinLight; },
+      get night() { return light.night; },
+      get outside() { return { windowL: light.windowL, sunLux: light.sunLux }; },
+      set(o) { Object.assign(light, o); },
+    };
+    const g = new Group();
+    const renderer = {
+      coordinateSystem: 2000, xr: { enabled: false }, getRenderTarget: () => null, getActiveCubeFace: () => 0, getActiveMipmapLevel: () => 0,
+      setRenderTarget() {}, autoClear: true, getClearAlpha: () => 1, getClearColor: (c) => c, setClearColor() {},
+      render: () => seen.push(light.night),
+    };
+    const r = createCabinReflection({ size: 4 });
+    // the session's flag says day (the Sun is still up by a fraction); the cabin is 40 % into its night setting
+    r.capture({ renderer, cabin: { group: g, model: { materials: mats } }, position: new Vector3(), night: false });
+    expect(seen).toEqual([0.4, 0.4, 0.4, 0.4, 0.4, 0.4]);
+    expect(light.night).toBe(0.4);
+    r.dispose();
+  });
+});

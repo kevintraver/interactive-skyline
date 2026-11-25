@@ -24,20 +24,31 @@ export const STEADY_DIM = 0.15;
 /**
  * Peak intensity of each kind of lamp toward its axis, candela: the 1.0 of the lamp's photometry in the bake
  * (models/aircraft/spec.py LIGHT_CANDELA, written to rig.json lightBake.candela; tests/unit/flight/lights.test.js holds
- * the two equal). Keys are the groups, plus NAV_AFT for the white aft position lights, which switch with NAV.
+ * the two equal but for the groups in TUNED below). Keys are the groups, plus NAV_AFT for the white aft position
+ * lights, which switch with NAV.
  *   NAV       100     ESTIMATED: 14 CFR 25.1391 asks 40 cd at least within 10 deg of ahead; LED units give more
  *   NAV_AFT   40      ESTIMATED: 25.1391(c) asks 20 cd at least in the rear 140 deg
- *   BEACON    1500    ESTIMATED peak; with FLASHERS' 0.3 s pulse about 570 cd effective, over 25.1401(f)'s 400 cd
+ *   BEACON    1100    the least peak that keeps 25.1401(f)'s 400 cd effective with FLASHERS' 0.3 s pulse (420 cd).
+ *                     It was 1,500 (ESTIMATED), and the pulse flooded the upper wing red (F8.1, 25 Nov 2026)
  *   STROBE    5000    ESTIMATED peak; with the 0.08 s pulse about 900 cd effective (effectiveIntensity below)
  *   LANDING   300000  ESTIMATED: sealed-beam and LED landing lights are rated a few hundred thousand candela
  *   TAXI      40000   ESTIMATED: a sealed-beam taxi lamp
  *   TURNOFF   40000   ESTIMATED: a wide flood of the taxi light's power
  *   LOGO      5000    ESTIMATED: lights the fin to a few hundred lux
- *   WING      10000   ESTIMATED: lights the leading edge 10 m out to tens of lux, enough to inspect it for ice
+ *   WING      5000    ESTIMATED: lights the slats to 10 to 20 lux (grey at the night exposure), the nacelle's top 3 m
+ *                     from the lamp to 160 lux at most (light grey, not white). It was 10,000: the nacelle drew white
+ *                     (F8.1, 25 Nov 2026). The bake's beam puts twelve times more on the cowl than on the leading edge,
+ *                     so no one figure lights the edge pale and keeps the cowl grey; the cowl decided
  */
 export const CANDELA = Object.freeze({
-  NAV: 100, NAV_AFT: 40, BEACON: 1500, STROBE: 5000, LANDING: 300000, TAXI: 40000, TURNOFF: 40000, LOGO: 5000, WING: 10000,
+  NAV: 100, NAV_AFT: 40, BEACON: 1100, STROBE: 5000, LANDING: 300000, TAXI: 40000, TURNOFF: 40000, LOGO: 5000, WING: 5000,
 });
+/**
+ * The groups whose candela F8.1 changed from what the bake assumed (rig.json lightBake.candela, from
+ * models/aircraft/spec.py LIGHT_CANDELA). The bake stores light per candela, so this is a run-time change; spec.py's
+ * figures should follow when the lamps are next baked.
+ */
+export const TUNED = Object.freeze({ BEACON: Object.freeze({ baked: 1500 }), WING: Object.freeze({ baked: 10000 }) });
 
 /**
  * Linear RGB, scaled to a luminance of 1 so that candela carries the brightness. Chromaticities of 14 CFR 25.1397:

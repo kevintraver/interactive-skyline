@@ -6,7 +6,7 @@ import { readFileSync, existsSync } from 'node:fs';
 import { describe, it, expect } from 'vitest';
 import { Mesh, BufferGeometry, PerspectiveCamera, Vector3 } from 'three';
 import { MeshLambertNodeMaterial } from 'three/webgpu';
-import { createNightGround, lampsLitAt, LIT_BELOW_LUX } from '../../../src/flight/ground/index.js';
+import { createNightGround, lampsLitAt, LIT_BELOW_LUX, OBSTRUCTION_ON_LUX } from '../../../src/flight/ground/index.js';
 import { createFrame, curveDrop } from '../../../src/world/frame.js';
 import { ambientLux } from '../../../src/drive/env.js';
 import cities from '../../../data/cities.json';
@@ -120,6 +120,26 @@ describe('the drive\'s valley-wide parts, without a drive', () => {
     expect(s.obstruction?.on).toBe(true);
     expect(s.obstruction.lamps).toBeGreaterThan(0); // the corridor's tall buildings (no towers without a scene here)
     expect(s.draws).toBe(3);
+    night.dispose();
+  });
+});
+
+describe('the obstruction lights at dusk (F8.1)', () => {
+  it('burn by their own photocell, from about sunset, not with the street lamps', async () => {
+    // lv-19-dusk on final: the Sun 1.3 degrees down, 327 lux; under 1 % of the street lamps are lit then
+    expect(ambientLux(-1.3)).toBeLessThan(OBSTRUCTION_ON_LUX);
+    expect(lampsLitAt(-1.3)).toBeLessThan(0.01);
+    expect(ambientLux(1)).toBeGreaterThan(OBSTRUCTION_ON_LUX);
+    const { night, fe } = setup({ sunAltDeg: -1.3 });
+    night.show(true);
+    const cam = camera({ x: 15000, y: -15000, alt: 2000, look: [0, 0] });
+    night.update({ camera: cam, simMs: NIGHT_MS });
+    await night.whenSettled();
+    night.update({ camera: cam, simMs: NIGHT_MS + 1000 });
+    expect(night.stats().obstruction?.on).toBe(true);
+    fe.state.sun.altDeg = 1;
+    night.update({ camera: cam, simMs: NIGHT_MS + 2000 });
+    expect(night.stats().obstruction?.on).toBe(false);
     night.dispose();
   });
 });

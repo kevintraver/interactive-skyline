@@ -5,7 +5,7 @@ import { describe, expect, it } from 'vitest';
 import { LIGHT } from '../../../src/flight/track.js';
 import {
   GROUPS, MAX_FLASHES_PER_S, FLASHERS, lampLevels, inferLights, lightBits, flashLevel, limitFlashers, lampTable, COLOURS, CANDELA,
-  effectiveIntensity,
+  effectiveIntensity, TUNED,
 } from '../../../src/flight/aircraft/lights.js';
 
 const rig = JSON.parse(readFileSync(new URL('../../../public/models/aircraft/rig.json', import.meta.url), 'utf8'));
@@ -155,8 +155,14 @@ describe('lampTable: the lamps of rig.json with colours and intensities', () => 
 });
 
 describe('photometry: the candela, colours and flashes the bake and the regulation assume', () => {
-  it('uses the intensities the bake was made for (rig.json lightBake.candela, from spec.py)', () => {
-    expect(rig.lightBake.candela).toEqual({ ...CANDELA });
+  it('uses the intensities the bake was made for (rig.json lightBake.candela, from spec.py), but those F8.1 tuned', () => {
+    // the bake stores light per candela, so a group's intensity can change in the app alone; the ones that did are
+    // listed in TUNED, each with the bake's figure, until spec.py's LIGHT_CANDELA follows them
+    for (const [k, v] of Object.entries(rig.lightBake.candela)) {
+      if (k in TUNED) { expect(TUNED[k].baked).toBe(v); expect(CANDELA[k]).not.toBe(v); } else expect(CANDELA[k]).toBe(v);
+    }
+    expect(Object.keys(CANDELA).sort()).toEqual(Object.keys(rig.lightBake.candela).sort());
+    expect(Object.keys(TUNED).sort()).toEqual(['BEACON', 'WING']);
   });
 
   it('gives the white aft position lights their own intensity, at least 25.1391(c)\'s 20 cd', () => {

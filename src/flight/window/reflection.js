@@ -48,6 +48,9 @@ export function createCabinReflection({ size = 128 } = {}) {
       const index = parent ? parent.children.indexOf(g) : -1;
       const mats = cabin.model.materials;
       const before = mats ? mats.cabinLight : 1;
+      // the night setting the cabin has now (a share through the twilight, cabin.js nightShare), not only the flag:
+      // the cube's lamps are the cabin's at full on the setting in use
+      const nightNow = typeof mats?.night === 'number' ? mats.night : night;
       // the cube is the cabin's own lamps only: the outside's light in the cabin (cabin.js createCabinLight) is off
       // while it is drawn, or a cube drawn by day, rescaled by the exposure at dusk, mirrors a daylit cabin forty times over
       const outsideBefore = mats?.outside ?? null;
@@ -58,7 +61,7 @@ export function createCabinReflection({ size = 128 } = {}) {
         if (parent) parent.remove(g);
         scene.add(g);
         for (const o of hide) o.visible = false;
-        if (mats) mats.set({ cabinLight: 1, night, ...(outsideBefore ? { windowL: 0, sunLux: 0 } : {}) });
+        if (mats) mats.set({ cabinLight: 1, night: nightNow, ...(outsideBefore ? { windowL: 0, sunLux: 0 } : {}) });
         renderer.autoClear = true;
         renderer.setClearColor(0x000000, 1);
         camera.position.copy(position);
@@ -71,7 +74,7 @@ export function createCabinReflection({ size = 128 } = {}) {
         scene.remove(g);
         if (parent) { parent.add(g); if (index >= 0) { parent.children.splice(parent.children.indexOf(g), 1); parent.children.splice(index, 0, g); } }
         hide.forEach((o, i) => { o.visible = shown[i]; });
-        if (mats) mats.set({ cabinLight: before, night, ...(outsideBefore ?? {}) });
+        if (mats) mats.set({ cabinLight: before, night: nightNow, ...(outsideBefore ?? {}) });
         renderer.autoClear = auto;
         renderer.setClearColor(_clear, alpha);
         g.updateMatrixWorld(true);

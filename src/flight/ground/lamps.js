@@ -30,11 +30,15 @@ export const HEAD_LIFT_M = 3;
 /** Reflectance of the ground under a lamp, for its pool seen from afar (the drive's GROUND_ALBEDO). */
 export const GROUND_ALBEDO = 0.15;
 /**
- * All the outdoor light a city sends up over what its street lamps send up. ASSUMED 5: street lamps are a fifth of
- * it; Kyba et al. (2021, Tucson, switching the street lights off and measuring from the satellite) found about 13 %,
- * the rest being parking lots, signs, buildings and homes. The inventory holds street lamps only, so from the air
- * each lamp's pool stands for its neighbourhood's light (the plan's per-cell calibration against the satellite's
- * radiance, section 7.11, would replace this one number; it needs plan 01's radiance grids).
+ * All the outdoor light a city sends up over what its street lamps send up: 5, street lamps a fifth of it. Kyba et al.
+ * (2021, Lighting Research & Technology; Tucson changed its street lights' output over ten nights and the VIIRS day-
+ * night band measured the difference) found street lights 18 % of the city's light at full output (95 % CI 15 to
+ * 23 %), 21 % with other owners' street lights, and 13 % after midnight with the city's dimmed; the rest is parking
+ * lots, signs, buildings and homes. The valley's inventory holds every owner's street lamps and the flights land in the
+ * evening, so 1 / 0.21 to 1 / 0.18: 4.8 to 5.6 (checked in F8.1, 25 Nov 2026; this comment cited the 13 % before).
+ * Las Vegas's casinos make its share of other light larger than Tucson's, so 5 is the low side. From the air each
+ * lamp's pool stands for its neighbourhood's light (the plan's per-cell calibration against the satellite's radiance,
+ * section 7.11, would replace this one number; plan 01's radiance grids are not built in this checkout).
  */
 export const ALL_LIGHT_FACTOR = 5;
 /**

@@ -325,9 +325,21 @@ export function mirrorGeometryX(g) {
  *                        with the tint
  *   nightFull            the lamps at night at the channel's 1, as a share of the day's: crews dim the cabin after dark
  *   nightGamma           the dimmer's curve at night: light = nightFull * channel^gamma, so the flight files' 0.3 for
- *                        the approach (the lights dimmed for landing) is under 1 % of the day's: near dark
+ *                        the approach (the lights dimmed for landing) is 2.5 % of the day's: the sidewall about
+ *                        0.2 cd/m^2 (1 lux on it), a dim shape against the valley outside (0.1 to 0.6 cd/m^2 from
+ *                        final), and never darker than the cabin's emergency lighting alone (14 CFR 25.812(c): 0.05 fc,
+ *                        0.54 lux, along the aisle). It was 3 (0.4 %: the cabin drew black from 10,000 ft down, F8.1,
+ *                        25 Nov 2026). The level within those bounds is ESTIMATED: no published figure for the setting
  */
-export const CABIN_LIGHT = Object.freeze({ washLux: 160, ambientLux: 70, stripCdM2: 450, bounce: 0.9, floor: 0.12, glass: 0.83, nightFull: 0.15, nightGamma: 3 });
+export const CABIN_LIGHT = Object.freeze({ washLux: 160, ambientLux: 70, stripCdM2: 450, bounce: 0.9, floor: 0.12, glass: 0.83, nightFull: 0.15, nightGamma: 1.5 });
+/**
+ * When the crew's night setting takes over from the day's (ESTIMATED: crews change the cabin's lighting scene as it
+ * gets dark outside, not at the moment of sunset). By the window's mean luminance (windowLuminance, cd/m^2): the day's
+ * setting above dayCdM2 (a clear sky with the Sun about 2.5 degrees up), the night's below nightCdM2 (the Sun about 4.5
+ * degrees down), log-linear between. With the switch at sunset (the session's night flag, Sun below 0) the lamps fell
+ * from the day's full to 15 % in one frame on lv-19-dusk's final (F8.1, 25 Nov 2026).
+ */
+export const NIGHT_SCENE = Object.freeze({ dayCdM2: 400, nightCdM2: 4 });
 /** The ground's albedo the window sees (desert and city from the air, ESTIMATED). */
 export const GROUND_ALBEDO = 0.2;
 const DAY_TINT = [1.0, 0.97, 0.92], NIGHT_TINT = [1.0, 0.84, 0.66];
@@ -353,10 +365,27 @@ export function windowLuminance({ sunLux = 0, ambientLux = 0, sunAltDeg = -90 })
   return 0.5 * (sky + (GROUND_ALBEDO * onGround) / Math.PI);
 }
 
-/** The lamps' level for the flight file's cabinLight channel (0..1): the channel by day, dimmed at night. Pure. */
+/**
+ * The crew's night setting as a share, 0 (day) to 1 (night), from the window's mean luminance (cd/m^2). Pure.
+ * @param {number} windowL
+ */
+export function nightShare(windowL) {
+  if (!(windowL > 0)) return 1;
+  const t = Math.log(windowL / NIGHT_SCENE.nightCdM2) / Math.log(NIGHT_SCENE.dayCdM2 / NIGHT_SCENE.nightCdM2);
+  const u = Math.min(1, Math.max(0, t));
+  return 1 - u * u * (3 - 2 * u);
+}
+
+/**
+ * The lamps' level for the flight file's cabinLight channel (0..1): the channel by day, dimmed at night. `night` is a
+ * flag or the share of the night setting (nightShare), between which the level moves geometrically. Pure.
+ */
 export function cabinLightLevel(channel, night) {
   const c = Number.isFinite(channel) ? Math.min(1, Math.max(0, channel)) : 1;
-  return night ? CABIN_LIGHT.nightFull * c ** CABIN_LIGHT.nightGamma : c;
+  const n = typeof night === 'number' ? Math.min(1, Math.max(0, Number.isFinite(night) ? night : 0)) : night ? 1 : 0;
+  if (c === 0) return 0;
+  const atNight = CABIN_LIGHT.nightFull * c ** CABIN_LIGHT.nightGamma;
+  return n === 0 ? c : n === 1 ? atNight : c ** (1 - n) * atNight ** n;
 }
 
 /**
@@ -422,7 +451,7 @@ export function createCabinLight(nodes) {
     sunBody: uniform(new Vector3(0, -1, 0)), sunWorld: uniform(new Vector3(0, -1, 0)), side: uniform(1),
     windows: uniformArray(Array.from({ length: SUN_WINDOWS }, () => new Vector4(1e6, 0, 0, 0)), 'vec4'),
   };
-  const state = { cabinLight: 1, night: false, level: 1 };
+  const state = { cabinLight: 1, night: 0, level: 1 };
   const tint = mix(vec3(...DAY_TINT), vec3(...NIGHT_TINT), u.night);
   const C = CABIN_LIGHT;
 
@@ -477,10 +506,11 @@ export function createCabinLight(nodes) {
     set(o = {}) {
       if (o.cabinLight !== undefined || o.night !== undefined) {
         if (o.cabinLight !== undefined) state.cabinLight = Number.isFinite(o.cabinLight) ? Math.min(1, Math.max(0, o.cabinLight)) : 1;
-        if (o.night !== undefined) state.night = !!o.night;
+        // a flag, or the share of the night setting (nightShare)
+        if (o.night !== undefined) state.night = typeof o.night === 'number' ? Math.min(1, Math.max(0, o.night || 0)) : o.night ? 1 : 0;
         state.level = cabinLightLevel(state.cabinLight, state.night);
         u.level.value = state.level;
-        u.night.value = state.night ? 1 : 0;
+        u.night.value = state.night;
       }
       if (Number.isFinite(o.windowL)) u.windowL.value = Math.max(0, o.windowL);
       if (Number.isFinite(o.sunLux)) u.sunLux.value = Math.max(0, o.sunLux);
@@ -777,7 +807,7 @@ export function createModelledCabin({ nodes, seat, load = null, url, infoUrl, ma
   group.name = 'cabin';
   group.add(standIn.group);
   let model = null, error = null, disposed = false, current = seat;
-  let shadeTarget = 0, shade = 0, light = { cabinLight: 1, night: false };
+  let shadeTarget = 0, shade = 0, light = { cabinLight: 1, night: 0 };
   const get = load ?? (() => loadCabinModel({ ...(url ? { url } : {}), ...(infoUrl ? { infoUrl } : {}) }));
   const api = {
     group,
@@ -808,7 +838,8 @@ export function createModelledCabin({ nodes, seat, load = null, url, infoUrl, ma
       .catch((e) => { error = e; return null; }),
     /**
      * Relight and animate. cabinLight 0..1 (the flight file's channel) and night set the lamps (cabinLightLevel: dim
-     * and warm at night, near dark at the approach's setting); `outside` the light through the windows: windowL
+     * and warm at night, dark at the approach's setting); with `outside` the night setting follows its windowL through
+     * the twilight (nightShare) and the flag is not used; `outside` the light through the windows: windowL
      * (windowLuminance, cd/m^2), and the Sun (sunLux, sunColor, sunWorld: the unit direction toward it in the scene;
      * the patch is worked in body axes from state.quaternion). The own shade slides toward its target at 0.8 of its
      * travel a second (at once with reduced motion or without dtS).
@@ -816,7 +847,8 @@ export function createModelledCabin({ nodes, seat, load = null, url, infoUrl, ma
      *   outside?: { windowL?: number, sunLux?: number, sunColor?: { r: number, g: number, b: number }, sunWorld?: Vector3 } }} [o]
      */
     update(state, { cabinLight = 1, night = false, reducedMotion = false, dtS, outside = null } = {}) {
-      light = { cabinLight, night };
+      // the night setting follows the light outside when it is known (nightShare), else the flag
+      light = { cabinLight, night: Number.isFinite(outside?.windowL) ? nightShare(outside.windowL) : night ? 1 : 0 };
       if (model) model.materials.set(light);
       else cabinLight_?.set(light);
       if (shade !== shadeTarget) {
@@ -838,8 +870,8 @@ export function createModelledCabin({ nodes, seat, load = null, url, infoUrl, ma
     },
     /** The cabin's light (createCabinLight): its uniforms and state, for the window and the hooks. */
     get light() { return cabinLight_; },
-    /** Night as the cabin's lamps have it (the warm, dimmed setting). */
-    get night() { return !!light.night; },
+    /** Night as the cabin's lamps have it (the warm, dimmed setting): true once the night setting is more than half in. */
+    get night() { return light.night > 0.5; },
     /** Another seat: the same group, its contents placed round the new seat. */
     setSeat(s) {
       current = s;

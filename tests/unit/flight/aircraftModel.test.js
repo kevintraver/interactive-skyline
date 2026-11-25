@@ -163,7 +163,8 @@ describe('the skin\'s light from the baked attributes (the CPU twin of the emiss
   it('flashes the winglet white with the strobe at its peak, far brighter than the steady glow', () => {
     const cs = winglet(1);
     const steady = RAD_LUMA(sum(cs, 1)), flash = sum(cs, 1 | 4);
-    expect(RAD_LUMA(flash)).toBeGreaterThan(20 * steady);
+    // five times at least: the steady green is a glow (F8.1 raised it), the strobe a flash that whitens the face
+    expect(RAD_LUMA(flash)).toBeGreaterThan(5 * steady);
     const c = chroma(flash);
     expect(Math.max(...c) - Math.min(...c)).toBeLessThan(0.1);
   });
@@ -174,6 +175,47 @@ describe('the skin\'s light from the baked attributes (the CPU twin of the emiss
     const rgb = sum(cs, 2).map((x) => x / cs.length);
     expect(RAD_LUMA(rgb)).toBeGreaterThan(10);
     expect(chroma(rgb)[0]).toBeGreaterThan(0.95);
+  });
+
+  // F8.1 (25 Nov 2026), judged against what window-seat photographs from a 737 at night show (described in the brief;
+  // no photograph was available to the session): the winglet's inner face glows clearly green on the right the whole
+  // flight; the red beacon is a modest wash on the wing, nacelle and flap fairings, not a flood; the strobe whitens the
+  // winglet; the wing lights show the leading edge and upper surface grey, not white. Levels are read at the app's night
+  // exposure (pre-exposure 0.032, the eye mode over Las Vegas at night: a white surface at 1 cd/m^2 draws about 44 of
+  // 255, and AgX whitens above some 30 cd/m^2).
+  const median = (xs) => { const a = xs.slice().sort((p, q) => p - q); return a[Math.floor(a.length / 2)]; };
+  const pct = (xs, q) => { const a = xs.slice().sort((p, r) => p - r); return a[Math.floor(a.length * q)]; };
+  const luxEach = (cs, bits) => cs.map((c) => RAD_LUMA(skinLux(c.codes, c.pos, lampIntensities(levels(bits), bake), bake)));
+  const wingletFace = () => corners('Wing_R', (c) => c.pos[0] > 17.2 && c.pos[1] > 4 && c.normal[0] < -0.6);
+
+  it('glows the right winglet\'s inner face green with the position light: a lux on half of it, several near its foot', () => {
+    const cs = wingletFace();
+    const lux = luxEach(cs, 1);
+    expect(median(lux)).toBeGreaterThan(0.8); // 0.03 lux before F8.1, 0.85 now: a green 0.24 cd/m^2 face, about 13 of 255
+    expect(pct(lux, 0.95)).toBeGreaterThan(5);
+    expect(pct(lux, 0.95)).toBeLessThan(30); // a glow, not the lamp's own white-hot lens
+  });
+
+  it('keeps the beacon\'s pulse a quarter of the strobe\'s on the winglet, and a wash of under a lux on the upper wing', () => {
+    const face = wingletFace();
+    expect(median(luxEach(face, 2))).toBeLessThan(0.25 * median(luxEach(face, 4)));
+    // the upper wing half way out, where the fuselage's shadow line lies: 1.0 lux median before (1,500 cd)
+    const upper = corners('Wing_R', (c) => c.pos[0] > 7 && c.pos[0] < 11 && c.normal[1] > 0.8);
+    expect(upper.length).toBeGreaterThan(50);
+    expect(median(luxEach(upper, 2))).toBeLessThan(0.8);
+    expect(pct(luxEach(upper, 2), 0.95)).toBeLessThan(2.5);
+    // and still visible on the nacelle at its peak: over a lux on the top of the cowl where it reaches
+    const cowl = corners('Engine_R', (c) => c.material.startsWith('Paint') && c.normal[1] > 0.5);
+    expect(pct(luxEach(cowl, 2), 0.95)).toBeGreaterThan(5);
+  });
+
+  it('lights the leading edge grey and the nacelle short of white with the wing lights', () => {
+    const cowl = corners('Engine_R', (c) => c.material.startsWith('Paint') && c.normal[1] > 0.5);
+    // white paint (0.87) at the night exposure: 170 lux is 47 cd/m^2, light grey under AgX; 320 lux before (white)
+    expect(pct(luxEach(cowl, 128), 0.95)).toBeLessThan(170);
+    const slats = [1, 2, 3, 4].flatMap((k) => corners(`Slat${k}_R`, (c) => c.normal[1] > 0.3 || c.normal[2] < -0.5));
+    // bare metal (0.45): 8 lux is 1.1 cd/m^2, a grey edge that reads against the dark wing
+    expect(pct(luxEach(slats, 128), 0.95)).toBeGreaterThan(8);
   });
 
   it('lights the outer wing with the white aft position light on the shared channel, and the taxi light nothing there', () => {

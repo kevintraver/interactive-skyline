@@ -3,7 +3,7 @@
 import { readFileSync } from 'node:fs';
 import { describe, it, expect, beforeAll } from 'vitest';
 import { PerspectiveCamera, Vector3 } from 'three';
-import { createAirLamps, AIR_BUDGET, HEAD_LIFT_M } from '../../../src/flight/ground/lamps.js';
+import { createAirLamps, AIR_BUDGET, HEAD_LIFT_M, ALL_LIGHT_FACTOR } from '../../../src/flight/ground/lamps.js';
 import { decodeLampPack } from '../../../src/drive/lights/pack.js';
 import { curveDrop, EARTH_R } from '../../../src/world/frame.js';
 import { lampHash } from '../../../src/drive/lights/switching.js';
@@ -158,5 +158,15 @@ describe('the region\'s towns (public/data/lv/lights-region.bin, scripts/build_f
     both.update({ camera: cam, renderer, heightAboveGround: 8000, extinctionM: 60000, ambientLux: 0.002, on: true });
     expect(both.stats().drawn).toBeGreaterThan(500);
     both.dispose();
+  });
+});
+
+describe("all the city's outdoor light over its street lamps (F8.1)", () => {
+  it("is the inverse of the street lamps' share Kyba et al. (2021) measured from space at full output", () => {
+    // Tucson, VIIRS day-night band: street lights 18 % of the city's light at full output (95 % CI 15 to 23 %), 21 %
+    // with the other owners' street lights; 13 % only after midnight, with the city's dimmed. The valley's inventory
+    // holds every owner's street lamps, and the flights land in the evening
+    expect(ALL_LIGHT_FACTOR).toBeGreaterThanOrEqual(1 / 0.23);
+    expect(ALL_LIGHT_FACTOR).toBeLessThanOrEqual(1 / 0.15);
   });
 });

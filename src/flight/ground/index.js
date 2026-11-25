@@ -35,6 +35,15 @@ import { flightPartContext, loadDriveParts, collectTall } from './driveParts.js'
 
 /** The highest photocell threshold a lamp can have (switching.js: u clamped to 1e-4): above this ambient no lamp is lit. */
 export const LIT_BELOW_LUX = SWITCH_MID_LUX * ((1 - 1e-4) / 1e-4) ** SWITCH_SPREAD;
+/**
+ * The obstruction lights switch on below this ambient illuminance (lux): 35 foot-candles. FAA AC 70/7460-1M has
+ * obstruction lighting switched by a photocell facing the northern sky, on as that light falls through about 35 fc and
+ * off above 60 fc. The figure is RECALLED, not re-read: the circular could not be fetched on 25 Nov 2026 (both the
+ * FAA's and the FCC's copies refused). A north-facing sensor reads less than the horizontal illuminance this is
+ * compared with, so the lights come on, if anything, earlier. On the street lamps' switch (as before F8.1) they were
+ * still off on lv-19-dusk's final, with the Sun 1.3 degrees down.
+ */
+export const OBSTRUCTION_ON_LUX = 377;
 /** The files, in the city's data folder. */
 export const FILES = Object.freeze({ valley: 'lamps-drive', region: 'lights-region' });
 
@@ -170,7 +179,7 @@ export function createNightGround({ fe, region, ground = {}, data, renderer = nu
       if (parts.valley) { parts.valley.update(frame); parts.valley.beforeRender(frame); }
       if (parts.obstruction) {
         parts.obstruction.update(frame);
-        parts.obstruction.setLook({ lights: light.lit > 0.05 ? 1 : 0 });
+        parts.obstruction.setLook({ lights: light.ambientLux < OBSTRUCTION_ON_LUX ? 1 : 0 });
         parts.obstruction.beforeRender(frame);
       }
       updateMs = performance.now() - t0;
