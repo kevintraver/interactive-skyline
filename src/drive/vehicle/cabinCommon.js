@@ -22,13 +22,42 @@ export const cabinModelForLevel = (level) => (level === 'low' ? 'low' : 'high');
 
 // Linear base colours. Matte and dark inside, as interiors are (a dashboard is about 4 % reflective); the
 // darker the part sits under the roof, the darker it is drawn, which stands in for the roof's shade.
+// `specular` is three's specularIntensity: the share of a smooth dielectric's reflection (F0 0.04, rising to 1 at
+// grazing) the surface keeps. The grained, low-gloss skins of a dashboard and its trim (specified near 2 gloss units at
+// 60 degrees against about 90 for smooth black plastic, so that the windshield does not mirror them) keep a tenth of it
+// and are fully rough (assumed). With the full lobe a sunlit dashboard top facing a sun ahead, seen at the driver's
+// grazing angle, reflected 0.17, more than the asphalt beyond it (the white dashboard driving south at noon,
+// 2026-11-24). `outside`: beyond the glass (the bonnet), lit by the sun without the glass between.
 export const PAINT = {
-  CabinDash: { color: [0.030, 0.031, 0.034], roughness: 0.92 },
-  CabinTrim: { color: [0.050, 0.051, 0.055], roughness: 0.85 },
-  CabinPillar: { color: [0.090, 0.090, 0.087], roughness: 0.95 },
-  Hood: { color: [0.32, 0.32, 0.31], roughness: 0.38 }, // a neutral mid-grey paint
-  MirrorHousing: { color: [0.035, 0.036, 0.04], roughness: 0.6 },
+  CabinDash: { color: [0.030, 0.031, 0.034], roughness: 1, specular: 0.1 },
+  CabinTrim: { color: [0.050, 0.051, 0.055], roughness: 1, specular: 0.1 },
+  CabinPillar: { color: [0.090, 0.090, 0.087], roughness: 1, specular: 0.1 },
+  Hood: { color: [0.32, 0.32, 0.31], roughness: 0.38, specular: 1, outside: true }, // a neutral mid-grey paint
+  MirrorHousing: { color: [0.035, 0.036, 0.04], roughness: 0.6, specular: 1 },
 };
+
+/** The share of the sun a laminated windshield (and a front side window) passes into the cabin: visible transmittance
+ * about 0.75 to 0.8 near normal incidence, 0.7 the legal minimum (assumed). */
+export const GLASS_TRANSMITTANCE = 0.78;
+
+/**
+ * The reflectance of a paint under one direct light, as three shades it (MeshPhysicalNodeMaterial, no metal): the Lambert
+ * term plus the GGX lobe (Schlick Fresnel from F0 = 0.04 x specular to F90 = specular, the height-correlated Smith
+ * visibility, alpha = roughness^2), times pi: the albedo a Lambert surface would need to send the same luminance toward
+ * the eye. The colour is taken by its luminance. Pure.
+ * @param {{ color: number[], roughness: number, specular?: number }} paint
+ * @param {{ nl: number, nv: number, nh: number, vh: number }} g cosines: normal-light, normal-view, normal-half, view-half
+ */
+export function paintReflectance(paint, { nl, nv, nh, vh }) {
+  if (nl <= 0 || nv <= 0) return 0;
+  const [r, g, b] = paint.color;
+  const albedo = 0.2126 * r + 0.7152 * g + 0.0722 * b;
+  const s = paint.specular ?? 1, a = paint.roughness ** 2, a2 = a * a;
+  const F = 0.04 * s + (s - 0.04 * s) * (1 - vh) ** 5;
+  const V = 0.5 / (nv * Math.sqrt(a2 + (1 - a2) * nl * nl) + nl * Math.sqrt(a2 + (1 - a2) * nv * nv));
+  const D = a2 / (Math.PI * (nh * nh * (a2 - 1) + 1) ** 2);
+  return albedo + Math.PI * F * V * D;
+}
 
 export const NODE_ROLES = {
   Instruments: 'instruments', CenterScreen: 'screen', MirrorLeft: 'mirror', MirrorRight: 'mirror', MirrorCenter: 'mirror',

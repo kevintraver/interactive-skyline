@@ -370,9 +370,10 @@ class GlassLayerNode extends Node {
  * @param {{ car: THREE.Object3D, corners: object, options: object, env: object, session: object, renderer: object,
  *   pipeline: object, occluders: THREE.Scene, scene: THREE.Scene }} o
  *   car: the car's group (its matrix is the body's); options: a preset's `rain`; occluders: the cabin's silhouette
- *   (meshes in place, kept in step by the cabin), drawn into the layer's depth first
+ *   (meshes in place, kept in step by the cabin), drawn into the layer's depth first; staged: whether the layer's
+ *   stage starts registered (setStaged changes it: the cabin registers it only while the drive is shown)
  */
-export function createGlassRain({ car, corners, options, env, session, renderer, pipeline, occluders, scene }) {
+export function createGlassRain({ car, corners, options, env, session, renderer, pipeline, occluders, scene, staged = true }) {
   const { bottomLeft: BL, bottomRight: BR, topRight: TR, topLeft: TL } = corners;
   const glass = glassOf(corners);
   const layout = siteLayout(glass, options.siteM);
@@ -495,7 +496,14 @@ export function createGlassRain({ car, corners, options, env, session, renderer,
     });
     return c;
   })();
-  const removeStage = pipeline.addStage({ id: 'cabin-rain', at: 'beforeBloom', node: composite });
+  const rainStage = { id: 'cabin-rain', at: 'beforeBloom', node: composite };
+  let removeStage = null;
+  /** The layer's pipeline stage registered (on) or removed (off): registered only while the drive is shown. */
+  function setStaged(on) {
+    if (on && !removeStage) removeStage = pipeline.addStage(rainStage);
+    else if (!on && removeStage) { removeStage(); removeStage = null; }
+  }
+  setStaged(staged);
 
   /**
    * @param {object} frame the session's frame  @param {{ camera: THREE.Camera, L: object }} o the scene camera, rig.last
@@ -529,11 +537,13 @@ export function createGlassRain({ car, corners, options, env, session, renderer,
     setSpeedOverride: feed.setSpeedOverride,
     update,
     hide() { raining.value = 0; },
+    setStaged,
+    get staged() { return !!removeStage; },
     drops: feed.drops,
     state: feed.state,
     stats: () => ({ enabled: feed.enabled, raining: raining.value > 0, mode: feed.mode, sites: layout.count, bins: feed.binCount, copied, drawn, js: timing.summary(), draw: drawTiming.summary() }),
     dispose() {
-      removeStage();
+      setStaged(false);
       for (const m of meshes) { holder.remove(m); m.geometry.dispose(); m.material.dispose(); }
       depthOnly.dispose();
       layer.dispose();

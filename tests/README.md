@@ -208,6 +208,7 @@ one (`--backend webgl`).
 | `traffic-probe.mjs` | a tail lamp's light at the eye, the pool under an oncoming head lamp, a lane ribbon at 6 km |
 | `traffic-determinism.mjs` | a play and a seek to the same instant place the same vehicles |
 | `night-display.mjs` | the night look as displayed (the driver's adaptation, decision 13): the road in the beams and under lamps, lit windows, the Sphere, a board, in stops from mid-grey |
+| `cabin-dash-sun.mjs` | the dashboard under a midday Sun ahead: its displayed luminance against the road's (at most half), with two controls |
 | `drive-shots.mjs` | frames of the drive at chosen routes, places, times, views and rain; the model for the others |
 | `cabin-shots.mjs`, `rain-shots.mjs`, `screens-shots.mjs` | frames of the cabin (mirrors, windshield, rain on the glass), of the weather, and of the screens and billboards |
 | `traffic-smoke.mjs` | the traffic and valley parts' stats and a frame at a place and time |

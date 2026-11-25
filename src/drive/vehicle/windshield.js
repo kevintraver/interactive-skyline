@@ -52,9 +52,10 @@ const glassReflectance = (ci0) => {
 /**
  * @param {{ parent: THREE.Object3D, corners: object, options: object, env: object, pipeline?: object, renderer?: object }} o
  *   parent: the car's group (cabin coordinates); corners: the windshield's (cabin coordinates); options: a preset's
- *   `windshield`; pipeline: plan 01's, for the bloom veil (only where it has a bloom)
+ *   `windshield`; pipeline: plan 01's, for the bloom veil (only where it has a bloom); staged: whether the veil's stage
+ *   starts registered (setStaged changes it: the cabin registers it only while the drive is shown)
  */
-export function createWindshield({ parent, corners, options, env, pipeline = null, renderer = null, silhouette = null }) {
+export function createWindshield({ parent, corners, options, env, pipeline = null, renderer = null, silhouette = null, staged = true }) {
   const { bottomLeft: BL, bottomRight: BR, topRight: TR, topLeft: TL } = corners;
   const { glassIn, glassOut, size: [glassW, glassH] } = glassFrame(corners);
   const [mw, mh] = options.maskSize || [512, 256];
@@ -160,6 +161,7 @@ export function createWindshield({ parent, corners, options, env, pipeline = nul
 
   let removeStage = null;
   const bloomVeil = !!pipeline && pipeline.settings?.bloom > 0;
+  let veilStage = null;
   if (bloomVeil) {
     const stage = ({ color, bloom }) => Fn(() => {
       const out = vec4(color).toVar();
@@ -169,8 +171,15 @@ export function createWindshield({ parent, corners, options, env, pipeline = nul
       });
       return out;
     })();
-    removeStage = pipeline.addStage({ id: 'cabin-veil', at: 'afterBloom', node: stage });
+    veilStage = { id: 'cabin-veil', at: 'afterBloom', node: stage };
   }
+  /** The veil's pipeline stage registered (on) or removed (off): registered only while the drive is shown. */
+  function setStaged(on) {
+    if (!veilStage) return;
+    if (on && !removeStage) removeStage = pipeline.addStage(veilStage);
+    else if (!on && removeStage) { removeStage(); removeStage = null; }
+  }
+  setStaged(staged);
 
   let enabled = options.enabled !== false;
   mesh.visible = enabled;
@@ -201,11 +210,13 @@ export function createWindshield({ parent, corners, options, env, pipeline = nul
     setEnabled(v) { enabled = !!v; mesh.visible = enabled; if (!enabled) seen.on.value = 0; },
     /** Hidden with the car (the clean view): the bloom veil goes too. */
     hide() { seen.on.value = 0; },
+    setStaged,
+    get staged() { return !!removeStage; },
     /** Where the glass is seen (r: dirt, g: 1; 0 behind the cabin), as last drawn: the metering mask. */
     glassSeen: maskTarget.texture,
     update,
     stats: () => ({ enabled, bloomVeil, maskRenders, ...last, js: timing.summary() }),
-    dispose() { removeStage?.(); parent.remove(mesh); geometry.dispose(); material.dispose(); glassMat.dispose(); black.dispose(); mask.dispose(); maskTarget.dispose(); },
+    dispose() { setStaged(false); parent.remove(mesh); geometry.dispose(); material.dispose(); glassMat.dispose(); black.dispose(); mask.dispose(); maskTarget.dispose(); },
   };
 }
 

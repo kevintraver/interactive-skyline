@@ -4,7 +4,7 @@ import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import * as THREE from 'three';
 import { Texture } from 'three/webgpu';
-import { cabinModelForLevel, createDisplayDriver, cabinGlass, REDRAW_MS } from '../../../src/drive/vehicle/cabinCommon.js';
+import { cabinModelForLevel, createDisplayDriver, cabinGlass, REDRAW_MS, PAINT, GLASS_TRANSMITTANCE, paintReflectance } from '../../../src/drive/vehicle/cabinCommon.js';
 import { glassPresetForLevel, QUALITY_GLASS, mirrorsDue, mirrorPixels, GLASS_PRESETS } from '../../../src/drive/vehicle/glassPresets.js';
 import { glassOf, siteLayout } from '../../../src/drive/vehicle/drops.js';
 import { displayLuminance, DISPLAY_CD, sunIntoCabin, CABIN_ORDER } from '../../../src/drive/vehicle/cabin.js';
@@ -104,6 +104,44 @@ describe('the sun inside the cabin', () => {
   });
 });
 
+describe('the dashboard in the sun (the white dashboard driving south at noon, 2026-11-24)', () => {
+  // three's direct-light shading of a horizontal top seen from the eye: the sun ahead at `sunEl`, the eye's ray coming
+  // down onto the top at `viewEl` (12 degrees on the dashboard's top from the driver's eye)
+  const geometry = (sunEl, viewEl, sunAz = 0) => {
+    const r = Math.PI / 180, n = new THREE.Vector3(0, 1, 0);
+    const l = new THREE.Vector3(Math.sin(sunAz * r) * Math.cos(sunEl * r), Math.sin(sunEl * r), -Math.cos(sunAz * r) * Math.cos(sunEl * r));
+    const v = new THREE.Vector3(0, Math.sin(viewEl * r), Math.cos(viewEl * r)); // toward the eye, behind the point
+    const h = l.clone().add(v).normalize();
+    return { nl: n.dot(l), nv: n.dot(v), nh: n.dot(h), vh: v.dot(h) };
+  };
+  const ASPHALT = 0.1; // the darkest the sunlit road is (albedo 0.1 to 0.15)
+  it('is dark plastic: through the glass, its sunlit top reflects at most half what asphalt does, under a midday sun ahead', () => {
+    // (a sun within 15 degrees of the horizon ahead makes every surface glare at the driver's grazing view, the road too;
+    // the browser check tests/manual/cabin-dash-sun.mjs holds the dusk case against the road as drawn)
+    // the dashboard at most half the asphalt; the trim, a lighter grey (albedo 0.05), at most two thirds
+    for (const [name, bound] of [['CabinDash', ASPHALT / 2], ['CabinTrim', ASPHALT * 2 / 3]]) {
+      for (const sunEl of [20, 32, 45, 60, 75]) for (const viewEl of [8, 12, 20, 30]) {
+        const k = GLASS_TRANSMITTANCE * paintReflectance(PAINT[name], geometry(sunEl, viewEl));
+        expect(k, `${name} sun ${sunEl} view ${viewEl}`).toBeLessThanOrEqual(bound);
+      }
+    }
+  });
+  it('the arithmetic is three\'s: a Lambert surface is its albedo; a smooth dielectric in the mirror direction glares', () => {
+    expect(paintReflectance({ color: [0.3, 0.3, 0.3], roughness: 1, specular: 0 }, geometry(32, 12))).toBeCloseTo(0.3, 6);
+    // the case of the defect: the old dashboard paint (roughness 0.92, a full dielectric lobe) at 32 / 12 degrees
+    // reflected 0.17, more than asphalt; the frame measured the sun's share at 5.6 times the diffuse term
+    const old = paintReflectance({ color: [0.03, 0.031, 0.034], roughness: 0.92, specular: 1 }, geometry(32, 12));
+    expect(old).toBeGreaterThan(0.15);
+    expect(old / 0.0307).toBeCloseTo(5.6, 0);
+  });
+  it('the glass passes most but not all of the sun; paint outside the glass gets it all', () => {
+    expect(GLASS_TRANSMITTANCE).toBeGreaterThanOrEqual(0.7); // the legal minimum for a windshield
+    expect(GLASS_TRANSMITTANCE).toBeLessThan(0.92);
+    expect(PAINT.Hood.outside).toBe(true);
+    expect(PAINT.CabinDash.outside).toBeFalsy();
+  });
+});
+
 describe('the mirror cameras', () => {
   it('project in the renderer\'s clip space and depth direction (a WebGL projection kept only the farthest surfaces)', () => {
     const scene = new THREE.Scene();
@@ -154,5 +192,27 @@ describe('rain on the glass', () => {
     a.update(at(50000), L);
     expect(a.raining).toBe(false);
     a.dispose(); b.dispose();
+  });
+});
+
+describe('the cabin\'s pipeline stages follow the drive shown and hidden', () => {
+  it('the rain layer registers its stage only while staged, once, and removes it on dispose', () => {
+    const f = fixture();
+    const journey = createJourney({ route: f.route('test'), road: f.road('test.main'), frame: f.frame, departMs: 0 });
+    const live = [];
+    const pipeline = { scenePass: { getTexture: () => new Texture(), renderTarget: { width: 1, height: 1 } },
+      addStage: (st) => { live.push(st); return () => live.splice(live.indexOf(st), 1); } };
+    const env = { weather: { state: () => weatherFor(0), on: () => () => {} } };
+    const rain = createGlassRain({ car: new THREE.Group(), corners, options: { siteM: 0.02 }, env, session: { journey, locked: false },
+      renderer: null, pipeline, occluders: new THREE.Scene(), scene: new THREE.Scene(), staged: false });
+    expect(live).toEqual([]);
+    rain.setStaged(true); rain.setStaged(true);
+    expect(live.map((st) => st.id)).toEqual(['cabin-rain']);
+    expect(rain.staged).toBe(true);
+    rain.setStaged(false);
+    expect(live).toEqual([]);
+    rain.setStaged(true);
+    rain.dispose();
+    expect(live).toEqual([]);
   });
 });

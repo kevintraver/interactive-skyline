@@ -16,8 +16,8 @@
 //
 // Parts. Each drive feature (the road chunks, the roadside signs, the terrain's loading, and every
 // later one) is registered with addPart(part), where a part is
-//   { name, update?(frame), setLook?(look), setRoute?(route), whenSettled?(), stats?(), beforeRender?(frame),
-//     afterRender?(frame), dispose?() }
+//   { name, update?(frame), setLook?(look), setRoute?(route), show?(on), whenSettled?(), stats?(),
+//     beforeRender?(frame), afterRender?(frame), dispose?() }
 //   frame = { simMs, dtSimMs, pose, camera, viewport, night, sun: { elevation, azimuth }, rate, playing }
 //   look  = look.js lookFromEnv(): { night: boolean, dusk: number, lights: number, beams: number, sun, ambientLux }
 //           dusk 0 by day .. 1 by night, in steps of 1 / LOOK_STEPS; lights 0..1, plan 01's street-light switch-on;
@@ -480,6 +480,9 @@ export async function createSession(ctx, terrain, hooks, { route: firstRoute, ro
     /** Show or hide the drive's scene objects. */
     show(on) {
       group.visible = on;
+      // a part with pipeline stages of its own adds and removes them with the drive (the cabin), here and not a frame
+      // later: Map puts its pipeline state back right after this (index.js, mapPipeline.js)
+      for (const p of parts) p.show?.(on);
       if (!on) look = null;
       attach(on);
       if (mapApron) mapApron.visible = !on;
