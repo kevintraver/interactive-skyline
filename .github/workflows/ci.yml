@@ -3,11 +3,11 @@
 # Golden images are compared only where a snapshot for the runner's platform is committed; until Linux goldens
 # exist (run the "linux-goldens" job by hand and commit its artifact, see tests/README.md) the baseline spec
 # renders every scene and checks for errors but compares nothing.
+#
+# Tests run locally (CLAUDE.md): this workflow does not start on a push or a pull request. It starts only by hand,
+# to run the suites on a Linux runner or to generate the Linux goldens.
 name: ci
 on:
-  push:
-    branches: [main]
-  pull_request:
   workflow_dispatch:
     inputs:
       linux_goldens:

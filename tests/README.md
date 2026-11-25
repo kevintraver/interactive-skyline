@@ -1,13 +1,15 @@
 # Tests
 
+Tests run locally. Nothing starts them on a push or a pull request: the `ci` workflow (`.github/workflows/ci.yml`) runs only when it is started by hand. Whoever opens or updates a pull request runs the suites on their own machine and says in the pull request what ran and what passed (`CLAUDE.md`, "Every pull request attests what ran").
+
 | Command | What | Where it runs |
 |---|---|---|
-| `pnpm test:unit` | Vitest: `src/core`, extrusion, the sky data readers and their committed files, cities.json shape, source hygiene, the landmark tool, upper bounds on hot code; the drive's frame, terrain and patches, road net, routes, journey, rig and cabin, signs, corridor, traffic, lights (beam, retroreflection, lamps, pools), screens, weather and UI formatting; the data credits (`credits.test.js`) | CI and locally |
-| `pnpm test:py` | pytest (through [uv](https://docs.astral.sh/uv/), Python 3.12, `tests/python/requirements.txt`) on every data pipeline in `scripts/`, in one folder, `tests/python/`: plan 01's parsers, encoders and committed sky, star, lamp, night-light and aerosol outputs against their sidecars; the drive's Python twins (frame, heights, ground, roads, interchanges, layers, roadside, barriers, routes, terrain patch, traffic, valley traffic, corridor and its overrides, billboards, lamp packing, beam maps). Never the network. About 90 s (the first run also builds the environment) | CI and locally |
-| `pnpm test:e2e` | Playwright on SwiftShader, the map's project (`webgl2-software`, below): goldens, the `window.__skyline` contract, the buildless boot, the deterministic performance budgets | CI and locally |
+| `pnpm test:unit` | Vitest: `src/core`, extrusion, the sky data readers and their committed files, cities.json shape, source hygiene, the landmark tool, upper bounds on hot code; the drive's frame, terrain and patches, road net, routes, journey, rig and cabin, signs, corridor, traffic, lights (beam, retroreflection, lamps, pools), screens, weather and UI formatting; the data credits (`credits.test.js`) | locally |
+| `pnpm test:py` | pytest (through [uv](https://docs.astral.sh/uv/), Python 3.12, `tests/python/requirements.txt`) on every data pipeline in `scripts/`, in one folder, `tests/python/`: plan 01's parsers, encoders and committed sky, star, lamp, night-light and aerosol outputs against their sidecars; the drive's Python twins (frame, heights, ground, roads, interchanges, layers, roadside, barriers, routes, terrain patch, traffic, valley traffic, corridor and its overrides, billboards, lamp packing, beam maps). Never the network. About 90 s (the first run also builds the environment) | locally |
+| `pnpm test:e2e` | Playwright on SwiftShader, the map's project (`webgl2-software`, below): goldens, the `window.__skyline` contract, the buildless boot, the deterministic performance budgets | locally |
 | `pnpm test:e2e:gpu` | the functional browser specs on this machine's GPU: the map's (`gpu-functional`) and the drive's (`drive-gpu`), everything but the goldens, which are compared only on SwiftShader. The quick local run; not a substitute for `pnpm test:e2e` before a merge | locally only |
 | `pnpm test:e2e:drive` | Drive mode on this machine's GPU (`drive-gpu`), on the WebGPU backend: every drive spec, no goldens. About 20 minutes | locally only |
-| `pnpm test:e2e:drive:software` | Drive mode on SwiftShader (`drive-software`), the WebGL2 backend: the goldens, every route, the logarithmic depth buffer. About 30 minutes on a quiet machine (below) | locally; `drive-depth.spec.js` alone also in CI, not required |
+| `pnpm test:e2e:drive:software` | Drive mode on SwiftShader (`drive-software`), the WebGL2 backend: the goldens, every route, the logarithmic depth buffer. About 30 minutes on a quiet machine (below) | locally |
 | `pnpm test` | `test:unit`, then `test:e2e` | |
 | `pnpm test:goldens:update` | rewrites the map goldens of this platform (`baseline.spec.js`) | locally |
 | `pnpm test:goldens:drive:update` | writes the drive goldens (`drive-*.png`) that differ or are missing, for this platform; never the map's | locally |
@@ -22,10 +24,10 @@ The Playwright projects (`playwright.config.js`; every one serves the production
 
 | Project | Specs | Where, and notes |
 |---|---|---|
-| `webgl2-software` | the map's: `baseline` (goldens), `hooks`, `interactions`, `buildless`, `perf.budgets`, and the other map specs | SwiftShader, 1280 x 800. CI and locally |
+| `webgl2-software` | the map's: `baseline` (goldens), `hooks`, `interactions`, `buildless`, `perf.budgets`, and the other map specs | SwiftShader, 1280 x 800. locally |
 | `gpu-functional` | the map's functional specs (all but goldens, timing and the drive's) | this machine's GPU, WebGL2 backend. Locally |
 | `drive-gpu` | every drive spec: `drive.spec.js` (motion, seeking, the reveal, an address, hiding a building, Map and back), `routes.spec.js` (each route opened cold, route switching and GPU memory), `drive-ui.spec.js` (route bar, picker, popovers, links, the phone layout), `drive-cabin.spec.js` (the cabin's depth, instruments, inputs, mirrors, rain on the glass), `drive-quality.spec.js` (the quality level held while driving), `drive-depth.spec.js` (a logarithmic depth buffer) | this machine's GPU, WebGPU backend (`drive-depth` asks for WebGL2). No goldens. Locally |
-| `drive-software` | `drive.spec.js` (with its canvas goldens), `routes.spec.js`, `drive-depth.spec.js` | SwiftShader, the WebGL2 backend. Locally (about 30 minutes: 6, 17 and 7); `drive-depth` also in CI as the `drive-depth-software` job, which does not block a merge. See below for what is left to the GPU and why |
+| `drive-software` | `drive.spec.js` (with its canvas goldens), `routes.spec.js`, `drive-depth.spec.js` | SwiftShader, the WebGL2 backend. Locally (about 30 minutes: 6, 17 and 7); `drive-depth` is also a job of the `ci` workflow, for when that is started by hand. See below for what is left to the GPU and why |
 | `drive-timing` | `drive.perf.spec.js` (the drive's own per-frame JavaScript) | this machine's GPU, through `pnpm test:perf:drive` |
 | `gpu`, `software-timing` | `perf.timing.spec.js` | only through `pnpm test:perf` and `test:perf:software` |
 | `gpu-ab`, `webgpu-software` | plan 01's renderer comparisons and its software WebGPU run | see Phase 2 below |
@@ -45,7 +47,7 @@ On a quiet machine, from a shell that can reach the GPU (times on an Apple M4, 1
 | `pnpm test:py` | 1.5 minutes (the first run also builds its Python environment) |
 | `pnpm test:e2e:gpu` | the map's functional specs, then every drive spec (about 20 minutes of it) |
 | `pnpm test:perf:drive` | under a minute |
-| `pnpm test:e2e` | the map on SwiftShader, as CI runs it: hours on a busy machine (see `gpu-functional` above) |
+| `pnpm test:e2e` | the map on SwiftShader: hours on a busy machine (see `gpu-functional` above) |
 | `pnpm test:e2e:drive:software` | 30 minutes; needed when the drive's picture changes (its goldens) |
 
 ## Golden images
@@ -57,7 +59,7 @@ itself flickers a few pixels now and then, see the phase 0 notes).
 
 Goldens are per platform: Chromium's text and SwiftShader's output differ between macOS and Linux. Only
 `darwin` goldens are committed. Where none exists for the running platform, the spec still renders each scene and
-fails on page or console errors, but compares nothing, and says so in an annotation. **CI (Linux) therefore has no
+fails on page or console errors, but compares nothing, and says so in an annotation. **A run on Linux therefore has no
 golden coverage until Linux goldens are committed.** To make them:
 
 - in GitHub: run the `ci` workflow by hand with "Generate Linux golden images" ticked, download the `linux-goldens`
@@ -101,7 +103,7 @@ world nor clipped by its 0.1 m near plane.
 
 Two tiers.
 
-- **Deterministic** (`tests/e2e/perf.budgets.spec.js`, CI and locally), against `tests/reference/perf/budgets.json`:
+- **Deterministic** (`tests/e2e/perf.budgets.spec.js`, locally), against `tests/reference/perf/budgets.json`:
   gzipped JS and CSS from `vite build` (total and per chunk), bytes each city downloads before it is ready and in
   all, `renderer.info` counts per scene, and render on demand (a scene held still renders no frame in 5 s; with
   the show clocks running it renders only if something animates in view, at most 30 frames a second). Counts must
@@ -136,7 +138,7 @@ Two tiers.
 ## Data pipelines (plan 01, phase 4 data; plan 02's pipeline)
 
 All Python tests are in `tests/python/` with one dependency list (`tests/python/requirements.txt`) and one command,
-`pnpm test:py` (one CI step). Plan 02's drive pipeline tests joined plan 01's there from `tests/data/`; they hold the
+`pnpm test:py`. Plan 02's drive pipeline tests joined plan 01's there from `tests/data/`; they hold the
 JavaScript twins to the Python ones on shared fixtures (`tests/fixtures/`, `tests/unit/*/fixtures/`), check every
 route's built data against the drawn ground (`test_ground.py`, with its exceptions in `ground_known.json`, empty), and
 read the committed outputs under `public/data/`.
@@ -151,7 +153,7 @@ real Las Vegas grid against its landmarks once `public/data/lv/nightlights.json`
 | Command / spec | What |
 |---|---|
 | `pnpm test:perf:ab` (`perf.ab.spec.js`, project `gpu-ab`) | The classic renderer (`?renderer=legacy`) and the new one in the same run, interleaved (A B, B A, six pairs of 60 frames per scene), as throughput on this machine's GPU; prints the median per-pair ratio per scene and their geometric mean, and fails above `SKYLINE_AB_GATE` (default 1.15, the ship gate). `SKYLINE_AB_B='backend=webgpu'` times the WebGPU backend. Throughput, not timer queries: on ANGLE Metal a frame timed alone follows the GPU's clock (see `docs/plans/notes/01-phase2-spike.md`) |
-| `pnpm test:webgpu` (project `webgpu-software`) | `renderer`, `hooks` and `webgpu` specs on Chromium's software WebGPU adapter, the app forced to `?backend=webgpu`. In CI as a job that does not block a merge yet (decision 6) |
+| `pnpm test:webgpu` (project `webgpu-software`) | `renderer`, `hooks` and `webgpu` specs on Chromium's software WebGPU adapter, the app forced to `?backend=webgpu`. In the `ci` workflow (started by hand) as a job that does not block a merge yet (decision 6) |
 | `pnpm test:bench` (`bench.spec.js` on `gpu-ab`) | `?bench=1` on both backends; `SKYLINE_BENCH_UPDATE=1` records `tests/reference/bench/<machine id>.json`. The software suite runs it for two seconds |
 | `renderer.spec.js` | boot, hide, undo and a captured frame on each renderer and backend (T2.1) |
 | `buildingMaterial.spec.js`, `parity.spec.js`, `attractions.spec.js` | the new renderer at the classic display (`?display=classic`: ACES, exposure 1, no bloom) against the classic renderer in the same run: buildings within 3 %, the ten scenes within 2 % (and against the T0.2 goldens), the fountain within 5 %; the show paused renders nothing; an instant shows the same jets after a scrub (T2.2, T2.3, T2.11) |
