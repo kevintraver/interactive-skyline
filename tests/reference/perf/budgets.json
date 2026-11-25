@@ -1,27 +1,64 @@
 {
   "bundle": {
     "chunks": {
+      "GLTFLoader.js": 13525,
+      "active.js": 55,
+      "apron.js": 3722,
+      "atlas.js": 207,
+      "billboards.js": 8115,
+      "cabin.js": 22924,
       "client.js": 12414,
+      "control.js": 1231,
+      "crosssection.js": 1713,
+      "env.js": 3379,
+      "faces.js": 2986,
+      "flow.js": 1602,
+      "frame.js": 909,
       "generateMeshBVH.worker.js": 47185,
-      "index.css": 3949,
-      "index.js": 221730,
-      "renderer.js": 89634,
+      "headlights.js": 7134,
+      "index.css": 5880,
+      "index.js": 112053,
+      "lamps.js": 1188,
+      "light.js": 851,
+      "lights.js": 8089,
+      "mesher.js": 878,
+      "mesher.worker.js": 4065,
+      "nodes.js": 669,
+      "obstruction.js": 2193,
+      "parts.js": 1177,
+      "photometry.js": 286,
+      "pools.worker.js": 2791,
+      "preload-helper.js": 831,
+      "rainMirror.js": 802,
+      "renderer.js": 89617,
       "rolldown-runtime.js": 154,
-      "shared.js": 130037
+      "routemap.js": 2567,
+      "screens.js": 3387,
+      "session.js": 28966,
+      "shared.js": 134567,
+      "sprites.js": 8064,
+      "surfaceLight.js": 1217,
+      "three.webgpu.js": 110585,
+      "timing.js": 264,
+      "traffic.js": 27224,
+      "units.js": 527,
+      "valley.js": 5189,
+      "weather.js": 7244,
+      "wetMirror.js": 380
     },
-    "cssGzip": 3949,
-    "jsGzip": 501154
+    "cssGzip": 5880,
+    "jsGzip": 696521
   },
   "bytes": {
     "lv": {
-      "beforeReady": 29370830,
-      "requests": 149,
-      "total": 31366549
+      "beforeReady": 29419873,
+      "requests": 162,
+      "total": 31415604
     },
     "slc": {
-      "beforeReady": 22057711,
-      "requests": 90,
-      "total": 22110667
+      "beforeReady": 22106378,
+      "requests": 103,
+      "total": 22159346
     }
   },
   "scenes": {
@@ -31,7 +68,7 @@
       "info": {
         "calls": 294,
         "geometries": 371,
-        "lines": 98205,
+        "lines": 99517,
         "points": 0,
         "programs": 10,
         "textures": 7,
@@ -44,7 +81,7 @@
       "info": {
         "calls": 295,
         "geometries": 372,
-        "lines": 98205,
+        "lines": 99517,
         "points": 0,
         "programs": 11,
         "textures": 7,
@@ -57,7 +94,7 @@
       "info": {
         "calls": 338,
         "geometries": 371,
-        "lines": 137538,
+        "lines": 139134,
         "points": 0,
         "programs": 10,
         "textures": 7,
@@ -70,7 +107,7 @@
       "info": {
         "calls": 339,
         "geometries": 372,
-        "lines": 137538,
+        "lines": 139134,
         "points": 0,
         "programs": 11,
         "textures": 7,
@@ -83,7 +120,7 @@
       "info": {
         "calls": 276,
         "geometries": 371,
-        "lines": 123289,
+        "lines": 124656,
         "points": 0,
         "programs": 10,
         "textures": 7,
@@ -96,7 +133,7 @@
       "info": {
         "calls": 277,
         "geometries": 372,
-        "lines": 123289,
+        "lines": 124656,
         "points": 0,
         "programs": 11,
         "textures": 7,
@@ -109,7 +146,7 @@
       "info": {
         "calls": 142,
         "geometries": 152,
-        "lines": 47304,
+        "lines": 47428,
         "points": 0,
         "programs": 9,
         "textures": 7,
@@ -122,7 +159,7 @@
       "info": {
         "calls": 142,
         "geometries": 152,
-        "lines": 47304,
+        "lines": 47428,
         "points": 0,
         "programs": 9,
         "textures": 7,
@@ -135,7 +172,7 @@
       "info": {
         "calls": 146,
         "geometries": 152,
-        "lines": 51096,
+        "lines": 51227,
         "points": 0,
         "programs": 9,
         "textures": 7,
@@ -148,7 +185,7 @@
       "info": {
         "calls": 146,
         "geometries": 152,
-        "lines": 51096,
+        "lines": 51227,
         "points": 0,
         "programs": 9,
         "textures": 7,

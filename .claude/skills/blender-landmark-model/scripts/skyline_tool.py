@@ -6,7 +6,7 @@
     python skyline_tool.py install --repo REPO --city lv --id w135457469 --glb strat.glb [--offset 3.2,0.8]
     python skyline_tool.py install --repo REPO --city lv --extra "High Roller" --glb high_roller.glb
                                    --east 455 --north -60 [--rotation DEG] [--visible night] [--blend additive]
-                                   [--spin-period S [--spin-direction -1] [--spin-node Rotor]]
+                                   [--spin-period S [--spin-direction -1] [--spin-node Rotor]] [--building ID]
     python skyline_tool.py upgrade --repo REPO --city lv
     python skyline_tool.py check   --repo REPO --city lv --id w135457469 --out DIR [--shot ...]
     python skyline_tool.py check   --repo REPO --city lv --extra "High Roller" --out DIR [--shot ...]
@@ -22,7 +22,10 @@ install  adds the model loader, night mode, extras, fountain shows and LED surfa
          --extra a structure that is not a building in the app's data (a canopy, a wheel, a light beam),
          placed on the terrain at --east/--north (m from the city origin), turned --rotation degrees
          counter-clockwise from east, shown always or only at night; --spin-period turns its Rotor node (a
-         wheel built to high_roller/SPIN_CONTRACT.md) once every S seconds. It never commits.
+         wheel built to high_roller/SPIN_CONTRACT.md) once every S seconds; --building names the removable
+         building the extra belongs to (it hides and moves with it, src/attractions.js). Re-installing an extra
+         keeps the keys of its entry this tool does not set (a `building` added by hand stays unless --building
+         gives another). It never commits.
 upgrade  does install's integration part alone (pristine repo, or v3/v4/v5 -> v6), touching no model entry.
 check    serves the repo itself (no Node, no Vite, nothing written into the repo) on a local port, opens it
          in headless Edge or Chrome with a throwaway profile, frames the building (or with --extra the extra
@@ -612,13 +615,29 @@ def glb_node_names(glb: str) -> tuple[set[str], dict[str, list[str]]]:
     return set(names), {names[i]: [names[c] for c in n.get("children", [])] for i, n in enumerate(nodes)}
 
 
+# The keys of an extra's entry install --extra writes (or, for blend and spin, leaves out to mean the default):
+# every other key of an entry it replaces (such as "building", or one a later app version reads) is kept.
+EXTRA_TOOL_KEYS = ("name", "url", "east", "north", "rotation_deg", "visible", "blend", "spin")
+
+
+def merge_extra(previous: dict | None, entry: dict) -> dict:
+    """The entry to write for an extra: `entry` (what this install sets) over the keys of the entry it replaces
+    that the tool does not manage; "building" from `entry` when given, else kept from `previous`."""
+    kept = {k: v for k, v in (previous or {}).items() if k not in EXTRA_TOOL_KEYS}
+    return {**kept, **entry}
+
+
 def install_extra(repo: str, city: str, name: str, glb: str, east: float, north: float, rotation: float,
-                  visible: str, blend: str, force: bool, spin: dict | None = None) -> int:
+                  visible: str, blend: str, force: bool, spin: dict | None = None, building: str | None = None) -> int:
     """List a structure that is not a building in the app's data under "extras" (upserted by name). `spin`
-    ({"node", "period_s", "direction"}) makes it a turning wheel (high_roller/SPIN_CONTRACT.md)."""
+    ({"node", "period_s", "direction"}) makes it a turning wheel (high_roller/SPIN_CONTRACT.md); `building` (an
+    id of the app's removable buildings) makes it hide and move with that building. Keys of a replaced entry the
+    tool does not set are kept (merge_extra)."""
     check_repo(repo, city)
     if not name.strip():
         raise SystemExit("--extra needs a name")
+    if building is not None and not building.strip():
+        raise SystemExit("--building needs a building id (see find)")
     if not os.path.isfile(glb):
         raise SystemExit(f"no such file: {glb}")
     if not all(math.isfinite(v) for v in (east, north, rotation)):
@@ -646,8 +665,10 @@ def install_extra(repo: str, city: str, name: str, glb: str, east: float, north:
         raise SystemExit(f"{manifest_path}: \"extras\" should be {{\"<city>\": [ ... ]}}")
     entry = {"name": name.strip(), "url": url, "east": round(east, 2), "north": round(north, 2),
              "rotation_deg": round(rotation, 2), "visible": visible, **({"blend": blend} if blend != "opaque" else {}),
-             **({"spin": spin} if spin else {})}
+             **({"spin": spin} if spin else {}), **({"building": building.strip()} if building else {})}
     done += spin_notes
+    previous = next((e for e in extras[city] if e.get("name") == entry["name"]), None)
+    entry = merge_extra(previous, entry)
     others = [e for e in extras[city] if e.get("name") != entry["name"]]
     replaced = len(others) != len(extras[city])
     if any(e.get("url") == url for e in others):
@@ -1199,6 +1220,9 @@ def main() -> int:
             p.add_argument("--spin-period", type=float, help="extra: seconds per turn of its Rotor node (a wheel)")
             p.add_argument("--spin-direction", type=int, choices=(1, -1), default=1, help="extra: 1 or -1")
             p.add_argument("--spin-node", default="Rotor", help="extra: the node that turns (default Rotor)")
+            p.add_argument("--building", metavar="ID",
+                           help="extra: the removable building it belongs to (hides and moves with it); kept from "
+                                "the existing entry when not given")
         if cmd == "check":
             target = p.add_mutually_exclusive_group(required=True)
             target.add_argument("--id", help="building id to frame")
@@ -1230,7 +1254,7 @@ def main() -> int:
             spin = None if args.spin_period is None else {
                 "node": args.spin_node, "period_s": args.spin_period, "direction": args.spin_direction}
             return install_extra(repo, args.city, args.extra, os.path.abspath(args.glb), args.east, args.north,
-                                 args.rotation, args.visible, args.blend, args.force, spin)
+                                 args.rotation, args.visible, args.blend, args.force, spin, args.building)
         offset = [float(x) for x in args.offset.split(",")]
         if len(offset) != 2:
             raise SystemExit("--offset is east,north in meters, e.g. 3.2,0.8")

@@ -1,0 +1,503 @@
+{
+  "triangles": {
+    "low": 3660,
+    "high": 12782
+  },
+  "view": {
+    "pillarYawLeftDeg": 22.9,
+    "pillarYawRightDeg": 48.2,
+    "forwardViewDeg": 71.1,
+    "roadVisibleFromM": 11.3,
+    "roadAt12mVisible": true,
+    "mirror_left": {
+      "yawDeg": 39.2,
+      "pitchDeg": -7.1,
+      "visibleSamples": "9/9"
+    },
+    "mirror_right": {
+      "yawDeg": -59.9,
+      "pitchDeg": -4.6,
+      "visibleSamples": "9/9"
+    },
+    "mirror_center": {
+      "yawDeg": -30.8,
+      "pitchDeg": 12.5,
+      "visibleSamples": "9/9"
+    },
+    "instrumentsVisibleSamples": "15/15",
+    "screenVisibleSamples": "15/15"
+  },
+  "errors": [],
+  "nodes": {
+    "low/Cabin": {
+      "object": "Cabin",
+      "verts": 1767,
+      "faces": 1777,
+      "tris": 3222,
+      "bbox_min": [
+        -0.779,
+        -2.2,
+        0.36
+      ],
+      "bbox_max": [
+        1.529,
+        2.85,
+        1.645
+      ],
+      "islands": 78,
+      "open_islands": 0,
+      "inside_out_islands": 0,
+      "nonmanifold_edges": 0,
+      "degenerate_faces": 0,
+      "loose_verts": 0,
+      "nonplanar_ngons": 0,
+      "materials": {
+        "CabinDash": 555,
+        "CabinTrim": 636,
+        "CabinPillar": 238,
+        "Hood": 192,
+        "MirrorHousing": 156
+      },
+      "glow": {
+        "max": 0.0,
+        "dark_faces": 1777
+      },
+      "windowed_faces": 0,
+      "errors": [],
+      "warnings": []
+    },
+    "low/Wheel": {
+      "object": "Wheel",
+      "verts": 216,
+      "faces": 200,
+      "tris": 416,
+      "bbox_min": [
+        -0.201,
+        -0.091,
+        -0.185
+      ],
+      "bbox_max": [
+        0.201,
+        0.091,
+        0.185
+      ],
+      "islands": 5,
+      "open_islands": 0,
+      "inside_out_islands": 0,
+      "nonmanifold_edges": 0,
+      "degenerate_faces": 0,
+      "loose_verts": 0,
+      "nonplanar_ngons": 0,
+      "materials": {
+        "CabinDash": 200
+      },
+      "glow": {
+        "max": 0.0,
+        "dark_faces": 200
+      },
+      "windowed_faces": 0,
+      "errors": [],
+      "warnings": []
+    },
+    "low/MirrorLeft": {
+      "object": "MirrorLeft",
+      "verts": 8,
+      "faces": 1,
+      "tris": 6,
+      "bbox_min": [
+        -0.756,
+        0.779,
+        1.01
+      ],
+      "bbox_max": [
+        -0.564,
+        0.841,
+        1.13
+      ],
+      "islands": 1,
+      "open_islands": 1,
+      "inside_out_islands": 0,
+      "nonmanifold_edges": 8,
+      "degenerate_faces": 0,
+      "loose_verts": 0,
+      "nonplanar_ngons": 0,
+      "materials": {
+        "Mirror": 1
+      },
+      "glow": {
+        "max": 0.0,
+        "dark_faces": 1
+      },
+      "windowed_faces": 0,
+      "errors": [],
+      "warnings": []
+    },
+    "low/MirrorRight": {
+      "object": "MirrorRight",
+      "verts": 8,
+      "faces": 1,
+      "tris": 6,
+      "bbox_min": [
+        1.309,
+        0.766,
+        1.01
+      ],
+      "bbox_max": [
+        1.491,
+        0.854,
+        1.13
+      ],
+      "islands": 1,
+      "open_islands": 1,
+      "inside_out_islands": 0,
+      "nonmanifold_edges": 8,
+      "degenerate_faces": 0,
+      "loose_verts": 0,
+      "nonplanar_ngons": 0,
+      "materials": {
+        "Mirror": 1
+      },
+      "glow": {
+        "max": 0.0,
+        "dark_faces": 1
+      },
+      "windowed_faces": 0,
+      "errors": [],
+      "warnings": []
+    },
+    "low/MirrorCenter": {
+      "object": "MirrorCenter",
+      "verts": 8,
+      "faces": 1,
+      "tris": 6,
+      "bbox_min": [
+        0.249,
+        0.586,
+        1.325
+      ],
+      "bbox_max": [
+        0.491,
+        0.654,
+        1.395
+      ],
+      "islands": 1,
+      "open_islands": 1,
+      "inside_out_islands": 0,
+      "nonmanifold_edges": 8,
+      "degenerate_faces": 0,
+      "loose_verts": 0,
+      "nonplanar_ngons": 0,
+      "materials": {
+        "Mirror": 1
+      },
+      "glow": {
+        "max": 0.0,
+        "dark_faces": 1
+      },
+      "windowed_faces": 0,
+      "errors": [],
+      "warnings": []
+    },
+    "low/Instruments": {
+      "object": "Instruments",
+      "verts": 4,
+      "faces": 1,
+      "tris": 2,
+      "bbox_min": [
+        -0.15,
+        0.85,
+        0.976
+      ],
+      "bbox_max": [
+        0.15,
+        0.87,
+        1.074
+      ],
+      "islands": 1,
+      "open_islands": 1,
+      "inside_out_islands": 0,
+      "nonmanifold_edges": 4,
+      "degenerate_faces": 0,
+      "loose_verts": 0,
+      "nonplanar_ngons": 0,
+      "materials": {
+        "Screen": 1
+      },
+      "glow": {
+        "max": 0.07,
+        "dark_faces": 0
+      },
+      "windowed_faces": 0,
+      "errors": [],
+      "warnings": []
+    },
+    "low/CenterScreen": {
+      "object": "CenterScreen",
+      "verts": 4,
+      "faces": 1,
+      "tris": 2,
+      "bbox_min": [
+        0.235,
+        0.813,
+        0.934
+      ],
+      "bbox_max": [
+        0.505,
+        0.907,
+        1.086
+      ],
+      "islands": 1,
+      "open_islands": 1,
+      "inside_out_islands": 0,
+      "nonmanifold_edges": 4,
+      "degenerate_faces": 0,
+      "loose_verts": 0,
+      "nonplanar_ngons": 0,
+      "materials": {
+        "Screen": 1
+      },
+      "glow": {
+        "max": 0.07,
+        "dark_faces": 0
+      },
+      "windowed_faces": 0,
+      "errors": [],
+      "warnings": []
+    },
+    "high/Cabin": {
+      "object": "Cabin",
+      "verts": 5724,
+      "faces": 6241,
+      "tris": 11088,
+      "bbox_min": [
+        -0.779,
+        -2.2,
+        0.36
+      ],
+      "bbox_max": [
+        1.529,
+        2.85,
+        1.645
+      ],
+      "islands": 90,
+      "open_islands": 0,
+      "inside_out_islands": 0,
+      "nonmanifold_edges": 0,
+      "degenerate_faces": 0,
+      "loose_verts": 0,
+      "nonplanar_ngons": 0,
+      "materials": {
+        "CabinDash": 1903,
+        "CabinTrim": 2059,
+        "CabinPillar": 853,
+        "Hood": 1198,
+        "MirrorHousing": 228
+      },
+      "glow": {
+        "max": 0.0,
+        "dark_faces": 6241
+      },
+      "windowed_faces": 0,
+      "errors": [],
+      "warnings": []
+    },
+    "high/Wheel": {
+      "object": "Wheel",
+      "verts": 832,
+      "faces": 808,
+      "tris": 1648,
+      "bbox_min": [
+        -0.201,
+        -0.091,
+        -0.187
+      ],
+      "bbox_max": [
+        0.201,
+        0.091,
+        0.187
+      ],
+      "islands": 5,
+      "open_islands": 0,
+      "inside_out_islands": 0,
+      "nonmanifold_edges": 0,
+      "degenerate_faces": 0,
+      "loose_verts": 0,
+      "nonplanar_ngons": 0,
+      "materials": {
+        "CabinDash": 808
+      },
+      "glow": {
+        "max": 0.0,
+        "dark_faces": 808
+      },
+      "windowed_faces": 0,
+      "errors": [],
+      "warnings": []
+    },
+    "high/MirrorLeft": {
+      "object": "MirrorLeft",
+      "verts": 16,
+      "faces": 1,
+      "tris": 14,
+      "bbox_min": [
+        -0.756,
+        0.779,
+        1.01
+      ],
+      "bbox_max": [
+        -0.564,
+        0.841,
+        1.13
+      ],
+      "islands": 1,
+      "open_islands": 1,
+      "inside_out_islands": 0,
+      "nonmanifold_edges": 16,
+      "degenerate_faces": 0,
+      "loose_verts": 0,
+      "nonplanar_ngons": 0,
+      "materials": {
+        "Mirror": 1
+      },
+      "glow": {
+        "max": 0.0,
+        "dark_faces": 1
+      },
+      "windowed_faces": 0,
+      "errors": [],
+      "warnings": []
+    },
+    "high/MirrorRight": {
+      "object": "MirrorRight",
+      "verts": 16,
+      "faces": 1,
+      "tris": 14,
+      "bbox_min": [
+        1.309,
+        0.766,
+        1.01
+      ],
+      "bbox_max": [
+        1.491,
+        0.854,
+        1.13
+      ],
+      "islands": 1,
+      "open_islands": 1,
+      "inside_out_islands": 0,
+      "nonmanifold_edges": 16,
+      "degenerate_faces": 0,
+      "loose_verts": 0,
+      "nonplanar_ngons": 0,
+      "materials": {
+        "Mirror": 1
+      },
+      "glow": {
+        "max": 0.0,
+        "dark_faces": 1
+      },
+      "windowed_faces": 0,
+      "errors": [],
+      "warnings": []
+    },
+    "high/MirrorCenter": {
+      "object": "MirrorCenter",
+      "verts": 16,
+      "faces": 1,
+      "tris": 14,
+      "bbox_min": [
+        0.249,
+        0.586,
+        1.325
+      ],
+      "bbox_max": [
+        0.491,
+        0.654,
+        1.395
+      ],
+      "islands": 1,
+      "open_islands": 1,
+      "inside_out_islands": 0,
+      "nonmanifold_edges": 16,
+      "degenerate_faces": 0,
+      "loose_verts": 0,
+      "nonplanar_ngons": 0,
+      "materials": {
+        "Mirror": 1
+      },
+      "glow": {
+        "max": 0.0,
+        "dark_faces": 1
+      },
+      "windowed_faces": 0,
+      "errors": [],
+      "warnings": []
+    },
+    "high/Instruments": {
+      "object": "Instruments",
+      "verts": 4,
+      "faces": 1,
+      "tris": 2,
+      "bbox_min": [
+        -0.15,
+        0.85,
+        0.976
+      ],
+      "bbox_max": [
+        0.15,
+        0.87,
+        1.074
+      ],
+      "islands": 1,
+      "open_islands": 1,
+      "inside_out_islands": 0,
+      "nonmanifold_edges": 4,
+      "degenerate_faces": 0,
+      "loose_verts": 0,
+      "nonplanar_ngons": 0,
+      "materials": {
+        "Screen": 1
+      },
+      "glow": {
+        "max": 0.07,
+        "dark_faces": 0
+      },
+      "windowed_faces": 0,
+      "errors": [],
+      "warnings": []
+    },
+    "high/CenterScreen": {
+      "object": "CenterScreen",
+      "verts": 4,
+      "faces": 1,
+      "tris": 2,
+      "bbox_min": [
+        0.235,
+        0.813,
+        0.934
+      ],
+      "bbox_max": [
+        0.505,
+        0.907,
+        1.086
+      ],
+      "islands": 1,
+      "open_islands": 1,
+      "inside_out_islands": 0,
+      "nonmanifold_edges": 4,
+      "degenerate_faces": 0,
+      "loose_verts": 0,
+      "nonplanar_ngons": 0,
+      "materials": {
+        "Screen": 1
+      },
+      "glow": {
+        "max": 0.07,
+        "dark_faces": 0
+      },
+      "windowed_faces": 0,
+      "errors": [],
+      "warnings": []
+    }
+  }
+}

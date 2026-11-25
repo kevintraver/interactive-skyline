@@ -2,7 +2,7 @@
 
 **[interactive-skyline.vercel.app](https://interactive-skyline.vercel.app)**
 
-A true-scale 3D model of the Salt Lake City and Las Vegas skylines, built with three.js. Hide or move the tall buildings to see what each skyline would look like without them, or with them somewhere else.
+A true-scale 3D model of the Salt Lake City and Las Vegas skylines, built with three.js. Hide or move the tall buildings to see what each skyline would look like without them, or with them somewhere else. In Las Vegas you can also drive into the city on three real freeways.
 
 ![Salt Lake City from Ensign Peak](docs/salt-lake-city.png)
 
@@ -24,8 +24,90 @@ A true-scale 3D model of the Salt Lake City and Las Vegas skylines, built with t
 - **Switch city and viewpoint.** Each city has an eye-level view and an aerial one.
 - **Change the picture.** The moon button switches to night: windows light up and the hand-modelled landmarks of both cities glow with their own lighting. Map options set the aerial photo, the blue color, how tall a building must be to count, and the units.
 - **Watch the Strip.** In Las Vegas the Bellagio fountains run their show and the High Roller turns.
+- **Drive in.** In Las Vegas, Drive takes you into the city along one of three freeways, from the driver's seat, by day, at dusk, at night or in rain. See below.
 
 ![The Sphere moved onto the Wynn golf course](docs/moved.png)
+
+## Drive into Las Vegas
+
+In Las Vegas, the Drive button beside the search box puts you in a car on a real freeway into the city, from the driver's seat, at true scale. The drive runs on rails: the car keeps its lane at the posted speed while you look around, scrub along the road, change the time of day and bring rain. Hidden and moved buildings stay hidden and moved, and you can still click a building to hide or move it on the way in.
+
+![I-15 north at dusk from the driver's seat, the Strip's towers lit ahead and traffic all around](docs/drive-dusk.jpg)
+
+What you see:
+
+- **The road.** Lanes, shoulders, tapers, ramps and gores, bridges that cross overhead, concrete barriers, guardrail, walls and delineators. The pavement has wheel-path wear, rumble strips and joints on the bridge decks.
+- **Signs.** Green guide signs before every exit, overhead where the road is wide, speed limits, route shields and mile markers, lettered with the real exit numbers and destinations.
+- **The roadside.** About 50,000 buildings along the three routes, beyond the modelled core, and 408 billboards carrying made-up advertisements in the style of the 1990s.
+- **Traffic.** Sedans, crossovers, pickups, vans, tractor-trailers and coaches on both carriageways, as many as the 2025 counts give for that hour of that day of the week. Beyond 4 km they become a ribbon of light per lane, and the rest of the valley's freeways and main roads carry ribbons of their own.
+- **Night.** Your headlights light the road and make the signs and lane lines shine back. Street lamps light up through dusk, sodium ones warming up orange. Other vehicles carry head, tail and stop lamps. Towers over 61 m carry red obstruction lights, and the Sphere lights its surroundings.
+- **The car.** The default view is from the driver's seat of a generic crossover, with speed and time on the cluster, a route display, three working mirrors and a windshield that hazes around a low sun and oncoming lamps. The car rides the road's texture and the bridge joints. The clean view drops the car and puts the eye 1.2 m above the road.
+- **Rain.** Light rain, rain and heavy rain darken and gloss the road, put streaks of reflected lamps on it, bead on the windshield under the wipers and throw spray behind vehicles. The rain is the app's weather: the real conditions for the chosen moment, or a preset.
+
+![The same road at night: street lamps, tail lamps and the lit city](docs/drive-night.jpg)
+
+![Heavy rain at night: drops on the glass, a wet road with reflected lamps](docs/drive-rain.jpg)
+
+![US-93 by day, climbing out of Black Canyon after the Hoover Dam bridge](docs/drive-dam.jpg)
+
+![The clean view on I-15 south, under the overhead guide sign for Spring Mountain Road](docs/drive-clean.jpg)
+
+![A billboard beside I-15 with one of the made-up advertisements: "We Fix Hot", for Chillfizz Cooling](docs/drive-billboard.jpg)
+
+### The three routes
+
+| Route | From | To | Length | The Strip comes into view |
+| --- | --- | --- | --- | --- |
+| I-15 north from Primm | California state line | Spaghetti Bowl | 68.4 km | at km 42.7 |
+| I-15 south from Apex | US-93 junction | Russell Road | 45.3 km | at km 7.5 |
+| US-93 from Hoover Dam | Hoover Dam bypass bridge | Spaghetti Bowl | 59.5 km | at km 25.4 |
+
+Each route can start before the view opens (the default), from its start, or through the city. The default moment is today, timed so the car reaches the view in mid civil twilight.
+
+![The route picker open, three routes with their outline maps](docs/drive-picker.jpg)
+
+<img src="docs/drive-phone.jpg" width="300" alt="Drive on a phone in portrait">
+
+### Controls
+
+| | Mouse and keyboard | Touch |
+| --- | --- | --- |
+| Look around | Drag; W A S D (5 degrees a press) | Drag with one finger |
+| Zoom | Scroll; + and -; the zoom buttons | Pinch; the zoom buttons |
+| Look ahead again | Double-click; R; the compass button | Double-tap; the compass button |
+| Glance | 1 ahead, 2 left mirror, 3 right mirror, 4 rear-view mirror (hold to stay) | The view popover's mirror buttons |
+| Cabin or clean view | C; the wheel button in the route bar | The wheel button |
+| Play and pause | Space; the play button | The play button |
+| Move along the road | Left and right arrows (10 s, with Shift 60 s); drag the track | Drag the track |
+| Playback rate | Comma and full stop, or the arrows beside the rate: 0.25x to 16x | The arrows |
+| High beam | H | |
+| Close a popover | Escape | Tap outside it |
+
+The route bar also holds the time and the next exit. The clock opens the time popover: a slider for the local time of day, three jumps (Dusk, the route's default moment; Noon; Night, 3 a.m.) and the weather (Clear, Light, Rain, Heavy: about 1, 4 and 12 mm of rain an hour). The jumps keep the car where it is. The padlock is the hold-position lock: while it is closed the car holds its place, and the running clock, the arrow keys and the time slider change only the time; while it is open, changing the time moves the car to where it would be then. The view popover holds Cabin or Clean, the mirror glances and the drive's own Reduce motion, which holds the eye still.
+
+The address bar follows the drive, so a link opens the same place, time, route, view and weather:
+
+```
+?city=lv&mode=drive&route=i15n&s=42150&t=2026-11-14T01:07:30Z&view=cabin&yaw=-12&pitch=2&lens=28&rain=heavy
+```
+
+`s` is metres along the route, `t` simulation time in UTC, `rain` one of `light`, `moderate` or `heavy` (or a rate in mm an hour). Everything but `mode` is optional.
+
+### What is real and what is assumed
+
+- **Roads and lanes** come from OpenStreetMap: the route relations, lane counts, speed limits, exits and their destinations, and mapped barriers. The road's height is set by rule over the coarse elevation the app already has: the highest ground under the pavement plus 0.3 m, smoothed under a 6 % grade limit, with a fixed embankment down to the ground. Interchanges and the bridges over the road take their heights by rule too. Around Hoover Dam a finer patch of ground (20 m posts, 6 m imagery) gives Black Canyon its walls, and the road is carved into it, because the elevation data predates the highway.
+- **Signs** are placed by the MUTCD's rules and carry the real exit numbers and destinations. Route numbers sit in plain shields of this project's drawing, and no legend carries a trade name: a deny-list (`data/sign_denylist.txt`) is checked on every build.
+- **Billboards** stand where OpenStreetMap and the City of Las Vegas and Clark County billboard layers put them. Their faces carry forty made-up advertisements in the style of 1990s roadside boards (`public/textures/billboards/`): the pictures were generated with an image model through OpenAI's Codex, one per joke and without lettering, and the lettering was set in code on top. Every business is fictional, with no real brand, person, character, phone number or address; any resemblance to a real business is unintended. If the images fail to load, the faces fall back to generated abstract patterns.
+- **Buildings** along the routes are OpenStreetMap footprints, plus Overture Maps footprints (from Microsoft's) for tall buildings OpenStreetMap lacks. Heights are OpenStreetMap's where tagged, else Overture's, else a guess by type and area; 13 resort towers and grandstands that both sources get wrong have hand-set heights (`data/corridor_overrides.json`; 24 outlines in the report). Of 49,859 buildings, 41,285 take Overture's height and 8,441 are guesses (`data/derived/lv/corridor_report.json`). Those 20 m and taller cannot be hidden or moved.
+- **Traffic** comes from 2025 counts: FHWA's hourly counts at the permanent stations, as published in the national transportation atlas, and NDOT's annual counts between them, with NDOT's 2023 truck shares. The road's capacity (2,300 cars an hour a lane) and the speed of each lane are assumed. Your car does not slow in a queue; the counts show none on these routes.
+- **Street lamps** are the agencies' own inventories (Clark County, the City of Las Vegas, Henderson, Boulder City), with OpenStreetMap's, and a rule only where no inventory reaches: 196,300 lamps, 13 % of them placed by rule (`data/derived/lv/lights_report.json`).
+- **Your headlamps' beams** are shaped by hand inside the test points of the US vehicle lighting standard (FMVSS 108), because the published survey of real beam patterns could not be fetched. Other vehicles' lamps take their intensities from the same standard's ranges.
+- **The car and the vehicles** are generic shapes with no badge or brand.
+- **Light and exposure** are the app's: the sky, the dusk and the exposure follow its clock, and the drive's lamps, beams, signs and screens are described in physical units (candela, lux, cd/m²) and measured in the rendered frame by the probes under `tests/manual/`. Two things are the drive's own choices about the picture, not measurements: at night it lifts the dark parts of the frame so that the road reads as it does to a driver's eye (up to twice, leaving lit windows and signs where they are), and a billboard's face is drawn no brighter than the display can show in colour. How strongly pavement throws headlight back toward the driver (15 mcd/m²/lx for asphalt, 25 for concrete) is assumed, within published bounds.
+
+Not there yet: the sky does not turn grey in rain (rain on the road and on the glass is the drive's own until the app draws rain itself), the night sky is brighter than it should be, and the city's glow is not fitted to satellite night lights.
+
+The plan behind all this, with what is done and what is not, is `docs/plans/02-vegas-drive.md`.
 
 ## Run it
 
@@ -34,7 +116,7 @@ pnpm install
 pnpm dev
 ```
 
-The built data in `public/data` is checked in, so the app runs without the data pipeline.
+The built data in `public/data` and the models in `public/models` are checked in, so the app runs without the data pipeline.
 
 ### Weather
 
@@ -88,6 +170,43 @@ uv run scripts/build_buildings.py lv   # footprints + heights -> public/data/lv/
 `pnpm data` runs all four for both cities. The raw OpenStreetMap extract for each city is expected at `data/raw/<city>/osm-buildings.json`; the scripts do not download it.
 
 To add a city, add an entry to `data/cities.json` (origin, bounding box, LiDAR dataset, terrain extents and viewpoints) and run the pipeline for it.
+
+## Rebuilding the drive's data
+
+The drive's built data is checked in too (`public/data/lv/`, `public/data/drive/`, `public/models/drive/`), with a report for each step in `data/derived/lv/`. Downloads are cached under `data/raw/lv/`, which is not committed; a rerun with a warm cache makes no requests. The routes and the terrain grids are configured in `data/cities.json`. In order:
+
+```sh
+uv run scripts/fetch_osm.py lv              # route relations, interchanges and barriers from Overpass -> data/raw/lv/osm-<ref>.json, -x.json, -barriers.json
+uv run scripts/build_terrain.py lv wide dam # the wide grid and the Hoover Dam patch (AWS Terrain Tiles) -> terrain-wide.bin, terrain-dam.bin, water-dam.json, terrain.json
+uv run scripts/build_imagery.py lv wide dam # NAIP imagery for them -> ground-wide.jpg, ground-dam.jpg
+uv run scripts/build_roads.py lv            # RoadNets and the reveal -> roadnet[-i15s|-us93].json/.bin, routes.json, data/derived/lv/roads_report*.json
+uv run scripts/build_roadside.py lv i15n    # signs, barriers, delineators (also i15s, us93) -> signs[-R].json, barriers[-R].json
+uv run scripts/build_traffic.py lv          # 2025 counts -> traffic/<route>.json, traffic_report.json
+uv run scripts/build_valley_traffic.py lv   # the valley's ribbons -> traffic/valley.json/.bin
+uv run scripts/build_corridor.py lv         # buildings beyond the core (OSM, Overture through DuckDB) -> corridor/
+uv run scripts/build_billboards.py lv       # OSM and the city's and county's layers -> billboards.json
+python3 scripts/pack_lamps.py --city lv     # data/derived/lv/lamps.bin -> lamps-drive.bin/.json
+uv run scripts/make_beam.py                 # headlamp candela maps -> public/data/drive/beam_low.bin, beam_high.bin, beam.json
+```
+
+The dam patch carves the road along US-93's plan, so it needs a RoadNet first: after changing the patch, rebuild US-93's road with `build_roads.py lv --route us93 --heights-moved`. Each build checks its acceptance numbers, writes them to its report and exits non-zero when one is missed.
+
+The lamp inventory itself (`data/derived/lv/lamps.bin`, `lamps.json`, `lights_report.json`) is built by `scripts/build_lights.py` on plan 01's data branch (`t3/sky-weather-data-pipelines`); this branch keeps a copy of its output and packs it.
+
+The caches in `data/raw/lv/`: the Overpass answers (`osm-*.json`, including `osm-corridor*.json`, `osm-valley-roads.json`, `osm-water-dam.json`), the Overture extract (`overture/heights.parquet`), the billboard layers (`billboards-*.geojson`, `billboards-osm.json`) and the traffic counts (`traffic/`: the TMAS extract in FHWA's pipe-delimited format, the atlas downloads in `ntad/`, NDOT TRINA stations per route).
+
+The cabin and the six vehicle bodies are built in headless Blender, like the landmarks:
+
+```sh
+python .claude/skills/blender-landmark-model/scripts/run_blender.py models/drive/cabin/build_cabin.py
+python .claude/skills/blender-landmark-model/scripts/run_blender.py models/drive/vehicles/build_vehicles.py -- --out public/models/drive
+```
+
+They write `public/models/drive/cabin.glb`, `cabin-low.glb`, `cabin.json`, `vehicles.glb` and `vehicles.json`, with a mesh report beside each script in `models/drive/`.
+
+## Tests
+
+`pnpm test` runs the unit tests and the map's browser suite; `pnpm test:py` tests the Python data pipelines; `pnpm test:e2e:gpu` runs the functional browser specs, Drive mode's included, on this machine's GPU. What each command covers, where it runs, the golden images, the performance budgets and the manual screenshot scripts are in [tests/README.md](tests/README.md).
 
 ## Hand-modelled landmarks
 
@@ -151,7 +270,7 @@ Known limits:
 - The hand-made models have measured footprints and heights, but most of their facades are estimated from a few photos. The Strat's pod, crown and mast are sized from the LiDAR and its legs are estimated. The Las Vegas Eiffel Tower's height and the position of its four feet are real, and its platforms follow the proportions of the original.
 - Buildings finished after the LiDAR survey have estimated heights unless OpenStreetMap tags one. They are marked "est." in the list.
 - Hand corrections to wrong or missing OpenStreetMap data are listed, with reasons, in `data/overrides.json`.
-- 3D buildings cover only the core of each city. Beyond that the ground is imagery.
+- In the map, 3D buildings cover only the core of each city. Beyond that the ground is imagery. Drive adds the buildings along its routes, but not to the map.
 
 ## License
 
@@ -163,15 +282,22 @@ The data and images are not covered by it and keep their own terms:
 - Terrain and ground imagery in `public/data` come from USGS sources in the public domain.
 - `docs/photo-match.png` includes a CC BY-SA 4.0 photo, credited below.
 - The footprints in `landmarks/**/footprint.json` are OpenStreetMap data under the Open Database License, and the models in `public/models/` are built on them.
+- The drive's roads, signs, barriers and roadside buildings in `public/data/lv/` (`roadnet*`, `signs*`, `barriers*`, `corridor/`, `billboards.json`, `traffic/valley.*`) are derived from OpenStreetMap, and the roadside buildings also from Overture Maps; they are available under the Open Database License.
+- The street-lamp positions in `public/data/lv/lamps-drive.*` come from the Clark County, City of Las Vegas, Henderson and Boulder City street-light layers, which name no licence, and from OpenStreetMap. They are used with the credit below.
+- The traffic files in `public/data/lv/traffic/` are derived from FHWA and Nevada DOT counts; the repository records no licence for those sources.
 
 ## Credits
 
-- Building data © [OpenStreetMap](https://www.openstreetmap.org/copyright) contributors, available under the Open Database License.
-- LiDAR, elevation and NAIP imagery from the U.S. Geological Survey, public domain.
+- Building, road, sign, barrier and billboard data © [OpenStreetMap](https://www.openstreetmap.org/copyright) contributors, available under the Open Database License.
+- LiDAR, elevation and NAIP imagery from the U.S. Geological Survey, public domain. Elevation via AWS Terrain Tiles.
+- Drive: building heights and some footprints from the [Overture Maps Foundation](https://docs.overturemaps.org/attribution/) (© OpenStreetMap contributors, Overture Maps Foundation; footprints from Microsoft Global ML Building Footprints), under the Open Database License.
+- Drive: hourly traffic counts from FHWA's Travel Monitoring Analysis System (2025), via the BTS National Transportation Atlas; annual counts and truck shares from the Nevada Department of Transportation.
+- Drive: street lights from Clark County Public Works, the City of Las Vegas, the City of Henderson (via its lighting contractor's public layer) and Boulder City; billboard positions from the City of Las Vegas and Clark County, Nevada.
 - Weather data by [Open-Meteo.com](https://open-meteo.com/), [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/); used under its free tier, for non-commercial use.
   - ERA5: generated using Copernicus Climate Change Service information. Hersbach, H. et al. (2023): ERA5 hourly data on single levels from 1940 to present. Copernicus Climate Change Service (C3S) Climate Data Store (CDS), doi:[10.24381/cds.adbb2d47](https://doi.org/10.24381/cds.adbb2d47).
   - Aerosols (CAMS): generated using Copernicus Atmosphere Monitoring Service information.
 - Weather observations from NOAA / National Weather Service ([aviationweather.gov](https://aviationweather.gov/), [api.weather.gov](https://www.weather.gov/documentation/services-web-api)), public domain.
 - Archived observations from the Iowa Environmental Mesonet of Iowa State University ([ASOS archive](https://mesonet.agron.iastate.edu/request/download.phtml)).
+- The app lists the same sources, with links, under Map options > About the data, or from the OpenStreetMap credit in the corner.
 - Comparison photo: "Salt Lake City skyline (2020) from Ensign Peak" by Iansmh98, [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/), via Wikimedia Commons.
 - The models in 41 of the `landmarks/` folders were drawn from public reference photos, which are not included. Their sources are in each model's `landmarks/lv/<model>/refs/` folder: `sources.json` gives author and license, and `commons_candidates.json` gives the Wikimedia Commons pages of the thumbnails a model was compared with. The other models were built from the map data and published figures alone.

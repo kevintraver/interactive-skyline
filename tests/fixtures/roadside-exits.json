@@ -1,0 +1,25 @@
+{
+  "note": "Hand-made exits for tests/python/test_roadside.py: the link records build_roads.py writes, with the junction node's tags and its exit ramp's tags as OSM would carry them. Places are real road names; the deny-listed ones are there to be removed.",
+  "length": 30000,
+  "denylist": ["Caesars Palace", "Flamingo Las Vegas", "Harrah's", "T-Mobile Arena"],
+  "exits": [
+    {"link": {"s": 10000, "side": "right", "ref": "25", "label": "Sloan", "osm": "n1"},
+     "node": {"ref": "25"},
+     "ramps": [{"destination": "Sloan;Bermuda Road", "destination:ref": "SR 146 East", "junction:ref": "25"}]},
+    {"link": {"s": 14000, "side": "left", "ref": "", "label": "Harmon Avenue", "osm": "n2"},
+     "node": {"noref": "yes"},
+     "ramps": [{"destination": "Harmon Avenue", "junction:noref": "yes"}]},
+    {"link": {"s": 20000, "side": "right", "ref": "38", "label": "Flamingo Road", "osm": "n3"},
+     "node": {"ref": "38"},
+     "ramps": [{"destination": "Flamingo Las Vegas;Flamingo Road", "junction:ref": "38"}]},
+    {"link": {"s": 21000, "side": "right", "ref": "39", "label": "Spring Mountain Road", "osm": "n4"},
+     "node": {},
+     "ramps": [{"destination": "Caesars Palace", "destination:street": "Spring Mountain Road", "junction:ref": "39"}]},
+    {"link": {"s": 22300, "side": "right", "ref": "40", "label": "Sahara Avenue", "osm": "n5"},
+     "node": {"ref": "40"},
+     "ramps": [{"destination": "Sahara Avenue;Paradise Road;Joe W Brown Drive", "junction:ref": "40"}]},
+    {"link": {"s": 26000, "side": "right", "ref": "41", "label": "Charleston Boulevard", "osm": "n6"},
+     "node": {},
+     "ramps": [{}]}
+  ]
+}

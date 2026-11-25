@@ -159,6 +159,7 @@ export function initSkyPopover(app) {
 
   addEventListener('keydown', (ev) => {
     if (ev.defaultPrevented || ev.metaKey || ev.ctrlKey || typingIn(ev.target)) return;
+    if (app.drive && app.drive.active) return; // drive seam: while driving, the drive's own keys (src/drive/input.js)
     const onControl = ev.target instanceof HTMLButtonElement || (ev.target instanceof HTMLInputElement && ['radio', 'checkbox', 'range'].includes(ev.target.type));
     switch (ev.code) {
       case 'Space':

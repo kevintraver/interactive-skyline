@@ -1,0 +1,430 @@
+// The cabin (plan 02, D4.2 to D4.6, D8.2; third stretch, decisions 3, 6, 7 and 8): the car's interior model, its
+// displays, the steering wheel, the mirrors, the windshield and rain on the glass. The model, the paint, the faces, the
+// displays' logic and the glass's model are in cabinCommon.js, veil.js, mirrorGeometry.js, glassRainFeed.js, drops.js,
+// wipers.js and displays.js.
+//
+//   - One pass (decisions 3 and 7). The car is a group of the drive's scene group, placed each frame at the body's
+//     matrix (rig.last.body: cabin coordinates to scene coordinates; the renderer composes model-view matrices in double
+//     precision, so the cabin is as steady as in its own pass), and drawn by the pipeline's scene pass with the world,
+//     on the app's camera with the session's 0.1 m near plane (rig.js NEAR_M). Every mesh of the model is drawn
+//     first (renderOrder CABIN_ORDER), so the world behind the dashboard, the pillars and the roof fails the depth test
+//     instead of being shaded. With reversed depth (both backends on the reference Apple M4) the cabin drawn at near 0.1 m
+//     and at 0.01 m differed by at most 3 pixels of 921,600 at ten head poses out to the rig's limits (measured
+//     2026-11-23), so nothing of it is clipped and nothing fights. On a tiled GPU the order saves nothing measurable
+//     (its hidden-surface removal rejects the world behind anyway). Where the renderer has no reversed depth (WebGL2 without EXT_clip_control:
+//     a logarithmic buffer, chosen when the renderer is created) the same one-pass draw is used; that case could not be
+//     produced on the reference machine, and stats().depth reports which buffer is in use. Decision 3's `afterWorld`
+//     fallback is not built.
+//   - Light. The cabin's materials have their own light list (material.lightsNode): the scene's own sky light, sun and
+//     city light (the very lights the world is drawn with, pre-exposed in the shipped look), plus the interior fill
+//     and the displays' spill: the same objects as the world's. No fog inside (the scene's fog node would otherwise reach the dashboard).
+//   - The displays emit in cd/m^2 (decision 6): DISPLAY_CD by day, dimmed with the dusk toward night, times the
+//     pre-exposure (not the lights-out slider: they are the car's, not the city's).
+//   - The mirrors are a pipeline stage at `beforeScene` (mirrors.js); the windshield's veil a mesh of the car and
+//     a stage at `afterBloom` (windshield.js); the rain on the glass a layer drawn after the scene pass from the
+//     scene's colour, composited at `beforeBloom` (glassRain.js).
+//   - Exposure: the cabin gives plan 01's exposure a metering mask (env.exposure.setMeteringMask), the screen's share
+//     seen through the glass, so a meter reads the road and the sky, not the dashboard.
+//   - Quality (decision 8): app.quality's level picks the model (cabin-low.glb on Low), the mirrors' sizes and rates
+//     and the rain's detail (glassPresets.js); a level change rebuilds the cabin with the new preset.
+//   - Shown and hidden with the drive: the three pipeline stages (mirrors, rain, veil) are registered only while the
+//     drive is shown (the part's show(on), called by the session's show()). Registered in the map, they kept the scene
+//     pass's depth resolve on there. They go at once, not a frame later: Map puts its pipeline state back right after
+//     (index.js, mapPipeline.js), and a stage removed later would rebuild the graph after that restore.
+
+import * as THREE from 'three';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { MeshPhysicalNodeMaterial, MeshBasicNodeMaterial } from 'three/webgpu';
+import { lights, texture, uniform, vec4 } from 'three/tsl';
+import { localUp } from '../../world/frame.js';
+import { createInstrumentCanvas, createScreenCanvas } from './displays.js';
+import { createTimings } from '../timing.js';
+import { createMirrors } from './mirrors.js';
+import { createWindshield } from './windshield.js';
+import { createGlassRain } from './glassRain.js';
+import { glassPresetForLevel } from './glassPresets.js';
+import { MODELS, FILL, PAINT, GLASS_TRANSMITTANCE, cabinModelForLevel, roleOf, loadCabinMeta, cabinGlass, createDisplayDriver } from './cabinCommon.js';
+import { photometryContext, lightScale } from '../lights/photometry.js';
+import { sunOnGlass, glassFrame } from './veil.js';
+
+/** Draw order of the cabin's meshes: before everything of the world (three sorts opaque objects by it first). */
+export const CABIN_ORDER = -1000;
+/** A display's luminance (cd/m^2) by day and fully dimmed at night (assumed: a car display at full brightness, and turned
+ * down for night driving as automatic dimming does). The dimming follows the look's dusk geometrically. */
+export const DISPLAY_CD = Object.freeze({ day: 1000, night: 6, screen: 0.95 });
+
+/** A display's luminance (cd/m^2) at a dusk (0 by day .. 1 at night). Pure. */
+export const displayLuminance = (dusk) => DISPLAY_CD.day * (DISPLAY_CD.night / DISPLAY_CD.day) ** Math.min(1, Math.max(0, dusk));
+
+/**
+ * How much of the sun reaches the cabin's inside, 0..1, for the direction toward the sun in cabin coordinates (+X right,
+ * +Y up, -Z forward): through the windshield (veil.js sunOnGlass on its outward normal) or a front side window (low,
+ * from the side, not from behind), and nothing from behind or overhead, where the roof, the rear of the body and the
+ * seats shade the dashboard. A model (assumed), for the shipped look: the cabin has no shadows of its own, and the
+ * physical sun stays strong down to the horizon, where it lit the driver's side of the dashboard through a body the
+ * model does not have. Pure.
+ * @param {{ x: number, y: number, z: number }} d unit, toward the sun  @param {{ x: number, y: number, z: number }} glassOut
+ */
+export function sunIntoCabin(d, glassOut) {
+  const s = (a, b, x) => { const t = Math.min(1, Math.max(0, (x - a) / (b - a))); return t * t * (3 - 2 * t); };
+  const front = sunOnGlass(d.x * glassOut.x + d.y * glassOut.y + d.z * glassOut.z);
+  const side = s(0.2, 0.5, Math.abs(d.x)) * (1 - s(0.1, 0.5, d.z)) * (1 - s(0.6, 0.85, d.y));
+  return Math.max(front, side);
+}
+
+/** The cabin part. ctx is the part context (see parts.js). */
+export async function createCabin(ctx) {
+  const quality = ctx.app?.plan01?.quality;
+  let level = quality?.level ?? 'high';
+  // whether the drive is shown (see the header): as the group stands now, then by show(on)
+  let shown = ctx.group ? ctx.group.visible : true;
+  let cur = null;
+  cur = await buildCabin(ctx, level, shown);
+  cur.setStaged(shown); // shown or hidden while it loaded
+  const listeners = [];
+  // a level change rebuilds the cabin with the new preset (model, mirrors, rain), then swaps it in
+  let pending = null;
+  const offQuality = quality?.on ? quality.on('change', (q) => {
+    const next = q?.level ?? quality.level;
+    if (next === level || pending) return;
+    level = next;
+    pending = buildCabin(ctx, next, shown).then((built) => {
+      built.setStaged(shown);
+      const old = cur;
+      built.setLook(old.look);
+      cur = built;
+      old.dispose();
+      for (const fn of listeners) fn(cur);
+      ctx.app.invalidate?.();
+    }).catch((e) => console.warn(`cabin rebuild for ${next} failed: ${e && e.message ? e.message : e}`)).finally(() => { pending = null; });
+  }) : null;
+
+  // the part's surface stays the same object across rebuilds: everything goes to the current build
+  const part = {
+    name: 'cabin',
+    get model() { return cur.model; },
+    get level() { return cur.level; },
+    get meta() { return cur.meta; },
+    get car() { return cur.car; },
+    get cabinScene() { return cur.car; },
+    get cabinCamera() { return null; },
+    get mirrors() { return cur.mirrors; },
+    get windshield() { return cur.windshield; },
+    get wheel() { return cur.wheel; },
+    get readout() { return cur.readout; },
+    get glass() { return cur.glass; },
+    /** The drive's weather port (env.weather), for test scripts that set the rain. */
+    get weather() { return ctx.env?.weather ?? null; },
+    setLook(l) { cur.setLook(l); },
+    setDepthMask() {},
+    /** The cabin's draw order (tests: CABIN_ORDER draws it first; a large value last, to measure what drawing it first saves). */
+    setDrawOrder(order) { cur.setDrawOrder(order); },
+    get depthMask() { return false; },
+    update(frame) { cur.update(frame); },
+    beforeRender(frame) { cur.beforeRender(frame); },
+    afterRender() { cur.afterRender(); },
+    stats: () => cur.stats(),
+    /** fn(build) after a quality change has rebuilt the cabin (tests). */
+    onRebuild(fn) { listeners.push(fn); return () => { const i = listeners.indexOf(fn); if (i >= 0) listeners.splice(i, 1); }; },
+    whenRebuilt: () => pending || Promise.resolve(),
+    /** The drive shown or hidden (session.show): the cabin's pipeline stages follow at once. */
+    show(on) { on = !!on; if (on === shown) return; shown = on; cur?.setStaged(on); },
+    dispose() {
+      offQuality?.();
+      cur.dispose();
+    },
+  };
+  return part;
+}
+
+/** One build of the cabin for a quality level; `staged`: its pipeline stages registered from the start (the drive shown). */
+async function buildCabin(ctx, level, staged = true) {
+  const { app, session, env } = ctx;
+  const rig = session.rig;
+  const { renderer, scene, settings, city } = app;
+  const plan01 = app.plan01 || {};
+  const pipeline = plan01.pipeline;
+  const meta = await loadCabinMeta();
+  const model = cabinModelForLevel(level);
+  const gltf = await new GLTFLoader().loadAsync(`${MODELS}${meta.files[model]}`);
+  rig.setCabin(meta);
+  const phot = photometryContext({ nodes: env?.nodes });
+
+  // the car: cabin coordinates under a group placed at the body each frame
+  const car = new THREE.Group();
+  car.name = 'cabin';
+  car.matrixAutoUpdate = false;
+  car.visible = false;
+  const root = gltf.scene;
+  car.add(root);
+  (ctx.group || scene).add(car);
+
+  // ---------------------------------------------------------------- light
+  let worldHemi = null, worldSun = null, cityLight = null;
+  for (const o of scene.children) {
+    if (o.isHemisphereLight && !worldHemi) worldHemi = o;
+    if (o.isDirectionalLight && o.castShadow && !worldSun) worldSun = o;
+    if (o.isAmbientLight && o.name === 'city light' && !cityLight) cityLight = o;
+  }
+  const glow = new THREE.PointLight(0xbcd4ff, 0, 1.2, 2); // the displays' spill, by night
+  const GLOW_AT = new THREE.Vector3(0.15, 0.95, -0.7);
+  // Light that reaches the inside through the glass from every side, bounced off the road and the seats: the sky light's
+  // own tone, a share of its strength, from no direction (cabinCommon.js FILL)
+  const fill = new THREE.AmbientLight(0xffffff, 0);
+  // the sun: a copy of the scene's admitted only through the glass (sunIntoCabin), less what the glass keeps
+  // (GLASS_TRANSMITTANCE); the paint outside the glass (the bonnet) has its own copy without the glass
+  const cabinSun = worldSun ? new THREE.DirectionalLight(0xffffff, 0) : null;
+  const outsideSun = worldSun ? new THREE.DirectionalLight(0xffffff, 0) : null;
+  const lightsNode = lights([worldHemi, cabinSun || worldSun, cityLight, fill, glow].filter(Boolean));
+  const outsideLightsNode = lights([worldHemi, outsideSun || worldSun, cityLight, fill, glow].filter(Boolean));
+
+  // ---------------------------------------------------------------- materials
+  const materials = {};
+  const paint = (name) => {
+    if (!materials[name]) {
+      const p = PAINT[name] || PAINT.CabinTrim;
+      const m = new MeshPhysicalNodeMaterial({ name, color: new THREE.Color(...p.color), roughness: p.roughness, metalness: 0,
+        specularIntensity: p.specular ?? 1, side: THREE.DoubleSide, fog: false });
+      m.lightsNode = p.outside ? outsideLightsNode : lightsNode;
+      materials[name] = m;
+    }
+    return materials[name];
+  };
+  const instruments = createInstrumentCanvas();
+  const screenCanvas = createScreenCanvas();
+  const textureOf = (canvas) => {
+    const t = new THREE.CanvasTexture(canvas);
+    t.colorSpace = THREE.SRGBColorSpace;
+    t.flipY = false; // glTF texture coordinates: v runs down the image
+    t.anisotropy = Math.min(8, renderer.getMaxAnisotropy ? renderer.getMaxAnisotropy() : 1);
+    return t;
+  };
+  const instrumentsTex = textureOf(instruments.canvas), screenTex = textureOf(screenCanvas.canvas);
+  // the displays: cd/m^2 x the light scale
+  const displayScale = { instruments: uniform(1), screen: uniform(1) };
+  const displayMat = (map, k) => {
+    const m = new MeshBasicNodeMaterial({ side: THREE.DoubleSide, fog: false });
+    const scale = k.mul(lightScale(phot));
+    m.colorNode = vec4(texture(map).rgb.mul(scale), 1);
+    return m;
+  };
+  const instrumentsMat = displayMat(instrumentsTex, displayScale.instruments), screenMat = displayMat(screenTex, displayScale.screen);
+  /** The mirrors' stand-in until the mirror pass: a plain dark sky. */
+  const mirrorStandIns = [];
+
+  const byNode = {};
+  const meshes = [];
+  root.traverse((o) => {
+    if (o.name) byNode[o.name] = byNode[o.name] || o;
+    if (!o.isMesh) return;
+    o.frustumCulled = false; // a handful of meshes, all within a few metres: culling saves nothing
+    o.renderOrder = CABIN_ORDER;
+    const role = roleOf(o);
+    const old = o.material;
+    if (role === 'instruments') o.material = instrumentsMat;
+    else if (role === 'screen') o.material = screenMat;
+    else if (role === 'mirror') { o.material = new MeshBasicNodeMaterial({ color: 0x1c2330, side: THREE.DoubleSide, fog: false }); mirrorStandIns.push(o.material); }
+    else o.material = paint(old?.name);
+    old?.dispose?.();
+    meshes.push(o);
+  });
+
+  const v3 = (a) => new THREE.Vector3(...a);
+  const { mirrors, windshield } = cabinGlass(meta, byNode);
+  const wheel = byNode[meta.wheel.node];
+  const wheelAxis = v3(meta.wheel.axis).normalize();
+  const wheelRest = wheel ? wheel.quaternion.clone() : null;
+  const _wq = new THREE.Quaternion();
+
+  // ---------------------------------------------------------------- the cabin's silhouette, for the glass and the meter
+  // its opaque meshes again, sharing their geometry, in a scene of their own: the occluders of the rain on the glass
+  // (depth only) and the metering mask (black on white)
+  const silhouette = new THREE.Scene();
+  silhouette.name = 'cabin-silhouette';
+  silhouette.matrixWorldAutoUpdate = false;
+  const pairs = [];
+  for (const o of meshes) {
+    const m = new THREE.Mesh(o.geometry);
+    m.matrixAutoUpdate = false;
+    m.frustumCulled = false;
+    silhouette.add(m);
+    pairs.push([o, m]);
+  }
+  const shown = (o) => { for (let p = o; p; p = p.parent) if (!p.visible && p !== car) return false; return true; };
+  const syncSilhouette = () => { for (const [src, m] of pairs) { m.matrixWorld.copy(src.matrixWorld); m.visible = shown(src); } };
+
+  // ---------------------------------------------------------------- the glass: mirrors, windshield, rain
+  const glassOptions = glassPresetForLevel(level, model);
+  let mirrorPass = null, windshieldLayer = null, rainLayer = null;
+  try {
+    const strides = glassOptions.mirrors.groundStride || {};
+    const ground = [...(ctx.ground || []).map(([mesh, grid]) => [mesh, strides[grid] || 1]), ...(ctx.wideMesh ? [[ctx.wideMesh, strides.wide || 1]] : [])];
+    mirrorPass = createMirrors({ renderer, scene, session, car, carGroup: car, faces: mirrors, options: glassOptions.mirrors, lightsNode, ground });
+    for (const m of mirrorStandIns) m.dispose();
+    mirrorStandIns.length = 0;
+  } catch (e) { console.warn(`cabin mirrors left out: ${e && e.message ? e.message : e}`); }
+  try {
+    if (glassOptions.windshield.enabled) windshieldLayer = createWindshield({ parent: car, corners: windshield.corners, options: glassOptions.windshield, env, pipeline, renderer, silhouette, staged });
+  } catch (e) { console.warn(`cabin windshield left out: ${e && e.message ? e.message : e}`); }
+  try {
+    if (glassOptions.rain?.enabled && pipeline) {
+      rainLayer = createGlassRain({ car, corners: windshield.corners, options: glassOptions.rain, env, session, renderer, pipeline, occluders: silhouette, scene, staged });
+    }
+  } catch (e) { console.warn(`cabin rain on the glass left out: ${e && e.message ? e.message : e}`); }
+
+  // ---------------------------------------------------------------- the metering mask (plan 01 section 11.4)
+  // the windshield's picture of where the glass is seen (windshield.js: 0 behind the dashboard, the pillars and the
+  // mirror), handed to plan 01's exposure so a meter reads through the glass; redrawn for the meter when the view has
+  // turned or zoomed (every frame anyway in the shipped look, where the bloom veil reads it)
+  const meter = plan01.env?.exposure;
+  let maskSet = false, maskAt = { frame: -Infinity, yaw: NaN, pitch: NaN, fov: NaN };
+  function meterDue(camera) {
+    if (!meter?.setMeteringMask || !windshieldLayer) return false;
+    const e = rig.effectiveLook, n = renderer.info.frame ?? 0;
+    const moved = !(Math.abs(e.yaw - maskAt.yaw) <= 0.5 && Math.abs(e.pitch - maskAt.pitch) <= 0.5 && Math.abs(camera.fov - maskAt.fov) <= 0.2);
+    if (maskSet && (!moved || n - maskAt.frame < 15)) return false;
+    maskAt = { frame: n, yaw: e.yaw, pitch: e.pitch, fov: camera.fov };
+    return true;
+  }
+  function setMask() { if (!maskSet && meter?.setMeteringMask && windshieldLayer) { meter.setMeteringMask(windshieldLayer.glassSeen); maskSet = true; } }
+  function clearMask() { if (maskSet && meter?.setMeteringMask) meter.setMeteringMask(null); maskSet = false; maskAt.yaw = NaN; }
+
+  // ---------------------------------------------------------------- displays
+  let look = { night: false, dusk: 0 };
+  const displays = createDisplayDriver({
+    session, settings, city, env, instruments, screen: screenCanvas, look: () => look,
+    onDrawn: (which) => { (which === 'instruments' ? instrumentsTex : screenTex).needsUpdate = true; },
+  });
+
+  // ---------------------------------------------------------------- light, each frame
+  const _up = new THREE.Vector3(), _sunDir = new THREE.Vector3(), _inv = new THREE.Matrix4();
+  const _toSun = new THREE.Vector3(), _sunCabin = new THREE.Vector3(), _eyeAt = new THREE.Vector3();
+  const { glassOut } = glassFrame(windshield.corners);
+  function updateLight(L) {
+    if (worldHemi) {
+      fill.color.copy(worldHemi.color).lerp(worldHemi.groundColor, 0.5);
+      fill.intensity = FILL * worldHemi.intensity;
+    }
+    const d = look.dusk;
+    displayScale.instruments.value = displayLuminance(d);
+    displayScale.screen.value = displayLuminance(d) * DISPLAY_CD.screen;
+    if (cabinSun) {
+      _inv.copy(L.body).invert();
+      _toSun.copy(worldSun.position).sub(worldSun.target.position).normalize();
+      _sunCabin.copy(_toSun).transformDirection(_inv);
+      const admitted = worldSun.intensity * sunIntoCabin(_sunCabin, glassOut);
+      _eyeAt.setFromMatrixPosition(L.body);
+      for (const [light, k] of [[cabinSun, GLASS_TRANSMITTANCE], [outsideSun, 1]]) {
+        light.color.copy(worldSun.color);
+        light.intensity = admitted * k;
+        light.target.position.copy(_eyeAt);
+        light.position.copy(_eyeAt).addScaledVector(_toSun, 10);
+        light.updateMatrixWorld(true);
+        light.target.updateMatrixWorld(true);
+      }
+    }
+    glow.intensity = 0.02 * d;
+    glow.position.copy(GLOW_AT).applyMatrix4(L.body);
+    glow.updateMatrixWorld(true);
+    // the mirrors' stand-in takes the haze's tone, darkened
+    if (scene.fog) for (const m of mirrorStandIns) m.color.copy(scene.fog.color).multiplyScalar(0.3);
+  }
+
+  /** The car at the body and the steering wheel turned, for this frame. */
+  function placeCar(L) {
+    car.matrix.copy(L.body);
+    car.matrixWorldNeedsUpdate = true;
+    if (wheel) wheel.quaternion.copy(wheelRest).multiply(_wq.setFromAxisAngle(wheelAxis, L.wheel));
+    car.updateMatrixWorld(true);
+  }
+
+  // ---------------------------------------------------------------- the mirror stage (beforeScene)
+  let drawFrame = null, mirrorJs = 0;
+  const mirrorStage = mirrorPass && pipeline?.addStage ? {
+    id: 'cabin-mirrors', at: 'beforeScene',
+    render: () => {
+      const L = rig.last;
+      if (!drawFrame || !car.visible || !L || L.view !== 'cabin') return;
+      mirrorJs += mirrorPass.render(drawFrame, L);
+    },
+  } : null;
+  let removeMirrorStage = null;
+  /** Register the build's pipeline stages (the drive shown) or remove them (hidden, or disposed). */
+  function setStaged(on) {
+    if (mirrorStage && on && !removeMirrorStage) removeMirrorStage = pipeline.addStage(mirrorStage);
+    else if (!on && removeMirrorStage) { removeMirrorStage(); removeMirrorStage = null; }
+    windshieldLayer?.setStaged(on);
+    rainLayer?.setStaged(on);
+  }
+  setStaged(staged);
+
+  let renders = 0;
+  const timing = createTimings(); // the part's own JavaScript per drawn frame, the renderer's own work excluded
+  const depth = renderer.reversedDepthBuffer ? 'reversed' : renderer.logarithmicDepthBuffer ? 'logarithmic' : 'standard';
+
+  const build = {
+    model, level, meta, car, mirrors, windshield, wheel,
+    get look() { return look; },
+    get readout() { return { ...displays.readout }; },
+    glass: { options: glassOptions, mirrors: mirrorPass, windshield: windshieldLayer, rain: rainLayer },
+    setDrawOrder(order) { for (const o of meshes) o.renderOrder = order; },
+    setStaged,
+    setLook(l) { look = { night: !!l.night, dusk: Number.isFinite(l.dusk) ? l.dusk : l.night ? 1 : 0 }; mirrorPass?.setLook(look); },
+    update(frame) { if (rig.view === 'cabin') displays.update(frame, false); },
+    /** Before the pipeline draws (session.js `around`): the scene's lights already hold what this frame draws with. */
+    beforeRender(frame) {
+      const L = rig.last;
+      const on = !!L && L.view === 'cabin' && rig.view === 'cabin';
+      car.visible = on;
+      drawFrame = on ? frame : null;
+      if (!on) { windshieldLayer?.hide(); rainLayer?.hide(); clearMask(); return; }
+      const t0 = performance.now();
+      displays.update(frame, false);
+      placeCar(L);
+      updateLight(L);
+      mirrorPass?.shade(worldHemi, worldSun);
+      if (windshieldLayer) {
+        _inv.copy(L.body).invert();
+        if (worldSun) _sunDir.copy(worldSun.position).sub(worldSun.target.position).normalize().transformDirection(_inv);
+        else _sunDir.copy(localUp(frame.camera.position.x, frame.camera.position.z, _up)).transformDirection(_inv);
+        const traffic = session.part?.('traffic');
+        syncSilhouette();
+        windshieldLayer.update({
+          frame, L, sunDir: _sunDir, sunColor: worldSun?.color, sunIntensity: worldSun?.intensity ?? 0, hemi: worldHemi,
+          lampPoints: traffic?.lampPoints ? traffic.lampPoints() : null, eyeWorld: frame.camera.position, camera: frame.camera,
+          ambientLux: env?.lighting?.ambientLux ? env.lighting.ambientLux() : undefined, meterDue: meterDue(frame.camera),
+        });
+        setMask();
+      }
+      if (rainLayer) {
+        syncSilhouette();
+        rainLayer.update(frame, { camera: frame.camera, L });
+      }
+      renders++;
+      timing.add(performance.now() - t0 + mirrorJs);
+      mirrorJs = 0;
+    },
+    /** After the pipeline has drawn (session.js `around`): the scene's matrix updates are the scene's again. */
+    afterRender() { mirrorPass?.release(); },
+    stats: () => ({
+      model, level, renders, depth, order: CABIN_ORDER, sunInside: cabinSun ? +cabinSun.intensity.toPrecision(3) : null, js: timing.summary(),
+      displayScale: { instruments: displayScale.instruments.value, screen: displayScale.screen.value },
+      meteringMask: { supported: !!meter?.setMeteringMask, set: maskSet },
+      staged: { mirrors: !!removeMirrorStage, windshield: !!windshieldLayer?.staged, rain: !!rainLayer?.staged },
+      mirrors: mirrorPass ? mirrorPass.stats() : null, windshield: windshieldLayer ? windshieldLayer.stats() : null,
+      rain: rainLayer ? rainLayer.stats() : null,
+    }),
+    dispose() {
+      setStaged(false);
+      clearMask();
+      mirrorPass?.dispose();
+      windshieldLayer?.dispose();
+      rainLayer?.dispose();
+      car.parent?.remove(car);
+      root.traverse((o) => { if (o.isMesh) o.geometry.dispose(); });
+      for (const m of [...Object.values(materials), instrumentsMat, screenMat, ...mirrorStandIns]) m.dispose();
+      instrumentsTex.dispose(); screenTex.dispose();
+    },
+  };
+  return build;
+}

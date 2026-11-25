@@ -1,0 +1,362 @@
+{
+  "sedan_lod0": {
+    "object": "sedan_lod0",
+    "verts": 342,
+    "faces": 620,
+    "tris": 620,
+    "bbox_min": [
+      -1.03,
+      -2.47,
+      0.0
+    ],
+    "bbox_max": [
+      1.03,
+      2.47,
+      1.45
+    ],
+    "islands": 16,
+    "open_islands": 0,
+    "inside_out_islands": 0,
+    "nonmanifold_edges": 0,
+    "degenerate_faces": 0,
+    "loose_verts": 0,
+    "nonplanar_ngons": 0,
+    "materials": {
+      "VehicleBody": 620
+    },
+    "glow": null,
+    "windowed_faces": 0,
+    "errors": [],
+    "warnings": []
+  },
+  "sedan_lod1": {
+    "object": "sedan_lod1",
+    "verts": 36,
+    "faces": 56,
+    "tris": 56,
+    "bbox_min": [
+      -0.92,
+      -2.45,
+      0.0
+    ],
+    "bbox_max": [
+      0.92,
+      2.45,
+      1.45
+    ],
+    "islands": 4,
+    "open_islands": 0,
+    "inside_out_islands": 0,
+    "nonmanifold_edges": 0,
+    "degenerate_faces": 0,
+    "loose_verts": 0,
+    "nonplanar_ngons": 0,
+    "materials": {
+      "VehicleBody": 56
+    },
+    "glow": null,
+    "windowed_faces": 0,
+    "errors": [],
+    "warnings": []
+  },
+  "crossover_lod0": {
+    "object": "crossover_lod0",
+    "verts": 354,
+    "faces": 644,
+    "tris": 644,
+    "bbox_min": [
+      -1.03,
+      -2.32,
+      0.0
+    ],
+    "bbox_max": [
+      1.03,
+      2.32,
+      1.7
+    ],
+    "islands": 16,
+    "open_islands": 0,
+    "inside_out_islands": 0,
+    "nonmanifold_edges": 0,
+    "degenerate_faces": 0,
+    "loose_verts": 0,
+    "nonplanar_ngons": 0,
+    "materials": {
+      "VehicleBody": 644
+    },
+    "glow": null,
+    "windowed_faces": 0,
+    "errors": [],
+    "warnings": []
+  },
+  "crossover_lod1": {
+    "object": "crossover_lod1",
+    "verts": 36,
+    "faces": 56,
+    "tris": 56,
+    "bbox_min": [
+      -0.93,
+      -2.3,
+      0.0
+    ],
+    "bbox_max": [
+      0.93,
+      2.3,
+      1.7
+    ],
+    "islands": 4,
+    "open_islands": 0,
+    "inside_out_islands": 0,
+    "nonmanifold_edges": 0,
+    "degenerate_faces": 0,
+    "loose_verts": 0,
+    "nonplanar_ngons": 0,
+    "materials": {
+      "VehicleBody": 56
+    },
+    "glow": null,
+    "windowed_faces": 0,
+    "errors": [],
+    "warnings": []
+  },
+  "pickup_lod0": {
+    "object": "pickup_lod0",
+    "verts": 328,
+    "faces": 588,
+    "tris": 588,
+    "bbox_min": [
+      -1.12,
+      -2.965,
+      0.0
+    ],
+    "bbox_max": [
+      1.12,
+      2.965,
+      1.97
+    ],
+    "islands": 17,
+    "open_islands": 0,
+    "inside_out_islands": 0,
+    "nonmanifold_edges": 0,
+    "degenerate_faces": 0,
+    "loose_verts": 0,
+    "nonplanar_ngons": 0,
+    "materials": {
+      "VehicleBody": 588
+    },
+    "glow": null,
+    "windowed_faces": 0,
+    "errors": [],
+    "warnings": []
+  },
+  "pickup_lod1": {
+    "object": "pickup_lod1",
+    "verts": 40,
+    "faces": 64,
+    "tris": 64,
+    "bbox_min": [
+      -1.015,
+      -2.945,
+      0.0
+    ],
+    "bbox_max": [
+      1.015,
+      2.945,
+      1.97
+    ],
+    "islands": 4,
+    "open_islands": 0,
+    "inside_out_islands": 0,
+    "nonmanifold_edges": 0,
+    "degenerate_faces": 0,
+    "loose_verts": 0,
+    "nonplanar_ngons": 0,
+    "materials": {
+      "VehicleBody": 64
+    },
+    "glow": null,
+    "windowed_faces": 0,
+    "errors": [],
+    "warnings": []
+  },
+  "van_lod0": {
+    "object": "van_lod0",
+    "verts": 336,
+    "faces": 600,
+    "tris": 600,
+    "bbox_min": [
+      -1.17,
+      -2.985,
+      0.0
+    ],
+    "bbox_max": [
+      1.17,
+      2.985,
+      2.55
+    ],
+    "islands": 18,
+    "open_islands": 0,
+    "inside_out_islands": 0,
+    "nonmanifold_edges": 0,
+    "degenerate_faces": 0,
+    "loose_verts": 0,
+    "nonplanar_ngons": 0,
+    "materials": {
+      "VehicleBody": 600
+    },
+    "glow": null,
+    "windowed_faces": 0,
+    "errors": [],
+    "warnings": []
+  },
+  "van_lod1": {
+    "object": "van_lod1",
+    "verts": 36,
+    "faces": 56,
+    "tris": 56,
+    "bbox_min": [
+      -1.01,
+      -2.965,
+      0.0
+    ],
+    "bbox_max": [
+      1.01,
+      2.965,
+      2.55
+    ],
+    "islands": 4,
+    "open_islands": 0,
+    "inside_out_islands": 0,
+    "nonmanifold_edges": 0,
+    "degenerate_faces": 0,
+    "loose_verts": 0,
+    "nonplanar_ngons": 0,
+    "materials": {
+      "VehicleBody": 56
+    },
+    "glow": null,
+    "windowed_faces": 0,
+    "errors": [],
+    "warnings": []
+  },
+  "tractor_trailer_lod0": {
+    "object": "tractor_trailer_lod0",
+    "verts": 530,
+    "faces": 924,
+    "tris": 924,
+    "bbox_min": [
+      -1.295,
+      -11.14,
+      0.0
+    ],
+    "bbox_max": [
+      1.295,
+      11.15,
+      4.11
+    ],
+    "islands": 34,
+    "open_islands": 0,
+    "inside_out_islands": 0,
+    "nonmanifold_edges": 0,
+    "degenerate_faces": 0,
+    "loose_verts": 0,
+    "nonplanar_ngons": 0,
+    "materials": {
+      "VehicleBody": 924
+    },
+    "glow": null,
+    "windowed_faces": 0,
+    "errors": [],
+    "warnings": []
+  },
+  "tractor_trailer_lod1": {
+    "object": "tractor_trailer_lod1",
+    "verts": 48,
+    "faces": 72,
+    "tris": 72,
+    "bbox_min": [
+      -1.295,
+      -11.12,
+      0.0
+    ],
+    "bbox_max": [
+      1.295,
+      11.12,
+      4.11
+    ],
+    "islands": 6,
+    "open_islands": 0,
+    "inside_out_islands": 0,
+    "nonmanifold_edges": 0,
+    "degenerate_faces": 0,
+    "loose_verts": 0,
+    "nonplanar_ngons": 0,
+    "materials": {
+      "VehicleBody": 72
+    },
+    "glow": null,
+    "windowed_faces": 0,
+    "errors": [],
+    "warnings": []
+  },
+  "coach_lod0": {
+    "object": "coach_lod0",
+    "verts": 386,
+    "faces": 704,
+    "tris": 704,
+    "bbox_min": [
+      -1.295,
+      -6.88,
+      0.0
+    ],
+    "bbox_max": [
+      1.295,
+      6.88,
+      3.5
+    ],
+    "islands": 17,
+    "open_islands": 0,
+    "inside_out_islands": 0,
+    "nonmanifold_edges": 0,
+    "degenerate_faces": 0,
+    "loose_verts": 0,
+    "nonplanar_ngons": 0,
+    "materials": {
+      "VehicleBody": 704
+    },
+    "glow": null,
+    "windowed_faces": 0,
+    "errors": [],
+    "warnings": []
+  },
+  "coach_lod1": {
+    "object": "coach_lod1",
+    "verts": 32,
+    "faces": 48,
+    "tris": 48,
+    "bbox_min": [
+      -1.295,
+      -6.86,
+      0.0
+    ],
+    "bbox_max": [
+      1.295,
+      6.86,
+      3.5
+    ],
+    "islands": 4,
+    "open_islands": 0,
+    "inside_out_islands": 0,
+    "nonmanifold_edges": 0,
+    "degenerate_faces": 0,
+    "loose_verts": 0,
+    "nonplanar_ngons": 0,
+    "materials": {
+      "VehicleBody": 48
+    },
+    "glow": null,
+    "windowed_faces": 0,
+    "errors": [],
+    "warnings": []
+  }
+}

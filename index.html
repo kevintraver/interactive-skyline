@@ -21,6 +21,12 @@
         <g id="i-clock"><circle cx="10" cy="10" r="7" /><path d="M10 6v4.2l2.8 1.8" /></g>
         <g id="i-play"><path d="M7 5.2v9.6l7.6-4.8z" /></g>
         <g id="i-pause"><path d="M7.5 5.5v9M12.5 5.5v9" /></g>
+        <g id="i-lock"><rect x="4.5" y="9" width="11" height="8" rx="1.8" /><path d="M7 9V6.6a3 3 0 0 1 6 0V9" /></g>
+        <g id="i-unlock"><rect x="4.5" y="9" width="11" height="8" rx="1.8" /><path d="M7 9V6.6a3 3 0 0 1 5.8-1.1" /></g>
+        <g id="i-replay"><path d="M4.6 11.2a5.6 5.6 0 1 0 1.3-5.1" /><path d="M5.2 3.2v3.3h3.3" /></g>
+        <g id="i-slower"><path d="m10 6-4 4 4 4M15 6l-4 4 4 4" /></g>
+        <g id="i-faster"><path d="m5 6 4 4-4 4M10 6l4 4-4 4" /></g>
+        <g id="i-wheel"><circle cx="10" cy="10" r="7" /><circle cx="10" cy="10" r="1.8" /><path d="M3.3 9.2 8.2 10M11.8 10l4.9-.8M10 11.8V17" /></g>
         <g id="i-eye-off"><path d="M2 10s3-5.5 8-5.5S18 10 18 10s-3 5.5-8 5.5S2 10 2 10z" /><path d="M4 16 16 4" /></g>
       </defs>
     </svg>
@@ -37,6 +43,10 @@
           <svg class="icon" viewBox="0 0 20 20" aria-hidden="true"><use href="#i-search" /></svg>
           <input id="search" type="search" placeholder="Search buildings" aria-label="Search buildings" aria-controls="results" autocomplete="off" spellcheck="false" />
         </label>
+      </div>
+      <div id="modes" role="group" aria-label="Mode" hidden>
+        <button type="button" data-mode="map" aria-pressed="true">Map</button>
+        <button type="button" data-mode="drive" aria-pressed="false" title="Drive into the city">Drive</button>
       </div>
     </div>
     <div class="views" role="group" aria-label="Viewpoints"></div>
@@ -109,6 +119,7 @@
       <label class="check"><input type="checkbox" name="reduceFlashes" /><span>Reduce flashes</span></label>
       <button type="button" id="settings-reset">Reset options</button>
       <p id="about"></p>
+      <button type="button" id="credits-open" data-credits>About the data</button>
       <p id="about-weather">Weather data by <a href="https://open-meteo.com/" target="_blank" rel="noopener">Open-Meteo.com</a> (CC BY 4.0), generated using Copernicus Climate Change Service information (ERA5) and Copernicus Atmosphere Monitoring Service information. Observations: NOAA / National Weather Service; archive: Iowa Environmental Mesonet of Iowa State University.</p>
     </form>
 
@@ -224,9 +235,10 @@
         <button type="button" class="now" title="Now (N)">Now</button>
       </div>
     </div>
-    <div id="credit">Interactive Skyline</div>
+    <div id="credit">Interactive Skyline<span class="data"> · <button type="button" data-credits title="About the data">© OpenStreetMap contributors</button></span></div>
     <div id="loading">Loading the city…</div>
 
     <script type="module" src="/src/main.js"></script>
+    <script type="module" src="/src/ui/credits.js"></script>
   </body>
 </html>

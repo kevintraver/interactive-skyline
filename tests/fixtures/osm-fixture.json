@@ -1,0 +1,316 @@
+{
+ "version": 0.6,
+ "osm3s": {
+  "timestamp_osm_base": "2026-01-01T00:00:00Z"
+ },
+ "elements": [
+  {
+   "type": "relation",
+   "id": 101,
+   "members": [
+    {
+     "type": "way",
+     "ref": 11,
+     "role": ""
+    },
+    {
+     "type": "way",
+     "ref": 13,
+     "role": ""
+    },
+    {
+     "type": "way",
+     "ref": 12,
+     "role": ""
+    },
+    {
+     "type": "way",
+     "ref": 14,
+     "role": ""
+    }
+   ],
+   "tags": {
+    "type": "route",
+    "route": "road",
+    "network": "US:I",
+    "ref": "15",
+    "direction": "north"
+   }
+  },
+  {
+   "type": "relation",
+   "id": 102,
+   "members": [
+    {
+     "type": "way",
+     "ref": 31,
+     "role": ""
+    }
+   ],
+   "tags": {
+    "type": "route",
+    "route": "road",
+    "network": "US:I",
+    "ref": "15",
+    "direction": "south"
+   }
+  },
+  {
+   "type": "relation",
+   "id": 103,
+   "members": [
+    {
+     "type": "way",
+     "ref": 31,
+     "role": ""
+    }
+   ],
+   "tags": {
+    "type": "route",
+    "route": "road",
+    "network": "US:I",
+    "ref": "515",
+    "direction": "north"
+   }
+  },
+  {
+   "type": "way",
+   "id": 11,
+   "nodes": [
+    1001,
+    1002,
+    1003,
+    1004
+   ],
+   "tags": {
+    "highway": "motorway",
+    "ref": "I 15",
+    "oneway": "yes",
+    "maxspeed": "70 mph",
+    "lanes": "3"
+   }
+  },
+  {
+   "type": "way",
+   "id": 12,
+   "nodes": [
+    1009,
+    1008,
+    1007,
+    1006,
+    1005,
+    1004
+   ],
+   "tags": {
+    "highway": "motorway",
+    "ref": "I 15",
+    "oneway": "-1",
+    "maxspeed": "70 mph",
+    "lanes": "4"
+   }
+  },
+  {
+   "type": "way",
+   "id": 13,
+   "nodes": [
+    1014,
+    1013,
+    1012,
+    1011,
+    1010,
+    1009
+   ],
+   "tags": {
+    "highway": "motorway",
+    "ref": "I 15",
+    "maxspeed": "65 mph",
+    "lanes": "3"
+   }
+  },
+  {
+   "type": "way",
+   "id": 14,
+   "nodes": [
+    1015,
+    1016,
+    1017
+   ],
+   "tags": {
+    "highway": "motorway",
+    "ref": "I 15",
+    "oneway": "yes",
+    "maxspeed": "65 mph",
+    "lanes": "3",
+    "placement": "right_of:2",
+    "bridge": "yes",
+    "layer": "1"
+   }
+  },
+  {
+   "type": "way",
+   "id": 21,
+   "nodes": [
+    1003,
+    1018,
+    1019
+   ],
+   "tags": {
+    "highway": "motorway_link",
+    "oneway": "yes",
+    "destination": "Test Road;Other Road",
+    "junction:ref": "7"
+   }
+  },
+  {
+   "type": "way",
+   "id": 31,
+   "nodes": [
+    1017,
+    1016,
+    1015
+   ],
+   "tags": {
+    "highway": "motorway",
+    "ref": "I 15",
+    "oneway": "yes",
+    "maxspeed": "70 mph",
+    "lanes": "3"
+   }
+  },
+  {
+   "type": "node",
+   "id": 1001,
+   "lat": 35.6638722,
+   "lon": -115.3936851
+  },
+  {
+   "type": "node",
+   "id": 1002,
+   "lat": 35.666576,
+   "lon": -115.3936925
+  },
+  {
+   "type": "node",
+   "id": 1003,
+   "lat": 35.6683786,
+   "lon": -115.3936975,
+   "tags": {
+    "highway": "motorway_junction",
+    "ref": "7"
+   }
+  },
+  {
+   "type": "node",
+   "id": 1004,
+   "lat": 35.672885,
+   "lon": -115.3937099
+  },
+  {
+   "type": "node",
+   "id": 1005,
+   "lat": 35.6733567,
+   "lon": -115.3936961
+  },
+  {
+   "type": "node",
+   "id": 1006,
+   "lat": 35.6738272,
+   "lon": -115.393652
+  },
+  {
+   "type": "node",
+   "id": 1007,
+   "lat": 35.6742951,
+   "lon": -115.3935778
+  },
+  {
+   "type": "node",
+   "id": 1008,
+   "lat": 35.6747593,
+   "lon": -115.3934737
+  },
+  {
+   "type": "node",
+   "id": 1009,
+   "lat": 35.6752183,
+   "lon": -115.39334
+  },
+  {
+   "type": "node",
+   "id": 1010,
+   "lat": 35.6756711,
+   "lon": -115.393177
+  },
+  {
+   "type": "node",
+   "id": 1011,
+   "lat": 35.6761162,
+   "lon": -115.3929852
+  },
+  {
+   "type": "node",
+   "id": 1012,
+   "lat": 35.6765526,
+   "lon": -115.392765
+  },
+  {
+   "type": "node",
+   "id": 1013,
+   "lat": 35.6769789,
+   "lon": -115.3925173
+  },
+  {
+   "type": "node",
+   "id": 1014,
+   "lat": 35.6773941,
+   "lon": -115.3922424
+  },
+  {
+   "type": "node",
+   "id": 1015,
+   "lat": 35.6776285,
+   "lon": -115.3920774
+  },
+  {
+   "type": "node",
+   "id": 1016,
+   "lat": 35.6799731,
+   "lon": -115.3904268
+  },
+  {
+   "type": "node",
+   "id": 1017,
+   "lat": 35.6823177,
+   "lon": -115.3887762
+  },
+  {
+   "type": "node",
+   "id": 1018,
+   "lat": 35.6697308,
+   "lon": -115.3935355
+  },
+  {
+   "type": "node",
+   "id": 1019,
+   "lat": 35.6710832,
+   "lon": -115.3932631
+  }
+ ],
+ "fixture": {
+  "start": {
+   "lat": 35.66387221343765,
+   "lon": -115.39368508556406
+  },
+  "end": {
+   "lat": 35.68231768253631,
+   "lon": -115.38877619010836
+  },
+  "radius": 1000.0,
+  "arc_s": [
+   1000.0,
+   1523.5987755982987
+  ],
+  "gap_m": 30.0,
+  "junction": 1003
+ }
+}

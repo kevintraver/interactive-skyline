@@ -13,12 +13,14 @@ const flatten = customModels.flatten;
 // Things that are not buildings in the app's data, listed in public/models/models.json next to the cities:
 //   "extras":    { "lv": [{ "name": "High Roller", "url": "/models/lv/high_roller.glb", "east": 417.5, "north": 331.1,
 //                           "rotation_deg": 90, "visible": "always" | "night", "blend": "opaque" | "additive",
-//                           "spin": { "node": "Rotor", "period_s": 180, "direction": 1 } }] }
+//                           "spin": { "node": "Rotor", "period_s": 180, "direction": 1 }, "building": "w27858544" }] }
 //   "fountains": { "lv": [{ "name": "Fountains of Bellagio", "url": "/models/lv/attractions/bellagio.json" }] }
 // An extra stands on the terrain at `east`, `north` (meters from the city origin), turned `rotation_deg`
 // counter-clockwise from east. It is static and not removable, lit at night like the models (its `_GLOW`
 // colors; lit windows only where `_WINDOWS` says), and with `visible: "night"` shown only at night.
 // `blend: "additive"` adds its night glow as light (a beam) instead of drawing a solid.
+// `building` (optional) names one of the app's removable buildings by id: the extra belongs to it, hides when it is
+// hidden and moves with it (by its offset), like the building's own model.
 // `spin` (a wheel; see high_roller/SPIN_CONTRACT.md): the GLB node `spin.node` (default Rotor) turns about its
 // own axle (its local -Z, the exporter's name for Blender's +Y) once every `period_s` seconds, and its
 // `Cabin_*` children turn back about their own pivots so they stay level. Without `spin` the GLB draws at rest.
@@ -63,6 +65,7 @@ function extraProblems(spec) {
   if (spec.rotation_deg !== undefined && !finite(spec.rotation_deg)) problems.push('rotation_deg must be a number');
   if (spec.visible !== undefined && !['always', 'night'].includes(spec.visible)) problems.push('visible must be "always" or "night"');
   if (spec.blend !== undefined && !['opaque', 'additive'].includes(spec.blend)) problems.push('blend must be "opaque" or "additive"');
+  if (spec.building !== undefined && (typeof spec.building !== 'string' || !spec.building)) problems.push('building must be a building id');
   const spin = spec.spin;
   if (spin !== undefined) {
     if (!spin || typeof spin !== 'object') problems.push('spin must be an object');
@@ -109,6 +112,7 @@ function placeExtra(object, spec, groundY) {
   object.position.set(spec.east, groundY(spec.east, spec.north), -spec.north);
   object.rotation.y = THREE.MathUtils.degToRad(spec.rotation_deg || 0);
   object.userData.extra = { ...spec, visible: spec.visible || 'always', blend: spec.blend || 'opaque' };
+  object.userData.home = object.position.clone(); // where it stands while its building (`building`) is not moved
   object.updateMatrixWorld(true);
   return object;
 }
@@ -247,14 +251,36 @@ export function initAttractions({ cityId, scene, camera, renderer, settings, inv
     invalidate();
   }
 
+  // an extra that names its building (`building`) is shown only while that building is, and stands where it stands
+  const ownerOf = (m) => (m.userData.extra.building ? tall.find((t) => t.data.id === m.userData.extra.building) || null : null);
+  const wanted = (m) => (m.userData.extra.visible !== 'night' || settings.night) && !(ownerOf(m) && !ownerOf(m).mesh.visible);
+
   // night-only extras follow the Night setting, fountains the Fountain show one; true if anything changed
   function applyVisibility() {
     if (state.night === settings.night && state.fountain === settings.fountain) return false;
     state.night = settings.night;
     state.fountain = settings.fountain;
-    for (const m of extras) m.visible = m.userData.extra.visible !== 'night' || settings.night;
+    for (const m of extras) m.visible = wanted(m);
     for (const f of fountains) f.visible = settings.fountain;
     return true;
+  }
+
+  /** Extras that name a building follow its hide and move (checked every tick: a few numbers each). True if one changed. */
+  function followBuildings() {
+    let changed = false;
+    for (const m of extras) {
+      if (!m.userData.extra.building) continue;
+      const owner = ownerOf(m), home = m.userData.home, o = owner ? owner.offset : null;
+      const visible = wanted(m);
+      if (m.visible !== visible) { m.visible = visible; changed = true; }
+      const x = home.x + (o ? o.x : 0), y = home.y + (o ? o.y : 0), z = home.z + (o ? o.z : 0);
+      if (m.position.x !== x || m.position.y !== y || m.position.z !== z) {
+        m.position.set(x, y, z);
+        m.updateMatrixWorld(true);
+        changed = true;
+      }
+    }
+    return changed;
   }
 
   function turnWheels() {
@@ -303,7 +329,8 @@ export function initAttractions({ cityId, scene, camera, renderer, settings, inv
       else state.wheelTime += dt;
     }
     turnWheels();
-    const changed = applyVisibility();
+    const shownChanged = applyVisibility(), followed = followBuildings();
+    const changed = shownChanged || followed;
     if (changed) redrawShadows();
     viewProjection.multiplyMatrices(camera.projectionMatrix, camera.matrixWorldInverse);
     // the camera's own depth convention (v7: WebGPU's 0..1 range and a reversed depth buffer change the planes)
@@ -362,6 +389,7 @@ export function initAttractions({ cityId, scene, camera, renderer, settings, inv
     /** The extra or fountain with this name (exact, else the first whose name contains it), or null. */
     find(name) {
       applyVisibility();
+      followBuildings();
       const all = [...extras, ...fountains], q = String(name).toLowerCase();
       return all.find((o) => o.name.toLowerCase() === q) || all.find((o) => o.name.toLowerCase().includes(q)) || null;
     },
@@ -379,6 +407,7 @@ export function initAttractions({ cityId, scene, camera, renderer, settings, inv
     animating: () => { step(performance.now()); return state.animating; },
     summary: () => {
       applyVisibility();
+      followBuildings();
       return { extras: extras.map(describe), fountains: fountains.map(describe), problems: [...state.problems] };
     },
   };

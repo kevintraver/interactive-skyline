@@ -1,0 +1,5 @@
+/* Applied to page screenshots (toHaveScreenshot, playwright.config.js stylePath). The map goldens predate Drive mode,
+   so what was added to the map's default state since is hidden in them: the Map/Drive switch (drive-ui.spec.js tests
+   it) and the data credit in the corner label (ui/credits.js). */
+#modes { visibility: hidden !important; }
+#credit .data { visibility: hidden !important; }

@@ -3,8 +3,16 @@
 // Projects
 //   webgl2-software  Chromium on SwiftShader (software WebGL2). Deterministic enough for goldens; the one CI runs.
 //   gpu              Chromium on this machine's GPU. Local only: timing budgets (pnpm test:perf).
-//   gpu-functional   The functional specs on this machine's GPU. Local only: a fast run of everything but the goldens.
+//   gpu-functional   The map's functional specs on this machine's GPU. Local only: a fast run of everything but the goldens.
 //   software-timing  The timing suite on SwiftShader, gated at 2x (pnpm test:perf:software).
+//   drive-gpu        Drive mode (drive*.spec.js, routes.spec.js) on this machine's GPU, on the WebGPU backend, the one
+//                    a visitor with a GPU gets (pnpm test:e2e:drive). No goldens. Local only.
+//   drive-software   Drive mode on SwiftShader (the WebGL2 backend): the goldens, every route, a logarithmic depth
+//                    buffer (pnpm test:e2e:drive:software): a drive frame takes 5 to 13 s there. Local only.
+//   drive-timing     The drive's own per-frame JavaScript (*.perf.spec.js) on this machine's GPU (pnpm test:perf:drive).
+//
+// The GPU projects need a browser that can reach the GPU: on macOS one started from a sandboxed process (an agent's
+// shell, for one) silently gets SwiftShader instead. The drive's projects check their backend (tests/helpers/drive.js).
 //
 // Golden images are per platform (Chromium's text and SwiftShader output differ between macOS and Linux), so
 // the snapshot path carries {platform}. A spec compares only when a snapshot for the running platform exists;
@@ -24,7 +32,9 @@ const WEBGPU = ['--enable-unsafe-webgpu', '--enable-webgpu-developer-features'];
 export default defineConfig({
   testDir: 'tests/e2e',
   timeout: 120_000,
-  expect: { timeout: 30_000, toHaveScreenshot: { maxDiffPixelRatio: 0.001, animations: 'disabled', caret: 'hide' } },
+  expect: { timeout: 30_000, toHaveScreenshot: { maxDiffPixelRatio: 0.001, animations: 'disabled', caret: 'hide',
+    // the map goldens predate Drive mode's Map/Drive switch; it is hidden in page screenshots (see the file)
+    stylePath: 'tests/reference/screenshot.css' } },
   fullyParallel: true,
   workers: process.env.CI ? 1 : 2,
   retries: 0,
@@ -46,7 +56,7 @@ export default defineConfig({
   projects: [
     {
       name: 'webgl2-software',
-      testIgnore: /perf\.(timing|ab)\.spec\.js|webgpu\.spec\.js/,
+      testIgnore: [/perf\.(timing|ab)\.spec\.js|webgpu\.spec\.js/, /\.perf\.spec\.js$/, /(drive[\w.-]*|routes)\.spec\.js$/],
       // software frames take seconds, and under load from other work a test can run out of time: one more try, and
       // the report then lists it as flaky. A wrong image or count fails both tries.
       retries: 1,
@@ -59,7 +69,8 @@ export default defineConfig({
       // local runs. Pictures are compared with the goldens only on SwiftShader, so baseline.spec.js stays with
       // webgl2-software, which is also what CI runs (it has no GPU).
       name: 'gpu-functional',
-      testIgnore: /perf\.(timing|ab)\.spec\.js|webgpu\.spec\.js|baseline\.spec\.js|bench\.spec\.js/,
+      // the drive's specs are drive-gpu's, on the WebGPU backend
+      testIgnore: [/perf\.(timing|ab)\.spec\.js|webgpu\.spec\.js|baseline\.spec\.js|bench\.spec\.js/, /\.perf\.spec\.js$/, /(drive[\w.-]*|routes)\.spec\.js$/],
       retries: 1,
       use: { ...devices['Desktop Chrome'], viewport: { width: 1280, height: 800 }, deviceScaleFactor: 1,
         launchOptions: { args: GPU } },
@@ -96,6 +107,35 @@ export default defineConfig({
       retries: 2, // a noisy measurement passes when taken again; a real slowdown does not (helpers/perf.js, GATES)
       use: { ...devices['Desktop Chrome'], viewport: { width: 1280, height: 800 }, deviceScaleFactor: 1,
         launchOptions: { args: SOFTWARE } },
+    },
+    {
+      // Drive mode on this machine's GPU (pnpm test:e2e:drive), on the WebGPU backend: every drive spec in minutes,
+      // goldens excepted. The WebGL2 backend is drive-software's, and drive-depth.spec.js's on both projects.
+      name: 'drive-gpu',
+      testMatch: /(drive[\w.-]*|routes)\.spec\.js$/,
+      testIgnore: /\.perf\.spec\.js$/,
+      metadata: { backend: 'webgpu' },
+      use: { ...devices['Desktop Chrome'], viewport: { width: 1280, height: 800 }, deviceScaleFactor: 1,
+        launchOptions: { args: [...GPU, ...WEBGPU] } },
+    },
+    {
+      // Drive mode on SwiftShader, the WebGL2 backend, with the drive's canvas goldens (pnpm test:e2e:drive:software).
+      // Run on its own: a drive frame takes 5 to 13 s here and beside the map suite it starves the budgets' timing.
+      // What needs SwiftShader: the goldens, every route's state, the logarithmic depth buffer. The controls, the cabin
+      // and the quality hold are drive-gpu's only (tests/README.md, "SwiftShader and the drive").
+      name: 'drive-software',
+      testMatch: /(drive|routes|drive-depth)\.spec\.js$/,
+      metadata: { backend: 'webgl2', goldens: true },
+      use: { ...devices['Desktop Chrome'], viewport: { width: 1280, height: 800 }, deviceScaleFactor: 1,
+        launchOptions: { args: SOFTWARE } },
+    },
+    {
+      // the drive's own per-frame JavaScript, on this machine's GPU like the other timing (pnpm test:perf:drive):
+      // on SwiftShader a settled cabin frame draws the world four times and the test does not finish
+      name: 'drive-timing',
+      testMatch: /\.perf\.spec\.js$/,
+      use: { ...devices['Desktop Chrome'], viewport: { width: 1280, height: 800 }, deviceScaleFactor: 1,
+        launchOptions: { args: GPU } },
     },
   ],
 });

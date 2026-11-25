@@ -1,0 +1,89 @@
+# Terms no generated sign legend may carry (plan 02, assumption A5: no casino names, company
+# names, venue naming rights or other trade names, even where the real sign shows one).
+# One term per line, matched case-insensitively as whole words or phrases; '#' starts a comment.
+# Road names, place names and numbered routes are fine, so a term that is also part of a street
+# name is listed only in the form that names the business ("Sahara Avenue" stays, "Sahara Las
+# Vegas" does not). scripts/build_roadside.py drops or replaces a destination that matches, and
+# fails if a finished legend still matches.
+
+# resorts and casinos on and near the route
+Aria
+Bally's
+Bellagio
+Buffalo Bill's
+Caesars
+Caesars Palace
+Circus Circus
+Cosmopolitan
+Encore
+Excalibur
+Flamingo Las Vegas
+Fontainebleau
+Four Queens
+Golden Nugget
+Gold Strike
+Hard Rock
+Harrah's
+Horseshoe
+Linq
+Luxor
+M Resort
+Mandalay Bay
+MGM
+MGM Grand
+Mirage
+New York-New York
+Palms Casino
+Paris Las Vegas
+Park MGM
+Planet Hollywood
+Primm Valley
+Resorts World
+Rio Las Vegas
+Rio All-Suite
+Sahara Las Vegas
+Silverton
+South Point
+Stratosphere
+The STRAT
+Treasure Island
+Tropicana Las Vegas
+Venetian
+Palazzo
+Virgin Hotels
+Whiskey Pete's
+Wynn
+Westgate
+Stateline Casino
+Resort and Casino
+Hotel and Casino
+
+# venues under naming rights, and their sponsors
+Allegiant
+Allegiant Stadium
+T-Mobile
+T-Mobile Arena
+Michelob
+Michelob Ultra Arena
+Dolby Live
+Cashman
+Las Vegas Ballpark
+MSG Sphere
+Thomas & Mack
+UNLV
+
+# shops, outlets, fuel and other trade names seen on Las Vegas guide and service signs
+Premium Outlets
+Fashion Show
+Costco
+Walmart
+Chevron
+Terrible's
+Love's
+Pilot
+Flying J
+Raiders
+Golden Knights
+Amazon
+Tesla
+In-N-Out

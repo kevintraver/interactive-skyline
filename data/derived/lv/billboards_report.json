@@ -1,0 +1,241 @@
+{
+ "method": "scripts/build_billboards.py",
+ "route_m": 300.0,
+ "pole_clear_m": 6.0,
+ "panel_clear_m": 2.0,
+ "assumed": {
+  "digital_share_untagged": 0.15,
+  "two_sided_share_untagged": 0.6
+ },
+ "sources": {
+  "osm": {
+   "how": "cache",
+   "snapshot": "2026-11-22T12:04:35Z",
+   "records": 471
+  },
+  "clv": {
+   "how": "cache",
+   "url": "https://services1.arcgis.com/F1v0ufATbBQScMtY/arcgis/rest/services/CLV_Billboards/FeatureServer/3/query",
+   "records": 342
+  },
+  "clark": {
+   "how": "cache",
+   "url": "https://services1.arcgis.com/F1v0ufATbBQScMtY/arcgis/rest/services/CLV_Billboards/FeatureServer/2/query",
+   "records": 1007
+  }
+ },
+ "records_near_routes": {
+  "osm": 210,
+  "clv": 111,
+  "clark": 348
+ },
+ "structures_after_merge": 501,
+ "merged_groups": 162,
+ "placed": 419,
+ "placed_by_source": {
+  "clark": 271,
+  "clv": 99,
+  "osm": 204
+ },
+ "placed_by_sources": {
+  "clark": 139,
+  "clv": 75,
+  "clv+osm": 23,
+  "clark+clv": 1,
+  "osm": 50,
+  "clark+osm": 131
+ },
+ "kinds": {
+  "static bulletin": 321,
+  "digital bulletin": 83,
+  "static poster": 14,
+  "digital poster": 1
+ },
+ "sides": {
+  "1": 173,
+  "2": 246
+ },
+ "sizes_m": {
+  "14.63x4.27": 402,
+  "7.32x3.66": 8,
+  "9.58x2.79": 4,
+  "7.92x7.32": 1,
+  "8.53x7.32": 1,
+  "12.19x3.05": 1,
+  "3.66x1.83": 1,
+  "18.29x6.10": 1
+ },
+ "moved_off_pavement": 11,
+ "max_shift_m": 35.0,
+ "dropped": [
+  {
+   "id": "clark1009",
+   "why": "status approved"
+  },
+  {
+   "id": "clark1010",
+   "why": "status approved"
+  },
+  {
+   "id": "clark1011",
+   "why": "status approved"
+  },
+  {
+   "id": "clark1015",
+   "why": "status pending"
+  },
+  {
+   "id": "clark1017",
+   "why": "status approved"
+  },
+  {
+   "id": "clark1049",
+   "why": "status approved"
+  },
+  {
+   "id": "clark1051",
+   "why": "status approved"
+  },
+  {
+   "id": "clark1057",
+   "why": "status approved"
+  },
+  {
+   "id": "clark1058",
+   "why": "status approved"
+  },
+  {
+   "id": "clark1067",
+   "why": "status permitted"
+  },
+  {
+   "id": "clark1068",
+   "why": "status permitted"
+  },
+  {
+   "id": "clark1069",
+   "why": "status permitted"
+  },
+  {
+   "id": "clark1070",
+   "why": "status permitted"
+  },
+  {
+   "id": "clark1079",
+   "why": "status permitted"
+  },
+  {
+   "id": "clark1080",
+   "why": "status permitted"
+  },
+  {
+   "id": "clark1086",
+   "why": "status permitted"
+  },
+  {
+   "id": "clark1093",
+   "why": "status approved"
+  },
+  {
+   "id": "clark1096",
+   "why": "status approved"
+  },
+  {
+   "id": "clark1097",
+   "why": "status approved"
+  },
+  {
+   "id": "clark1102",
+   "why": "status approved"
+  },
+  {
+   "id": "clark1126",
+   "why": "status permitted"
+  },
+  {
+   "id": "clark1127",
+   "why": "status permitted"
+  },
+  {
+   "id": "clark1157",
+   "why": "status approved"
+  },
+  {
+   "id": "clark1163",
+   "why": "status pending"
+  },
+  {
+   "id": "clark1164",
+   "why": "status pending"
+  },
+  {
+   "id": "clark1170",
+   "why": "status permitted"
+  },
+  {
+   "id": "clark1171",
+   "why": "status approved"
+  },
+  {
+   "id": "clark1179",
+   "why": "status pending"
+  },
+  {
+   "id": "clark1188",
+   "why": "status approved"
+  },
+  {
+   "id": "clark1191",
+   "why": "status permitted"
+  },
+  {
+   "id": "clark1193",
+   "why": "status approved"
+  },
+  {
+   "id": "clark1196",
+   "why": "status permitted"
+  },
+  {
+   "id": "clark1201",
+   "why": "status pending"
+  },
+  {
+   "id": "clark1202",
+   "why": "status pending"
+  },
+  {
+   "id": "clark1208",
+   "why": "status pending"
+  },
+  {
+   "id": "clark1209",
+   "why": "status pending"
+  },
+  {
+   "id": "clark1210",
+   "why": "status pending"
+  },
+  {
+   "id": "clark1215",
+   "why": "status pending"
+  },
+  {
+   "id": "clark1225",
+   "why": "status pending"
+  },
+  {
+   "id": "clark1226",
+   "why": "status pending"
+  }
+ ],
+ "dropped_count": 65,
+ "dropped_by_reason": {
+  "status approved": 29,
+  "status pending": 16,
+  "status permitted": 18,
+  "on or over a pavement and no clear spot within reach": 2
+ },
+ "denylist_hits": [],
+ "bytes": 25961
+}

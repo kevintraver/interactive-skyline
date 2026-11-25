@@ -1,0 +1,2575 @@
+{
+ "osmSnapshot": "2026-11-22T09:36:50Z 2026-11-22T10:59:35Z 2026-11-22T13:05:21Z",
+ "overtureRelease": null,
+ "thresholds": {
+  "near": 400.0,
+  "near_area": 30.0,
+  "band": 1500.0,
+  "band_area": 60.0,
+  "band_height": 8.0,
+  "tall": 20.0,
+  "otherRoutesBand": 800.0,
+  "simplify": 1.0,
+  "minHole": 6.0
+ },
+ "kept": 49859,
+ "tall": 182,
+ "cells": 105,
+ "byBand": {
+  "0-400 m": 19572,
+  "400 m-1.5 km": 30147,
+  "beyond 1.5 km": 140
+ },
+ "byRung": {
+  "osm-height": 35,
+  "osm-levels": 98,
+  "overture": 41285,
+  "guess": 8441
+ },
+ "byType": {
+  "other": 46197,
+  "house": 2180,
+  "apartments": 266,
+  "retail": 455,
+  "warehouse": 216,
+  "hotel": 83,
+  "office": 12,
+  "civic": 34,
+  "canopy": 394,
+  "shed": 22
+ },
+ "bySource": {
+  "osm": 26031,
+  "overture": 23707,
+  "overture-osm": 121
+ },
+ "skipped": {
+  "core:by-id": 9806,
+  "dropped:rule": 40647,
+  "seated": 3,
+  "core:inside": 1208,
+  "outside-region": 1
+ },
+ "bytes": {
+  "total": 1615952,
+  "index": 12432,
+  "tall": 16648,
+  "cells": 1586872,
+  "largestCell": 98596
+ },
+ "routes": [
+  "i15n",
+  "i15s",
+  "us93"
+ ],
+ "perFiveKm": [
+  {
+   "km": [
+    0,
+    5
+   ],
+   "buildings": 106,
+   "within400": 42,
+   "inCore": false,
+   "byRung": {
+    "guess": 61,
+    "osm-height": 10,
+    "osm-levels": 1,
+    "overture": 34
+   }
+  },
+  {
+   "km": [
+    5,
+    10
+   ],
+   "buildings": 1,
+   "within400": 1,
+   "inCore": false,
+   "byRung": {
+    "guess": 1
+   }
+  },
+  {
+   "km": [
+    10,
+    15
+   ],
+   "buildings": 0,
+   "within400": 0,
+   "inCore": false,
+   "byRung": {}
+  },
+  {
+   "km": [
+    15,
+    20
+   ],
+   "buildings": 3,
+   "within400": 3,
+   "inCore": false,
+   "byRung": {
+    "guess": 2,
+    "overture": 1
+   }
+  },
+  {
+   "km": [
+    20,
+    25
+   ],
+   "buildings": 43,
+   "within400": 17,
+   "inCore": false,
+   "byRung": {
+    "guess": 25,
+    "osm-levels": 1,
+    "overture": 17
+   }
+  },
+  {
+   "km": [
+    25,
+    30
+   ],
+   "buildings": 0,
+   "within400": 0,
+   "inCore": false,
+   "byRung": {}
+  },
+  {
+   "km": [
+    30,
+    35
+   ],
+   "buildings": 0,
+   "within400": 0,
+   "inCore": false,
+   "byRung": {}
+  },
+  {
+   "km": [
+    35,
+    40
+   ],
+   "buildings": 7,
+   "within400": 7,
+   "inCore": false,
+   "byRung": {
+    "guess": 7
+   }
+  },
+  {
+   "km": [
+    40,
+    45
+   ],
+   "buildings": 684,
+   "within400": 322,
+   "inCore": false,
+   "byRung": {
+    "guess": 406,
+    "overture": 278
+   }
+  },
+  {
+   "km": [
+    45,
+    50
+   ],
+   "buildings": 7891,
+   "within400": 1721,
+   "inCore": false,
+   "byRung": {
+    "guess": 2558,
+    "osm-height": 2,
+    "osm-levels": 5,
+    "overture": 5326
+   }
+  },
+  {
+   "km": [
+    50,
+    55
+   ],
+   "buildings": 3987,
+   "within400": 1040,
+   "inCore": false,
+   "byRung": {
+    "guess": 919,
+    "osm-height": 3,
+    "osm-levels": 22,
+    "overture": 3043
+   }
+  },
+  {
+   "km": [
+    55,
+    60
+   ],
+   "buildings": 1288,
+   "within400": 184,
+   "inCore": false,
+   "byRung": {
+    "guess": 185,
+    "osm-height": 12,
+    "osm-levels": 10,
+    "overture": 1081
+   }
+  },
+  {
+   "km": [
+    60,
+    65
+   ],
+   "buildings": 0,
+   "within400": 0,
+   "inCore": true,
+   "byRung": {}
+  },
+  {
+   "km": [
+    65,
+    68.35
+   ],
+   "buildings": 343,
+   "within400": 0,
+   "inCore": true,
+   "byRung": {
+    "guess": 36,
+    "overture": 307
+   }
+  }
+ ],
+ "perFiveKmByRoute": {
+  "i15n": [
+   {
+    "km": [
+     0,
+     5
+    ],
+    "buildings": 106,
+    "within400": 42,
+    "inCore": false,
+    "byRung": {
+     "guess": 61,
+     "osm-height": 10,
+     "osm-levels": 1,
+     "overture": 34
+    }
+   },
+   {
+    "km": [
+     5,
+     10
+    ],
+    "buildings": 1,
+    "within400": 1,
+    "inCore": false,
+    "byRung": {
+     "guess": 1
+    }
+   },
+   {
+    "km": [
+     10,
+     15
+    ],
+    "buildings": 0,
+    "within400": 0,
+    "inCore": false,
+    "byRung": {}
+   },
+   {
+    "km": [
+     15,
+     20
+    ],
+    "buildings": 3,
+    "within400": 3,
+    "inCore": false,
+    "byRung": {
+     "guess": 2,
+     "overture": 1
+    }
+   },
+   {
+    "km": [
+     20,
+     25
+    ],
+    "buildings": 43,
+    "within400": 17,
+    "inCore": false,
+    "byRung": {
+     "guess": 25,
+     "osm-levels": 1,
+     "overture": 17
+    }
+   },
+   {
+    "km": [
+     25,
+     30
+    ],
+    "buildings": 0,
+    "within400": 0,
+    "inCore": false,
+    "byRung": {}
+   },
+   {
+    "km": [
+     30,
+     35
+    ],
+    "buildings": 0,
+    "within400": 0,
+    "inCore": false,
+    "byRung": {}
+   },
+   {
+    "km": [
+     35,
+     40
+    ],
+    "buildings": 7,
+    "within400": 7,
+    "inCore": false,
+    "byRung": {
+     "guess": 7
+    }
+   },
+   {
+    "km": [
+     40,
+     45
+    ],
+    "buildings": 684,
+    "within400": 322,
+    "inCore": false,
+    "byRung": {
+     "guess": 406,
+     "overture": 278
+    }
+   },
+   {
+    "km": [
+     45,
+     50
+    ],
+    "buildings": 7891,
+    "within400": 1721,
+    "inCore": false,
+    "byRung": {
+     "guess": 2558,
+     "osm-height": 2,
+     "osm-levels": 5,
+     "overture": 5326
+    }
+   },
+   {
+    "km": [
+     50,
+     55
+    ],
+    "buildings": 3987,
+    "within400": 1040,
+    "inCore": false,
+    "byRung": {
+     "guess": 919,
+     "osm-height": 3,
+     "osm-levels": 22,
+     "overture": 3043
+    }
+   },
+   {
+    "km": [
+     55,
+     60
+    ],
+    "buildings": 1288,
+    "within400": 184,
+    "inCore": false,
+    "byRung": {
+     "guess": 185,
+     "osm-height": 12,
+     "osm-levels": 10,
+     "overture": 1081
+    }
+   },
+   {
+    "km": [
+     60,
+     65
+    ],
+    "buildings": 0,
+    "within400": 0,
+    "inCore": true,
+    "byRung": {}
+   },
+   {
+    "km": [
+     65,
+     68.35
+    ],
+    "buildings": 343,
+    "within400": 0,
+    "inCore": true,
+    "byRung": {
+     "guess": 36,
+     "overture": 307
+    }
+   }
+  ],
+  "i15s": [
+   {
+    "km": [
+     0,
+     5
+    ],
+    "buildings": 29,
+    "within400": 7,
+    "inCore": false,
+    "byRung": {
+     "guess": 9,
+     "overture": 20
+    }
+   },
+   {
+    "km": [
+     5,
+     10
+    ],
+    "buildings": 18,
+    "within400": 6,
+    "inCore": false,
+    "byRung": {
+     "guess": 9,
+     "overture": 9
+    }
+   },
+   {
+    "km": [
+     10,
+     15
+    ],
+    "buildings": 5,
+    "within400": 0,
+    "inCore": false,
+    "byRung": {
+     "guess": 4,
+     "overture": 1
+    }
+   },
+   {
+    "km": [
+     15,
+     20
+    ],
+    "buildings": 92,
+    "within400": 45,
+    "inCore": false,
+    "byRung": {
+     "guess": 29,
+     "osm-height": 2,
+     "overture": 61
+    }
+   },
+   {
+    "km": [
+     20,
+     25
+    ],
+    "buildings": 820,
+    "within400": 110,
+    "inCore": false,
+    "byRung": {
+     "guess": 334,
+     "osm-levels": 11,
+     "overture": 475
+    }
+   },
+   {
+    "km": [
+     25,
+     30
+    ],
+    "buildings": 1798,
+    "within400": 612,
+    "inCore": false,
+    "byRung": {
+     "guess": 219,
+     "osm-levels": 4,
+     "overture": 1575
+    }
+   },
+   {
+    "km": [
+     30,
+     35
+    ],
+    "buildings": 3439,
+    "within400": 1238,
+    "inCore": false,
+    "byRung": {
+     "guess": 305,
+     "osm-levels": 3,
+     "overture": 3131
+    }
+   },
+   {
+    "km": [
+     35,
+     40
+    ],
+    "buildings": 34,
+    "within400": 0,
+    "inCore": true,
+    "byRung": {
+     "guess": 7,
+     "overture": 27
+    }
+   },
+   {
+    "km": [
+     40,
+     45
+    ],
+    "buildings": 0,
+    "within400": 0,
+    "inCore": true,
+    "byRung": {}
+   },
+   {
+    "km": [
+     45,
+     45.31
+    ],
+    "buildings": 261,
+    "within400": 5,
+    "inCore": true,
+    "byRung": {
+     "guess": 55,
+     "osm-height": 7,
+     "osm-levels": 2,
+     "overture": 197
+    }
+   }
+  ],
+  "us93": [
+   {
+    "km": [
+     0,
+     5
+    ],
+    "buildings": 53,
+    "within400": 33,
+    "inCore": false,
+    "byRung": {
+     "guess": 35,
+     "osm-height": 1,
+     "osm-levels": 1,
+     "overture": 16
+    }
+   },
+   {
+    "km": [
+     5,
+     10
+    ],
+    "buildings": 0,
+    "within400": 0,
+    "inCore": false,
+    "byRung": {}
+   },
+   {
+    "km": [
+     10,
+     15
+    ],
+    "buildings": 15,
+    "within400": 9,
+    "inCore": false,
+    "byRung": {
+     "guess": 12,
+     "overture": 3
+    }
+   },
+   {
+    "km": [
+     15,
+     20
+    ],
+    "buildings": 10,
+    "within400": 1,
+    "inCore": false,
+    "byRung": {
+     "guess": 1,
+     "overture": 9
+    }
+   },
+   {
+    "km": [
+     20,
+     25
+    ],
+    "buildings": 25,
+    "within400": 21,
+    "inCore": false,
+    "byRung": {
+     "guess": 9,
+     "osm-levels": 4,
+     "overture": 12
+    }
+   },
+   {
+    "km": [
+     25,
+     30
+    ],
+    "buildings": 3341,
+    "within400": 1647,
+    "inCore": false,
+    "byRung": {
+     "guess": 814,
+     "overture": 2527
+    }
+   },
+   {
+    "km": [
+     30,
+     35
+    ],
+    "buildings": 4677,
+    "within400": 2478,
+    "inCore": false,
+    "byRung": {
+     "guess": 419,
+     "overture": 4258
+    }
+   },
+   {
+    "km": [
+     35,
+     40
+    ],
+    "buildings": 2939,
+    "within400": 972,
+    "inCore": false,
+    "byRung": {
+     "guess": 390,
+     "osm-levels": 1,
+     "overture": 2548
+    }
+   },
+   {
+    "km": [
+     40,
+     45
+    ],
+    "buildings": 2715,
+    "within400": 1078,
+    "inCore": false,
+    "byRung": {
+     "guess": 776,
+     "osm-height": 2,
+     "osm-levels": 5,
+     "overture": 1932
+    }
+   },
+   {
+    "km": [
+     45,
+     50
+    ],
+    "buildings": 5969,
+    "within400": 2762,
+    "inCore": false,
+    "byRung": {
+     "guess": 205,
+     "osm-levels": 17,
+     "overture": 5747
+    }
+   },
+   {
+    "km": [
+     50,
+     55
+    ],
+    "buildings": 6763,
+    "within400": 3004,
+    "inCore": false,
+    "byRung": {
+     "guess": 419,
+     "osm-height": 1,
+     "osm-levels": 1,
+     "overture": 6342
+    }
+   },
+   {
+    "km": [
+     55,
+     59.46
+    ],
+    "buildings": 4087,
+    "within400": 1593,
+    "inCore": false,
+    "byRung": {
+     "guess": 401,
+     "osm-levels": 8,
+     "overture": 3678
+    }
+   }
+  ]
+ },
+ "overrides": [
+  {
+   "id": "r20284437",
+   "from": 12.0,
+   "h": 12.0,
+   "area": 17256,
+   "source": "estimated: shadow length and room count; tower footprint traced from USGS NAIP imagery",
+   "note": "Primm, east of I-15 (OSM: Primm Valley Resort & Casino): the hotel ring around the pool"
+  },
+  {
+   "id": "r20284437:2",
+   "from": 12.0,
+   "h": 12.0,
+   "area": 893,
+   "source": "estimated: shadow length and room count; tower footprint traced from USGS NAIP imagery",
+   "note": "Primm, east of I-15 (OSM: Primm Valley Resort & Casino): the hotel ring around the pool"
+  },
+  {
+   "id": "r20284437:3",
+   "from": 12.0,
+   "h": 12.0,
+   "area": 39,
+   "source": "estimated: shadow length and room count; tower footprint traced from USGS NAIP imagery",
+   "note": "Primm, east of I-15 (OSM: Primm Valley Resort & Casino): the hotel ring around the pool"
+  },
+  {
+   "id": "r20284437:4",
+   "from": 12.0,
+   "h": 12.0,
+   "area": 23,
+   "source": "estimated: shadow length and room count; tower footprint traced from USGS NAIP imagery",
+   "note": "Primm, east of I-15 (OSM: Primm Valley Resort & Casino): the hotel ring around the pool"
+  },
+  {
+   "id": "r20284437:tower",
+   "from": 12.0,
+   "h": 40.0,
+   "area": 7491,
+   "source": "estimated: shadow length and room count; tower footprint traced from USGS NAIP imagery",
+   "note": "Primm, east of I-15 (OSM: Primm Valley Resort & Casino): the hotel ring around the pool"
+  },
+  {
+   "id": "w1017279618",
+   "from": 30.0,
+   "h": 8.0,
+   "area": 4872,
+   "source": "estimated: one storey (OSM building:levels=1)",
+   "note": "Boulder City, a school: OSM height=30 on one level"
+  },
+  {
+   "id": "w1017279619",
+   "from": 30.0,
+   "h": 8.0,
+   "area": 8117,
+   "source": "estimated: one storey (OSM building:levels=1)",
+   "note": "Boulder City, a school: OSM height=30 on one level"
+  },
+  {
+   "id": "w1036290086",
+   "from": 30.1,
+   "h": 58.0,
+   "area": 2746,
+   "source": "estimated: 18 floors (Wikipedia, Silverton article) at 3.2 m; Overture's 30 m is low",
+   "note": "Blue Diamond Road, west of I-15 (OSM: The Berkley, Las Vegas): the timeshare tower"
+  },
+  {
+   "id": "w148990683",
+   "from": 11.5,
+   "h": 38.0,
+   "area": 7886,
+   "source": "estimated: shadow length in USGS NAIP imagery",
+   "note": "Primm, west of I-15 (OSM: Whiskey Pete's (closed)): the outline is the hotel wings"
+  },
+  {
+   "id": "w195180390",
+   "from": 6.2,
+   "h": 6.2,
+   "area": 7099,
+   "source": "estimated: shadow length; tower footprint traced from USGS NAIP imagery",
+   "note": "Boulder City, beside US-93 (OSM: Hoover Dam Lodge): the hotel block"
+  },
+  {
+   "id": "w195180390:2",
+   "from": 6.2,
+   "h": 6.2,
+   "area": 17,
+   "source": "estimated: shadow length; tower footprint traced from USGS NAIP imagery",
+   "note": "Boulder City, beside US-93 (OSM: Hoover Dam Lodge): the hotel block"
+  },
+  {
+   "id": "w195180390:tower",
+   "from": 6.2,
+   "h": 22.0,
+   "area": 931,
+   "source": "estimated: shadow length; tower footprint traced from USGS NAIP imagery",
+   "note": "Boulder City, beside US-93 (OSM: Hoover Dam Lodge): the hotel block"
+  },
+  {
+   "id": "w265375511",
+   "from": 18.2,
+   "h": 26.0,
+   "area": 15352,
+   "source": "estimated: shadow length in USGS NAIP imagery; Overture 18 m",
+   "note": "I-15 south, the speedway: south-west frontstretch grandstand"
+  },
+  {
+   "id": "w265375512",
+   "from": 15.4,
+   "h": 26.0,
+   "area": 21532,
+   "source": "estimated: shadow length in USGS NAIP imagery; Overture 15 m",
+   "note": "I-15 south, the speedway: frontstretch grandstand"
+  },
+  {
+   "id": "w27738460",
+   "from": 9.5,
+   "h": 12.0,
+   "area": 48600,
+   "source": "Wikipedia: 21-story tower, 230 ft",
+   "note": "Henderson, Sunset Road beside US-93/95: the casino hotel's tower (outline tagged commercial, no height)"
+  },
+  {
+   "id": "w27738460:tower",
+   "from": 9.5,
+   "h": 70.0,
+   "area": 1123,
+   "source": "Wikipedia: 21-story tower, 230 ft",
+   "note": "Henderson, Sunset Road beside US-93/95: the casino hotel's tower (outline tagged commercial, no height)"
+  },
+  {
+   "id": "w437195222",
+   "from": 8.3,
+   "h": 12.0,
+   "area": 28974,
+   "source": "estimated: 16 floors (Wikipedia, building article) at 3.1 m; tower footprint traced from USGS NAIP imagery",
+   "note": "Primm, east of I-15 (OSM: Buffalo Bill's Resort & Casino): hotel towers over the casino floor"
+  },
+  {
+   "id": "w437195222:2",
+   "from": 8.3,
+   "h": 12.0,
+   "area": 125,
+   "source": "estimated: 16 floors (Wikipedia, building article) at 3.1 m; tower footprint traced from USGS NAIP imagery",
+   "note": "Primm, east of I-15 (OSM: Buffalo Bill's Resort & Casino): hotel towers over the casino floor"
+  },
+  {
+   "id": "w437195222:3",
+   "from": 8.3,
+   "h": 12.0,
+   "area": 117,
+   "source": "estimated: 16 floors (Wikipedia, building article) at 3.1 m; tower footprint traced from USGS NAIP imagery",
+   "note": "Primm, east of I-15 (OSM: Buffalo Bill's Resort & Casino): hotel towers over the casino floor"
+  },
+  {
+   "id": "w437195222:tower",
+   "from": 8.3,
+   "h": 50.0,
+   "area": 2595,
+   "source": "estimated: 16 floors (Wikipedia, building article) at 3.1 m; tower footprint traced from USGS NAIP imagery",
+   "note": "Primm, east of I-15 (OSM: Buffalo Bill's Resort & Casino): hotel towers over the casino floor"
+  },
+  {
+   "id": "w501940847",
+   "from": 12.0,
+   "h": 14.0,
+   "area": 27637,
+   "source": "about 119 m (390 ft), the figure in the build brief; tower footprint traced from USGS NAIP imagery",
+   "note": "St. Rose Parkway, west of I-15 (OSM: The M Resort): the curved hotel tower at the south end"
+  },
+  {
+   "id": "w501940847:tower",
+   "from": 12.0,
+   "h": 119.0,
+   "area": 2717,
+   "source": "about 119 m (390 ft), the figure in the build brief; tower footprint traced from USGS NAIP imagery",
+   "note": "St. Rose Parkway, west of I-15 (OSM: The M Resort): the curved hotel tower at the south end"
+  },
+  {
+   "id": "w520547150",
+   "from": 30.0,
+   "h": 8.0,
+   "area": 4977,
+   "source": "estimated: one storey (OSM building:levels=1)",
+   "note": "Boulder City, a school: OSM height=30 on one level"
+  },
+  {
+   "id": "w747285316",
+   "from": 3.2,
+   "h": 111.0,
+   "area": 7471,
+   "source": "skydb.net: 111 m (365 ft), 25 floors",
+   "note": "Silverado Ranch Boulevard, west of I-15: the hotel tower slab (OSM tags it one level)"
+  }
+ ],
+ "tallList": [
+  {
+   "id": "w261741962",
+   "h": 140.0,
+   "rung": "osm-height",
+   "c": [
+    -26956,
+    -61885
+   ]
+  },
+  {
+   "id": "w261741963",
+   "h": 140.0,
+   "rung": "osm-height",
+   "c": [
+    -28107,
+    -59802
+   ]
+  },
+  {
+   "id": "w501940847:tower",
+   "h": 119.0,
+   "rung": "osm-height",
+   "c": [
+    214,
+    -16673
+   ]
+  },
+  {
+   "id": "w747285316",
+   "h": 111.0,
+   "rung": "osm-height",
+   "c": [
+    -320,
+    -11480
+   ]
+  },
+  {
+   "id": "w27738460:tower",
+   "h": 70.0,
+   "rung": "osm-height",
+   "c": [
+    12039,
+    -5964
+   ]
+  },
+  {
+   "id": "w472813580",
+   "h": 64.0,
+   "rung": "osm-levels",
+   "c": [
+    -442,
+    -11777
+   ]
+  },
+  {
+   "id": "w472813581",
+   "h": 64.0,
+   "rung": "osm-levels",
+   "c": [
+    -521,
+    -11763
+   ]
+  },
+  {
+   "id": "w472813583",
+   "h": 64.0,
+   "rung": "osm-levels",
+   "c": [
+    -392,
+    -11657
+   ]
+  },
+  {
+   "id": "w1263608723",
+   "h": 60.8,
+   "rung": "osm-levels",
+   "c": [
+    -10633,
+    5807
+   ]
+  },
+  {
+   "id": "w1263608725",
+   "h": 60.8,
+   "rung": "osm-levels",
+   "c": [
+    -10732,
+    5734
+   ]
+  },
+  {
+   "id": "w1036290086",
+   "h": 58.0,
+   "rung": "osm-height",
+   "c": [
+    -1119,
+    -8235
+   ]
+  },
+  {
+   "id": "w437195222:tower",
+   "h": 50.0,
+   "rung": "osm-height",
+   "c": [
+    -19220,
+    -55588
+   ]
+  },
+  {
+   "id": "r20284437:tower",
+   "h": 40.0,
+   "rung": "osm-height",
+   "c": [
+    -19224,
+    -55960
+   ]
+  },
+  {
+   "id": "w472813576",
+   "h": 38.4,
+   "rung": "osm-levels",
+   "c": [
+    -192,
+    -11717
+   ]
+  },
+  {
+   "id": "w472813578",
+   "h": 38.4,
+   "rung": "osm-levels",
+   "c": [
+    -287,
+    -11735
+   ]
+  },
+  {
+   "id": "w472813579",
+   "h": 38.4,
+   "rung": "osm-levels",
+   "c": [
+    -380,
+    -11762
+   ]
+  },
+  {
+   "id": "w472813584",
+   "h": 38.4,
+   "rung": "osm-levels",
+   "c": [
+    -274,
+    -11653
+   ]
+  },
+  {
+   "id": "w472813585",
+   "h": 38.4,
+   "rung": "osm-levels",
+   "c": [
+    -73,
+    -11698
+   ]
+  },
+  {
+   "id": "w148990683",
+   "h": 38.0,
+   "rung": "osm-height",
+   "c": [
+    -19882,
+    -55788
+   ]
+  },
+  {
+   "id": "w556163177",
+   "h": 33.7,
+   "rung": "overture",
+   "c": [
+    11516,
+    -8572
+   ]
+  },
+  {
+   "id": "w1243995331",
+   "h": 33.5,
+   "rung": "overture",
+   "c": [
+    6361,
+    7085
+   ]
+  },
+  {
+   "id": "w530764852",
+   "h": 33.1,
+   "rung": "overture",
+   "c": [
+    -6504,
+    -4654
+   ]
+  },
+  {
+   "id": "w1365400879",
+   "h": 32.7,
+   "rung": "overture",
+   "c": [
+    14979,
+    -8973
+   ]
+  },
+  {
+   "id": "w1243995332",
+   "h": 31.4,
+   "rung": "overture",
+   "c": [
+    6523,
+    7080
+   ]
+  },
+  {
+   "id": "w1098894507",
+   "h": 31.3,
+   "rung": "overture",
+   "c": [
+    -6742,
+    -4847
+   ]
+  },
+  {
+   "id": "w618024028",
+   "h": 31.2,
+   "rung": "overture",
+   "c": [
+    4150,
+    82
+   ]
+  },
+  {
+   "id": "w1264392086",
+   "h": 30.8,
+   "rung": "overture",
+   "c": [
+    -6188,
+    -5147
+   ]
+  },
+  {
+   "id": "w1264392091",
+   "h": 30.6,
+   "rung": "overture",
+   "c": [
+    -6209,
+    -4724
+   ]
+  },
+  {
+   "id": "w1266706650",
+   "h": 30.5,
+   "rung": "overture",
+   "c": [
+    -511,
+    -17250
+   ]
+  },
+  {
+   "id": "w1236491280",
+   "h": 30.4,
+   "rung": "overture",
+   "c": [
+    -11274,
+    -1425
+   ]
+  },
+  {
+   "id": "w551574907",
+   "h": 30.2,
+   "rung": "overture",
+   "c": [
+    8608,
+    -4794
+   ]
+  },
+  {
+   "id": "w1264392090",
+   "h": 29.7,
+   "rung": "overture",
+   "c": [
+    -6208,
+    -4771
+   ]
+  },
+  {
+   "id": "w558879872",
+   "h": 29.3,
+   "rung": "overture",
+   "c": [
+    -14363,
+    3932
+   ]
+  },
+  {
+   "id": "w1266699917",
+   "h": 29.0,
+   "rung": "overture",
+   "c": [
+    -2628,
+    -12781
+   ]
+  },
+  {
+   "id": "w558879873",
+   "h": 29.0,
+   "rung": "overture",
+   "c": [
+    -14362,
+    3987
+   ]
+  },
+  {
+   "id": "w945718459",
+   "h": 28.8,
+   "rung": "overture",
+   "c": [
+    -7827,
+    3159
+   ]
+  },
+  {
+   "id": "w1235628324",
+   "h": 28.7,
+   "rung": "overture",
+   "c": [
+    8258,
+    10897
+   ]
+  },
+  {
+   "id": "w1263985015",
+   "h": 28.6,
+   "rung": "overture",
+   "c": [
+    -11317,
+    -3131
+   ]
+  },
+  {
+   "id": "w1117027540",
+   "h": 28.5,
+   "rung": "overture",
+   "c": [
+    -11250,
+    1564
+   ]
+  },
+  {
+   "id": "w1380333446",
+   "h": 28.5,
+   "rung": "overture",
+   "c": [
+    -6501,
+    -12745
+   ]
+  },
+  {
+   "id": "w1263984180",
+   "h": 28.4,
+   "rung": "overture",
+   "c": [
+    -9684,
+    -4383
+   ]
+  },
+  {
+   "id": "w316302065",
+   "h": 28.3,
+   "rung": "overture",
+   "c": [
+    -14273,
+    4470
+   ]
+  },
+  {
+   "id": "w1236118749",
+   "h": 27.7,
+   "rung": "overture",
+   "c": [
+    10263,
+    -12930
+   ]
+  },
+  {
+   "id": "w1266398882",
+   "h": 27.6,
+   "rung": "overture",
+   "c": [
+    -12247,
+    246
+   ]
+  },
+  {
+   "id": "w219614828",
+   "h": 27.6,
+   "rung": "overture",
+   "c": [
+    -12531,
+    -37836
+   ]
+  },
+  {
+   "id": "w1243926082",
+   "h": 27.5,
+   "rung": "overture",
+   "c": [
+    -7328,
+    11571
+   ]
+  },
+  {
+   "id": "w1257653284",
+   "h": 27.5,
+   "rung": "overture",
+   "c": [
+    -3253,
+    -9265
+   ]
+  },
+  {
+   "id": "w1263587137",
+   "h": 27.2,
+   "rung": "overture",
+   "c": [
+    22264,
+    430
+   ]
+  },
+  {
+   "id": "w1263587138",
+   "h": 27.2,
+   "rung": "overture",
+   "c": [
+    22277,
+    451
+   ]
+  },
+  {
+   "id": "w1017048628",
+   "h": 27.1,
+   "rung": "overture",
+   "c": [
+    -6418,
+    -8027
+   ]
+  },
+  {
+   "id": "w1266706181",
+   "h": 27.1,
+   "rung": "overture",
+   "c": [
+    2720,
+    -17092
+   ]
+  },
+  {
+   "id": "w1126369839",
+   "h": 26.8,
+   "rung": "overture",
+   "c": [
+    997,
+    -5274
+   ]
+  },
+  {
+   "id": "w714666023",
+   "h": 26.8,
+   "rung": "overture",
+   "c": [
+    -11329,
+    -4035
+   ]
+  },
+  {
+   "id": "w1263985014",
+   "h": 26.6,
+   "rung": "overture",
+   "c": [
+    -11261,
+    -3125
+   ]
+  },
+  {
+   "id": "w945718457",
+   "h": 26.6,
+   "rung": "overture",
+   "c": [
+    -7860,
+    3179
+   ]
+  },
+  {
+   "id": "w1235295199",
+   "h": 26.5,
+   "rung": "overture",
+   "c": [
+    18706,
+    -12022
+   ]
+  },
+  {
+   "id": "w1235628325",
+   "h": 26.5,
+   "rung": "overture",
+   "c": [
+    8258,
+    10844
+   ]
+  },
+  {
+   "id": "w954179116",
+   "h": 26.5,
+   "rung": "overture",
+   "c": [
+    -5458,
+    4489
+   ]
+  },
+  {
+   "id": "w1243994359",
+   "h": 26.4,
+   "rung": "overture",
+   "c": [
+    7242,
+    6714
+   ]
+  },
+  {
+   "id": "w348127356",
+   "h": 26.4,
+   "rung": "overture",
+   "c": [
+    -14426,
+    3952
+   ]
+  },
+  {
+   "id": "w551320695",
+   "h": 26.4,
+   "rung": "overture",
+   "c": [
+    12452,
+    -8772
+   ]
+  },
+  {
+   "id": "w954179117",
+   "h": 26.4,
+   "rung": "overture",
+   "c": [
+    -5426,
+    4485
+   ]
+  },
+  {
+   "id": "w1267030870",
+   "h": 26.3,
+   "rung": "overture",
+   "c": [
+    9402,
+    -3593
+   ]
+  },
+  {
+   "id": "w1380333444",
+   "h": 26.2,
+   "rung": "overture",
+   "c": [
+    -6447,
+    -12795
+   ]
+  },
+  {
+   "id": "overture:71799f65-b2d6-408e-972e-4dedbb53a7c0",
+   "h": 26.1,
+   "rung": "overture",
+   "c": [
+    -6678,
+    10622
+   ]
+  },
+  {
+   "id": "w265375511",
+   "h": 26.0,
+   "rung": "osm-height",
+   "c": [
+    14187,
+    17523
+   ]
+  },
+  {
+   "id": "w265375512",
+   "h": 26.0,
+   "rung": "osm-height",
+   "c": [
+    14370,
+    17770
+   ]
+  },
+  {
+   "id": "w556165072",
+   "h": 26.0,
+   "rung": "overture",
+   "c": [
+    11519,
+    -6327
+   ]
+  },
+  {
+   "id": "overture:6d05475b-d074-4d86-a1ba-e9254a3524b6",
+   "h": 25.9,
+   "rung": "overture",
+   "c": [
+    -6677,
+    10641
+   ]
+  },
+  {
+   "id": "w313187716",
+   "h": 25.8,
+   "rung": "overture",
+   "c": [
+    6320,
+    -1588
+   ]
+  },
+  {
+   "id": "w1236686009",
+   "h": 25.4,
+   "rung": "overture",
+   "c": [
+    -12254,
+    130
+   ]
+  },
+  {
+   "id": "w1266398880",
+   "h": 25.3,
+   "rung": "overture",
+   "c": [
+    -12244,
+    198
+   ]
+  },
+  {
+   "id": "w889062911",
+   "h": 25.2,
+   "rung": "overture",
+   "c": [
+    2854,
+    -17098
+   ]
+  },
+  {
+   "id": "w791224494",
+   "h": 25.1,
+   "rung": "overture",
+   "c": [
+    -538,
+    -9685
+   ]
+  },
+  {
+   "id": "w1237070836",
+   "h": 25.0,
+   "rung": "overture",
+   "c": [
+    -10082,
+    -2799
+   ]
+  },
+  {
+   "id": "w1263954723",
+   "h": 24.9,
+   "rung": "overture",
+   "c": [
+    -9345,
+    -4796
+   ]
+  },
+  {
+   "id": "w248011497",
+   "h": 24.9,
+   "rung": "overture",
+   "c": [
+    7381,
+    18932
+   ]
+  },
+  {
+   "id": "w725949449",
+   "h": 24.9,
+   "rung": "overture",
+   "c": [
+    -14153,
+    4636
+   ]
+  },
+  {
+   "id": "w981901265",
+   "h": 24.8,
+   "rung": "overture",
+   "c": [
+    13713,
+    -300
+   ]
+  },
+  {
+   "id": "w1263985010",
+   "h": 24.7,
+   "rung": "overture",
+   "c": [
+    -10774,
+    -3542
+   ]
+  },
+  {
+   "id": "w558879877",
+   "h": 24.6,
+   "rung": "overture",
+   "c": [
+    -14391,
+    3366
+   ]
+  },
+  {
+   "id": "w1266398881",
+   "h": 24.5,
+   "rung": "overture",
+   "c": [
+    -12216,
+    196
+   ]
+  },
+  {
+   "id": "w157054753",
+   "h": 24.5,
+   "rung": "overture",
+   "c": [
+    6390,
+    -13948
+   ]
+  },
+  {
+   "id": "w780857670",
+   "h": 24.5,
+   "rung": "overture",
+   "c": [
+    5032,
+    -3897
+   ]
+  },
+  {
+   "id": "overture:dc89d117-56f9-43fa-b099-f6a8820de133",
+   "h": 24.4,
+   "rung": "overture",
+   "c": [
+    17156,
+    -7718
+   ]
+  },
+  {
+   "id": "w1267030632",
+   "h": 24.4,
+   "rung": "overture",
+   "c": [
+    3853,
+    -5520
+   ]
+  },
+  {
+   "id": "w1267030860",
+   "h": 24.4,
+   "rung": "overture",
+   "c": [
+    9409,
+    -3761
+   ]
+  },
+  {
+   "id": "w466212423",
+   "h": 24.2,
+   "rung": "overture",
+   "c": [
+    -6374,
+    -4749
+   ]
+  },
+  {
+   "id": "w558879871",
+   "h": 24.2,
+   "rung": "overture",
+   "c": [
+    -14326,
+    3850
+   ]
+  },
+  {
+   "id": "overture:ac725fe2-9d54-4e62-8bb0-a7315ed21195",
+   "h": 24.1,
+   "rung": "overture",
+   "c": [
+    -36679,
+    44493
+   ]
+  },
+  {
+   "id": "w1161287131",
+   "h": 24.0,
+   "rung": "overture",
+   "c": [
+    4796,
+    -8889
+   ]
+  },
+  {
+   "id": "w1234740312",
+   "h": 24.0,
+   "rung": "overture",
+   "c": [
+    1738,
+    -6041
+   ]
+  },
+  {
+   "id": "w1243926546",
+   "h": 24.0,
+   "rung": "overture",
+   "c": [
+    -7388,
+    10242
+   ]
+  },
+  {
+   "id": "w558884281",
+   "h": 24.0,
+   "rung": "overture",
+   "c": [
+    -14325,
+    4034
+   ]
+  },
+  {
+   "id": "w1365274946",
+   "h": 23.8,
+   "rung": "overture",
+   "c": [
+    12255,
+    -11244
+   ]
+  },
+  {
+   "id": "w699358734",
+   "h": 23.8,
+   "rung": "overture",
+   "c": [
+    -15613,
+    6211
+   ]
+  },
+  {
+   "id": "w1170364700",
+   "h": 23.6,
+   "rung": "overture",
+   "c": [
+    -9446,
+    -5522
+   ]
+  },
+  {
+   "id": "w1019617190",
+   "h": 23.5,
+   "rung": "overture",
+   "c": [
+    15836,
+    -4905
+   ]
+  },
+  {
+   "id": "w558884296",
+   "h": 23.5,
+   "rung": "overture",
+   "c": [
+    -14434,
+    4993
+   ]
+  },
+  {
+   "id": "overture:3d45dfbb-955b-4a26-977b-d2435b2aa968",
+   "h": 23.4,
+   "rung": "overture",
+   "c": [
+    24350,
+    34900
+   ]
+  },
+  {
+   "id": "w208802950",
+   "h": 23.4,
+   "rung": "overture",
+   "c": [
+    16138,
+    -11291
+   ]
+  },
+  {
+   "id": "overture:551fd330-c84e-456e-9ea7-f9d158cc9ff2",
+   "h": 23.3,
+   "rung": "overture",
+   "c": [
+    15693,
+    -8052
+   ]
+  },
+  {
+   "id": "w367822901",
+   "h": 23.3,
+   "rung": "overture",
+   "c": [
+    21756,
+    -1084
+   ]
+  },
+  {
+   "id": "w558884294",
+   "h": 23.3,
+   "rung": "overture",
+   "c": [
+    -14284,
+    5131
+   ]
+  },
+  {
+   "id": "w279261340",
+   "h": 23.2,
+   "rung": "overture",
+   "c": [
+    10481,
+    -752
+   ]
+  },
+  {
+   "id": "w1266395763",
+   "h": 23.1,
+   "rung": "overture",
+   "c": [
+    -15691,
+    -323
+   ]
+  },
+  {
+   "id": "w370207632",
+   "h": 23.1,
+   "rung": "overture",
+   "c": [
+    -299,
+    -8346
+   ]
+  },
+  {
+   "id": "w931638430",
+   "h": 23.1,
+   "rung": "overture",
+   "c": [
+    11878,
+    -394
+   ]
+  },
+  {
+   "id": "w1266704539",
+   "h": 23.0,
+   "rung": "overture",
+   "c": [
+    2667,
+    -17101
+   ]
+  },
+  {
+   "id": "w551320711",
+   "h": 23.0,
+   "rung": "overture",
+   "c": [
+    12471,
+    -8826
+   ]
+  },
+  {
+   "id": "overture:94f20892-3205-4303-bd4f-aba40065319d",
+   "h": 22.9,
+   "rung": "overture",
+   "c": [
+    17210,
+    -7738
+   ]
+  },
+  {
+   "id": "w1170364674",
+   "h": 22.9,
+   "rung": "overture",
+   "c": [
+    -9522,
+    -5705
+   ]
+  },
+  {
+   "id": "w219614831",
+   "h": 22.9,
+   "rung": "overture",
+   "c": [
+    -12532,
+    -37762
+   ]
+  },
+  {
+   "id": "w551320712",
+   "h": 22.9,
+   "rung": "overture",
+   "c": [
+    12427,
+    -8813
+   ]
+  },
+  {
+   "id": "w1161287130",
+   "h": 22.8,
+   "rung": "overture",
+   "c": [
+    4742,
+    -8909
+   ]
+  },
+  {
+   "id": "w1194466287",
+   "h": 22.7,
+   "rung": "overture",
+   "c": [
+    -6434,
+    -10773
+   ]
+  },
+  {
+   "id": "w1234780351",
+   "h": 22.6,
+   "rung": "overture",
+   "c": [
+    -3596,
+    -4115
+   ]
+  },
+  {
+   "id": "w1266697932",
+   "h": 22.6,
+   "rung": "overture",
+   "c": [
+    -168,
+    -8455
+   ]
+  },
+  {
+   "id": "w317143053",
+   "h": 22.6,
+   "rung": "overture",
+   "c": [
+    11261,
+    15436
+   ]
+  },
+  {
+   "id": "w566194057",
+   "h": 22.6,
+   "rung": "overture",
+   "c": [
+    -7053,
+    16523
+   ]
+  },
+  {
+   "id": "w959656975",
+   "h": 22.6,
+   "rung": "overture",
+   "c": [
+    -4825,
+    -10151
+   ]
+  },
+  {
+   "id": "overture:685acb38-0e84-4122-a7ad-5ea7f6210822",
+   "h": 22.5,
+   "rung": "overture",
+   "c": [
+    -6674,
+    10656
+   ]
+  },
+  {
+   "id": "w1244102202",
+   "h": 22.5,
+   "rung": "overture",
+   "c": [
+    808,
+    8853
+   ]
+  },
+  {
+   "id": "w1362781398",
+   "h": 22.5,
+   "rung": "overture",
+   "c": [
+    -3117,
+    5859
+   ]
+  },
+  {
+   "id": "w782054826",
+   "h": 22.5,
+   "rung": "overture",
+   "c": [
+    -15440,
+    7190
+   ]
+  },
+  {
+   "id": "w1237070838",
+   "h": 22.4,
+   "rung": "overture",
+   "c": [
+    -10047,
+    -2812
+   ]
+  },
+  {
+   "id": "w341326766",
+   "h": 22.4,
+   "rung": "osm-levels",
+   "c": [
+    7430,
+    -10276
+   ]
+  },
+  {
+   "id": "w341326770",
+   "h": 22.4,
+   "rung": "osm-levels",
+   "c": [
+    7367,
+    -10372
+   ]
+  },
+  {
+   "id": "w617646784",
+   "h": 22.4,
+   "rung": "overture",
+   "c": [
+    -14613,
+    8406
+   ]
+  },
+  {
+   "id": "overture:7dd101de-ec0c-48c7-b7c5-e13f2cc06b88",
+   "h": 22.3,
+   "rung": "overture",
+   "c": [
+    -14235,
+    17541
+   ]
+  },
+  {
+   "id": "overture:de6fc927-5c1a-4fd4-88d1-ca7b1b7a0671",
+   "h": 22.3,
+   "rung": "overture",
+   "c": [
+    -14281,
+    17482
+   ]
+  },
+  {
+   "id": "w1161287132",
+   "h": 22.3,
+   "rung": "overture",
+   "c": [
+    4831,
+    -8898
+   ]
+  },
+  {
+   "id": "w1162174238",
+   "h": 22.3,
+   "rung": "overture",
+   "c": [
+    -3444,
+    -4146
+   ]
+  },
+  {
+   "id": "w614240760",
+   "h": 22.3,
+   "rung": "overture",
+   "c": [
+    -6469,
+    3127
+   ]
+  },
+  {
+   "id": "w156497829",
+   "h": 22.2,
+   "rung": "overture",
+   "c": [
+    -3114,
+    -893
+   ]
+  },
+  {
+   "id": "w348127355",
+   "h": 22.2,
+   "rung": "overture",
+   "c": [
+    -14494,
+    3932
+   ]
+  },
+  {
+   "id": "w1155266884",
+   "h": 22.1,
+   "rung": "overture",
+   "c": [
+    9050,
+    -4902
+   ]
+  },
+  {
+   "id": "w1264392084",
+   "h": 22.1,
+   "rung": "overture",
+   "c": [
+    -6195,
+    -5075
+   ]
+  },
+  {
+   "id": "w1267643222",
+   "h": 22.1,
+   "rung": "overture",
+   "c": [
+    -6602,
+    10569
+   ]
+  },
+  {
+   "id": "w551578003",
+   "h": 22.1,
+   "rung": "overture",
+   "c": [
+    8688,
+    -4706
+   ]
+  },
+  {
+   "id": "w782054822",
+   "h": 22.1,
+   "rung": "overture",
+   "c": [
+    -15516,
+    7206
+   ]
+  },
+  {
+   "id": "w929090442",
+   "h": 22.1,
+   "rung": "overture",
+   "c": [
+    -6638,
+    -9041
+   ]
+  },
+  {
+   "id": "w195180390:tower",
+   "h": 22.0,
+   "rung": "osm-height",
+   "c": [
+    34991,
+    -11517
+   ]
+  },
+  {
+   "id": "w731556098",
+   "h": 22.0,
+   "rung": "overture",
+   "c": [
+    8621,
+    8302
+   ]
+  },
+  {
+   "id": "w1098896825",
+   "h": 21.9,
+   "rung": "overture",
+   "c": [
+    -11008,
+    -4750
+   ]
+  },
+  {
+   "id": "w485562220",
+   "h": 21.9,
+   "rung": "overture",
+   "c": [
+    12311,
+    17234
+   ]
+  },
+  {
+   "id": "w1267030866",
+   "h": 21.7,
+   "rung": "overture",
+   "c": [
+    9413,
+    -3643
+   ]
+  },
+  {
+   "id": "w145488709",
+   "h": 21.7,
+   "rung": "overture",
+   "c": [
+    10353,
+    16509
+   ]
+  },
+  {
+   "id": "w248011496",
+   "h": 21.7,
+   "rung": "overture",
+   "c": [
+    7343,
+    18971
+   ]
+  },
+  {
+   "id": "w1264392112",
+   "h": 21.6,
+   "rung": "overture",
+   "c": [
+    -7985,
+    -4247
+   ]
+  },
+  {
+   "id": "w1234780353",
+   "h": 21.5,
+   "rung": "overture",
+   "c": [
+    -3504,
+    -4117
+   ]
+  },
+  {
+   "id": "w218647964",
+   "h": 21.5,
+   "rung": "overture",
+   "c": [
+    3642,
+    7538
+   ]
+  },
+  {
+   "id": "w1017048653",
+   "h": 21.4,
+   "rung": "overture",
+   "c": [
+    -4737,
+    -6559
+   ]
+  },
+  {
+   "id": "w1234780352",
+   "h": 21.3,
+   "rung": "overture",
+   "c": [
+    -3595,
+    -4157
+   ]
+  },
+  {
+   "id": "w393097343",
+   "h": 21.3,
+   "rung": "overture",
+   "c": [
+    12204,
+    1744
+   ]
+  },
+  {
+   "id": "w444666222",
+   "h": 21.2,
+   "rung": "overture",
+   "c": [
+    -10640,
+    6046
+   ]
+  },
+  {
+   "id": "w782054825",
+   "h": 21.2,
+   "rung": "overture",
+   "c": [
+    -15431,
+    7235
+   ]
+  },
+  {
+   "id": "w1117689590",
+   "h": 21.0,
+   "rung": "overture",
+   "c": [
+    11482,
+    -8839
+   ]
+  },
+  {
+   "id": "w1117689592",
+   "h": 21.0,
+   "rung": "overture",
+   "c": [
+    11485,
+    -8780
+   ]
+  },
+  {
+   "id": "w1236128959",
+   "h": 21.0,
+   "rung": "overture",
+   "c": [
+    -15975,
+    760
+   ]
+  },
+  {
+   "id": "w1266402332",
+   "h": 21.0,
+   "rung": "overture",
+   "c": [
+    -6743,
+    -5280
+   ]
+  },
+  {
+   "id": "w959657005",
+   "h": 21.0,
+   "rung": "overture",
+   "c": [
+    -3534,
+    -9247
+   ]
+  },
+  {
+   "id": "w317144420",
+   "h": 20.8,
+   "rung": "overture",
+   "c": [
+    12318,
+    14189
+   ]
+  },
+  {
+   "id": "w1267029095",
+   "h": 20.6,
+   "rung": "overture",
+   "c": [
+    -8705,
+    -9312
+   ]
+  },
+  {
+   "id": "w367822597",
+   "h": 20.6,
+   "rung": "overture",
+   "c": [
+    21801,
+    -1036
+   ]
+  },
+  {
+   "id": "overture:190fc681-d798-4986-a0fa-7a7dd738cd86",
+   "h": 20.5,
+   "rung": "overture",
+   "c": [
+    3253,
+    18532
+   ]
+  },
+  {
+   "id": "w1236462764",
+   "h": 20.5,
+   "rung": "overture",
+   "c": [
+    -9719,
+    -4397
+   ]
+  },
+  {
+   "id": "w1378093473",
+   "h": 20.5,
+   "rung": "overture",
+   "c": [
+    130,
+    -14350
+   ]
+  },
+  {
+   "id": "overture:90196efe-1286-4d56-878e-05d3ee48e1a4",
+   "h": 20.4,
+   "rung": "overture",
+   "c": [
+    31165,
+    41521
+   ]
+  },
+  {
+   "id": "w1263587520",
+   "h": 20.4,
+   "rung": "overture",
+   "c": [
+    22187,
+    493
+   ]
+  },
+  {
+   "id": "w1365402400",
+   "h": 20.4,
+   "rung": "overture",
+   "c": [
+    8343,
+    -10049
+   ]
+  },
+  {
+   "id": "w1378410569",
+   "h": 20.4,
+   "rung": "overture",
+   "c": [
+    4748,
+    -8981
+   ]
+  },
+  {
+   "id": "w1378410570",
+   "h": 20.4,
+   "rung": "overture",
+   "c": [
+    4749,
+    -8951
+   ]
+  },
+  {
+   "id": "w704711903",
+   "h": 20.4,
+   "rung": "overture",
+   "c": [
+    7651,
+    13999
+   ]
+  },
+  {
+   "id": "w1017049197",
+   "h": 20.3,
+   "rung": "overture",
+   "c": [
+    -9253,
+    -6480
+   ]
+  },
+  {
+   "id": "w1162174194",
+   "h": 20.3,
+   "rung": "overture",
+   "c": [
+    -6558,
+    -4376
+   ]
+  },
+  {
+   "id": "w324352938",
+   "h": 20.3,
+   "rung": "overture",
+   "c": [
+    12107,
+    -57
+   ]
+  },
+  {
+   "id": "w372750505",
+   "h": 20.2,
+   "rung": "overture",
+   "c": [
+    9899,
+    5826
+   ]
+  },
+  {
+   "id": "w791224495",
+   "h": 20.2,
+   "rung": "overture",
+   "c": [
+    -484,
+    -9685
+   ]
+  },
+  {
+   "id": "w348127351",
+   "h": 20.1,
+   "rung": "overture",
+   "c": [
+    -14427,
+    3853
+   ]
+  },
+  {
+   "id": "w1561714550",
+   "h": 20.0,
+   "rung": "overture",
+   "c": [
+    22514,
+    25492
+   ]
+  },
+  {
+   "id": "w219614826",
+   "h": 20.0,
+   "rung": "overture",
+   "c": [
+    -12589,
+    -37788
+   ]
+  }
+ ],
+ "heightCheck": [
+  {
+   "id": "w1343930243",
+   "h": 12.2,
+   "type": "house",
+   "rung": "overture",
+   "area": 148
+  },
+  {
+   "id": "w1343930244",
+   "h": 13.8,
+   "type": "house",
+   "rung": "overture",
+   "area": 152
+  }
+ ]
+}

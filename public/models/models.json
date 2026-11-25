@@ -1074,7 +1074,8 @@
         "north": -2133.7,
         "rotation_deg": 0.0,
         "visible": "night",
-        "blend": "additive"
+        "blend": "additive",
+        "building": "w27858544"
       },
       {
         "name": "High Roller",

@@ -1,0 +1,19 @@
+{
+  "_": "The corridor format's shared fixture: tests/data/test_corridor.py and format.test.js both encode these and compare with cell.bin and tall.bin. Points at a quarter metre test rounding half away from zero.",
+  "cell": {
+    "origin": [3000, -55000],
+    "wide": false,
+    "buildings": [
+      { "rings": [[[2990, -55010], [3010, -55010], [3010, -54990], [2990, -54990]]], "height": 4.5, "type": 1, "rung": 3 },
+      { "rings": [[[3100, -55100], [3160, -55100], [3160, -55040], [3100, -55040]], [[3120, -55080], [3120, -55060], [3140, -55060], [3140, -55080]]], "height": 12.25, "type": 5, "rung": 2 },
+      { "rings": [[[2899.75, -54900.25], [2930.25, -54900.25], [2930.25, -54880], [2899.75, -54880]]], "height": 5, "type": 8, "rung": 0 }
+    ]
+  },
+  "tall": {
+    "origin": [0, 0],
+    "wide": true,
+    "buildings": [
+      { "rings": [[[-26956.125, -61885.5], [-26950, -61885.5], [-26950, -61879.375]]], "height": 140, "type": 0, "rung": 0 }
+    ]
+  }
+}

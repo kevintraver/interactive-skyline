@@ -1,0 +1,959 @@
+{
+ "km": {
+  "motorway": 524.0,
+  "trunk": 197.1,
+  "primary": 1293.1,
+  "secondary": 1180.9,
+  "total": 3195.1
+ },
+ "byClass": {
+  "motorway": {
+   "pieces": 287,
+   "station": 255,
+   "default": 32,
+   "kmStation": 431.0,
+   "kmDefault": 93.0
+  },
+  "trunk": {
+   "pieces": 76,
+   "station": 76,
+   "default": 0,
+   "kmStation": 197.1,
+   "kmDefault": 0.0
+  },
+  "primary": {
+   "pieces": 1054,
+   "station": 1015,
+   "default": 39,
+   "kmStation": 1240.8,
+   "kmDefault": 52.3
+  },
+  "secondary": {
+   "pieces": 1159,
+   "station": 1159,
+   "default": 0,
+   "kmStation": 1180.9,
+   "kmDefault": 0.0
+  }
+ },
+ "kmCutAsDrivenRoutes": {
+  "motorway": 248.2,
+  "trunk": 0.0,
+  "primary": 0.2,
+  "secondary": 9.2
+ },
+ "stations": {
+  "mainline": 1011,
+  "snappedToARoad": 716,
+  "usedByAPiece": 633,
+  "unsnapped": [
+   {
+    "id": "0031120",
+    "route": "IR15",
+    "location": "IR15, 1.5 mi N of SR604 (Apex Intch 'Exit 58')"
+   },
+   {
+    "id": "0031210",
+    "route": "IR15",
+    "location": "IR15, .2 mi N of Sahara Intch 'Exit 40'"
+   },
+   {
+    "id": "0031230",
+    "route": "IR15",
+    "location": "IR15 .7 mi N of SR147 Lake Mead Intch 'Exit 45'"
+   },
+   {
+    "id": "0035340",
+    "route": "IR15",
+    "location": "IR15, 1 mi S of Blue Diamond Rd Intch \"Exit 33'"
+   },
+   {
+    "id": "0035360",
+    "route": "IR15",
+    "location": "IR15, 1.5 mi S of Sloan Intch Exit 25"
+   },
+   {
+    "id": "0030819",
+    "route": "IR515, US95",
+    "location": "btwn the Tropicana Intch 'Exit 68' & the Russell Intch 'Exit 65'"
+   },
+   {
+    "id": "0032279",
+    "route": "Oakey Blvd",
+    "location": "290ft E of Las Vegas Blvd"
+   },
+   {
+    "id": "0036005",
+    "route": "Alexander Rd",
+    "location": "375ft W of Losee Rd"
+   },
+   {
+    "id": "0036302",
+    "route": "Valley Dr",
+    "location": "670ft N of SR574 (Cheyenne Ave)"
+   },
+   {
+    "id": "0036407",
+    "route": "Revere Rd",
+    "location": "70ft S of Craig Creek Ave"
+   },
+   {
+    "id": "0031660",
+    "route": "Hollywood Blvd",
+    "location": "250ft N of Alto Ave"
+   },
+   {
+    "id": "0031570",
+    "route": "Craig Rd",
+    "location": "380ft W of Durango Dr"
+   },
+   {
+    "id": "0036706",
+    "route": "Gowan Rd",
+    "location": "780ft E of Decatur Blvd"
+   },
+   {
+    "id": "0036808",
+    "route": "Gowan Rd",
+    "location": "115ft W of Pecos Rd"
+   },
+   {
+    "id": "0031500",
+    "route": "Dean Martin Dr",
+    "location": "650ft N of Tompkins St"
+   },
+   {
+    "id": "0031509",
+    "route": "Spring Mountain Rd",
+    "location": "385ft E of Artemis St"
+   },
+   {
+    "id": "0032053",
+    "route": "Eastgate Rd",
+    "location": "375ft N of Commercial Way"
+   },
+   {
+    "id": "0032072",
+    "route": "Gilespie St",
+    "location": "350ft S of Warm Springs Rd"
+   },
+   {
+    "id": "0031256",
+    "route": "Pyle Ave",
+    "location": "370ft W of Spencer St"
+   },
+   {
+    "id": "0030561",
+    "route": "Donovan Way",
+    "location": "560ft N of SR573 (Craig Rd)"
+   },
+   {
+    "id": "0032144",
+    "route": "Dean Martin Dr",
+    "location": "325ft N of Frias Ave"
+   },
+   {
+    "id": "0030537",
+    "route": "Carson Ave",
+    "location": "120ft W of Las Vegas Blvd"
+   },
+   {
+    "id": "0030357",
+    "route": "Alexander Rd",
+    "location": "250ft E of Timberlake Dr"
+   },
+   {
+    "id": "0030466",
+    "route": "Lake Mountain Dr",
+    "location": "475ft N of Valencia Dr"
+   },
+   {
+    "id": "0030479",
+    "route": "Pacific Ave",
+    "location": "160ft N of Colorado St"
+   },
+   {
+    "id": "0031552",
+    "route": "Twain Ave",
+    "location": "115ft W of SR612 (Nellis Blvd)"
+   },
+   {
+    "id": "0031553",
+    "route": "Arville St.",
+    "location": "75ft N of Gracemont Ave"
+   },
+   {
+    "id": "0031555",
+    "route": "Tenaya Way",
+    "location": "560ft N of Robindale Rd"
+   },
+   {
+    "id": "0032227",
+    "route": "Serene Ave",
+    "location": "465ft E of Eastern Ave"
+   },
+   {
+    "id": "0031300",
+    "route": "Twain Ave",
+    "location": "280ft E of SR596 (Jones Blvd)"
+   },
+   {
+    "id": "0030603",
+    "route": "Berg St",
+    "location": "50ft S of La Madre Way"
+   },
+   {
+    "id": "0030488",
+    "route": "Pueblo Blvd",
+    "location": "350ft S of Aztec Ln"
+   },
+   {
+    "id": "0030532",
+    "route": "Ogden Ave",
+    "location": "160ft E of 6th St"
+   },
+   {
+    "id": "0030303",
+    "route": "Tenaya Way",
+    "location": "385ft N of Desert Inn Rd"
+   },
+   {
+    "id": "0030312",
+    "route": "El Camino Way",
+    "location": "325ft E of Buchanan Blvd"
+   },
+   {
+    "id": "0030516",
+    "route": "Los Feliz St",
+    "location": "385ft N of Piccadily Dr"
+   },
+   {
+    "id": "0031228",
+    "route": "Williams Ranch Rd",
+    "location": "75ft N of SR160"
+   },
+   {
+    "id": "0031141",
+    "route": "Equestrian Dr",
+    "location": "530ft E of Magic Way"
+   },
+   {
+    "id": "0030942",
+    "route": "Karen Ave",
+    "location": "250ft E of Paradise Rd"
+   },
+   {
+    "id": "0031169",
+    "route": "Robindale Rd",
+    "location": "385ft E of Decatur Blvd"
+   },
+   {
+    "id": "0030934",
+    "route": "Convention Center Dr",
+    "location": "215ft W of Debbie Reynolds Dr"
+   },
+   {
+    "id": "0030293",
+    "route": "Arizona St",
+    "location": "10ft W of Hotel Plaza"
+   },
+   {
+    "id": "0031298",
+    "route": "Lindell Rd",
+    "location": "230ft N of SR589 (Sahara Ave)"
+   },
+   {
+    "id": "0030463",
+    "route": "Park St",
+    "location": "310ft N of Colorado St"
+   },
+   {
+    "id": "0031551",
+    "route": "Twain Ave",
+    "location": ".2 mi E of SR612 (Nellis Blvd)"
+   },
+   {
+    "id": "0030988",
+    "route": "Ave 'B'",
+    "location": "310ft N of Adams Blvd"
+   },
+   {
+    "id": "0030721",
+    "route": "SR599 (Rancho Dr)",
+    "location": ".27 mi N of Rainbow Blvd"
+   },
+   {
+    "id": "0031145",
+    "route": "Newport Dr",
+    "location": "110ft W of Racetrack Rd"
+   },
+   {
+    "id": "0031150",
+    "route": "6th St",
+    "location": "150ft N of SR159 (Charleston Blvd)"
+   },
+   {
+    "id": "0031046",
+    "route": "Racetrack Rd",
+    "location": "270ft N of Warm Springs Rd"
+   },
+   {
+    "id": "0031649",
+    "route": "Warm Springs Rd",
+    "location": "115ft E of Racetrack Rd"
+   },
+   {
+    "id": "0031659",
+    "route": "Torrey Pines Dr",
+    "location": "245ft N of Windmill Ln"
+   },
+   {
+    "id": "0031174",
+    "route": "Burns Rd",
+    "location": "250ft N of Sunset Rd"
+   },
+   {
+    "id": "0031176",
+    "route": "Pabco Rd",
+    "location": "450ft S of Sunset Rd"
+   },
+   {
+    "id": "0031193",
+    "route": "Wynn Rd",
+    "location": "300ft N of Tropicana Ave"
+   },
+   {
+    "id": "0031208",
+    "route": "Arrowhead Trail",
+    "location": "150ft S of Horizon Dr."
+   },
+   {
+    "id": "0030626",
+    "route": "4th St",
+    "location": "100ft S of Lewis Ave"
+   },
+   {
+    "id": "0030929",
+    "route": "FRLA02 (Old US-40)",
+    "location": "130ft N of Marlin Ave"
+   },
+   {
+    "id": "0031419",
+    "route": "Symphony Park Ave",
+    "location": "300ft E of Martin L King Blvd"
+   },
+   {
+    "id": "0031562",
+    "route": "Sandhill Rd",
+    "location": "435ft N of Desert Inn Rd"
+   }
+  ]
+ },
+ "shapes": [
+  {
+   "id": 0,
+   "station": "0030720",
+   "dir": 1,
+   "kind": "freeway",
+   "location": ".4 mi N of the Ann Intch 'Exit 86'",
+   "meanDay": 67887
+  },
+  {
+   "id": 1,
+   "station": "0030720",
+   "dir": 5,
+   "kind": "freeway",
+   "location": ".4 mi N of the Ann Intch 'Exit 86'",
+   "meanDay": 42577
+  },
+  {
+   "id": 2,
+   "station": "0031120",
+   "dir": 1,
+   "kind": "freeway",
+   "location": "IR-15 1.5 mi N of SR-604 (Apex Intch)",
+   "meanDay": 16720
+  },
+  {
+   "id": 3,
+   "station": "0031120",
+   "dir": 5,
+   "kind": "freeway",
+   "location": "IR-15 1.5 mi N of SR-604 (Apex Intch)",
+   "meanDay": 17293
+  },
+  {
+   "id": 4,
+   "station": "0031210",
+   "dir": 1,
+   "kind": "freeway",
+   "location": ".2 mi N of Sahara Intch 'Exit 40'",
+   "meanDay": 155288
+  },
+  {
+   "id": 5,
+   "station": "0031210",
+   "dir": 5,
+   "kind": "freeway",
+   "location": ".2 mi N of Sahara Intch 'Exit 40'",
+   "meanDay": 96455
+  },
+  {
+   "id": 6,
+   "station": "0031230",
+   "dir": 1,
+   "kind": "freeway",
+   "location": "IR-15 0.7 mi N of SR-147 (Lake Mead Intch)",
+   "meanDay": 84287
+  },
+  {
+   "id": 7,
+   "station": "0031230",
+   "dir": 5,
+   "kind": "freeway",
+   "location": "IR-15 0.7 mi N of SR-147 (Lake Mead Intch)",
+   "meanDay": 82801
+  },
+  {
+   "id": 8,
+   "station": "0031250",
+   "dir": 3,
+   "kind": "freeway",
+   "location": "IR215, .2 mi E of the Eastern Intch 'Exit 7'",
+   "meanDay": 71268
+  },
+  {
+   "id": 9,
+   "station": "0031250",
+   "dir": 7,
+   "kind": "freeway",
+   "location": "IR215, .2 mi E of the Eastern Intch 'Exit 7'",
+   "meanDay": 71257
+  },
+  {
+   "id": 10,
+   "station": "0032120",
+   "dir": 1,
+   "kind": "arterial",
+   "location": "US-95 at SR-157  (Charleston Park Rd Intch)",
+   "meanDay": 10724
+  },
+  {
+   "id": 11,
+   "station": "0032120",
+   "dir": 5,
+   "kind": "arterial",
+   "location": "US-95 at SR-157  (Charleston Park Rd Intch)",
+   "meanDay": 12421
+  },
+  {
+   "id": 12,
+   "station": "0033120",
+   "dir": 3,
+   "kind": "arterial",
+   "location": "SR-562 (Sunset Rd) 0.2 mi E of Paradise Rd",
+   "meanDay": 22918
+  },
+  {
+   "id": 13,
+   "station": "0033120",
+   "dir": 7,
+   "kind": "arterial",
+   "location": "SR-562 (Sunset Rd) 0.2 mi E of Paradise Rd",
+   "meanDay": 23405
+  },
+  {
+   "id": 14,
+   "station": "0033150",
+   "dir": 1,
+   "kind": "arterial",
+   "location": "US-93 0.75 mi S of US-95 Intch",
+   "meanDay": 13103
+  },
+  {
+   "id": 15,
+   "station": "0033150",
+   "dir": 5,
+   "kind": "arterial",
+   "location": "US-93 0.75 mi S of US-95 Intch",
+   "meanDay": 12821
+  },
+  {
+   "id": 16,
+   "station": "0033180",
+   "dir": 1,
+   "kind": "arterial",
+   "location": "SR-160 15.6 mi N of SR-159",
+   "meanDay": 6068
+  },
+  {
+   "id": 17,
+   "station": "0033180",
+   "dir": 5,
+   "kind": "arterial",
+   "location": "SR-160 15.6 mi N of SR-159",
+   "meanDay": 6056
+  },
+  {
+   "id": 18,
+   "station": "0033190",
+   "dir": 1,
+   "kind": "arterial",
+   "location": "SR-599 (Rancho Dr.) 0.2 mi N of SR-574 (Cheyenne A",
+   "meanDay": 12900
+  },
+  {
+   "id": 19,
+   "station": "0033190",
+   "dir": 5,
+   "kind": "arterial",
+   "location": "SR-599 (Rancho Dr.) 0.2 mi N of SR-574 (Cheyenne A",
+   "meanDay": 13948
+  },
+  {
+   "id": 20,
+   "station": "0033200",
+   "dir": 3,
+   "kind": "arterial",
+   "location": "SR-564 (Lake Mead Dr) 1.7 mi E of Las Vegas Pkwy",
+   "meanDay": 1204
+  },
+  {
+   "id": 21,
+   "station": "0033200",
+   "dir": 7,
+   "kind": "arterial",
+   "location": "SR-564 (Lake Mead Dr) 1.7 mi E of Las Vegas Pkwy",
+   "meanDay": 1252
+  },
+  {
+   "id": 22,
+   "station": "0035230",
+   "dir": 1,
+   "kind": "arterial",
+   "location": "Eastern Av. 0.15 mi S of SR-159 (Charleston Bl)",
+   "meanDay": 15801
+  },
+  {
+   "id": 23,
+   "station": "0035230",
+   "dir": 5,
+   "kind": "arterial",
+   "location": "Eastern Av. 0.15 mi S of SR-159 (Charleston Bl)",
+   "meanDay": 13893
+  },
+  {
+   "id": 24,
+   "station": "0035240",
+   "dir": 1,
+   "kind": "arterial",
+   "location": "Jones Bl. 0.3 mi N of Smoke Ranch Rd.",
+   "meanDay": 7725
+  },
+  {
+   "id": 25,
+   "station": "0035240",
+   "dir": 5,
+   "kind": "arterial",
+   "location": "Jones Bl. 0.3 mi N of Smoke Ranch Rd.",
+   "meanDay": 7333
+  },
+  {
+   "id": 26,
+   "station": "0035250",
+   "dir": 3,
+   "kind": "arterial",
+   "location": "SR-592 (Flamingo Bl) 0.1 mi E of Decatur Bl",
+   "meanDay": 25067
+  },
+  {
+   "id": 27,
+   "station": "0035250",
+   "dir": 7,
+   "kind": "arterial",
+   "location": "SR-592 (Flamingo Bl) 0.1 mi E of Decatur Bl",
+   "meanDay": 23690
+  },
+  {
+   "id": 28,
+   "station": "0035300",
+   "dir": 3,
+   "kind": "arterial",
+   "location": "Craig Rd. 0.3 mi W of Lawrence St",
+   "meanDay": 24322
+  },
+  {
+   "id": 29,
+   "station": "0035300",
+   "dir": 7,
+   "kind": "arterial",
+   "location": "Craig Rd. 0.3 mi W of Lawrence St",
+   "meanDay": 24051
+  },
+  {
+   "id": 30,
+   "station": "0035310",
+   "dir": 3,
+   "kind": "arterial",
+   "location": "SR-593 (Tropicana Av) 0.4 mi W of Eastern Av",
+   "meanDay": 18520
+  },
+  {
+   "id": 31,
+   "station": "0035310",
+   "dir": 7,
+   "kind": "arterial",
+   "location": "SR-593 (Tropicana Av) 0.4 mi W of Eastern Av",
+   "meanDay": 18213
+  },
+  {
+   "id": 32,
+   "station": "0035330",
+   "dir": 1,
+   "kind": "arterial",
+   "location": ".2 mi S of SR612 (Nellis Blvd)",
+   "meanDay": 4848
+  },
+  {
+   "id": 33,
+   "station": "0035330",
+   "dir": 5,
+   "kind": "arterial",
+   "location": ".2 mi S of SR612 (Nellis Blvd)",
+   "meanDay": 5442
+  },
+  {
+   "id": 34,
+   "station": "0035340",
+   "dir": 1,
+   "kind": "freeway",
+   "location": "IR-15 1.0 mi S of SR 160 (Blue Diamond Rd Intch)",
+   "meanDay": 75999
+  },
+  {
+   "id": 35,
+   "station": "0035340",
+   "dir": 5,
+   "kind": "freeway",
+   "location": "IR-15 1.0 mi S of SR 160 (Blue Diamond Rd Intch)",
+   "meanDay": 72069
+  },
+  {
+   "id": 36,
+   "station": "0035350",
+   "dir": 1,
+   "kind": "freeway",
+   "location": "IR-15 3.2 mi N of US 93",
+   "meanDay": 14692
+  },
+  {
+   "id": 37,
+   "station": "0035350",
+   "dir": 5,
+   "kind": "freeway",
+   "location": "IR-15 3.2 mi N of US 93",
+   "meanDay": 14708
+  },
+  {
+   "id": 38,
+   "station": "0035360",
+   "dir": 1,
+   "kind": "freeway",
+   "location": "IR15, 1.5 mi S of Sloan Intch 'Exit 25'",
+   "meanDay": 23605
+  },
+  {
+   "id": 39,
+   "station": "0035360",
+   "dir": 5,
+   "kind": "freeway",
+   "location": "IR15, 1.5 mi S of Sloan Intch 'Exit 25'",
+   "meanDay": 23701
+  },
+  {
+   "id": 40,
+   "station": "0035370",
+   "dir": 3,
+   "kind": "freeway",
+   "location": "IR-215 0.5 mi W of Gibson Intch",
+   "meanDay": 70262
+  },
+  {
+   "id": 41,
+   "station": "0035370",
+   "dir": 7,
+   "kind": "freeway",
+   "location": "IR-215 0.5 mi W of Gibson Intch",
+   "meanDay": 70269
+  },
+  {
+   "id": 42,
+   "station": "0035380",
+   "dir": 3,
+   "kind": "arterial",
+   "location": "SR-157 25' W of SR-158 (Deer Creek Rd)",
+   "meanDay": 956
+  },
+  {
+   "id": 43,
+   "station": "0035380",
+   "dir": 7,
+   "kind": "arterial",
+   "location": "SR-157 25' W of SR-158 (Deer Creek Rd)",
+   "meanDay": 949
+  },
+  {
+   "id": 44,
+   "station": "0035390",
+   "dir": 1,
+   "kind": "arterial",
+   "location": "SR-158 25' E of SR-157 (Charleston Pk Rd)",
+   "meanDay": 508
+  },
+  {
+   "id": 45,
+   "station": "0035390",
+   "dir": 5,
+   "kind": "arterial",
+   "location": "SR-158 25' E of SR-157 (Charleston Pk Rd)",
+   "meanDay": 427
+  },
+  {
+   "id": 46,
+   "station": "route:i15n:with",
+   "dir": 0,
+   "kind": "route",
+   "location": "I-15 north from Primm, the route",
+   "meanDay": 0
+  },
+  {
+   "id": 47,
+   "station": "route:i15n:against",
+   "dir": 0,
+   "kind": "route",
+   "location": "I-15 north from Primm, oncoming",
+   "meanDay": 0
+  },
+  {
+   "id": 48,
+   "station": "route:i15s:with",
+   "dir": 0,
+   "kind": "route",
+   "location": "I-15 south from Apex, the route",
+   "meanDay": 0
+  },
+  {
+   "id": 49,
+   "station": "route:i15s:against",
+   "dir": 0,
+   "kind": "route",
+   "location": "I-15 south from Apex, oncoming",
+   "meanDay": 0
+  },
+  {
+   "id": 50,
+   "station": "route:us93:with",
+   "dir": 0,
+   "kind": "route",
+   "location": "US-93 from Hoover Dam, the route",
+   "meanDay": 0
+  },
+  {
+   "id": 51,
+   "station": "route:us93:against",
+   "dir": 0,
+   "kind": "route",
+   "location": "US-93 from Hoover Dam, oncoming",
+   "meanDay": 0
+  }
+ ],
+ "busiest": [
+  {
+   "name": "Bruce Woodbury Beltway",
+   "cls": "motorway",
+   "km": 159.0,
+   "vehicleKmPerDay": 10393981,
+   "maxTwoWayAadt": 266000
+  },
+  {
+   "name": "I-15 north from Primm",
+   "cls": "motorway",
+   "km": 89.0,
+   "vehicleKmPerDay": 5351464,
+   "maxTwoWayAadt": 306194
+  },
+  {
+   "name": "US-93 from Hoover Dam",
+   "cls": "motorway",
+   "km": 87.2,
+   "vehicleKmPerDay": 4050431,
+   "maxTwoWayAadt": 162774
+  },
+  {
+   "name": "Purple Heart Highway",
+   "cls": "motorway",
+   "km": 55.3,
+   "vehicleKmPerDay": 3754009,
+   "maxTwoWayAadt": 236000
+  },
+  {
+   "name": "I-15 south from Apex",
+   "cls": "motorway",
+   "km": 70.9,
+   "vehicleKmPerDay": 2681823,
+   "maxTwoWayAadt": 247180
+  },
+  {
+   "name": "West Sahara Avenue",
+   "cls": "primary",
+   "km": 43.0,
+   "vehicleKmPerDay": 850741,
+   "maxTwoWayAadt": 75000
+  },
+  {
+   "name": "East Flamingo Road",
+   "cls": "secondary",
+   "km": 37.7,
+   "vehicleKmPerDay": 830133,
+   "maxTwoWayAadt": 67500
+  },
+  {
+   "name": "East Craig Road",
+   "cls": "primary",
+   "km": 37.4,
+   "vehicleKmPerDay": 813088,
+   "maxTwoWayAadt": 71000
+  },
+  {
+   "name": "Blue Diamond Road",
+   "cls": "primary",
+   "km": 36.7,
+   "vehicleKmPerDay": 766724,
+   "maxTwoWayAadt": 66500
+  },
+  {
+   "name": "Summerlin Parkway",
+   "cls": "motorway",
+   "km": 18.4,
+   "vehicleKmPerDay": 745702,
+   "maxTwoWayAadt": 109000
+  },
+  {
+   "name": "North Decatur Boulevard",
+   "cls": "primary",
+   "km": 40.5,
+   "vehicleKmPerDay": 733265,
+   "maxTwoWayAadt": 51000
+  },
+  {
+   "name": "South Las Vegas Boulevard",
+   "cls": "secondary",
+   "km": 56.5,
+   "vehicleKmPerDay": 724259,
+   "maxTwoWayAadt": 48500
+  },
+  {
+   "name": "South Jones Boulevard",
+   "cls": "primary",
+   "km": 33.5,
+   "vehicleKmPerDay": 574614,
+   "maxTwoWayAadt": 38000
+  },
+  {
+   "name": "West Cheyenne Avenue",
+   "cls": "primary",
+   "km": 33.6,
+   "vehicleKmPerDay": 563838,
+   "maxTwoWayAadt": 57500
+  },
+  {
+   "name": "West Tropicana Avenue",
+   "cls": "primary",
+   "km": 24.8,
+   "vehicleKmPerDay": 544461,
+   "maxTwoWayAadt": 65000
+  },
+  {
+   "name": "South Eastern Avenue",
+   "cls": "secondary",
+   "km": 30.5,
+   "vehicleKmPerDay": 544294,
+   "maxTwoWayAadt": 39000
+  },
+  {
+   "name": "South Fort Apache Road",
+   "cls": "primary",
+   "km": 30.4,
+   "vehicleKmPerDay": 538301,
+   "maxTwoWayAadt": 34500
+  },
+  {
+   "name": "North Nellis Boulevard",
+   "cls": "primary",
+   "km": 28.9,
+   "vehicleKmPerDay": 537165,
+   "maxTwoWayAadt": 48000
+  },
+  {
+   "name": "North Rainbow Boulevard",
+   "cls": "secondary",
+   "km": 30.1,
+   "vehicleKmPerDay": 511305,
+   "maxTwoWayAadt": 52000
+  },
+  {
+   "name": "South Durango Drive",
+   "cls": "primary",
+   "km": 26.7,
+   "vehicleKmPerDay": 496049,
+   "maxTwoWayAadt": 33500
+  },
+  {
+   "name": "Saint Rose Parkway",
+   "cls": "primary",
+   "km": 21.2,
+   "vehicleKmPerDay": 485175,
+   "maxTwoWayAadt": 52000
+  },
+  {
+   "name": "East Lake Mead Boulevard",
+   "cls": "secondary",
+   "km": 28.1,
+   "vehicleKmPerDay": 480780,
+   "maxTwoWayAadt": 48000
+  },
+  {
+   "name": "West Charleston Boulevard",
+   "cls": "primary",
+   "km": 34.6,
+   "vehicleKmPerDay": 477566,
+   "maxTwoWayAadt": 35000
+  },
+  {
+   "name": "North Lamb Boulevard",
+   "cls": "primary",
+   "km": 21.5,
+   "vehicleKmPerDay": 475703,
+   "maxTwoWayAadt": 43000
+  },
+  {
+   "name": "East Sunset Road",
+   "cls": "primary",
+   "km": 26.6,
+   "vehicleKmPerDay": 436372,
+   "maxTwoWayAadt": 46000
+  }
+ ],
+ "routeGroups": {
+  "i15n": 69.3,
+  "i15n+i15s": 19.7,
+  "i15s": 70.9,
+  "us93": 87.2
+ },
+ "tmasDaysDropped": 1020,
+ "generated": "2026-11-22T13:42:55Z",
+ "bytes": {
+  "json": 126486,
+  "bin": 101376
+ }
+}

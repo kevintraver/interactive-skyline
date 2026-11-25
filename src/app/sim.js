@@ -72,6 +72,7 @@ export function initSim(app) {
 /** Apply ?t= (and ?rate=) once the interface is up: any t enters the clock state (section 4.1). */
 export function applyTimeParams(app) {
   const params = new URLSearchParams(location.search);
+  if (params.get('mode') === 'drive') return; // drive seam: a drive link's ?t= is the drive's own moment (src/drive/url.js)
   const t = parseTimeParam(params.get('t'), app.clock.zone);
   const { clock, env } = app;
   if (params.get('journey') === 'test') {

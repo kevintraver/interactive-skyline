@@ -33,10 +33,12 @@ import { createLook } from './render/look.js';
 import { initQuality } from './render/setupQuality.js';
 import { createBench } from './render/bench.js';
 import { warmUp } from './render/warmup.js';
+import { initDrive } from './drive/index.js'; // drive seam
 import cities from '../data/cities.json';
 
 const app = await createApp(cities);
 const { cityId, city, pending, settings, scene, camera, renderer, controls, loop, invalidate } = app;
+const drive = app.drive = { active: false, focus: null, holding: null }; // drive seam: set by Drive mode (src/drive/index.js) while it is active
 app.format = createFormat(settings, city);
 app.sky = createLegacySky().init(app);
 initSim(app);
@@ -89,13 +91,12 @@ const readyAt = performance.now();
 let lastFrame = null;
 loop.start(renderer, {
   before(now) {
-    app.stepFlight(now);
-    controls.update();
+    if (!drive.active) { app.stepFlight(now); controls.update(); } // drive seam: while driving the drive moves the camera
   },
   render(now) {
     // while the camera is still, so the extra frames cost nothing during a drag
-    if (app.views.stale && !app.flying() && !app.dragging()) { app.views.stale = false; app.views.snap(); }
-    pipeline.render();
+    if (app.views.stale && !app.flying() && !app.dragging() && !drive.active) { app.views.stale = false; app.views.snap(); } // drive seam
+    if (!(drive.active && drive.holding())) pipeline.render(); // drive seam: a route switch holds the last frame
     if (app.look) app.look.afterRender();
     // the quality governor sees the interval between frames drawn back to back (section 7.14, T2.7)
     // (not in the first five seconds: shader compilation makes the first frames slow, and the governor never raises
@@ -116,3 +117,6 @@ if (new URLSearchParams(location.search).get('bench') === '1') {
 // extras, the fountain show and animated LED surfaces (skyline-integration v7, src/attractions.js): a subsystem of
 // the frame loop, its show time from the simulation clock (plan 01, T2.11)
 initAttractions({ cityId, scene, camera, renderer, settings, invalidate, groundY, tall, loop, clock: app.clock, env: app.env });
+
+// drive seam: Drive mode, offered for cities with routes; it adds window.__skyline.drive and .terrain
+initDrive(app, { terrainData });

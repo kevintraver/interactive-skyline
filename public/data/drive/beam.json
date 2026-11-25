@@ -1,0 +1,390 @@
+{
+ "format": "float16 little-endian, row-major, rows from vMin up, columns from hMin rightwards",
+ "units": "candela, one lamp of a two-lamp system",
+ "angles": "h: degrees, positive to the driver's right; v: degrees, positive up; from the lamp's aimed H-V axis",
+ "grid": {
+  "hMin": -45.0,
+  "hMax": 45.0,
+  "dh": 0.5,
+  "nh": 181,
+  "vMin": -15.0,
+  "vMax": 10.0,
+  "dv": 0.25,
+  "nv": 101
+ },
+ "files": {
+  "low": "beam_low.bin",
+  "high": "beam_high.bin"
+ },
+ "low": {
+  "peakCd": 22832.0,
+  "peakAt": {
+   "hDeg": 2.0,
+   "vDeg": -1.75
+  },
+  "clampedNodes": 0,
+  "label": "FMVSS 108 Table XIX-a, Lower beam #1V (LB1V)",
+  "testPoints": [
+   {
+    "point": "10U-90U, 90L-90R",
+    "min": null,
+    "max": 125,
+    "sampledLow": 0.1,
+    "sampledHigh": 55.4,
+    "ok": true
+   },
+   {
+    "point": "4U 8L",
+    "min": 64,
+    "max": null,
+    "sampledLow": 80.1,
+    "sampledHigh": 80.1,
+    "ok": true
+   },
+   {
+    "point": "4U 8R",
+    "min": 64,
+    "max": null,
+    "sampledLow": 161.9,
+    "sampledHigh": 161.9,
+    "ok": true
+   },
+   {
+    "point": "2U 4L",
+    "min": 135,
+    "max": null,
+    "sampledLow": 311.8,
+    "sampledHigh": 311.8,
+    "ok": true
+   },
+   {
+    "point": "1.5U 1R-3R",
+    "min": 200,
+    "max": null,
+    "sampledLow": 711.0,
+    "sampledHigh": 728.5,
+    "ok": true
+   },
+   {
+    "point": "1.5U 1R-R",
+    "min": null,
+    "max": 1400,
+    "sampledLow": 1.0,
+    "sampledHigh": 728.5,
+    "ok": true
+   },
+   {
+    "point": "1U 1.5L-L",
+    "min": null,
+    "max": 700,
+    "sampledLow": 1.2,
+    "sampledHigh": 656.5,
+    "ok": true
+   },
+   {
+    "point": "0.5U 1.5L-L",
+    "min": null,
+    "max": 1000,
+    "sampledLow": 1.4,
+    "sampledHigh": 774.5,
+    "ok": true
+   },
+   {
+    "point": "0.5U 1R-3R",
+    "min": 500,
+    "max": 2700,
+    "sampledLow": 976.5,
+    "sampledHigh": 1001.0,
+    "ok": true
+   },
+   {
+    "point": "H-V",
+    "min": null,
+    "max": 5000,
+    "sampledLow": 2286.0,
+    "sampledHigh": 2286.0,
+    "ok": true
+   },
+   {
+    "point": "H 4L",
+    "min": 135,
+    "max": null,
+    "sampledLow": 1133.0,
+    "sampledHigh": 1133.0,
+    "ok": true
+   },
+   {
+    "point": "H 8L",
+    "min": 64,
+    "max": null,
+    "sampledLow": 633.5,
+    "sampledHigh": 633.5,
+    "ok": true
+   },
+   {
+    "point": "0.6D 1.3R",
+    "min": 10000,
+    "max": null,
+    "sampledLow": 15230.4,
+    "sampledHigh": 15230.4,
+    "ok": true
+   },
+   {
+    "point": "0.86D V",
+    "min": 4500,
+    "max": null,
+    "sampledLow": 15860.5,
+    "sampledHigh": 15860.5,
+    "ok": true
+   },
+   {
+    "point": "0.86D 3.5L",
+    "min": 1800,
+    "max": 12000,
+    "sampledLow": 7107.4,
+    "sampledHigh": 7107.4,
+    "ok": true
+   },
+   {
+    "point": "1.5D 2R",
+    "min": 15000,
+    "max": null,
+    "sampledLow": 22736.0,
+    "sampledHigh": 22736.0,
+    "ok": true
+   },
+   {
+    "point": "2D 9L",
+    "min": 1250,
+    "max": null,
+    "sampledLow": 4212.0,
+    "sampledHigh": 4212.0,
+    "ok": true
+   },
+   {
+    "point": "2D 9R",
+    "min": 1250,
+    "max": null,
+    "sampledLow": 5108.0,
+    "sampledHigh": 5108.0,
+    "ok": true
+   },
+   {
+    "point": "2D 15L",
+    "min": 1000,
+    "max": null,
+    "sampledLow": 2046.0,
+    "sampledHigh": 2046.0,
+    "ok": true
+   },
+   {
+    "point": "2D 15R",
+    "min": 1000,
+    "max": null,
+    "sampledLow": 2054.0,
+    "sampledHigh": 2054.0,
+    "ok": true
+   },
+   {
+    "point": "4D V",
+    "min": null,
+    "max": 10000,
+    "sampledLow": 7480.0,
+    "sampledHigh": 7480.0,
+    "ok": true
+   },
+   {
+    "point": "4D 4R",
+    "min": null,
+    "max": 12500,
+    "sampledLow": 7072.0,
+    "sampledHigh": 7072.0,
+    "ok": true
+   },
+   {
+    "point": "4D 20L",
+    "min": 300,
+    "max": null,
+    "sampledLow": 756.0,
+    "sampledHigh": 756.0,
+    "ok": true
+   },
+   {
+    "point": "4D 20R",
+    "min": 300,
+    "max": null,
+    "sampledLow": 756.5,
+    "sampledHigh": 756.5,
+    "ok": true
+   }
+  ]
+ },
+ "high": {
+  "peakCd": 61376.0,
+  "peakAt": {
+   "hDeg": 0.0,
+   "vDeg": 0.0
+  },
+  "clampedNodes": 0,
+  "label": "FMVSS 108 Table XVIII, Upper beam #2 (UB2)",
+  "testPoints": [
+   {
+    "point": "2U V",
+    "min": 1500,
+    "max": null,
+    "sampledLow": 14272.0,
+    "sampledHigh": 14272.0,
+    "ok": true
+   },
+   {
+    "point": "1U 3L",
+    "min": 5000,
+    "max": null,
+    "sampledLow": 17760.0,
+    "sampledHigh": 17760.0,
+    "ok": true
+   },
+   {
+    "point": "1U 3R",
+    "min": 5000,
+    "max": null,
+    "sampledLow": 17760.0,
+    "sampledHigh": 17760.0,
+    "ok": true
+   },
+   {
+    "point": "H-V",
+    "min": 40000,
+    "max": 75000,
+    "sampledLow": 61376.0,
+    "sampledHigh": 61376.0,
+    "ok": true
+   },
+   {
+    "point": "H 3L",
+    "min": 15000,
+    "max": null,
+    "sampledLow": 25408.0,
+    "sampledHigh": 25408.0,
+    "ok": true
+   },
+   {
+    "point": "H 3R",
+    "min": 15000,
+    "max": null,
+    "sampledLow": 25408.0,
+    "sampledHigh": 25408.0,
+    "ok": true
+   },
+   {
+    "point": "H 6L",
+    "min": 5000,
+    "max": null,
+    "sampledLow": 10936.0,
+    "sampledHigh": 10936.0,
+    "ok": true
+   },
+   {
+    "point": "H 6R",
+    "min": 5000,
+    "max": null,
+    "sampledLow": 10936.0,
+    "sampledHigh": 10936.0,
+    "ok": true
+   },
+   {
+    "point": "H 9L",
+    "min": 3000,
+    "max": null,
+    "sampledLow": 6484.0,
+    "sampledHigh": 6484.0,
+    "ok": true
+   },
+   {
+    "point": "H 9R",
+    "min": 3000,
+    "max": null,
+    "sampledLow": 6484.0,
+    "sampledHigh": 6484.0,
+    "ok": true
+   },
+   {
+    "point": "H 12L",
+    "min": 1500,
+    "max": null,
+    "sampledLow": 3258.0,
+    "sampledHigh": 3258.0,
+    "ok": true
+   },
+   {
+    "point": "H 12R",
+    "min": 1500,
+    "max": null,
+    "sampledLow": 3258.0,
+    "sampledHigh": 3258.0,
+    "ok": true
+   },
+   {
+    "point": "1.5D V",
+    "min": 5000,
+    "max": null,
+    "sampledLow": 32224.0,
+    "sampledHigh": 32224.0,
+    "ok": true
+   },
+   {
+    "point": "1.5D 9L",
+    "min": 2000,
+    "max": null,
+    "sampledLow": 6608.0,
+    "sampledHigh": 6608.0,
+    "ok": true
+   },
+   {
+    "point": "1.5D 9R",
+    "min": 2000,
+    "max": null,
+    "sampledLow": 6608.0,
+    "sampledHigh": 6608.0,
+    "ok": true
+   },
+   {
+    "point": "2.5D V",
+    "min": 2500,
+    "max": null,
+    "sampledLow": 14528.0,
+    "sampledHigh": 14528.0,
+    "ok": true
+   },
+   {
+    "point": "2.5D 12L",
+    "min": 1000,
+    "max": null,
+    "sampledLow": 2906.0,
+    "sampledHigh": 2906.0,
+    "ok": true
+   },
+   {
+    "point": "2.5D 12R",
+    "min": 1000,
+    "max": null,
+    "sampledLow": 2906.0,
+    "sampledHigh": 2906.0,
+    "ok": true
+   },
+   {
+    "point": "4D V",
+    "min": null,
+    "max": 12000,
+    "sampledLow": 5872.0,
+    "sampledHigh": 5872.0,
+    "ok": true
+   }
+  ]
+ },
+ "sources": {
+  "testPoints": "FMVSS 108 (49 CFR 571.108), 2023 ed., Tables XIX-a (LB1V) and XVIII (UB2): https://www.govinfo.gov/content/pkg/CFR-2023-title49-vol6/pdf/CFR-2023-title49-vol6-sec571-108.pdf (plan 02, C6)",
+  "shape": "ASSUMED smooth lobes (scripts/make_beam.py). The UMTRI-2004-23 survey medians (plan 02, G4, https://hdl.handle.net/2027.42/55198) could not be fetched: the repository serves a browser challenge to scripts. Replace the lobes with the survey table when it can be read."
+ },
+ "builtBy": "scripts/make_beam.py"
+}
