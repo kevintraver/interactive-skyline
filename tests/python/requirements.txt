@@ -1,0 +1,11 @@
+# Python for the data pipelines (scripts/) and their tests: plan 01 sky, lights and weather, plan 02 the drive.
+# pnpm test:py installs these through uv; CI runs the same.
+pytest
+numpy
+requests
+pillow
+openexr
+scipy
+shapely
+pyproj
+h5py

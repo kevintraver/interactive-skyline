@@ -1,5 +1,5 @@
 """The rules of the corridor build (build_corridor.py): which buildings to keep, how high they are,
-and how their footprints are tidied. Pure functions, so tests/data/test_corridor.py can hold them.
+and how their footprints are tidied. Pure functions, so tests/python/test_corridor.py can hold them.
 
     t = building_type(tags, area)            # a TYPES code from lib.corridor_format
     h, rung = height_of(tags, area, overture_h)

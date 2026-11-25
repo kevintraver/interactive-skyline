@@ -3,11 +3,11 @@
 | Command | What | Where it runs |
 |---|---|---|
 | `pnpm test:unit` | Vitest: `src/core`, extrusion, the sky data readers and their committed files, cities.json shape, source hygiene, the landmark tool, upper bounds on hot code; the drive's frame, terrain and patches, road net, routes, journey, rig and cabin, signs, corridor, traffic, lights (beam, retroreflection, lamps, pools), screens, weather and UI formatting; the data credits (`credits.test.js`) | CI and locally |
-| `pnpm test:py` | pytest on the data pipelines in `scripts/` (`tests/python/`): parsers, encoders and the committed outputs against their sidecars, never the network; needs [uv](https://docs.astral.sh/uv/) | CI and locally |
-| `pnpm test:data` | pytest (through `uv`): the data pipeline's Python twins (frame, heights, roads, interchanges, roadside, barriers, routes, terrain patch, traffic, valley traffic, corridor and its overrides, billboards, lamp packing, beam maps) | CI and locally |
+| `pnpm test:py` | pytest (through [uv](https://docs.astral.sh/uv/), Python 3.12, `tests/python/requirements.txt`) on every data pipeline in `scripts/`, in one folder, `tests/python/`: plan 01's parsers, encoders and committed sky, star, lamp, night-light and aerosol outputs against their sidecars; the drive's Python twins (frame, heights, ground, roads, interchanges, layers, roadside, barriers, routes, terrain patch, traffic, valley traffic, corridor and its overrides, billboards, lamp packing, beam maps). Never the network. About 90 s (the first run also builds the environment) | CI and locally |
 | `pnpm test:e2e` | Playwright on SwiftShader, the map's project (`webgl2-software`, below): goldens, the `window.__skyline` contract, the buildless boot, the deterministic performance budgets | CI and locally |
-| `pnpm test:e2e:drive` | Playwright, Drive mode on SwiftShader (`drive-software`): about 40 minutes on a quiet machine | locally only |
-| `pnpm test:e2e:gpu` | the functional specs of `pnpm test:e2e` on this machine's GPU (`gpu-functional`): everything but the goldens, which are compared only on SwiftShader. One software frame of this app takes about 3 s on a quiet machine and far longer on a busy one, so this is the quick local run; it is not a substitute for `pnpm test:e2e` before a merge | locally only |
+| `pnpm test:e2e:gpu` | the functional browser specs on this machine's GPU: the map's (`gpu-functional`) and the drive's (`drive-gpu`), everything but the goldens, which are compared only on SwiftShader. The quick local run; not a substitute for `pnpm test:e2e` before a merge | locally only |
+| `pnpm test:e2e:drive` | Drive mode on this machine's GPU (`drive-gpu`), on the WebGPU backend: every drive spec, no goldens. About 20 minutes | locally only |
+| `pnpm test:e2e:drive:software` | Drive mode on SwiftShader (`drive-software`), the WebGL2 backend: the goldens, every route, the logarithmic depth buffer. About 30 minutes on a quiet machine (below) | locally; `drive-depth.spec.js` alone also in CI, not required |
 | `pnpm test` | `test:unit`, then `test:e2e` | |
 | `pnpm test:goldens:update` | rewrites the map goldens of this platform (`baseline.spec.js`) | locally |
 | `pnpm test:goldens:drive:update` | writes the drive goldens (`drive-*.png`) that differ or are missing, for this platform; never the map's | locally |
@@ -20,12 +20,33 @@
 
 The Playwright projects (`playwright.config.js`; every one serves the production build, `pnpm build && pnpm preview`):
 
-| Project | Specs | Notes |
+| Project | Specs | Where, and notes |
 |---|---|---|
-| `webgl2-software` | `baseline`, `hooks`, `interactions`, `buildless`, `perf.budgets` | the map on SwiftShader, 1280 x 800 |
-| `drive-software` | `drive.spec.js` (goldens), `drive-ui.spec.js` (route bar, picker, popovers, links), `drive-cabin.spec.js` (the cabin view, its instruments and inputs), `routes.spec.js` (each route and route switching) | after `webgl2-software` |
-| `drive-timing` | `drive.perf.spec.js` (the drive's own per-frame JavaScript) | on the GPU, through `pnpm test:perf:drive` |
+| `webgl2-software` | the map's: `baseline` (goldens), `hooks`, `interactions`, `buildless`, `perf.budgets`, and the other map specs | SwiftShader, 1280 x 800. CI and locally |
+| `gpu-functional` | the map's functional specs (all but goldens, timing and the drive's) | this machine's GPU, WebGL2 backend. Locally |
+| `drive-gpu` | every drive spec: `drive.spec.js` (motion, seeking, the reveal, an address, hiding a building, Map and back), `routes.spec.js` (each route opened cold, route switching and GPU memory), `drive-ui.spec.js` (route bar, picker, popovers, links, the phone layout), `drive-cabin.spec.js` (the cabin's depth, instruments, inputs, mirrors, rain on the glass), `drive-quality.spec.js` (the quality level held while driving), `drive-depth.spec.js` (a logarithmic depth buffer) | this machine's GPU, WebGPU backend (`drive-depth` asks for WebGL2). No goldens. Locally |
+| `drive-software` | `drive.spec.js` (with its canvas goldens), `routes.spec.js`, `drive-depth.spec.js` | SwiftShader, the WebGL2 backend. Locally (about 30 minutes: 6, 17 and 7); `drive-depth` also in CI as the `drive-depth-software` job, which does not block a merge. See below for what is left to the GPU and why |
+| `drive-timing` | `drive.perf.spec.js` (the drive's own per-frame JavaScript) | this machine's GPU, through `pnpm test:perf:drive` |
 | `gpu`, `software-timing` | `perf.timing.spec.js` | only through `pnpm test:perf` and `test:perf:software` |
+| `gpu-ab`, `webgpu-software` | plan 01's renderer comparisons and its software WebGPU run | see Phase 2 below |
+
+**The GPU projects need a browser that can reach the GPU.** On macOS a browser started from a sandboxed process (an
+agent's shell, for one) gets no GPU and falls back to SwiftShader without a word, and the run is then both slow and not
+what it claims. The drive's projects check the backend they got (`metadata.backend` in the config,
+`tests/helpers/drive.js` `expectBackend`) and fail at once if it is the wrong one.
+
+### Before a pull request
+
+On a quiet machine, from a shell that can reach the GPU (times on an Apple M4, 10 cores):
+
+| Command | About |
+|---|---|
+| `pnpm test:unit` | under a minute |
+| `pnpm test:py` | 1.5 minutes (the first run also builds its Python environment) |
+| `pnpm test:e2e:gpu` | the map's functional specs, then every drive spec (about 20 minutes of it) |
+| `pnpm test:perf:drive` | under a minute |
+| `pnpm test:e2e` | the map on SwiftShader, as CI runs it: hours on a busy machine (see `gpu-functional` above) |
+| `pnpm test:e2e:drive:software` | 30 minutes; needed when the drive's picture changes (its goldens) |
 
 ## Golden images
 
@@ -55,14 +76,26 @@ change the picture, and say so in the commit.
 
 ### Drive goldens
 
-`tests/e2e/drive.spec.js` compares the WebGL canvas only (no DOM) at five places on route `i15n` (`drive-km5`,
-`drive-km33`, `drive-reveal`, `drive-km62`, `drive-km62-day`) within 0.2 % of pixels, in the same folder and under the
-same per-platform rule as the map's. `pnpm test:goldens:drive:update` writes them; it never touches the map's. A
-SwiftShader frame of the drive takes seconds (a settled cabin frame draws the world four times, once for each mirror),
-so the drive specs have 15- and 30-minute timeouts, share one page per test, and run in a project of their own,
-`drive-software`, apart from the map suite (beside it they starve the render-on-demand budgets) and not in CI, whose
-job is 45 minutes. Run them on a quiet machine: with other software renderers busy on every core they time out. The
-drive's per-frame JavaScript is timed on the GPU in `drive-timing`, where a frame takes milliseconds.
+`tests/e2e/drive.spec.js` compares the canvas only (no DOM) at five places on route `i15n` (`drive-km5`, `drive-km33`,
+`drive-reveal`, `drive-km62`, `drive-km62-day`) within 0.2 % of pixels, in the same folder and under the same
+per-platform rule as the map's, and only in `drive-software` (on the GPU the same steps run and compare nothing).
+`pnpm test:goldens:drive:update` writes them; it never touches the map's. Plan 01's renderer keeps no drawing buffer, so
+a capture draws the frame once more and reads it in the same task (`window.__skyline.capture`).
+
+**SwiftShader and the drive.** On plan 01's renderer SwiftShader runs the WebGL2 backend with reversed depth (its
+ANGLE offers `EXT_clip_control`). On a quiet Apple M4 a settled drive frame takes about 5 s in the clean view and 13 s in
+the cabin (a paused cabin frame draws all three mirrors), the first frames 25 to 30 s while programs compile, and
+entering Drive about a minute. So `drive-software` takes what needs SwiftShader: the goldens (`drive.spec.js`), the
+state checks of every route (`routes.spec.js`), and the logarithmic depth buffer (`drive-depth.spec.js`, about 7 minutes).
+The controls (`drive-ui.spec.js`: state and DOM only, dozens of settled frames), the cabin (`drive-cabin.spec.js`: cabin
+frames, three captures per check) and the quality hold (`drive-quality.spec.js`: the governor acts only on frames under
+250 ms apart) run on the GPU only. Run `drive-software` on a quiet machine: with other software renderers busy on every
+core the drive's frames slow several times over.
+
+**A logarithmic depth buffer** is what three falls back to on WebGL2 without `EXT_clip_control`. No machine here lacks
+it, so `drive-depth.spec.js` hides the extension in an init script and compares the same places with reversed depth on
+the same backend: within 0.1 % of the frame, the upper half (the distance) included, with the cabin neither leaking the
+world nor clipped by its 0.1 m near plane.
 
 ## Performance (plan 01, section 8.7)
 
@@ -100,7 +133,13 @@ Two tiers.
 `perf.budgets.spec.js` also counts the frame loop's tiers in the app (paused: no frame; 1x: two a second), and
 `perf.timing.spec.js` times a scrub of the time of day (CPU per step, frame rate against the scene's own).
 
-## Data pipelines (plan 01, phase 4 data)
+## Data pipelines (plan 01, phase 4 data; plan 02's pipeline)
+
+All Python tests are in `tests/python/` with one dependency list (`tests/python/requirements.txt`) and one command,
+`pnpm test:py` (one CI step). Plan 02's drive pipeline tests joined plan 01's there from `tests/data/`; they hold the
+JavaScript twins to the Python ones on shared fixtures (`tests/fixtures/`, `tests/unit/*/fixtures/`), check every
+route's built data against the drawn ground (`test_ground.py`, with its exceptions in `ground_known.json`, empty), and
+read the committed outputs under `public/data/`.
 
 `pnpm test:py` reads the committed outputs of `scripts/build_stars.py`, `build_sky_textures.py` and
 `build_lights.py` and checks them against their sidecars and known sky and street facts. `build_nightlights.py` is
@@ -153,21 +192,24 @@ HRRR or NAM provide: values from the historical forecast are read from the fixtu
 (`tests/helpers/weatherRoutes.js` answers `/api/weather` with the real handler over the fixtures).
 ## Manual GPU scripts (`tests/manual/`)
 
-Not part of any suite: they render on this machine's GPU (about a second a frame) for looking at frames and measuring
-cost while building. Each serves from a running server (`pnpm exec vite --port <port> --strictPort`, or the production
-build with `pnpm preview`), takes an output directory outside the repository, and gives its usage in its header.
+Not part of any suite: they render on this machine's GPU (about a second a frame) for measuring the drive's light and
+looking at frames while building. Each serves from a running server (`pnpm exec vite --port <port> --strictPort`, or the
+production build with `pnpm preview`), takes an output directory outside the repository where it writes one, and gives
+its usage in its header. All of them pin the quality level before entering Drive: a level change on the WebGPU backend
+currently breaks every later frame (plan 01's shadow map is destroyed while bound). The probes print one line per
+quantity with PASS or FAIL, and their exit code is the verdict; run each on the WebGPU backend and once on the WebGL2
+one (`--backend webgl`).
 
 | Script | For |
 |---|---|
-| `drive-shots.mjs` | screenshots of the drive at chosen places and times; the model for the others |
-| `cabin-shots.mjs`, `cabin-phone-shots.mjs` | the same from the cabin, on desktop and on a phone |
-| `drive-ui-shots.mjs`, `routes-app-shots.mjs` | the drive's controls, and any route in the app with its interface |
-| `dusk-shots.mjs`, `dusk-scrub.mjs` | the look through dusk by sun elevation; scrubbing across sunset at 16x for jumps |
-| `headlights-shots.mjs`, `lamps-shots.mjs`, `polish-shots.mjs` | headlamps and retroreflection; street lamps; general review |
-| `traffic-shots.mjs`, `traffic-budget.mjs`, `traffic-lamps-budget.mjs`, `traffic-lamps-check.mjs` | traffic frames, the GPU cost of bodies and of lamps, ribbons and pools, and the lamps and ribbons drawn apart |
-| `valley-shots.mjs`, `valley-routes-shots.mjs` | the valley's ribbons and their frame budget; the routes' own carriageways in them |
-| `screens-shots.mjs`, `screens-probe.mjs` | screens and billboards; the Sphere's lit patch measured |
-| `rain-shots.mjs`, `rain-probe.mjs`, `rain-budget.mjs` | rain frames; road crops dry and wet; the weather part's GPU and JavaScript cost |
-| `roadnet.html`, `roadnet-lv.html`, `routes-lv.html`, `signs.html`, `corridor.html`, `vehicles-instancing.html` with their `*-shots.mjs` | dev pages for one layer alone: the road net, each route, the signs, the corridor's buildings, the instanced vehicle bodies |
+| `lights-probe.mjs` | the street lamps' pools and sprites, the low and high beam on the road and the guide signs' retroreflection, in cd/m² against the plan's pure functions (section 8.3) |
+| `screens-luminance.mjs` | the digital and floodlit billboard faces, the Sphere's light on a card (shown, hidden, moved) and the flash rate |
+| `rain-probe.mjs` | the wet road against its rules (dry: nothing added; heavy rain: the asphalt against `wetMirror.js`) |
+| `traffic-probe.mjs` | a tail lamp's light at the eye, the pool under an oncoming head lamp, a lane ribbon at 6 km |
+| `traffic-determinism.mjs` | a play and a seek to the same instant place the same vehicles |
+| `night-display.mjs` | the night look as displayed (the driver's adaptation, decision 13): the road in the beams and under lamps, lit windows, the Sphere, a board, in stops from mid-grey |
+| `drive-shots.mjs` | frames of the drive at chosen routes, places, times, views and rain; the model for the others |
+| `cabin-shots.mjs`, `rain-shots.mjs`, `screens-shots.mjs` | frames of the cabin (mirrors, windshield, rain on the glass), of the weather, and of the screens and billboards |
+| `traffic-smoke.mjs` | the traffic and valley parts' stats and a frame at a place and time |
 | `corridor-budget.mjs`, `cabin-check.mjs`, `vehicles-load.mjs` | in Node, no browser: the corridor's meshing budget over the real terrain; the cabin and vehicle GLBs checked against their sidecars |
 

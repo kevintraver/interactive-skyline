@@ -3,59 +3,66 @@
 // cabin/clean toggle leaving the pose and the time alone, every input of section 4.4 by mouse, touch and keyboard,
 // and the view in the address. Asserted on state and on pixel agreement within one frame, never on goldens.
 import { test, expect } from '@playwright/test';
-import { openCity, openAt, watchConsole, DRIVE_TIMEOUT } from '../helpers/drive.js';
+import { openCity, openAt, watchConsole, definePixels, DRIVE_TIMEOUT } from '../helpers/drive.js';
 
 test.describe.configure({ timeout: DRIVE_TIMEOUT });
 
 const run = (page, fn, arg) => page.evaluate(fn, arg);
 const pose = (page) => run(page, () => window.__skyline.drive.pose());
 const settled = (page) => run(page, async () => { await window.__skyline.drive.whenSettled(); return window.__skyline.drive.pose(); });
-const params = (page) => run(page, () => Object.fromEntries(new URLSearchParams(location.search)));
+/** The address's parameters, without `renderer` (the specs' own, see helpers/drive.js openAt). */
+const params = (page) => run(page, () => { const q = new URLSearchParams(location.search); q.delete('renderer'); return Object.fromEntries(q); });
 /** Everything pose() reports that the view may not change (the view itself, its lens and the eye it puts the camera at may). */
 const carOf = (p) => { const { view, lens, eye, ...rest } = p; return rest; };
 
 /**
- * In the page: the share of cabin pixels that the world shows through. The frame on the canvas is compared with the
- * cabin drawn alone over magenta, with the same camera; inside the cabin's silhouette (shrunk by a pixel, so the
- * antialiased rim does not count) the two must agree. A depth artefact (the world poking through the dashboard,
- * pillars or mirrors) makes them differ.
+ * In the page: the share of cabin pixels that the world shows through. On plan 01's renderer the cabin is drawn in the
+ * scene pass with the world, first, on the app's camera with a 0.1 m near plane (third stretch, decisions 3 and 7). The
+ * frame is compared with the car drawn alone (everything but the car and the lights hidden), twice, over two clear
+ * colours: the car's silhouette is where those two agree (shrunk by a pixel, so the antialiased rim does not count; the
+ * glass, which lets the clear colour through, is left out by the same rule). Inside it the frame must agree with the car
+ * alone. A depth artefact (the world poking through the dashboard, pillars or mirrors' housings) makes them differ. Bloom
+ * is off for the measurement (the world's halo over the dashboard is light, not depth), and the mirror faces are hidden
+ * (with the world hidden their stage draws an empty road).
  */
-const cabinLeak = (page) => run(page, async () => {
-  const s = window.__skyline, d = s.drive, r = s.renderer, cabin = d.cabin();
+const cabinLeak = (page) => definePixels(page).then(() => run(page, async () => {
+  const s = window.__skyline, d = s.drive, r = s.renderer, cabin = d.cabin(), car = cabin.car;
   await d.whenSettled();
   for (let i = 0; i < 2; i++) await new Promise((res) => requestAnimationFrame(res));
-  const canvas = document.getElementById('scene');
-  const grab = () => {
-    const c = Object.assign(document.createElement('canvas'), { width: canvas.width, height: canvas.height });
-    const g = c.getContext('2d');
-    g.drawImage(canvas, 0, 0);
-    return g.getImageData(0, 0, c.width, c.height).data;
-  };
-  const frame = grab();
+  const bloom = s.pipeline.settings.bloom;
+  s.pipeline.configure({ bloom: 0 });
+  const faces = Object.values(cabin.mirrors).map((m) => [m.mesh, m.mesh.visible]);
+  for (const [m] of faces) m.visible = false;
+  const frame = await window.__pixels();
+  const chain = new Set();
+  for (let o = car; o; o = o.parent) chain.add(o);
+  const hidden = [];
+  for (const o of chain) for (const c of o.parent ? o.parent.children : []) if (!chain.has(c) && !c.isLight && c.visible) { hidden.push(c); c.visible = false; }
   // a THREE.Color to keep the clear colour in, without importing three here: any light's colour is one
-  const old = { color: r.getClearColor(cabin.cabinScene.children.find((o) => o.isLight).color.clone()), alpha: r.getClearAlpha() };
+  const clear = r.getClearColor(s.scene.children.find((o) => o.isLight).color.clone());
+  const clearAlpha = r.getClearAlpha();
   r.setClearColor(0xff00ff, 1);
-  r.clear();
-  const auto = r.autoClear;
-  r.autoClear = false;
-  r.render(cabin.cabinScene, cabin.cabinCamera);
-  r.autoClear = auto;
-  const alone = grab();
-  r.setClearColor(old.color, old.alpha);
+  const alone = await window.__pixels();
+  r.setClearColor(0x00ff00, 1);
+  const other = await window.__pixels();
+  r.setClearColor(clear, clearAlpha);
+  for (const c of hidden) c.visible = true;
+  for (const [m, v] of faces) m.visible = v;
+  s.pipeline.configure({ bloom });
   s.invalidate();
-  const W = canvas.width, H = canvas.height;
-  const magenta = (i) => alone[i] > 240 && alone[i + 1] < 15 && alone[i + 2] > 240;
+  const W = s.renderer.domElement.width, H = s.renderer.domElement.height;
+  const same = (i) => alone[i] === other[i] && alone[i + 1] === other[i + 1] && alone[i + 2] === other[i + 2];
   let inside = 0, leaks = 0;
   for (let y = 1; y < H - 1; y++) {
     for (let x = 1; x < W - 1; x++) {
       const i = (y * W + x) * 4;
-      if (magenta(i) || magenta(i - 4) || magenta(i + 4) || magenta(i - W * 4) || magenta(i + W * 4)) continue;
+      if (!same(i) || !same(i - 4) || !same(i + 4) || !same(i - W * 4) || !same(i + W * 4)) continue;
       inside++;
       if (Math.abs(frame[i] - alone[i]) > 3 || Math.abs(frame[i + 1] - alone[i + 1]) > 3 || Math.abs(frame[i + 2] - alone[i + 2]) > 3) leaks++;
     }
   }
   return { inside: inside / ((W - 2) * (H - 2)), leaks: inside ? leaks / inside : 0, model: cabin.model };
-});
+}));
 
 test('lv drive cabin: depth, motion, instruments, toggle, inputs', async ({ page }) => {
   const problems = watchConsole(page);
@@ -78,7 +85,8 @@ test('lv drive cabin: depth, motion, instruments, toggle, inputs', async ({ page
       return {
         model: c.model, mirrors: Object.keys(c.mirrors), kinds: Object.values(c.mirrors).map((m) => m.kind),
         meshes: Object.values(c.mirrors).every((m) => m.mesh && m.mesh.isMesh), corner: pt(c.windshield.corners.topLeft),
-        near: c.cabinCamera.near, far: c.cabinCamera.far,
+        // one pass: the car is in the drive's scene group, drawn on the app's camera (no camera of its own)
+        near: window.__skyline.camera.near, inScene: !!c.car && c.car.parent?.parent === window.__skyline.scene, ownCamera: c.cabinCamera,
       };
     });
     expect(['low', 'high']).toContain(cabin.model);
@@ -86,7 +94,9 @@ test('lv drive cabin: depth, motion, instruments, toggle, inputs', async ({ page
     expect(cabin.kinds).toEqual(['flat', 'convex', 'flat']);
     expect(cabin.meshes).toBe(true);
     expect(cabin.corner).toEqual([-0.4025, 1.44, -0.68]);
-    expect([cabin.near, cabin.far]).toEqual([0.05, 6]);
+    expect(cabin.near).toBe(0.1); // src/drive/session.js NEAR_M
+    expect(cabin.inScene).toBe(true);
+    expect(cabin.ownCamera).toBe(null);
   });
 
   await test.step('no depth artefacts between cabin and world over a look sweep of +/-150 degrees', async () => {
@@ -113,11 +123,14 @@ test('lv drive cabin: depth, motion, instruments, toggle, inputs', async ({ page
     expect(ft.r.unit).toBe('mph');
     expect(Math.abs(+ft.r.speed - ft.mph)).toBeLessThanOrEqual(1);
     expect(ft.r.clock).toBe(ft.clock);
-    expect(ft.r.temp).toBe(null); // the environment has no temperature today
+    // plan 01's weather gives the air temperature (the classic renderer's environment had none, and showed nothing)
+    expect(ft.r.temp).toMatch(/^-?\d+°F$/);
     expect(ft.r.next).toMatch(/^Exit /);
     const m = await read('m');
     expect(m.r.unit).toBe('km/h');
     expect(Math.abs(+m.r.speed - m.kmh)).toBeLessThanOrEqual(1);
+    expect(m.r.temp).toMatch(/^-?\d+°C$/);
+    expect(Math.abs((parseInt(ft.r.temp, 10) - 32) / 1.8 - parseInt(m.r.temp, 10))).toBeLessThanOrEqual(1);
     await read('ft');
   });
 
@@ -289,7 +302,7 @@ test('lv drive cabin: mirrors show the road behind on the correct side; settled 
     await d.whenSettled();
     const found = {};
     for (const name of ['left', 'right', 'center']) {
-      const img = g.read(name);
+      const img = await g.read(name); // linear, scene-referred floats
       let n = 0, sx = 0;
       for (let i = 0; i < img.width * img.height; i++) {
         const R = img.data[4 * i], G = img.data[4 * i + 1], B = img.data[4 * i + 2];
@@ -345,10 +358,11 @@ test('lv drive cabin: mirrors show the road behind on the correct side; settled 
     }
   });
 
-  await test.step('the windshield is a layer of the cabin pass; the clean camera draws neither glass nor mirrors', async () => {
+  await test.step('the windshield is a mesh of the car; the clean camera draws neither glass nor mirrors', async () => {
     const r = await run(page, async () => {
       const d = window.__skyline.drive, c = d.cabin(), g = c.glass;
-      const inCabin = g.windshield.mesh.parent === c.cabinScene;
+      let inCabin = false;
+      for (let o = g.windshield.mesh; o; o = o.parent) if (o === c.car) inCabin = true;
       const before = g.mirrors.frame;
       d.setView('clean');
       d.seek({ s: d.pose().s + 5 });
@@ -382,32 +396,32 @@ test('lv drive cabin: rain on the glass is the same at the same time; dry leaves
   }, NIGHT);
 
   /** In the page: set the rain, go to (s, t), settle, and read the canvas over the windshield opening. */
-  const glassPixels = (at) => run(page, async ({ s, t, rain, glass }) => {
+  const glassPixels = (at) => definePixels(page).then(() => run(page, async ({ s, t, rain, glass }) => {
     const sk = window.__skyline, d = sk.drive, c = d.cabin();
     let weather = null;
     sk.scene.traverse((o) => { if (o.userData?.weatherPart) weather = o.userData.weatherPart; });
     weather.setRain(rain);
+    await weather.whenApplied(); // plan 01's weather takes the shorthand asynchronously
     c.glass.rain.setEnabled(glass !== false);
     d.seek({ s, t });
     await d.whenSettled();
     sk.invalidate();
     for (let i = 0; i < 3; i++) await new Promise((r) => requestAnimationFrame(r));
     const canvas = document.getElementById('scene');
-    // the opening's box on the canvas, through the cabin camera
-    const cam = c.cabinCamera, xs = [], ys = [];
+    // the opening's box on the canvas: cabin coordinates through the car's matrix and the app's camera, which draws it
+    const cam = sk.camera, xs = [], ys = [];
     for (const k of ['bottomLeft', 'bottomRight', 'topRight', 'topLeft']) {
-      const q = c.windshield.corners[k].clone().applyMatrix4(cam.matrixWorldInverse).applyMatrix4(cam.projectionMatrix);
+      const q = c.windshield.corners[k].clone().applyMatrix4(c.car.matrixWorld).applyMatrix4(cam.matrixWorldInverse).applyMatrix4(cam.projectionMatrix);
       xs.push(((q.x + 1) / 2) * canvas.width); ys.push(((1 - q.y) / 2) * canvas.height);
     }
     const x0 = Math.max(0, Math.floor(Math.min(...xs))), y0 = Math.max(0, Math.floor(Math.min(...ys)));
     const x1 = Math.min(canvas.width, Math.ceil(Math.max(...xs))), y1 = Math.min(canvas.height, Math.ceil(Math.max(...ys)));
-    const tmp = Object.assign(document.createElement('canvas'), { width: canvas.width, height: canvas.height });
-    const g = tmp.getContext('2d');
-    g.drawImage(canvas, 0, 0);
-    const data = Array.from(g.getImageData(x0, y0, x1 - x0, y1 - y0).data);
+    const all = await window.__pixels();
+    const data = [];
+    for (let y = y0; y < y1; y++) for (let i = (y * canvas.width + x0) * 4; i < (y * canvas.width + x1) * 4; i++) data.push(all[i]);
     const st = c.glass.rain.state();
-    return { data, box: [x0, y0, x1, y1], mode: st.mode, angle: st.angle, dropCount: st.dropCount, visible: c.glass.rain.meshes.map((m) => m.visible) };
-  }, at);
+    return { data, box: [x0, y0, x1, y1], mode: st.mode, angle: st.angle, dropCount: st.dropCount, raining: c.glass.rain.raining };
+  }, at));
   /** Share of pixels that differ by more than `tol` in any channel. */
   const differ = (a, b, tol = 2) => {
     expect(a.box).toEqual(b.box);
@@ -423,7 +437,7 @@ test('lv drive cabin: rain on the glass is the same at the same time; dry leaves
     const a = await glassPixels(here);
     expect(a.mode).toBe('high');
     expect(a.dropCount).toBeGreaterThan(100);
-    expect(a.visible).toEqual([true, true, true]);
+    expect(a.raining).toBe(true);
     await glassPixels({ ...here, s: 47000, t: here.t + 600000 }); // away, forward
     const b = await glassPixels(here);
     expect(b.angle).toBe(a.angle);
@@ -441,7 +455,7 @@ test('lv drive cabin: rain on the glass is the same at the same time; dry leaves
     const dry = await glassPixels({ ...here, rain: 0 });
     expect(dry.mode).toBe('off');
     expect(dry.dropCount).toBe(0);
-    expect(dry.visible).toEqual([false, false, false]);
+    expect(dry.raining).toBe(false); // the layer draws nothing (on plan 01's renderer a uniform, not the meshes' visibility)
     const without = await glassPixels({ ...here, rain: 0, glass: false });
     expect(differ(dry, without, 0)).toBe(0);
     await glassPixels({ ...here, rain: 0, glass: true });

@@ -21,7 +21,7 @@ KINDS = ["pavement_main", "pavement_ramp", "pavement_crossing", "embankment_main
          "embankment_crossing", "end_ramp", "end_crossing", "pier_foot", "pier_buried", "abutment_toe", "sign_post",
          "sign_buried", "sign_column", "delineator_hang", "delineator_buried", "wall_base", "billboard_hang",
          "billboard_buried", "pole_hang", "building_hang"]
-# Items still over tolerance, each kind with why (tests/data/ground_known.json): no more of them, none worse, and none
+# Items still over tolerance, each kind with why (tests/python/ground_known.json): no more of them, none worse, and none
 # other. It is empty: each item is fixed at its cause rather than recorded here.
 KNOWN = json.loads((Path(__file__).with_name("ground_known.json")).read_text())
 

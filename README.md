@@ -205,7 +205,7 @@ They write `public/models/drive/cabin.glb`, `cabin-low.glb`, `cabin.json`, `vehi
 
 ## Tests
 
-`pnpm test` runs the unit tests and the browser suites; `pnpm test:data` tests the Python pipeline. What each command covers, the golden images, the performance budgets and the manual screenshot scripts are in [tests/README.md](tests/README.md).
+`pnpm test` runs the unit tests and the map's browser suite; `pnpm test:py` tests the Python data pipelines; `pnpm test:e2e:gpu` runs the functional browser specs, Drive mode's included, on this machine's GPU. What each command covers, where it runs, the golden images, the performance budgets and the manual screenshot scripts are in [tests/README.md](tests/README.md).
 
 ## Hand-modelled landmarks
 

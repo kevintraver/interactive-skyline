@@ -1,7 +1,7 @@
 """RoadNet v1 writer and reader, the Python twin of src/drive/roadnet/format.js.
 
 The specification is the comment at the top of format.js. encode_roadnet() must give the same
-bytes as encodeRoadNet() for the same input, and the same JSON document; tests/data and
+bytes as encodeRoadNet() for the same input, and the same JSON document; tests/python and
 tests/unit/roadnet-parity.test.js hold the two together.
 
     doc, blob = encode_roadnet({"source": {...}, "roads": [road, ...]})

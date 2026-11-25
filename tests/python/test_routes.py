@@ -206,7 +206,7 @@ def test_each_carriageway_runs_on_beyond_both_ends_as_scenery(rid):
         for which in ("in", "out"):
             info = leads[f"{cw}.{which}"]
             assert info["built"] and info["buried_below_envelope_m"] == 0 and info["eased_m"] < 0.5, info
-            # the leads are built before the interchanges, which clear them (tests/data/test_layers.py): no lead has to
+            # the leads are built before the interchanges, which clear them (tests/python/test_layers.py): no lead has to
             # dip under a crossing road
             assert "under_crossing" not in info, info
     # the US-93 deck runs on to the Arizona side: the lead-in starts on land and is a held deck where it meets the route

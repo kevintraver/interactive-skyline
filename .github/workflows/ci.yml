@@ -1,4 +1,5 @@
-# Unit tests, the deterministic performance budgets, and the app in software WebGL2 (plan 01, T0.1 and T0.8).
+# Unit tests, the Python data pipelines' tests, the deterministic performance budgets, and the map in software WebGL2
+# (plan 01, T0.1 and T0.8); Drive mode's logarithmic depth buffer on SwiftShader as a job that does not block.
 # Golden images are compared only where a snapshot for the runner's platform is committed; until Linux goldens
 # exist (run the "linux-goldens" job by hand and commit its artifact, see tests/README.md) the baseline spec
 # renders every scene and checks for errors but compares nothing.
@@ -32,9 +33,8 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm test:unit
       - uses: astral-sh/setup-uv@v10.4.0
+      # every data pipeline's tests, plan 01's and the drive's, in one folder (tests/python, its requirements.txt)
       - run: pnpm test:py
-      # the drive's data pipeline tests (pytest, through uv; tests/data/requirements.txt)
-      - run: pnpm test:data
       - run: pnpm exec playwright install --with-deps chromium
       - run: pnpm test:e2e
         env:
@@ -67,6 +67,38 @@ jobs:
       - run: pnpm test:webgpu
         env:
           CI: '1'
+
+  # Drive mode on SwiftShader, as far as a runner can take it. The drive's unit and Python tests are in `test` above. Its
+  # browser specs are not: on a 10-core Apple M4 the drive-software project takes about 30 minutes (a settled drive
+  # frame 5 to 13 s, entering Drive about a minute), several times that on a 4-core runner, beside the map suite's own
+  # share of `test`'s 45 minutes; and its goldens are macOS-only. The one drive spec run here is the logarithmic depth
+  # buffer (drive-depth.spec.js, about 7 minutes on the M4): what a visitor on WebGL2 without EXT_clip_control gets, the
+  # one configuration no development machine draws without forcing it. Not required: its time on a runner is not yet
+  # known. The rest of the drive runs locally (tests/README.md: pnpm test:e2e:drive, test:e2e:drive:software).
+  drive-depth-software:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm exec playwright install --with-deps chromium
+      - run: pnpm exec playwright test --project=drive-software drive-depth
+        env:
+          CI: '1'
+      - if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: drive-depth-report
+          path: |
+            playwright-report/
+            test-results/
+          retention-days: 14
 
   linux-goldens:
     if: ${{ github.event_name == 'workflow_dispatch' && inputs.linux_goldens }}

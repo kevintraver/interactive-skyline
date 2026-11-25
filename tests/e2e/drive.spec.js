@@ -5,6 +5,7 @@
 // the road and the sight lines, so they ask for the clean camera (no car); the cabin has drive-cabin.spec.js.
 import { test, expect } from '@playwright/test';
 import { openCity, openAt, captureCanvas, expectGolden, watchConsole, keepPixels, pixelsDiffer, DRIVE_TIMEOUT } from '../helpers/drive.js';
+import { SHOW_TIME } from '../helpers/app.js';
 
 const ROUTE = 'i15n';
 const STRAT = 'w135457469';
@@ -139,6 +140,17 @@ test('lv drive: opened from an address, goldens, and hiding the Sphere', async (
 test('lv drive: the mode switch, and leaving restores the map exactly', async ({ page }) => {
   const problems = watchConsole(page);
   await openCity(page, 'lv');
+  // Plan 01's pinned look carries no atmospheric medium until its weather code has loaded, and the clear weather's medium
+  // after (src/env/environment.js build()), which hazes the distance. Drive loads that code (it enters the clock state),
+  // so load it first, as any visit to the clock state would, and compare the map with itself.
+  await page.evaluate(async () => {
+    const { env } = window.__skyline;
+    env.enterClock();
+    for (let i = 0; i < 600 && !env.state?.medium; i++) { window.__skyline.invalidate(); await new Promise((r) => setTimeout(r, 50)); }
+    env.pin(false);
+    window.__skyline.invalidate();
+  });
+  expect(await page.evaluate(() => !!window.__skyline.env.state?.medium), 'plan 01\'s weather loaded').toBe(true);
   const before = await page.evaluate(() => ({ stored: localStorage.getItem('slc-skyline-settings'), settings: { ...window.__skyline.settings } }));
   await keepPixels(page, 'map');
   await page.getByRole('button', { name: 'Drive', exact: true }).click();
@@ -148,11 +160,13 @@ test('lv drive: the mode switch, and leaving restores the map exactly', async ({
   });
   const inDrive = await page.evaluate(() => ({
     mode: new URLSearchParams(location.search).get('mode'), night: window.__skyline.drive.pose().night,
-    theme: document.documentElement.dataset.theme, nightBtn: document.getElementById('night').hidden,
+    theme: document.documentElement.dataset.theme, appNight: window.__skyline.env.night, nightBtn: document.getElementById('night').hidden,
     views: document.querySelector('.views').hidden, transport: !document.getElementById('drivebar').hidden,
   }));
-  // the default moment starts 70 s before the reveal, in civil twilight: the night look, a dark interface
-  expect(inDrive).toEqual({ mode: 'drive', night: true, theme: 'dark', nightBtn: true, views: true, transport: true });
+  // The default moment starts 70 s before the reveal, in civil twilight (the sun about 3 degrees down): the drive's
+  // night look. The interface's theme is plan 01's in its clock state, which Drive enters: dark once the sun is 6
+  // degrees down (src/env/environment.js NIGHT_BELOW_DEG), so still light here.
+  expect(inDrive).toEqual({ mode: 'drive', night: true, theme: 'light', appNight: false, nightBtn: true, views: true, transport: true });
   await page.keyboard.press(' ');
   expect(await page.evaluate(() => window.__skyline.drive.pose().playing)).toBe(false);
 
@@ -163,7 +177,14 @@ test('lv drive: the mode switch, and leaving restores the map exactly', async ({
     theme: document.documentElement.dataset.theme,
   }));
   expect(after).toEqual({ ...before, mode: null, active: false, theme: 'light' });
-  // the map's own frame, as it was before Drive (a few pixels of SwiftShader noise allowed)
+  // the map's own frame, as it was before Drive (a few pixels of SwiftShader noise allowed). Leaving Drive gives the map
+  // its show clocks back running (src/drive/screens/index.js release(): attractions.freeze(null), on the first animation
+  // frame after leaving), which also lets go of the hold openAt() put on them; hold them again at the same second once
+  // that has happened (a visitor's map simply runs them).
+  await page.evaluate(async (at) => {
+    for (let i = 0; i < 2; i++) await new Promise((r) => requestAnimationFrame(r));
+    window.__skyline.attractions.freeze(at);
+  }, SHOW_TIME);
   await keepPixels(page, 'back');
   expect(await pixelsDiffer(page, 'map', 'back')).toBeLessThan(0.002);
   expect(problems).toEqual([]);

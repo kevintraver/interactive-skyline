@@ -1,6 +1,6 @@
-"""Writes the three-station TMAS fixture used by tests/data/test_traffic.py.
+"""Writes the three-station TMAS fixture used by tests/python/test_traffic.py.
 
-Run from the repository root: python3 tests/data/fixtures/traffic/make_fixture.py
+Run from the repository root: python3 tests/python/fixtures/traffic/make_fixture.py
 
 Stations (TMAS ids; TRINA ids carry a leading zero):
   000001  rural, 2 lanes each way, counted two weeks in every season; one northbound day (Jan 13)

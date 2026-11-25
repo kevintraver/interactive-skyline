@@ -1,6 +1,6 @@
 """Billboards beside the drive's roads (plan 02, D7.4): records from three sources, merged, placed and faced.
 
-Pure functions; scripts/build_billboards.py reads the files and writes the product. tests/data/test_billboards.py
+Pure functions; scripts/build_billboards.py reads the files and writes the product. tests/python/test_billboards.py
 tests them on fixtures.
 
     recs = osm_records(overpass_json, to_local) + clv_records(geojson, to_local) + clark_records(geojson, to_local)

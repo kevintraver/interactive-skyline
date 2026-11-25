@@ -4,7 +4,7 @@ Vitest (interchange-parity.test.js) checks the JavaScript writer gives the same 
 test_interchanges.py checks the Python writer still does.
 
     node -e "import('./tests/unit/roadnet/interchange-fixture.js').then(m => process.stdout.write(JSON.stringify(m.interchangeInput())))" > /tmp/in.json
-    uv run --with numpy python tests/data/make_interchange_parity.py /tmp/in.json
+    uv run --with numpy python tests/python/make_interchange_parity.py /tmp/in.json
 """
 import base64
 import json
