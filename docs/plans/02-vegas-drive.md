@@ -166,10 +166,10 @@ The owner asked again for the build to be driven to completion, and for bugs to 
 **The path to the pull request (owner, 2026-11-24).** The owner asked to leave the VIIRS fit (D7.1, D7.2) aside, confirmed this path, and asked for a pull request when it is done:
 
 1. The wet road, rain and spray; traffic and the valley's ribbons; the night look (decision 13). Done.
-2. The closing pass: Drive opens on the new renderer; the quality level is held while driving so the WebGPU fault of a quality change cannot be triggered; the drive's browser specs pass on the new renderer, including on a logarithmic depth buffer (the cabin's fallback where reversed depth is refused).
-3. The GLSL path, the stand-ins and the interim seams are deleted, and the `.node` suffix with them; `tests/data` joins `tests/python` under one command.
-4. The billboards' lettering in several layouts (the text-free artwork was lost with the scratchpad in a restart, so it is generated again and this time kept in the repository).
-5. The orchestrator's final check, goldens and budgets, the README, then the pull request.
+2. Done. The closing pass: Drive opens on the new renderer; the quality level is held while driving so the WebGPU fault of a quality change cannot be triggered; the drive's browser specs pass on the new renderer, including on a logarithmic depth buffer (the cabin's fallback where reversed depth is refused).
+3. Done. The GLSL path, the stand-ins and the interim seams are deleted, and the `.node` suffix with them; `tests/data` joins `tests/python` under one command.
+4. Done. The billboards' lettering in several layouts (the text-free artwork was lost with the scratchpad in a restart, so it is generated again and this time kept in the repository).
+5. The orchestrator's final check, goldens and budgets, the README, then the pull request. Done on 2026-11-24: pull request 5 of `kevintraver/interactive-skyline`, stacked on `t3/sky-weather-integration`. On the final tree: unit 1,737, Python 349, the drive's browser specs 14 of 14 on the GPU and 3 of 3 on the software renderer with their goldens recorded again, the budget file recorded again (13 of 14; `frame loop tiers` fails on the base branch alike).
 
 Left out of this branch: the frame-rate work at device pixel ratio 2 beyond one measurement (plan 01's quality governor owns the render scale); a separate pass over the controls by real input (the drive's interface spec covers it); merges of plan 01 beyond its small commits (its phase 3 is the next merge).
 
