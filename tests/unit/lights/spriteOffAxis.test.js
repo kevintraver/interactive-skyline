@@ -1,6 +1,6 @@
 // A light sprite off the screen's centre must still carry the lamp's illuminance at the eye (plan 02, 8.4: sprite flux
 // within 5 %). A pixel at angle t from the camera's axis subtends pa^2 cos^3(t) on a flat image plane, not pa^2; the
-// node sprite layer (sprites.node.js) sizes and fills a sprite with pixelAngleOffAxis. Found by tests/manual/lights-probe.mjs
+// node sprite layer (sprites.js) sizes and fills a sprite with pixelAngleOffAxis. Found by tests/manual/lights-probe.mjs
 // (2026-11-24): a lamp 18 degrees off axis returned 0.859 of I / d^2, cos^3 of its angle to four digits.
 import { describe, it, expect } from 'vitest';
 import { spriteRule, profileAt } from '../../../src/drive/lights/spriteMirror.js';

@@ -2,8 +2,8 @@
 // digital face rotates through them, and the loading of the packed atlas. Pure functions but the last.
 //
 // The images are fictional 1990s advertisements, public/textures/billboards/manifest.json, packed by
-// scripts/pack_billboards.py into atlas-high.webp (desktops) or atlas-low.webp (the devices that get the low cabin
-// model, vehicle/cabin.js chooseCabinModel) and atlas.json: each image's rectangle in either atlas, inside a gutter
+// scripts/pack_billboards.py into atlas-high.webp or atlas-low.webp (on app.quality's Low: billboards.js DETAIL) and
+// atlas.json: each image's rectangle in either atlas, inside a gutter
 // of its own repeated edge texels, and its mean colour (linear, computed once by the script).
 //
 // Choice. A face takes the kind of image nearer its own shape (bulletin 1024 x 300, poster 768 x 384, by the

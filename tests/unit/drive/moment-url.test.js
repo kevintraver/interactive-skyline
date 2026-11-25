@@ -1,13 +1,17 @@
 import { describe, it, expect } from 'vitest';
 import { defaultDeparture } from '../../../src/drive/moment.js';
 import { createEnv, localDate } from '../../../src/drive/env.js';
+import { createSimClock } from '../../../src/sim/clock.js';
+import { createEphemeris } from '../../../src/sky/ephemeris.js';
 import { createJourney } from '../../../src/drive/journey.js';
 import { encodeDriveState, decodeDriveState, clearDriveState } from '../../../src/drive/url.js';
 import { fixture, LV } from './helpers.js';
 
 describe('defaultDeparture', () => {
   const { route, road, frame } = fixture();
-  const env = createEnv({ city: LV });
+  const clock = createSimClock({ zone: LV.tz, timeMs: Date.parse('2026-11-21T20:00:00Z') });
+  const ephemeris = createEphemeris({ lat: LV.origin.lat, lon: LV.origin.lon, elevationM: 610 });
+  const env = createEnv({ city: LV, app: { clock, env: { state: null, ephemeris, nodes: {} } } });
   const opts = { route: route('test'), road: road('test.main'), frame };
 
   it.each(['2026-11-21T20:00:00Z', '2026-06-21T18:00:00Z', '2026-03-09T07:30:00Z'])(

@@ -1,6 +1,5 @@
-// Vehicle lamps as light sprites (plan 02, D6.4): the work both renderers share. lampLayer.js (the classic renderer,
-// lights/sprites.js) and lampLayer.node.js (plan 01's, lights/sprites.node.js) hand this their sprite layer's factory;
-// what is written is here once (plan 02, third stretch, decision 2: pure logic is shared, not copied).
+// Vehicle lamps as light sprites (plan 02, D6.4): the work. lampLayer.js hands this the sprite layer's factory
+// (lights/sprites.js).
 //
 // One sprite layer holding every lamp of every vehicle out to the sprite range, rewritten each frame. Photometry and
 // switching: lamps.js.
@@ -11,12 +10,12 @@
 // lamps are then weighted by spriteWeight (lamps.js): whole within the sprite range less its band, falling to 0
 // at its end, where the ribbons (ribbon.js) take over with the complementary weight.
 //
-// Per lamp: position from the body's lamp positions (vehicles.json, as render.js reads them), facing as its axis,
+// Per lamp: position from the body's lamp positions (vehicles.json, as renderCore.js reads them), facing as its axis,
 // intensity in candela x the vehicle's opacity (dissolve, ramps, the car's slot) x the weights above, a lobe
 // pattern, its colour, the lens diameter, and the vehicle's switch-on threshold (lux; the shader compares it with
 // the ambient illuminance). A lamp facing away from the eye (its lobe is zero there) is not written. Brake lamps
 // (the stop sprites on the tail lamps and the high stop lamp) are listed while the vehicle's speed falls.
-// Only the rows in use are uploaded (sprites.js commitRows).
+// Only the rows in use are written (sprites.js commitRows).
 // Cost: beyond mergeDist (where a lamp pair's spacing is about a pixel with the current lens) a vehicle's pairs are
 // one sprite each at their middle carrying both lamps' light (head, tail, stop; a truck's front and rear marker
 // groups), and its side-facing markers are left out; nearer, a marker seen almost edge on (its lobe under
@@ -24,15 +23,12 @@
 
 import { BODY_NAMES } from './fleet.js';
 import * as LAMPS from './lamps.js';
-import { WHITEN } from './lightData.js';
 
 // local bindings: the hot loop calls plain functions, not module-namespace getters (see demand.js)
 const { LAMP_CD, LOBE, LENS_M, LAMP_RGB, vehicleThresholdLux, spriteWeight } = LAMPS;
 
 export const CAPACITY = 16384;
 export const NEAR_BAND_M = 60;
-/** Share of a clipping lamp's excess drawn as white (sprites.js `whiten`). ASSUMED, by eye: red stays red. */
-export { WHITEN };
 /** A marker lamp seen at more than acos(MARKER_COS) from its axis is not drawn (under a tenth of its light). */
 const MARKER_COS = 0.1;
 const smooth = (x) => (x <= 0 ? 0 : x >= 1 ? 1 : x * x * (3 - 2 * x));
@@ -78,12 +74,10 @@ function templateOf(spec, pat, merged = false) {
 
 /**
  * @param {{ parent: THREE.Object3D, sidecar: object, capacity?: number, createSpriteLayer: Function, layerOptions?: object }} opts
- *   sidecar: vehicles.json; createSpriteLayer: lights/sprites.js's or lights/sprites.node.js's; layerOptions: more of
- *   its options (the node layer's photometry)
+ *   sidecar: vehicles.json; createSpriteLayer: lights/sprites.js's; layerOptions: more of its options (photometry)
  */
 export function createLampLayerWith({ parent, sidecar, capacity = CAPACITY, createSpriteLayer, layerOptions = {} }) {
-  // whiten 0.2: a red tail lamp keeps its red core (the street lamps' full whitening turns every red lamp white)
-  const layer = createSpriteLayer({ capacity, name: 'vehicle-lamps', minPx: 1.5, halo: 0.01, renderOrder: 11, whiten: WHITEN, reflect: true, ...layerOptions }); // reflect: twins on wet pavement (weather)
+  const layer = createSpriteLayer({ capacity, name: 'vehicle-lamps', minPx: 1.5, halo: 0.01, renderOrder: 11, reflect: true, ...layerOptions }); // reflect: twins on wet pavement (weather)
   const pat = {
     head: layer.definePattern({ kind: 'lobe', exponent: LOBE.head }),
     tail: layer.definePattern({ kind: 'lobe', exponent: LOBE.tail }),

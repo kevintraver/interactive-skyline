@@ -1,11 +1,10 @@
-// The `valley` drive part (plan 02, D6.6): the work both renderers share, with no shader in it. valley.js (GLSL, the
-// classic renderer) and valley.node.js (TSL, plan 01's) each hand this their material, the way they make a uniform
-// and the unit of uGain; the part itself (data, geometry, route, hour of week, switching) is here once (plan 02, third
-// stretch, decision 2: pure logic is shared, not copied). valley.js's header describes the part.
+// The `valley` drive part (plan 02, D6.6): the work, with no shader in it. valley.js hands this its material and
+// the way it makes a uniform; the part itself (data, geometry, route, hour of week, switching) is here. valley.js's
+// header describes the part.
 //
-// Detail by plan 01's quality level (decision 8), on plan 01's renderer only (`quality`): VALLEY_CLASSES names the road
-// classes drawn per level. Low leaves out the secondary roads (the dimmest ribbons: 1,159 of the 2,576 pieces in Las Vegas);
-// High and Ultra draw them all, as the classic renderer does.
+// Detail by plan 01's quality level (decision 8, `quality`): VALLEY_CLASSES names the road classes drawn per level. Low
+// leaves out the secondary roads (the dimmest ribbons: 1,159 of the 2,576 pieces in Las Vegas); High and Ultra draw them
+// all.
 
 import * as THREE from 'three';
 import { curveDrop } from '../../world/frame.js';
@@ -18,7 +17,7 @@ import { createTimings } from '../timing.js';
 export const NEAR_M = [350, 1200];
 /** Narrowest strip on the screen, pixels. */
 export const MIN_PX = 1.5;
-/** With the transparent lights, just before the light sprites (sprites.js, renderOrder 10). */
+/** With the transparent lights, just before the light sprites (lights/sprites.js, renderOrder 10). */
 const RENDER_ORDER = 9;
 /** Road classes drawn by plan 01's quality level (valley.json `classes`). */
 export const VALLEY_CLASSES = Object.freeze({
@@ -44,14 +43,13 @@ export function classRuns(data, level) {
 
 /**
  * @param {object} ctx the part context (parts.js)
- * @param {{ uniform: (value: *) => { value: * }, unit: number, material: (uniforms: object, shapes: THREE.DataTexture) => THREE.Material,
- *   fade?: (look: object) => number, liveFade?: (() => number) | null, minFade?: number, quality?: object | null }} o
- *   uniform: makes a uniform holding `value`; unit: uGain per unit of fade (the classic scene units per cd/m^2, or 1
- *   where the material carries the light scale); fade: the look's fade (default its `lights`); liveFade: the fade
- *   read each frame instead (plan 01's shipped look: the vehicles' lit share at the ambient light of the moment);
- *   minFade: drawn only above this fade (0); quality: plan 01's app.quality (detail by level), null on the classic renderer
+ * @param {{ uniform: (value: *) => { value: * }, material: (uniforms: object, shapes: THREE.DataTexture) => THREE.Material,
+ *   fade: () => number, minFade?: number, quality?: object | null }} o
+ *   uniform: makes a uniform holding `value`; fade: read each frame (the vehicles' lit share at the ambient light of the
+ *   moment), uGain is it (the material carries the light scale); minFade: drawn only above this fade (0); quality:
+ *   plan 01's app.quality (detail by level)
  */
-export async function createValleyPartWith(ctx, { uniform, unit, material: makeMaterial, fade: fadeOf, liveFade = null, minFade = 0, quality = null }) {
+export async function createValleyPartWith(ctx, { uniform, material: makeMaterial, fade: fadeNow, minFade = 0, quality = null }) {
   const doc = await ctx.optional('traffic/valley.json');
   if (!doc) return null;
   const buffer = await ctx.get(doc.file || 'traffic/valley.bin').then((r) => r.arrayBuffer());
@@ -121,13 +119,12 @@ export async function createValleyPartWith(ctx, { uniform, unit, material: makeM
   };
 
   const show = () => { mesh.visible = enabled && fade > minFade; };
-  const setFade = (f) => { fade = f; uniforms.uGain.value = unit * fade * gainScale; show(); };
-  const lookFade = fadeOf || ((look) => Math.min(1, Math.max(0, look.lights ?? look.dusk ?? (look.night ? 1 : 0))));
+  const setFade = (f) => { fade = f; uniforms.uGain.value = 1 * fade * gainScale; show(); };
 
   const part = {
     name: 'valley',
     update(frame) {
-      if (liveFade) setFade(liveFade());
+      setFade(fadeNow());
       if (!mesh.visible) return;
       const t0 = performance.now();
       lastHow = howAt(frame.simMs);
@@ -136,7 +133,7 @@ export async function createValleyPartWith(ctx, { uniform, unit, material: makeM
       timings.add(performance.now() - t0);
     },
     beforeRender(frame) {
-      if (liveFade) setFade(liveFade());
+      setFade(fadeNow());
       if (!mesh.visible) return;
       const t0 = performance.now();
       const cam = frame.camera;
@@ -149,11 +146,8 @@ export async function createValleyPartWith(ctx, { uniform, unit, material: makeM
       if (how !== lastHow) { lastHow = how; uniforms.uHow.value = how; uniforms.uTime.value = driftTime(frame.simMs); }
       timings.add(performance.now() - t0);
     },
-    setLook(look) {
-      if (!liveFade) setFade(lookFade(look));
-    },
     /** Multiply the ribbons' brightness: a debugging aid for finding them in a screenshot, never a look. */
-    setGainScale(k) { gainScale = k; uniforms.uGain.value = unit * fade * gainScale; ctx.app?.invalidate?.(); },
+    setGainScale(k) { gainScale = k; uniforms.uGain.value = 1 * fade * gainScale; ctx.app?.invalidate?.(); },
     /** The route being driven: its own carriageways are left out (its vehicles are the `traffic` part's). */
     setRoute({ route } = {}) { applyRoute(route?.id ?? null); },
     /** Turn the ribbons off and on (for the frame-budget probe and the screenshots). */
@@ -177,6 +171,6 @@ export async function createValleyPartWith(ctx, { uniform, unit, material: makeM
       shapes.dispose();
     },
   };
-  mesh.userData.part = part; // for tests/manual/valley-shots.mjs, which finds it in the scene
+  mesh.userData.part = part; // for tests and probes, which find it in the scene
   return part;
 }

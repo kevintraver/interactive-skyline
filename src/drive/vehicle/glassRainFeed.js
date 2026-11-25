@@ -1,6 +1,5 @@
-// What the rain on the windshield gives its shaders each frame (plan 02, D8.2), shared by both renderers: glassRain.js
-// (the classic renderer) and glassRain.node.js (plan 01's) hold the same values in their own uniforms and pass them in
-// as `out`. The rules are drops.js and wipers.js; this is glassRain.js's per-frame work, moved here unchanged.
+// What the rain on the windshield gives its shaders each frame (plan 02, D8.2): glassRain.js holds the values in its
+// uniforms and passes them in as `out`. The rules are drops.js and wipers.js.
 //
 // Per frame (update): the weather's rain rate (env.weather.state()), the wiper cycle for it, the window of bins
 // (drops.js createBinWindow: per half-second bin of absolute simulation time, the expected arrivals per site from the

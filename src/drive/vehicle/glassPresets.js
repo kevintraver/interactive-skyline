@@ -1,7 +1,6 @@
 // The cabin's glass by preset (plan 02, section 7.11): the three mirrors' render targets and refresh rates, and
-// the windshield layer. There is no quality system yet (plan 01 brings it), so the cabin picks one of two
-// configurations by its own model (cabin.js chooseCabinModel): 'high' for the full model, 'low' for the devices
-// that get the low model (software renderers, small or slow devices). One options object holds both.
+// the windshield layer: 'high' for the full model, 'low' for the low model. One options object holds both; app.quality's
+// level picks (below).
 //
 // Mirror pixels per frame (section 9.1: Low 25 k, High 100 k). A mirror refreshes on the frames where
 // frameNo % every === phase; when the picture is paused (or any time `all` is asked for) every mirror is drawn.
@@ -23,7 +22,7 @@ export const GLASS_PRESETS = Object.freeze({
     mirrors: Object.freeze({
       enabled: true,
       samples: 4, // MSAA in the targets
-      groundStride: Object.freeze({ far: 3, near: 2, wide: 2 }), // every n-th post of each ground grid (mirrors.js coarseGridIndex)
+      groundStride: Object.freeze({ far: 3, near: 2, wide: 2 }), // every n-th post of each ground grid (mirrorGeometry.js coarseGridIndex)
       skip: Object.freeze([]), // names of scene objects the mirror passes leave out (none: leaving the sprites out saved nothing measurable)
       center: Object.freeze({ size: [512, 144], every: 2, phase: 0 }),
       left: Object.freeze({ size: [320, 192], every: 4, phase: 1 }),
@@ -76,7 +75,7 @@ export function mirrorPixels(frameNo, mirrors, all = false) {
 }
 
 // ---------------------------------------------------------------- plan 01's quality levels (third stretch, decision 8)
-// On plan 01's renderer app.quality's level picks the preset, not the device probe: Low the low preset (with the low
+// app.quality's level picks the preset: Low the low preset (with the low
 // model), High the high preset, Ultra the high preset with larger mirrors (interior 576 x 162, doors 384 x 230, at the
 // same rates: one pass a frame at most, 90.8 k mirror pixels a frame on average, within 9.1's 100 k) and rain sites 1.6 cm
 // apart (104 x 51 = 5,304 sites).

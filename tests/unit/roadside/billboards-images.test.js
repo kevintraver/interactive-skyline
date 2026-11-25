@@ -8,7 +8,7 @@ import crypto from 'node:crypto';
 import * as THREE from 'three';
 import { adFrame, adMean, assignImages, fitOf, imageAt, kindForAspect, NO_REPEAT_BOARDS, shaderTables, stepFor, textureBytes } from '../../../src/drive/roadside/billboardsImages.js';
 import { boardOf, panelsOf, faceSeed, createBillboardsPart } from '../../../src/drive/roadside/billboards.js';
-import { PLAIN } from '../../../src/drive/roadside/billboardsFace.js';
+import { PLAIN } from '../../../src/drive/screens/digital.js';
 import { HOLD_S, FADE_S, phaseOf } from '../../../src/drive/screens/digital.js';
 import { measureFlash, luminance, FLASH_LIMIT_HZ } from '../../../src/drive/screens/flash.js';
 import { hash32 } from '../../../src/drive/screens/art.js';
@@ -241,13 +241,12 @@ describe('the digital rotation', () => {
   });
 
   it('agrees with the face shader\'s index rule, negative holds included', () => {
-    const glsl = fs.readFileSync(path.join(ROOT, 'src/drive/roadside/billboardsFace.js'), 'utf8');
-    expect(glsl).toContain('( int( vAd.z + 0.5 ) + k * int( vAd.w + 0.5 ) ) % n');
-    expect(glsl).toContain('int( vAd.x + 0.5 ) + ( i < 0 ? i + n : i )');
+    const src = fs.readFileSync(path.join(ROOT, 'src/drive/roadside/billboardsFace.js'), 'utf8');
+    expect(src).toContain('int(ad.z.add(0.5)).add(k.add(n).mul(int(ad.w.add(0.5)))).mod(n)');
     const a = { base: 32, n: 8, start: 5, step: 3 };
-    // GLSL's % on negative ints follows C (sign of the dividend), as JavaScript's does
-    const shader = (k) => { const i = (a.start + k * a.step) % a.n; return a.base + (i < 0 ? i + a.n : i); };
-    for (let k = -20; k < 20; k++) expect(imageAt(a, k)).toBe(shader(k));
+    // the shader adds n x step before the modulo, so no operand of % is negative for a hold from -n on
+    const shader = (k) => a.base + ((a.start + (k + a.n) * a.step) % a.n);
+    for (let k = -a.n; k < 40; k++) expect(imageAt(a, k)).toBe(shader(k));
   });
 
   const means = Float32Array.from(images.flatMap((i) => i.mean));
@@ -268,11 +267,11 @@ describe('the digital rotation', () => {
 function fakeCtx() {
   const fields = ['x', 'y', 'facing', 'facing2', 'w', 'h', 'bottom', 'digital', 'sides', 'seed', 'sources'];
   const doc = { fields, boards: [[0, 0, 90, null, 14.63, 4.27, 7.62, 0, 1, 7, 1], [100, 0, -110, 110, 14.63, 4.27, 7.62, 1, 2, 9, 1], [200, 0, 90, null, 7.32, 3.66, 4, 0, 1, 11, 1]] };
-  const renderer = { capabilities: { getMaxAnisotropy: () => 16 }, getContext: () => { throw new Error('no GL here'); }, initTexture: vi.fn() };
+  const renderer = { getMaxAnisotropy: () => 16, getContext: () => { throw new Error('no GL here'); }, initTexture: vi.fn() };
   return {
     optional: async () => doc,
     terrain: { groundY: () => 600, surfaceY: () => 600 },
-    env: { lighting: { units: { nit: 0.1 }, ambientLux: () => 1e4 } },
+    env: { lighting: { ambientLux: () => 1e4 } },
     app: { renderer, invalidate: () => {} },
     group: new THREE.Group(),
   };

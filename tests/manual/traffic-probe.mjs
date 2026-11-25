@@ -39,8 +39,11 @@ await page.routeWebSocket(/.*/, () => {});
 page.on('console', (m) => { if (m.type() === 'error' || m.type() === 'warning') problems.push(`[${m.type()}] ${m.text().slice(0, 300)}`); });
 page.on('pageerror', (e) => problems.push(`[pageerror] ${e.message.slice(0, 300)}`));
 await page.addInitScript(() => { try { localStorage.clear(); localStorage.setItem('slc-skyline-hinted', '1'); } catch { /* none */ } });
-await page.goto(`http://localhost:${port}/?city=lv&renderer=webgpu&backend=${backend}&parts=traffic`);
+await page.goto(`http://localhost:${port}/?city=lv&backend=${backend}&parts=traffic`);
 await page.waitForFunction(() => performance.getEntriesByName('skyline-ready').length > 0 && window.__skyline?.drive, null, { timeout: 300000 });
+// the quality level pinned before Drive is entered: a level change on WebGPU leaves every later frame broken (plan 01's
+// shadow map is destroyed while bound, "Destroyed texture ShadowDepthTexture used in a submit"), and every probe reads 0
+await page.evaluate(() => window.__skyline.quality?.set('high'));
 
 const result = await page.evaluate(async ({ NIGHT, only }) => {
   const s = window.__skyline, d = s.drive;

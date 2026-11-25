@@ -1,12 +1,10 @@
-// What the cabin part does the same way on both renderers (plan 02, D4.2 and D4.5; third stretch, decision 2): which
-// model a device gets, the model's paint, the roles of its nodes, the mirror faces and windshield corners from
-// cabin.json, and the displays' redraw logic (what the instrument cluster and the route screen show, and when they are
-// drawn again). cabin.js (the classic renderer) and cabin.node.js (plan 01's) build their materials and passes around
-// these; nothing here touches a renderer.
+// What the cabin part is made of (plan 02, D4.2 and D4.5), with no renderer in it: which model a quality level gets, the
+// model's paint, the roles of its nodes, the mirror faces and windshield corners from cabin.json, and the displays'
+// redraw logic (what the instrument cluster and the route screen show, and when they are drawn again). cabin.js
+// builds its materials and passes around these.
 
 import * as THREE from 'three';
 import { instrumentText, screenText } from './displays.js';
-import { isSoftwareRenderer } from '../renderScale.js';
 
 export const MODELS = '/models/drive/';
 /** The interior fill: this share of the sky light's strength reaches inside from all round (assumed). */
@@ -15,35 +13,12 @@ export const FILL = 1.3;
 export const REDRAW_MS = 100;
 
 /**
- * Which model a device gets. Low on a software renderer, on a device that reports 4 GB of memory or less or 4
- * logical cores or fewer, and on a phone (a coarse pointer and a screen under 768 px on its short side).
- * @param {{ software?: boolean, deviceMemory?: number, cores?: number, coarse?: boolean, minScreen?: number }} d
- * @returns {'high'|'low'}
- */
-export function chooseCabinModel({ software = false, deviceMemory, cores, coarse = false, minScreen } = {}) {
-  if (software) return 'low';
-  if (Number.isFinite(deviceMemory) && deviceMemory <= 4) return 'low';
-  if (Number.isFinite(cores) && cores <= 4) return 'low';
-  if (coarse && Number.isFinite(minScreen) && minScreen < 768) return 'low';
-  return 'high';
-}
-
-/**
- * The model on plan 01's renderer, where app.quality decides (decision 8): 'low' on Low, 'high' on High and Ultra.
- * Plan 01's detection already puts software renderers, phones and small devices on Low.
+ * The model for app.quality's level (third stretch, decision 8): 'low' on Low, 'high' on High and Ultra. Plan 01's
+ * detection already puts software renderers, phones and small devices on Low.
  * @param {'low'|'high'|'ultra'|string|undefined} level
  * @returns {'high'|'low'}
  */
 export const cabinModelForLevel = (level) => (level === 'low' ? 'low' : 'high');
-
-/** What chooseCabinModel needs, read from the browser and the renderer. */
-export function probeDevice(renderer) {
-  const software = isSoftwareRenderer(renderer);
-  const nav = typeof navigator === 'undefined' ? {} : navigator;
-  const coarse = typeof matchMedia === 'function' && matchMedia('(pointer: coarse)').matches;
-  const minScreen = typeof screen === 'undefined' ? undefined : Math.min(screen.width, screen.height);
-  return { software, deviceMemory: nav.deviceMemory, cores: nav.hardwareConcurrency, coarse, minScreen };
-}
 
 // Linear base colours. Matte and dark inside, as interiors are (a dashboard is about 4 % reflective); the
 // darker the part sits under the roof, the darker it is drawn, which stands in for the roof's shade.
@@ -120,7 +95,7 @@ export function createDisplayDriver({ session, settings, city, env, instruments,
   const readout = { speed: null, unit: null, clock: null, temp: null, next: null, dist: null, drawnAt: null, s: null, simMs: null };
 
   function temperature() {
-    // the stand-in environment's weather has a placeholder temperature; only a real one is shown
+    // until plan 01's weather has loaded there is no temperature; only a real one is shown
     const w = env?.weather;
     if (!w || w.hasTemperature !== true) return null;
     const t = w.state?.().tempC;

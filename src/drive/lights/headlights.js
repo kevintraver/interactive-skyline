@@ -8,40 +8,31 @@
 // Lambert and standard material in the scene, with the map projected through a perspective camera that cannot hold
 // the beam's +-45 degrees without wasting most of its texels. The retro term (section 7.4) follows the beam term on
 // the reflective materials: R_A(alpha, beta) x E_perp / cos(nu) for sheeting, R_L(alpha) x E_perp for markings, from a
-// small table of retro.js's coefficients. GLSL: headlamps.glsl.js; JavaScript mirrors: headlampMirror.js. In the
-// shipped look on plan 01's renderer the pavement itself returns R_L x E_perp (decision 13, headlamps.node.js).
+// small table of retro.js's coefficients. The terms: headlamps.js; JavaScript mirrors: headlampMirror.js. The
+// pavement itself returns R_L x E_perp (third stretch, decision 13). Units (decision 6): the beam is the lamps' candela,
+// the beam on a surface lux and the retroreflected return cd/m^2, all scaled by photometry.js.
 //
 // Lamps. DEFAULT_LAMPS (beam.js) at the car's nose on the journey's pose (pose.position is the car's centre line on
 // the road; the nose is NOSE_M ahead, from public/models/drive/cabin.json's body.front less the lamp's depth), so the
 // beam follows the road's grade and crossfall and never where the head looks or the body's bounce.
 //
-// Automatic switching. On while the ambient illuminance (env.lighting.ambientLux, the sun's clear-sky table) is
-// under AUTO_ON_LUX, the switch-on level UN Regulation 48 sets for automatic dipped beams (1,000 lux; recalled, not
-// re-opened); a pure function of the sun, so no hysteresis. That is with the sun about half a degree above the
-// horizon. The drawn strength is then scaled by the look's `beams` (0 by day, 1 from mid civil twilight): env.js's
-// units are fitted to the night look, and the dusk blend fades the drive's lights in with it (env.js, LIGHTING_UNITS).
-// Off (by day, or through setEnabled(false)) the terms add exactly nothing: the shader skips them on uHlSpec.x.
+// Automatic switching. On while the ambient illuminance (env.lighting.ambientLux) is under AUTO_ON_LUX, the switch-on
+// level UN Regulation 48 sets for automatic dipped beams (1,000 lux; recalled, not re-opened); a pure function of the
+// moment, so no hysteresis. Off (by day, or through setEnabled(false)) the terms add exactly nothing.
 //
 // Materials. Beam: the road (pavement, shoulders, embankments, barriers, structures), the wide ground and the app's
 // ground meshes, sign faces and supports, delineator posts and faces, the roadside buildings and the traffic's bodies
-// (the last two found in the scene once they load). Retro: road markings by a mask read from the road atlas
+// (the session's surfaces of kinds 'building' and 'vehicle'). Retro: road markings by a mask read from the road atlas
 // (markingMask.js) and barrier reflectors by the road's `retro` attribute, sign faces by `retro` and `retroLegend`,
-// delineator faces by their material. With this part running the road's and roadside's stand-in glow is off
-// (setHeadlights on their APIs).
+// delineator faces by their material.
 //
 // Keys. H switches between low and high beam while Drive is active (not while typing in a field).
-//
-// Renderers (plan 02, third stretch, decisions 2 and 6). The terms live in headlamps.js (classic, GLSL through
-// surfaceLight.js) and headlamps.node.js (plan 01's, TSL through surfaceLight.node.js), picked by ctx.legacy; this
-// file is the part, the same on both. On plan 01's renderer the beam is the lamps' candela, the beam on a surface lux
-// and the retroreflected return cd/m^2, all scaled by photometry.node.js; the look's `beams` fade and the retro term's
-// soft shoulder (headlamps.glsl.js RETRO_SHOULDER) were stand-ins for the classic fixed exposure and apply only at
-// ?display=classic, where the parity tool compares with the classic renderer (display.js).
+
 
 import { decodeBeam, DEFAULT_LAMPS } from './beam.js';
 import { beamTexture, retroTable, linearOf, chromaOf, lampPositions } from './headlampMirror.js';
 import { markingMaskOf, pavementAlbedo } from './markingMask.js';
-import { displayFade } from './display.js';
+import { createHeadlampTerms } from './headlamps.js';
 import { createTimings } from '../timing.js';
 import { eachGround } from '../parts.js';
 
@@ -70,9 +61,6 @@ export async function createHeadlightsPart(ctx) {
   const maps = { low: beamTexture(decodeBeam(lowBytes, meta, 'low')), high: beamTexture(decodeBeam(highBytes, meta, 'high')) };
   const table = retroTable();
   const { env } = ctx;
-  const legacy = ctx.legacy !== false;
-  // the terms of the renderer (decision 2): headlamps.js (GLSL) or headlamps.node.js (TSL)
-  const { createHeadlampTerms } = await (legacy ? import('./headlamps.js') : import('./headlamps.node.js'));
 
   // colours: the sign atlas' own (faces.js COLOURS) where it exports them
   let signColours = {};
@@ -97,7 +85,6 @@ export async function createHeadlightsPart(ctx) {
   const terms = createHeadlampTerms({
     ctx, maps, table, ink, chroma, mask, ageing: AGEING, colour: LAMP_COLOUR, range: { range: RANGE_M, fade: FADE_M }, pavement,
   });
-  const display = terms.display || 'classic';
 
   const undo = [];
   const lit = new Set();
@@ -105,7 +92,7 @@ export async function createHeadlightsPart(ctx) {
   /** Add the beam term and, for a reflective kind, the retro term. */
   function attach(material, kind = null, row = 0) {
     if (!material || lit.has(material)) return;
-    if (!legacy && !material.isNodeMaterial) return; // a classic material plan 01's renderer converts itself: no term
+    if (!material.isNodeMaterial) return; // a stock material the renderer converts itself takes no term
     lit.add(material);
     const r = terms.attach(material, kind, row);
     if (!r) return;
@@ -142,28 +129,11 @@ export async function createHeadlightsPart(ctx) {
     });
     roadsideUndo = undo.splice(from);
     roadsideCounts = { beam: counts.beam - before.beam, retro: counts.retro - before.retro };
-    ctx.roadside?.setHeadlights?.(true);
   }
   const roadsideMats = [];
   attachRoadside();
-  ctx.materials?.setHeadlights?.(true);
-  // plan 01's renderer: the corridor's buildings (and later surfaces of that kind) through the session's surfaces
-  const offSurfaces = !legacy && ctx.eachSurface ? ctx.eachSurface((m, kind) => { if (kind === 'building') attach(m); }) : () => {};
-
-  // the roadside buildings and the traffic arrive later: look for their materials now and then
-  let lateCheck = 0;
-  const lateDone = { corridor: false, traffic: false };
-  function findLate() {
-    for (const name of Object.keys(lateDone)) {
-      if (lateDone[name]) continue;
-      ctx.group.getObjectByName(name)?.traverse((o) => {
-        if (!o.isMesh || o.material?.type === 'ShaderMaterial') return;
-        for (const m of Array.isArray(o.material) ? o.material : [o.material]) {
-          if (m && (m.isMeshLambertMaterial || m.isMeshStandardMaterial || m.isMeshPhongMaterial)) { attach(m); lateDone[name] = true; }
-        }
-      });
-    }
-  }
+  // the corridor's buildings and the traffic's bodies (and later surfaces of those kinds) through the session's surfaces
+  const offSurfaces = ctx.eachSurface ? ctx.eachSurface((m, kind) => { if (kind === 'building' || kind === 'vehicle') attach(m); }) : () => {};
 
   let enabled = true, high = false, beams = 0, on = false, ambient = 0;
   const timings = createTimings();
@@ -171,8 +141,7 @@ export async function createHeadlightsPart(ctx) {
 
   function apply() {
     const which = high ? 'high' : 'low';
-    const gain = on ? displayFade({ legacy, display, fade: beams }) : 0;
-    terms.set({ which, peak: maps[which].peakCd * gain, on: on && gain > 0, lamps, basis });
+    terms.set({ which, peak: on ? maps[which].peakCd : 0, on, lamps, basis });
   }
 
   const onKey = (e) => {
@@ -196,7 +165,6 @@ export async function createHeadlightsPart(ctx) {
         const pose = frame.pose;
         lamps = lampPositions(pose, DEFAULT_LAMPS, NOSE_M);
         basis = { right: pose.right, up: pose.up, forward: pose.forward };
-        if (legacy && lateCheck++ % 30 === 0 && !(lateDone.corridor && lateDone.traffic)) findLate();
       }
       on = enabled && ambient < AUTO_ON_LUX;
       apply();
@@ -207,18 +175,16 @@ export async function createHeadlightsPart(ctx) {
     setRoute() { attachRoadside(); },
     stats() {
       const t = timings.summary();
-      return { on, high, beams, ambientLux: ambient, materials: { beam: counts.beam, retro: counts.retro }, mask: !!terms.hasMask, pavement, renderer: legacy ? 'classic' : 'node', display, js: { mean: t.mean, p95: t.p95, max: t.max } };
+      return { on, high, beams, ambientLux: ambient, materials: { beam: counts.beam, retro: counts.retro }, mask: !!terms.hasMask, pavement, js: { mean: t.mean, p95: t.p95, max: t.max } };
     },
     dispose() {
       offGround();
       offSurfaces();
       if (typeof window !== 'undefined') window.removeEventListener('keydown', onKey);
       for (const u of [...undo, ...roadsideUndo].reverse()) u();
-      ctx.materials?.setHeadlights?.(false);
-      ctx.roadside?.setHeadlights?.(false);
       terms.dispose();
     },
   };
-  ctx.group.userData.headlightsPart = part; // for tests/manual/headlights-shots.mjs
+  ctx.group.userData.headlightsPart = part; // for tests/manual/lights-probe.mjs
   return part;
 }

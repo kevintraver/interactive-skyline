@@ -1,12 +1,12 @@
 // The drive's night look as displayed (plan 02, third stretch, decision 13): what the canvas shows, not the scene's
-// light. GPU, shipped look (no ?display=classic), clean camera, the drive's clock paused, the quality level pinned.
+// light. GPU, shipped look, clean camera, the drive's clock paused, the quality level pinned.
 // Each line prints the place, the expected range, the measured value and PASS or FAIL; the exit code is the verdict.
 //
 // Serve the repository first (pnpm exec vite --port 5326 --strictPort), then:
 //   node tests/manual/night-display.mjs [--port 5326] [--backends webgpu,webgl] [--out <dir outside the repo>]
 //        [--parts lamps,headlights,cabin,obstruction,screens,billboards] [--only desert,freeway,...] [--quality high]
 //
-// Displayed luminance: the canvas's 8-bit sRGB pixels (drawn and read in one task, as drive-parity.mjs does), each
+// Displayed luminance: the canvas's 8-bit sRGB pixels (drawn and read in one task), each
 // channel decoded to linear, Y = Rec. 709 luminance, 0 to 1. Stops are log2(Y / 0.18): mid-grey is 0.
 //
 // The places and their ranges (the analysis of decision 13; a range changed later says why on its line):
@@ -207,7 +207,7 @@ async function openPage(backend) {
   page.on('pageerror', (e) => page.problems.push(`[pageerror] ${e.message.slice(0, 300)}`));
   await page.addInitScript(() => { try { localStorage.clear(); localStorage.setItem('slc-skyline-hinted', '1'); } catch { /* none */ } });
   await page.routeWebSocket(/./, () => {}); // other work in the checkout makes Vite reload the page: keep its socket silent
-  await page.goto(`http://localhost:${port}/?city=lv&renderer=webgpu&backend=${backend}&parts=${parts}`);
+  await page.goto(`http://localhost:${port}/?city=lv&backend=${backend}&parts=${parts}`);
   await page.waitForFunction(() => performance.getEntriesByName('skyline-ready').length > 0 && window.__skyline?.attractions && window.__skyline?.drive, null, { timeout: 300000 });
   await page.evaluate(async (level) => { const s = window.__skyline; s.quality?.set(level); s.attractions.freeze(20); await s.attractions.ready; }, level);
   await page.addScriptTag({ content: PAGE_HELPERS });

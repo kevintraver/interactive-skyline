@@ -1,8 +1,8 @@
 // The drive's state in the address bar (plan 02, section 4.9):
 // ?city=lv&mode=drive&route=i15n&s=42150&t=2026-11-14T01:07:30Z&view=cabin&yaw=-12&pitch=2&lens=28
 // s is metres along the road the route drives; t is simulation time in UTC. Other parameters
-// (city, and anything else) are left alone. rain=light|moderate|heavy (or a rate in mm/h) is the weather stand-in's
-// preset (env.js RAIN_PRESETS); absent means clear.
+// (city, and anything else) are left alone. rain=light|moderate|heavy (or a rate in mm/h) is the drive's rain shorthand
+// (env.js RAIN_PRESETS, into plan 01's weather); absent means clear.
 
 export const DRIVE_KEYS = ['mode', 'route', 's', 't', 'view', 'yaw', 'pitch', 'lens', 'rain'];
 /** The rain presets an address may name (env.js RAIN_PRESETS; clear is the absence of the key). */

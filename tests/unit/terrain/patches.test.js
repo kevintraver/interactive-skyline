@@ -143,7 +143,7 @@ describe('the meshes', () => {
   it('builds the patch whole, sharing its edge with the wide mesh', () => {
     const mesh = buildPatchMesh({ patch, id: 'dam', base: BASE, map: null });
     expect(mesh.name).toBe('terrain-patch-dam');
-    expect(mesh.material).toBeInstanceOf(THREE.MeshLambertMaterial);
+    expect(mesh.material.type).toBe('MeshLambertNodeMaterial');
     expect(mesh.geometry.index.count).toBe((dam.nx - 1) * (dam.ny - 1) * 6);
     const pos = mesh.geometry.attributes.position.array, o = mesh.position;
     // posts on the patch's edge that are also wide posts have the wide grid's height, to the decimetre

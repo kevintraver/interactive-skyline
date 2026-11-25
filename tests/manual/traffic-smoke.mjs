@@ -1,14 +1,14 @@
-// Smoke check of the traffic and valley parts on a renderer (plan 02, third stretch): opens the drive with
-// ?parts=traffic,valley at a place and time, prints the parts' stats and any console errors, and writes the frame.
-//   node tests/manual/traffic-smoke.mjs [--port 5325] [--renderer webgpu|legacy] [--backend webgpu|webgl]
-//        [--display classic] [--route i15n] [--s 52000] [--t ISO] [--out file.png] [--look '{"yaw":0}']
+// Smoke check of the traffic and valley parts (plan 02, D6.4, D6.6): opens the drive with ?parts=traffic,valley at a
+// place and time, prints the parts' stats and any console errors, and writes the frame. The quality level is pinned.
+//   node tests/manual/traffic-smoke.mjs [--port 5325] [--backend webgpu|webgl] [--route i15n] [--s 52000] [--t ISO]
+//        [--out file.png] [--look '{"yaw":0}'] [--parts traffic,valley]
 import { chromium } from '@playwright/test';
 import { writeFileSync } from 'node:fs';
 
 const args = process.argv.slice(2);
 const opt = (n, f) => { const i = args.indexOf(`--${n}`); return i >= 0 ? args[i + 1] : f; };
-const port = opt('port', '5325'), rendererName = opt('renderer', 'webgpu'), backend = opt('backend', 'webgpu');
-const display = opt('display', ''), route = opt('route', 'i15n'), s = Number(opt('s', 52000));
+const port = opt('port', '5325'), backend = opt('backend', 'webgpu');
+const route = opt('route', 'i15n'), s = Number(opt('s', 52000));
 const t = Date.parse(opt('t', '2026-11-22T05:00:00Z')), out = opt('out', null), look = JSON.parse(opt('look', '{}'));
 const parts = opt('parts', 'traffic,valley');
 const browser = await chromium.launch({ channel: 'chromium', headless: true, args: ['--use-angle=metal', '--ignore-gpu-blocklist', '--enable-gpu', '--enable-unsafe-webgpu',
@@ -19,9 +19,10 @@ const problems = [];
 page.on('console', (m) => { if (m.type() === 'error' || m.type() === 'warning') problems.push(`[${m.type()}] ${m.text().slice(0, 400)}`); });
 page.on('pageerror', (e) => problems.push(`[pageerror] ${e.message.slice(0, 400)}`));
 await page.addInitScript(() => { try { localStorage.clear(); localStorage.setItem('slc-skyline-hinted', '1'); } catch { /* none */ } });
-const q = `city=lv&renderer=${rendererName}${rendererName === 'webgpu' ? `&backend=${backend}` : ''}${display ? `&display=${display}` : ''}&parts=${parts}`;
+const q = `city=lv&backend=${backend}&parts=${parts}`;
 await page.goto(`http://localhost:${port}/?${q}`);
 await page.waitForFunction(() => performance.getEntriesByName('skyline-ready').length > 0 && window.__skyline?.drive, null, { timeout: 180000 });
+await page.evaluate(() => window.__skyline.quality?.set('high')); // a level change on WebGPU breaks every later frame
 const r = await page.evaluate(async ({ route, s, t, look }) => {
   const sk = window.__skyline, d = sk.drive;
   await d.start(route, { s, t, view: 'clean' });

@@ -285,7 +285,7 @@ export const LUMINAIRE_DIAMETER_M = 0.5;
  * @param {{ intensityCd: number, distanceM: number, pixelSolidAngleSr: number, diameterM?: number,
  *           minDiameterPx?: number, transmittance?: number }} o
  * @returns {{ illuminanceLux: number, diameterPx: number, solidAngleSr: number, radiance: number }}
- *   radiance in cd/m^2 (multiply by lighting.units.nit for the scene)
+ *   radiance in cd/m^2
  */
 export function spriteFlux({ intensityCd, distanceM, pixelSolidAngleSr, diameterM = LUMINAIRE_DIAMETER_M, minDiameterPx = 1.5, transmittance = 1 }) {
   const e = (transmittance * intensityCd) / (distanceM * distanceM);

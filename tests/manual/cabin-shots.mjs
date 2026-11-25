@@ -1,86 +1,81 @@
-// Screenshots of the drive from the cabin on the GPU (the copy of drive-shots.mjs with the cabin's options).
-// Serve the repo first:   pnpm exec vite --port 5281 --strictPort
-// then: node tests/manual/cabin-shots.mjs <out-dir> <port> '<shots>' [width] [height] [route]   (keep the out dir outside the repo;
-//   route defaults to i15n)
-// <shots> is JSON: [[name, s in metres, "day" | "night" | ISO time, { view, yaw, pitch, lens, reduceMotion, glance,
-//   veil, mirrors, clip }?], ...]
-//   view 'cabin' (default) or 'clean'; lens defaults to the view's own (28 mm cabin, 50 mm clean); glance
-//   'left' | 'right' | 'center' | 'ahead' is shot at its hold, 0.6 s after the key; veil / mirrors false switch the
-//   windshield layer / the mirror passes off (D4.3, D4.4); clip 'left' | 'right' | 'center' saves only that mirror's
-//   face (with a margin), as drawn
+// Frames of the cabin (plan 02, D4.2 to D4.6, D8.2: the cabin, mirrors, windshield and rain on the glass) on this
+// machine's GPU, in the shipped look, read from the canvas, for looking at. The quality level is pinned (High).
+// Serve the repository first, then:
+//   node tests/manual/cabin-shots.mjs <out-dir outside the repo> <port> [backend webgpu|webgl] ['<shots JSON>'] [width] [height]
+// <shots> is JSON: [[name, route, s in metres, "day" | "night" | ISO time, { view, yaw, pitch, lens, reduceMotion, glance,
+//   veil, mirrors, rain (mm/h), dt (seconds on from the time), toggle (true: C to the clean view and back first) }?], ...]
+// Without <shots> the default set runs: each route by day, at dusk into a low sun, at night, in light rain and in heavy
+// rain with the wipers mid-sweep, the C toggle and back, a glance left and right, Reduce motion on.
 import { chromium } from '@playwright/test';
-import { mkdirSync } from 'node:fs';
-const out = process.argv[2]; const port = process.argv[3] || 5281;
-const shots = JSON.parse(process.argv[4]);
-const width = +(process.argv[5] || 1280), height = +(process.argv[6] || 720);
-const route = process.argv[7] || 'i15n';
-mkdirSync(out, { recursive: true });
-const browser = await chromium.launch({ channel: 'chromium', headless: true, args: ['--use-angle=metal', '--ignore-gpu-blocklist', '--enable-gpu'] });
-const page = await browser.newPage({ viewport: { width, height } });
-page.on('console', (m) => { if (m.type() === 'error' || m.type() === 'warning') console.log(`[${m.type()}]`, m.text().slice(0, 300)); });
-page.on('pageerror', (e) => console.log('[pageerror]', e.message));
-// a dev server reloads the page whenever any source changes (other work in the same checkout): answer its hot-update
-// socket with a silent stand-in, so the page stays as it loaded
-await page.routeWebSocket(/.*/, () => {});
-await page.addInitScript(() => { try { localStorage.clear(); localStorage.setItem('slc-skyline-hinted', '1'); } catch {} });
-// open the app and start the drive; again after a reload (a dev server reloads the page when a source changes)
-async function setup() {
-  await page.goto(`http://localhost:${port}/?city=lv&renderer=legacy`);
-  await page.waitForFunction(() => performance.getEntriesByName('skyline-ready').length > 0 && window.__skyline?.attractions && window.__skyline?.drive, null, { timeout: 120000 });
-  const gl = await page.evaluate(() => { const g = window.__skyline.renderer.getContext(); const e = g.getExtension('WEBGL_debug_renderer_info'); return e ? g.getParameter(e.UNMASKED_RENDERER_WEBGL) : 'n/a'; });
-  console.log('renderer:', gl);
-  await page.evaluate(async (route) => { const s = window.__skyline; s.attractions.freeze(20); await s.attractions.ready; await s.drive.start(route, {}); s.drive.pause(); }, route);
-  // wait for the cabin part (it loads after the drive starts)
-  await page.waitForFunction(() => window.__skyline.drive.cabin(), null, { timeout: 60000 }).catch(() => console.log('no cabin part'));
-}
-await setup();
-const DAY = Date.parse('2026-11-21T20:30:00Z'), NIGHT = Date.parse('2026-11-22T02:30:00Z');
-for (const [name, s, when, opt = {}] of shots) {
-  let info = null;
-  for (let attempt = 0; attempt < 3 && !info; attempt++) {
-    try { info = await shoot(s, when, opt); } catch (e) { console.log('retrying', name, e.message.split('\n')[0]); await setup(); }
-  }
-  await page.screenshot({ path: `${out}/${name}.png`, ...(info?.clip ? { clip: info.clip } : {}) });
-  console.log('shot', name, JSON.stringify({ ...info, clip: undefined }));
-}
-await browser.close();
+import { mkdirSync, writeFileSync } from 'node:fs';
 
-async function shoot(s, when, opt) {
-  const t = when === 'night' ? NIGHT : when === 'day' ? DAY : Date.parse(when);
-  return page.evaluate(async ({ s, t, opt }) => {
+const [out, port = 5323, backend = 'webgpu', shotsArg, w = '1280', h = '720'] = process.argv.slice(2);
+if (!out) { console.error('usage: cabin-shots.mjs <out-dir> <port> [backend] [shots] [width] [height]'); process.exit(2); }
+const width = +w, height = +h;
+mkdirSync(out, { recursive: true });
+const DAY = '2026-11-21T20:30:00Z', DUSK = '2026-11-22T00:22:00Z', NIGHT = '2026-11-22T05:00:00Z';
+const ROUTES = [['i15n', 45000], ['us93', 25500], ['i15s', 36500]];
+const DEFAULT = ROUTES.flatMap(([r, s]) => [
+  [`${r}-day`, r, s, DAY], [`${r}-dusk`, r, s, DUSK], [`${r}-night`, r, s, NIGHT],
+  [`${r}-light-rain`, r, s, DAY, { rain: 1 }], [`${r}-heavy-rain`, r, s, DUSK, { rain: 12, dt: 0.35 }],
+]).concat([
+  ['i15n-night-heavy-rain', 'i15n', 45000, NIGHT, { rain: 12, dt: 0.5 }],
+  ['us93-dusk-into-sun', 'us93', 25500, DUSK, { yaw: 35 }],
+  ['i15n-toggle', 'i15n', 45000, DAY, { toggle: true }],
+  ['i15n-glance-left', 'i15n', 45000, DAY, { glance: 'left' }], ['i15n-glance-right', 'i15n', 45000, DAY, { glance: 'right' }],
+  ['i15n-reduce-motion', 'i15n', 45000, DUSK, { reduceMotion: true }],
+]);
+const shots = shotsArg ? JSON.parse(shotsArg) : DEFAULT;
+
+const browser = await chromium.launch({ channel: 'chromium', headless: true,
+  args: ['--use-angle=metal', '--ignore-gpu-blocklist', '--enable-gpu', '--enable-unsafe-webgpu'] });
+const page = await browser.newPage({ viewport: { width, height }, deviceScaleFactor: 1 });
+const problems = [];
+page.on('console', (m) => { if (m.type() === 'error' || m.type() === 'warning') problems.push(`[${m.type()}] ${m.text().slice(0, 300)}`); });
+page.on('pageerror', (e) => problems.push(`[pageerror] ${e.message.slice(0, 300)}`));
+await page.routeWebSocket(/.*/, () => {}); // other work in the checkout must not reload the page
+await page.addInitScript(() => { try { localStorage.clear(); localStorage.setItem('slc-skyline-hinted', '1'); } catch { /* none */ } });
+const q = `city=lv&backend=${backend}&parts=cabin`;
+await page.goto(`http://localhost:${port}/?${q}`);
+await page.waitForFunction(() => performance.getEntriesByName('skyline-ready').length > 0 && window.__skyline?.drive, null, { timeout: 180000 });
+// the quality level pinned: a level change on the WebGPU backend breaks every later frame (plan 01's shadow map)
+const info = await page.evaluate(async () => { const s = window.__skyline; s.quality?.set('high'); s.attractions?.freeze(20); await s.attractions?.ready; return s.rendererInfo; });
+console.log('renderer:', JSON.stringify(info));
+
+const log = [];
+for (const [name, route, s, when, opt = {}] of shots) {
+  const r = await page.evaluate(async ({ route, s, t, opt }) => {
     const d = window.__skyline.drive;
-    d.pause();
-    d.setView(opt.view || 'cabin');
-    d.setReduceMotion(!!opt.reduceMotion);
-    const g = d.cabin()?.glass;
-    g?.windshield?.setEnabled(opt.veil !== false);
-    g?.mirrors?.setEnabled(opt.mirrors !== false);
-    d.seek({ s, t });
-    const look = { yaw: 0, pitch: 0, ...opt };
-    d.look({ yaw: look.yaw, pitch: look.pitch, lens: look.lens || (opt.view === 'clean' ? 50 : 28) });
-    await d.whenSettled();
-    if (opt.glance) { d.glance(opt.glance); await new Promise((r) => setTimeout(r, 600)); }
-    await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
-    const p = d.pose(); const c = d.cabin();
-    let clip = null;
-    if (opt.clip && c) {
-      // the mirror face's corners on screen, through the cabin camera
-      const m = c.mirrors[opt.clip], cam = c.cabinCamera;
-      const xs = [], ys = [];
-      for (const k of ['bottomLeft', 'bottomRight', 'topRight', 'topLeft']) {
-        const q = m.corners[k].clone().applyMatrix4(cam.matrixWorldInverse).applyMatrix4(cam.projectionMatrix);
-        xs.push(((q.x + 1) / 2) * innerWidth); ys.push(((1 - q.y) / 2) * innerHeight);
-      }
-      const pad = 12, x0 = Math.max(0, Math.min(...xs) - pad), y0 = Math.max(0, Math.min(...ys) - pad);
-      clip = { x: x0, y: y0, width: Math.min(innerWidth, Math.max(...xs) + pad) - x0, height: Math.min(innerHeight, Math.max(...ys) + pad) - y0 };
-      if (!(clip.width > 1 && clip.height > 1)) clip = null; // the face is off the screen: the whole frame is saved
-    }
-    const st = c?.stats();
-    return {
-      s: Math.round(p.s), night: p.night, sunEl: +p.sunElevation.toFixed(2), iso: p.iso, view: p.view, lens: p.lens, model: c?.model,
-      mirrors: st?.mirrors && { renders: st.mirrors.renders, pixels: st.mirrors.pixels, calls: st.mirrors.calls },
-      veil: st?.windshield && { S: st.windshield.scenePerLux, sunLux: Math.round(st.windshield.sunLux), lit: st.windshield.lit, lamps: st.windshield.lamps },
-      clip,
-    };
-  }, { s, t, opt });
+    try {
+      if (!d.active() || d.route()?.id !== route) await d.start(route, { s, t, view: 'cabin' });
+      await new Promise((res) => { const f = () => (d.cabin() ? res() : setTimeout(f, 100)); f(); });
+      d.pause();
+      const c = d.cabin();
+      c.weather?.setRain?.(opt.rain || 0);
+      d.setView(opt.view || 'cabin');
+      d.setReduceMotion(!!opt.reduceMotion);
+      c.glass?.windshield?.setEnabled(opt.veil !== false);
+      c.glass?.mirrors?.setEnabled(opt.mirrors !== false);
+      d.seek({ s, t });
+      if (opt.dt) d.seek({ t: t + opt.dt * 1000 });
+      d.look({ yaw: opt.yaw ?? 0, pitch: opt.pitch ?? 0, ...(opt.lens ? { lens: opt.lens } : {}) });
+      if (opt.toggle) { d.setView('clean'); d.renderFrame(); d.setView('cabin'); }
+      const settled = await Promise.race([d.whenSettled().then(() => true), new Promise((res) => setTimeout(() => res(false), 60000))]);
+      // the weather service answers asynchronously: give the rain a few frames to arrive
+      for (let i = 0; i < 20 && opt.rain && !c.glass?.rain?.raining; i++) await new Promise((res) => setTimeout(res, 100));
+      if (opt.glance) { d.glance(opt.glance); await new Promise((res) => setTimeout(res, 600)); }
+      for (let i = 0; i < 3; i++) await new Promise((res) => requestAnimationFrame(res));
+      const p = d.pose(), st = c.stats();
+      return { settled, s: Math.round(p.s), sun: +p.sunElevation.toFixed(1), view: p.view, model: st.model, level: st.level, depth: st.depth,
+        display: st.displayScale, mask: st.meteringMask, rain: st.rain && { raining: st.rain.raining, mode: st.rain.mode, drawn: st.rain.drawn },
+        wiper: c.glass?.rain?.state ? (({ mode, angle, dropCount }) => ({ mode, angle: +angle.toFixed(1), dropCount }))(c.glass.rain.state()) : null,
+        veil: st.windshield && { S: +(+st.windshield.scenePerLux).toPrecision(3), sunLux: Math.round(st.windshield.sunLux), bloomVeil: st.windshield.bloomVeil } };
+    } catch (e) { return { error: String(e && e.stack ? e.stack : e) }; }
+  }, { route, s, t: Date.parse(when), opt });
+  await page.screenshot({ path: `${out}/${name}.png` });
+  console.log('shot', name, JSON.stringify(r));
+  log.push({ name, ...r });
 }
+writeFileSync(`${out}/shots.json`, JSON.stringify(log, null, 1));
+if (problems.length) console.log(`page said:\n  ${[...new Set(problems)].slice(0, 20).join('\n  ')}`);
+await browser.close();

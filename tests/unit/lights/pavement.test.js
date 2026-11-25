@@ -1,5 +1,5 @@
 // The pavement's return under our headlamps (plan 02, third stretch, decision 13): R_L x E_perp instead of a matte
-// surface, through the mirrors of headlamps.node.js (headlampMirror.js) and the reference albedo (markingMask.js).
+// surface, through the mirrors of headlamps.js (headlampMirror.js) and the reference albedo (markingMask.js).
 import { describe, it, expect } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { decodeBeam, DEFAULT_LAMPS } from '../../../src/drive/lights/beam.js';
@@ -76,8 +76,8 @@ describe('pavementAlbedo', () => {
   });
 });
 
-describe('PAVEMENT_SPANS (headlamps.node.js)', async () => {
-  const { PAVEMENT_SPANS } = await import('../../../src/drive/lights/headlamps.node.js');
+describe('PAVEMENT_SPANS (headlamps.js)', async () => {
+  const { PAVEMENT_SPANS } = await import('../../../src/drive/lights/headlamps.js');
   const { REGIONS } = await import('../../../src/drive/roadnet/atlas.js');
   const inside = (u) => PAVEMENT_SPANS.some(([a, b]) => u >= a && u < b);
   const mid = (r) => (r[0] + r[1]) / 2;

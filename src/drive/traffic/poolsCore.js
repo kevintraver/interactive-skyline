@@ -1,7 +1,6 @@
-// Headlamp pools of other vehicles (plan 02, D6.4): the work both renderers share, with no shader in it. pools.js
-// (GLSL, the classic renderer) and pools.node.js (TSL, plan 01's) each hand this their uniforms and material; the
-// decal's geometry, the choice of the nearest lit vehicles and the pool model in JavaScript are here once (plan 02,
-// third stretch, decision 2: pure logic is shared, not copied).
+// Headlamp pools of other vehicles (plan 02, D6.4): the work, with no shader in it. pools.js hands this its
+// uniforms and material; the decal's geometry, the choice of the nearest lit vehicles and the pool model in JavaScript
+// are here.
 
 import * as THREE from 'three';
 import { WET_DIFFUSE, fresnelWater } from '../weather/wetMirror.js';
@@ -18,7 +17,7 @@ export const poolIlluminance = (across, along, halfSpacing = 0.5, height = 0.65,
 
 /**
  * Mirrors the pool shader: the decal's luminance (cd/m^2) at a point, dry or wet (the visitor's own pool's rule,
- * weather/wet.glsl.js: the light that reaches the pavement is reflected k = 1 - cover x (1 - WET_DIFFUSE) as strongly).
+ * weather/wet.js: the light that reaches the pavement is reflected k = 1 - cover x (1 - WET_DIFFUSE) as strongly).
  */
 export function poolLuminance(across, along, { halfSpacing = 0.5, height = 0.65, cover = 0, rho = ASPHALT_RHO } = {}) {
   const k = 1 - cover * (1 - WET_DIFFUSE);

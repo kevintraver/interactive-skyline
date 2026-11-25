@@ -3,7 +3,8 @@
 import { describe, it, expect } from 'vitest';
 import fs from 'node:fs';
 import path from 'node:path';
-import { ledColor, ledMean, ledSamples, ledLevel, nightHash, createLedMeanCache } from '../../../src/drive/screens/led.js';
+import { ledColor, ledMean, ledSamples, ledScale, nightHash, createLedMeanCache } from '../../../src/drive/screens/led.js';
+import { ledCdM2 } from '../../../src/render/photometry.js';
 import { measureFlash, luminance, FLASH_LIMIT_HZ } from '../../../src/drive/screens/flash.js';
 import { contentSeconds, CONTENT_PERIOD_S } from '../../../src/drive/screens/clock.js';
 
@@ -46,9 +47,11 @@ describe('the LED program mirror', () => {
     for (const v of a) { expect(v).toBeGreaterThanOrEqual(0); expect(v).toBeLessThanOrEqual(1); }
   });
 
-  it('level follows the night uniform: faint by day, bright at night', () => {
-    expect(ledLevel(0)).toBeCloseTo(0.05, 6);
-    expect(ledLevel(1)).toBeCloseTo(1.2, 6);
+  it('level is plan 01\'s LED luminance: bright by day, dimmed at night', () => {
+    expect(ledScale({ signs: 0 })).toBe(ledCdM2(0));
+    expect(ledScale({ signs: 1 })).toBe(ledCdM2(1));
+    expect(ledScale({ signs: 1 })).toBeLessThan(ledScale({ signs: 0 }));
+    expect(ledScale({ signs: 3 })).toBe(ledScale({ signs: 1 })); // clamped
   });
 
   it('the mean over samples is the weighted mean of the points', () => {

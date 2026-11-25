@@ -10,7 +10,7 @@
 //   2. candelaAt() as one bilinear texture fetch at uv = ((h - hMin) / (hMax - hMin), (v - vMin) / (vMax - vMin)),
 //      texels at their centres (half-texel inset), linear filtering, clamp to edge;
 //   3. illuminance E = I x max(0, dot(n, -l)) / d^2  (l: unit vector from lamp to point).
-// Through three's SpotLight.map instead, use spotMapTexture() and set the light's intensity to peakCd x units.candela.
+// Through three's SpotLight.map instead, use spotMapTexture() and set the light's intensity to peakCd (in the scene's units).
 
 const RAD = Math.PI / 180;
 
@@ -202,7 +202,7 @@ export function roadIlluminance(map, lampPositions, point, { normal = [0, 1, 0],
  * The map resampled for three's SpotLight.map, which projects a texture through the light's perspective camera
  * (gnomonic: texel (s, t) looks along (tan(half) * (2s - 1), tan(half) * (2t - 1), 1)). Values are I / peakCd.
  * Row 0 is the bottom (t = 0, looking down), as a DataTexture with flipY false is read. Set the SpotLight's
- * angle to halfAngleDeg, penumbra 0, intensity peakCd x lighting.units.candela, decay 2. The light camera's x
+ * angle to halfAngleDeg, penumbra 0, intensity peakCd (in the scene's units), decay 2. The light camera's x
  * axis must be the car's right; if a renderer finds it mirrored, flip the columns, not the beam.
  * @param {object} map
  * @param {{ size?: number, halfAngleDeg?: number, channels?: 1|4 }} [opts]

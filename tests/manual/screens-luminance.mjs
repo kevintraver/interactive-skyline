@@ -51,8 +51,11 @@ await page.routeWebSocket(/.*/, () => {}); // other work in the checkout must no
 page.on('console', (m) => { if (m.type() === 'error' || m.type() === 'warning') problems.push(`[${m.type()}] ${m.text().slice(0, 300)}`); });
 page.on('pageerror', (e) => problems.push(`[pageerror] ${e.message.slice(0, 300)}`));
 await page.addInitScript(() => { try { localStorage.clear(); localStorage.setItem('slc-skyline-hinted', '1'); } catch { /* none */ } });
-await page.goto(`http://localhost:${port}/?city=lv&renderer=webgpu&backend=${backend}&parts=screens,billboards`);
+await page.goto(`http://localhost:${port}/?city=lv&backend=${backend}&parts=screens,billboards`);
 await page.waitForFunction(() => performance.getEntriesByName('skyline-ready').length > 0 && window.__skyline?.drive, null, { timeout: 300000 });
+// the quality level pinned before Drive is entered: a level change on WebGPU leaves every later frame broken (plan 01's
+// shadow map is destroyed while bound, "Destroyed texture ShadowDepthTexture used in a submit"), and every probe reads 0
+await page.evaluate(() => window.__skyline.quality?.set('high'));
 
 const result = await page.evaluate(async ({ DAY, NIGHT, SPHERE }) => {
   const s = window.__skyline, d = s.drive;
@@ -219,7 +222,7 @@ const result = await page.evaluate(async ({ DAY, NIGHT, SPHERE }) => {
     cam.fov = 40; cam.near = 0.5; cam.far = 5000; cam.aspect = 1280 / 720;
     cam.position.set(spot.x + 25, spot.y + 45, spot.z + 25); cam.up.set(0, 1, 0); cam.lookAt(spot.x, spot.y, spot.z);
     cam.updateProjectionMatrix(); cam.updateMatrixWorld(true);
-    const card = new s.webgpu.Mesh(new s.webgpu.PlaneGeometry(6, 6).rotateX(-Math.PI / 2), lambert(false, { color: 0xffffff }));
+    const card = new s.webgpu.Mesh(new s.webgpu.PlaneGeometry(6, 6).rotateX(-Math.PI / 2), lambert({ color: 0xffffff }));
     card.position.set(spot.x, spot.y + 0.3, spot.z);
     card.name = 'lux meter';
     s.scene.add(card);
@@ -259,7 +262,7 @@ const result = await page.evaluate(async ({ DAY, NIGHT, SPHERE }) => {
     // the flash limit on the rendered light: 3 s of real time at 60 samples a second per rate
     const { measureFlash, FLASH_LIMIT_HZ } = await import('/src/drive/screens/flash.js');
     const signs = s.uniforms?.switchOn?.signs?.value ?? 1;
-    const peak = predicted(C0).peak * ledScale({ display: 'physical', signs });
+    const peak = predicted(C0).peak * ledScale({ signs });
     const off = (scr.setLight(false), await probeY(0, 0)); scr.setLight(true);
     for (const rate of [0.25, 1, 4, 16]) {
       const ys = [];

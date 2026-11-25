@@ -1,11 +1,11 @@
 // Photometric probes of the drive's lights on plan 01's renderer (plan 02, section 8.3 and 8.4; third stretch,
 // decision 6): the scene-referred light the pipeline holds (window.__skyline.probe, pipeline.probe(): cd/m^2 at a
 // point of the screen, the pre-exposure divided out) against what the plan's pure functions say it must be. GPU,
-// shipped look (no ?display=classic), clean camera, the drive's clock paused. Each line prints the quantity, the
+// shipped look, clean camera, the drive's clock paused. Each line prints the quantity, the
 // expected value, the measured one, the tolerance and PASS or FAIL; the exit code is the verdict (0: all pass).
 //
 // Serve the repository first (pnpm exec vite --port 5321 --strictPort), then:
-//   node tests/manual/lights-probe.mjs [--port 5321] [--backends webgpu,webgl] [--only pool,sprite,road,sign] [--quality high]
+//   node tests/manual/lights-probe.mjs [--port 5321] [--backends webgpu,webgl] [--only pool,sprite,road,sign,vehicle] [--quality high]
 //
 // The quality level is pinned (default High) before Drive is entered: the automatic choice's governor may drop a level
 // on a loaded machine, and a level change while driving on WebGPU leaves the frame broken (plan 01's shadow map is
@@ -36,6 +36,11 @@
 //            R_A(alpha, beta) x E_perp / cos(nu) per lamp from retro.js's tables. Tolerance 15 % (the plan's table
 //            ratio tolerance, 8.4); and the plan's acceptance on its own line: the white legend at 150 m within 10 to
 //            60 cd/m^2 with the lamps on, and near zero (under 1 cd/m^2) with them off.
+//   vehicle  ?parts=headlights,traffic, unlit desert at 23:30. A vehicle body 20 m ahead in the low beam (the first fully
+//            drawn vehicle found 17 to 23 m ahead of the lamps within 5 m of the car's lane, walking along the route):
+//            the luminance where the eye's ray to it meets the body, the headlamps on minus off, against albedo x E / pi,
+//            E from headlampMirror.js headlampIrradiance at the hit's point and normal and the albedo the body's paint
+//            rule gives there (COLOR_0 x mix(1, instance colour, _paint), traffic/material.js). Tolerance 15 %.
 import { chromium } from '@playwright/test';
 
 const args = process.argv.slice(2);
@@ -194,7 +199,7 @@ async function openPage(backend, parts) {
   page.on('pageerror', (e) => page.problems.push(`[pageerror] ${e.message.slice(0, 300)}`));
   await page.addInitScript(() => { try { localStorage.clear(); localStorage.setItem('slc-skyline-hinted', '1'); } catch { /* none */ } });
   await page.routeWebSocket(/./, () => {}); // other work in the checkout makes Vite reload the page: keep its socket silent
-  await page.goto(`http://localhost:${port}/?city=lv&renderer=webgpu&backend=${backend}&parts=${parts}`);
+  await page.goto(`http://localhost:${port}/?city=lv&backend=${backend}&parts=${parts}`);
   await page.waitForFunction(() => performance.getEntriesByName('skyline-ready').length > 0 && window.__skyline?.attractions && window.__skyline?.drive, null, { timeout: 180000 });
   await page.evaluate(async (level) => { const s = window.__skyline; s.quality?.set(level); s.attractions.freeze(20); await s.attractions.ready; }, level);
   await page.addScriptTag({ content: PAGE_HELPERS });
@@ -581,12 +586,109 @@ async function headlights(backend) {
   return page;
 }
 
+// ------------------------------------------------------------------ headlights on a vehicle body
+async function vehicle(backend) {
+  const page = await openPage(backend, 'headlights,traffic');
+  await place(page, { route: 'i15n', s: 3000, look: { pitch: -2, lens: 50 } });
+  const r = await page.evaluate(new Function(`return (async () => {
+    const sk = window.__skyline, lp = window.__lp, m = await lp.load(), T = sk.three, d = sk.drive;
+    const meta = await (await fetch('/data/drive/beam.json')).json();
+    const bin = await (await fetch('/data/drive/' + (meta.files?.low || 'beam_low.bin'))).arrayBuffer();
+    const tex = m.mirror.beamTexture(m.beam.decodeBeam(bin, meta, 'low'));
+    const hl = await import('/src/drive/lights/headlights.js');
+    const head = sk.scene.getObjectByName('drive')?.userData.headlightsPart;
+    const traffic = sk.scene.getObjectByName('traffic')?.userData.part;
+    if (!head || !traffic) return { error: 'no ' + (head ? 'traffic' : 'headlights') + ' part' };
+    head.setHigh(false);
+    const v = (x) => ({ x: x.x, y: x.y, z: x.z });
+    const lampsNow = () => { const b = lp.poseBasis();
+      return { b, lamps: m.mirror.lampPositions({ position: v(b.position), right: v(b.right), up: v(b.up), forward: v(b.forward) }, m.beam.DEFAULT_LAMPS, hl.NOSE_M),
+        basis: { right: v(b.right), up: v(b.up), forward: v(b.forward) } }; };
+    // walk along the route until a fully drawn vehicle is 17 to 23 m ahead of the lamps, within 5 m of the car's lane
+    let pick = null, s = d.pose().s;
+    for (let k = 0; k < 160 && !pick; k++) {
+      const { b, lamps } = lampsNow(), P = traffic.placed();
+      const mid = new T.Vector3((lamps[0][0] + lamps[1][0]) / 2, (lamps[0][1] + lamps[1][1]) / 2, (lamps[0][2] + lamps[1][2]) / 2);
+      for (let i = 0; P && i < P.count; i++) {
+        const c = new T.Vector3(P.pos[3 * i], P.pos[3 * i + 1], P.pos[3 * i + 2]), rel = c.clone().sub(mid);
+        const along = rel.dot(b.forward), side = rel.dot(b.right);
+        if (along > 17 && along < 23 && Math.abs(side) < 5 && P.alpha[i] >= 0.999 && (!pick || Math.abs(side) < Math.abs(pick.side))) pick = { c, up: new T.Vector3(P.up[3 * i], P.up[3 * i + 1], P.up[3 * i + 2]), along, side };
+      }
+      if (!pick) { s += 120; d.seek({ s }); await d.whenSettled(); await lp.frames(3); }
+    }
+    if (!pick) return { error: 'no vehicle 20 m ahead found' };
+    await lp.frames(3);
+    await lp.calibrate((on) => head.setEnabled(on)); // probe()'s vertical sense (see calibrate)
+    // The body has detail at the scale of a pixel (panels of their own colour), so the expectation is worked out from
+    // the ray through the very pixel probe() reads, and a point is taken only where the 3 x 3 pixels around it agree
+    // (the same vehicle, albedo within 2 %, illuminance within 5 %): the brightest such point in the beam.
+    const meshes = [];
+    traffic.renderer.group.traverse((o) => { if (o.isInstancedMesh && o.visible && o.count > 0 && o.geometry.getAttribute('color')) meshes.push(o); });
+    const { b: basisNow, lamps, basis } = lampsNow();
+    const colour = m.mirror.chromaOf([1, 0.95, 0.86]);
+    const W = sk.renderer.domElement.width, H = sk.renderer.domElement.height;
+    const centre = (n) => ({ x: ((Math.floor(((n.x + 1) / 2) * W) + 0.5) / W) * 2 - 1, y: ((Math.floor(((n.y + 1) / 2) * H) + 0.5) / H) * 2 - 1 });
+    /** What the pixel at ndc should hold: { expected, E, albedo, instance, mesh } or null where no body is hit. */
+    function sampleAt(x, y) {
+      const { o, d: dir } = lp.rayAtNdc(x, y);
+      const ray = new T.Raycaster(o, dir, 0.5, 200);
+      const hit = ray.intersectObjects(meshes, false)[0];
+      if (!hit || hit.instanceId === undefined) return null;
+      // the body's albedo at the hit: COLOR_0 x mix(1, instance colour, _paint), interpolated over the face
+      const mesh = hit.object, g = mesh.geometry, M4 = mesh.matrixWorld.constructor, im = new M4(); mesh.getMatrixAt(hit.instanceId, im);
+      const wm = new M4().multiplyMatrices(mesh.matrixWorld, im), pos = g.getAttribute('position');
+      const corner = (i) => new T.Vector3(pos.getX(i), pos.getY(i), pos.getZ(i)).applyMatrix4(wm);
+      const { a, b, c } = hit.face;
+      const A = corner(a), e0 = corner(b).sub(A), e1 = corner(c).sub(A), e2 = hit.point.clone().sub(A);
+      const d00 = e0.dot(e0), d01 = e0.dot(e1), d11 = e1.dot(e1), d20 = e2.dot(e0), d21 = e2.dot(e1), den = d00 * d11 - d01 * d01;
+      const wb = (d11 * d20 - d01 * d21) / den, wc = (d00 * d21 - d01 * d20) / den, wa = 1 - wb - wc;
+      const at = (attr, k) => (attr ? attr.getComponent(a, k) * wa + attr.getComponent(b, k) * wb + attr.getComponent(c, k) * wc : 1);
+      const col = g.getAttribute('color'), paintAttr = g.getAttribute('_paint');
+      const inst = mesh.material.color.clone().setRGB(1, 1, 1); if (mesh.instanceColor) mesh.getColorAt(hit.instanceId, inst);
+      const paint = paintAttr ? at(paintAttr, 0) : 1;
+      const albedo = [inst.r, inst.g, inst.b].map((ic, k) => at(col, k) * (1 + (ic - 1) * paint));
+      // the normal the shader shades with: the vertices' normals interpolated, into the scene (the face's as a fallback)
+      const nAttr = g.getAttribute('normal'), face = new T.Vector3().crossVectors(e0, e1).normalize();
+      const normal = nAttr ? new T.Vector3(at(nAttr, 0), at(nAttr, 1), at(nAttr, 2)).transformDirection(wm) : face.clone();
+      if (face.dot(dir) > 0) { face.negate(); if (normal.dot(face) < 0) normal.negate(); }
+      if (-face.dot(dir) < 0.3) return null; // too grazing a view
+      const E = m.mirror.headlampIrradiance({ tex, lamps, basis, point: [hit.point.x, hit.point.y, hit.point.z], normal: [normal.x, normal.y, normal.z] });
+      return { expected: (lp.lum(albedo.map((p, k) => p * colour[k])) * E) / Math.PI, E, albedo, instance: hit.instanceId, mesh: mesh.name, metalness: mesh.material.metalness };
+    }
+    let h = null, best = null;
+    const pxW = 2 / W, pxH = 2 / H;
+    for (const up of [0.5, 0.8, 1.1, 1.4, 1.8, 2.4]) for (const across of [-0.9, -0.6, -0.3, 0, 0.3, 0.6, 0.9]) {
+      const n = centre(lp.ndcOf(pick.c.clone().addScaledVector(pick.up, up).addScaledVector(basisNow.right, across)));
+      const mid = sampleAt(n.x, n.y);
+      if (!mid || !(mid.expected > 0)) continue;
+      let uniform = true;
+      for (let j = -1; j <= 1 && uniform; j++) for (let i = -1; i <= 1 && uniform; i++) {
+        const q = sampleAt(n.x + i * pxW, n.y + j * pxH);
+        uniform = !!q && q.mesh === mid.mesh && q.instance === mid.instance && Math.abs(lp.lum(q.albedo) / lp.lum(mid.albedo) - 1) < 0.02 && Math.abs(q.E / mid.E - 1) < 0.05;
+      }
+      if (uniform && (!best || mid.expected > best.expected)) { best = mid; h = { ndc: n }; }
+    }
+    if (!h) return { error: 'no even patch of the vehicle in view' };
+    const { expected, E, albedo } = best;
+    const n = h.ndc;
+    if (Math.abs(n.x) > 1 || Math.abs(n.y) > 1) return { error: 'the vehicle is off screen' };
+    head.setEnabled(true); const on = await lp.probe(n.x, n.y);
+    head.setEnabled(false); const off = await lp.probe(n.x, n.y);
+    head.setEnabled(true);
+    return { expected, measured: on.L - off.L, E, rho: lp.lum(albedo), along: pick.along, side: pick.side, mesh: best.mesh, metalness: best.metalness };
+  })()`));
+  if (r.error) report(backend, 'vehicle body in low beam, 20 m', NaN, NaN, 0.15, 'cd/m2', r.error);
+  else report(backend, 'vehicle body in low beam, 20 m', r.expected, r.measured, 0.15, 'cd/m2', `E ${r.E.toFixed(2)} lux, albedo ${r.rho.toFixed(3)}, ${r.along.toFixed(1)} m ahead, ${r.side.toFixed(1)} m across, ${r.mesh}, metalness ${r.metalness}`);
+  return page;
+}
+
 const started = Date.now();
 for (const backend of backends) {
   const pages = [];
   try {
     if (want('pool') || want('sprite')) pages.push(await lamps(backend));
     if (want('road') || want('sign')) pages.push(await headlights(backend));
+    if (want('vehicle')) pages.push(await vehicle(backend));
   } catch (e) {
     console.log(`${backend} ERROR ${e.message}`);
     rows.push({ backend, quantity: 'run', pass: false });

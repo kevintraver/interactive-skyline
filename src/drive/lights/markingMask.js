@@ -108,7 +108,7 @@ export function meanAlbedo(rgba, width, height, [x0, x1]) {
 }
 
 /**
- * The pavement's reference albedo for its R_L (headlamps.node.js): the mean of the day atlas over the asphalt lane
+ * The pavement's reference albedo for its R_L (headlamps.js): the mean of the day atlas over the asphalt lane
  * and over the concrete lane, so that the pavement's return is R_L x albedo / reference x E_perp: R_L on average, with
  * the atlas' wear, oil and joints showing through. regions: atlas.js REGIONS in the image's pixel columns.
  * @param {{ map?: object }} materials  @param {{ lane: number[], laneC: number[] }} regions

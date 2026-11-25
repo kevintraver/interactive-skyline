@@ -1,7 +1,7 @@
-// The driver's night adaptation (src/drive/adaptation.node.js; plan 02, third stretch, decision 13): the CPU twin of
+// The driver's night adaptation (src/drive/adaptation.js; plan 02, third stretch, decision 13): the CPU twin of
 // the afterBloom stage and the gain's ramp with the light.
 import { describe, it, expect } from 'vitest';
-import { ADAPTATION, adaptationGain, adaptRgb, lumaOf } from '../../../src/drive/adaptation.node.js';
+import { ADAPTATION, adaptationGain, adaptRgb, lumaOf } from '../../../src/drive/adaptation.js';
 
 const { G, W, dayEv, nightEv } = ADAPTATION;
 

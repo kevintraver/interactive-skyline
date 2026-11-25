@@ -1,6 +1,5 @@
-// The lamp pool map's ring around the car (plan 02, D5.4; section 7.8), shared by both renderers: the window, the
-// workers, the tile cache and the ring texture. pools.js puts it on the classic renderer's materials (a GLSL surface
-// term), pools.node.js on plan 01's node materials (a TSL one); neither holds any of the logic below.
+// The lamp pool map's ring around the car (plan 02, D5.4; section 7.8): the window, the workers, the tile cache and the
+// ring texture. pools.js puts it on the drive's node materials as a surface term.
 //
 // A ring texture of RING x RING tiles (POOL_TILE_M metres, `tilePx` texels each: 2048 m at 2 m per texel by default),
 // RGBA half floats in lux, one channel per light class and switching slice (poolTile.js). Tile (ti, tj) always sits
@@ -10,12 +9,12 @@
 // Tiles are splatted in workers (pools.worker.js) and kept in a small cache; a window shows once all its tiles are
 // in, and until then the part of the last complete window that the new one shares.
 //
-// The values a term reads (plain three objects, wrapped by each renderer's uniforms):
+// The values a term reads (plain three objects, wrapped in uniforms by pools.js):
 //   ring     the DataTexture (repeat wrapping, linear filtering)
 //   rect     Vector4 x0, y0, x1, y1 of the shown window (map metres); all zero when nothing is shown
 //   spec     Vector4 1 / ring size (m), edge fade (m), on (0/1), unused
 //   weights  four Vector3: each channel's weight (setWeights)
-// Both renderers copy a tile into the ring with renderer.copyTextureToTexture (WebGLRenderer and WebGPURenderer).
+// A tile is copied into the ring with renderer.copyTextureToTexture.
 
 import * as THREE from 'three';
 import { POOL_TILE_M, POOL_TILE_PX } from './poolTile.js';
@@ -106,8 +105,7 @@ export function createPoolRing({ renderer, pack, createWorker = defaultWorker, w
     const entry = pool.reduce((a, b) => (b.busy < a.busy ? b : a));
     entry.busy++;
     pending.set(key, entry);
-    // px only when it is not the worker's default, so the classic renderer's messages stay as they were
-    entry.w.postMessage(tilePx === POOL_TILE_PX ? { type: 'tile', id: nextId++, ti, tj } : { type: 'tile', id: nextId++, ti, tj, px: tilePx });
+    entry.w.postMessage({ type: 'tile', id: nextId++, ti, tj, px: tilePx });
   }
 
   function upload(ti, tj, rgba) {

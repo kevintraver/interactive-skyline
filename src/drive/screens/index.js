@@ -10,11 +10,12 @@
 //
 // Registry. The screens the drive knows (registry.js): the Sphere (screen id 'sphere'), the LED faces of the other
 // landmark models and of the extras, and the billboards part's faces. LED screens take their mean colour from the
-// mirror of night.js's program (led.js) over a fixed set of area samples of their LED faces; their level is the
-// shader's own, from the shared `night` uniform the drive sets from the look (a function of ambientLux).
+// mirror of night.js's program (led.js) over a fixed set of area samples of their LED faces; their level is a luminance
+// in cd/m^2, the one plan 01's building material draws the skin at (led.js ledScale: plan 01's ledCdM2(switchOn.signs)).
 //
-// The Sphere's light (D7.5): a surface term (light.glsl.js) on the ground, the road, the wide terrain, the low
-// buildings and the roadside buildings, scaled each frame by the Sphere's mean colour and falling off with distance
+// The Sphere's light (D7.5; third stretch, decision 6): an illuminance in lux, a surface term (light.js) on the
+// ground, the wide terrain, the low buildings and every 'road' and 'building' surface of ctx.eachSurface (the road and
+// the corridor's buildings), scaled each frame by the Sphere's mean colour and falling off with distance
 // from its centre. The term is switched on in beforeRender and off in afterRender, so it only ever lights the
 // drive's frames, never the map's. It follows hide and move: hidden, the term is off; moved, its centre moves with
 // the building's offset. It follows the app's edit events on the part context's bus (ctx.app.events, src/app/events.js):
@@ -22,25 +23,15 @@
 // moves with a dragged Sphere frame by frame) re-reads the Sphere's visibility and offset, and 'buildings:rebuilt'
 // (the height cutoff rebuilt the towers) rescans the removable buildings. Both are read once when the part starts;
 // nothing is polled per frame.
-//
-// Renderers (plan 02, third stretch, decisions 2 and 6). The light's term comes from light.glsl.js on the classic
-// renderer and from light.node.js on plan 01's, picked by ctx.legacy; the registry, the clocks and the events are the
-// same. On the classic renderer a screen's mean colour is in scene units (the LED skin's mix(0.05, 1.2, night)); on plan
-// 01's it is a luminance in cd/m^2, the one the building material draws the skin at (led.js ledScale: plan 01's
-// ledCdM2(switchOn.signs) in the shipped look), and the Sphere's light is an illuminance in lux from it. The surfaces
-// it lands on there are the ground, the wide terrain, the low buildings and every 'road' and 'building' surface of
-// ctx.eachSurface (the road and the corridor's buildings).
 
 import * as THREE from 'three';
-import { night } from '../../night.js';
 import { switchOn } from '../../render/materials/shared.js';
 import { createTimings } from '../timing.js';
 import { eachGround } from '../parts.js';
 import { contentSeconds } from './clock.js';
 import { createLedMeanCache, ledMean, ledSamples, ledScale } from './led.js';
 import { createScreenRegistry } from './registry.js';
-import * as lightGlsl from './light.glsl.js';
-import * as lightNode from './light.node.js';
+import { createSphereLight } from './light.js';
 
 export const SPHERE_ID = 'w976405284';
 /** Metres from the Sphere's centre within which its light is drawn. */
@@ -52,11 +43,11 @@ const SPHERE_WORK_M = 8000;
  * of content time and filled ahead a slice a frame (led.js createLedMeanCache). */
 const SPHERE_SAMPLES = 512;
 
-/** What multiplies an LED pattern now, for the display (led.js ledScale), from the shared uniforms. */
-const ledNow = (display) => ledScale({ display, night: night.value, signs: switchOn.signs.value });
+/** What multiplies an LED pattern now (led.js ledScale), from the shared uniforms. */
+const ledNow = () => ledScale({ signs: switchOn.signs.value });
 
 /** An LED screen of a removable building (its geometry is in world coordinates; the mesh moves by its offset). */
-function buildingScreen(entry, id, name, display) {
+function buildingScreen(entry, id, name) {
   const geo = entry.mesh.geometry;
   const led = geo.getAttribute('led'), pos = geo.getAttribute('position');
   if (!led || !pos || !led.array.some((v) => v > 0)) return null;
@@ -71,7 +62,7 @@ function buildingScreen(entry, id, name, display) {
     visible: () => entry.mesh.visible,
     meanColor(simMs, out = [0, 0, 0]) {
       if (cache) cache.at(contentSeconds(simMs), out); else ledMean(samples, contentSeconds(simMs), out);
-      const k = ledNow(display);
+      const k = ledNow();
       out[0] *= k; out[1] *= k; out[2] *= k;
       return out;
     },
@@ -79,7 +70,7 @@ function buildingScreen(entry, id, name, display) {
 }
 
 /** An LED screen on an extra (a mesh in its own frame, placed by its matrixWorld). */
-function extraScreen(mesh, id, name, display) {
+function extraScreen(mesh, id, name) {
   const geo = mesh.geometry;
   const led = geo.getAttribute('led'), pos = geo.getAttribute('position');
   if (!led || !pos || !led.array.some((v) => v > 0)) return null;
@@ -92,7 +83,7 @@ function extraScreen(mesh, id, name, display) {
     visible: shown,
     meanColor(simMs, out = [0, 0, 0]) {
       ledMean(samples, contentSeconds(simMs), out);
-      const k = ledNow(display);
+      const k = ledNow();
       out[0] *= k; out[1] *= k; out[2] *= k;
       return out;
     },
@@ -102,10 +93,8 @@ function extraScreen(mesh, id, name, display) {
 /** @param {object} ctx the part context (parts.js) */
 export function createScreensPart(ctx) {
   const { app, session } = ctx;
-  const legacy = ctx.legacy !== false;
-  // the Sphere's light: its term, uniforms and display ('legacy' on the classic renderer)
-  const light = (legacy ? lightGlsl : lightNode).createSphereLight({ range: SPHERE_RANGE, photometry: legacy ? undefined : { nodes: ctx.env?.nodes } });
-  const display = light.display;
+  // the Sphere's light: its term and uniforms
+  const light = createSphereLight({ range: SPHERE_RANGE, photometry: { nodes: ctx.env?.nodes } });
   const registry = createScreenRegistry();
   const timings = createTimings();
   const attractions = () => (typeof window !== 'undefined' ? window.__skyline?.attractions : null) || null;
@@ -117,7 +106,7 @@ export function createScreensPart(ctx) {
     sphere = null;
     for (const entry of app.tall || []) {
       const isSphere = entry.data.id === SPHERE_ID;
-      const s = buildingScreen(entry, isSphere ? 'sphere' : `led:${entry.data.id}`, entry.data.name || entry.data.id, display);
+      const s = buildingScreen(entry, isSphere ? 'sphere' : `led:${entry.data.id}`, entry.data.name || entry.data.id);
       if (!s) continue;
       registry.add(s);
       if (isSphere) sphere = s;
@@ -132,7 +121,7 @@ export function createScreensPart(ctx) {
         let k = 0;
         root.traverse((m) => {
           if (!m.isMesh) return;
-          const s = extraScreen(m, `extra:${root.name}${k ? `#${k}` : ''}`, root.name, display);
+          const s = extraScreen(m, `extra:${root.name}${k ? `#${k}` : ''}`, root.name);
           if (s) { registry.add(s); k++; }
         });
       }
@@ -146,7 +135,7 @@ export function createScreensPart(ctx) {
   const detach = [], attached = new Set();
   const attach = (material) => {
     if (!material || attached.has(material)) return;
-    if (!legacy && !material.isNodeMaterial) return; // plan 01's renderer: node materials only
+    if (!material.isNodeMaterial) return; // a stock material the renderer converts itself takes no term
     attached.add(material);
     detach.push(light.attach(material));
   };
@@ -154,18 +143,14 @@ export function createScreensPart(ctx) {
   attach(ctx.materials?.roadNear);
   attach(ctx.wideMesh?.material);
   const offGround = eachGround(ctx, (mesh) => attach(mesh.material)); // the terrain patches too, when they come
-  // plan 01's renderer: the road and the corridor's buildings as the session hands them over (a route switch adds more)
-  const offSurfaces = !legacy && typeof ctx.eachSurface === 'function'
+  // the road and the corridor's buildings as the session hands them over (a route switch adds more)
+  const offSurfaces = typeof ctx.eachSurface === 'function'
     ? ctx.eachSurface((material, kind) => { if (kind === 'road' || kind === 'building') attach(material); })
     : () => {};
   let corridorCheck = 0;
   function attachLate() {
     const low = app.getLow?.();
-    if (low) attach(low.material);
-    if (!legacy) return; // the corridor's material came through eachSurface
-    const corridor = ctx.group.children.find((o) => o.name === 'corridor');
-    const mesh = corridor?.children.find((m) => m.isMesh);
-    if (mesh) attach(mesh.material);
+    if (low) attach(low.material); // the corridor's material comes through eachSurface
   }
 
   let lightOn = false, lightEnabled = true, sphereState = '', sphereShown = false;

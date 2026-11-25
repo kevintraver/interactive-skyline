@@ -1,6 +1,10 @@
 // Spray's puffs (plan 02, D8.3) on the CPU: which vehicles throw spray this frame, where their puffs are, how big,
-// how opaque and lit by what, sorted far to near. Pure: no three.js, no DOM, no shader. spray.js (classic renderer)
-// and spray.node.js (plan 01's) draw what this writes; the rules and numbers are spray.js's (read its header).
+// how opaque and lit by what, sorted far to near. Pure: no three.js, no DOM, no shader. spray.js draws what this
+// writes (its header has the rules).
+//
+// Numbers (ASSUMED, by eye): SPRAY_OPACITY at full wetness and SPRAY_FULL_MPS and up; the puffs' places and sizes
+// (PUFFS); the spray's albedo SPRAY_ALBEDO (water droplets scatter almost all they intercept); the night's ambient
+// illuminance on it AMBIENT_NIGHT_LUX (a lit freeway's spill).
 
 import { lowBeamShare, LOW_PEAK_CD } from './rainMirror.js';
 import { LAMP_CD, LAMP_RGB } from '../traffic/lamps.js';
@@ -44,7 +48,7 @@ export function createPuffs(maxVehicles = MAX_VEHICLES) {
  * @param {{ placed: object|null, lengths: number[], eye: {x,y,z}, pose: object, wetness: number, lights: number,
  *   beams: number, units: number, sky: {r,g,b} }} f
  *   placed: traffic placed(); lengths: body lengths by body index; lights: the look's night share (0 day, 1 night);
- *   beams: the visitor's headlamps' drawn strength; units: the light scale of lux (classic: lighting.units.nit);
+ *   beams: the visitor's headlamps' drawn strength; units: the scale of lux (cityFactor);
  *   sky: the sky's radiance near the horizon in the units the colours are wanted in
  */
 export function writePuffs(st, { placed, lengths, eye, pose, wetness, lights, beams, units, sky }) {

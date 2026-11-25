@@ -1,4 +1,4 @@
-// The car's inside as the interior mirror shows it (plan 02, D4.3), shared by both renderers' mirror passes.
+// The car's inside as the interior mirror shows it (plan 02, D4.3), for the mirror passes (mirrors.js).
 
 import * as THREE from 'three';
 
@@ -6,7 +6,7 @@ import * as THREE from 'three';
  * The car's inside as the interior mirror sees it (cabin coordinates, metres; assumed proportions of a crossover
  * of cabin.json's body: 1.85 m wide, roof at 1.66, rear at 2.2): the rear window's opening in a frame (C-pillars,
  * headliner, parcel shelf), the headliner over the rear seats, and the two outboard rear headrests. `material(params)`
- * makes each material (MeshStandardMaterial parameters): the classic renderer's, or a node material on plan 01's.
+ * makes each material from MeshStandardMaterial parameters (mirrors.js: a node material).
  */
 export function buildInterior(material = (p) => new THREE.MeshStandardMaterial(p)) {
   const g = new THREE.Group();

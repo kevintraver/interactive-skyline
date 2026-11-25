@@ -1,6 +1,6 @@
 // The arithmetic of the valley's light ribbons (plan 02, D6.6), in JavaScript. Pure: no three.js, no DOM.
 //
-// Mirror: valley.glsl.js does the same per vertex and per fragment (shapeAt, densityPerMetre, lampIntensity,
+// Mirror: valley.js's material does the same per vertex and per fragment (shapeAt, densityPerMetre, lampIntensity,
 // ribbonRadiance, driftSpeed, the drift pattern); tests/unit/traffic/valley.test.js holds this file to the
 // counts. Change both together.
 //

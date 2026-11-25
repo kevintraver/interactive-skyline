@@ -8,18 +8,16 @@
 // the choice, fit and rotation are billboardsImages.js): a static face one image, lit from below at night by its own
 // lamps; a digital face a new image every HOLD_S seconds of simulation time with a quick fade (screens/digital.js), at
 // a level that follows the ambient illuminance. The atlas loads after the part is in (the faces are plain until
-// then); if it fails, the faces show the generated abstract artwork of screens/art.js instead, never nothing. The faces are screens in the registry (`screens` part), and the
-// digital ones nearest the car light the road and ground in front of them (a surface term, screens/light.glsl.js).
+// then); if it fails, the faces show the generated abstract artwork of screens/art.js instead, never nothing. The faces
+// are screens in the registry (`screens` part), and the digital ones nearest the car light the road and ground in front
+// of them (a surface term, screens/light.js).
 //
 // Per frame: two uniforms (the content time and the levels) and, for the glow, the nearest digital faces to the car.
 //
-// Renderers (plan 02, third stretch, decisions 2, 6 and 8). The faces' and lamps' materials come from billboardsFace.js
-// on the classic renderer and billboardsFace.node.js on plan 01's, the glow's term from screens/light.glsl.js or
-// light.node.js, picked by ctx.legacy; the layout, the images and the schedule are the same. On plan 01's renderer the
-// levels are luminances in cd/m^2 (screens/digital.js faceLevels: a digital face's white 300 cd/m^2 at night and 6,000
-// by day; a static face vinyl under 400 lx of floodlight), as are the registry's mean colours and the glow's, and the
-// detail follows app.quality's level (DETAIL below): the atlas tier, the floodlights per face and the faces that glow.
-// On the classic renderer the atlas tier follows the cabin model's device probe, as before.
+// The faces' and lamps' materials are billboardsFace.js's. The levels are luminances in cd/m^2 (third stretch,
+// decision 6; screens/digital.js faceLevels: a digital face's white 300 cd/m^2 at night and 6,000 by day; a static face
+// vinyl under 400 lx of floodlight), as are the registry's mean colours and the glow's, and the detail follows
+// app.quality's level (decision 8; DETAIL below): the atlas tier, the floodlights per face and the faces that glow.
 
 import * as THREE from 'three';
 import { MeshLambertNodeMaterial } from 'three/webgpu';
@@ -28,10 +26,8 @@ import { eachGround } from '../parts.js';
 import { buildAtlas, hash32 } from '../screens/art.js';
 import { contentSeconds } from '../screens/clock.js';
 import { digitalMean, faceLevels, phaseOf, PLAIN } from '../screens/digital.js';
-import * as lightGlsl from '../screens/light.glsl.js';
-import * as lightNode from '../screens/light.node.js';
-import * as faceGlsl from './billboardsFace.js';
-import * as faceNode from './billboardsFace.node.js';
+import { createGlowLight } from '../screens/light.js';
+import * as faceNode from './billboardsFace.js';
 import { adMean, assignImages, loadAds, shaderTables, textureBytes } from './billboardsImages.js';
 
 const RAD = Math.PI / 180;
@@ -41,9 +37,8 @@ const GLOW_RANGE = 70;
 const GLOW_PICK_M = 250;
 const POLE_R = { bulletin: 0.45, poster: 0.25 };
 /**
- * Detail by plan 01's quality level (decision 8), on its renderer: the atlas tier, the floodlights of a static face
- * (bulletins, 11 m and wider, and posters), and how many digital faces nearest the car light the ground. The classic
- * renderer keeps the high row, with the tier chosen by the cabin model's device probe.
+ * Detail by plan 01's quality level (decision 8): the atlas tier, the floodlights of a static face (bulletins, 11 m and
+ * wider, and posters), and how many digital faces nearest the car light the ground.
  */
 export const DETAIL = Object.freeze({
   low: Object.freeze({ tier: 'low', lampsBulletin: 2, lampsPoster: 2, glow: 2 }),
@@ -90,10 +85,9 @@ export async function createBillboardsPart(ctx) {
   const doc = await ctx.optional('billboards.json');
   if (!doc || !Array.isArray(doc.boards) || !doc.boards.length) return null;
   const { env, terrain } = ctx;
-  const legacy = ctx.legacy !== false;
-  const level = legacy ? 'high' : (DETAIL[env?.quality?.preset] ? env.quality.preset : 'high');
+  const level = DETAIL[env?.quality?.preset] ? env.quality.preset : 'high';
   const detail = DETAIL[level];
-  const photometry = legacy ? undefined : { nodes: env?.nodes };
+  const photometry = { nodes: env?.nodes };
   // a board stands on the ground as drawn (terrain.surfaceY), at the lowest point around its pole, so on a slope
   // the pole never hangs on its downhill side
   const groundY = (x, y) => {
@@ -120,33 +114,19 @@ export async function createBillboardsPart(ctx) {
 
   // ---------------------------------------------------------------- materials
   const renderer = ctx.app.renderer;
-  const anisotropy = Math.min(16, renderer.getMaxAnisotropy ? renderer.getMaxAnisotropy() : renderer.capabilities.getMaxAnisotropy());
+  const anisotropy = Math.min(16, renderer.getMaxAnisotropy());
   const blank = new THREE.DataTexture(new Uint8Array([255, 255, 255, 255]), 1, 1);
   blank.needsUpdate = true;
   const blankTable = new THREE.DataTexture(new Float32Array(8), 1, 2, THREE.RGBAFormat, THREE.FloatType);
   blankTable.needsUpdate = true;
-  let uniforms, faceMat, steel, frameMat, lampMat, lampLevel;
-  if (legacy) {
-    uniforms = {
-      uArt: { value: blank }, uAds: { value: blank }, uAdTable: { value: blankTable }, uAdTexel: { value: new THREE.Vector2(1, 1) },
-      uMode: { value: 0 }, uTime: { value: 0 }, uDigitalLevel: { value: 0.5 }, uStaticLevel: { value: 0 },
-    };
-    faceMat = faceGlsl.faceMaterial(new THREE.MeshLambertMaterial({ color: 0xffffff }), uniforms);
-    steel = new THREE.MeshLambertMaterial({ color: 0x6f7377 });
-    frameMat = new THREE.MeshLambertMaterial({ color: 0x3c3f43 });
-    lampMat = new THREE.MeshLambertMaterial({ color: 0x2b2d30, emissive: 0xfff1d6, emissiveIntensity: 0 });
-    lampLevel = (v) => { lampMat.emissiveIntensity = v; };
-  } else {
-    ({ material: faceMat, uniforms } = faceNode.faceMaterial({ blank, blankTable, photometry }));
-    steel = new MeshLambertNodeMaterial({ color: 0x6f7377 });
-    frameMat = new MeshLambertNodeMaterial({ color: 0x3c3f43 });
-    const lamp = faceNode.lampMaterial({ color: 0xfff1d6, photometry });
-    lampMat = lamp.material;
-    lampLevel = (v) => { lamp.uniforms.uLevel.value = v; };
-  }
-  // the levels' units: scene units on the classic renderer, cd/m^2 on plan 01's (faceLevels)
-  const display = legacy ? 'legacy' : faceNode.displayOf(photometry);
-  const levelsFor = (ambientLux, lampsOn) => faceLevels({ display, ambientLux, lampsOn, units: env.lighting.units });
+  const { material: faceMat, uniforms } = faceNode.faceMaterial({ blank, blankTable, photometry });
+  const steel = new MeshLambertNodeMaterial({ color: 0x6f7377 });
+  const frameMat = new MeshLambertNodeMaterial({ color: 0x3c3f43 });
+  const lamp = faceNode.lampMaterial({ color: 0xfff1d6, photometry });
+  const lampMat = lamp.material;
+  const lampLevel = (v) => { lamp.uniforms.uLevel.value = v; };
+  // the levels in cd/m^2 (faceLevels)
+  const levelsFor = (ambientLux, lampsOn) => faceLevels({ ambientLux, lampsOn });
   let art = null, ads = null, table = null, mode = 'plain', adMeans = null, assigned = null;
   const loadInfo = { state: 'loading' };
 
@@ -273,11 +253,7 @@ export async function createBillboardsPart(ctx) {
   }
   let disposed = false;
   const loading = (async () => {
-    let tier = detail.tier;
-    if (legacy) {
-      const { chooseCabinModel, probeDevice } = await import('../vehicle/cabin.js');
-      tier = chooseCabinModel(probeDevice(renderer)) === 'low' ? 'low' : 'high';
-    }
+    const tier = detail.tier;
     const got = await loadAds(tier);
     if (disposed) { got.bitmap.close?.(); return; }
     const { doc, bitmap } = got;
@@ -312,10 +288,10 @@ export async function createBillboardsPart(ctx) {
     ctx.app.invalidate?.();
   })().catch(useArt);
 
-  const glowLight = legacy ? lightGlsl.createGlowLight({ range: GLOW_RANGE }) : lightNode.createGlowLight({ range: GLOW_RANGE, count: detail.glow, photometry });
+  const glowLight = createGlowLight({ range: GLOW_RANGE, count: detail.glow, photometry });
   const glow = glowLight.uniforms, GLOW_MAX = glowLight.count;
   const detach = [];
-  const attach = (mat) => { if (mat && (legacy || mat.isNodeMaterial)) detach.push(glowLight.attach(mat)); };
+  const attach = (mat) => { if (mat?.isNodeMaterial) detach.push(glowLight.attach(mat)); };
   attach(ctx.materials?.road);
   attach(ctx.materials?.roadNear);
   attach(ctx.wideMesh?.material);
@@ -336,7 +312,7 @@ export async function createBillboardsPart(ctx) {
     glowCount = Math.min(GLOW_MAX, near.length);
     for (let i = 0; i < GLOW_MAX; i++) {
       const L = glow.uScrGlowL.value[i];
-      if (i >= glowCount || !group.visible) { L.set(0, 0, 0); continue; } // (dLevel: scene units, or cd/m^2 on plan 01's renderer)
+      if (i >= glowCount || !group.visible) { L.set(0, 0, 0); continue; } // (dLevel: cd/m^2)
       const f = near[i][1];
       faceMean(f.index, t, mean);
       L.set(mean[0] * dLevel, mean[1] * dLevel, mean[2] * dLevel);
@@ -382,7 +358,7 @@ export async function createBillboardsPart(ctx) {
       const t = timings.summary();
       return {
         boards: boards.length, faces: faces.length, digital: digitals.length, lamps: nLamps, glow: glowCount, glowMax: GLOW_MAX,
-        detail: { level, ...detail }, units: display === 'physical' ? 'cd/m2' : display === 'classic' ? 'cd/m2 (classic display)' : 'scene',
+        detail: { level, ...detail }, units: 'cd/m2',
         images: { ...loadInfo },
         level: { digital: +dLevel.toFixed(3), static: +sLevel.toFixed(3), ambientLux: +ambient.toFixed(3) },
         js: { mean: t.mean, p95: t.p95, max: t.max },

@@ -93,7 +93,7 @@ The user asked for the build to be driven to the end. These are the assumptions 
 
 **After the owner drove it (2026-11-22).** Two things the owner reported, and what was decided:
 
-- *"The road had intersections with mountainous regions"* and *"some of the structures look like they are floating."* Cause: everything was placed by the terrain's bilinear height while the ground is drawn as triangles, which differ by metres in a twisted cell of coarse mountain terrain; ramps were the roads under hillsides (up to 9.4 m), and ramp ends, sign posts, billboards and roadside buildings hung in the air. The drive now has one **drawn ground** (`terrain.surfaceAt`, `Heights.drawn_at`: the same triangles the meshes draw) for everything it places and for every road's profile, and `scripts/check_ground.py` with its tests holds it: no drawn ground above any pavement, every structure and object on the ground or on its road, with the exceptions recorded in `tests/data/ground_known.json`. The map's own `heightAt` is unchanged.
+- *"The road had intersections with mountainous regions"* and *"some of the structures look like they are floating."* Cause: everything was placed by the terrain's bilinear height while the ground is drawn as triangles, which differ by metres in a twisted cell of coarse mountain terrain; ramps were the roads under hillsides (up to 9.4 m), and ramp ends, sign posts, billboards and roadside buildings hung in the air. The drive now has one **drawn ground** (`terrain.surfaceAt`, `Heights.drawn_at`: the same triangles the meshes draw) for everything it places and for every road's profile, and `scripts/check_ground.py` with its tests holds it: no drawn ground above any pavement, every structure and object on the ground or on its road, with the exceptions recorded in `tests/python/ground_known.json`. The map's own `heightAt` is unchanged.
 - *Billboard images.* The owner asked for billboard images that are funny and look like they are from the 1990s, made with Codex. Section 7.9's generated abstract faces are now only the fallback: the boards carry forty fictional advertisements (`public/textures/billboards/`), their pictures generated with an image model through Codex and their lettering set in code. The plan's rule still holds in full: no real business, person, character, phone number or address, and every string is checked against `data/sign_denylist.txt`.
 
 **State of the second stretch** (kept current as work lands; the table above is the state on 2026-11-22 before it). One row per task of section 10 that this branch touched; tasks not listed were not started.
@@ -137,36 +137,7 @@ The user asked for the build to be driven to the end. These are the assumptions 
 | Section 8.3 luminance probes | Not done: probes of rendered frames wait for plan 01's exposure. The photometric acceptance numbers are unit tests on the pure functions. |
 | Section 12.2 attribution | Done: About the data (`src/ui/credits.js`), from Settings and the corner label, in Map and Drive. |
 
-**Custom shaders to port when plan 01 changes the renderer** (each in a file of its own; found by `onBeforeCompile`, `ShaderMaterial` and `addSurfaceTerm`):
-
-| File | What |
-| --- | --- |
-| `src/drive/roadnet/material.js` | `onBeforeCompile`: pavement pulled forward in depth. |
-| `src/drive/skyblend.js` | `ShaderMaterial`: the drive's sky dome with a warm band on the sun's side. |
-| `src/drive/lights/surfaceLight.js` | `onBeforeCompile` on Lambert and standard materials: the helper every surface term goes through (`addSurfaceTerm`). |
-| `src/drive/lights/pools.js` | Surface term: the lamp pool map around the car. |
-| `src/drive/lights/sprites.glsl.js`, `sprites.js` | `ShaderMaterial`: flux-conserving light sprites (mirrored in `spriteMirror.js`), for street, vehicle and obstruction lamps. |
-| `src/drive/lights/headlamps.glsl.js`, `headlights.js` | Surface terms: the beam and the retroreflected return (mirrored in `headlampMirror.js`); `headlights.js` also chains an `onBeforeCompile` that adds the varyings the retro term reads. |
-| `src/drive/roadside/billboardsFace.js`, `billboards.js` | `onBeforeCompile` on the billboard faces' Lambert material; `billboards.js` adds surface terms. |
-| `src/drive/screens/light.glsl.js`, `index.js` | Surface term: the screens' light on their surroundings. |
-| `src/drive/traffic/material.js` | `onBeforeCompile` and `ShaderMaterial`: vehicle paint, lamp faces, dissolve; contact shadows. |
-| `src/drive/traffic/pools.glsl.js`, `pools.js` | `ShaderMaterial`: other vehicles' headlamp pools. |
-| `src/drive/traffic/ribbon.glsl.js`, `ribbon.js` | `ShaderMaterial`: a ribbon of light per lane. |
-| `src/drive/traffic/valley.glsl.js`, `valley.js` | `ShaderMaterial`: the valley's ribbons. |
-| `src/drive/vehicle/mirrors.glsl.js`, `mirrors.js` | `ShaderMaterial`: the mirror faces. |
-| `src/drive/vehicle/windshield.glsl.js`, `windshield.js` | `ShaderMaterial`: the windshield layer. |
-| `src/drive/weather/wet.glsl.js`, `wetRoad.js` | Surface term: the wet road (mirrored in `wetMirror.js`). |
-| `src/drive/weather/rain.glsl.js`, `rain.js` | `ShaderMaterial`: falling rain (mirrored in `rainMirror.js`). |
-| `src/drive/weather/spray.glsl.js`, `spray.js` | `ShaderMaterial`: spray behind vehicles. |
-| `src/night.js`, `src/fountain.js`, `src/sky/legacySky.js` | The map's own (`onBeforeCompile` for the lit windows, `ShaderMaterial` for the fountain and the sky). Plan 01 ports them anyway; listed because the drive draws them too. |
-
-**Stand-ins that plan 01 replaces:**
-
-- `src/drive/env.js`: the clock, the ephemeris (NOAA solar position), the ambient light table (`ambientLux`), the light units at a fixed exposure (`LIGHTING_UNITS`) and the weather (`RAIN_PRESETS`, `weatherFor`, `createWeather`).
-- `src/drive/look.js`: the look blended between the app's day and night by the sun's elevation, and the lamp and beam switching curves read from it.
-- `src/drive/skyblend.js`: the blend put on the legacy sky.
-- `src/sky/legacySky.js`: the seam lines (`sky.hold`, the dome's `userData.sky`).
-- The other `// drive seam` lines: `src/main.js`, `src/ui/settingsPanel.js`, `src/interaction/edits.js`, `src/interaction/focus.js`, `src/drive/index.js`.
+**The port is done** (2026-11-24, third stretch below). The drive runs on plan 01's renderer alone, with no GLSL, no shader patch and no classic-renderer class left under `src/drive` or `src/world` (`tests/unit/drive/sourceRules.test.js` holds that). Its node materials are the drive's own modules, one per feature beside its CPU mirror: the road, corridor and terrain materials (`src/drive/roadnet/material.js`, `src/drive/corridor/material.js`, `src/world/terrain/material.js`), the light sprites, lamp pools, headlamps and the surface-light helper with the one light scale (`src/drive/lights/sprites.js`, `pools.js`, `headlamps.js`, `surfaceLight.js`, `photometry.js`), the screens' light and the billboard faces (`src/drive/screens/light.js`, `src/drive/roadside/billboardsFace.js`), the traffic's materials, ribbons, pools and the valley (`src/drive/traffic/`), the cabin, mirrors, windshield and rain on the glass (`src/drive/vehicle/`), and the wet road, rain and spray (`src/drive/weather/`). Its pipeline stages are the mirrors at `beforeScene`, the rain on the glass at `beforeBloom`, the windshield's veil and the driver's adaptation at `afterBloom` (`src/drive/vehicle/mirrors.js`, `glassRain.js`, `windshield.js`, `src/drive/adaptation.js`). The environment is plan 01's through the adapter in `src/drive/env.js`; what it still derives itself (wetness and the sky's dimming until plan 01's phase 7, the clear sky's illuminance for an elevation other than `env.state`'s) is marked there.
 
 ## Decisions for the third stretch (2026-11-23): the port to plan 01's renderer
 
@@ -210,7 +181,7 @@ Left out of this branch: the frame-rate work at device pixel ratio 2 beyond one 
 | Foundation: parity tool, `?parts=`, session on the pipeline, the adapter, the clock, terrain, road, static roadside | Done, 784bcf0. `?mode=drive&renderer=webgpu` runs the static world on the new renderer; 18 shots on three routes pass the parity tool on both backends (0.05 to 0.55 % by day, 0.40 to 1.17 % at night under plan 01's real Moon). Plan 01's apron rose above the wide ground inside the wide grid (up to 418 m): hidden while driving, and the same apron rings the wide grid. Reversed depth holds the road at 22 km and a 0.1 m near plane, so the depth pull and the moving near plane are dropped there. |
 | Light sprites, the surface-light helper and photometry as node modules | Done, 44bbc4e. Within 0.2 % of the GLSL layer on both backends; single lamps within 2 % of I/d². The classic renderer blended sprites after tone mapping and the new one adds them before, so lights are accepted by placement, by luminance probes (`pipeline.probe`) and by looking, not by image parity. |
 | Traffic materials, ribbons, pools and valley as node modules | Done, 7b2b7a9. Within 0.01 % of the GLSL modules on the WebGL2 backend. On WebGPU every case passes without multisampling; with 4× multisampling lamp lenses under a pixel and valley strips 1.5 pixels wide differ by 6 to 16 % (the backends cover such shapes with different samples; three's own material shows the same at edges). |
-| Road data defects: the deck over `i15s.main.out`, the five recorded ground exceptions, a ramp against a lead-out | Done, 5a32bb7. The deck was 3.42 m above the lead, not 4.62: interchanges were solved before the leads existed. Leads are now built first and are fixed roads; Russell Road's deck rises 2.2 m; three ramps cross the leads on decks and one ends before them; the US-93 fill over the wash is a bridge and the stub beside it is removed; `tests/data/ground_known.json` is empty. |
+| Road data defects: the deck over `i15s.main.out`, the five recorded ground exceptions, a ramp against a lead-out | Done, 5a32bb7. The deck was 3.42 m above the lead, not 4.62: interchanges were solved before the leads existed. Leads are now built first and are fixed roads; Russell Road's deck rises 2.2 m; three ramps cross the leads on decks and one ends before them; the US-93 fill over the wash is a bridge and the stub beside it is removed; `tests/python/ground_known.json` (then `tests/data/`) is empty. |
 | Lamps, pools, poles, obstruction lights, headlights and retroreflection on the new renderer | Done, 2849937. 26 photometric probes pass on both backends (section 8.3's luminance probes, for the lights). The beam does not light traffic bodies yet. |
 | Screens, the Sphere's light and billboards on the new renderer | Done, 4f16a6c and 4ab2272 (decision 12). 15 luminance probes pass. |
 | Cabin, mirrors, instruments, windshield, rain on the glass | Done, 35c4498. The cabin is in the scene pass on one camera; mirrors are a `beforeScene` stage (1.8 ms of main thread on WebGPU against about 5.3 on the classic renderer, at a load average of 130 to 210); the frame copy for the glass is gone. The logarithmic-depth fallback is not built. |
@@ -220,7 +191,7 @@ Left out of this branch: the frame-rate work at device pixel ratio 2 beyond one 
 | The drive's bar by real input on `app.clock`, `#sky` while driving, a quality change while driving | After the weather. Each part sets its own detail by quality level. |
 | Frame rate at device pixel ratio 2, diagnosed on the new renderer | After the port. |
 | Luminance probes of section 8.3 | After the port (plan 01's `pipeline.probe`). |
-| Delete the GLSL path, the interim seams and the stand-ins; goldens, budgets, CI | Last. |
+| Delete the GLSL path, the interim seams and the stand-ins; goldens, budgets, CI | The deletion is done (2026-11-24): Drive opens on plan 01's renderer and is not offered on `?renderer=legacy`; the GLSL modules, the `ctx.legacy` branches, the classic display, the stand-ins and the `.node` suffix are gone; 24 frames on three routes (day, dusk, night, cabin and clean, heavy rain) are bit-identical before and after, and the probes read the same numbers. The headlights now light vehicle bodies. Goldens, budgets and CI: the orchestrator's. |
 | D7.1, D7.2 fit to VIIRS | Left aside by the owner (2026-11-24); it needs a NASA Earthdata login. |
 
 **Found in plan 01's code and left for it** (the drive works around each):
@@ -1566,8 +1537,8 @@ Every phase ends in something that can be deployed. Task ids are `D<phase>.<n>`;
 - *Note.* The working tree has uncommitted changes; the user decides which tree is the baseline before this runs.
 
 **D0.2 · Test runners** · S · ∥ D0.1
-- *Files.* `package.json` (`test`, `test:e2e`, `test:data`), `vitest.config.js`, `tests/unit/`, `tests/data/conftest.py`.
-- *Steps.* Vitest for pure modules; Playwright (Chromium, software GL allowed; a second project with WebGPU enabled once plan 1 needs it); pytest run as `uv run --with pytest pytest tests/data`. One trivial test in each. A CI workflow that runs unit and data tests on every push and e2e on demand.
+- *Files.* `package.json` (`test`, `test:e2e`, `test:data`), `vitest.config.js`, `tests/unit/`, `tests/python/conftest.py` (then `tests/data/conftest.py`).
+- *Steps.* Vitest for pure modules; Playwright (Chromium, software GL allowed; a second project with WebGPU enabled once plan 1 needs it); pytest run as `uv run --with pytest pytest tests/data` (now `pnpm test:py` over `tests/python`). One trivial test in each. A CI workflow that runs unit and data tests on every push and e2e on demand.
 - *Accept.* `pnpm test && pnpm test:data` green locally and in CI.
 
 **D0.3 · Split `main.js`** · M · after D0.1

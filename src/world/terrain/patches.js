@@ -37,16 +37,15 @@ export function patchesCrossing(outline, patches, reach = PATCH_REACH) {
 }
 
 /**
- * @param {{ terrain: object, base: number, renderer: THREE.WebGLRenderer,
- *           image: (file: string) => Promise<ImageBitmap|null>, json: (file: string) => Promise<object|null>, ids?: string[],
- *           legacy?: boolean }} opts  legacy false: node materials (plan 01's renderer)
+ * @param {{ terrain: object, base: number, renderer: import('three/webgpu').WebGPURenderer,
+ *           image: (file: string) => Promise<ImageBitmap|null>, json: (file: string) => Promise<object|null>, ids?: string[] }} opts
  *   terrain is the provider; image and json fetch a file of the city's data directory (null when it is missing); ids
  *   the patches to build (default all; patchesCrossing picks a route's).
  * @returns {Promise<{ grids: object[], ground: Array<[THREE.Mesh, string]>, objects: THREE.Object3D[],
  *           setImagery(on: boolean): void }>}  grids for the wide mesh's cuts; ground as the app's ground list
  *           (mesh, id), for the parts that add terms to ground materials; objects to add to the scene
  */
-export async function buildPatches({ terrain, base, renderer, image, json, ids, legacy = true }) {
+export async function buildPatches({ terrain, base, renderer, image, json, ids }) {
   const list = await terrain.loadPatches(ids);
   const built = await Promise.all(list.map(async ({ id, grid, info }) => {
     const [bitmap, water] = await Promise.all([
@@ -58,12 +57,12 @@ export async function buildPatches({ terrain, base, renderer, image, json, ids, 
       map = new THREE.Texture(bitmap);
       map.flipY = false; // flipped while decoding, as for the wide grid
       map.colorSpace = THREE.SRGBColorSpace;
-      map.anisotropy = renderer.getMaxAnisotropy ? renderer.getMaxAnisotropy() : renderer.capabilities.getMaxAnisotropy();
+      map.anisotropy = renderer.getMaxAnisotropy();
       map.needsUpdate = true;
     }
-    const mesh = buildPatchMesh({ patch: grid, id, base, map, legacy });
+    const mesh = buildPatchMesh({ patch: grid, id, base, map });
     const skirt = buildSkirt(mesh, grid, PATCH_SKIRT);
-    const sheet = water ? buildWaterMesh(water, { base, name: `water-${id}`, legacy }) : null;
+    const sheet = water ? buildWaterMesh(water, { base, name: `water-${id}` }) : null;
     return { id, grid, mesh, map, objects: [mesh, skirt, ...(sheet ? [sheet] : [])] };
   }));
   return {

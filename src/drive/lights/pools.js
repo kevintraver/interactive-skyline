@@ -1,19 +1,16 @@
-// The lamp pool map around the car (plan 02, D5.4; section 7.8), and its term on the drive's surfaces, on the classic
-// renderer (pools.node.js is plan 01's). The ring, its window, workers and cache are poolRing.js's:
+// The lamp pool map around the car (plan 02, D5.4 and section 7.8; third stretch, decision 6), and its term on the
+// drive's surfaces through surfaceLight.js. The ring, its window, workers and tile cache are poolRing.js's.
 //
-// A ring texture of RING x RING tiles (POOL_TILE_M metres, POOL_TILE_PX texels each: 2048 m at 2 m per texel),
-// RGBA half floats in lux, one channel per light class and switching slice (poolTile.js). Tile (ti, tj) always sits
-// in ring slot (ti mod RING, tj mod RING), so the texture is read with repeat wrapping at map / (RING x tile) and
-// moving the window only replaces the tiles that left it. The window is RING x RING tiles centred on the car's
-// position snapped to the tile grid, so what is drawn is a function of where the car is, not of the way it came.
-// Tiles are splatted in workers (pools.worker.js) and kept in a small cache; a window shows once all its tiles are
-// in, and until then the part of the last complete window that the new one shares.
+// The term is an illuminance: E = sum over the four channels of lux x weight, where each weight is the colour of the
+// class (luminance 1) x the lit share of the slice x the warm-up flux, worked out per frame on the CPU (lights/index.js
+// poolWeights). surfaceLight.js reflects it as albedo x E / pi x the light scale (the pre-exposure), so no unit
+// is applied here. Buildings take a share on walls (WALL) and roofs (ROOF), the ground by its normal's tilt: the map
+// holds illuminance on level ground.
 //
-// The surface term (surfaceLight.js) adds albedo x E / pi with E = sum over channels of lux x weight, where each
-// weight is the colour of the class x the lit share of the slice x the warm-up flux x lighting.units.lux x the dusk
-// fade, worked out per frame on the CPU (setWeights). Buildings take a share on walls (WALL) and roofs (ROOF):
-// the map holds illuminance on level ground.
+// Programs: the two terms (ground, building) are made once per pool map and shared by every material they are added
+// to, so all the ground materials keep one program between them (surfaceLight.js, "Programs").
 
+import { uniform, texture, vec2, vec3, float, min, clamp, mix, smoothstep, select } from 'three/tsl';
 import { POOL_TILE_PX } from './poolTile.js';
 import { addSurfaceTerm } from './surfaceLight.js';
 import { RING, poolWindow, createPoolRing } from './poolRing.js';
@@ -21,50 +18,45 @@ import { RING, poolWindow, createPoolRing } from './poolRing.js';
 export { RING, poolWindow };
 const WALL = 0.5, ROOF = 0.35;
 
-const TERM_HEAD = /* glsl */ `
-uniform sampler2D uLampPool;
-uniform vec4 uLampPoolRect;   // x0, y0, x1, y1 of the shown window (map metres)
-uniform vec4 uLampPoolSpec;   // 1 / ring size (m), edge fade (m), on (0/1), unused
-uniform vec3 uLampPoolW[4];   // weight of each channel (colour x lit share x warm-up x units x fade)`;
-
-const termBody = (surface) => /* glsl */ `
-if ( uLampPoolSpec.z > 0.5 ) {
-  vec2 slMap = vec2( slWorld.x, -slWorld.z );
-  vec2 slIn = min( slMap - uLampPoolRect.xy, uLampPoolRect.zw - slMap );
-  float slFade = clamp( min( slIn.x, slIn.y ) / uLampPoolSpec.y, 0.0, 1.0 );
-  if ( slFade > 0.0 ) {
-    vec4 slP = texture( uLampPool, slMap * uLampPoolSpec.x );
-    vec3 slPool = slP.r * uLampPoolW[0] + slP.g * uLampPoolW[1] + slP.b * uLampPoolW[2] + slP.a * uLampPoolW[3];
-    ${surface === 'building' ? `slPool *= mix( ${WALL.toFixed(2)}, ${ROOF.toFixed(2)}, smoothstep( 0.5, 0.9, slNormal.y ) );` : 'slPool *= clamp( slNormal.y * 1.5, 0.0, 1.0 );'}
-    slE += slPool * slFade;
-  }
-}`;
-
 /**
- * @param {{ renderer: THREE.WebGLRenderer, pack: object, createWorker?: () => Worker, workers?: number, tilePx?: number }} opts
- *   pack: the decoded lamp product (pack.js), sent to the workers once (poolRing.js holds the window, the workers and
- *   the ring)
+ * @param {{ renderer: object, pack: object, createWorker?: () => Worker, workers?: number, tilePx?: number,
+ *   photometry?: { nodes?: object } }} opts  pack: the lamp product (pack.js); createWorker, workers: the splatting
+ *   workers (default pools.worker.js, two); tilePx: texels along a tile; photometry: the light scale's context
+ *   (photometry.js), given to every material the term is added to
  */
-export function createPools({ renderer, pack, createWorker, workers = 2, tilePx = POOL_TILE_PX }) {
+export function createPools({ renderer, pack, createWorker, workers = 2, tilePx = POOL_TILE_PX, photometry = {} }) {
   const r = createPoolRing({ renderer, pack, createWorker, workers, tilePx });
-  const uniforms = {
-    uLampPool: { value: r.ring },
-    uLampPoolRect: { value: r.rect },
-    uLampPoolSpec: { value: r.spec },
-    uLampPoolW: { value: r.weights },
+  const uRect = uniform(r.rect).setName('uLampPoolRect');
+  const uSpec = uniform(r.spec).setName('uLampPoolSpec');
+  const uW = r.weights.map((w, i) => uniform(w).setName(`uLampPoolW${i}`));
+  const ring = texture(r.ring);
+
+  /** The pool's lux on a surface, for 'ground' or 'building'. */
+  const luxOf = (surface) => ({ positionWorld, normalWorld }) => {
+    const map = vec2(positionWorld.x, positionWorld.z.negate());
+    const inside = min(map.sub(uRect.xy), uRect.zw.sub(map));
+    const fade = clamp(min(inside.x, inside.y).div(uSpec.y), 0, 1);
+    const p = ring.sample(map.mul(uSpec.x));
+    const pool = uW[0].mul(p.r).add(uW[1].mul(p.g)).add(uW[2].mul(p.b)).add(uW[3].mul(p.a));
+    const tilt = surface === 'building'
+      ? mix(float(WALL), float(ROOF), smoothstep(0.5, 0.9, normalWorld.y))
+      : clamp(normalWorld.y.mul(1.5), 0, 1);
+    return select(uSpec.z.greaterThan(0.5), pool.mul(tilt).mul(fade), vec3(0));
   };
   const terms = {
-    ground: { id: 'lampPools', key: 'ground-v1', uniforms, head: TERM_HEAD, body: termBody('ground') },
-    building: { id: 'lampPools', key: 'building-v1', uniforms, head: TERM_HEAD, body: termBody('building') },
+    ground: { id: 'lampPools', key: 'ground-v1', lux: luxOf('ground') },
+    building: { id: 'lampPools', key: 'building-v1', lux: luxOf('building') },
   };
+
   return {
-    uniforms, terms, ring: r.ring,
-    /** Add the pool term to a material: surface 'ground' (road, terrain) or 'building'. Returns a remover. */
-    attach(material, surface = 'ground') { return addSurfaceTerm(material, terms[surface] || terms.ground); },
+    terms, ring: r.ring, tilePx,
+    /** Add the pool term to a node material: surface 'ground' (road, terrain) or 'building'. Returns a remover. */
+    attach(material, surface = 'ground') { return addSurfaceTerm(material, terms[surface] || terms.ground, { photometry }); },
     /** Follow the car (map metres). Off, nothing is requested and the term draws nothing. */
     update: r.update,
-    /** Channel weights (scene irradiance per lux), each [r, g, b]. */
+    /** Channel weights (dimensionless: colour x lit share x warm-up), each [r, g, b]. */
     setWeights: r.setWeights,
+    /** The lux the shown map holds per channel at map (x, y) (poolRing.js), or null. */
     channelsAt: r.channelsAt,
     whenSettled: r.whenSettled,
     stats: r.stats,

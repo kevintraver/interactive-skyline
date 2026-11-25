@@ -16,7 +16,7 @@ export const MAX_SHAPES = 8;
 /** Smallest extent of any shape, as a share of the panel's height (letters would need far smaller strokes). */
 export const MIN_SHAPE = 0.12;
 
-/** A 32-bit integer hash (lowbias32, C. Wellons); the face shader has the same one in GLSL. */
+/** A 32-bit integer hash (lowbias32, C. Wellons); the face shader has the same one (roadside/billboardsFace.js bbHash). */
 export function hash32(x) {
   x >>>= 0;
   x ^= x >>> 16; x = Math.imul(x, 0x7feb352d) >>> 0;

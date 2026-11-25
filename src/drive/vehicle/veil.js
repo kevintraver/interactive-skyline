@@ -1,8 +1,7 @@
-// The windshield's model, shared by both renderers (plan 02, D4.4; section 7.6): windshield.js draws it on the classic
-// renderer, windshield.node.js on plan 01's. The layer lies over the windshield opening, drawn with the cabin (so the
-// clean camera has none), additive: light that the dirt on the glass scatters toward the eye
-// lifts the darks, and the lit dashboard top shows faintly in the lower glass by day. The shader is
-// windshield.glsl.js; the functions below are its arithmetic in JavaScript, which the unit tests check.
+// The windshield's model (plan 02, D4.4; section 7.6), drawn by windshield.js. The layer lies over the windshield
+// opening, drawn with the cabin (so the clean camera has none), additive: light that the dirt on the glass scatters
+// toward the eye lifts the darks, and the lit dashboard top shows faintly in the lower glass by day. The functions below
+// are the layer's arithmetic in JavaScript, which the unit tests check.
 //
 // The dirt mask (windshieldMask): generated once, procedurally. Two tandem wiper arcs of a left-hand-drive car
 // (both park along the cowl and sweep up to the left) leave a cleaner swept area; dust outside it, heavier low
@@ -24,17 +23,15 @@
 //   - the brightest oncoming head lamps (the traffic part's lamp points, kind head, facing the eye): 800 cd toward
 //     an eye above the cut-off with a cos^6 lobe (traffic/lamps.js LAMP_CD, LOBE: FMVSS 108 Table XIX-a), each
 //     switched on by its vehicle's own threshold; the few strongest by illuminance at the eye.
-// In scene units: luminance x (scene per lux), where scene per lux is the scene's horizontal irradiance (its sky
-// light plus its sun) over the real one (env.js ambientLux) by day, and env.lighting.units.lux (0.1) at night;
-// the sun term is soft-capped (CAP_SUN), the lamps' too (CAP_LAMP), so a head lamp's glare never whites out the
-// road.
+// In buffer units: luminance x the pre-exposure (veilFrame's scenePerLux); the sun term is soft-capped (CAP_SUN), the
+// lamps' too (CAP_LAMP), so a head lamp's glare never whites out the road.
 // The dashboard: the view reflected in the glass's plane, where it meets the dash top's plane inside its
 // outline, at the glass's unpolarised Fresnel reflectance (n = 1.52, both faces), times the dash's radiance in
 // the cabin's own light (albedo DASH_ALBEDO, ASSUMED a mid-dark grey top).
 
 import * as THREE from 'three';
 import { LAMP_CD, LOBE, vehicleThresholdLux } from '../traffic/lamps.js';
-import { LIGHTING_UNITS, ambientLux } from '../env.js';
+import { ambientLux } from '../env.js';
 
 export const VEIL = Object.freeze({
   /** cd/m^2 per lux per deg^-2, for mask 1 (assumed: see the header) */
@@ -43,7 +40,7 @@ export const VEIL = Object.freeze({
   THETA_C: 0.5,
   /** the dust's share of the sky's light (assumed) */
   K_SKY: 0.001,
-  /** soft caps in scene units: the sun's veil and the lamps' (the road at night is 0.003 to 0.06) */
+  /** soft caps in buffer units: the sun's veil and the lamps' */
   CAP_SUN: 1.5,
   CAP_LAMP: 0.12,
 });
@@ -208,21 +205,18 @@ const _inv = new THREE.Matrix4(), _d = new THREE.Vector3(), _c = new THREE.Color
  * values: { sunDir: Vector3, sun: Color, sky: Color, lamps: Vector4[], dash: Color }. Returns the numbers for stats.
  * @param {{ frame: object, L: object, sunDir: THREE.Vector3, sunColor: THREE.Color, sunIntensity: number,
  *   hemi: THREE.HemisphereLight|null, lampPoints: object|null, eyeWorld: THREE.Vector3 }} o
- *   sunDir: unit, toward the sun, cabin coordinates; sunIntensity and hemi: the scene's own lights (scene units)
+ *   sunDir: unit, toward the sun, cabin coordinates; sunIntensity and hemi: the scene's own lights (the sky's colour,
+ *   the dashboard's light)
  * @param {{ glassOut: THREE.Vector3, maxLamps: number, dashboard?: boolean, picked: number[][] }} k  the layer's constants
  *   and a scratch list
- * @param {{ ambient?: number, scenePerLux?: number|null }} [over] ambient: the horizontal illuminance (lux; default
- *   env.js ambientLux at the sun's elevation); scenePerLux: the buffer value per cd/m^2 (default: the classic scene's
- *   horizontal irradiance over the real one, never above the night units)
+ * @param {{ ambient?: number, scenePerLux: number }} over ambient: the horizontal illuminance (lux; default env.js
+ *   ambientLux at the sun's elevation); scenePerLux: the buffer value per cd/m^2 (the pre-exposure)
  */
-export function veilFrame({ frame, L, sunDir, sunColor, sunIntensity, hemi, lampPoints, eyeWorld }, out, k, over = {}) {
+export function veilFrame({ frame, L, sunDir, sunColor, sunIntensity, hemi, lampPoints, eyeWorld }, out, k, over) {
   const { glassOut, maxLamps, picked } = k;
   const el = frame.sun.elevation;
   const ambient = over.ambient ?? ambientLux(el);
-  // scene per lux: the scene's horizontal irradiance over the real one, never above the night units
-  const sinEl = Math.max(0, Math.sin(el * RAD));
-  const sceneEh = (sunIntensity || 0) * sinEl * (sunColor ? lum(sunColor) : 1) + (hemi ? hemi.intensity * lum(hemi.color) : 0);
-  const S = over.scenePerLux ?? Math.min(LIGHTING_UNITS.lux, sceneEh / Math.max(ambient, 1e-6));
+  const S = over.scenePerLux;
   out.sunDir.copy(sunDir);
   const lit = sunOnGlass(sunDir.dot(glassOut));
   const E = sunNormalLux(el) * lit;

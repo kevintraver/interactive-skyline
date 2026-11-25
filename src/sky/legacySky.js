@@ -55,8 +55,6 @@ export function createLegacySky() {
   const HAZE = haze.value.set(DAY.haze), ZENITH = new THREE.Color(DAY.zenith);
   const sky = {
     sun: null, hemi: null, dome: null, scene: null, invalidate: null,
-    // drive seam: while Drive mode holds the look (src/drive/skyblend.js), apply() hands it the ground and stops
-    hold: null,
     /** 'pinned' (today's two looks) or 'clock' (follows env.state; plan 01, sections 4.2 and 5.6). */
     mode: 'pinned', state: null, imagery: true, terrain: [],
     /** What the classic look set: key body, weight and sun power, hemisphere, street glow (read by render/look.js). */
@@ -84,7 +82,6 @@ export function createLegacySky() {
         sky.dome.updateMatrixWorld(true);
       };
       scene.add(sky.dome);
-      sky.dome.userData.sky = sky; // drive seam: Drive mode is given the dome and reaches the lights through it
 
       const hemi = sky.hemi = new THREE.HemisphereLight(DAY.skyLight, DAY.groundLight, DAY.hemi);
       scene.add(hemi);
@@ -113,7 +110,6 @@ export function createLegacySky() {
     apply({ night: isNight, imagery, terrain }) {
       sky.imagery = imagery;
       sky.terrain = terrain;
-      if (sky.hold) { sky.hold({ imagery, terrain }); return; } // drive seam
       if (sky.mode === 'clock' && sky.state) { sky.update(sky.state); sky.invalidate(); return; }
       sky.look(isNight ? NIGHT : DAY, isNight ? 1 : 0);
       sky.invalidate();

@@ -1,165 +1,189 @@
-// The mirrors (plan 02, D4.3; section 7.6): each of the three mirror faces of the cabin shows the world from a
-// camera placed by reflecting the driver's eye in the mirror's plane, rendered into a render target of its own.
+// The mirrors (plan 02, D4.3; section 7.6; third stretch, decisions 3 and 8): each of the three mirror faces of the cabin
+// shows the world from a camera placed by reflecting the driver's eye in the mirror's plane (mirrorGeometry.js
+// mirrorView, whose header has the construction), drawn into a render target of its own.
 //
-// Construction (mirrorView, pure). The eye is the head's position in cabin coordinates (rig.last.head), so the
-// reflection follows the head: its lag, its look and the glances.
-//   Flat mirrors (the driver's door mirror, the interior mirror): the camera sits at the eye's reflection E' and
-//   looks through the mirror's rectangle as through a window, an off-axis frustum whose near plane is the mirror
-//   plane: x = -right, y = up, z = -normal (the normal points to the driver). This is exact for a flat mirror:
-//   the ray from E' through a point of the glass is the eye's ray reflected there. The camera's x runs against
-//   the face's u, hence the flip in the face's shader. The interior mirror is widened to cabin.json's minFovDeg
-//   (FMVSS 111's 20 degrees) when the eye sees less through it (it sees about 19).
-//   The convex passenger mirror (radius 1.4 m, FMVSS 111 allows 889-1651 mm): a spherical mirror turns the ray at
-//   an offset a from its centre by 2a/R more than a flat one does, so the angles of the field grow by
-//   k = 1 + 2D/R (D the eye's distance to the mirror; about 3.3 here). The camera sits at E', looks along the
-//   central ray reflected, with a symmetric frustum of k times the flat mirror's half-angles, and the face
-//   samples it through a barrel mapping (tan(sA)/tan(A)), so angles, not tangents, run linearly across it.
-// Each camera is then carried into the scene by the body's matrix (rig.last.body).
-//
-// The passes (createMirrors). A mirror pass draws the world scene only: not the cabin, not the windshield layer
-// (both live in the cabin's own scene). The passes run before the world's own draw (session.js render, cabin.js
-// beforeWorld), so the canvas's world and cabin are drawn without a pass between them; the first pass redraws the
-// shadow map when it is due (only buildings cast shadows, so it is the map the world's draw would have made).
-// Two things the world's parts cull against the main camera are put right for each pass: the traffic bodies
-// (traffic.renderer.draw is run again for the mirror's camera, and once more for the main camera afterwards,
-// so the traffic part's lamp points and stats stay the main view's), and the light sprites and ribbons, which
-// size themselves in pixels from uViewport and uPixelAngle (set back afterwards). The glass's reflectance is applied
-// before the tone mapping, as the eye would see a dimmer image: the renderer's exposure times the reflectance for
-// the world, the sprites' gain times it for the light sprites (they tone-map themselves, and a dimmer lamp is a
-// smaller disc: a follower's head lamps do not blind in the mirror). The interior mirror then gets
-// the car's own interior drawn over the world with the depth cleared (the rear window's frame, the headliner,
-// the rear headrests: simple boxes in cabin coordinates on layer 1 of the cabin scene); the door mirrors get the
-// car's flank in their shader.
-// What the passes do not fix: the street lamps' sprites are culled per cell against the main view
-// (lights/index.js), so lamp heads well behind the car are missing from the mirrors; the lamps' pools are not.
-//
-// Refresh. glassPresets.js sets each mirror's target and rate; while the clock is paused every mirror is drawn
-// on every drawn frame, so a settled frame's mirrors are current whatever the frame count.
+//   - The passes are a pipeline stage at `beforeScene` (decision 3; plan 01 section 11.8), drawn before the shadow and
+//     scene passes, so the scene pass is never split. The cabin part adds the stage and removes it on dispose.
+//   - The targets hold linear HDR (half float, pre-exposed like the scene pass). The face multiplies by the glass's
+//     reflectance (the eye sees a dimmer image) and the pipeline tone-maps it with the rest of the frame. The light
+//     sprites size themselves from the target being drawn (sprites.js), so nothing is set aside.
+//   - The traffic bodies are culled against the main camera, so traffic.renderer.draw is run again for each mirror's
+//     camera, and once more for the main camera afterwards (the traffic part's lamp points and stats stay the main
+//     view's). The street lamps' sprites are culled per cell against the main view (lights/index.js), so lamp heads well
+//     behind the car are missing from the mirrors; the lamps' pools are not.
+//   - The car is in the world scene (the cabin is drawn in the scene pass), so the passes hide it. The interior mirror's
+//     view of the car's inside (the rear window's frame, the headliner, the headrests: mirrorInterior.js) is a group of
+//     the world scene shown only during that mirror's pass, drawn with the world in one pass: everything behind the
+//     rear window is farther than the car's inside, so no depth clear is needed. The door mirrors get the car's flank in
+//     their face's shader.
+//   - The coarse ground: each ground grid gets a second mesh sharing its vertices with a coarser index (mirrorGeometry.js
+//     coarseGridIndex), shown instead of the grid during the passes (a swapped index would leave a GPU buffer behind at
+//     every rebuild of the near ring: the renderer keys buffers by attribute). The coarse index is updated in place in a
+//     buffer with room to spare, drawn with a draw range.
+//   - Refresh and quality (decision 8): sizes, rates and samples come from the preset the cabin picked for app.quality's
+//     level (glassPresets.js); setOptions() takes another preset when the level changes. While the clock is paused every
+//     mirror is drawn on every drawn frame, so a settled frame's mirrors are current whatever the frame count.
 
 import * as THREE from 'three';
-import { mirrorVertex, mirrorFragment } from './mirrors.glsl.js';
+import { RenderTarget, MeshBasicNodeMaterial, MeshStandardNodeMaterial, HalfFloatType } from 'three/webgpu';
+import { Fn, uniform, texture, uv, vec2, vec3, vec4, float, select, mix, smoothstep, atan, tan, abs } from 'three/tsl';
 import { mirrorsDue, MIRROR_NAMES } from './glassPresets.js';
 import { createTimings } from '../timing.js';
-import { buildInterior } from './mirrorInterior.js';
 import {
-  FINE_M, FINE_STEP_M, GROUND_BUDGET_MS, MIRROR_FAR, TRAFFIC_BEHIND_SHARE, REFLECTANCE, FLANK, FLANK_PAINT as PAINT, srgbToLinear,
-  reflectPoint, mirrorView, projectToMirror, coarseGridIndex, gridCells, coarseGridSteps,
+  FINE_M, FINE_STEP_M, GROUND_BUDGET_MS, TRAFFIC_BEHIND_SHARE, REFLECTANCE, FLANK, FLANK_PAINT, mirrorView, coarseGridIndex,
+  coarseGridSteps, gridCells,
 } from './mirrorGeometry.js';
+import { buildInterior } from './mirrorInterior.js';
 
-export { FINE_M, FINE_STEP_M, GROUND_BUDGET_MS, MIRROR_FAR, REFLECTANCE, reflectPoint, mirrorView, projectToMirror, coarseGridIndex, gridCells, coarseGridSteps };
-
-/**
- * A mirror's render target, drawn exactly as the screen is: tone-mapped and sRGB-encoded by each material's own
- * shader. three gives a plain render target linear output without tone mapping, which is a different shader
- * program for every material of the world: switching every material's program twice a frame cost about 4 ms of
- * main-thread time. A target marked as an XR target takes the screen's tone mapping and its texture's colour space
- * (three's WebGLPrograms, getOutputColorSpace). The storage is plain RGBA8, set up while the texture is still
- * linear, so the encoded values are stored as they are (no second encoding by the hardware); the face's shader
- * decodes them.
- */
-function displayTarget(renderer, w, h, samples) {
-  const target = new THREE.WebGLRenderTarget(w, h, {
-    type: THREE.UnsignedByteType, samples, depthBuffer: true, generateMipmaps: false,
-    minFilter: THREE.LinearFilter, magFilter: THREE.LinearFilter, colorSpace: THREE.NoColorSpace,
-  });
-  renderer.initRenderTarget(target); // RGBA8, while linear
-  target.texture.colorSpace = THREE.SRGBColorSpace; // read by the programs from now on
-  target.isXRRenderTarget = true;
+/** A mirror's target: linear HDR as the scene pass holds it, multisampled when the preset asks. */
+function hdrTarget(w, h, samples) {
+  const target = new RenderTarget(w, h, { type: HalfFloatType, samples, depthBuffer: true, generateMipmaps: false });
+  target.texture.minFilter = THREE.LinearFilter;
+  target.texture.magFilter = THREE.LinearFilter;
   return target;
 }
 
 /**
- * The mirror passes.
- * @param {{ renderer: THREE.WebGLRenderer, scene: THREE.Scene, session: object, cabinScene: THREE.Scene,
- *   faces: object, options: object, lights: THREE.Light[] }} o
- *   faces: the cabin part's mirrors; options: a preset's `mirrors` (glassPresets.js); lights: the cabin's lights
- *   (they light the interior mirror's view of the car's inside too); ground: [[mesh, stride], ...] regular grid
- *   meshes drawn coarser in the mirrors (the ground grids: millions of triangles that culling cannot reduce)
+ * The face's colour, linear: the image times the reflectance, the stand-in before the
+ * first image, the barrel mapping on the convex mirror, the car's flank along the inboard edge of a door mirror.
  */
-export function createMirrors({ renderer, scene, session, cabinScene, faces, options, lights, ground = [] }) {
+function faceNode(u) {
+  return Fn(() => {
+    // the face as the driver sees it, u right and v up (three keeps glTF's v, which runs down)
+    const f = vec2(uv().x, float(1).sub(uv().y)).toVar();
+    // the reflected camera's x runs against the face's u
+    const t = vec2(float(1).sub(f.x), f.y).toVar();
+    const s = t.mul(2).sub(1);
+    const A = atan(u.barrel.max(1e-6));
+    const tb = tan(s.mul(A)).div(u.barrel.max(1e-6)).mul(0.5).add(0.5);
+    const tt = select(u.barrel.x.greaterThan(0), tb, t);
+    // three samples a render target's texture with v running down on both backends
+    const image = texture(u.map, vec2(tt.x, float(1).sub(tt.y))).rgb.mul(u.reflect);
+    const c = select(u.ready.greaterThan(0.5), image, u.standIn.mul(u.reflect)).toVar();
+    // the car's own side: wider low down, a window line at the beltline, a highlight along the shoulder
+    const edge = select(u.flank.x.greaterThan(0), float(1).sub(f.x), f.x);
+    const w = mix(u.flank.y, u.flank.z, f.y);
+    const k = float(1).sub(smoothstep(w.sub(0.012), w.add(0.004), edge));
+    const paint = u.flankPaint.mul(smoothstep(0, u.flank.w, f.y).mul(0.4).add(0.8));
+    const side = select(f.y.greaterThan(u.flank.w), u.flankGlass, paint)
+      .add(u.flankPaint.mul(0.5).mul(float(1).sub(smoothstep(0, 0.035, abs(f.y.sub(u.flank.w).add(0.03))))));
+    const withFlank = mix(c, side.mul(u.reflect), k);
+    return vec4(select(abs(u.flank.x).greaterThan(0), withFlank, c), 1);
+  })();
+}
+
+/**
+ * The mirror passes.
+ * @param {{ renderer: object, scene: THREE.Scene, session: object, car: THREE.Object3D, carGroup: THREE.Object3D,
+ *   faces: object, options: object, lightsNode: object, ground?: Array<[THREE.Mesh, number]>, standIn?: THREE.Color }} o
+ *   car: the car's group in the world scene (hidden during the passes); carGroup: where the interior group goes (it is
+ *   placed with the car); faces: the cabin part's mirrors; options: a preset's `mirrors`; lightsNode: the cabin's lights
+ *   (the inside the interior mirror shows is lit as the cabin is); ground: [[mesh, stride], ...] grid meshes drawn coarser
+ */
+export function createMirrors({ renderer, scene, session, car, carGroup, faces, options: opts0, lightsNode, ground = [] }) {
+  let options = opts0;
   const mirrors = {};
   const standIn = new THREE.Color(0x1c2330);
   for (const name of MIRROR_NAMES) {
     const face = faces[name], opt = options[name];
     if (!face?.mesh || !opt) continue;
     const [w, h] = opt.size;
-    const target = displayTarget(renderer, w, h, options.samples || 0);
+    const target = hdrTarget(w, h, options.samples || 0);
     target.texture.name = `mirror-${name}`;
     const door = name !== 'center';
     const side = name === 'left' ? 1 : name === 'right' ? -1 : 0; // the inboard edge: u = 1 on the left mirror
-    const material = new THREE.ShaderMaterial({
-      name: `mirror-${name}`,
-      uniforms: {
-        map: { value: target.texture }, uReady: { value: 0 }, uStandIn: { value: standIn.clone() },
-        uReflect: { value: door ? REFLECTANCE.door : REFLECTANCE.centerDay }, uBarrel: { value: new THREE.Vector2(0, 0) },
-        uExposure: { value: renderer.toneMappingExposure },
-        uFlank: { value: new THREE.Vector4(door ? side : 0, FLANK.bottom, FLANK.top, FLANK.belt) },
-        uFlankPaint: { value: new THREE.Color() }, uFlankGlass: { value: new THREE.Color() },
-      },
-      vertexShader: mirrorVertex, fragmentShader: mirrorFragment, side: THREE.DoubleSide,
-      toneMapped: false, // the image is tone-mapped already; the shader maps the flank itself
-    });
+    const u = {
+      map: target.texture, ready: uniform(0), standIn: uniform(standIn.clone()),
+      reflect: uniform(door ? REFLECTANCE.door : REFLECTANCE.centerDay), barrel: uniform(new THREE.Vector2(0, 0)),
+      flank: uniform(new THREE.Vector4(door ? side : 0, FLANK.bottom, FLANK.top, FLANK.belt)),
+      flankPaint: uniform(new THREE.Color()), flankGlass: uniform(new THREE.Color()),
+    };
+    const material = new MeshBasicNodeMaterial({ name: `mirror-${name}`, side: THREE.DoubleSide, fog: false });
+    material.colorNode = faceNode(u);
     const old = face.mesh.material;
     face.mesh.material = material;
     old?.dispose?.();
     const camera = new THREE.PerspectiveCamera();
     camera.matrixAutoUpdate = false;
-    const cabinCam = new THREE.PerspectiveCamera();
-    cabinCam.matrixAutoUpdate = false;
-    cabinCam.layers.set(1);
-    mirrors[name] = { name, face, opt, target, material, camera, cabinCam, view: null, renders: 0, stamp: null };
+    // the renderer's clip space and depth direction from the start: otherwise its first render of this camera re-derives
+    // the projection from fov and aspect (symmetric), and a projection built for WebGL's clip space without reversed depth
+    // keeps only the farthest surfaces (three has no setter for the camera's reversed depth)
+    camera.coordinateSystem = renderer.coordinateSystem;
+    camera._reversedDepth = !!renderer.reversedDepthBuffer;
+    mirrors[name] = { name, face, opt, target, material, u, camera, view: null, renders: 0, stamp: null };
   }
 
   // ---------------------------------------------------------------- the car's inside, for the interior mirror
-  const proxies = buildInterior();
-  proxies.traverse((o) => o.layers.set(1));
-  cabinScene.add(proxies);
-  for (const l of lights) l.layers.enable(1);
+  const interior = buildInterior((params) => {
+    const m = new MeshStandardNodeMaterial({ ...params, fog: false });
+    m.lightsNode = lightsNode;
+    return m;
+  });
+  interior.visible = false;
+  interior.traverse((o) => { if (o.isMesh) o.frustumCulled = false; });
+  carGroup.add(interior);
 
   // ---------------------------------------------------------------- the coarse ground
-  // Each grid mesh gets a second index over its own vertices, swapped in for the mirror passes only.
-  // A mesh whose full index is replaced later (the wide mesh, when a terrain patch is cut out of it: session.js
-  // addPatches) gets its coarse index again from the new one.
-  // Within FINE_M of the car each grid keeps its own cells (coarseGridIndex's `fine`), rebuilt when the car has moved
-  // FINE_STEP_M from where it last was.
+  const coarseGroup = new THREE.Group();
+  coarseGroup.name = 'mirror-coarse-ground';
+  coarseGroup.visible = false;
+  coarseGroup.matrixWorldAutoUpdate = false;
+  scene.add(coarseGroup);
   const coarse = [];
   for (const [mesh, stride] of ground) {
-    const g = mesh?.geometry, idx = g?.index, uv = g?.getAttribute('uv'), pos = g?.getAttribute('position');
-    if (!idx || !uv || !pos || !(stride > 1)) continue;
-    const nx = Math.round(1 / uv.array[2]) + 1, ny = pos.count / nx;
+    const g = mesh?.geometry, idx = g?.index, uvA = g?.getAttribute('uv'), pos = g?.getAttribute('position');
+    if (!idx || !uvA || !pos || !(stride > 1)) continue;
+    const nx = Math.round(1 / uvA.array[2]) + 1, ny = pos.count / nx;
     if (!Number.isInteger(ny) || ny < 2) continue;
-    // the grid's posts in map metres: post (i, j) at (x0 + i * step, y0 + j * step); scene z is -y
     const a = pos.array, step = a[3] - a[0];
     const x0 = a[0] + mesh.position.x, y0 = -(a[2] + mesh.position.z);
-    const index = new THREE.BufferAttribute(coarseGridIndex(idx.array, nx, ny, stride), 1);
-    coarse.push({ geometry: g, full: idx, index, nx, ny, stride, x0, y0, step, at: null });
+    const geometry = new THREE.BufferGeometry();
+    for (const [k, v] of Object.entries(g.attributes)) geometry.setAttribute(k, v); // shared: one GPU buffer each
+    const first = coarseGridIndex(idx.array, nx, ny, stride);
+    const index = new THREE.BufferAttribute(new Uint32Array(Math.ceil(first.length * 1.5) + 6 * 4096), 1);
+    index.array.set(first);
+    geometry.setIndex(index);
+    geometry.setDrawRange(0, first.length);
+    geometry.boundingSphere = g.boundingSphere; geometry.boundingBox = g.boundingBox;
+    const copy = new THREE.Mesh(geometry, mesh.material);
+    copy.name = `${mesh.name || 'ground'}-coarse`;
+    copy.matrixAutoUpdate = false;
+    copy.matrixWorldAutoUpdate = false;
+    copy.frustumCulled = mesh.frustumCulled;
+    copy.renderOrder = mesh.renderOrder;
+    coarseGroup.add(copy);
+    coarse.push({ mesh, copy, geometry, full: idx, nx, ny, stride, x0, y0, step, at: null, cells: null, grown: 0, was: undefined });
   }
   const fineOf = (c, x, y) => {
     const r = FINE_M / c.step;
     const fi = (x - c.x0) / c.step, fj = (y - c.y0) / c.step;
     return [Math.floor(fi - r), Math.ceil(fi + r), Math.floor(fj - r), Math.ceil(fj + r)];
   };
-  // The near-ground rebuild when the car has moved is spread over the frames (GROUND_BUDGET_MS of each mirror frame,
-  // about 25 frames for the three grids; measured at 10 to 35 ms a grid in one go, a 60 to 100 ms frame): the old
-  // index, fine within FINE_M of where it was built, serves meanwhile, since the car is at most FINE_STEP_M plus a
-  // second's travel from there. A grid whose full index was replaced (a patch cut out of it) is rebuilt at once.
-  // Its cost: stats().ground, and a user-timing measure 'drive:mirror-ground' around each frame's share of the work.
-  const rebuilt = { count: 0, lastMs: 0, maxMs: 0, maxStepMs: 0, totalMs: 0, indices: 0, pending: 0 };
-  let job = null; // { c, it, at, ms }
+  const rebuilt = { count: 0, lastMs: 0, maxMs: 0, maxStepMs: 0, totalMs: 0, indices: 0, pending: 0, grown: 0 };
+  let job = null;
   const measure = (t0) => { const ms = performance.now() - t0; performance.measure?.('drive:mirror-ground', { start: t0, end: t0 + ms }); return ms; };
   const done = (c, index, ms) => {
-    c.index = new THREE.BufferAttribute(index, 1);
-    rebuilt.count++; rebuilt.lastMs = ms; rebuilt.maxMs = Math.max(rebuilt.maxMs, ms); rebuilt.totalMs += ms; rebuilt.indices = c.index.count;
+    let attr = c.geometry.index;
+    if (index.length > attr.array.length) {
+      // no room: a bigger buffer (the old one is left to the renderer's geometry disposal; rare: counted in stats)
+      attr = new THREE.BufferAttribute(new Uint32Array(Math.ceil(index.length * 1.5)), 1);
+      c.geometry.setIndex(attr);
+      c.grown++; rebuilt.grown++;
+    }
+    attr.array.set(index);
+    attr.clearUpdateRanges();
+    attr.addUpdateRange(0, index.length);
+    attr.needsUpdate = true;
+    c.geometry.setDrawRange(0, index.length);
+    rebuilt.count++; rebuilt.lastMs = ms; rebuilt.maxMs = Math.max(rebuilt.maxMs, ms); rebuilt.totalMs += ms; rebuilt.indices = index.length;
   };
-  const swapGround = (on, x, y) => {
+  function swapGround(on, x, y) {
     if (on && Number.isFinite(x)) {
-      const t0 = performance.now();
-      const end = t0 + GROUND_BUDGET_MS;
+      const t0 = performance.now(), end = t0 + GROUND_BUDGET_MS;
       for (const c of coarse) {
-        if (c.geometry.index === c.full) continue;
-        // a new full index: at once, and a pending rebuild of the old one is dropped
-        if (job?.c === c) job = null;
-        c.full = c.geometry.index;
+        if (c.mesh.geometry.index === c.full) continue;
+        if (job?.c === c) job = null; // a new full index (a patch cut out of the wide grid): at once
+        c.full = c.mesh.geometry.index;
         c.cells = gridCells(c.full.array, c.nx, c.ny);
         c.at = [x, y];
         done(c, coarseGridIndex(c.full.array, c.nx, c.ny, c.stride, fineOf(c, x, y)), 0);
@@ -169,10 +193,7 @@ export function createMirrors({ renderer, scene, session, cabinScene, faces, opt
         if (c) {
           c.cells ||= gridCells(c.full.array, c.nx, c.ny);
           job = { c, at: [x, y], ms: 0, it: coarseGridSteps(c.full.array, c.nx, c.ny, c.stride, fineOf(c, x, y), c.cells) };
-          if (!c.at) { // the first: at once
-            let r; do r = job.it.next(); while (!r.done);
-            c.at = job.at; done(c, r.value, 0); job = null;
-          }
+          if (!c.at) { let r; do r = job.it.next(); while (!r.done); c.at = job.at; done(c, r.value, 0); job = null; }
         }
       }
       if (job) {
@@ -185,58 +206,55 @@ export function createMirrors({ renderer, scene, session, cabinScene, faces, opt
       }
       rebuilt.pending = job ? 1 : 0;
     }
+    coarseGroup.visible = !!on;
     for (const c of coarse) {
-      // a geometry's index can be swapped between draws: the renderer binds whichever it finds
-      c.geometry.index = on ? c.index : c.full;
+      if (on) {
+        c.was = c.mesh.visible;
+        c.copy.visible = c.was;
+        c.copy.matrixWorld.copy(c.mesh.matrixWorld);
+        c.mesh.visible = false;
+      } else if (c.was !== undefined) { c.mesh.visible = c.was; c.was = undefined; }
     }
-  };
+  }
 
-  // ---------------------------------------------------------------- the world's pixel-sized things
-  // and the objects the passes leave out (options.skip: names), found in the same walk of the scene
-  let sized = [], skipped = [], sizedAt = -Infinity;
+  // objects the passes leave out (options.skip: names), found by a walk of the scene every 120 mirror frames
+  let skipped = [], skippedAt = -Infinity;
   let skipNames = new Set(options.skip || []);
-  function findSized(frameNo) {
-    if (frameNo - sizedAt < 120 && sizedAt >= 0) return sized;
-    sizedAt = frameNo;
-    const found = new Set();
+  function findSkipped(frameNo) {
+    if (frameNo - skippedAt < 120 && skippedAt >= 0) return skipped;
+    skippedAt = frameNo;
     skipped = [];
-    scene.traverse((o) => {
-      const u = o.material?.uniforms;
-      if (u && u.uViewport && u.uPixelAngle) found.add(o.material);
-      if (o.name && skipNames.has(o.name)) skipped.push({ o, v: true });
-    });
-    sized = [...found].map((m) => ({ u: m.uniforms, vp: new THREE.Vector2(), pa: 0, gain: 0 }));
-    return sized;
+    if (skipNames.size) scene.traverse((o) => { if (o.name && skipNames.has(o.name)) skipped.push({ o, v: true }); });
+    return skipped;
   }
 
   const timing = createTimings(); // the passes' own JavaScript (renderer.render's work excluded: see submits)
   const submits = createTimings(); // the CPU side of the mirror passes' renderer.render calls
-  const _body = new THREE.Matrix4(), _eye = new THREE.Vector3(), _q = new THREE.Quaternion(), _s = new THREE.Vector3();
-  const _w = new THREE.Matrix4();
+  const _body = new THREE.Matrix4(), _eye = new THREE.Vector3(), _s = new THREE.Vector3(), _w = new THREE.Matrix4();
   let frameNo = 0, lastPassMs = 0, lastPixels = 0, lastCalls = 0, renders = 0, enabled = options.enabled !== false;
-  let rotate = false; // tests: rotate as while playing even on a paused frame (cabin-cost.mjs)
+  let heldMatrices = null; // the scene's matrixWorldAutoUpdate while the passes have it off (null: not held)
+  let rotate = false; // tests: rotate as while playing even on a paused frame (to time it)
   let marker = null;
   const look = { dusk: 0 };
   const flank = { paint: new THREE.Color(), glass: new THREE.Color() };
 
-  /** Light the flank and set the reflectances from the scene's sky light (the cabin's hemisphere copy). */
+  /** Light the flank and set the interior mirror's reflectance from the scene's sky light and sun (as drawn this frame). */
   function shade(hemi, sunLight) {
     const sky = hemi ? hemi.intensity : 0.5;
     const sun = sunLight ? sunLight.intensity : 0;
-    // the car's side in the sky's light and a share of the sun's (it faces sideways): Lambert, albedo of the paint
     const e = sky * 0.7 + sun * 0.25;
-    flank.paint.setRGB(PAINT[0] * e / Math.PI, PAINT[1] * e / Math.PI, PAINT[2] * e / Math.PI);
+    flank.paint.setRGB(FLANK_PAINT[0] * e / Math.PI, FLANK_PAINT[1] * e / Math.PI, FLANK_PAINT[2] * e / Math.PI);
     if (hemi) flank.paint.multiply(hemi.color);
     flank.glass.copy(flank.paint).multiplyScalar(0.18);
     for (const m of Object.values(mirrors)) {
-      m.material.uniforms.uFlankPaint.value.copy(flank.paint);
-      m.material.uniforms.uFlankGlass.value.copy(flank.glass);
-      if (m.name === 'center') m.material.uniforms.uReflect.value = REFLECTANCE.centerDay + (REFLECTANCE.centerNight - REFLECTANCE.centerDay) * look.dusk;
+      m.u.flankPaint.value.copy(flank.paint);
+      m.u.flankGlass.value.copy(flank.glass);
+      if (m.name === 'center') m.u.reflect.value = REFLECTANCE.centerDay + (REFLECTANCE.centerNight - REFLECTANCE.centerDay) * look.dusk;
     }
   }
 
   /**
-   * Draw the mirrors due on this frame. Called from the cabin's beforeWorld, before the world and the cabin are drawn.
+   * Draw the mirrors due on this frame (the cabin's beforeScene stage).
    * @param {object} frame the session's frame  @param {object} L rig.last (cabin view)  @param {{ all?: boolean }} [opt]
    * @returns {number} the pass's own JavaScript, ms (renderer.render's work excluded)
    */
@@ -251,22 +269,21 @@ export function createMirrors({ renderer, scene, session, cabinScene, faces, opt
     _body.copy(L.body);
     const prevTarget = renderer.getRenderTarget();
     const prevAuto = renderer.autoClear;
-    // the shadow map (refreshed on demand: shadowMap.autoUpdate is off) is redrawn by the first pass when it is due,
-    // and then not again by the world's draw that follows; only buildings cast shadows, so it is the same map
     const traffic = session.part?.('traffic');
     const placed = traffic?.placed?.();
     const vpH = frame.viewport?.height || 720;
-    const tw = traffic?.renderer && placed ? { s: frame.pose.s, range: traffic.renderer.rangeFor(frame.camera, vpH) * TRAFFIC_BEHIND_SHARE } : null;
-    const list = findSized(frameNo);
-    for (const it of list) { it.vp.copy(it.u.uViewport.value); it.pa = it.u.uPixelAngle.value; if (it.u.uGain) it.gain = it.u.uGain.value; }
-    const prevExposure = renderer.toneMappingExposure;
-    for (const k of skipped) { k.v = k.o.visible; k.o.visible = false; }
-    const info = renderer.info.render;
+    const tw = traffic?.renderer?.draw && placed ? { s: frame.pose.s, range: traffic.renderer.rangeFor(frame.camera, vpH) * TRAFFIC_BEHIND_SHARE } : null;
+    for (const k of findSkipped(frameNo)) { k.v = k.o.visible; k.o.visible = false; }
+    const carShown = car.visible;
+    car.visible = false;
     let pixels = 0, calls = 0, submit = 0;
+    // bring the scene's matrices up to date once; the passes skip the scene graph's update, and so does the scene pass
+    // that follows on this frame (heldMatrices: the cabin puts the flag back after the frame is drawn)
+    scene.updateMatrixWorld();
     swapGround(true, _body.elements[12], -_body.elements[14]);
-    // the session brought every matrix up to date for this frame (session.js render): the passes skip the scene graph's update
-    const prevAutoMatrix = scene.matrixWorldAutoUpdate;
+    if (heldMatrices === null) heldMatrices = scene.matrixWorldAutoUpdate;
     scene.matrixWorldAutoUpdate = false;
+    const info = renderer.info.render;
     for (const name of due) {
       const m = mirrors[name];
       if (!m) continue;
@@ -279,47 +296,29 @@ export function createMirrors({ renderer, scene, session, cabinScene, faces, opt
       _w.decompose(cam.position, cam.quaternion, _s);
       cam.matrixWorldInverse.copy(_w).invert();
       cam.near = view.near; cam.far = view.far; cam.fov = view.fovY; cam.aspect = (view.tan.r - view.tan.l) / (view.tan.t - view.tan.b);
-      cam.projectionMatrix.copy(view.projection);
-      cam.projectionMatrixInverse.copy(view.projection).invert();
-      const [w, h] = m.opt.size;
+      // mirrorView's off-axis frustum, in this renderer's clip space and depth direction
+      cam.projectionMatrix.makePerspective(view.left, view.right, view.top, view.bottom, view.near, view.far, renderer.coordinateSystem, !!renderer.reversedDepthBuffer);
+      cam.projectionMatrixInverse.copy(cam.projectionMatrix).invert();
+      const [, h] = m.opt.size;
       if (tw) traffic.renderer.draw(placed, cam, h, tw);
-      const pa = (view.tan.t - view.tan.b) / h;
-      // the glass's reflectance, before the tone mapping: the world through the renderer's exposure, the light sprites
-      // (which tone-map themselves) through their gain, so a follower's lamp seen in a dim mirror is a smaller disc
-      const R = m.material.uniforms.uReflect.value;
-      renderer.toneMappingExposure = prevExposure * R;
-      for (const it of list) { it.u.uViewport.value.set(w, h); it.u.uPixelAngle.value = pa; if (it.u.uGain) it.u.uGain.value = it.gain * R; }
+      interior.visible = name === 'center';
       renderer.setRenderTarget(m.target);
       renderer.autoClear = true;
-      let ts = performance.now();
+      const ts = performance.now();
+      const before = info.drawCalls ?? info.calls ?? 0;
       renderer.render(scene, cam);
       submit += performance.now() - ts;
-      calls += info.calls;
-      if (name === 'center') {
-        // the car's inside, over the world: the same camera in cabin coordinates
-        m.cabinCam.matrix.copy(view.matrix);
-        m.cabinCam.matrixWorld.copy(view.matrix);
-        m.cabinCam.matrixWorldInverse.copy(view.matrix).invert();
-        m.cabinCam.projectionMatrix.copy(view.projection);
-        m.cabinCam.projectionMatrixInverse.copy(cam.projectionMatrixInverse);
-        renderer.autoClear = false;
-        renderer.clearDepth();
-        ts = performance.now();
-        renderer.render(cabinScene, m.cabinCam);
-        submit += performance.now() - ts;
-        calls += info.calls;
-      }
-      m.material.uniforms.uReady.value = 1;
-      if (view.barrel) m.material.uniforms.uBarrel.value.set(view.barrel[0], view.barrel[1]);
+      calls += (info.drawCalls ?? info.calls ?? 0) - before;
+      m.u.ready.value = 1;
+      if (view.barrel) m.u.barrel.value.set(view.barrel[0], view.barrel[1]);
       m.renders++;
       m.stamp = { simMs: frame.simMs, frame: frameNo, eye: [_eye.x, _eye.y, _eye.z] };
-      pixels += w * h;
+      pixels += m.opt.size[0] * h;
     }
+    interior.visible = false;
     swapGround(false);
     for (const k of skipped) k.o.visible = k.v;
-    scene.matrixWorldAutoUpdate = prevAutoMatrix;
-    for (const it of list) { it.u.uViewport.value.copy(it.vp); it.u.uPixelAngle.value = it.pa; if (it.u.uGain) it.u.uGain.value = it.gain; }
-    renderer.toneMappingExposure = prevExposure;
+    car.visible = carShown;
     if (tw) traffic.renderer.draw(placed, frame.camera, vpH, { s: frame.pose.s, range: traffic.renderer.rangeFor(frame.camera, vpH) });
     renderer.setRenderTarget(prevTarget);
     renderer.autoClear = prevAuto;
@@ -332,48 +331,68 @@ export function createMirrors({ renderer, scene, session, cabinScene, faces, opt
     return own;
   }
 
+  /** Another preset's mirrors (a quality change): new targets where the size or samples changed. */
+  function setOptions(next) {
+    if (!next) return;
+    const resample = (next.samples || 0) !== (options.samples || 0);
+    options = next;
+    skipNames = new Set(options.skip || []); skippedAt = -Infinity;
+    enabled = options.enabled !== false;
+    for (const m of Object.values(mirrors)) {
+      const opt = options[m.name];
+      if (!opt) continue;
+      const same = opt.size[0] === m.opt.size[0] && opt.size[1] === m.opt.size[1];
+      m.opt = opt;
+      if (same && !resample) continue;
+      const target = hdrTarget(opt.size[0], opt.size[1], options.samples || 0);
+      target.texture.name = m.target.texture.name;
+      m.target.dispose();
+      m.target = target;
+      m.u.map = target.texture;
+      m.material.colorNode = faceNode(m.u);
+      m.material.needsUpdate = true;
+      m.u.ready.value = 0;
+    }
+  }
+
   return {
     mirrors,
     get enabled() { return enabled; },
-    /** The wall time of the last render() call, ms (its own JavaScript and its renderer.render work). */
     get lastPassMs() { return lastPassMs; },
-    /** Names of scene objects the passes leave out (replaces the preset's list). */
-    setSkip(names) { skipNames = new Set(names || []); sizedAt = -Infinity; },
-    /** Mirrors on or off (off: the faces keep their last image; for measuring what they cost). */
+    setSkip(names) { skipNames = new Set(names || []); skippedAt = -Infinity; },
     setEnabled(v) { enabled = !!v; },
     /** Tests: draw the mirrors in rotation, as while playing, even on paused frames (for measuring a playing frame's cost). */
     setRotation(v) { rotate = !!v; },
+    /** After the frame is drawn: the scene updates its own matrices again (see render). */
+    release() { if (heldMatrices !== null) { scene.matrixWorldAutoUpdate = heldMatrices; heldMatrices = null; } },
+    setOptions,
+    get options() { return options; },
     setLook(l) { look.dusk = Number.isFinite(l.dusk) ? l.dusk : l.night ? 1 : 0; },
     shade,
     render,
-    /** Cabin frames seen so far (a stamp's `frame` is the one its mirror was last drawn on). */
     get frame() { return frameNo; },
-    /** The views of the last pass, per mirror (for tests): position, axes, frustum tangents. */
     views: () => Object.fromEntries(Object.values(mirrors).map((m) => [m.name, m.view && {
       position: m.view.position.toArray(), x: m.view.x.toArray(), y: m.view.y.toArray(), z: m.view.z.toArray(),
       tan: { ...m.view.tan }, barrel: m.view.barrel, k: m.view.k, fovY: m.view.fovY, near: m.view.near,
     }])),
-    /** Per mirror: when it was last drawn ({ simMs, frame, eye }) and how often. */
     stamps: () => Object.fromEntries(Object.values(mirrors).map((m) => [m.name, m.stamp && { ...m.stamp, renders: m.renders }])),
     /**
-     * A mirror's image (tone-mapped, as displayed) as linear floats 0..1 (RGBA, rows from the bottom), for tests:
-     * { width, height, data }. Reads the render target back (slow; never per frame).
+     * A mirror's image as linear floats (RGBA, rows from the bottom), for tests: { width, height, data }. Scene-referred
+     * (pre-exposed HDR, before the reflectance and the tone mapping). Slow.
      */
-    read(name) {
+    async read(name) {
       const m = mirrors[name];
       if (!m) return null;
       const [w, h] = m.opt.size;
-      const bytes = new Uint8Array(w * h * 4);
-      renderer.readRenderTargetPixels(m.target, 0, 0, w, h, bytes);
-      const data = new Float32Array(bytes.length);
-      for (let i = 0; i < bytes.length; i++) data[i] = srgbToLinear(bytes[i] / 255);
-      return { width: w, height: h, data };
+      const px = await renderer.readRenderTargetPixelsAsync(m.target, 0, 0, w, h);
+      const data = new Float32Array(px.length);
+      for (let i = 0; i < px.length; i++) data[i] = px instanceof Uint16Array ? THREE.DataUtils.fromHalfFloat(px[i]) : px[i];
+      return { width: w, height: h, data, scene: true };
     },
-    /** A magenta box in the world for tests (scene coordinates, metres), or null to remove it. */
     marker(at, size = 1.6) {
       if (marker) { scene.remove(marker); marker.geometry.dispose(); marker.material.dispose(); marker = null; }
       if (!at) return null;
-      marker = new THREE.Mesh(new THREE.BoxGeometry(size, size, size), new THREE.MeshBasicMaterial({ color: 0xff00ff, fog: false }));
+      marker = new THREE.Mesh(new THREE.BoxGeometry(size, size, size), new MeshBasicNodeMaterial({ color: 0xff00ff, fog: false }));
       marker.name = 'mirror-test-marker';
       marker.position.set(at.x, at.y, at.z);
       marker.updateMatrixWorld(true);
@@ -384,12 +403,16 @@ export function createMirrors({ renderer, scene, session, cabinScene, faces, opt
       enabled, renders, frame: frameNo, pixels: lastPixels, calls: lastCalls, js: timing.summary(), submit: submits.summary(),
       ground: { ...rebuilt, lastMs: +rebuilt.lastMs.toFixed(2), maxMs: +rebuilt.maxMs.toFixed(2), maxStepMs: +rebuilt.maxStepMs.toFixed(2), totalMs: +rebuilt.totalMs.toFixed(2) },
       sizes: Object.fromEntries(Object.values(mirrors).map((m) => [m.name, [...m.opt.size, m.opt.every]])),
+      samples: options.samples || 0,
     }),
     dispose() {
+      this.release();
       for (const m of Object.values(mirrors)) { m.target.dispose(); m.material.dispose(); }
-      proxies.traverse((o) => { if (o.isMesh) { o.geometry.dispose(); o.material.dispose(); } });
+      interior.traverse((o) => { if (o.isMesh) { o.geometry.dispose(); o.material.dispose(); } });
+      carGroup.remove(interior);
       swapGround(false);
-      cabinScene.remove(proxies);
+      // the coarse copies share the grids' vertex buffers: only their own index goes (disposing the geometry would free the shared ones)
+      scene.remove(coarseGroup);
       if (marker) this.marker(null);
     },
   };

@@ -1,5 +1,5 @@
-// D5.4 and D5.5: the pool map (poolTile.js, pools.js), switching across the lamp product, and the surface-light
-// helper (surfaceLight.js) that adds pools (and next headlights) to other features' materials.
+// D5.4 and D5.5: the pool map (poolTile.js, pools.js) and switching across the lamp product. The surface-light helper
+// that adds pools to other features' materials is in surfaceLight.test.js.
 import { describe, it, expect } from 'vitest';
 import { readFileSync, existsSync } from 'node:fs';
 import * as THREE from 'three';
@@ -9,12 +9,6 @@ import { poolWindow, RING } from '../../../src/drive/lights/pools.js';
 import { switchThresholdLux, sliceLit, litShare, lampHash } from '../../../src/drive/lights/switching.js';
 import { ambientLux } from '../../../src/drive/env.js';
 import { decodeLampPack } from '../../../src/drive/lights/pack.js';
-import { addSurfaceTerm, removeSurfaceTerm, surfaceTerms } from '../../../src/drive/lights/surfaceLight.js';
-import { lightAtNight } from '../../../src/night.js';
-import { active } from '../../../src/render/active.js';
-import * as legacyMaterials from '../../../src/render/legacy/materials.js';
-
-active.legacy = legacyMaterials; // the drive's GLSL materials are the classic renderer's, until they are ported (plan 02)
 
 const ROOT = new URL('../../../', import.meta.url).pathname;
 const typesJson = JSON.parse(readFileSync(`${ROOT}data/lamp_types.json`, 'utf8'));
@@ -105,52 +99,5 @@ describe('switching across the lamps', () => {
       const both = (sliceLit(a, 0, 0.5).share + sliceLit(a, 0.5, 1).share) / 2;
       expect(both).toBeCloseTo(litShare(a), 6);
     }
-  });
-});
-
-describe('the surface-light helper', () => {
-  const shaderOf = (name) => ({ uniforms: THREE.UniformsUtils.clone(THREE.ShaderLib[name].uniforms), vertexShader: THREE.ShaderLib[name].vertexShader, fragmentShader: THREE.ShaderLib[name].fragmentShader });
-  const term = (id, body = 'slE += vec3(1.0);') => ({ id, body, head: `uniform float u_${id};`, uniforms: { [`u_${id}`]: { value: 1 } }, key: 'k1' });
-
-  it('chains onto a material\'s own hook and key, and takes itself out again', () => {
-    const m = new THREE.MeshLambertMaterial();
-    const own = (shader) => { shader.vertexShader = shader.vertexShader.replace('#include <project_vertex>', '#include <project_vertex>\n// OWN'); };
-    m.onBeforeCompile = own;
-    m.customProgramCacheKey = () => 'own-key';
-    const remove = addSurfaceTerm(m, term('pools'));
-    addSurfaceTerm(m, term('headlights', 'slL += vec3(0.5);'));
-    expect(surfaceTerms(m)).toEqual(['pools', 'headlights']);
-    const sh = shaderOf('lambert');
-    m.onBeforeCompile(sh, null);
-    expect(sh.vertexShader).toContain('// OWN');
-    expect(sh.vertexShader).toContain('slWorldPos = ( modelMatrix * slW ).xyz;');
-    expect(sh.fragmentShader).toContain('uniform float u_pools;');
-    expect(sh.fragmentShader).toContain('slL += vec3(0.5);');
-    expect(sh.fragmentShader.indexOf('slE += vec3(1.0);')).toBeGreaterThan(sh.fragmentShader.indexOf('#include <lights_fragment_end>'));
-    expect(sh.uniforms.u_pools.value).toBe(1);
-    expect(m.customProgramCacheKey()).toBe('own-key|sl:pools@k1,headlights@k1');
-    remove();
-    expect(surfaceTerms(m)).toEqual(['headlights']);
-    removeSurfaceTerm(m, 'headlights');
-    expect(m.onBeforeCompile).toBe(own);
-    expect(m.customProgramCacheKey()).toBe('own-key');
-  });
-
-  it('works over night.js\'s lit windows and over a material with three\'s default key', () => {
-    const lit = lightAtNight(new THREE.MeshLambertMaterial({ vertexColors: true }));
-    addSurfaceTerm(lit, term('pools'));
-    const sh = shaderOf('lambert');
-    lit.onBeforeCompile(sh, null);
-    expect(sh.fragmentShader).toContain('nightGlow()');
-    expect(sh.fragmentShader).toContain('reflectedLight.directDiffuse += slE * BRDF_Lambert( slAlbedo ) + slL;');
-    expect(lit.customProgramCacheKey()).toMatch(/^night-v\d+\|sl:pools@k1$/);
-
-    const plain = new THREE.MeshLambertMaterial();
-    const before = plain.customProgramCacheKey();
-    addSurfaceTerm(plain, term('pools'));
-    expect(plain.customProgramCacheKey()).toBe(`${before}|sl:pools@k1`);
-    removeSurfaceTerm(plain, 'pools');
-    expect(plain.customProgramCacheKey()).toBe(before);
-    expect(Object.prototype.hasOwnProperty.call(plain, 'customProgramCacheKey')).toBe(false);
   });
 });

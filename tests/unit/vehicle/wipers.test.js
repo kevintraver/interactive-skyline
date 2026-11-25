@@ -5,7 +5,7 @@ import {
   wiperMode, wiperSchedule, sweepAt, sweepAtPhase, wipePhase, passAgoAtPhase, passAgoAt, comfortOf, wiperState,
   WIPER_THRESHOLDS, WIPER_CPM,
 } from '../../../src/drive/vehicle/wipers.js';
-import { WIPERS, wiperDepth } from '../../../src/drive/vehicle/windshield.js';
+import { WIPERS, wiperDepth } from '../../../src/drive/vehicle/veil.js';
 
 const T0 = Date.parse('2026-11-22T02:30:00Z') / 1000;
 

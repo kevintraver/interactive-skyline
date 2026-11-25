@@ -39,12 +39,12 @@ export function initSettingsPanel(app) {
         t.mesh.material.needsUpdate = true;
       }
     }
-    if (changed === null || changed === 'night' || changed === 'imagery') sky.apply({ night: app.nightNow(), imagery: settings.imagery, terrain }); // drive seam
+    if (changed === null || changed === 'night' || changed === 'imagery') sky.apply({ night: settings.night, imagery: settings.imagery, terrain });
     if (changed === 'night' && app.look) app.look.seek(false); // a new pinned look is a seek for the exposure (T2.6)
     app.tall.forEach(app.paint);
     hint.querySelector('b').textContent = `Click a ${settings.highlight ? 'blue' : 'tall'} building to hide or move it.`;
     // the interface goes dark with the sky
-    document.documentElement.dataset.theme = app.nightNow() ? 'dark' : 'light'; // drive seam
+    document.documentElement.dataset.theme = settings.night ? 'dark' : 'light';
     nightBtn.setAttribute('aria-pressed', String(settings.night));
     // pinned: switch between the two looks; in the clock state the button pins the look opposite the real sky
     nightBtn.title = settings.night ? 'Switch to day' : 'Switch to night';

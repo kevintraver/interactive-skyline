@@ -1,7 +1,5 @@
-// Light ribbons on the route's own road (plan 02, D6.4): the work both renderers share, with no shader in it.
-// ribbon.js (GLSL, the classic renderer) and ribbon.node.js (TSL, plan 01's) each hand this their material and the
-// way they make a uniform; everything on the CPU is here, once (plan 02, third stretch, decision 2: pure logic is
-// shared, not copied).
+// Light ribbons on the route's own road (plan 02, D6.4): the work on the CPU, with no shader in it. ribbon.js
+// hands this its material and the way it makes a uniform.
 //
 // Geometry (per route, once): each lane's centre line from the lane map (lanemap.js), sampled every STEP_M of
 // route chainage, at LAMP_H above the pavement, with its direction of travel, lane weight and truck share.
@@ -12,7 +10,6 @@
 
 import * as THREE from 'three';
 import { LAMP_CD, LOBE, LAMP_RGB, TRUCK_MARKERS } from './lamps.js';
-import { WHITEN } from './lightData.js';
 
 export const STEP_M = 50;
 export const BIN_M = 100;
@@ -134,7 +131,6 @@ export function createRibbonsWith({ parent, traffic, laneMap, frame, uniform, ga
     uCw: u(new THREE.Vector3(...LAMP_RGB.white)), uCr: u(new THREE.Vector3(...LAMP_RGB.red)), uCa: u(new THREE.Vector3(...LAMP_RGB.amber)),
     uCd: u(new THREE.Vector4(LAMP_CD.head, LAMP_CD.tail, LAMP_CD.amber, LAMP_CD.red)),
     uLobe: u(new THREE.Vector4(LOBE.head, LOBE.tail, LOBE.marker, TRUCK_MARKERS)),
-    uMinPx: u(1.5), uWhiten: u(WHITEN),
   };
   const material = makeMaterial(uniforms, tex);
   const mesh = new THREE.Mesh(geometry, material);

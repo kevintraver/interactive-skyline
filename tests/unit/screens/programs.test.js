@@ -4,7 +4,7 @@ import { describe, it, expect } from 'vitest';
 import fs from 'node:fs';
 import path from 'node:path';
 import { designOf, rasterise, buildAtlas, hash32, SHAPE_TYPES, MAX_SHAPES, MIN_SHAPE, CELL_W, CELL_H, DESIGNS, designSeed } from '../../../src/drive/screens/art.js';
-import { digitalFrame, digitalMean, digitalLevel, staticLevel, daylight, frameDesign, phaseOf, HOLD_S, FADE_S, NIGHT_LUX, DAY_LUX, NIGHT_SCALE } from '../../../src/drive/screens/digital.js';
+import { digitalFrame, digitalMean, digitalCdM2, faceLevels, daylight, frameDesign, phaseOf, HOLD_S, FADE_S, NIGHT_LUX, DAY_LUX, NIGHT_NITS, DAY_NITS } from '../../../src/drive/screens/digital.js';
 import { measureFlash, luminance, FLASH_LIMIT_HZ } from '../../../src/drive/screens/flash.js';
 
 const ROOT = path.resolve(__dirname, '../../..');
@@ -74,11 +74,11 @@ describe('the digital billboard program', () => {
   });
 
   it('uses the same hash and timing as the face shader', () => {
-    const glsl = fs.readFileSync(path.join(ROOT, 'src/drive/roadside/billboardsFace.js'), 'utf8');
-    expect(glsl).toContain('x *= 0x7feb352du');
-    expect(glsl).toContain('x *= 0x846ca68bu');
-    expect(glsl).toContain('uint( k ) * 0x9e3779b9u');
-    expect(glsl).toMatch(/HOLD_S|\$\{f1\(HOLD_S\)\}/);
+    const src = fs.readFileSync(path.join(ROOT, 'src/drive/roadside/billboardsFace.js'), 'utf8');
+    expect(src).toContain('x.mul(uint(0x7feb352d))');
+    expect(src).toContain('x.mul(uint(0x846ca68b))');
+    expect(src).toContain('uint(k).mul(uint(0x9e3779b9))');
+    expect(src).toContain('u.div(HOLD_S)');
     // the GPU's uint arithmetic (wrapping at 2^32), done with BigInt, gives the same values
     const M = (1n << 32n) - 1n;
     const ref = (v) => {
@@ -117,12 +117,11 @@ describe('the digital billboard program', () => {
     expect(daylight(DAY_LUX)).toBe(1);
     expect(daylight(30)).toBeGreaterThan(0);
     expect(daylight(30)).toBeLessThan(1);
-    const night = digitalLevel(0.01), day = digitalLevel(50000);
-    expect(night).toBeCloseTo(300 * NIGHT_SCALE * 0.1, 6); // 300 cd/m^2 x NIGHT_SCALE x units
-    expect(day).toBeCloseTo(0.55, 6);
-    let prev = Infinity;
-    for (let lg = -2; lg <= 5; lg += 0.25) { const l = digitalLevel(10 ** lg); expect(l).toBeLessThanOrEqual(prev + 1e-12); prev = l; }
-    expect(staticLevel(0)).toBe(0);
-    expect(staticLevel(1)).toBeGreaterThan(0.5);
+    expect(digitalCdM2(0.01)).toBeCloseTo(NIGHT_NITS, 6);
+    expect(digitalCdM2(50000)).toBeCloseTo(DAY_NITS, 6);
+    let prev = 0;
+    for (let lg = -2; lg <= 5; lg += 0.25) { const l = digitalCdM2(10 ** lg); expect(l).toBeGreaterThanOrEqual(prev - 1e-9); prev = l; }
+    expect(faceLevels({ ambientLux: 0.1, lampsOn: 0 }).static).toBe(0);
+    expect(faceLevels({ ambientLux: 0.1, lampsOn: 1 }).static).toBeGreaterThan(50);
   });
 });

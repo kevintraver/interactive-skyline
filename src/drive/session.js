@@ -1,36 +1,34 @@
 // Everything Drive mode builds and runs, created the first time Drive is entered (index.js imports
 // this module only then). It owns the drive's scene objects (wide ground, skirts, road chunks), the
-// clock, the journey and the rig, and runs one frame at a time from the app's animation loop.
+// journey and the rig, and is a subsystem of plan 01's frame loop (see "the frame loop and the pipeline" below).
 //
-// The usual frame (plan 02, section 5.7): clock.advance -> journey.poseAt -> parts' update ->
-// rig.apply on the app's own camera; then, when the app asks for a frame, render(): parts'
-// beforeRender, the draw, parts' afterRender. Everything else (which look, what the pill shows)
+// The usual frame (plan 02, section 5.7): the app's clock moves (frame step 0) -> journey.poseAt -> parts' update ->
+// rig.apply on the app's own camera (step 20); the look from plan 01's environment (step 45); then the pipeline draws,
+// with the parts' beforeRender and afterRender around it. Everything else (which look, what the pill shows)
 // follows from the pose and the clock, so a frame is a pure function of simulation time and the look state.
 //
 // Routes. The session is on one route at a time (routeswitch.js). A route brings its own RoadNet, road chunks,
 // signs and barriers (the route's "kit"); configure() on another route loads that route's files (routes.js
 // filesOf), builds its kit, disposes of the old kit (its chunk meshes, its mesher worker, its sign atlas and
 // materials, its delineators), then tells the parts (setRoute below). While a switch loads and settles, the last frame
-// stays on screen (render draws nothing), so no frame shows the road missing or two routes at once.
+// stays on screen (main.js skips the pipeline's draw while `holding`), so no frame shows the road missing or two routes
+// at once.
 //
 // Parts. Each drive feature (the road chunks, the roadside signs, the terrain's loading, and every
 // later one) is registered with addPart(part), where a part is
-//   { name, update?(frame), setLook?(look), setRoute?(route), whenSettled?(), stats?(), beforeRender?(frame), beforeWorld?(frame),
+//   { name, update?(frame), setLook?(look), setRoute?(route), whenSettled?(), stats?(), beforeRender?(frame),
 //     afterRender?(frame), dispose?() }
 //   frame = { simMs, dtSimMs, pose, camera, viewport, night, sun: { elevation, azimuth }, rate, playing }
-//   look  = look.js lookAt(): { night: boolean, dusk: number, lights: number, beams: number, sun, ambientLux, sky, light, street }
-//           dusk 0 by day .. 1 by night, in steps of 1 / LOOK_STEPS; lights 0..1, how far the city's lights are on;
-//           beams 0..1, how far the drive's headlight stand-ins (road and sign glow) are on
+//   look  = look.js lookFromEnv(): { night: boolean, dusk: number, lights: number, beams: number, sun, ambientLux }
+//           dusk 0 by day .. 1 by night, in steps of 1 / LOOK_STEPS; lights 0..1, plan 01's street-light switch-on;
+//           beams 0..1, the headlamps' dusk curve
 //   route = { route, roadnet, road, files }: the route (routes.json, parsed), the decoded RoadNet it runs on, its
 //           road in that RoadNet, and its file names (routes.js filesOf: roadnet, bin, signs, barriers, traffic)
 // update runs when the pose moved (every frame while the clock plays), setLook when the look changes
 // (and once on registering, if there is a look already), setRoute when the route changes (and once on
 // registering, if a route is set; before the journey moves onto the new route, so session.journey may still
-// be the old one's), whenSettled and stats over all parts. beforeWorld runs after every part's beforeRender, with the
-// scene's matrices up to date, for passes drawn into targets of their own before the world is drawn (the mirrors); it
-// may clear the canvas and draw into it (the cabin's silhouette in the depth) and return 'cleared', and the world's
-// draw then leaves the canvas as it is. The part context's `chunks` and `roadside` (parts.js)
-// are the current route's.
+// be the old one's), whenSettled and stats over all parts. A pass of a part's own (the mirrors) is a pipeline stage
+// (parts.js). The part context's `chunks` and `roadside` (parts.js) are the current route's.
 
 import * as THREE from 'three';
 import { createFrame, EARTH_R, localUp } from '../world/frame.js';
@@ -40,8 +38,7 @@ import { createApron } from '../city/apron.js';
 import { buildPatches, NO_PATCHES, patchesCrossing } from '../world/terrain/patches.js';
 import { loadRoutes } from './routes.js';
 import { createRoadMaterials } from './roadnet/material.js';
-import { createRoadMaterials as createRoadNodeMaterials } from './roadnet/material.node.js';
-import { corridorMaterial as corridorNodeMaterial } from './corridor/material.node.js';
+import { corridorMaterial } from './corridor/material.js';
 import { createRoadChunks } from './roadnet/chunks.js';
 import { createRoadside } from './roadside/index.js';
 import { createCorridor } from './corridor/index.js';
@@ -51,22 +48,11 @@ import { createEnv } from './env.js';
 import { createJourney } from './journey.js';
 import { defaultDeparture } from './moment.js';
 import { createRig } from './vehicle/rig.js';
-import { isNightAt, lookAt, lookFromEnv } from './look.js';
-import { createSkyBlend, SUN_STEP_MS } from './skyblend.js';
+import { isNightAt, lookFromEnv } from './look.js';
 import { sightOverGround } from './sightline.js';
 import { createTimings } from './timing.js';
-import { createRenderScale, adaptiveAllowed, isSoftwareRenderer } from './renderScale.js';
-import { createAdaptationStage } from './adaptation.node.js'; // decision 13: the driver's night adaptation
-import { displayOfSearch } from './lights/display.js';
+import { createAdaptationStage } from './adaptation.js'; // decision 13: the driver's night adaptation
 
-/** Real time a single frame may advance the clock by, so a hidden tab or a stalled frame does not jump the car. */
-const MAX_STEP_MS = 250;
-/**
- * Plan 01's renderer: the camera's near plane, metres (decisions 3 and 7). The rig moves its near plane between 1 and 5 m
- * for the classic depth buffer; with reversed depth a 0.1 m plane holds on both backends (the depth test of the port:
- * a 0.1 m plane against the rig's changed at most 4 pixels of 921,600, the road against the ground at 15 to 22 km not one).
- */
-export const NEAR_M = 0.1;
 /** Metres the skirts hang below the edges of the finer terrain meshes: more than the 8 m sink and the grids' disagreement. */
 const SKIRT_DEPTH = 20;
 const RAD = Math.PI / 180;
@@ -77,8 +63,8 @@ const RAD = Math.PI / 180;
  */
 const LOOK_STEPS = 512;
 
-/** The renderer's maximum anisotropy, on either renderer. */
-const maxAnisotropy = (renderer) => (renderer.getMaxAnisotropy ? renderer.getMaxAnisotropy() : renderer.capabilities.getMaxAnisotropy());
+/** The renderer's maximum anisotropy. */
+const maxAnisotropy = (renderer) => renderer.getMaxAnisotropy();
 
 const bitmapOf = (blob) => createImageBitmap(blob, { imageOrientation: 'flipY', premultiplyAlpha: 'none', colorSpaceConversion: 'none' });
 
@@ -94,10 +80,8 @@ const HOLD_MAX_MS = 15000;
  */
 export async function createSession(ctx, terrain, hooks, { route: firstRoute, routesDoc } = {}) {
   const ctx0 = ctx;
-  const { city, DATA, scene, renderer, camera, seam, invalidate, applyNight, settings, tall, getLow, ground } = ctx;
-  // the classic WebGLRenderer (the GLSL path, the reference) or plan 01's renderer, whose contract is ctx.plan01
-  const legacy = ctx.legacy !== false;
-  const plan01 = ctx.plan01 || {};
+  const { city, DATA, scene, renderer, camera, settings, tall, getLow, ground, invalidate } = ctx;
+  const plan01 = ctx.plan01 || {}; // plan 01's contract: clock, timeline, env, quality, pipeline, loop
   const get = async (name) => {
     const r = await fetch(`${DATA}/${name}`);
     if (!r.ok) throw new Error(`${name}: HTTP ${r.status}`);
@@ -114,7 +98,7 @@ export async function createSession(ctx, terrain, hooks, { route: firstRoute, ro
   const patchMeta = terrain.patchIds.length ? Object.fromEntries(terrain.patchIds.map((id) => [id, terrain.patchInfo(id)])) : null;
   const patchesOf = (route) => (patchMeta && route ? patchesCrossing(route.outline, patchMeta) : []);
   const buildSome = (ids) => (ids.length ? buildPatches({
-    terrain, base: city.base, renderer, json: optional, ids, legacy,
+    terrain, base: city.base, renderer, json: optional, ids,
     image: (f) => get(f).then((r) => r.blob()).then(bitmapOf),
   }).catch((e) => { console.warn(`terrain patches left out: ${e && e.message ? e.message : e}`); return NO_PATCHES; }) : Promise.resolve(NO_PATCHES));
   const [net, wide, bitmap, corridorIndex, patches] = await Promise.all([
@@ -140,14 +124,14 @@ export async function createSession(ctx, terrain, hooks, { route: firstRoute, ro
       wideMap.anisotropy = maxAnisotropy(renderer);
       wideMap.needsUpdate = true;
     }
-    wideMesh = buildWideMesh({ wide, hole: terrain.grid('far'), cuts: patches.grids, base: city.base, map: wideMap, legacy });
+    wideMesh = buildWideMesh({ wide, hole: terrain.grid('far'), cuts: patches.grids, base: city.base, map: wideMap });
     group.add(wideMesh);
   }
-  // Plan 01's renderer: plan 01's apron rings the far grid and, inside the wide grid, rises above the drive's ground in
-  // places (123 of its 488 posts there, by up to 418 m): two grounds. While driving it is hidden and the same apron
-  // (src/city/apron.js) rings the wide grid instead, tucked under its edge, so the ground runs on past the wide grid
-  // with no cliff and no second ground. The classic renderer keeps the map's apron (the reference is unchanged).
-  const mapApron = !legacy && wideMesh ? scene.getObjectByName('terrain apron') : null;
+  // Plan 01's apron rings the far grid and, inside the wide grid, rises above the drive's ground in places (123 of its
+  // 488 posts there, by up to 418 m): two grounds. While driving it is hidden and the same apron (src/city/apron.js)
+  // rings the wide grid instead, tucked under its edge, so the ground runs on past the wide grid with no cliff and no
+  // second ground.
+  const mapApron = wideMesh ? scene.getObjectByName('terrain apron') : null;
   const driveApron = mapApron ? createApron({ scene: group, base: city.base }, wide, wideMesh, wideMap) : null;
   if (driveApron) driveApron.name = 'drive apron';
   // ground[i] is drawn from the grid named alongside it; a skirt fills the ledge at each one's edge
@@ -207,11 +191,11 @@ export async function createSession(ctx, terrain, hooks, { route: firstRoute, ro
   }
 
   const anisotropy = maxAnisotropy(renderer);
-  const materials = legacy ? createRoadMaterials({ anisotropy }) : createRoadNodeMaterials({ anisotropy });
+  const materials = createRoadMaterials({ anisotropy });
 
-  // Surfaces (plan 01's renderer, decision 6): the node materials light lands on, by kind ('road', 'sign', 'support',
-  // 'delineator', 'building'; the ground has eachGround). The lights part adds its terms to each through
-  // src/drive/lights/surfaceLight.node.js; a route switch brings new sign materials, which reach it as they are built.
+  // Surfaces (decision 6): the node materials light lands on, by kind ('road', 'sign', 'support', 'delineator', 'building',
+  // and the traffic part's 'vehicle'; the ground has eachGround). The lights parts add their terms to each through
+  // src/drive/lights/surfaceLight.js; a route switch brings new sign materials, which reach it as they are built.
   const surfaces = new Map(), surfaceListeners = new Set();
   function addSurfaces(list) {
     for (const [m, kind] of list) {
@@ -240,9 +224,8 @@ export async function createSession(ctx, terrain, hooks, { route: firstRoute, ro
       const chunks = createRoadChunks({ roadnet: d.roadnet, base: city.base, earthR: EARTH_R, parent: roads, materials, barriers: d.barriers });
       const roadside = d.signs ? createRoadside({
         signs: d.signs, barriers: d.barriers, roadnet: d.roadnet, base: city.base, earthR: EARTH_R, parent: roads, anisotropy,
-        ground: terrain.surfaceAt, legacy,
+        ground: terrain.surfaceAt,
       }) : null;
-      if (roadside && look) roadside.setLook(look);
       const own = roadside?.surfaces?.() ?? [];
       addSurfaces(own);
       return { ...d, chunks, roadside, dispose() { dropSurfaces(own); roadside?.dispose(); chunks.dispose(); } };
@@ -251,8 +234,8 @@ export async function createSession(ctx, terrain, hooks, { route: firstRoute, ro
   const routeInfo = (k) => ({ route: k.route, roadnet: k.roadnet, road: k.road, files: k.files });
   routes.onSwap((k) => { for (const p of parts) p.setRoute?.(routeInfo(k)); });
   await routes.use(firstRoute ?? net.routes[0].id);
-  // plan 01's renderer: the port adapts the app's clock and environment (env.js, decisions 4 and 5)
-  const env = createEnv({ city, app: legacy ? null : ctx.plan01 });
+  // the drive's port over the app's clock and environment (env.js, decisions 4 and 5)
+  const env = createEnv({ city, app: plan01 });
   const clock = env.clock;
   const frameOf = createFrame(city);
   const rig = createRig();
@@ -262,19 +245,19 @@ export async function createSession(ctx, terrain, hooks, { route: firstRoute, ro
   // follow the current route's kit (its chunks and its signs; a route without signs has none)
   const car = (f) => ({ x: f.pose.position.x, y: -f.pose.position.z });
   addPart({
-    name: 'roads', update: (f) => routes.kit?.chunks.update(car(f)), setLook: (l) => materials.setLook(l),
+    name: 'roads', update: (f) => routes.kit?.chunks.update(car(f)),
     whenSettled: () => routes.whenSettled((k) => k.chunks.whenSettled()),
     stats: () => ({ ...routes.kit?.chunks.stats(), route: routes.id }), dispose: () => routes.dispose(),
   });
   addPart({
-    name: 'signs', update: (f) => routes.kit?.roadside?.update(car(f)), setLook: (l) => routes.kit?.roadside?.setLook(l),
+    name: 'signs', update: (f) => routes.kit?.roadside?.update(car(f)),
     whenSettled: () => routes.whenSettled((k) => k.roadside?.whenSettled()),
     stats: () => routes.kit?.roadside?.stats() ?? null,
   });
   addPart({ name: 'terrain', whenSettled: () => terrain.whenSettled(), stats: () => terrain.stats() });
   if (corridorIndex && wide) {
-    const corridorMat = legacy ? undefined : corridorNodeMaterial();
-    if (corridorMat) addSurfaces([[corridorMat, 'building']]);
+    const corridorMat = corridorMaterial();
+    addSurfaces([[corridorMat, 'building']]);
     addPart(createCorridor({
       index: corridorIndex, fetchBinary: (f) => get(`corridor/${f}`).then((r) => r.arrayBuffer()), heightAt: terrain.surfaceAt,
       base: city.base, earthR: EARTH_R, parent: group, anisotropy, material: corridorMat,
@@ -285,14 +268,14 @@ export async function createSession(ctx, terrain, hooks, { route: firstRoute, ro
   let partsReady = Promise.resolve();
   function loadParts() {
     const ctx = {
-      legacy, app: ctx0, session, get, optional, group, roads, terrain, wideMesh, ground: groundMeshes, eachGround, eachSurface, net, env, clock, rig, frameOf,
+      app: ctx0, session, get, optional, group, roads, terrain, wideMesh, ground: groundMeshes, eachGround, eachSurface, net, env, clock, rig, frameOf,
       addSurfaces, // [[material, kind], ...]: a part's own surfaces for the light (the traffic's bodies, 'vehicle')
       earthR: EARTH_R, base: city.base, materials,
       get chunks() { return routes.kit?.chunks ?? null; },
       get roadside() { return routes.kit?.roadside ?? null; },
     };
     const wanted = partsFromSearch(typeof location !== 'undefined' ? location.search : '');
-    partsReady = Promise.all(selectParts({ legacy, wanted, registry: PARTS }).map(async (entry) => {
+    partsReady = Promise.all(selectParts({ wanted, registry: PARTS }).map(async (entry) => {
       try {
         const part = await entry.load(ctx);
         if (!part) return;
@@ -302,7 +285,7 @@ export async function createSession(ctx, terrain, hooks, { route: firstRoute, ro
     })).then(() => { needPose = true; invalidate(); });
   }
 
-  let journey = null, pose = null, needPose = true, lastNow = null, loading = false, updateId = 0;
+  let journey = null, pose = null, needPose = true, loading = false, updateId = 0;
   // a route switch keeps the last frame on screen until the new route's parts are in (see the top of this file)
   let holdUntil = 0;
   // the rig's body and head layers read the journey and the simulation time (vehicle/motion.js)
@@ -311,12 +294,6 @@ export async function createSession(ctx, terrain, hooks, { route: firstRoute, ro
   let locked = false, startKey = 'reveal';
   const timings = { total: createTimings(), journey: createTimings(), chunks: createTimings(), rig: createTimings(), ui: createTimings() };
   const viewport = () => ({ width: innerWidth, height: innerHeight });
-  // the adaptive render scale (renderScale.js): playing, the pixel ratio follows the frame times; paused, the full one
-  // on plan 01's renderer its quality governor owns the render scale (decision 8): renderScale.js is not used there
-  const scale = legacy ? createRenderScale({
-    renderer, invalidate,
-    allowed: adaptiveAllowed({ webdriver: typeof navigator !== 'undefined' && !!navigator.webdriver, software: isSoftwareRenderer(renderer) }),
-  }) : governedScale(plan01.quality);
 
   function journeyFor(routeId) {
     const route = net.route(routeId);
@@ -344,7 +321,7 @@ export async function createSession(ctx, terrain, hooks, { route: firstRoute, ro
     invalidate();
   }
 
-  // Plan 01's renderer (decision 4): the journey is on app.timeline, so plan 01's environment, exposure and transport
+  // One clock (decision 4): the journey is on app.timeline, so plan 01's environment, exposure and transport
   // know a journey is under way and where it departed. The drive's journey (journey.js) stays the one that places the
   // car; the timeline's handle is begun again whenever the drive re-times its departure (a start, a seek with a time,
   // the time-of-day jumps; the lock re-times every frame and syncs when it is released). The timeline's own end of
@@ -364,7 +341,7 @@ export async function createSession(ctx, terrain, hooks, { route: firstRoute, ro
     return timelineJourneys.get(j);
   }
   function syncTimeline() {
-    if (legacy || !group.visible || !journey || locked) return;
+    if (!group.visible || !journey || locked) return;
     const startMs = journey.timeAt(journey.s0);
     if (handle && plan01.timeline.active === handle && handle.journey === timelineJourney(journey) && handle.startMs === startMs) return;
     handle = plan01.timeline.begin(timelineJourney(journey), { startMs });
@@ -374,41 +351,16 @@ export async function createSession(ctx, terrain, hooks, { route: firstRoute, ro
     handle = null;
   }
 
-  // The look (look.js) for the sun: blended on the app's sky (skyblend.js), the parts told when dusk moves a step,
-  // and the boolean night (the interface theme, the app's night-only extras) switched once at its threshold. The sun is
-  // rounded (elevation to 0.02 degree, azimuth to 0.1) so the sky is repainted only when something visible changes.
-  // On plan 01's renderer the sky, the light, the haze and the exposure are plan 01's (decision 5): no blend, and the
-  // look the parts get is computed from env.state at frame step 45, after the environment (lookFromEnv, look.js).
-  const skyBlend = legacy ? createSkyBlend({
-    dome: ctx.sky, renderer, invalidate, ephemeris: env.ephemeris, ground, imagery: () => settings.imagery,
-  }) : null;
-  let skyKey = null;
+  // The look the parts get (look.js lookFromEnv): the sky, the light, the haze and the exposure are plan 01's (decision
+  // 5), and the look is computed from env.state at frame step 45, after the environment; the parts are told when dusk
+  // moves a step.
   /** Tell the parts when the look moved a step. */
-  function applyLook(next) {
+  function updateLook() {
+    if (!plan01.env.state) return;
+    const next = lookFromEnv(plan01.env.state, { steps: LOOK_STEPS });
     if (look && look.dusk === next.dusk && look.night === next.night && look.lights === next.lights) return;
     look = next;
     for (const p of parts) p.setLook?.(look);
-  }
-  function updateLook(sun, simMs) {
-    if (!legacy) { if (plan01.env.state) applyLook(lookFromEnv(plan01.env.state, { steps: LOOK_STEPS })); return; }
-    const elevation = Math.round(sun.elevation * 50) / 50, azimuth = Math.round(sun.azimuth * 10) / 10;
-    const next = lookAt({ elevation, azimuth }, { steps: LOOK_STEPS });
-    const key = `${elevation} ${azimuth} ${Math.round(simMs / SUN_STEP_MS)}`;
-    if (key !== skyKey) { skyKey = key; skyBlend?.set(next, simMs); }
-    if (seam.night !== next.night) {
-      seam.night = next.night;
-      applyNight(); // the legacy sky hands this to the blend; another sky gets the boolean look
-      document.documentElement.dataset.theme = next.night ? 'dark' : 'light';
-    }
-    if (look && look.dusk === next.dusk && look.night === next.night) return;
-    look = next;
-    for (const p of parts) p.setLook?.(look);
-  }
-  /** Leaving Drive: the map's sun and dome come back (index.js then applies the visitor's own look). */
-  function releaseLook() {
-    skyBlend?.release();
-    skyKey = null;
-    look = null;
   }
 
   /** Bring the pose, the parts and the look up to date with the clock. */
@@ -431,15 +383,13 @@ export async function createSession(ctx, terrain, hooks, { route: firstRoute, ro
     // mesher is quick, and on a slow GPU (or a software one) frames in between starve it of CPU.
     // Playing, the clock asks for every frame anyway.
     settledParts().then(() => { if (id === updateId) loading = false; invalidate(); });
-    updateLook(sun, simMs);
+    updateLook();
     lap('chunks');
   }
   const settledParts = () => partsReady.then(() => Promise.all(parts.map((p) => p.whenSettled?.())));
 
   const session = {
-    net, env, clock, rig, group, terrain, timings, addPart, eachSurface, legacy,
-    /** The adaptive render scale (renderScale.js): stats(), setAdaptive(on). */
-    renderScale: scale,
+    net, env, clock, rig, group, terrain, timings, addPart, eachSurface,
     get parts() { return parts.map((p) => p.name); },
     /** A registered part by name, or null. */
     part: (name) => parts.find((p) => p.name === name) || null,
@@ -530,10 +480,8 @@ export async function createSession(ctx, terrain, hooks, { route: firstRoute, ro
     /** Show or hide the drive's scene objects. */
     show(on) {
       group.visible = on;
-      lastNow = null;
-      if (on) scale.enter(); else scale.leave(); // leaving Drive puts the app's own pixel ratio back
-      if (!on) releaseLook();
-      if (!legacy) attach(on);
+      if (!on) look = null;
+      attach(on);
       if (mapApron) mapApron.visible = !on;
       if (on) {
         if (wideMesh) {
@@ -548,73 +496,15 @@ export async function createSession(ctx, terrain, hooks, { route: firstRoute, ro
       invalidate();
     },
 
-    /** One frame, run by the app's animation loop before it renders. */
-    frame(now) {
-      const t0 = performance.now();
-      const dt = lastNow === null ? 0 : Math.min(Math.max(now - lastNow, 0), MAX_STEP_MS);
-      lastNow = now;
-      const before = clock.now();
-      clock.advance(dt);
-      if (locked && pose && clock.now() !== before) journey.rebase(pose.s, clock.now());
-      const moved = needPose || clock.now() !== before;
-      if (moved) {
-        needPose = false;
-        update(); // asks for a frame once the chunks are in; a playing clock asks for every frame below
-      }
-      let t = performance.now();
-      // every tick: resize() may have put the map's lens back on the shared camera
-      rig.apply(camera, pose, viewport());
-      ctx.sky.position.copy(camera.position);
-      if (moved) timings.rig.add(performance.now() - t);
-      t = performance.now();
-      hooks.onFrame(session);
-      if (moved) {
-        timings.ui.add(performance.now() - t);
-        timings.total.add(performance.now() - t0);
-      }
-      if (clock.playing || rig.glancing) invalidate(); // a glance eases over real time
-      scale.tick(now, clock.playing); // before the frame is drawn: a paused frame at the full ratio
-    },
-
-    /**
-     * Draw the frame now: on the classic renderer app.drive.render (parts' beforeRender, the passes, the scene, parts'
-     * afterRender); on plan 01's the pipeline draws it, with the parts' beforeRender and afterRender around it.
-     */
-    render() {
-      if (!legacy) { plan01.pipeline.render(); return; }
-      if (holdUntil > performance.now()) return; // a route switch: the last frame stays until the new road is in
-      if (frame) for (const p of parts) p.beforeRender?.(frame);
-      // passes into targets of their own (the mirrors) go before the world: the canvas is then drawn in one go, world
-      // and cabin, where a pass in between makes the GPU store the canvas's multisampled buffer and load it again
-      // (about 4.5 ms at 2560 x 1440 on an M4). The scene's matrices are brought up to date once, for all of them.
-      // A part that has cleared the canvas and drawn into it already (the cabin's silhouette in the depth) says so.
-      let early = false, cleared = false;
-      if (frame) {
-        for (const p of parts) {
-          if (!p.beforeWorld) continue;
-          if (!early) { scene.updateMatrixWorld(); early = true; }
-          if (p.beforeWorld(frame) === 'cleared') cleared = true;
-        }
-      }
-      const auto = scene.matrixWorldAutoUpdate, autoClear = renderer.autoClear;
-      if (early) scene.matrixWorldAutoUpdate = false;
-      if (cleared) renderer.autoClear = false;
-      renderer.render(scene, camera);
-      scene.matrixWorldAutoUpdate = auto;
-      renderer.autoClear = autoClear;
-      if (frame) for (const p of parts) p.afterRender?.(frame);
-    },
-
-    /** A route switch holds the last frame on screen (plan 01's renderer: main.js then skips the pipeline's draw). */
+    /** A route switch holds the last frame on screen (main.js then skips the pipeline's draw). */
     get holding() { return holdUntil > performance.now(); },
 
     /** Remove every part's objects, last registered first. The session is unusable after this. */
     dispose() {
-      if (!legacy) attach(false);
+      attach(false);
       for (const p of [...parts].reverse()) p.dispose?.();
       parts.length = 0;
-      releaseLook();
-      skyBlend?.dispose();
+      look = null;
       scene.remove(group);
     },
 
@@ -678,7 +568,7 @@ export async function createSession(ctx, terrain, hooks, { route: firstRoute, ro
         position: v(pose.position), forward: v(pose.forward), up: v(pose.up), eye: v(rig.apply(scratch, pose, viewport()).position),
         t: clock.now(), iso: new Date(clock.now()).toISOString(), playing: clock.playing,
         yaw: rig.yaw, pitch: rig.pitch, lens: rig.lens, view: rig.view, reduceMotion: rig.reduceMotion, glance: rig.glancing,
-        night: legacy ? !!seam.night : !!look?.night, rate: clock.rate, locked, arrived: session.arrived,
+        night: !!look?.night, rate: clock.rate, locked, arrived: session.arrived,
         sunElevation: env.ephemeris.sun(clock.now()).elevation,
       };
     },
@@ -690,12 +580,13 @@ export async function createSession(ctx, terrain, hooks, { route: firstRoute, ro
         signs: null, // a city or build without signs
         ...Object.fromEntries(parts.filter((p) => p.stats).map((p) => [p.name, p.stats()])),
         js: Object.fromEntries(Object.entries(timings).map(([k, v]) => [k, v.summary()])),
-        renderScale: scale.stats(),
+        // plan 01's quality governor owns the render scale (decision 8)
+        renderScale: { governedBy: 'app.quality', ratio: plan01.quality?.renderScale ?? 1, level: plan01.quality?.level ?? null },
       };
     },
   };
 
-  // ---------------------------------------------------------------- plan 01's renderer: the frame loop and the pipeline
+  // ---------------------------------------------------------------- the frame loop and the pipeline
   // The session is a subsystem of the app's frame loop (decision 3): at order 20, after the clock (0) and the timeline
   // (10), it places the car and the camera and runs the parts' update; at 45, after the environment (40), it gives the
   // parts the look; it votes 'continuous' while the clock plays or a glance eases. main.js draws through the pipeline,
@@ -710,8 +601,7 @@ export async function createSession(ctx, terrain, hooks, { route: firstRoute, ro
     lastSeenMs = simMs;
     if (moved) { needPose = false; update(); }
     let t = performance.now();
-    rig.apply(camera, pose, viewport());
-    if (camera.near !== NEAR_M) { camera.near = NEAR_M; camera.updateProjectionMatrix(); }
+    rig.apply(camera, pose, viewport()); // its near plane is NEAR_M (rig.js)
     if (moved) timings.rig.add(performance.now() - t);
     t = performance.now();
     hooks.onFrame(session);
@@ -733,11 +623,10 @@ export async function createSession(ctx, terrain, hooks, { route: firstRoute, ro
     pipeline.around.push(around);
     if (pipeline.scenePass && pipeline.scenePass.camera !== camera) pipeline.setCamera(camera);
     syncTimeline();
-    // ---- decision 13: the driver's night adaptation (adaptation.node.js), shipped look only. Registered once the
+    // ---- decision 13: the driver's night adaptation (adaptation.js). Registered once the
     // parts are in, so it follows their afterBloom stages (the cabin's veil is light in front of the eye too).
     let adaptation = null, attached = true;
-    const shipped = displayOfSearch(globalThis.location ? location.search : '') !== 'classic';
-    if (shipped && pipeline.addStage) {
+    if (pipeline.addStage) {
       partsReady.then(() => {
         if (!attached) return;
         adaptation = createAdaptationStage({ pipeline, ev100: () => plan01.env?.state?.exposure?.ev100 });
@@ -780,12 +669,4 @@ const nextFrame = () => new Promise((resolve) => requestAnimationFrame(resolve))
 /** Whether the renderer's WebGL context is lost (WebGPU reports a lost device through its own handler instead). */
 function contextLost(renderer) {
   try { return !!renderer.getContext?.()?.isContextLost?.(); } catch { return false; }
-}
-
-/** renderScale.js's interface on plan 01's renderer, where app.quality's governor owns the render scale (decision 8). */
-function governedScale(quality) {
-  return {
-    enter() {}, leave() {}, tick() {}, setAdaptive() {},
-    stats: () => ({ adaptive: false, allowed: false, governedBy: 'app.quality', ratio: quality?.renderScale ?? 1, level: quality?.level ?? null }),
-  };
 }

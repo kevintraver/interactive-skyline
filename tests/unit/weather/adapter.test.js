@@ -140,10 +140,4 @@ describe('env.weather on plan 01 (weatherOn) with plan 01\'s environment and wea
     expect(env.lighting.ambientLux()).toBeCloseTo(p01.state.sky.horizontalLux * weatherFor(3).skyDim, 6);
     expect(env.lighting.ambientLux()).toBeLessThan(clear);
   });
-
-  it('the classic renderer keeps the stand-in', () => {
-    const env = createEnv({ city: LV });
-    expect(env.weather.plan01).toBe(undefined);
-    expect(env.weather.setPreset('moderate').state().precipMmPerHour).toBe(4);
-  });
 });

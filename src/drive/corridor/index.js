@@ -8,11 +8,10 @@
  * bases sit on the terrain the drive draws: `heightAt` is sampled at each outline's points here, on
  * the main thread, and the worker turns that into walls and a roof (mesher.js).
  *
- * The material is the app's own for its low buildings (lightAtNight over a vertex-coloured Lambert, as
- * src/city/buildings.js makes it), so by day they are the same grey and at night they get the same lit
- * windows, following the shared `night` uniform the app's look sets; ./material.js adds a share per wall (none on
- * canopies, sheds, blank and low walls; fewer lit in warehouses and stores). While driving that uniform is the look's
- * `lights` (0..1, src/drive/look.js), so the windows here fade in through dusk with the city's, with no work here.
+ * The material is the app's building material (src/night.js lightAtNight, plan 01's node material), so by day they are
+ * the same grey and at night they get the same lit windows, following the shared uniforms plan 01's environment sets;
+ * ./material.js adds a share per wall (none on canopies, sheds, blank and low walls; fewer lit in warehouses and
+ * stores), so the windows here come on through dusk with the city's, with no work here.
  *
  * Part interface (src/drive/session.js): { name, update(frame), setLook(look), whenSettled(), stats(), dispose() }.
  */
@@ -62,9 +61,8 @@ export function createCorridor({
     g.setAttribute('normal', new THREE.BufferAttribute(m.normals, 3));
     g.setAttribute('color', new THREE.BufferAttribute(m.colors, 3));
     if (m.winLit) {
-      // the walls' window share (material.js): normalised bytes; WebGPU has no one-byte vertex format, so the node
-      // material (material.node.js) asks for floats
-      g.setAttribute('winLit', mat.userData.winLitFloat ? new THREE.BufferAttribute(Float32Array.from(m.winLit, (v) => v / 255), 1) : new THREE.BufferAttribute(m.winLit, 1, true));
+      // the walls' window share (material.js), as floats: WebGPU has no one-byte vertex format
+      g.setAttribute('winLit', new THREE.BufferAttribute(Float32Array.from(m.winLit, (v) => v / 255), 1));
     }
     g.setIndex(new THREE.BufferAttribute(m.indices, 1));
     const [sx, sy, sz, r] = m.sphere;

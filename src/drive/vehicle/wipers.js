@@ -1,8 +1,8 @@
 // The wipers (plan 02, D8.2; section 7.6): which mode the rain rate asks for, and where the two blades are, as pure
-// functions of simulation time. No three.js. glassRain.glsl.js computes the same per fragment and per drop (the time
-// since a blade last passed a point of the glass); glassRain.js draws the blades.
+// functions of simulation time. No three.js. glassRain.js computes the same per fragment and per drop (the time since a
+// blade last passed a point of the glass) and draws the blades.
 //
-// The blades sweep the arcs the dirt mask already assumes (windshield.js WIPERS: a left-hand-drive tandem pair,
+// The blades sweep the arcs the dirt mask already assumes (veil.js WIPERS: a left-hand-drive tandem pair,
 // pivots under the cowl, both parked along the cowl at a0 and sweeping counter-clockwise to a1), in step, on one
 // linkage. One cycle is an out-stroke and a return taking SWEEP seconds, then a pause at park (intermittent only):
 //     q(phase) = (1 - cos(2 pi phase / sweep)) / 2  for phase < sweep, else 0;  angle = a0 + (a1 - a0) q

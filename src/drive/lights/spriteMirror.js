@@ -1,8 +1,8 @@
-// The light-sprite shader's arithmetic in JavaScript (sprites.glsl.js), function for function, for tests and for
-// anything on the CPU that must agree with what the GPU draws. Pure. Change both together.
+// The light-sprite layer's arithmetic in JavaScript (sprites.js), function for function, for tests and for anything
+// on the CPU that must agree with what the GPU draws. Pure. Change both together.
 
 import { ON_TABLE } from './switching.js';
-import { TWIN_FOOT } from './sprites.glsl.js';
+import { TWIN_FOOT } from './spriteData.js';
 
 export { TWIN_FOOT };
 
@@ -106,19 +106,6 @@ export function warmSodium(seconds, startUv, steadyUv) {
   };
 }
 
-/** The sprite tone (fragment shader): ACES fit on luminance, hue kept, only what would clip whitened (whiten: the share
- * of it, the layer's uWhiten, 1 by default). */
-export function toneSprite([r, g, b], whiten = 1) {
-  const y = 0.2126 * r + 0.7152 * g + 0.0722 * b;
-  if (!(y > 0)) return [0, 0, 0];
-  const x = y / 0.6;
-  const t = Math.min(1, Math.max(0, (x * (x + 0.0245786) - 0.000090537) / (x * (0.983729 * x + 0.432951) + 0.238081)));
-  let o = [r, g, b].map((c) => (c * t) / y);
-  const m = Math.max(...o);
-  if (m > 1) { const w = (whiten * (m - 1)) / m; o = o.map((c) => (c / m) * (1 - w) + w); }
-  return o;
-}
-
 /**
  * Intensity toward the eye as the vertex shader computes it, for one instance (theta from the axis, phi from the
  * aim, the far pool glow). Positions in scene metres; aimRad NaN for unknown.
@@ -141,7 +128,7 @@ export function instanceIntensity({ pos, eye, intensity, kind, k, axis, aimRad, 
   return { intensity: I, theta, phi, distance: d };
 }
 
-// ---------------------------------------------------------------- reflected twins (sprites.glsl.js spriteTwinVertex)
+// ---------------------------------------------------------------- reflected twins
 
 /** Mirrors twinFresnel: Fresnel reflectance of water (n 1.333), unpolarised, by the cosine of the incidence angle. */
 export function twinFresnel(c, n = 1.333) {

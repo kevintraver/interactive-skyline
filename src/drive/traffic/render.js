@@ -22,15 +22,25 @@
 // lamp again as kind 2. Side markers and the trucks' clearance and identification lamps are kind 3. The
 // arrays are reused: read them before the next frame.
 //
-// The work is renderCore.js's, shared with render.node.js (plan 01's renderer); this file gives it material.js.
+//
+// Light (plan 02, third stretch, decision 6): `lightScale` (a TSL node: photometry.js artificialScale, the
+// pre-exposure x the lights-out slider) multiplies the lamp faces' luminance in cd/m^2 (material.js).
+// Detail by plan 01's quality level (decision 8): DETAIL_PX, the size on screen above which a body is drawn detailed.
+// With the default 50 mm lens at 1280 x 720 a sedan is detailed to about 120 m on Low, 210 m on High and 330 m on
+// Ultra. The work is renderCore.js's, given material.js's materials.
+
 import * as MATERIALS from './material.js';
-import { createTrafficRendererWith } from './renderCore.js';
+import { createTrafficRendererWith, LOD0_PX } from './renderCore.js';
 
 export { LOD0_PX, MIN_PX, FADE_PX, LAMP_KIND } from './renderCore.js';
 
+/** Size on screen (px) above which a body is drawn detailed, by plan 01's quality level. */
+export const DETAIL_PX = Object.freeze({ low: 24, high: LOD0_PX, ultra: 9 });
+
 /**
- * @param {{ parent: THREE.Object3D, sidecar: object, gltf: object }} opts sidecar: vehicles.json; gltf: the loaded vehicles.glb
+ * @param {{ parent: import('three').Object3D, sidecar: object, gltf: object,
+ *   lightScale?: number | import('three/webgpu').Node }} opts sidecar: vehicles.json; gltf: the loaded vehicles.glb
  */
-export function createTrafficRenderer({ parent, sidecar, gltf }) {
-  return createTrafficRendererWith({ parent, sidecar, gltf, materials: MATERIALS, shared: MATERIALS.createTrafficUniforms() });
+export function createTrafficRenderer({ parent, sidecar, gltf, lightScale = 1 }) {
+  return createTrafficRendererWith({ parent, sidecar, gltf, materials: MATERIALS, shared: MATERIALS.createTrafficUniforms({ lightScale }) });
 }

@@ -125,11 +125,11 @@ const DAY = { lane: '#6a6863', laneSpeck: ['#64625d', '#706e69', '#5f5d58'], sho
   reflWhite: '#f4f4ef', reflYellow: '#f2c230',
   pave: '#9e9a91', paveSpeck: ['#96928a', '#a6a299', '#918d85'], paveShoulder: '#a49f95', jointSeal: '#57544f', joint: '#4a4a48',
   wear: 1, oil: 'rgba(28,24,20,', light: 'rgba(255,252,244,', dark: 'rgba(20,18,16,' };
-// Emissive map for the night look: markings stand out (they are retroreflective; this stands in
-// for headlights until they exist), asphalt barely, dirt not at all.
+// The night paint: markings stand out (they are retroreflective), asphalt barely, dirt not at all. It is not drawn on the
+// road: the headlights part reads its marking mask from it (lights/markingMask.js).
 const NIGHT = { lane: '#3a3a3a', laneSpeck: ['#363636', '#3e3e3e'], shoulder: '#323231', shoulderSpeck: ['#2e2e2e', '#363635'],
   dirt: '#000000', dirtSpeck: [], white: '#ecebe4', yellow: '#eabd42', concrete: '#1c1c1b', concreteSpeck: [], steel: '#151617', steelSpeck: [],
-  // reflectors glow like the markings: a stand-in for headlights until they exist
+  // reflectors like the markings
   reflWhite: '#ffffff', reflYellow: '#ffc840',
   pave: '#454543', paveSpeck: ['#404040', '#4a4a48'], paveShoulder: '#3e3e3c', jointSeal: '#262626', joint: '#1a1a1a',
   wear: 0.6, oil: 'rgba(0,0,0,', light: 'rgba(255,255,255,', dark: 'rgba(0,0,0,' };

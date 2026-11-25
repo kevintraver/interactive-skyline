@@ -1,7 +1,21 @@
-// The mirrors' geometry (plan 02, D4.3; section 7.6), shared by both renderers' mirror passes (mirrors.js on the classic
-// renderer, mirrors.node.js on plan 01's): the reflected camera of each mirror (mirrorView, pure; the construction is
-// described at the top of mirrors.js), where a point shows on a mirror's face, the coarser ground index the passes draw,
-// and the constants of the passes (reflectance, the door mirrors' flank, the near-ground ring).
+// The mirrors' geometry (plan 02, D4.3; section 7.6), for the mirror passes (mirrors.js): the reflected camera of
+// each mirror (mirrorView, pure), where a point shows on a mirror's face, the coarser ground index the passes draw, and
+// the constants of the passes (reflectance, the door mirrors' flank, the near-ground ring).
+//
+// Construction (mirrorView). The eye is the head's position in cabin coordinates (rig.last.head), so the reflection
+// follows the head: its lag, its look and the glances.
+//   Flat mirrors (the driver's door mirror, the interior mirror): the camera sits at the eye's reflection E' and
+//   looks through the mirror's rectangle as through a window, an off-axis frustum whose near plane is the mirror
+//   plane: x = -right, y = up, z = -normal (the normal points to the driver). This is exact for a flat mirror:
+//   the ray from E' through a point of the glass is the eye's ray reflected there. The camera's x runs against
+//   the face's u, hence the flip in the face's shader. The interior mirror is widened to cabin.json's minFovDeg
+//   (FMVSS 111's 20 degrees) when the eye sees less through it (it sees about 19).
+//   The convex passenger mirror (radius 1.4 m, FMVSS 111 allows 889-1651 mm): a spherical mirror turns the ray at
+//   an offset a from its centre by 2a/R more than a flat one does, so the angles of the field grow by
+//   k = 1 + 2D/R (D the eye's distance to the mirror; about 3.3 here). The camera sits at E', looks along the
+//   central ray reflected, with a symmetric frustum of k times the flat mirror's half-angles, and the face
+//   samples it through a barrel mapping (tan(sA)/tan(A)), so angles, not tangents, run linearly across it.
+// Each camera is then carried into the scene by the body's matrix (rig.last.body).
 
 import * as THREE from 'three';
 
@@ -18,7 +32,7 @@ export const TRAFFIC_BEHIND_SHARE = 0.35;
 export const REFLECTANCE = Object.freeze({ door: 0.5, centerDay: 0.8, centerNight: 0.3 });
 /** The door mirrors' flank: share of the face at the bottom and top, and the beltline's height (assumed, by eye). */
 export const FLANK = Object.freeze({ bottom: 0.15, top: 0.09, belt: 0.48 });
-export const FLANK_PAINT = [0.32, 0.32, 0.31]; // cabin.js's hood paint
+export const FLANK_PAINT = [0.32, 0.32, 0.31]; // the hood's paint
 const RAD = Math.PI / 180;
 
 /** sRGB-encoded 0..1 to linear. */
@@ -35,7 +49,7 @@ export function reflectPoint(p, center, normal, out = new THREE.Vector3()) {
 /**
  * The reflected camera for one mirror. Pure.
  * @param {THREE.Vector3} eye the eye in cabin coordinates
- * @param {object} face a cabin mirror (cabin.js: center, normal, right, up, corners, kind, radiusM?, minFovDeg?)
+ * @param {object} face a cabin mirror (cabinCommon.js cabinGlass: center, normal, right, up, corners, kind, radiusM?, minFovDeg?)
  * @param {{ far?: number }} [opts]
  * @returns {{ position: THREE.Vector3, x: THREE.Vector3, y: THREE.Vector3, z: THREE.Vector3, left: number, right: number,
  *   top: number, bottom: number, near: number, far: number, tan: { l: number, r: number, b: number, t: number },

@@ -1,10 +1,8 @@
-// Drawing the placed vehicles (plan 02, D6.4): the work both renderers share, with no shader in it. render.js (the
-// classic renderer, material.js) and render.node.js (plan 01's, material.node.js) hand this their material module;
-// everything else is here once (plan 02, third stretch, decision 2: pure logic is shared, not copied). render.js's
-// header describes it.
+// Drawing the placed vehicles (plan 02, D6.4): the work, with no shader in it. render.js hands this its material
+// module (material.js); its header describes the whole.
 //
 // Detail by plan 01's quality level (decision 8): setDetailPx(px) moves the size on screen above which a body is drawn
-// detailed (LOD0_PX by default, the classic renderer's; render.node.js's DETAIL_PX by level).
+// detailed (LOD0_PX by default; render.js's DETAIL_PX by level).
 
 import * as THREE from 'three';
 import { BODY_NAMES } from './fleet.js';
@@ -84,7 +82,7 @@ const smooth = (x) => (x <= 0 ? 0 : x >= 1 ? 1 : x * x * (3 - 2 * x));
 /**
  * @param {{ parent: THREE.Object3D, sidecar: object, gltf: object, materials: { createBodyMaterial: Function,
  *   createShadowMaterial: Function }, shared: { uniforms: object } }} opts sidecar: vehicles.json; gltf: the loaded
- *   vehicles.glb; materials: material.js or material.node.js; shared: their createTrafficUniforms()
+ *   vehicles.glb; materials: material.js; shared: its createTrafficUniforms()
  */
 export function createTrafficRendererWith({ parent, sidecar, gltf, materials: { createBodyMaterial, createShadowMaterial }, shared }) {
   let lod0Px = LOD0_PX;
