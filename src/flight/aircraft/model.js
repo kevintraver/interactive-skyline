@@ -73,8 +73,6 @@ export function buildAirframeModel(scene, rig, { nodes, lampPoints = true }) {
 
   const lamps = lampTable(rig);
   const lampUniforms = createLampUniforms();
-  const navOf = (name) => rig.lights[name]?.position ?? [0, 0, 0];
-  const navLamps = { left: navOf('nav_left'), right: navOf('nav_right'), aftLeft: navOf('nav_aft_left'), aftRight: navOf('nav_aft_right') };
   const tipL = uniform(0), tipR = uniform(0);
   const { toBody, toLocal } = bodyMatrices(root);
   const bodyPosition = toBody.mul(vec4(positionLocal, 1)).xyz;
@@ -94,7 +92,7 @@ export function buildAirframeModel(scene, rig, { nodes, lampPoints = true }) {
       // eye is inside the fuselage, and its inner faces must not hide the view
       side: FrontSide,
     });
-    m.emissiveNode = skinLightNode({ nodes, uniforms: lampUniforms, bodyPosition, albedo: materialColor, navLamps });
+    m.emissiveNode = skinLightNode({ nodes, uniforms: lampUniforms, bodyPosition, albedo: materialColor, bake: rig.lightBake });
     if (flex) m.positionNode = flexed;
     made.set(key, m);
     return m;
@@ -127,7 +125,7 @@ export function buildAirframeModel(scene, rig, { nodes, lampPoints = true }) {
   const model = {
     root, parts, rest, triangles, drawCalls, lamps, lampUniforms,
     materials: [...made.values()],
-    flex: { get tipL() { return tipL.value; }, get tipR() { return tipR.value; } },
+    flex: { get tipL() { return tipL.value; }, get tipR() { return tipR.value; }, rootY, tipY },
     /** The lamp group levels last set, GROUPS order. */
     levels,
     /**
@@ -152,7 +150,7 @@ export function buildAirframeModel(scene, rig, { nodes, lampPoints = true }) {
       const bits = lightBits(state, { hasChannel: hasLightsChannel, night });
       if (points) levels.set(points.update(bits, wallS, { reducedMotion }));
       else lampLevels(bits, wallS, { reducedMotion }, levels);
-      setLampUniforms(lampUniforms, levels);
+      setLampUniforms(lampUniforms, levels, rig.lightBake);
       return model;
     },
     dispose() {

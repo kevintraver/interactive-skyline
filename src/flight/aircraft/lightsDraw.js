@@ -1,67 +1,109 @@
 // The aircraft's own lights, the drawn part (plan 03, section 7.8; F3.8): the baked attributes _LIGHTS0 and _LIGHTS1
 // turned into light on the skin, and each lamp as a light point. No light sources: the bake already knows how much of
-// each lamp reaches each corner of the airframe (distance, cone, cosine, occlusion), so the skin's emission is
-// sum(baked x candela x level x colour) x albedo / pi, in cd/m^2, through the environment's emissive().
+// each lamp reaches each corner of the airframe (photometry, distance, the surface's cosine, the airframe's own
+// shadows), so the skin's emission is lux x albedo / pi, in cd/m^2, through the environment's emissive().
 //
-// Units. A baked value of 1 is the lamp's on-axis irradiance at 1 m, so baked x candela is lux. The bake stores it
-// sRGB-encoded in byte colours (Blender's byte colour attributes; the glTF exporter writes them as they are), which the
-// vertex stage decodes. The points go through the environment's pointSource(), so they bloom and conserve flux at any
-// size, as plan 2's lamps do. Neither is marked artificial: the lights-out control is about the city.
+// Decoding (rig.json lightBake, written by models/aircraft/build_airframe.py). Each channel stores v = sqrt(E / scale),
+// E being the illuminance per candela of the lamps' peak (lux/cd), 16 bits a channel, so nothing clips and the light
+// a few metres from a lamp keeps its precision. Lux on a corner = v^2 x scale x candela x level. The vertex stage
+// squares the codes once; scale x candela x level of each channel is one uniform, set on the CPU each frame.
 //
-// The NAV channel holds three colours (red left tip, green right tip, white aft on both); a corner's share of the
-// white is the inverse-square share of the aft lamp, its red or green the side it is on.
+// Colours. NAV holds the coloured forward position lights only: green where the body x > 0, red where x < 0. The
+// TAXI channel is shared: inboard of lightBake.mux.TAXI.outboardOf it is the taxi light's, outboard it is the white
+// aft position lights' (on with NAV, at CANDELA.NAV_AFT). The other channels are each one group's, red for the beacon
+// and white for the rest. The points go through the environment's pointSource(), so they bloom and conserve flux at
+// any size, as plan 2's lamps do. Neither is marked artificial: the lights-out control is about the city.
 
 import { BufferAttribute, BufferGeometry, Mesh, Vector4, AdditiveBlending } from 'three';
 import { MeshBasicNodeMaterial } from 'three/webgpu';
 import {
-  attribute, varying, uniform, vec3, vec4, float, mix, step, pow, max, dot, select, normalize, exp, smoothstep,
+  attribute, varying, uniform, vec3, vec4, float, max, dot, select, normalize, exp, smoothstep, step, abs,
   cameraPosition, cameraProjectionMatrix, cameraViewMatrix, positionWorld, modelWorldMatrix, screenSize,
 } from 'three/tsl';
 import { GROUPS, CANDELA, COLOURS, lampLevels } from './lights.js';
 
-/** sRGB-encoded 0..1 to linear (the IEC 61966-2-1 curve), one number: the CPU twin of the vertex stage's decode. */
-export function decodeBaked(v) {
-  return v <= 0.04045 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4;
-}
-const decodeNode = (v) => mix(v.div(12.92), pow(v.add(0.055).div(1.055), 2.4), step(0.04045, v));
+const NAV = GROUPS.indexOf('NAV'), TAXI = GROUPS.indexOf('TAXI');
 
-/** Uniforms of the skin's light: candela x level of each group, groups 0..3 and 4..7. */
-export function createLampUniforms() {
-  return [uniform(new Vector4()), uniform(new Vector4())];
+/** A stored code (0..1) back to lux per candela: v^2 x the channel's scale. The CPU twin of the vertex stage. */
+export function decodeBaked(v, scale) {
+  return v * v * scale;
+}
+
+const tables = new WeakMap();
+/** rig.json's lightBake, checked once: { scale: number[8] in GROUPS order, outboardOf }. */
+export function bakeTable(bake) {
+  let t = bake && tables.get(bake);
+  if (t) return t;
+  if (!bake || bake.encoding !== 'sqrt') throw new Error('airframe: rig.json has no lightBake with the sqrt encoding');
+  if (bake.channels.join() !== GROUPS.join()) throw new Error('airframe: rig.json lightBake channels are not the groups');
+  t = Object.freeze({ scale: GROUPS.map((g) => bake.scale[g]), outboardOf: bake.mux.TAXI.outboardOf });
+  tables.set(bake, t);
+  return t;
 }
 
 /**
- * Write the current candela x level of each group into the two uniforms.
- * @param {ReturnType<typeof createLampUniforms>} u  @param {ArrayLike<number>} levels  GROUPS order, 0..1
+ * Each channel's multiplier for the squared codes, lux per unit code^2: scale x candela x level, GROUPS order; and
+ * `aft`, the TAXI channel's multiplier outboard of the split (the white aft position lights).
+ * @param {ArrayLike<number>} levels  GROUPS order, 0..1  @param {object} bake  rig.json lightBake
+ * @param {{ channels: number[], aft: number }} [out]
  */
-export function setLampUniforms(u, levels) {
-  const c = GROUPS.map((g, i) => CANDELA[g] * levels[i]);
+export function lampIntensities(levels, bake, out = { channels: new Array(GROUPS.length), aft: 0 }) {
+  const { scale } = bakeTable(bake);
+  for (let i = 0; i < GROUPS.length; i++) out.channels[i] = scale[i] * CANDELA[GROUPS[i]] * levels[i];
+  out.aft = scale[TAXI] * CANDELA.NAV_AFT * levels[NAV];
+  return out;
+}
+
+/**
+ * Illuminance on one corner, linear RGB lux (each colour of unit luminance x its lux): the CPU twin of skinLightNode.
+ * @param {ArrayLike<number>} codes  the corner's eight stored values, 0..1  @param {number[]} bodyPosition  body axes
+ * @param {ReturnType<typeof lampIntensities>} k  @param {object} bake  rig.json lightBake
+ */
+export function skinLux(codes, bodyPosition, k, bake) {
+  const { outboardOf } = bakeTable(bake);
+  const e = Array.from(codes, (v) => v * v);
+  const navColour = bodyPosition[0] > 0 ? COLOURS.green : COLOURS.red;
+  const taxi = Math.abs(bodyPosition[0]) >= outboardOf ? k.aft : k.channels[TAXI];
+  const white = e[2] * k.channels[2] + e[3] * k.channels[3] + e[4] * taxi + e[5] * k.channels[5] + e[6] * k.channels[6] + e[7] * k.channels[7];
+  return [0, 1, 2].map((c) => navColour[c] * e[0] * k.channels[0] + COLOURS.red[c] * e[1] * k.channels[1] + COLOURS.white[c] * white);
+}
+
+/** Uniforms of the skin's light: lampIntensities' channels 0..3 and 4..7, and the aft position lights' multiplier. */
+export function createLampUniforms() {
+  return [uniform(new Vector4()), uniform(new Vector4()), uniform(0)];
+}
+
+/**
+ * Write the current multipliers into the uniforms.
+ * @param {ReturnType<typeof createLampUniforms>} u  @param {ArrayLike<number>} levels  GROUPS order, 0..1
+ * @param {object} bake  rig.json lightBake
+ */
+const scratch = { channels: new Array(GROUPS.length), aft: 0 };
+export function setLampUniforms(u, levels, bake) {
+  const { channels: c, aft } = lampIntensities(levels, bake, scratch);
   u[0].value.set(c[0], c[1], c[2], c[3]);
   u[1].value.set(c[4], c[5], c[6], c[7]);
+  u[2].value = aft;
 }
 
 const col = (c) => vec3(c[0], c[1], c[2]);
 
 /**
- * The skin's emission node, HDR units: decode the baked attributes in the vertex stage, weigh them by the groups'
- * candela, colour them, and scatter them by the surface's albedo.
+ * The skin's emission node, HDR units: square the baked codes in the vertex stage, weigh them by the uniforms, colour
+ * them, and scatter them by the surface's albedo.
  * @param {{ nodes: { emissive: (cdM2: any) => any }, uniforms: ReturnType<typeof createLampUniforms>, bodyPosition: any,
- *   albedo: any, navLamps: { left: number[], right: number[], aftLeft: number[], aftRight: number[] } }} o
- *   bodyPosition: the vertex in body axes (a node); albedo: the material's diffuse colour (a node)
+ *   albedo: any, bake: object }} o  bodyPosition: the vertex in body axes (a node); albedo: the material's diffuse colour
+ *   (a node); bake: rig.json lightBake
  */
-export function skinLightNode({ nodes, uniforms: [i0, i1], bodyPosition, albedo, navLamps }) {
-  const b0 = varying(decodeNode(attribute('_lights0', 'vec4')));
-  const b1 = varying(decodeNode(attribute('_lights1', 'vec4')));
+export function skinLightNode({ nodes, uniforms: [i0, i1, iAft], bodyPosition, albedo, bake }) {
+  const { outboardOf } = bakeTable(bake);
+  const a0 = attribute('_lights0', 'vec4'), a1 = attribute('_lights1', 'vec4');
+  const e0 = varying(a0.mul(a0)), e1 = varying(a1.mul(a1));
   const right = bodyPosition.x.greaterThan(0);
-  const front = select(right, vec3(...navLamps.right), vec3(...navLamps.left));
-  const aft = select(right, vec3(...navLamps.aftRight), vec3(...navLamps.aftLeft));
-  const df = bodyPosition.sub(front), da = bodyPosition.sub(aft);
-  const df2 = dot(df, df), da2 = dot(da, da);
-  const whiteShare = df2.div(max(df2.add(da2), 1e-6));
-  const navColour = mix(select(right, col(COLOURS.green), col(COLOURS.red)), col(COLOURS.white), whiteShare);
-  const lux = navColour.mul(b0.x.mul(i0.x))
-    .add(col(COLOURS.red).mul(b0.y.mul(i0.y)))
-    .add(col(COLOURS.white).mul(b0.z.mul(i0.z).add(b0.w.mul(i0.w)).add(dot(b1, i1))));
+  const navColour = select(right, col(COLOURS.green), col(COLOURS.red));
+  const taxi = select(abs(bodyPosition.x).greaterThanEqual(outboardOf), iAft, i1.x);
+  const white = e0.z.mul(i0.z).add(e0.w.mul(i0.w)).add(e1.x.mul(taxi)).add(dot(e1.yzw, i1.yzw));
+  const lux = navColour.mul(e0.x.mul(i0.x)).add(col(COLOURS.red).mul(e0.y.mul(i0.y))).add(col(COLOURS.white).mul(white));
   return nodes.emissive(lux.mul(albedo).div(Math.PI));
 }
 

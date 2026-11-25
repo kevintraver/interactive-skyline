@@ -503,63 +503,166 @@ FLEX = {
 
 # ===================================================================================== lights
 # channels of the two baked attributes: _LIGHTS0 = (NAV, BEACON, STROBE, LANDING), _LIGHTS1 = (TAXI, TURNOFF,
-# LOGO, WING), the order of section 5.5's bit field
+# LOGO, WING), the order of section 5.5's bit field. One channel is shared by two lamp groups that light parts of
+# the airframe far apart (LIGHT_BAKE "shared"): the TAXI channel carries the taxi light inboard of 8 m and the white
+# aft position lights outboard of it, so the position lights' two colours have a channel each.
 LIGHT_CHANNELS = ("NAV", "BEACON", "STROBE", "LANDING", "TAXI", "TURNOFF", "LOGO", "WING")
 
 
-def _light(x, y, z, channel, colour, direction, cone_deg, note):
-    return est({"position": (x, y, z), "channel": channel, "colour": colour, "direction": direction,
-                "cone_deg": cone_deg}, "m|deg", note)
+def _light(x, y, z, channel, colour, direction, cone_deg, note, beam, intensity=None, standoff=None):
+    """A lamp: station, buttock line, height (the frames above), its group's channel, colour, aim (x aft, y right,
+    z up), the cone the app's light point is drawn in, the photometry the bake uses (a LIGHT_BEAMS key) and which
+    intensity of LIGHT_CANDELA its beam's 1.0 is (the group's, unless named). `standoff`: how far out of the skin
+    the light's centre is, when not LIGHT_BAKE snap_offset (a beacon's dome)."""
+    v = {"position": (x, y, z), "channel": channel, "colour": colour, "direction": direction, "cone_deg": cone_deg,
+         "beam": beam, "intensity": intensity or channel}
+    if standoff is not None:
+        v["standoff"] = standoff
+    return est(v, "m|deg", note)
 
 
 LIGHTS = {
     "nav_left": _light(23.30, -17.10, 3.58, "NAV", "red", (0.0, -1.0, 0.0), 180.0,
                        "wingtip leading edge at the winglet root, left (red per 14 CFR 25.1385; position per [B8] as "
-                       "section 7.8 reads it); the bake cone is a hemisphere because the light covers 110 deg "
-                       "horizontally and also shines up and down, onto the winglet"),
+                       "section 7.8 reads it); its light covers 110 deg from ahead to outboard and also shines up and "
+                       "back onto the winglet", "position_fwd"),
     "nav_right": _light(23.30, 17.10, 3.58, "NAV", "green", (0.0, 1.0, 0.0), 180.0,
-                        "wingtip leading edge at the winglet root, right (green)"),
+                        "wingtip leading edge at the winglet root, right (green)", "position_fwd"),
     "nav_aft_left": _light(24.95, -17.05, 3.52, "NAV", "white", (1.0, 0.0, 0.0), 140.0,
-                           "white position light on the wingtip trailing edge, left"),
+                           "white position light on the wingtip trailing edge, left", "position_aft", "NAV_AFT"),
     "nav_aft_right": _light(24.95, 17.05, 3.52, "NAV", "white", (1.0, 0.0, 0.0), 140.0,
-                            "white position light on the wingtip trailing edge, right"),
+                            "white position light on the wingtip trailing edge, right", "position_aft", "NAV_AFT"),
     "strobe_left": _light(23.32, -16.90, 3.56, "STROBE", "white", (0.0, -1.0, 0.0), 180.0,
-                          "anti-collision strobe beside the left position light"),
+                          "anti-collision strobe beside the left position light", "strobe_tip"),
     "strobe_right": _light(23.32, 16.90, 3.56, "STROBE", "white", (0.0, 1.0, 0.0), 180.0,
-                           "anti-collision strobe beside the right position light"),
+                           "anti-collision strobe beside the right position light", "strobe_tip"),
     "strobe_tail": _light(38.02, 0.0, 4.75, "STROBE", "white", (1.0, 0.0, 0.0), 140.0,
-                          "white strobe on the tail cone"),
+                          "white strobe on the tail cone", "strobe_tail"),
     "beacon_top": _light(17.0, 0.0, 5.48, "BEACON", "red", (0.0, 0.0, 1.0), 180.0,
-                         "red rotating beacon on the fuselage crown above the wing"),
+                         "red rotating beacon on the fuselage crown above the wing; its light comes from about "
+                         "10 cm above the skin, the middle of a dome some 15 cm tall", "beacon", standoff=0.10),
     "beacon_bottom": _light(14.2, 0.0, 1.40, "BEACON", "red", (0.0, 0.0, -1.0), 180.0,
-                            "red rotating beacon on the belly ahead of the wing"),
-    "landing_left": _light(15.35, -2.55, 2.30, "LANDING", "white", (-1.0, 0.0, -0.05), 22.0,
-                           "fixed landing light in the left wing root's leading edge"),
-    "landing_right": _light(15.35, 2.55, 2.30, "LANDING", "white", (-1.0, 0.0, -0.05), 22.0,
-                            "fixed landing light in the right wing root's leading edge"),
-    "turnoff_left": _light(15.05, -2.10, 2.25, "TURNOFF", "white", (-0.8, -0.6, -0.05), 40.0,
-                           "runway turn-off light in the left wing root, aimed outward"),
-    "turnoff_right": _light(15.05, 2.10, 2.25, "TURNOFF", "white", (-0.8, 0.6, -0.05), 40.0,
-                            "runway turn-off light in the right wing root, aimed outward"),
-    "taxi": _light(3.95, 0.0, 1.20, "TAXI", "white", (-1.0, 0.0, -0.08), 30.0, "taxi light on the nose-gear strut"),
+                            "red rotating beacon on the belly ahead of the wing, a dome like the top one's", "beacon",
+                            standoff=0.10),
+    "landing_left": _light(15.35, -2.55, 2.30, "LANDING", "white", (-1.0, -0.07, -0.05), 22.0,
+                           "fixed landing light in the left wing root's leading edge, toed out 4 deg so the beam "
+                           "clears the fuselage 0.7 m inboard of it (aimed dead ahead, its core grazed the whole "
+                           "forward fuselage)", "landing"),
+    "landing_right": _light(15.35, 2.55, 2.30, "LANDING", "white", (-1.0, 0.07, -0.05), 22.0,
+                            "fixed landing light in the right wing root's leading edge, toed out 4 deg", "landing"),
+    "turnoff_left": _light(15.05, -2.10, 2.25, "TURNOFF", "white", (-0.8, -0.6, -0.12), 40.0,
+                           "runway turn-off light in the left wing root, aimed outward and down so its beam meets "
+                           "the ground about 20 m out, beside the main gear's path", "turnoff"),
+    "turnoff_right": _light(15.05, 2.10, 2.25, "TURNOFF", "white", (-0.8, 0.6, -0.12), 40.0,
+                            "runway turn-off light in the right wing root, aimed outward and down", "turnoff"),
+    "taxi": _light(3.95, 0.0, 1.20, "TAXI", "white", (-1.0, 0.0, -0.08), 30.0, "taxi light on the nose-gear strut",
+                   "taxi"),
     "logo_left": _light(35.6, -1.6, 4.75, "LOGO", "white", (0.15, 0.45, 0.88), 40.0,
-                        "logo light on the upper surface of the left tailplane, aimed at the fin"),
+                        "logo light on the upper surface of the left tailplane, aimed at the fin", "logo"),
     "logo_right": _light(35.6, 1.6, 4.75, "LOGO", "white", (0.15, -0.45, 0.88), 40.0,
-                         "logo light on the upper surface of the right tailplane, aimed at the fin"),
+                         "logo light on the upper surface of the right tailplane, aimed at the fin", "logo"),
     "wing_left": _light(13.2, -1.86, 3.55, "WING", "white", (0.45, -0.89, -0.10), 30.0,
                         "wing-illumination light on the left fuselage side ahead of the wing, lighting the leading "
-                        "edge and nacelle"),
+                        "edge and nacelle", "wing"),
     "wing_right": _light(13.2, 1.86, 3.55, "WING", "white", (0.45, 0.89, -0.10), 30.0,
-                         "wing-illumination light on the right fuselage side ahead of the wing"),
+                         "wing-illumination light on the right fuselage side ahead of the wing", "wing"),
+}
+
+# The photometry of each kind of lamp, relative to its peak (1.0 = LIGHT_CANDELA of the lamp's intensity), as tables
+# of (degrees, ratio) interpolated linearly. "polar": by the angle from the lamp's aim. "sector": by the horizontal
+# angle from dead ahead (positive toward the lamp's own wingtip, i.e. along its aim) times a factor by the elevation
+# above or below the body's horizontal plane, the form 14 CFR 25.1391-25.1401 gives position and anti-collision light
+# in. Beyond the last row a table holds its last ratio. Light into the structure the lamp sits on is removed by the
+# bake's ray casting, not by these tables.
+LIGHT_BEAMS = {
+    "position_fwd": est({"kind": "sector",
+                         "horizontal": ((-90, 0.025), (-10, 0.025), (-5, 0.1), (0, 1.0), (10, 1.0), (20, 0.6),
+                                        (30, 0.3), (110, 0.2), (140, 0.15), (180, 0.1)),
+                         "vertical": ((0, 1.0), (10, 0.85), (20, 0.6), (30, 0.45), (45, 0.35), (90, 0.3))},
+                        "deg|ratio",
+                        "forward position light. Ahead and outboard the regulation's shape (25.1391: 40, 30 and 5 cd "
+                        "minimums in the 0-10, 10-20 and 20-110 deg sectors; 25.1395: at most 10% across the "
+                        "centre line within 10 deg, 2.5% beyond). Up and back (the winglet above and behind the "
+                        "lamp) the ratios are ESTIMATED from night photographs from the cabin, in which the winglet's "
+                        "inner face glows the lamp's colour: a dome lens throws far more up than 25.1393's 5% minimum"),
+    "position_aft": est({"kind": "sector",
+                         "horizontal": ((-180, 1.0), (-110, 1.0), (-100, 0.1), (-90, 0.025), (90, 0.025),
+                                        (100, 0.1), (110, 1.0), (180, 1.0)),
+                         "vertical": ((0, 1.0), (5, 0.9), (10, 0.8), (15, 0.7), (20, 0.5), (30, 0.3), (40, 0.1),
+                                      (90, 0.05))},
+                        "deg|ratio", "aft position light: 25.1391(c), 20 cd minimum in the rear 140 deg (110-180 deg "
+                        "from ahead, either side); 25.1395's overlap limits (a tenth of that within 10 deg past the "
+                        "sector, a fortieth beyond) as the light toward the side; 25.1393's vertical ratios. No "
+                        "upward lobe beyond the regulation's: night photographs show no white wash on the winglet"),
+    "strobe_tip": est({"kind": "sector",
+                       "horizontal": ((-90, 0.3), (-20, 0.3), (0, 1.0), (110, 1.0), (140, 0.5), (180, 0.3)),
+                       "vertical": ((0, 1.0), (5, 1.0), (10, 0.9), (20, 0.5), (30, 0.35), (60, 0.3), (90, 0.3))},
+                      "deg|ratio", "wingtip strobe: 25.1401(f) vertical ratios (1.0, 0.9, 0.5, 0.3, 0.1 at 0-5, 5-10, "
+                      "10-20, 20-30, 30-90 deg) as minimums, the light above 30 deg and toward the fuselage "
+                      "ESTIMATED from the flash seen on the winglet and the wing in cabin video"),
+    "strobe_tail": est({"kind": "polar", "table": ((0, 1.0), (60, 1.0), (80, 0.5), (100, 0.1), (130, 0.0))},
+                       "deg|ratio", "tail-cone strobe covering the rear 140 deg (25.1401(b) with the tip strobes); "
+                       "fall-off ESTIMATED"),
+    "beacon": est({"kind": "polar",
+                   "table": ((0, 0.1), (55, 0.1), (65, 0.3), (75, 0.5), (82, 0.9), (90, 1.0), (98, 0.9), (105, 0.5),
+                             (115, 0.3), (125, 0.1), (180, 0.0))},
+                  "deg|ratio", "anti-collision beacon, by the angle from straight up (top) or down (belly): "
+                  "25.1401(f)'s vertical ratios read from the horizontal plane, brightest along it; the dome stands "
+                  "proud of the skin, so it also throws light a little past the horizontal (ESTIMATED), which is "
+                  "what reaches the nacelles and the flap fairings from the belly"),
+    "landing": est({"kind": "polar", "inboard_cut_deg": 6.0,
+                    "table": ((0, 1.0), (4, 0.8), (7, 0.5), (11, 0.1), (20, 0.02), (35, 0.005), (60, 0.0015),
+                              (90, 0.001), (100, 0.0))},
+                   "deg|ratio", "landing light: a narrow beam (half intensity near 7 deg, ESTIMATED from sealed-beam "
+                   "and LED landing-light data sheets) with a spill of lens and reflector-rim scatter, 0.1 to 0.5% "
+                   "of the peak, that lights the inlet beside it (ESTIMATED). The lamp sits in a recess of the wing "
+                   "root's fairing whose inboard wall cuts the beam 6 deg inboard of its aim (ESTIMATED): without "
+                   "it the beam's core grazed the whole forward fuselage, which photographs of the type on "
+                   "approach at night do not show"),
+    "turnoff": est({"kind": "polar",
+                    "table": ((0, 1.0), (10, 0.7), (20, 0.3), (30, 0.1), (45, 0.01), (70, 0.002), (90, 0.001),
+                              (100, 0.0))}, "deg|ratio", "runway turn-off light: a wide flood; ESTIMATED"),
+    "taxi": est({"kind": "polar",
+                 "table": ((0, 1.0), (8, 0.7), (15, 0.3), (25, 0.05), (45, 0.005), (90, 0.001), (100, 0.0))},
+                "deg|ratio", "taxi light: medium beam with a spill; ESTIMATED"),
+    "logo": est({"kind": "polar",
+                 "table": ((0, 1.0), (15, 0.6), (25, 0.2), (40, 0.02), (90, 0.001), (100, 0.0))},
+                "deg|ratio", "logo light: a flood on the fin; ESTIMATED"),
+    "wing": est({"kind": "polar",
+                 "table": ((0, 1.0), (10, 0.75), (20, 0.35), (30, 0.12), (45, 0.03), (70, 0.005), (90, 0.001),
+                           (100, 0.0))},
+                "deg|ratio", "wing-illumination light: a flood along the leading edge whose skirt also lights the "
+                "upper surface by the root; ESTIMATED"),
+}
+
+# Peak intensity of each lamp (its beam's 1.0), candela. src/flight/aircraft/lights.js CANDELA carries the same
+# numbers (tests/unit/flight/lights.test.js holds them equal through rig.json).
+LIGHT_CANDELA = {
+    "NAV": est(100.0, "cd", "forward position lights: 25.1391 asks 40 cd at least within 10 deg of ahead; LED units "
+               "give about twice that and more"),
+    "NAV_AFT": est(40.0, "cd", "aft position lights: 25.1391(c) asks 20 cd at least"),
+    "BEACON": est(1500.0, "cd", "peak of the beacon's pulse; with lights.js's 0.3 s half-sine pulse its effective "
+                  "intensity (Blondel-Rey) is about 570 cd, over 25.1401(f)'s 400 cd minimum"),
+    "STROBE": est(5000.0, "cd", "peak of the strobe's flash; with lights.js's 0.08 s pulse about 900 cd effective, "
+                  "over 25.1401(f)'s 400 cd"),
+    "LANDING": est(300000.0, "cd", "fixed landing light: sealed-beam and LED landing lights are rated a few hundred "
+                   "thousand candela"),
+    "TAXI": est(40000.0, "cd", "taxi light on the nose-gear strut: a sealed-beam taxi lamp's rating"),
+    "TURNOFF": est(40000.0, "cd", "runway turn-off light: a wide-flood lamp of the taxi light's power"),
+    "LOGO": est(5000.0, "cd", "logo light: a flood that lights the fin to a few hundred lux"),
+    "WING": est(10000.0, "cd", "wing-illumination light: a flood that lights the leading edge 10 m out to tens "
+                 "of lux, enough for the crew to inspect it for ice at night"),
 }
 
 LIGHT_BAKE = {
     "snap_offset": est(0.05, "m", "the build moves each lamp onto the nearest skin and this far out along its "
                        "normal, so a rough table position never ends up inside the structure"),
-    "reference_distance": est(1.0, "m", "baked value 1.0 = the lamp's on-axis irradiance at 1 m; stored as "
-                              "min(1, E/E_ref) so near surfaces saturate"),
-    "falloff_floor": est(0.02, "m", "distances below 2 cm are clamped, so a lamp's own housing does not blow up"),
-    "max_range": est(30.0, "m", "beyond this a lamp's contribution is dropped"),
+    "lens_radius": est(0.05, "m", "a lamp's emitting area: nearer than this the irradiance stops rising as 1/d^2 "
+                       "(the falloff floor)"),
+    "max_range": est(40.0, "m", "beyond this a lamp's contribution is dropped (the top beacon reaches the fin, 20 m "
+                     "away; a wingtip lamp the fuselage, 15 m)"),
+    "shared_outboard_of": est(8.0, "m", "the TAXI channel holds the taxi light inboard of this buttock line and the "
+                              "white aft position lights outboard of it; neither lamp reaches the other's side"),
 }
 
 # ===================================================================================== budgets

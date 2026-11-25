@@ -90,6 +90,13 @@ Section 6.2 gives the layout of `skyline-flight/1` but not its units or the valu
 - **Two more estimates in the model's source:** the main-gear trunnion sits 0.45 m ahead of the axle, and the main flap carries 24° of flaps 30 and 30° of flaps 40. Both belong in `spec.py` with the other estimates.
 - **The ground attitude belongs to the state, not the model.** On its wheels the aircraft sits 0.81° nose down. Today the model alone turns; the session applies it to the state so the cabin and the camera tilt with it.
 
+### The aircraft's lamps, re-baked (24 November)
+
+- **The two lamp findings above are closed.** Each lamp group's light on the skin is now baked from a lamp shape (14 CFR 25.1391 to 25.1401 where one applies), inverse-square falloff, the surface's angle and the airframe's own shadow, stored as 16-bit square-root codes with a scale per channel in `rig.json`'s `lightBake`, and decoded once in the app.
+- **Every candela figure is an estimate** except the regulatory minimums they are held above. The wing inspection lights at 10,000 cd clip the nacelle white, and the beacon's red wash over the wing is strong; both are tuned when the night flights are judged in the app (F8.1).
+- **The winglet's green is faint over a lit city and clear in dark sky.** That is the app's night exposure, not the lamp, and is left as it is.
+- **Moving parts carry the light of their rest pose.** A lowered flap's upper surface, hidden at rest, stays dark.
+
 ### Order of work
 
 1. Phase 0 with Phase 1's three independent starts, in parallel: the track sampler and kinematics on a synthetic track with the adapter and the airport block (F0.1, F0.2, F1.3); the runway ends and the bake of one real runway 19 arrival (F0.3, F1.1, F1.2); the window, wing and head (F1.5). The airframe's dimensions and kit (F3.1, F3.2) start at the same time because nothing blocks them.

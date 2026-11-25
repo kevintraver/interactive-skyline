@@ -6,6 +6,8 @@ import { describe, expect, it } from 'vitest';
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { buildAirframeModel, decodeBaked } from '../../../src/flight/aircraft/model.js';
+import { lampIntensities, skinLux } from '../../../src/flight/aircraft/lightsDraw.js';
+import { GROUPS, COLOURS } from '../../../src/flight/aircraft/lights.js';
 import { createEnvNodes } from '../../../src/env/nodes.js';
 
 const rig = JSON.parse(readFileSync(new URL('../../../public/models/aircraft/rig.json', import.meta.url), 'utf8'));
@@ -30,6 +32,8 @@ function lowest(model, name) {
 }
 
 const model = buildAirframeModel((await parse()).scene, rig, { nodes });
+// a second copy at rest, for reading the baked attributes in body axes
+const fresh = buildAirframeModel((await parse()).scene, rig, { nodes, lampPoints: false });
 
 describe('buildAirframeModel', () => {
   it('keeps every node rig.json moves, on its pivot, and hides the shadow proxy', () => {
@@ -112,10 +116,71 @@ describe('buildAirframeModel', () => {
 });
 
 describe('decodeBaked', () => {
-  it('undoes the sRGB encoding the bake stores the irradiance in', () => {
-    expect(decodeBaked(0)).toBe(0);
-    expect(decodeBaked(1)).toBeCloseTo(1, 9);
-    expect(decodeBaked(0.0987)).toBeCloseTo(0.0098, 4);
-    expect(decodeBaked(0.3813)).toBeCloseTo(0.1199, 3);
+  it('undoes the square-root encoding with the channel\'s scale (rig.json lightBake)', () => {
+    expect(rig.lightBake.encoding).toBe('sqrt');
+    expect(decodeBaked(0, 3)).toBe(0);
+    expect(decodeBaked(1, 3)).toBe(3);
+    expect(decodeBaked(0.5, 2)).toBeCloseTo(0.5, 12);
+  });
+});
+
+describe('the skin\'s light from the baked attributes (the CPU twin of the emission node)', () => {
+  const bake = rig.lightBake;
+  fresh.root.updateMatrixWorld(true);
+  const RAD_LUMA = (c) => 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2];
+  /** Corners of a node in body axes with their normals and both attributes, filtered. */
+  function corners(name, keep) {
+    const out = [];
+    const v = new THREE.Vector3(), n = new THREE.Vector3();
+    fresh.parts.get(name).traverse((o) => {
+      if (!o.isMesh || (o !== fresh.parts.get(name) && o.parent !== fresh.parts.get(name))) return;
+      const g = o.geometry, p = g.getAttribute('position'), nr = g.getAttribute('normal');
+      const l0 = g.getAttribute('_lights0'), l1 = g.getAttribute('_lights1');
+      const nm = new THREE.Matrix3().getNormalMatrix(o.matrixWorld);
+      for (let i = 0; i < p.count; i++) {
+        v.fromBufferAttribute(p, i).applyMatrix4(o.matrixWorld);
+        n.fromBufferAttribute(nr, i).applyMatrix3(nm).normalize();
+        const c = { pos: v.toArray(), normal: n.toArray(), material: o.material.name,
+          codes: [l0.getX(i), l0.getY(i), l0.getZ(i), l0.getW(i), l1.getX(i), l1.getY(i), l1.getZ(i), l1.getW(i)] };
+        if (keep(c)) out.push(c);
+      }
+    });
+    return out;
+  }
+  const levels = (bits, flash = 1) => GROUPS.map((g, i) => (bits & (1 << i) ? (g === 'BEACON' || g === 'STROBE' ? flash : 1) : 0));
+  const sum = (cs, bits) => cs.reduce((acc, c) => skinLux(c.codes, c.pos, lampIntensities(levels(bits), bake), bake).map((x, k) => acc[k] + x), [0, 0, 0]);
+  const chroma = (rgb) => rgb.map((x) => x / (rgb[0] + rgb[1] + rgb[2]));
+  const nav = (side) => rig.lights[side === 1 ? 'nav_right' : 'nav_left'].position;
+  const winglet = (side) => corners(side === 1 ? 'Wing_R' : 'Wing_L', (c) => side * c.pos[0] > 17.2 && c.pos[1] > 4 && side * c.normal[0] < -0.6
+    && Math.hypot(...c.pos.map((x, k) => x - nav(side)[k])) < 1.8);
+
+  it('glows the right winglet green and the left one red with the position lights alone', () => {
+    const r = chroma(sum(winglet(1), 1)), l = chroma(sum(winglet(-1), 1));
+    const green = chroma(COLOURS.green), red = chroma(COLOURS.red);
+    for (let k = 0; k < 3; k++) { expect(r[k]).toBeCloseTo(green[k], 1); expect(l[k]).toBeCloseTo(red[k], 1); }
+  });
+
+  it('flashes the winglet white with the strobe at its peak, far brighter than the steady glow', () => {
+    const cs = winglet(1);
+    const steady = RAD_LUMA(sum(cs, 1)), flash = sum(cs, 1 | 4);
+    expect(RAD_LUMA(flash)).toBeGreaterThan(20 * steady);
+    const c = chroma(flash);
+    expect(Math.max(...c) - Math.min(...c)).toBeLessThan(0.1);
+  });
+
+  it('pulses the nacelle\'s inboard cowl red with the beacons, tens of lux at the pulse\'s peak', () => {
+    const cs = corners('Engine_R', (c) => c.material.startsWith('Paint') && c.normal[0] < -0.5 && c.pos[0] < 4.83);
+    expect(cs.length).toBeGreaterThan(10);
+    const rgb = sum(cs, 2).map((x) => x / cs.length);
+    expect(RAD_LUMA(rgb)).toBeGreaterThan(10);
+    expect(chroma(rgb)[0]).toBeGreaterThan(0.95);
+  });
+
+  it('lights the outer wing with the white aft position light on the shared channel, and the taxi light nothing there', () => {
+    const cs = corners('Wing_R', (c) => c.pos[0] > bake.mux.TAXI.outboardOf && c.codes[4] > 0);
+    expect(cs.length).toBeGreaterThan(10);
+    expect(RAD_LUMA(sum(cs, 1))).toBeGreaterThan(0);
+    const taxiOnly = sum(cs, 16);
+    expect(RAD_LUMA(taxiOnly)).toBe(0);
   });
 });

@@ -5,6 +5,7 @@ import { describe, expect, it } from 'vitest';
 import { LIGHT } from '../../../src/flight/track.js';
 import {
   GROUPS, MAX_FLASHES_PER_S, FLASHERS, lampLevels, inferLights, lightBits, flashLevel, limitFlashers, lampTable, COLOURS, CANDELA,
+  effectiveIntensity,
 } from '../../../src/flight/aircraft/lights.js';
 
 const rig = JSON.parse(readFileSync(new URL('../../../public/models/aircraft/rig.json', import.meta.url), 'utf8'));
@@ -150,5 +151,47 @@ describe('lampTable: the lamps of rig.json with colours and intensities', () => 
     expect(green.colour[1]).toBeGreaterThan(green.colour[0]);
     expect(CANDELA.STROBE).toBeGreaterThan(CANDELA.NAV);
     expect(CANDELA.LANDING).toBeGreaterThan(CANDELA.STROBE);
+  });
+});
+
+describe('photometry: the candela, colours and flashes the bake and the regulation assume', () => {
+  it('uses the intensities the bake was made for (rig.json lightBake.candela, from spec.py)', () => {
+    expect(rig.lightBake.candela).toEqual({ ...CANDELA });
+  });
+
+  it('gives the white aft position lights their own intensity, at least 25.1391(c)\'s 20 cd', () => {
+    const lamps = lampTable(rig);
+    for (const n of ['nav_aft_left', 'nav_aft_right']) expect(lamps.find((l) => l.name === n).candela).toBe(CANDELA.NAV_AFT);
+    expect(CANDELA.NAV_AFT).toBeGreaterThanOrEqual(20);
+    expect(CANDELA.NAV).toBeGreaterThanOrEqual(40); // 25.1391(b), within 10 degrees of ahead
+  });
+
+  it('flashes the beacon and the strobes at 25.1401(f)\'s 400 cd effective at least', () => {
+    for (const f of FLASHERS) expect(effectiveIntensity(CANDELA[f.id], f.widthS), f.id).toBeGreaterThanOrEqual(400);
+    // a steady light's effective intensity is its intensity: the form reduces to peak x t / (0.2 + t) for a square pulse
+    expect(effectiveIntensity(1000, 1e9)).toBeCloseTo((1000 * 2) / Math.PI, 3);
+  });
+
+  /** CIE 1931 xy of a linear-sRGB colour. */
+  const xyz = ([r, g, b]) => {
+    const X = 0.4124 * r + 0.3576 * g + 0.1805 * b, Y = 0.2126 * r + 0.7152 * g + 0.0722 * b, Z = 0.0193 * r + 0.1192 * g + 0.9505 * b;
+    const s = X + Y + Z;
+    return { x: X / s, y: Y / s, z: Z / s, Y };
+  };
+  it('keeps aviation green and white inside 14 CFR 25.1397, and red at the display\'s red primary', () => {
+    const g = xyz(COLOURS.green);
+    expect(g.x).toBeLessThanOrEqual(0.440 - 0.320 * g.y);
+    expect(g.x).toBeLessThanOrEqual(g.y - 0.170);
+    expect(g.y).toBeGreaterThanOrEqual(0.390 - 0.170 * g.x);
+    const w = xyz(COLOURS.white);
+    expect(w.x).toBeGreaterThanOrEqual(0.300);
+    expect(w.x).toBeLessThanOrEqual(0.540);
+    expect(w.y).toBeGreaterThanOrEqual(w.x - 0.040);
+    expect(w.y).toBeLessThanOrEqual(Math.min(w.x + 0.020, 0.636 - 0.400 * w.x));
+    const r = xyz(COLOURS.red);
+    expect(r.y).toBeLessThanOrEqual(0.335);
+    expect(COLOURS.red[1]).toBe(0);
+    expect(COLOURS.red[2]).toBe(0);
+    for (const c of Object.values(COLOURS)) expect(xyz(c).Y).toBeCloseTo(1, 6);
   });
 });

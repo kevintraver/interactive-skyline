@@ -1560,41 +1560,42 @@
  "errors": [],
  "light_channels": {
   "NAV": {
-   "lit_corners": 432,
-   "max": 1.0
+   "lit_corners": 8602,
+   "scale": 3.18843
   },
   "BEACON": {
-   "lit_corners": 212,
-   "max": 0.0098
+   "lit_corners": 7974,
+   "scale": 2.42378
   },
   "STROBE": {
-   "lit_corners": 627,
-   "max": 1.0
+   "lit_corners": 12696,
+   "scale": 40.5525
   },
   "LANDING": {
-   "lit_corners": 0,
-   "max": 0.0017
+   "lit_corners": 330,
+   "scale": 0.000893739
   },
   "TAXI": {
-   "lit_corners": 0,
-   "max": 0.0
+   "lit_corners": 1938,
+   "scale": 5.93267
   },
   "TURNOFF": {
-   "lit_corners": 36,
-   "max": 0.1217
+   "lit_corners": 1880,
+   "scale": 0.0825431
   },
   "LOGO": {
-   "lit_corners": 150,
-   "max": 0.0909
+   "lit_corners": 1721,
+   "scale": 0.073241
   },
   "WING": {
-   "lit_corners": 68,
-   "max": 0.0397
+   "lit_corners": 7553,
+   "scale": 0.0389876
   }
  },
+ "light_encoding": "sqrt: E (lux per candela) = v^2 x scale, per channel; see rig.json lightBake",
  "files": {
   "glb": "airframe.glb",
   "rig": "rig.json",
-  "glb_bytes": 798608
+  "glb_bytes": 804496
  }
 }

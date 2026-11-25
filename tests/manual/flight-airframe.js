@@ -54,9 +54,9 @@ const sun = new DirectionalLight(0xfff4e6, 1);
 sun.position.set(-0.5, 0.75, 0.45).multiplyScalar(1000);
 const hemi = new HemisphereLight(0xb8cde8, 0x6b5a45, 1);
 scene.add(sun, sun.target, hemi);
-function setNight(night) {
+function setNight(night, k = K_NIGHT) {
   uNight.value = night ? 1 : 0;
-  exposure.value = night ? K_NIGHT : K_DAY;
+  exposure.value = night ? k : K_DAY;
   // lux x exposure. By day the cabin harness's sun (3.2) and fill (1.6), which make the sun 100,000 lux; by night a
   // quarter moon and starlight's fill in the same proportion to the day's sky
   sun.intensity = night ? MOON_LUX * K_NIGHT : SUN_LUX * K_DAY;
@@ -104,7 +104,7 @@ function placeGround(s) {
 
 function pose() {
   state = Object.assign(track.sample(view.t), view.set);
-  setNight(view.night);
+  setNight(view.night, view.exposure ?? K_NIGHT);
   placeGround(state);
   const aspect = size();
   layers.update(state, { aspect, heightAboveGround: state.position.y - ground.position.y });
@@ -177,9 +177,9 @@ const ready = airframe.ready.then(async (m) => { draw(); await frameDone(); retu
 window.__af = {
   ready,
   get info() { return { backend, reason, gpu, model: airframe.model ? true : String(airframe.error) }; },
-  async view({ t = 200, set = {}, seat = '22F', look = {}, night = false, wallS = 0, reducedMotion = false, clean = false, outside = null, flex = true } = {}) {
+  async view({ t = 200, set = {}, seat = '22F', look = {}, night = false, wallS = 0, reducedMotion = false, clean = false, outside = null, flex = true, exposure: k = null } = {}) {
     auto = false;
-    view = { t, set, night, wallS, reducedMotion, outside, flex };
+    view = { t, set, night, wallS, reducedMotion, outside, flex, exposure: k ?? K_NIGHT };
     setSeat(seat);
     rig.reset().look({ ...DEFAULT_LOOK, ...look });
     layers.cleanView(clean);
@@ -187,6 +187,68 @@ window.__af = {
     await frameDone();
     await measure();
     return this.stats();
+  },
+  /**
+   * Draw the current view and read named regions of the airframe off the displayed frame (8-bit sRGB after tone
+   * mapping), in the same task as the render so both backends still hold the image. Each region is { name, p, r }:
+   * p a point on the skin in body axes (metres; the wing's bend is added for points out on the span), r a radius in
+   * pixels. Returns per region { name, px, inView, lum (mean relative luminance of the pixels, linear 0..1), rgb (mean
+   * 0..255), hue (degrees), sat (0..1), clipped (share of pixels with a channel at 250 or more) }.
+   */
+  sample(regions) {
+    draw();
+    const w = canvas.width, h = canvas.height;
+    const c2 = (this._c2 ??= document.createElement('canvas'));
+    c2.width = w; c2.height = h;
+    const ctx = c2.getContext('2d', { willReadFrequently: true });
+    ctx.drawImage(canvas, 0, 0);
+    const img = ctx.getImageData(0, 0, w, h).data;
+    const cam = outsideCam ?? camera, m = airframe.model;
+    cam.updateMatrixWorld();
+    const lin = (v) => { v /= 255; return v <= 0.04045 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4; };
+    return regions.map(({ name, p, r = 6, node = null }) => {
+      const v = new Vector3(...p);
+      // a point on a moving part: into the part's own frame at rest (rest rotations are identity), then out through
+      // its current pose
+      const part = node && m ? m.parts.get(node) : null;
+      if (part) {
+        for (let o = part; o && o !== m.root; o = o.parent) v.sub(m.rest.get(o.name) ?? o.position);
+        part.localToWorld(v);
+        return pixels(name, v, r);
+      }
+      if (m && Math.abs(v.x) > (m.flex.rootY ?? 1.88)) {
+        const r0 = m.flex.rootY ?? 1.88, r1 = m.flex.tipY ?? 17.895;
+        const eta = Math.min(1, (Math.abs(v.x) - r0) / (r1 - r0));
+        v.y += ((eta * eta * (3 - eta)) / 2) * (v.x < 0 ? m.flex.tipL : m.flex.tipR);
+      }
+      (m ? m.root : airframe.group).localToWorld(v);
+      return pixels(name, v, r);
+    });
+    /** World point -> pixels; in view only in front of the eye and inside the frame. */
+    function pixels(name, v, r) {
+      const ahead = v.clone().applyMatrix4(cam.matrixWorldInverse).z < 0;
+      v.project(cam);
+      const x = ((v.x + 1) / 2) * w, y = ((1 - v.y) / 2) * h;
+      const inView = ahead && x >= r && y >= r && x < w - r && y < h - r;
+      if (!inView) return { name, px: [Math.round(x), Math.round(y)], inView };
+      let n = 0, lum = 0, clipped = 0;
+      const rgb = [0, 0, 0];
+      for (let dy = -r; dy <= r; dy++) for (let dx = -r; dx <= r; dx++) {
+        if (dx * dx + dy * dy > r * r) continue;
+        const i = 4 * (Math.round(y + dy) * w + Math.round(x + dx));
+        const R = img[i], G = img[i + 1], B = img[i + 2];
+        rgb[0] += R; rgb[1] += G; rgb[2] += B;
+        lum += 0.2126 * lin(R) + 0.7152 * lin(G) + 0.0722 * lin(B);
+        if (R >= 250 || G >= 250 || B >= 250) clipped++;
+        n++;
+      }
+      const [R, G, B] = rgb.map((c) => c / n);
+      const mx = Math.max(R, G, B), mn = Math.min(R, G, B), d = mx - mn;
+      let hue = 0;
+      if (d > 0) hue = mx === R ? 60 * (((G - B) / d) % 6) : mx === G ? 60 * ((B - R) / d + 2) : 60 * ((R - G) / d + 4);
+      return { name, px: [Math.round(x), Math.round(y)], inView, lum: +(lum / n).toFixed(5), rgb: [R, G, B].map((c) => +c.toFixed(1)),
+        hue: Math.round((hue + 360) % 360), sat: mx ? +(d / mx).toFixed(3) : 0, clipped: +(clipped / n).toFixed(3) };
+    }
   },
   /** Show or hide a named object of the airframe (debugging): returns whether it was found. */
   toggle(name, visible) {

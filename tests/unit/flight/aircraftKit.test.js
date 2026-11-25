@@ -79,6 +79,9 @@ describe('kit-two-parts.glb', () => {
           expect(a, `${node.name} ${name}`).toBeTruthy();
           expect(a.itemSize).toBe(4);
           expect(a.count).toBe(m.geometry.getAttribute('position').count);
+          // the kit writes them as normalized unsigned shorts (the exporter's floats repacked): 16 bits a channel
+          expect(a.array).toBeInstanceOf(Uint16Array);
+          expect(a.normalized).toBe(true);
           for (let i = 0; i < a.count; i++) {
             for (let c = 0; c < 4; c++) {
               const v = a.getComponent(i, c);

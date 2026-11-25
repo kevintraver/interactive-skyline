@@ -10,10 +10,15 @@ keeps one), so this folder rebuilds without the skill; this module imports it an
   part's pivot (a point on its hinge line or track) and whose rest rotation is identity, parented to another
   part or to the model's root. Geometry is given in the MODEL frame; the kit moves it into the part's own frame.
 - `Model.bake_lights(lamps)`: for each corner of every part, how much light each of the aircraft's lamps throws
-  on it (inverse square, the lamp's cone, the surface's cosine, and occlusion by every other part, by ray
-  casting), written as two four-component per-corner attributes `_LIGHTS0` and `_LIGHTS1`. They are byte
-  colours, which the glTF exporter writes as normalized unsigned shorts (8 bytes a vertex for both); values are
-  0..1 in linear units of the lamp's on-axis irradiance at the reference distance.
+  on it: the lamp's photometry toward the corner (a table by angle, `Lamp.beam`), inverse square with a floor at
+  the lamp's lens radius, the surface's cosine, and occlusion by the other parts, by ray casting. The result is
+  irradiance per candela of the lamp's peak (lux/cd, i.e. 1/m^2), summed per channel and written as two
+  four-component per-corner attributes `_LIGHTS0` and `_LIGHTS1`. Encoding (stated in the returned stats and in
+  the model's rig.json): each channel c has a scale S_c, its largest value, and stores v = sqrt(E / S_c), so
+  E = v^2 * S_c; nothing is clipped. Blender holds them as float colour attributes (no colour conversion), and
+  `Model.export` rewrites the two accessors as normalized unsigned shorts (8 bytes a vertex for both), so the
+  file is the size byte colours gave. A lamp may be confined to a region of the span (`Lamp.region`), which lets
+  two groups whose light never meets share one channel.
 - `Model.check(budget, proxy_names)`: the kit's mesh check per part, plus a triangle budget for the whole.
 - `Model.export(path)`: one GLB, every part a named node with its transform (translation = pivot relative to its
   parent), its hinge axis in the node's `extras.hingeAxis` (glTF axes), Y-up.
@@ -47,10 +52,13 @@ def to_gltf(v: Sequence[float]) -> tuple[float, float, float]:
     return tuple(round(c, 6) + 0.0 for c in (float(v[0]), float(v[2]), -float(v[1])))
 
 
-def linear_to_srgb(c: float) -> float:
-    """Byte-colour layers hold sRGB; the exporter linearizes them. Writing srgb(v) makes v come out."""
-    c = min(1.0, max(0.0, c))
-    return c * 12.92 if c <= 0.0031308 else 1.055 * c ** (1 / 2.4) - 0.055
+def encode_light(e: float, scale: float) -> float:
+    """Irradiance per candela (1/m^2) as the 0..1 the attribute stores: sqrt(E / scale)."""
+    return math.sqrt(min(1.0, max(0.0, e / scale))) if scale > 0 else 0.0
+
+
+def decode_light(v: float, scale: float) -> float:
+    return v * v * scale
 
 
 # ------------------------------------------------------------------------------------------------ builder
@@ -122,29 +130,68 @@ def unused_materials_trimmed(obj: bpy.types.Object) -> None:
 
 
 # ------------------------------------------------------------------------------------------------ lamps
+def _table(rows: Sequence[Sequence[float]], x: float) -> float:
+    """Piecewise-linear lookup in ((x, y), ...) sorted by x, holding the ends."""
+    if x <= rows[0][0]:
+        return float(rows[0][1])
+    for (x0, y0), (x1, y1) in zip(rows, rows[1:]):
+        if x <= x1:
+            return float(y0 + (y1 - y0) * (x - x0) / (x1 - x0)) if x1 > x0 else float(y1)
+    return float(rows[-1][1])
+
+
 @dataclass(frozen=True)
 class Lamp:
-    """A lamp for the bake: model-frame position and aim, full cone angle, attribute channel 0..7."""
+    """A lamp for the bake: model-frame position and aim, attribute channel 0..7, and its photometry.
+
+    `beam` is None (the first version's cone: 1 inside 70% of the half angle of `cone_deg`, smooth to 0 at its edge)
+    or a dict: {"kind": "polar", "table": ((deg, ratio), ...)} by the angle from the aim (with "inboard_cut_deg",
+    nothing more than that many degrees inboard of the aim in plan view: a lamp in a recess), or {"kind": "sector",
+    "horizontal": ..., "vertical": ...} by the horizontal angle from the model's forward (+Y), positive toward the
+    aim's side, times a factor by the elevation from the model's horizontal plane (the form of 14 CFR 25.1391-1401).
+    `region` (min, max) of |x| confines the lamp's light to that part of the span; `radius` is the lens radius."""
     name: str
     position: Point
     direction: Point
     cone_deg: float
     channel: int
+    beam: dict | None = None
+    region: tuple[float, float] | None = None
+    radius: float = 0.02
 
     def weight(self, to_point: Vector) -> float:
-        """The cone: 1 inside 70% of the half angle, smooth to 0 at the edge; omni at 360 degrees."""
-        if self.cone_deg >= 359.0:
-            return 1.0
-        d = Vector(self.direction).normalized()
-        cos_a = d.dot(to_point.normalized())
-        half = math.radians(self.cone_deg / 2)
-        inner, outer = math.cos(half * 0.7), math.cos(half)
-        if cos_a >= inner:
-            return 1.0
-        if cos_a <= outer:
-            return 0.0
-        t = (cos_a - outer) / (inner - outer)
-        return t * t * (3 - 2 * t)
+        """Relative intensity (peak 1) toward `to_point`, a vector from the lamp."""
+        d = to_point.normalized()
+        aim = Vector(self.direction).normalized()
+        if self.beam is None:
+            if self.cone_deg >= 359.0:
+                return 1.0
+            cos_a = aim.dot(d)
+            half = math.radians(self.cone_deg / 2)
+            inner, outer = math.cos(half * 0.7), math.cos(half)
+            if cos_a >= inner:
+                return 1.0
+            if cos_a <= outer:
+                return 0.0
+            t = (cos_a - outer) / (inner - outer)
+            return t * t * (3 - 2 * t)
+        if self.beam["kind"] == "polar":
+            cut = self.beam.get("inboard_cut_deg")
+            if cut is not None and (d.x or d.y):
+                # a lamp in a recess: nothing more than `cut` degrees inboard of its aim, in plan view
+                side = 1.0 if aim.x >= 0 else -1.0
+                if math.degrees(math.atan2(side * d.x, d.y) - math.atan2(side * aim.x, aim.y)) < -cut:
+                    return 0.0
+            angle = math.degrees(math.acos(max(-1.0, min(1.0, aim.dot(d)))))
+            return _table(self.beam["table"], angle)
+        # sector: horizontal angle from ahead (+Y), positive toward the side the lamp aims at (sign of aim.x)
+        side = 1.0 if aim.x >= 0 else -1.0
+        elevation = math.degrees(math.asin(max(-1.0, min(1.0, d.z))))
+        h = math.degrees(math.atan2(side * d.x, d.y)) if (d.x or d.y) else 0.0
+        return _table(self.beam["horizontal"], h) * _table(self.beam["vertical"], abs(elevation))
+
+    def reaches(self, p: Vector) -> bool:
+        return self.region is None or self.region[0] <= abs(p.x) < self.region[1]
 
 
 # ------------------------------------------------------------------------------------------------ model
@@ -204,28 +251,33 @@ class Model:
             polys += [[base + i for i in p.vertices] for p in info.obj.data.polygons]
         return BVHTree.FromPolygons(verts, polys, epsilon=0.0) if polys else None
 
-    def snap_lamps(self, lamps: Sequence[Lamp], offset: float = 0.05) -> list[Lamp]:
-        """Each lamp moved onto the nearest point of the skin, then `offset` out along the skin's normal: a lamp
-        position from a table sits on the structure, not inside it."""
+    def snap_lamps(self, lamps: Sequence[Lamp], offset: float = 0.05,
+                   offsets: dict[str, float] | None = None) -> list[Lamp]:
+        """Each lamp moved onto the nearest point of the skin, then `offset` (or `offsets[name]`) out along the
+        skin's normal: a lamp position from a table sits on the structure, not inside it."""
         tree = self._tree()
         out = []
         for lamp in lamps:
             loc, normal, _, _ = tree.find_nearest(Vector(lamp.position))
-            p = loc + normal.normalized() * offset
-            out.append(Lamp(lamp.name, tuple(p), lamp.direction, lamp.cone_deg, lamp.channel))
+            p = loc + normal.normalized() * (offsets or {}).get(lamp.name, offset)
+            out.append(Lamp(lamp.name, tuple(p), lamp.direction, lamp.cone_deg, lamp.channel, lamp.beam, lamp.region,
+                            lamp.radius))
         return out
 
     # -- light bake
-    def bake_lights(self, lamps: Sequence[Lamp], reference: float = 1.0, floor: float = 0.02,
-                    max_range: float = 30.0, occlude: bool = True, skip: Iterable[str] = ()) -> dict:
-        """Write `_LIGHTS0` / `_LIGHTS1` on every part (zeros on parts in `skip`). Returns stats per channel
-        (channel names are those of plan 03's light bit field)."""
+    def bake_lights(self, lamps: Sequence[Lamp], floor: float | None = None, max_range: float = 30.0,
+                    occlude: bool = True, skip: Iterable[str] = (), not_occluding: Iterable[str] = ()) -> dict:
+        """Write `_LIGHTS0` / `_LIGHTS1` on every part (zeros on parts in `skip`), encoded as the module's docstring
+        says, for the parts in the pose they are in now (the rest pose, when called before export). Parts in
+        `not_occluding` cast no shadow (parts that are away most of the time, such as the gear). `floor` overrides
+        each lamp's lens radius. Returns per channel (named after plan 03's light bit field): scale (the largest
+        value, lux per candela), corners lit, and the largest value again as `max`."""
         bpy.context.view_layer.update()
-        skip = set(skip)
+        skip, quiet = set(skip), set(not_occluding)
         verts, polys = [], []
         if occlude:
             for info in self.parts.values():
-                if info.role != "part":
+                if info.role != "part" or info.name in quiet:
                     continue
                 mw = info.obj.matrix_world
                 base = len(verts)
@@ -233,57 +285,67 @@ class Model:
                 polys += [[base + i for i in p.vertices] for p in info.obj.data.polygons]
         tree = BVHTree.FromPolygons(verts, polys, epsilon=0.0) if occlude and polys else None
         names = ["NAV", "BEACON", "STROBE", "LANDING", "TAXI", "TURNOFF", "LOGO", "WING"]
-        stats = {names[c]: {"lit_corners": 0, "max": 0.0} for c in sorted({lamp.channel for lamp in lamps})}
+        used = sorted({lamp.channel for lamp in lamps})
+        raw: dict[str, list[list[float]]] = {}
         for info in self.parts.values():
             mesh = info.obj.data
-            layers = [mesh.color_attributes.get(n) or mesh.color_attributes.new(n, "BYTE_COLOR", "CORNER")
-                      for n in LIGHT_ATTRIBUTES]
             values = [[0.0] * 8 for _ in range(len(mesh.loops))]
-            if info.name not in skip and info.role == "part":
-                mw = info.obj.matrix_world
-                nm = mw.to_3x3().inverted().transposed()
-                mesh.calc_loop_triangles()
-                corner_normals = mesh.corner_normals
-                world = [mw @ v.co for v in mesh.vertices]
-                for li, lamp in enumerate(lamps):
-                    lp = Vector(lamp.position)
-                    seen: dict[int, float] = {}  # per vertex: visibility and distance factor, cone
-                    for loop in mesh.loops:
-                        vi = loop.vertex_index
-                        p = world[vi]
-                        to_l = lp - p
-                        dist = to_l.length
-                        if dist > max_range:
-                            continue
-                        n = (nm @ corner_normals[loop.index].vector).normalized()
-                        cos_i = n.dot(to_l) / max(dist, 1e-9)
-                        if cos_i <= 0:
-                            continue
-                        if vi not in seen:
-                            w = lamp.weight(-to_l)
-                            if w > 0 and tree is not None:
-                                start = p + to_l.normalized() * 0.02 + n * 0.005
-                                hit = tree.ray_cast(start, to_l.normalized(), max(0.0, dist - 0.06))
-                                if hit[0] is not None:
-                                    w = 0.0
-                            seen[vi] = w
-                        w = seen[vi]
-                        if w <= 0:
-                            continue
-                        e = w * cos_i * (reference / max(dist, floor)) ** 2
-                        values[loop.index][lamp.channel] += e
-                for row in values:
-                    for c in range(8):
-                        row[c] = min(1.0, row[c])
-                for c in sorted({lamp.channel for lamp in lamps}):
-                    col = [row[c] for row in values]
-                    stats[names[c]]["lit_corners"] += sum(1 for v in col if v > 0.004)
-                    stats[names[c]]["max"] = max(stats[names[c]]["max"], max(col) if col else 0.0)
+            raw[info.name] = values
+            if info.name in skip or info.role != "part":
+                continue
+            mw = info.obj.matrix_world
+            nm = mw.to_3x3().inverted().transposed()
+            corner_normals = mesh.corner_normals
+            world = [mw @ v.co for v in mesh.vertices]
+            for lamp in lamps:
+                lp = Vector(lamp.position)
+                r_min = lamp.radius if floor is None else floor
+                seen: dict[int, float] = {}  # per vertex: photometry x visibility
+                for loop in mesh.loops:
+                    vi = loop.vertex_index
+                    p = world[vi]
+                    to_l = lp - p
+                    dist = to_l.length
+                    if dist > max_range or not lamp.reaches(p):
+                        continue
+                    n = (nm @ corner_normals[loop.index].vector).normalized()
+                    cos_i = n.dot(to_l) / max(dist, 1e-9)
+                    if cos_i <= 0:
+                        continue
+                    if vi not in seen:
+                        w = lamp.weight(-to_l)
+                        if w > 0 and tree is not None:
+                            start = p + to_l.normalized() * 0.02 + n * 0.005
+                            hit = tree.ray_cast(start, to_l.normalized(), max(0.0, dist - 0.06))
+                            if hit[0] is not None:
+                                w = 0.0
+                        seen[vi] = w
+                    w = seen[vi]
+                    if w <= 0:
+                        continue
+                    values[loop.index][lamp.channel] += w * cos_i / max(dist, r_min) ** 2
+        scale = [0.0] * 8
+        for values in raw.values():
+            for row in values:
+                for c in range(8):
+                    scale[c] = max(scale[c], row[c])
+        stats = {names[c]: {"scale": scale[c], "lit_corners": 0, "max": scale[c]} for c in used}
+        for info in self.parts.values():
+            mesh = info.obj.data
+            for n_ in LIGHT_ATTRIBUTES:
+                old = mesh.color_attributes.get(n_)
+                if old is not None:
+                    mesh.color_attributes.remove(old)
+            layers = [mesh.color_attributes.new(n_, "FLOAT_COLOR", "CORNER") for n_ in LIGHT_ATTRIBUTES]
+            values = raw[info.name]
+            for c in used:
+                stats[names[c]]["lit_corners"] += sum(1 for row in values if row[c] > 0)
             for k, layer in enumerate(layers):
                 flat = []
                 for row in values:
-                    flat += [linear_to_srgb(row[4 * k + c]) for c in range(4)]
+                    flat += [encode_light(row[4 * k + c], scale[4 * k + c]) for c in range(4)]
                 layer.data.foreach_set("color", flat)
+        self.light_scale = scale
         return stats
 
     # -- checks
@@ -321,6 +383,7 @@ class Model:
                                   export_apply=True, export_attributes=True, export_vertex_color="NONE",
                                   export_all_vertex_colors=False, export_active_vertex_color_when_no_material=False,
                                   export_extras=True, export_texcoords=False, export_materials="EXPORT")
+        repack_light_attributes(glb_path)
         return glb_path
 
     def save_blend(self, path: str) -> None:
@@ -332,6 +395,76 @@ class Model:
         info = self.parts[name]
         return {"node": name, "parent": info.parent or self.root_name, "pivot": [round(c, 4) for c in to_gltf(info.pivot)],
                 "axis": [round(c, 6) for c in to_gltf(info.axis)]}
+
+
+def repack_light_attributes(path: str) -> int:
+    """Rewrite the `_LIGHTS0` / `_LIGHTS1` accessors of a GLB from float to normalized unsigned short, in place
+    (the exporter writes float colour attributes as floats). Returns the number of accessors rewritten."""
+    with open(path, "rb") as fh:
+        data = fh.read()
+    jlen = struct.unpack_from("<I", data, 12)[0]
+    doc = json.loads(data[20:20 + jlen])
+    blen = struct.unpack_from("<I", data, 20 + jlen)[0]
+    bin_ = data[28 + jlen:28 + jlen + blen]
+    targets = set()
+    for mesh in doc["meshes"]:
+        for prim in mesh["primitives"]:
+            for a in LIGHT_ATTRIBUTES:
+                if a in prim["attributes"]:
+                    targets.add(prim["attributes"][a])
+    users: dict[int, list[int]] = {}
+    for i, acc in enumerate(doc["accessors"]):
+        if "bufferView" in acc:
+            users.setdefault(acc["bufferView"], []).append(i)
+    replaced: dict[int, bytes] = {}
+    for i in sorted(targets):
+        acc = doc["accessors"][i]
+        if acc["componentType"] == 5123:
+            continue
+        if acc["componentType"] != 5126 or acc["type"] != "VEC4":
+            raise ValueError(f"accessor {i}: expected float VEC4, got {acc['componentType']} {acc['type']}")
+        view_i = acc["bufferView"]
+        if users[view_i] != [i]:
+            raise ValueError(f"buffer view {view_i} is shared; cannot rewrite accessor {i} alone")
+        view = doc["bufferViews"][view_i]
+        start = view.get("byteOffset", 0) + acc.get("byteOffset", 0)
+        stride = view.get("byteStride", 16)
+        out = bytearray()
+        for k in range(acc["count"]):
+            for c in struct.unpack_from("<4f", bin_, start + k * stride):
+                out += struct.pack("<H", int(min(1.0, max(0.0, c)) * 65535 + 0.5))
+        replaced[view_i] = bytes(out)
+        acc["componentType"] = 5123
+        acc["normalized"] = True
+        acc.pop("byteOffset", None)
+        acc.pop("min", None)
+        acc.pop("max", None)
+    if not replaced:
+        return 0
+    new_bin = bytearray()
+    for vi, view in enumerate(doc["bufferViews"]):
+        chunk = replaced.get(vi)
+        if chunk is None:
+            o = view.get("byteOffset", 0)
+            chunk = bin_[o:o + view["byteLength"]]
+        else:
+            view.pop("byteStride", None)
+        while len(new_bin) % 4:
+            new_bin += b"\0"
+        view["byteOffset"] = len(new_bin)
+        view["byteLength"] = len(chunk)
+        new_bin += chunk
+    while len(new_bin) % 4:
+        new_bin += b"\0"
+    doc["buffers"][0]["byteLength"] = len(new_bin)
+    js = json.dumps(doc, separators=(",", ":")).encode()
+    js += b" " * (-len(js) % 4)
+    total = 12 + 8 + len(js) + 8 + len(new_bin)
+    with open(path, "wb") as fh:
+        fh.write(struct.pack("<III", 0x46546C67, 2, total))
+        fh.write(struct.pack("<II", len(js), 0x4E4F534A) + js)
+        fh.write(struct.pack("<II", len(new_bin), 0x004E4942) + bytes(new_bin))
+    return len(replaced)
 
 
 def glb_json(path: str) -> dict:
