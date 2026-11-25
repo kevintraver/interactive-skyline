@@ -2,6 +2,27 @@
  "format": "skyline-flight-index/1",
  "flights": [
   {
+   "id": "lv-19-dusk",
+   "runway": "19R",
+   "aircraftType": "B38M",
+   "date": "2026-03-09",
+   "localTime": "18:48",
+   "touchdown": "2026-03-10T01:48:34Z",
+   "duration": 2002.0,
+   "samples": 2002,
+   "start": 1349,
+   "badges": {
+    "light": "dusk",
+    "weather": "clear",
+    "from": "east",
+    "stripSide": "right",
+    "stripView": "passes-right"
+   },
+   "header": "lv-19-dusk.json",
+   "data": "lv-19-dusk.bin",
+   "preview": null
+  },
+  {
    "id": "lv-19-day",
    "runway": "19R",
    "aircraftType": "B739",
@@ -15,7 +36,8 @@
     "light": "day",
     "weather": "clear",
     "from": "north-east",
-    "stripSide": "right"
+    "stripSide": "right",
+    "stripView": "passes-right"
    },
    "header": "lv-19-day.json",
    "data": "lv-19-day.bin",
@@ -35,7 +57,8 @@
     "light": "night",
     "weather": "clear",
     "from": "east",
-    "stripSide": "right"
+    "stripSide": "right",
+    "stripView": "passes-right"
    },
    "header": "lv-19-night.json",
    "data": "lv-19-night.bin",
@@ -55,7 +78,8 @@
     "light": "day",
     "weather": "clear",
     "from": "east",
-    "stripSide": "right"
+    "stripSide": "right",
+    "stripView": "ahead-right"
    },
    "header": "lv-26-day.json",
    "data": "lv-26-day.bin",
@@ -75,7 +99,8 @@
     "light": "night",
     "weather": "clear",
     "from": "south-east",
-    "stripSide": "right"
+    "stripSide": "right",
+    "stripView": "ahead-right"
    },
    "header": "lv-26-night.json",
    "data": "lv-26-night.bin",
@@ -95,7 +120,8 @@
     "light": "day",
     "weather": "weather",
     "from": "east",
-    "stripSide": "right"
+    "stripSide": "right",
+    "stripView": "ahead-right"
    },
    "header": "lv-wx.json",
    "data": "lv-wx.bin",

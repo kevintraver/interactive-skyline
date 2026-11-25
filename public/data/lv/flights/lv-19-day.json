@@ -364,7 +364,8 @@
   "light": "day",
   "weather": "clear",
   "from": "north-east",
-  "stripSide": "right"
+  "stripSide": "right",
+  "stripView": "passes-right"
  },
  "qa": {
   "glidePathDeg": 3.35,
@@ -481,6 +482,7 @@
     "pass": true
    }
   },
+  "waived": [],
   "reported": {
    "heightBiasLast60sM": -0.03,
    "heightPointsLast60s": 73,
@@ -502,6 +504,17 @@
     "limit": 3.0,
     "within": null
    }
+  },
+  "stripView": {
+   "rightShare": 0.26,
+   "leftShare": 0.005,
+   "aheadShare": 0.702,
+   "rightShareLastMinute": 0.741,
+   "leftShareLastMinute": 0.0,
+   "meanRelativeBearingDeg": 10.837,
+   "maxAbsBearingLastMinuteDeg": 129.165,
+   "stripSide": "right",
+   "stripView": "passes-right"
   },
   "pass": true
  },

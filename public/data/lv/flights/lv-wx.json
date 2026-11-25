@@ -364,7 +364,8 @@
   "light": "day",
   "weather": "weather",
   "from": "east",
-  "stripSide": "right"
+  "stripSide": "right",
+  "stripView": "ahead-right"
  },
  "qa": {
   "glidePathDeg": 3.13,
@@ -481,6 +482,7 @@
     "pass": true
    }
   },
+  "waived": [],
   "reported": {
    "heightBiasLast60sM": 0.07,
    "heightPointsLast60s": 67,
@@ -502,6 +504,17 @@
     "limit": 3.0,
     "within": null
    }
+  },
+  "stripView": {
+   "rightShare": 0.245,
+   "leftShare": 0.0,
+   "aheadShare": 0.755,
+   "rightShareLastMinute": 0.59,
+   "leftShareLastMinute": 0.0,
+   "meanRelativeBearingDeg": 27.361,
+   "maxAbsBearingLastMinuteDeg": 51.908,
+   "stripSide": "right",
+   "stripView": "ahead-right"
   },
   "pass": true
  },

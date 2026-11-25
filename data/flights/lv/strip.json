@@ -1,0 +1,349 @@
+{
+ "about": "The Strip's resort corridor as the flight bake sees it (plan 03, the stripSide and stripView badges; scripts/lib/flight_view.py): every building of public/data/lv/buildings.json at least 100 m tall within x -800..1800 m, n -2800..3800 m of the city origin (Las Vegas Boulevard at Flamingo Road), from Mandalay Bay to the Strat. Kept here so the bake does not change when buildings.json is rebuilt.",
+ "source": "public/data/lv/buildings.json (OSM 2026-11-09T20:40:36Z, heights as recorded there), extracted 2026-11-25",
+ "towers": [
+  {
+   "id": "w27858550",
+   "name": "Mandalay Bay Resort & Casino",
+   "x": -181.4,
+   "n": -2540.6,
+   "top": 799.7
+  },
+  {
+   "id": "w118347176",
+   "name": "W Las Vegas",
+   "x": -422.5,
+   "n": -2409.5,
+   "top": 805.2
+  },
+  {
+   "id": "w27858544",
+   "name": "Luxor Las Vegas",
+   "x": -270.6,
+   "n": -2133.7,
+   "top": 767.4
+  },
+  {
+   "id": "w115661793",
+   "name": "New York New York Hotel and Casino",
+   "x": -148.1,
+   "n": -1384.6,
+   "top": 809.6
+  },
+  {
+   "id": "w27831695",
+   "name": "Park MGM",
+   "x": -295.2,
+   "n": -1108.4,
+   "top": 759.4
+  },
+  {
+   "id": "w95223224",
+   "name": "The Signature at MGM Grand Tower I",
+   "x": 545.2,
+   "n": -958.4,
+   "top": 786.9
+  },
+  {
+   "id": "w52194829",
+   "name": "Waldorf Astoria Las Vegas",
+   "x": -135.9,
+   "n": -945.8,
+   "top": 811.9
+  },
+  {
+   "id": "w95223232",
+   "name": "The Signature at MGM Grand Tower II",
+   "x": 559.0,
+   "n": -875.3,
+   "top": 789.6
+  },
+  {
+   "id": "w134930092",
+   "name": "Aria Resort & Casino",
+   "x": -398.5,
+   "n": -833.2,
+   "top": 830.1
+  },
+  {
+   "id": "w52134834",
+   "name": "Veer Towers East",
+   "x": -140.7,
+   "n": -809.2,
+   "top": 781.9
+  },
+  {
+   "id": "w52134835",
+   "name": "Veer Towers West",
+   "x": -198.1,
+   "n": -809.2,
+   "top": 783.5
+  },
+  {
+   "id": "w276427203",
+   "name": "Marriott's Grand Chateau",
+   "x": 325.1,
+   "n": -806.4,
+   "top": 757.2
+  },
+  {
+   "id": "w95223231",
+   "name": "The Signature at MGM Grand Tower III",
+   "x": 561.5,
+   "n": -799.1,
+   "top": 786.4
+  },
+  {
+   "id": "w134930090",
+   "name": "Aria Resort & Casino",
+   "x": -342.2,
+   "n": -706.8,
+   "top": 808.9
+  },
+  {
+   "id": "w134930088",
+   "name": "Aria Resort & Casino",
+   "x": -295.3,
+   "n": -693.6,
+   "top": 745.4
+  },
+  {
+   "id": "r5342155",
+   "name": "Elara, a Hilton Grand Vacations Club",
+   "x": 390.3,
+   "n": -657.4,
+   "top": 822.5
+  },
+  {
+   "id": "r20214578",
+   "name": "Vdara Hotel & Spa",
+   "x": -463.2,
+   "n": -573.0,
+   "top": 821.4
+  },
+  {
+   "id": "w472669744",
+   "name": "The Cosmopolitan Boulevard Tower",
+   "x": -167.3,
+   "n": -557.6,
+   "top": 828.9
+  },
+  {
+   "id": "w27897905",
+   "name": "The Cosmopolitan Chelsea Tower",
+   "x": -299.4,
+   "n": -540.3,
+   "top": 831.0
+  },
+  {
+   "id": "w134921373",
+   "name": "Planet Hollywood Resort and Casino",
+   "x": 137.2,
+   "n": -512.6,
+   "top": 762.4
+  },
+  {
+   "id": "w134795273",
+   "name": "The Cosmopolitan of Las Vegas",
+   "x": -116.2,
+   "n": -501.4,
+   "top": 827.7
+  },
+  {
+   "id": "w25723910",
+   "name": "Bellagio Spa Tower",
+   "x": -410.7,
+   "n": -416.1,
+   "top": 764.7
+  },
+  {
+   "id": "w27831697",
+   "name": "Le Boulevard At Paris",
+   "x": 210.7,
+   "n": -248.8,
+   "top": 752.9
+  },
+  {
+   "id": "w27831699",
+   "name": "Eiffel Tower",
+   "x": 59.8,
+   "n": -247.7,
+   "top": 808.0
+  },
+  {
+   "id": "w25723909",
+   "name": "Bellagio Las Vegas",
+   "x": -342.7,
+   "n": -176.1,
+   "top": 797.8
+  },
+  {
+   "id": "w1176928048",
+   "name": "Augustus Tower",
+   "x": -231.0,
+   "n": 62.0,
+   "top": 755.4
+  },
+  {
+   "id": "w126267789",
+   "name": "Octavius Tower",
+   "x": -376.3,
+   "n": 73.2,
+   "top": 750.6
+  },
+  {
+   "id": "w134944648",
+   "name": "Palace Tower",
+   "x": -372.5,
+   "n": 228.0,
+   "top": 776.5
+  },
+  {
+   "id": "w111367828",
+   "name": "Harrah's Las Vegas",
+   "x": 237.7,
+   "n": 530.3,
+   "top": 747.6
+  },
+  {
+   "id": "w976405284",
+   "name": "Sphere",
+   "x": 966.2,
+   "n": 726.2,
+   "top": 743.0
+  },
+  {
+   "id": "w30618090",
+   "name": "Venetian Tower",
+   "x": 341.9,
+   "n": 757.5,
+   "top": 780.6
+  },
+  {
+   "id": "w33957359",
+   "name": "Hard Rock Las Vegas",
+   "x": -260.4,
+   "n": 774.4,
+   "top": 744.2
+  },
+  {
+   "id": "w30424125",
+   "name": "Palazzo Tower",
+   "x": 452.1,
+   "n": 1027.5,
+   "top": 829.2
+  },
+  {
+   "id": "w33959894",
+   "name": "Treasure Island Hotel and Casino",
+   "x": 103.2,
+   "n": 1114.3,
+   "top": 747.2
+  },
+  {
+   "id": "w205501268",
+   "name": "Wynn Las Vegas",
+   "x": 655.7,
+   "n": 1327.6,
+   "top": 823.1
+  },
+  {
+   "id": "w27910891",
+   "name": "Encore Las Vegas",
+   "x": 723.7,
+   "n": 1632.0,
+   "top": 818.8
+  },
+  {
+   "id": "w111380666",
+   "name": "Trump International Hotel Las Vegas",
+   "x": 15.4,
+   "n": 1643.6,
+   "top": 828.0
+  },
+  {
+   "id": "w972129019",
+   "name": "Resorts World Las Vegas",
+   "x": 582.8,
+   "n": 2142.1,
+   "top": 835.9
+  },
+  {
+   "id": "w134677429",
+   "name": "Turnberry Place",
+   "x": 1553.9,
+   "n": 2445.3,
+   "top": 768.0
+  },
+  {
+   "id": "w134677416",
+   "name": "Turnberry Place",
+   "x": 1441.4,
+   "n": 2447.8,
+   "top": 770.3
+  },
+  {
+   "id": "w135332959",
+   "name": "Circus Circus Las Vegas",
+   "x": 679.9,
+   "n": 2553.2,
+   "top": 729.6
+  },
+  {
+   "id": "w134068318",
+   "name": "Fontainebleau Las Vegas",
+   "x": 1205.7,
+   "n": 2584.6,
+   "top": 850.9
+  },
+  {
+   "id": "w134677417",
+   "name": "Turnberry Place",
+   "x": 1556.8,
+   "n": 2613.9,
+   "top": 767.5
+  },
+  {
+   "id": "w134677425",
+   "name": "Turnberry Place",
+   "x": 1439.9,
+   "n": 2618.8,
+   "top": 769.4
+  },
+  {
+   "id": "w543641002",
+   "name": "Sky Tower Las Vegas Condominiums",
+   "x": 1034.9,
+   "n": 2669.9,
+   "top": 778.4
+  },
+  {
+   "id": "r6138877",
+   "name": "Hilton Grand Vacations on the Boulevard",
+   "x": 1073.0,
+   "n": 2794.5,
+   "top": 749.3
+  },
+  {
+   "id": "w134918082",
+   "name": "West Tower",
+   "x": 1714.7,
+   "n": 2911.0,
+   "top": 760.3
+  },
+  {
+   "id": "w134935559",
+   "name": "Allure Las Vegas Tower I",
+   "x": 1235.1,
+   "n": 3261.1,
+   "top": 765.4
+  },
+  {
+   "id": "w135457469",
+   "name": "Stratosphere Tower",
+   "x": 1555.1,
+   "n": 3629.6,
+   "top": 971.0
+  }
+ ]
+}

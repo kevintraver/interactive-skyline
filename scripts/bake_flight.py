@@ -41,6 +41,7 @@ import numpy as np
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from lib import flight_net  # noqa: E402,F401  (the generic client name for outside services)
 from lib import adsb, attitude, config_schedule, geodesy, smooth  # noqa: E402
+from lib import flight_view  # noqa: E402
 from lib import qa as qa_lib  # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -222,8 +223,49 @@ def calibrate(ob, td, airport, metar, frame, arp_xy, end):
     return out
 
 
+WAIVER_KEYS = ("gate", "value", "limit", "reason")
+
+
+def _gate_limit(gt):
+    for k in ("max", "maxAbs", "min", "maxDiff"):
+        if k in gt:
+            return k, gt[k]
+    return None, None
+
+
+def apply_waivers(gates, waivers):
+    """Pass the gates a flight's waivers name (selection.json `waivers`: gate, value measured, limit, reason), marking
+    each waived. A waiver covers its gate only up to the value it records: a worse measurement still fails. It must
+    name a gate the bake has, with that gate's own limit. A waiver of a gate that passes anyway changes nothing.
+    Returns the waivers applied."""
+    applied = []
+    for w in waivers or []:
+        missing = [k for k in WAIVER_KEYS if w.get(k) in (None, "")]
+        if missing:
+            raise ValueError(f"waiver {w!r} lacks {missing}")
+        gt = gates.get(w["gate"])
+        if gt is None:
+            raise ValueError(f"waiver names an unknown gate {w['gate']!r}")
+        kind, limit = _gate_limit(gt)
+        if limit is None or abs(float(limit) - float(w["limit"])) > 1e-9:
+            raise ValueError(f"waiver for {w['gate']!r} gives the limit {w['limit']}, the gate's is {limit}")
+        if gt["pass"]:
+            continue
+        v = gt["value"]
+        if not isinstance(v, (int, float)):
+            continue
+        covered = {"max": v <= w["value"], "min": v >= w["value"], "maxAbs": abs(v) <= abs(w["value"]),
+                   "maxDiff": False}[kind]
+        if not covered:
+            continue
+        gt.update({"pass": True, "waived": True, "waiver": {k: w[k] for k in WAIVER_KEYS}})
+        applied.append({k: w[k] for k in WAIVER_KEYS})
+    return applied
+
+
 def bake(p, airport, frame, *, metar, runway=None, flight_id, lead_s=1800.0, wide=None, release=None,
-         aircraft_type=None, touchdown_epoch=None, upper_air=None, upper_air_source=None, published=None):
+         aircraft_type=None, touchdown_epoch=None, upper_air=None, upper_air_source=None, published=None,
+         waivers=None, strip_towers=None):
     """Bake one arrival from the points of its trace (all sources). `upper_air`: atmosphere rows from the upper-air
     archive (true-north axes; lib.wind_aloft), or None for the surface report on a power-law profile. `published`:
     {runway end: {"angles": [...]}} from the CIFP (data/flights/<city>/cifp-<ICAO>.json), PUBLISHED without it.
@@ -567,6 +609,7 @@ def bake(p, airport, frame, *, metar, runway=None, flight_id, lead_s=1800.0, wid
     rec_ias = np.where(np.isfinite(pf.ias_kt), pf.ias_kt,
                        np.array([(st or {}).get("ias", np.nan) if isinstance(st, dict) else np.nan
                                  for st in pf.state], dtype=float))
+    waived = apply_waivers(gates, waivers)
     report_only = {"heightBiasLast60sM": round(float(np.mean(herr[last60])), 2) if last60.any() else None,
                    "heightPointsLast60s": int(last60.sum())}
     for key, rec, model, angle, scale in (
@@ -626,9 +669,10 @@ def bake(p, airport, frame, *, metar, runway=None, flight_id, lead_s=1800.0, wid
     from_deg = math.degrees(math.atan2(x[i24] - arp_xy[0], n[i24] - arp_xy[1])) % 360
     thr_xy = np.array(end["threshold"][:2])
     u = np.array([math.sin(math.radians(end["gridHeading"])), math.cos(math.radians(end["gridHeading"]))])
-    p_final = thr_xy - 3000 * u
-    to_strip = -p_final
-    strip_side = "right" if (u[1] * to_strip[0] - u[0] * to_strip[1]) > 0 else "left"
+    # where the Strip is seen from the cabin in the last three minutes (lib.flight_view); without the towers, the
+    # city origin on the boulevard stands for it
+    towers = strip_towers if strip_towers is not None else np.array([[0.0, 0.0, airport["arp"]["elevation"] + 100]])
+    strip_v = flight_view.strip_view(channels, towers, td=int(round(td - t0)))
     light = geodesy.light_of(sun_td)
     clear = metar and (metar.get("visibilityMi") or 0) >= 10 and (metar.get("ceilingFt") is None or
                                                                   metar["ceilingFt"] >= 12000)
@@ -679,7 +723,7 @@ def bake(p, airport, frame, *, metar, runway=None, flight_id, lead_s=1800.0, wid
                      "maxCrabDeg": round(float(np.abs(crab[air]).max()), 1) if air.any() else 0.0,
                      "maxMach": round(float(mach.max()), 3)},
         "badges": {"light": light, "weather": "clear" if clear else "weather", "from": _bearing_name(from_deg),
-                   "stripSide": strip_side},
+                   "stripSide": strip_v["stripSide"], "stripView": strip_v["stripView"]},
         "qa": {
             "glidePathDeg": gates["glidePathDeg"]["value"], "crossingHeightM": gates["crossingHeightM"]["value"],
             "touchdownPastThresholdM": gates["touchdownPastThresholdM"]["value"],
@@ -691,7 +735,8 @@ def bake(p, airport, frame, *, metar, runway=None, flight_id, lead_s=1800.0, wid
                       if k in ("y0", "tdSink", "sink0", "duration", "shift", "err")},
             "sunAtTouchdownDeg": round(sun_td, 1), "adsbShare": round(share, 4), "gatedOut": dropped,
             "antennaAboveWheelsM": ANTENNA_ABOVE_WHEELS_M,
-            "gates": gates, "reported": report_only, "pass": all(g["pass"] for g in gates.values()),
+            "gates": gates, "waived": waived, "reported": report_only,
+            "stripView": strip_v, "pass": all(g["pass"] for g in gates.values()),
         },
         "weather": None if not metar else {k: metar.get(k) for k in ("valid", "metar", "altimeterInHg", "tempC",
                                                                  "windDir", "windKt", "visibilityMi", "ceilingFt")},
@@ -764,6 +809,7 @@ def bake_selected(city_id, ids=(), *, offline=False, write=True, out_dir=None):
     wide = (w["x0"], w["y0"], w["x0"] + (w["nx"] - 1) * w["step"], w["y0"] + (w["ny"] - 1) * w["step"])
     sel_dir = ROOT / "data" / "flights" / city_id
     selection = json.loads((sel_dir / "selection.json").read_text())
+    strip_path = sel_dir / "strip.json"
     cifp_path = sel_dir / f"cifp-{city['icao']}.json"
     cifp = json.loads(cifp_path.read_text()) if cifp_path.exists() else None
     published = None
@@ -792,7 +838,8 @@ def bake_selected(city_id, ids=(), *, offline=False, write=True, out_dir=None):
         baked = bake(p, airport, frame, metar=metar, runway=f["runway"], flight_id=f["id"], wide=wide,
                      release=f["release"], aircraft_type=f["type"], touchdown_epoch=td, upper_air=upper,
                      upper_air_source="Open-Meteo GFS pressure levels for the hour (section 6.4)" if upper else None,
-                     published=published)
+                     published=published, waivers=f.get("waivers"),
+                     strip_towers=flight_view.load_strip(strip_path) if strip_path.exists() else None)
         baked.header["city"] = city_id
         end = airport["ends"][baked.header["runway"]]
         lat_t, lon_t = frame.to_geodetic(*end["threshold"][:2])
@@ -803,7 +850,9 @@ def bake_selected(city_id, ids=(), *, offline=False, write=True, out_dir=None):
         entry = index_entry(baked.header, city["tz"])
         index["flights"] = [e for e in index["flights"] if e["id"] != f["id"]] + [entry]
     keep = {f["id"] for f in selection["flights"]}
-    index["flights"] = sorted((e for e in index["flights"] if e["id"] in keep), key=lambda e: e["id"])
+    # in the selection's order: its first flight is the picker's default (lv-19-dusk, section 6.2)
+    order = [f["id"] for f in selection["flights"]]
+    index["flights"] = sorted((e for e in index["flights"] if e["id"] in keep), key=lambda e: order.index(e["id"]))
     index["attribution"] = "Flight tracks: adsb.lol contributors, ODbL 1.0 (https://www.adsb.lol/)"
     if write:
         qa_dir = sel_dir / "qa"
@@ -818,7 +867,7 @@ def bake_selected(city_id, ids=(), *, offline=False, write=True, out_dir=None):
 def print_gates(baked):
     qa = baked.header["qa"]
     for k, g in qa["gates"].items():
-        print(f"  {k:26s} {str(g['value']):>18s}  {'ok' if g['pass'] else 'FAIL'}{' (warn)' if g.get('warn') else ''}")
+        print(f"  {k:26s} {str(g['value']):>18s}  {('waived' if g.get('waived') else 'ok') if g['pass'] else 'FAIL'}{' (warn)' if g.get('warn') else ''}")
     print(f"{baked.header['id']}: {baked.header['samples']} samples; calibration {qa['calibration']['method']} "
           f"{qa['altitudeOffsetM']} m ({qa['datum']}); weight {baked.header['inferred']['weightKg']} kg")
 
