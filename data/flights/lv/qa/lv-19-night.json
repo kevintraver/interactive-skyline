@@ -1,0 +1,241 @@
+{
+ "format": "skyline-flight-qa/1",
+ "id": "lv-19-night",
+ "runway": "19R",
+ "aircraftType": "B738",
+ "touchdown": "2026-03-10T06:42:46Z",
+ "recordedStart": "2026-03-10T06:12:47Z",
+ "samples": 2157,
+ "calibration": {
+  "offsetM": -30.54,
+  "datum": "ellipsoid",
+  "barometricOffsetM": -20.51,
+  "barometricPoints": 115,
+  "method": "rollout",
+  "points": 18,
+  "geoidM": -28.07
+ },
+ "antennaAboveWheelsM": 5.6,
+ "gates": {
+  "positionRmsAirM": {
+   "value": 7.8,
+   "max": 12.0,
+   "pass": true
+  },
+  "positionRmsLowM": {
+   "value": 3.5,
+   "max": 5.0,
+   "pass": true
+  },
+  "heightRmsAirM": {
+   "value": 3.13,
+   "max": 8.0,
+   "pass": true
+  },
+  "heightRmsLast60sM": {
+   "value": 2.63,
+   "max": 3.0,
+   "pass": true
+  },
+  "glidePathDeg": {
+   "value": 3.0,
+   "nearest": 3.04,
+   "maxDiff": 0.35,
+   "warnDiff": 0.2,
+   "pass": true,
+   "warn": false
+  },
+  "crossingHeightM": {
+   "value": 25.8,
+   "min": 12.0,
+   "max": 32.0,
+   "pass": true
+  },
+  "touchdownPastThresholdM": {
+   "value": 483.1,
+   "min": 250.0,
+   "max": 1000.0,
+   "pass": true
+  },
+  "touchdownOffCentreM": {
+   "value": 2.3,
+   "maxAbs": 8.0,
+   "pass": true
+  },
+  "bankDeg": {
+   "value": 30.0,
+   "maxAbs": 35.0,
+   "pass": true
+  },
+  "pitchDeg": {
+   "value": [
+    -3.6,
+    4.9
+   ],
+   "min": -6.0,
+   "max": 12.0,
+   "pass": true
+  },
+  "decelerationMs2": {
+   "value": 2.67,
+   "max": 3.5,
+   "pass": true
+  },
+  "flapPlacard": {
+   "value": 0,
+   "max": 0,
+   "pass": true
+  },
+  "flapsMonotonic": {
+   "value": 0,
+   "max": 0,
+   "pass": true
+  },
+  "gearBeforeLandingFlapS": {
+   "value": 43.0,
+   "min": 0.1,
+   "pass": true
+  },
+  "landingLightBy10000ft": {
+   "value": true,
+   "pass": true
+  }
+ },
+ "pass": true,
+ "recordedVersusDerived": {
+  "heightBiasLast60sM": 0.1,
+  "heightPointsLast60s": 69,
+  "roll": {
+   "rms": null,
+   "points": 0,
+   "limit": 4.0,
+   "within": null
+  },
+  "iasKt": {
+   "rms": null,
+   "points": 0,
+   "limit": 8.0,
+   "within": null
+  },
+  "heading": {
+   "rms": null,
+   "points": 0,
+   "limit": 3.0,
+   "within": null
+  }
+ },
+ "procedure": {
+  "runway": "19R",
+  "cifpCycle": "2611",
+  "glidePathDeg": 3.0,
+  "nearestPublishedDeg": 3.04,
+  "diffDeg": -0.04,
+  "pass": true,
+  "warn": false,
+  "finalCourseFlownGridDeg": 204.98,
+  "finalCourseFlownTrueDeg": 204.99,
+  "crossingHeightAntennaM": 25.8,
+  "crossingHeightAntennaFt": 84.6,
+  "published": [
+   {
+    "source": "CIFP H19RZ",
+    "type": "RNAV (RNP)",
+    "angle": 3.24,
+    "crossingHeightFt": 75.0,
+    "finalCourseTrue": 204.84,
+    "lastFix": "CEGIL",
+    "courseDiffDeg": 0.15,
+    "angleDiffDeg": -0.24,
+    "crossingHeightDiffFt": 9.6
+   },
+   {
+    "source": "CIFP R19RY",
+    "type": "RNAV (GPS)",
+    "angle": 3.24,
+    "crossingHeightFt": 60.0,
+    "finalCourseTrue": 204.86,
+    "lastFix": "WAKSI",
+    "courseDiffDeg": 0.13,
+    "angleDiffDeg": -0.24,
+    "crossingHeightDiffFt": 24.6
+   },
+   {
+    "source": "PAPI (NASR)",
+    "type": "PAPI",
+    "angle": 3.04,
+    "crossingHeightFt": 80,
+    "finalCourseTrue": null,
+    "lastFix": null,
+    "angleDiffDeg": -0.04,
+    "crossingHeightDiffFt": 4.6
+   }
+  ]
+ },
+ "touchdownPoint": {
+  "pastThresholdM": 483.1,
+  "offCentreM": 2.3,
+  "source": "levelled before the surface flag",
+  "flare": {
+   "err": 0.05,
+   "y0": 9.0,
+   "tdSink": 0.5,
+   "sink0": 3.478,
+   "duration": 5.861,
+   "shift": -8.75
+  }
+ },
+ "inferred": {
+  "weightKg": 51044,
+  "approachSpeedKt": 136.0,
+  "landingFlap": 30,
+  "flapSelections": [
+   {
+    "flap": 1,
+    "t": 1446,
+    "why": "speed"
+   },
+   {
+    "flap": 5,
+    "t": 1476,
+    "why": "speed"
+   },
+   {
+    "flap": 15,
+    "t": 1630,
+    "why": "speed"
+   },
+   {
+    "flap": 30,
+    "t": 1673,
+    "why": "speed"
+   }
+  ],
+  "gearDownT": 1630,
+  "joinFinalT": 1733,
+  "maxCrabDeg": 4.1,
+  "maxMach": 0.807
+ },
+ "weather": {
+  "valid": "2026-03-10 06:56Z",
+  "metar": "KLAS 100656Z 00000KT 10SM FEW250 17/03 A2991 RMK AO2 SLP113 T01720033",
+  "altimeterInHg": 29.91,
+  "tempC": 17.22222222222222,
+  "windDir": 0.0,
+  "windKt": 0.0,
+  "visibilityMi": 10.0,
+  "ceilingFt": null
+ },
+ "badges": {
+  "light": "night",
+  "weather": "clear",
+  "from": "east",
+  "stripSide": "right"
+ },
+ "reconstructed": [
+  {
+   "from": 1793,
+   "to": 1799,
+   "what": "flare: wheel height modelled from 9.0 m to the runway"
+  }
+ ]
+}

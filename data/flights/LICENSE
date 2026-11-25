@@ -20,3 +20,11 @@ the ODbL. Keep this notice with the data.
 Other data that enter the bake: weather reports from the Iowa Environmental Mesonet ASOS archive
 (https://mesonet.agron.iastate.edu/), public domain, credit appreciated; runway data from the FAA NASR subscription,
 a US government work.
+
+Added for plan 03's phase 2 (fetched 2026-11-24):
+- Wind and temperature aloft: Open-Meteo historical forecast API (https://open-meteo.com/), GFS pressure levels,
+  licensed CC BY 4.0 (attribution: "Weather data by Open-Meteo.com"); the GFS model data are NOAA's, public domain.
+  The responses used are kept in data/flights/<city>/weather/<id>.json beside the ASOS reports used.
+- Published instrument approaches: FAA Coded Instrument Flight Procedures (CIFP), cycle 2611, a US government work
+  (https://www.faa.gov/air_traffic/flight_info/aeronav/digital_products/cifp/download/), extracted to
+  data/flights/<city>/cifp-<ICAO>.json by scripts/fetch_cifp.py.

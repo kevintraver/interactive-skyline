@@ -1,0 +1,1139 @@
+SUSAP KLASK2ALAS     0     148YHN36044923W115090882E011002183         1800018000C    MNAR    HARRY REID INTL               347992508
+SUSAP KLASK2CAALAN K20    C     N36351939W113550609                       E0107     NAR           AALAN                    348002605
+SUSAP KLASK2CAIRRO K20    W     N36100544W114420859                       E0109     NAR           AIRRO                    348012605
+SUSAP KLASK2CALOLY K20    W     N36114600W115111126                       E0110     NAR           ALOLY                    348022605
+SUSAP KLASK2CALUND K20    R     N36043374W115073049                       E0110     NAR           ALUND                    348032605
+SUSAP KLASK2CARYEL K20    W     N36271820W116125125                       E0113     NAR           ARYEL                    348042605
+SUSAP KLASK2CAYVUH K20    W     N36043256W114550298                       E0109     NAR           AYVUH                    348052605
+SUSAP KLASK2CBACCK K20    W     N36102503W115152569                       E0110     NAR           BACCK                    348062605
+SUSAP KLASK2CBASIC K20    W     N37195427W117043098                       E0117     NAR           BASIC                    348072605
+SUSAP KLASK2CBEEPR K20    W     N35593277W114431052                       E0109     NAR           BEEPR                    348082504
+SUSAP KLASK2CBERBN K20    W     N35595725W115005072                       E0109     NAR           BERBN                    348092605
+SUSAP KLASK2CBESSY K20    W     N36062767W115172256                       E0110     NAR           BESSY                    348102605
+SUSAP KLASK2CBHARP K20    W     N36042459W115153152                       E0110     NAR           BHARP                    348112605
+SUSAP KLASK2CBISHP K20    W     N35595594W114570890                       E0109     NAR           BISHP                    348122605
+SUSAP KLASK2CBJORG K20    C     N36043496W114570551                       E0109     NAR           BJORG                    348132605
+SUSAP KLASK2CBLAID K20    R     N36143138W114282707                       E0108     NAR           BLAID                    348142605
+SUSAP KLASK2CBOOOO K20    W     N36085734W114501537                       E0109     NAR           BOOOO                    348152605
+SUSAP KLASK2CBUETY K20    W     N35542659W115254858                       E0110     NAR           BUETY                    348162605
+SUSAP KLASK2CBUGSS K20    W     N35383982W115215793                       E0110     NAR           BUGSS                    348172605
+SUSAP KLASK2CBYRDY K20    W     N36394135W116240208                       E0114     NAR           BYRDY                    348182605
+SUSAP KLASK2CCAKNU K20    W     N35474200W115193576                       E0110     NAR           CAKNU                    348192605
+SUSAP KLASK2CCAMMP K20    W     N35320787W115202526                       E0110     NAR           CAMMP                    348202504
+SUSAP KLASK2CCARNG K20    W     N35582068W115132079                       E0110     NAR           CARNG                    348212605
+SUSAP KLASK2CCEDAX K20    R     N35380574W115251467                       E0110     NAR           CEDAX                    348222605
+SUSAP KLASK2CCEENA K20    W     N35555712W115203723                       E0110     NAR           CEENA                    348232605
+SUSAP KLASK2CCEGIL K20    W     N36073993W115082523                       E0110     NAR           CEGIL                    348242605
+SUSAP KLASK2CCFBDG K20    A     N36013628W115153090                       E0110     NAR           CFBDG(CNF)               348252605
+SUSAP KLASK2CCFDZP K20    A     N36013641W115153107                       E0110     NAR           CFDZP(CNF)               348262605
+SUSAP KLASK2CCFFDG K20    A     N36021555W114570571                       E0109     NAR           CFFDG(CNF)               348272605
+SUSAP KLASK2CCFFKJ K20    A     N36065542W115065197                       E0110     NAR           CFFKJ(CNF)               348282605
+SUSAP KLASK2CCFFLT K20    A     N36070736W115065892                       E0110     NAR           CFFLT(CNF)               348292605
+SUSAP KLASK2CCFFLV K20    A     N36021053W114570766                       E0109     NAR           CFFLV(CNF)               348302605
+SUSAP KLASK2CCHALL K20    R     N35570209W114150032                       E0107     NAR           CHALL                    348312605
+SUSAP KLASK2CCHOWW K20    C     N36234314W114134648                       E0108     NAR           CHOWW                    348322605
+SUSAP KLASK2CCODNO K20    R     N35540194W115161238                       E0110     NAR           CODNO                    348332605
+SUSAP KLASK2CCOKTL K20    W     N36150398W115554316                       E0112     NAR           COKTL                    348342605
+SUSAP KLASK2CCOMIC K20    W     N35560267W115163595                       E0110     NAR           COMIC                    348352605
+SUSAP KLASK2CCONDY K20    C     N36043512W115005866                       E0110     NAR           CONDY                    348362504
+SUSAP KLASK2CCOWBY K20    C     N35552484W113540994                       E0106     NAR           COWBY                    348372605
+SUSAP KLASK2CCUEVS K20    W     N36163722W115144698                       E0111     NAR           CUEVS                    348382504
+SUSAP KLASK2CDBLII K20    W     N36011796W114372325                       E0108     NAR           DBLII                    348392605
+SUSAP KLASK2CDEEON K20    W     N36022436W115255132                       E0111     NAR           DEEON                    348402605
+SUSAP KLASK2CDEREW K20    W     N36001772W115123120                       E0110     NAR           DEREW                    348412605
+SUSAP KLASK2CDIRDE K20    W     N36115649W115054545                       E0110     NAR           DIRDE                    348422605
+SUSAP KLASK2CDLARG K20    W     N36081073W115071751                       E0110     NAR           DLARG                    348432605
+SUSAP KLASK2CDRXLR K20    W     N36253964W115283627                       E0111     NAR           DRXLR                    348442605
+SUSAP KLASK2CDUPEC K20    W     N36033971W115103016                       E0110     NAR           DUPEC                    348452605
+SUSAP KLASK2CDUUGG K20    W     N36531085W112522137                       E0105     NAR           DUUGG                    348462504
+SUSAP KLASK2CECKKR K20    W     N36043420W115095899                       E0110     NAR           ECKKR                    348472605
+SUSAP KLASK2CELLDA K20    W     N34592920W113222358                       E0103     NAR           ELLDA                    348482605
+SUSAP KLASK2CEYUNG K20    W     N36033415W115175894                       E0110     NAR           EYUNG                    348492605
+SUSAP KLASK2CFEBET K20    W     N35525396W115163861                       E0110     NAR           FEBET                    348502605
+SUSAP KLASK2CFELAA K20    W     N36120487W114384975                       E0109     NAR           FELAA                    348512605
+SUSAP KLASK2CFEREL K20    W     N36065799W114204476                       E0108     NAR           FEREL                    348522605
+SUSAP KLASK2CFLAAR K20    W     N36025502W114542566                       E0109     NAR           FLAAR                    348532605
+SUSAP KLASK2CFLABB K20    W     N35501801W115164928                       E0110     NAR           FLABB                    348542605
+SUSAP KLASK2CFLICR K20    C     N36043440W114501564                       E0109     NAR           FLICR                    348552605
+SUSAP KLASK2CFLYES K20    C     N36043354W114434483                       E0109     NAR           FLYES                    348562605
+SUSAP KLASK2CGALNE K20    W     N35593902W115124771                       E0110     NAR           GALNE                    348572605
+SUSAP KLASK2CGEEZY K20    W     N36083060W114294509                       E0108     NAR           GEEZY                    348582605
+SUSAP KLASK2CGGAPP K20    W     N37315960W112080463                       E0103     NAR           GGAPP                    348592605
+SUSAP KLASK2CGIFTT K20    W     N36072836W115081926                       E0110     NAR           GIFTT                    348602605
+SUSAP KLASK2CGIINN K20    W     N36480166W116445066                       E0115     NAR           GIINN                    348612605
+SUSAP KLASK2CGIMBL K20    W     N36082985W115062683                       E0110     NAR           GIMBL                    348622605
+SUSAP KLASK2CGLDYN K20    W     N36002953W114245290                       E0108     NAR           GLDYN                    348632605
+SUSAP KLASK2CGLIAN K20    W     N36091033W115181141                       E0111     NAR           GLIAN                    348642504
+SUSAP KLASK2CGOLIE K20    W     N36020107W114484914                       E0109     NAR           GOLIE                    348652605
+SUSAP KLASK2CGRMMA K20    W     N35434213W115332039                       E0110     NAR           GRMMA                    348662605
+SUSAP KLASK2CGROLL K20    W     N35564301W114201917                       E0107     NAR           GROLL                    348672605
+SUSAP KLASK2CGRUDN K20    W     N35553414W115223948                       E0110     NAR           GRUDN                    348682605
+SUSAP KLASK2CHAANG K20    W     N36432300W113265889                       E0106     NAR           HAANG                    348692605
+SUSAP KLASK2CHAIDN K20    W     N36090932W114523336                       E0109     NAR           HAIDN                    348702605
+SUSAP KLASK2CHARFE K20    R     N35542289W114590788                       E0109     NAR           HARFE                    348712605
+SUSAP KLASK2CHAWKO K20    C     N36043485W114550982                       E0109     NAR           HAWKO                    348722605
+SUSAP KLASK2CHAYLN K20    W     N36021512W114391757                       E0109     NAR           HAYLN                    348732504
+SUSAP KLASK2CHIMIT K20    W     N35435081W115271165                       E0110     NAR           HIMIT                    348742605
+SUSAP KLASK2CHIRLR K20    W     N36082359W115071423                       E0110     NAR           HIRLR                    348752605
+SUSAP KLASK2CHNIBL K20    W     N35590367W114525726                       E0109     NAR           HNIBL                    348762605
+SUSAP KLASK2CHOCKY K20    R     N36025580W114521633                       E0109     NAR           HOCKY                    348772605
+SUSAP KLASK2CHOGOG K20    W     N35595585W114552279                       E0109     NAR           HOGOG                    348782605
+SUSAP KLASK2CHOLDM K20    C     N36490710W113324059                       E0107     NAR           HOLDM                    348792504
+SUSAP KLASK2CHRRLY K20    W     N35592285W115204961                       E0110     NAR           HRRLY                    348802605
+SUSAP KLASK2CHUXAR K20    C     N36042504W114552096                       E0109     NAR           HUXAR                    348812605
+SUSAP KLASK2CHUXLY K20    W     N35572502W114312648                       E0108     NAR           HUXLY                    348822605
+SUSAP KLASK2CIRISH K20    R     N36021644W114461406                       E0109     NAR           IRISH                    348832605
+SUSAP KLASK2CISHEE K20    R     N35490750W114195495                       E0107     NAR           ISHEE                    348842605
+SUSAP KLASK2CJABNA K20    W     N36061425W115090171                       E0110     NAR           JABNA                    348852605
+SUSAP KLASK2CJADWI K20    W     N35470706W114293531                       E0108     NAR           JADWI                    348862504
+SUSAP KLASK2CJAIDE K20    W     N35461884W114563611                       E0109     NAR           JAIDE                    348872605
+SUSAP KLASK2CJALID K20    W     N36043505W114550856                       E0109     NAR           JALID                    348882605
+SUSAP KLASK2CJAYSN K20    W     N36335341W116024726                       E0113     NAR           JAYSN                    348892605
+SUSAP KLASK2CJENFR K20    W     N36114611W114525204                       E0109     NAR           JENFR                    348902605
+SUSAP KLASK2CJETTG K20    W     N36084676W114282672                       E0108     NAR           JETTG                    348912605
+SUSAP KLASK2CJJEAN K20    W     N35174938W113405356                       E0104     NAR           JJEAN                    348922605
+SUSAP KLASK2CJOVII K20    W     N36113628W114261039                       E0108     NAR           JOVII                    348932605
+SUSAP KLASK2CKACEK K20    W     N36042505W115094619                       E0110     NAR           KACEK                    348942605
+SUSAP KLASK2CKIBSE K20    W     N35562052W115144095                       E0110     NAR           KIBSE                    348952605
+SUSAP KLASK2CKIVEY K20    W     N36081683W114584608                       E0110     NAR           KIVEY                    348962504
+SUSAP KLASK2CKNGPN K20    W     N35552162W114570608                       E0109     NAR           KNGPN                    348972605
+SUSAP KLASK2CKODSE K20    W     N36021434W114534167                       E0109     NAR           KODSE                    348982605
+SUSAP KLASK2CKOOPA K20    W     N36083038W115054929                       E0110     NAR           KOOPA                    348992605
+SUSAP KLASK2CKORYN K20    W     N36122924W115082972                       E0110     NAR           KORYN                    349002605
+SUSAP KLASK2CKRLOZ K20    W     N36091410W114361566                       E0109     NAR           KRLOZ                    349012504
+SUSAP KLASK2CKRUDY K20    R     N35475979W115193824                       E0110     NAR           KRUDY                    349022605
+SUSAP KLASK2CKRUGR K20    W     N35531914W115333286                       E0111     NAR           KRUGR                    349032605
+SUSAP KLASK2CKWEAN K20    W     N35345490W112532097                       E0103     NAR           KWEAN                    349042403
+SUSAP KLASK2CKWYYN K20    W     N35515506W115242455                       E0110     NAR           KWYYN                    349052605
+SUSAP KLASK2CKYBAD K20    W     N36083895W114573245                       E0110     NAR           KYBAD                    349062504
+SUSAP KLASK2CLARKK K20    R     N35502690W115264348                       E0110     NAR           LARKK                    349072605
+SUSAP KLASK2CLARRE K20    C     N36042465W114500964                       E0109     NAR           LARRE                    349082605
+SUSAP KLASK2CLEEEW K20    W     N35485756W114323666                       E0108     NAR           LEEEW                    349092605
+SUSAP KLASK2CLEELN K20    W     N36043500W115165400                       E0110     NAR           LEELN                    349102605
+SUSAP KLASK2CLOHLA K20    W     N36153132W115325334                       E0111     NAR           LOHLA                    349112605
+SUSAP KLASK2CLOOMI K20    W     N35494976W115373246                       E0111     NAR           LOOMI                    349122605
+SUSAP KLASK2CLUISA K20    W     N35595615W114570680                       E0109     NAR           LUISA                    349132605
+SUSAP KLASK2CMATLR K20    W     N35501928W115134483                       E0110     NAR           MATLR                    349142605
+SUSAP KLASK2CMEZKL K20    W     N35555136W115395970                       E0111     NAR           MEZKL                    349152605
+SUSAP KLASK2CMGNTO K20    W     N35530495W115215160                       E0110     NAR           MGNTO                    349162605
+SUSAP KLASK2CMLVIN K20    W     N36043066W114485235                       E0109     NAR           MLVIN                    349172605
+SUSAP KLASK2CMNCIN K20    W     N37135659W112424544                       E0105     NAR           MNCIN                    349182504
+SUSAP KLASK2CMNDRN K20    W     N35585737W115194420                       E0110     NAR           MNDRN                    349192605
+SUSAP KLASK2CMOBBB K20    W     N36083209W115035458                       E0110     NAR           MOBBB                    349202605
+SUSAP KLASK2CMOLME K20    W     N36005092W115120665                       E0110     NAR           MOLME                    349212605
+SUSAP KLASK2CMOZOS K20    W     N36150648W115025822                       E0110     NAR           MOZOS                    349222605
+SUSAP KLASK2CMYSHL K20    W     N36222874W115234377                       E0111     NAR           MYSHL                    349232605
+SUSAP KLASK2CNEEMA K20    W     N36094965W115361714                       E0111     NAR           NEEMA                    349242605
+SUSAP KLASK2CNEETL K20    W     N35320688W115105551                       E0109     NAR           NEETL                    349252605
+SUSAP KLASK2CNNEON K20    W     N36075950W114534585                       E0109     NAR           NNEON                    349262605
+SUSAP KLASK2CNODIY K20    R     N35565381W115143455                       E0110     NAR           NODIY                    349272605
+SUSAP KLASK2COLBLU K20    W     N36073106W114452935                       E0109     NAR           OLBLU                    349282605
+SUSAP KLASK2CPACKK K20    W     N36054205W114365160                       E0109     NAR           PACKK                    349292504
+SUSAP KLASK2CPAIRR K20    W     N36084824W115405643                       E0112     NAR           PAIRR                    349302504
+SUSAP KLASK2CPAREE K20    W     N35590571W115130672                       E0110     NAR           PAREE                    349312605
+SUSAP KLASK2CPEHTY K20    C     N35453055W114091111                       E0107     NAR           PEHTY                    349322504
+SUSAP KLASK2CPENSK K20    W     N36104297W115183615                       E0111     NAR           PENSK                    349332504
+SUSAP KLASK2CPESHY K20    W     N36171807W115413383                       E0112     NAR           PESHY                    349342605
+SUSAP KLASK2CPHHIL K20    W     N36484174W113301671                       E0106     NAR           PHHIL                    349352605
+SUSAP KLASK2CPPENN K20    W     N36080618W114555797                       E0109     NAR           PPENN                    349362605
+SUSAP KLASK2CPRINO K20    C     N36042360W114433886                       E0109     NAR           PRINO                    349372605
+SUSAP KLASK2CRACES K20    R     N36034336W114593718                       E0110     NAR           RACES                    349382504
+SUSAP KLASK2CRACOR K20    W     N35590726W115131847                       E0110     NAR           RACOR                    349392605
+SUSAP KLASK2CRAWKK K20    W     N35522601W115332578                       E0111     NAR           RAWKK                    349402605
+SUSAP KLASK2CREDQN K20    W     N36001447W115062781                       E0110     NAR           REDQN                    349412605
+SUSAP KLASK2CRELIN K20    C     N36042524W115005984                       E0110     NAR           RELIN                    349422504
+SUSAP KLASK2CRIGLL K20    W     N36570414W113422732                       E0107     NAR           RIGLL                    349432605
+SUSAP KLASK2CRKSTR K20    W     N35501866W114200323                       E0107     NAR           RKSTR                    349442605
+SUSAP KLASK2CRNDRZ K20    C     N35352672W115443006                       E0111     NAR           RNDRZ                    349452605
+SUSAP KLASK2CROAMN K20    W     N35485747W115202190                       E0110     NAR           ROAMN                    349462605
+SUSAP KLASK2CROODE K20    W     N35590381W114394406                       E0108     NAR           ROODE                    349472605
+SUSAP KLASK2CRUDYY K20    W     N36040763W115153231                       E0110     NAR           RUDYY                    349482605
+SUSAP KLASK2CRUMLY K20    W     N35413588W115315045                       E0110     NAR           RUMLY                    349492605
+SUSAP KLASK2CSACHL K20    W     N36134290W114324939                       E0109     NAR           SACHL                    349502504
+SUSAP KLASK2CSAMOA K20    W     N36021126W115185366                       E0110     NAR           SAMOA                    349512605
+SUSAP KLASK2CSARAS K20    R     N35212174W115433601                       E0110     NAR           SARAS                    349522605
+SUSAP KLASK2CSCAAR K20    W     N36042499W115035543                       E0110     NAR           SCAAR                    349532605
+SUSAP KLASK2CSELLZ K20    W     N35593274W115173802                       E0110     NAR           SELLZ                    349542605
+SUSAP KLASK2CSETKE K20    W     N35595546W114551354                       E0109     NAR           SETKE                    349552605
+SUSAP KLASK2CSGFRD K20    W     N35534946W114313487                       E0108     NAR           SGFRD                    349562605
+SUSAP KLASK2CSHAND K20    C     N36042513W114570748                       E0109     NAR           SHAND                    349572605
+SUSAP KLASK2CSHANQ K20    R     N35421126W115225581                       E0110     NAR           SHANQ                    349582605
+SUSAP KLASK2CSHEEN K20    W     N35373182W115052853                       E0109     NAR           SHEEN                    349592605
+SUSAP KLASK2CSILTT K20    W     N36042489W115121437                       E0110     NAR           SILTT                    349602605
+SUSAP KLASK2CSIROE K20    W     N36044611W115100477                       E0110     NAR           SIROE                    349612605
+SUSAP KLASK2CSKALD K20    W     N36043495W115094617                       E0110     NAR           SKALD                    349622605
+SUSAP KLASK2CSLOPP K20    W     N35133533W115465424                       E0110     NAR           SLOPP                    349632605
+SUSAP KLASK2CSLOTS K20    W     N35451045W115242679                       E0110     NAR           SLOTS                    349642605
+SUSAP KLASK2CSOOSN K20    C     N35375336W114204254                       E0107     NAR           SOOSN                    349652605
+SUSAP KLASK2CSOSOY K20    R     N35592032W115131092                       E0110     NAR           SOSOY                    349662605
+SUSAP KLASK2CSQIRE K20    W     N36024778W111380141                       E0099     NAR           SQIRE                    349672605
+SUSAP KLASK2CSTEWW K20    W     N37144387W113320816                       E0107     NAR           STEWW                    349682605
+SUSAP KLASK2CSTORA K20    W     N36183821W114595535                       E0110     NAR           STORA                    349692605
+SUSAP KLASK2CSTYYX K20    W     N35390731W113294663                       E0104     NAR           STYYX                    349702605
+SUSAP KLASK2CTATUU K20    W     N36112468W114325585                       E0108     NAR           TATUU                    349712605
+SUSAP KLASK2CTBRAN K20    W     N36390248W116292581                       E0115     NAR           TBRAN                    349722504
+SUSAP KLASK2CTEDDE K20    W     N35133339W116143854                       E0111     NAR           TEDDE                    349732605
+SUSAP KLASK2CTQILA K20    W     N37283300W117120200                       E0118     NAR           TQILA                    349742605
+SUSAP KLASK2CTRREY K20    C     N35512654W115174079                       E0110     NAR           TRREY                    349752605
+SUSAP KLASK2CTTEEA K20    W     N36114470W114410473                       E0109     NAR           TTEEA                    349762605
+SUSAP KLASK2CTTONE K20    W     N35545191W115123029                       E0110     NAR           TTONE                    349772605
+SUSAP KLASK2CTYEGR K20    W     N37115433W111440097                       E0101     NAR           TYEGR                    349782605
+SUSAP KLASK2CVANDL K20    W     N35440003W115203399                       E0110     NAR           VANDL                    349792605
+SUSAP KLASK2CVEDDR K20    W     N35503369W112365611                       E0102     NAR           VEDDR                    349802605
+SUSAP KLASK2CVIVVS K20    W     N35515717W115062989                       E0109     NAR           VIVVS                    349812605
+SUSAP KLASK2CVMPRE K20    W     N35525247W114595281                       E0109     NAR           VMPRE                    349822605
+SUSAP KLASK2CWAKSI K20    W     N36113251W115061184                       E0110     NAR           WAKSI                    349832605
+SUSAP KLASK2CWAPID K20    W     N36304189W115510155                       E0113     NAR           WAPID                    349842504
+SUSAP KLASK2CWARKA K20    W     N36593063W112293500                       E0103     NAR           WARKA                    349852605
+SUSAP KLASK2CWATEV K20    W     N35191428W116065171                       E0111     NAR           WATEV                    349862605
+SUSAP KLASK2CWOLPH K20    W     N36151822W114265769                       E0108     NAR           WOLPH                    349872605
+SUSAP KLASK2CYAGGR K20    W     N35524854W115213170                       E0110     NAR           YAGGR                    349882605
+SUSAP KLASK2CZABES K20    R     N36014065W115115082                       E0110     NAR           ZABES                    349892605
+SUSAP KLASK2CZEPAM K20    W     N36021499W114533294                       E0109     NAR           ZEPAM                    349902605
+SUSAP KLASK2CZGOSH K20    R     N35055371W116235685                       E0111     NAR           ZGOSH                    349912605
+SUSAP KLASK2CZINPI K20    W     N35452049W115304357                       E0110     NAR           ZINPI                    349922605
+SUSAP KLASK2CZOLAV K20    W     N36035161W115103595                       E0110     NAR           ZOLAV                    349932605
+SUSAP KLASK2DFRNCK14RW08B 010         0        VA                     0789        + 02682     18000                        349942205
+SUSAP KLASK2DFRNCK14RW08B 020AYVUHK2PC0EE      DF                                 + 06000                                  349952205
+SUSAP KLASK2DFRNCK15      010AYVUHK2PC0E       IF                                 + 06000     18000                        349962205
+SUSAP KLASK2DFRNCK15      020RATPKK2EA0E       TF                                 + 13000                                  349972205
+SUSAP KLASK2DFRNCK15      030DARDNK2EA0E       TF                                                                          349982205
+SUSAP KLASK2DFRNCK15      040FRNCKK2EA0EE      TF                                                                          349992205
+SUSAP KLASK2DGIDGT44RW01L 010         0        VI                     0139                    18000       KLAS  K2PA       350002605
+SUSAP KLASK2DGIDGT44RW01L 020KYBADK2PC0E       CF NJK K2      3590201607200089D                                            350012605
+SUSAP KLASK2DGIDGT44RW01L 030HAIDNK2PC0E       TF                                                                          350022605
+SUSAP KLASK2DGIDGT44RW01L 040AIRROK2PC0E       TF                                 + 11500          250               -     350032605
+SUSAP KLASK2DGIDGT44RW01L 050GIDGTK2EA0EE      TF                                                                          350042605
+SUSAP KLASK2DGIDGT44RW01R 010         0        VI                     0139                    18000                        350052605
+SUSAP KLASK2DGIDGT44RW01R 020KYBADK2PC0E       CF NJK K2      3590201607200087D                                            350062605
+SUSAP KLASK2DGIDGT44RW01R 030HAIDNK2PC0E       TF                                                                          350072605
+SUSAP KLASK2DGIDGT44RW01R 040AIRROK2PC0E       TF                                 + 11500          250               -     350082605
+SUSAP KLASK2DGIDGT44RW01R 050GIDGTK2EA0EE      TF                                                                          350092605
+SUSAP KLASK2DGIDGT44RW08B 010         0        VA                     0789        + 02681     18000                        350102605
+SUSAP KLASK2DGIDGT44RW08B 020AYVUHK2PC0E       DF                                 + 06000                                  350112605
+SUSAP KLASK2DGIDGT44RW08B 030MLVINK2PC0E       TF                                                                          350122605
+SUSAP KLASK2DGIDGT44RW08B 040GEEZYK2PC0E       TF                                 + 12000                                  350132605
+SUSAP KLASK2DGIDGT44RW08B 050JETTGK2PC0E       TF                                 - 14000                                  350142605
+SUSAP KLASK2DGIDGT44RW08B 060GIDGTK2EA0EE      TF                                                                          350152605
+SUSAP KLASK2DGIDGT44RW19L 010         0        VI                     1939                    18000                        350162605
+SUSAP KLASK2DGIDGT44RW19L 020LEELNK2PC0E       CF NJK K2      3547195427060052D   - 08000                                  350172605
+SUSAP KLASK2DGIDGT44RW19L 030GLIANK2PC0E       TF                                 + 05000          230               -     350182605
+SUSAP KLASK2DGIDGT44RW19L 040BACCKK2PC0E       TF                                 + 06000                                  350192605
+SUSAP KLASK2DGIDGT44RW19L 050ALOLYK2PC0E       TF                                 + 07000                                  350202605
+SUSAP KLASK2DGIDGT44RW19L 060TTEEAK2PC0E       TF                                 + 14000                                  350212605
+SUSAP KLASK2DGIDGT44RW19L 070GIDGTK2EA0EE      TF                                                                          350222605
+SUSAP KLASK2DGIDGT44RW19R 010         0        VI                     1939                    18000                        350232605
+SUSAP KLASK2DGIDGT44RW19R 020LEELNK2PC0E       CF NJK K2      3547195427010051D   - 08000                                  350242605
+SUSAP KLASK2DGIDGT44RW19R 030GLIANK2PC0E       TF                                 + 05000          230               -     350252605
+SUSAP KLASK2DGIDGT44RW19R 040BACCKK2PC0E       TF                                 + 06000                                  350262605
+SUSAP KLASK2DGIDGT44RW19R 050ALOLYK2PC0E       TF                                 + 07000                                  350272605
+SUSAP KLASK2DGIDGT44RW19R 060TTEEAK2PC0E       TF                                 + 14000                                  350282605
+SUSAP KLASK2DGIDGT44RW19R 070GIDGTK2EA0EE      TF                                                                          350292605
+SUSAP KLASK2DGIDGT44RW26B 010         0        VA                     2590        + 02681     18000                        350302605
+SUSAP KLASK2DGIDGT44RW26B 020LEELNK2PC0E       DF                                 - 08000                                  350312605
+SUSAP KLASK2DGIDGT44RW26B 030GLIANK2PC0E       TF                                 + 05000          230               -     350322605
+SUSAP KLASK2DGIDGT44RW26B 040BACCKK2PC0E       TF                                 + 06000                                  350332605
+SUSAP KLASK2DGIDGT44RW26B 050ALOLYK2PC0E       TF                                 + 07000                                  350342605
+SUSAP KLASK2DGIDGT44RW26B 060TTEEAK2PC0E       TF                                 + 14000                                  350352605
+SUSAP KLASK2DGIDGT44RW26B 070GIDGTK2EA0EE      TF                                                                          350362605
+SUSAP KLASK2DGIDGT46IWANS 010GIDGTK2EA0E       IF                                             18000                        350372605
+SUSAP KLASK2DGIDGT46IWANS 020NICLEK2EA0E       TF                                                                          350382605
+SUSAP KLASK2DGIDGT46IWANS 030IWANSK2EA0EE      TF                                                                          350392605
+SUSAP KLASK2DGIDGT46SSKEE 010GIDGTK2EA0E       IF                                             18000                        350402605
+SUSAP KLASK2DGIDGT46SSKEE 020NICLEK2EA0E       TF                                                                          350412605
+SUSAP KLASK2DGIDGT46SSKEE 030IWANSK2EA0E       TF                                                                          350422605
+SUSAP KLASK2DGIDGT46SSKEE 040SSKEEK2EA0EE      TF                                                                          350432605
+SUSAP KLASK2DGIDGT46TUKRR 010GIDGTK2EA0E       IF                                             18000                        350442605
+SUSAP KLASK2DGIDGT46TUKRR 020NICLEK2EA0E       TF                                                                          350452605
+SUSAP KLASK2DGIDGT46TUKRR 030TUKRRK2EA0EE      TF                                                                          350462605
+SUSAP KLASK2DGIDGT46VERKN 010GIDGTK2EA0E       IF                                             18000                        350472605
+SUSAP KLASK2DGIDGT46VERKN 020GEEOOK2EA0E       TF                                                                          350482605
+SUSAP KLASK2DGIDGT46VERKN 030BETHLK2EA0E       TF                                                                          350492605
+SUSAP KLASK2DGIDGT46VERKN 040VERKNK2EA0EE      TF                                                                          350502605
+SUSAP KLASK2DHOOVR81RW01B 010         0        VA                     0139        + 02500     18000                        350512209
+SUSAP KLASK2DHOOVR81RW01B 020         0 E      VM                     0600                                                 350522209
+SUSAP KLASK2DHOOVR81RW08B 010         0 E      VM                     0789                    18000                        350532209
+SUSAP KLASK2DHOOVR81RW19B 010         0 E      VM                     1939                    18000                        350542209
+SUSAP KLASK2DHOOVR81RW26B 010         0        VD LAS K2              25900030D               18000                        350552209
+SUSAP KLASK2DHOOVR81RW26B 020         0 E      VM                     1900                                                 350562209
+SUSAP KLASK2DHOOVR83BAVPE 010CHALLK2PC0E       IF                                 + 10000     18000                        350572209
+SUSAP KLASK2DHOOVR83BAVPE 020COWBYK2PC0E       TF                                                                          350582209
+SUSAP KLASK2DHOOVR83BAVPE 030PGS  K2D 0V       TF                                                                          350592209
+SUSAP KLASK2DHOOVR83BAVPE 040CUTROK2EA0E       TF                                 + FL180                                  350602209
+SUSAP KLASK2DHOOVR83BAVPE 050BAVPEK2EA0EE      TF                                                                          350612209
+SUSAP KLASK2DHOOVR83DRK   010SOOSNK2PC0E       IF                                 + 10000     18000                        350622209
+SUSAP KLASK2DHOOVR83DRK   020IGM  K2D 0V       TF                                                                          350632209
+SUSAP KLASK2DHOOVR83DRK   030DRK  K2D 0VE      TF                                                                          350642209
+SUSAP KLASK2DHOOVR83DVC   010GIDGTK2EA0E       IF                                 + 10000     18000                        350652209
+SUSAP KLASK2DHOOVR83DVC   020NICLEK2EA0E       TF                                                                          350662209
+SUSAP KLASK2DHOOVR83DVC   030PGA  K2D 0V       TF                                                                          350672209
+SUSAP KLASK2DHOOVR83DVC   040DVC  K2D 0VE      TF                                                                          350682209
+SUSAP KLASK2DHOOVR83MLF   010RATPKK2EA0E       IF                                 + 08500     18000                        350692209
+SUSAP KLASK2DHOOVR83MLF   020MMM  K2D 0V       TF                                                                          350702209
+SUSAP KLASK2DHOOVR83MLF   030MLF  K2D 0VE      TF                                                                          350712209
+SUSAP KLASK2DJOHKR54RW01B 010         0        VA                     0139        + 02682     18000       KLAS  K2PA       350722413
+SUSAP KLASK2DJOHKR54RW01B 020BESSYK2PC0E   L   DF                                 + 05000                                  350732413
+SUSAP KLASK2DJOHKR54RW01B 030HRRLYK2PC0E       TF                                                                          350742413
+SUSAP KLASK2DJOHKR54RW01B 040KWYYNK2PC0E       TF                                                                          350752413
+SUSAP KLASK2DJOHKR54RW01B 050RAWKKK2PC0E       TF                                 + 13000                                  350762413
+SUSAP KLASK2DJOHKR54RW01B 060JOHKRK2EA0EE      TF                                                                          350772413
+SUSAP KLASK2DJOHKR54RW08L 010         0        VI                     0789                    18000                        350782413
+SUSAP KLASK2DJOHKR54RW08L 020FLAARK2PC0E       CF FQF K2      2382534809010087D   + 06000                                  350792413
+SUSAP KLASK2DJOHKR54RW08L 030HNIBLK2PC0E       TF                                 + 08000          230               -     350802413
+SUSAP KLASK2DJOHKR54RW08L 040VMPREK2PC0E       TF                                                                          350812413
+SUSAP KLASK2DJOHKR54RW08L 050JOHKRK2EA0EE      TF                                                                          350822413
+SUSAP KLASK2DJOHKR54RW08R 010         0        VA                     0789        + 02682     18000                        350832413
+SUSAP KLASK2DJOHKR54RW08R 020SCAARK2PC0E       DF                                                                          350842413
+SUSAP KLASK2DJOHKR54RW08R 030FLAARK2PC0E       TF                                 + 06000                                  350852413
+SUSAP KLASK2DJOHKR54RW08R 040HNIBLK2PC0E       TF                                 + 08000          230               -     350862413
+SUSAP KLASK2DJOHKR54RW08R 050VMPREK2PC0E       TF                                                                          350872413
+SUSAP KLASK2DJOHKR54RW08R 060JOHKRK2EA0EE      TF                                                                          350882413
+SUSAP KLASK2DJOHKR54RW19B 010         0        VA                     1939        + 02682     18000                        350892413
+SUSAP KLASK2DJOHKR54RW19B 020DEREWK2PC0E       DF                                 - 07000                                  350902413
+SUSAP KLASK2DJOHKR54RW19B 030CARNGK2PC0E       TF                                                                          350912413
+SUSAP KLASK2DJOHKR54RW19B 040COMICK2PC0E       TF                                                                          350922413
+SUSAP KLASK2DJOHKR54RW19B 050MGNTOK2PC0E       TF                                                                          350932413
+SUSAP KLASK2DJOHKR54RW19B 060KRUGRK2PC0E       TF                                 - 11000          250               -     350942413
+SUSAP KLASK2DJOHKR54RW19B 070JOHKRK2EA0EE      TF                                                                          350952413
+SUSAP KLASK2DJOHKR54RW26L 010         0        VA                     2590        + 02682     18000                        350962413
+SUSAP KLASK2DJOHKR54RW26L 020SILTTK2PC0E       DF                                                                          350972413
+SUSAP KLASK2DJOHKR54RW26L 030RUDYYK2PC0E       TF                                 + 04000          230               -     350982413
+SUSAP KLASK2DJOHKR54RW26L 040SELLZK2PC0E       TF                                 - 08000                                  350992413
+SUSAP KLASK2DJOHKR54RW26L 050MGNTOK2PC0E       TF                                                                          351002413
+SUSAP KLASK2DJOHKR54RW26L 060KRUGRK2PC0E       TF                                 - 11000          250               -     351012413
+SUSAP KLASK2DJOHKR54RW26L 070JOHKRK2EA0EE      TF                                                                          351022413
+SUSAP KLASK2DJOHKR54RW26R 010         0        VI                     2590                    18000                        351032413
+SUSAP KLASK2DJOHKR54RW26R 020RUDYYK2PC0E       CF FQF K2      2391549524880026D   + 04000          230               -     351042413
+SUSAP KLASK2DJOHKR54RW26R 030SELLZK2PC0E       TF                                 - 08000                                  351052413
+SUSAP KLASK2DJOHKR54RW26R 040MGNTOK2PC0E       TF                                                                          351062413
+SUSAP KLASK2DJOHKR54RW26R 050KRUGRK2PC0E       TF                                 - 11000          250               -     351072413
+SUSAP KLASK2DJOHKR54RW26R 060JOHKRK2EA0EE      TF                                                                          351082413
+SUSAP KLASK2DJOHKR56KENNO 010JOHKRK2EA0E       IF                                             18000                        351092413
+SUSAP KLASK2DJOHKR56KENNO 020GRYMZK2EA0E       TF                                                                          351102413
+SUSAP KLASK2DJOHKR56KENNO 030DEDPLK2EA0E       TF                                                                          351112413
+SUSAP KLASK2DJOHKR56KENNO 040BIKKRK2EA0E       TF                                                                          351122413
+SUSAP KLASK2DJOHKR56KENNO 050CAGEEK2EA0E       TF                                                                          351132413
+SUSAP KLASK2DJOHKR56KENNO 060KENNOK2EA0EE      TF                                                                          351142413
+SUSAP KLASK2DLOHLA34RW01L 010         0        VI                     0139                    18000                        351152211
+SUSAP KLASK2DLOHLA34RW01L 020PENSKK2PC0E   L   CFYNJK K2      3541201328350088D                                            351162211
+SUSAP KLASK2DLOHLA34RW01L 030LOHLAK2PC0EE      TF                                 + 13400                                  351172211
+SUSAP KLASK2DLOHLA34RW01R 010         0        VI                     0139                    18000                        351182211
+SUSAP KLASK2DLOHLA34RW01R 020PENSKK2PC0E   L   CFYNJK K2      3541201328350089D                                            351192211
+SUSAP KLASK2DLOHLA34RW01R 030LOHLAK2PC0EE      TF                                 + 13400                                  351202211
+SUSAP KLASK2DLOHLA34RW08L 010         0        VI                     0789                    18000                        351212211
+SUSAP KLASK2DLOHLA34RW08L 020FLAARK2PC0E       CF NJK K2      0001196509010087D   + 06000                                  351222211
+SUSAP KLASK2DLOHLA34RW08L 030HNIBLK2PC0E       TF                                 + 08000          230               -     351232211
+SUSAP KLASK2DLOHLA34RW08L 040KNGPNK2PC0EY      TF                                                                          351242211
+SUSAP KLASK2DLOHLA34RW08L 050LOHLAK2PC0EE      DF                                 + 13400                                  351252211
+SUSAP KLASK2DLOHLA34RW08R 010         0        VA                     0789        + 02682     18000                        351262211
+SUSAP KLASK2DLOHLA34RW08R 020SCAARK2PC0E       DF                                                                          351272211
+SUSAP KLASK2DLOHLA34RW08R 030FLAARK2PC0E       TF                                 + 06000                                  351282211
+SUSAP KLASK2DLOHLA34RW08R 040HNIBLK2PC0E       TF                                 + 08000          230               -     351292211
+SUSAP KLASK2DLOHLA34RW08R 050KNGPNK2PC0EY      TF                                                                          351302211
+SUSAP KLASK2DLOHLA34RW08R 060LOHLAK2PC0EE      DF                                 + 13400                                  351312211
+SUSAP KLASK2DLOHLA34RW19L 010         0        VI                     1939                    18000                        351322211
+SUSAP KLASK2DLOHLA34RW19L 020LEELNK2PC0E       CF NJK K2      3547195427150052D   - 08000                                  351332211
+SUSAP KLASK2DLOHLA34RW19L 030PENSKK2PC0E       TF                                                                          351342211
+SUSAP KLASK2DLOHLA34RW19L 040LOHLAK2PC0EE      TF                                 + 13400                                  351352211
+SUSAP KLASK2DLOHLA34RW19R 010         0        VI                     1939                    18000                        351362211
+SUSAP KLASK2DLOHLA34RW19R 020LEELNK2PC0E       CF NJK K2      3547195427150051D   - 08000                                  351372211
+SUSAP KLASK2DLOHLA34RW19R 030PENSKK2PC0E       TF                                                                          351382211
+SUSAP KLASK2DLOHLA34RW19R 040LOHLAK2PC0EE      TF                                 + 13400                                  351392211
+SUSAP KLASK2DLOHLA34RW26B 010         0        VA                     2590        + 02682     18000                        351402211
+SUSAP KLASK2DLOHLA34RW26B 020LEELNK2PC0E       DF                                 - 08000                                  351412211
+SUSAP KLASK2DLOHLA34RW26B 030PENSKK2PC0E       TF                                                                          351422211
+SUSAP KLASK2DLOHLA34RW26B 040LOHLAK2PC0EE      TF                                 + 13400                                  351432211
+SUSAP KLASK2DLOHLA36JAYSN 010LOHLAK2PC0E       IF                                 + 13400     18000                        351442211
+SUSAP KLASK2DLOHLA36JAYSN 020JAYSNK2PC0EE      TF                                                                          351452211
+SUSAP KLASK2DMCCRN81RW01B 010         0        VA                     0139        + 02600     18000       KLAS  K2PA       351462504
+SUSAP KLASK2DMCCRN81RW01B 020         0 E  L   VM                     2200                                                 351472504
+SUSAP KLASK2DMCCRN81RW08B 010         0 E      VM                     0789                    18000                        351482504
+SUSAP KLASK2DMCCRN81RW19B 010         0 E      VM                     1939                    18000                        351492504
+SUSAP KLASK2DMCCRN81RW26B 010         0        VD LAS K2              25900030D               18000                        351502504
+SUSAP KLASK2DMCCRN81RW26B 020         0 E  L   VM                     1900                                                 351512504
+SUSAP KLASK2DMCCRN83HEC   010RADYRK2EA0E       IF                                 + 10000     18000                        351522504
+SUSAP KLASK2DMCCRN83HEC   020HEC  K2D 0VE      TF                                                                          351532504
+SUSAP KLASK2DMCCRN83TNP   010RADYRK2EA0E       IF                                 + 10000     18000                        351542504
+SUSAP KLASK2DMCCRN83TNP   020GFS  K2D 0V       TF                                                                          351552504
+SUSAP KLASK2DMCCRN83TNP   030JOTNUK2EA0E       TF                                                                          351562504
+SUSAP KLASK2DMCCRN83TNP   040TNP  K2D 0VE      TF                                                                          351572504
+SUSAP KLASK2DNIITZ44RW01L 010         0        VI                     0139                    18000       KLAS  K2PA       351582411
+SUSAP KLASK2DNIITZ44RW01L 020KYBADK2PC0E       CF NJK K2      3590201607200089D                                            351592411
+SUSAP KLASK2DNIITZ44RW01L 030HAIDNK2PC0E       TF                                                                          351602411
+SUSAP KLASK2DNIITZ44RW01L 040OLBLUK2PC0E       TF                                 + 10000          250               -     351612411
+SUSAP KLASK2DNIITZ44RW01L 050NIITZK2EA0EE      TF                                                                          351622411
+SUSAP KLASK2DNIITZ44RW01R 010         0        VI                     0139                    18000                        351632411
+SUSAP KLASK2DNIITZ44RW01R 020KYBADK2PC0E       CF NJK K2      3590201607200088D                                            351642411
+SUSAP KLASK2DNIITZ44RW01R 030HAIDNK2PC0E       TF                                                                          351652411
+SUSAP KLASK2DNIITZ44RW01R 040OLBLUK2PC0E       TF                                 + 10000          250               -     351662411
+SUSAP KLASK2DNIITZ44RW01R 050NIITZK2EA0EE      TF                                                                          351672411
+SUSAP KLASK2DNIITZ44RW08L 010         0        VI                     0789                    18000                        351682411
+SUSAP KLASK2DNIITZ44RW08L 020FLAARK2PC0E       CF NJK K2      0001196509010087D   + 06000          230               -     351692411
+SUSAP KLASK2DNIITZ44RW08L 030GOLIEK2PC0E       TF                                                                          351702411
+SUSAP KLASK2DNIITZ44RW08L 040DBLIIK2PC0E       TF                                 - 13000                                  351712411
+SUSAP KLASK2DNIITZ44RW08L 050GLDYNK2PC0E       TF                                 + 12000                                  351722411
+SUSAP KLASK2DNIITZ44RW08L 060NIITZK2EA0EE      TF                                                                          351732411
+SUSAP KLASK2DNIITZ44RW08R 010         0        VA                     0789        + 02682     18000                        351742411
+SUSAP KLASK2DNIITZ44RW08R 020SCAARK2PC0E       DF                                                                          351752411
+SUSAP KLASK2DNIITZ44RW08R 030FLAARK2PC0E       TF                                 + 06000          230               -     351762411
+SUSAP KLASK2DNIITZ44RW08R 040GOLIEK2PC0E       TF                                                                          351772411
+SUSAP KLASK2DNIITZ44RW08R 050DBLIIK2PC0E       TF                                 - 13000                                  351782411
+SUSAP KLASK2DNIITZ44RW08R 060GLDYNK2PC0E       TF                                 + 12000                                  351792411
+SUSAP KLASK2DNIITZ44RW08R 070NIITZK2EA0EE      TF                                                                          351802411
+SUSAP KLASK2DNIITZ44RW19L 010         0        VA                     1939        + 02682     18000                        351812411
+SUSAP KLASK2DNIITZ44RW19L 020DEREWK2PC0E   R   DF                                 - 07000                                  351822411
+SUSAP KLASK2DNIITZ44RW19L 030CARNGK2PC0E       TF                                                                          351832411
+SUSAP KLASK2DNIITZ44RW19L 040TTONEK2PC0E       TF                                 + 08000                                  351842411
+SUSAP KLASK2DNIITZ44RW19L 050VIVVSK2PC0E       TF                                 + 10000                                  351852411
+SUSAP KLASK2DNIITZ44RW19L 060SGFRDK2PC0E       TF                                 + 17000                                  351862411
+SUSAP KLASK2DNIITZ44RW19L 070NIITZK2EA0EE      TF                                                                          351872411
+SUSAP KLASK2DNIITZ44RW19R 010         0        VA                     1939        + 02682     18000                        351882411
+SUSAP KLASK2DNIITZ44RW19R 020DEREWK2PC0E   L   DF                                 - 07000                                  351892411
+SUSAP KLASK2DNIITZ44RW19R 030CARNGK2PC0E       TF                                                                          351902411
+SUSAP KLASK2DNIITZ44RW19R 040TTONEK2PC0E       TF                                 + 08000                                  351912411
+SUSAP KLASK2DNIITZ44RW19R 050VIVVSK2PC0E       TF                                 + 10000                                  351922411
+SUSAP KLASK2DNIITZ44RW19R 060SGFRDK2PC0E       TF                                 + 17000                                  351932411
+SUSAP KLASK2DNIITZ44RW19R 070NIITZK2EA0EE      TF                                                                          351942411
+SUSAP KLASK2DNIITZ44RW26L 010         0        VA                     2590        + 02682     18000                        351952411
+SUSAP KLASK2DNIITZ44RW26L 020SILTTK2PC0E       DF                                                                          351962411
+SUSAP KLASK2DNIITZ44RW26L 030RUDYYK2PC0E       TF                                 + 04000          230               -     351972411
+SUSAP KLASK2DNIITZ44RW26L 040SELLZK2PC0E       TF                                 - 08000                                  351982411
+SUSAP KLASK2DNIITZ44RW26L 050TTONEK2PC0E       TF                                 + 08000                                  351992411
+SUSAP KLASK2DNIITZ44RW26L 060VIVVSK2PC0E       TF                                 + 10000                                  352002411
+SUSAP KLASK2DNIITZ44RW26L 070SGFRDK2PC0E       TF                                 + 17000                                  352012411
+SUSAP KLASK2DNIITZ44RW26L 080NIITZK2EA0EE      TF                                                                          352022411
+SUSAP KLASK2DNIITZ44RW26R 010         0        VI                     2590                    18000                        352032411
+SUSAP KLASK2DNIITZ44RW26R 020RUDYYK2PC0E       CF NJK K2      3550195024880026D   + 04000          230               -     352042411
+SUSAP KLASK2DNIITZ44RW26R 030SELLZK2PC0E       TF                                 - 08000                                  352052411
+SUSAP KLASK2DNIITZ44RW26R 040TTONEK2PC0E       TF                                 + 08000                                  352062411
+SUSAP KLASK2DNIITZ44RW26R 050VIVVSK2PC0E       TF                                 + 10000                                  352072411
+SUSAP KLASK2DNIITZ44RW26R 060SGFRDK2PC0E       TF                                 + 17000                                  352082411
+SUSAP KLASK2DNIITZ44RW26R 070NIITZK2EA0EE      TF                                                                          352092411
+SUSAP KLASK2DNIITZ46HOCEE 010NIITZK2EA0E       IF                                             18000                        352102411
+SUSAP KLASK2DNIITZ46HOCEE 020HOCEEK2EA0EE      TF                                                                          352112411
+SUSAP KLASK2DNIITZ46IWANS 010NIITZK2EA0E       IF                                             18000                        352122411
+SUSAP KLASK2DNIITZ46IWANS 020IWANSK2EA0EE      TF                                                                          352132411
+SUSAP KLASK2DNIITZ46SSKEE 010NIITZK2EA0E       IF                                             18000                        352142411
+SUSAP KLASK2DNIITZ46SSKEE 020IWANSK2EA0E       TF                                                                          352152411
+SUSAP KLASK2DNIITZ46SSKEE 030SSKEEK2EA0EE      TF                                                                          352162411
+SUSAP KLASK2DNIITZ46TUKRR 010NIITZK2EA0E       IF                                             18000                        352172411
+SUSAP KLASK2DNIITZ46TUKRR 020TUKRRK2EA0EE      TF                                                                          352182411
+SUSAP KLASK2DRADYR24RW01B 010         0        VA                     0139        + 02682     18000                        352192108
+SUSAP KLASK2DRADYR24RW01B 020BESSYK2PC0E   L   DF                                 + 05000                                  352202108
+SUSAP KLASK2DRADYR24RW01B 030HRRLYK2PC0E       TF                                                                          352212108
+SUSAP KLASK2DRADYR24RW01B 040GRUDNK2PC0E       TF                                 + 10000                                  352222108
+SUSAP KLASK2DRADYR24RW01B 050RADYRK2EA0EE      TF                                 + 13000                                  352232108
+SUSAP KLASK2DRADYR24RW08L 010         0        VI                     0789                    18000                        352242108
+SUSAP KLASK2DRADYR24RW08L 020FLAARK2PC0E       CF BJC K2      2355517609010093D   + 06000                                  352252108
+SUSAP KLASK2DRADYR24RW08L 030HNIBLK2PC0E       TF                                 + 08000          230               -     352262108
+SUSAP KLASK2DRADYR24RW08L 040VMPREK2PC0E       TF                                                                          352272108
+SUSAP KLASK2DRADYR24RW08L 050FLABBK2PC0E       TF                                 + 13000                                  352282108
+SUSAP KLASK2DRADYR24RW08L 060RADYRK2EA0EE      TF                                 + 13000                                  352292108
+SUSAP KLASK2DRADYR24RW08R 010         0        VA                     0789        + 02682     18000                        352302108
+SUSAP KLASK2DRADYR24RW08R 020SCAARK2PC0E       DF                                                                          352312108
+SUSAP KLASK2DRADYR24RW08R 030FLAARK2PC0E       TF                                 + 06000                                  352322108
+SUSAP KLASK2DRADYR24RW08R 040HNIBLK2PC0E       TF                                 + 08000          230               -     352332108
+SUSAP KLASK2DRADYR24RW08R 050VMPREK2PC0E       TF                                                                          352342108
+SUSAP KLASK2DRADYR24RW08R 060FLABBK2PC0E       TF                                 + 13000                                  352352108
+SUSAP KLASK2DRADYR24RW08R 070RADYRK2EA0EE      TF                                 + 13000                                  352362108
+SUSAP KLASK2DRADYR24RW19B 010         0        VA                     1939        + 02682     18000                        352372108
+SUSAP KLASK2DRADYR24RW19B 020DEREWK2PC0E       DF                                 - 07000                                  352382108
+SUSAP KLASK2DRADYR24RW19B 030RADYRK2EA0EE      TF                                 + 13000                                  352392108
+SUSAP KLASK2DRADYR24RW26L 010         0        VA                     2590        + 02682     18000                        352402108
+SUSAP KLASK2DRADYR24RW26L 020SILTTK2PC0E       DF                                                                          352412108
+SUSAP KLASK2DRADYR24RW26L 030RUDYYK2PC0E       TF                                 + 04000          230               -     352422108
+SUSAP KLASK2DRADYR24RW26L 040SELLZK2PC0E       TF                                 - 08000                                  352432108
+SUSAP KLASK2DRADYR24RW26L 050RADYRK2EA0EE      TF                                 + 13000                                  352442108
+SUSAP KLASK2DRADYR24RW26R 010         0        VI                     2590                    18000                        352452108
+SUSAP KLASK2DRADYR24RW26R 020RUDYYK2PC0E       CF BJC K2      2365532024880026D   + 04000          230               -     352462108
+SUSAP KLASK2DRADYR24RW26R 030SELLZK2PC0E       TF                                 - 08000                                  352472108
+SUSAP KLASK2DRADYR24RW26R 040RADYRK2EA0EE      TF                                 + 13000                                  352482108
+SUSAP KLASK2DRADYR26BLAQQ 010RADYRK2EA0E       IF                                 + 13000     18000                        352492108
+SUSAP KLASK2DRADYR26BLAQQ 020BLAQQK2EA0EE      TF                                                                          352502108
+SUSAP KLASK2DRADYR26BLH   010RADYRK2EA0E       IF                                 + 13000     18000                        352512108
+SUSAP KLASK2DRADYR26BLH   020DOYYLK2EA0E       TF                                                                          352522108
+SUSAP KLASK2DRADYR26BLH   030ZELMAK2EA0E       TF                                                                          352532108
+SUSAP KLASK2DRADYR26BLH   040BLH  K2D 0VE      TF                                                                          352542108
+SUSAP KLASK2DRADYR26BOJAC 010RADYRK2EA0E       IF                                 + 13000     18000                        352552108
+SUSAP KLASK2DRADYR26BOJAC 020DOYYLK2EA0E       TF                                                                          352562108
+SUSAP KLASK2DRADYR26BOJAC 030BOJACK2EA0EE      TF                                                                          352572108
+SUSAP KLASK2DRADYR26HEC   010RADYRK2EA0E       IF                                 + 13000     18000                        352582108
+SUSAP KLASK2DRADYR26HEC   020SLVRRK2EA0E       TF                                                                          352592108
+SUSAP KLASK2DRADYR26HEC   030TOPACK2EA0E       TF                                                                          352602108
+SUSAP KLASK2DRADYR26HEC   040HEC  K2D 0VE      TF                                                                          352612108
+SUSAP KLASK2DRADYR26LVELL 010RADYRK2EA0E       IF                                 + 13000     18000                        352622108
+SUSAP KLASK2DRADYR26LVELL 020DOYYLK2EA0E       TF                                                                          352632108
+SUSAP KLASK2DRADYR26LVELL 030ZELMAK2EA0E       TF                                                                          352642108
+SUSAP KLASK2DRADYR26LVELL 040JOTNUK2EA0E       TF                                                                          352652108
+SUSAP KLASK2DRADYR26LVELL 050LVELLK2EA0EE      TF                                                                          352662108
+SUSAP KLASK2DRADYR26SLVRR 010RADYRK2EA0E       IF                                 + 13000     18000                        352672108
+SUSAP KLASK2DRADYR26SLVRR 020SLVRRK2EA0EE      TF                                                                          352682108
+SUSAP KLASK2DRASLR34RW01L 010         0        VI                     0139                    18000                        352692201
+SUSAP KLASK2DRASLR34RW01L 020KYBADK2PC0E       CF BJC K2      2362517007200089D                                            352702201
+SUSAP KLASK2DRASLR34RW01L 030HAIDNK2PC0E       TF                                                                          352712201
+SUSAP KLASK2DRASLR34RW01L 040OLBLUK2PC0E       TF                                 + 10000          250               -     352722201
+SUSAP KLASK2DRASLR34RW01L 050RASLRK2EA0EE      TF                                 + 13000                                  352732201
+SUSAP KLASK2DRASLR34RW01R 010         0        VI                     0139                    18000                        352742201
+SUSAP KLASK2DRASLR34RW01R 020KYBADK2PC0E       CF BJC K2      2362517007200088D                                            352752201
+SUSAP KLASK2DRASLR34RW01R 030HAIDNK2PC0E       TF                                                                          352762201
+SUSAP KLASK2DRASLR34RW01R 040OLBLUK2PC0E       TF                                 + 10000          250               -     352772201
+SUSAP KLASK2DRASLR34RW01R 050RASLRK2EA0EE      TF                                 + 13000                                  352782201
+SUSAP KLASK2DRASLR34RW08L 010         0        VI                     0789                    18000                        352792201
+SUSAP KLASK2DRASLR34RW08L 020FLAARK2PC0E       CF BJC K2      2355517609010093D   + 06000          230               -     352802201
+SUSAP KLASK2DRASLR34RW08L 030ROODEK2PC0E       TF                                 + 08000                                  352812201
+SUSAP KLASK2DRASLR34RW08L 040JADWIK2PC0E       TF                                 - 12000                                  352822201
+SUSAP KLASK2DRASLR34RW08L 050RASLRK2EA0EE      TF                                 + 13000                                  352832201
+SUSAP KLASK2DRASLR34RW08R 010         0        VA                     0789        + 02682     18000                        352842201
+SUSAP KLASK2DRASLR34RW08R 020SCAARK2PC0E       DF                                                                          352852201
+SUSAP KLASK2DRASLR34RW08R 030FLAARK2PC0E       TF                                 + 06000          230               -     352862201
+SUSAP KLASK2DRASLR34RW08R 040ROODEK2PC0E       TF                                 + 08000                                  352872201
+SUSAP KLASK2DRASLR34RW08R 050JADWIK2PC0E       TF                                 - 12000                                  352882201
+SUSAP KLASK2DRASLR34RW08R 060RASLRK2EA0EE      TF                                 + 13000                                  352892201
+SUSAP KLASK2DRASLR34RW19B 010         0        VA                     1939        + 02682     18000                        352902201
+SUSAP KLASK2DRASLR34RW19B 020DEREWK2PC0E       DF                                 - 07000                                  352912201
+SUSAP KLASK2DRASLR34RW19B 030CARNGK2PC0E       TF                                                                          352922201
+SUSAP KLASK2DRASLR34RW19B 040TTONEK2PC0E       TF                                 + 08000                                  352932201
+SUSAP KLASK2DRASLR34RW19B 050VIVVSK2PC0E       TF                                 + 10000                                  352942201
+SUSAP KLASK2DRASLR34RW19B 060RASLRK2EA0EE      TF                                 + 13000                                  352952201
+SUSAP KLASK2DRASLR34RW26L 010         0        VA                     2590        + 02682     18000                        352962201
+SUSAP KLASK2DRASLR34RW26L 020SILTTK2PC0EY      DF                                                                          352972201
+SUSAP KLASK2DRASLR34RW26L 030RUDYYK2PC0E       TF                                 + 04000          230               -     352982201
+SUSAP KLASK2DRASLR34RW26L 040SELLZK2PC0E       TF                                 - 08000                                  352992201
+SUSAP KLASK2DRASLR34RW26L 050TTONEK2PC0E       TF                                 + 08000                                  353002201
+SUSAP KLASK2DRASLR34RW26L 060VIVVSK2PC0E       TF                                 + 10000                                  353012201
+SUSAP KLASK2DRASLR34RW26L 070RASLRK2EA0EE      TF                                 + 13000                                  353022201
+SUSAP KLASK2DRASLR34RW26R 010         0        VI                     2590                    18000                        353032201
+SUSAP KLASK2DRASLR34RW26R 020RUDYYK2PC0E       CF BJC K2      2365532024880026D   + 04000          230               -     353042201
+SUSAP KLASK2DRASLR34RW26R 030SELLZK2PC0E       TF                                 - 08000                                  353052201
+SUSAP KLASK2DRASLR34RW26R 040TTONEK2PC0E       TF                                 + 08000                                  353062201
+SUSAP KLASK2DRASLR34RW26R 050VIVVSK2PC0E       TF                                 + 10000                                  353072201
+SUSAP KLASK2DRASLR34RW26R 060RASLRK2EA0EE      TF                                 + 13000                                  353082201
+SUSAP KLASK2DRASLR36ZAYNE 010RASLRK2EA0E       IF                                 + 13000     18000                        353092201
+SUSAP KLASK2DRASLR36ZAYNE 020ROHCKK2EA0E       TF                                                                          353102201
+SUSAP KLASK2DRASLR36ZAYNE 030ZAYNEK2EA0EE      TF                                                                          353112201
+SUSAP KLASK2DRATPK34RW01L 010         0        VI                     0139                    18000                        353122201
+SUSAP KLASK2DRATPK34RW01L 020KYBADK2PC0E       CF NJK K2      3590201607200089D   + 06000                                  353132201
+SUSAP KLASK2DRATPK34RW01L 030JENFRK2PC0E       TF                                                                          353142201
+SUSAP KLASK2DRATPK34RW01L 040RATPKK2EA0EE      TF                                                                          353152201
+SUSAP KLASK2DRATPK34RW01R 010         0        VI                     0139                    18000                        353162201
+SUSAP KLASK2DRATPK34RW01R 020KYBADK2PC0E       CF NJK K2      3590201607200088D   + 06000                                  353172201
+SUSAP KLASK2DRATPK34RW01R 030JENFRK2PC0E       TF                                                                          353182201
+SUSAP KLASK2DRATPK34RW01R 040RATPKK2EA0EE      TF                                                                          353192201
+SUSAP KLASK2DRATPK34RW08L 010         0        VI                     0789                    18000                        353202201
+SUSAP KLASK2DRATPK34RW08L 020FLAARK2PC0E       CF NJK K2      0001196509010087D   + 06000                                  353212201
+SUSAP KLASK2DRATPK34RW08L 030HNIBLK2PC0E       TF                                 + 08000          230               -     353222201
+SUSAP KLASK2DRATPK34RW08L 040KNGPNK2PC0EY      TF                                                                          353232201
+SUSAP KLASK2DRATPK34RW08L 050JENFRK2PC0E   R   DF                                                                          353242201
+SUSAP KLASK2DRATPK34RW08L 060RATPKK2EA0EE      TF                                                                          353252201
+SUSAP KLASK2DRATPK34RW08R 010         0        VA                     0789        + 02682     18000                        353262201
+SUSAP KLASK2DRATPK34RW08R 020SCAARK2PC0E       DF                                                                          353272201
+SUSAP KLASK2DRATPK34RW08R 030FLAARK2PC0E       TF                                 + 06000                                  353282201
+SUSAP KLASK2DRATPK34RW08R 040HNIBLK2PC0E       TF                                 + 08000          230               -     353292201
+SUSAP KLASK2DRATPK34RW08R 050KNGPNK2PC0EY      TF                                                                          353302201
+SUSAP KLASK2DRATPK34RW08R 060JENFRK2PC0E   R   DF                                                                          353312201
+SUSAP KLASK2DRATPK34RW08R 070RATPKK2EA0EE      TF                                                                          353322201
+SUSAP KLASK2DRATPK34RW19L 010         0        VI                     1939                    18000                        353332201
+SUSAP KLASK2DRATPK34RW19L 020LEELNK2PC0E       CF NJK K2      3547195427090052D   - 08000                                  353342201
+SUSAP KLASK2DRATPK34RW19L 030GLIANK2PC0E       TF                                 + 05000          230               -     353352201
+SUSAP KLASK2DRATPK34RW19L 040BACCKK2PC0E       TF                                 + 06000                                  353362201
+SUSAP KLASK2DRATPK34RW19L 050ALOLYK2PC0E       TF                                 + 07000                                  353372201
+SUSAP KLASK2DRATPK34RW19L 060JENFRK2PC0E       TF                                                                          353382201
+SUSAP KLASK2DRATPK34RW19L 070RATPKK2EA0EE      TF                                                                          353392201
+SUSAP KLASK2DRATPK34RW19R 010         0        VI                     1939                    18000                        353402201
+SUSAP KLASK2DRATPK34RW19R 020LEELNK2PC0E       CF NJK K2      3547195427090051D   - 08000                                  353412201
+SUSAP KLASK2DRATPK34RW19R 030GLIANK2PC0E       TF                                 + 05000          230               -     353422201
+SUSAP KLASK2DRATPK34RW19R 040BACCKK2PC0E       TF                                 + 06000                                  353432201
+SUSAP KLASK2DRATPK34RW19R 050ALOLYK2PC0E       TF                                 + 07000                                  353442201
+SUSAP KLASK2DRATPK34RW19R 060JENFRK2PC0E       TF                                                                          353452201
+SUSAP KLASK2DRATPK34RW19R 070RATPKK2EA0EE      TF                                                                          353462201
+SUSAP KLASK2DRATPK34RW26B 010         0        VA                     2590        + 02682     18000                        353472201
+SUSAP KLASK2DRATPK34RW26B 020LEELNK2PC0E       DF                                 - 08000                                  353482201
+SUSAP KLASK2DRATPK34RW26B 030GLIANK2PC0E       TF                                 + 05000          230               -     353492201
+SUSAP KLASK2DRATPK34RW26B 040BACCKK2PC0E       TF                                 + 06000                                  353502201
+SUSAP KLASK2DRATPK34RW26B 050ALOLYK2PC0E       TF                                 + 07000                                  353512201
+SUSAP KLASK2DRATPK34RW26B 060JENFRK2PC0E       TF                                                                          353522201
+SUSAP KLASK2DRATPK34RW26B 070RATPKK2EA0EE      TF                                                                          353532201
+SUSAP KLASK2DRATPK36FRNCK 010RATPKK2EA0E       IF                                             18000                        353542201
+SUSAP KLASK2DRATPK36FRNCK 020DARDNK2EA0E       TF                                                                          353552201
+SUSAP KLASK2DRATPK36FRNCK 030FRNCKK2EA0EE      TF                                                                          353562201
+SUSAP KLASK2EBLAID21BCE   010BCE  K2D 0V       IF                                             18000                        353572401
+SUSAP KLASK2EBLAID21BCE   020HOLDMK2PC0E       TF                                                                          353582401
+SUSAP KLASK2EBLAID21BCE   030AALANK2PC0EE      TF                                                                          353592401
+SUSAP KLASK2EBLAID21EHK   010EHK  K2D 0V       IF                                             18000                        353602401
+SUSAP KLASK2EBLAID21EHK   020HOLDMK2PC0E       TF                                                                          353612401
+SUSAP KLASK2EBLAID21EHK   030AALANK2PC0EE      TF                                                                          353622401
+SUSAP KLASK2EBLAID21PGA   010PGA  K2D 0V       IF                                             18000                        353632401
+SUSAP KLASK2EBLAID21PGA   020HOLDMK2PC0E       TF                                                                          353642401
+SUSAP KLASK2EBLAID21PGA   030AALANK2PC0EE      TF                                                                          353652401
+SUSAP KLASK2EBLAID22ALL   010AALANK2PC0E       IF                                             18000                        353662401
+SUSAP KLASK2EBLAID22ALL   020CHOWWK2PC0E       TF                                   15000          250                     353672401
+SUSAP KLASK2EBLAID22ALL   030BLAIDK2PC0EE      TF                                   12000                                  353682401
+SUSAP KLASK2ECHOWW44GGAPP 010GGAPPK2PC0E       IF                                             18000                        353692508
+SUSAP KLASK2ECHOWW44GGAPP 020MNCINK2PC0E       TF                                                                          353702508
+SUSAP KLASK2ECHOWW44GGAPP 030PHHILK2PC0E       TF                                 + FL240                                  353712508
+SUSAP KLASK2ECHOWW44GGAPP 040AALANK2PC0E       TF                                 B FL23017000                             353722508
+SUSAP KLASK2ECHOWW44GGAPP 050CHOWWK2PC0EE      TF                                 - 16000          250                     353732508
+SUSAP KLASK2ECHOWW44STEWW 010STEWWK2PC0E       IF                                             18000                        353742508
+SUSAP KLASK2ECHOWW44STEWW 020RIGLLK2PC0E       TF                                 + FL240                                  353752508
+SUSAP KLASK2ECHOWW44STEWW 030AALANK2PC0E       TF                                 B FL23017000                             353762508
+SUSAP KLASK2ECHOWW44STEWW 040CHOWWK2PC0EE      TF                                 - 16000          250                     353772508
+SUSAP KLASK2ECHOWW44TYEGR 010TYEGRK2PC0E       IF                                             18000                        353782508
+SUSAP KLASK2ECHOWW44TYEGR 020WARKAK2PC0E       TF                                                                          353792508
+SUSAP KLASK2ECHOWW44TYEGR 030DUUGGK2PC0E       TF                                                                          353802508
+SUSAP KLASK2ECHOWW44TYEGR 040HAANGK2PC0E       TF                                 + FL240                                  353812508
+SUSAP KLASK2ECHOWW44TYEGR 050AALANK2PC0E       TF                                 B FL23017000                             353822508
+SUSAP KLASK2ECHOWW44TYEGR 060CHOWWK2PC0EE      TF                                 - 16000          250                     353832508
+SUSAP KLASK2ECHOWW45      010CHOWWK2PC0E       IF                                 - 16000     18000250                     353842508
+SUSAP KLASK2ECHOWW45      020WOLPHK2PC0EE      TF                                                                          353852508
+SUSAP KLASK2ECHOWW46RW01B 010WOLPHK2PC0E       IF                                             18000                        353862508
+SUSAP KLASK2ECHOWW46RW01B 020PACKKK2PC0E       TF                                 + 16000                                  353872508
+SUSAP KLASK2ECHOWW46RW01B 030BEEPRK2PC0E       TF                                 + 15000                                  353882508
+SUSAP KLASK2ECHOWW46RW01B 040JAIDEK2PC0E       TF                                 - 13000                                  353892508
+SUSAP KLASK2ECHOWW46RW01B 050SHEENK2PC0E       TF                                 + 12000                                  353902508
+SUSAP KLASK2ECHOWW46RW01B 060NEETLK2PC0E       TF                                                                          353912508
+SUSAP KLASK2ECHOWW46RW01B 070CAMMPK2PC0E       TF                                   10000          210                     353922508
+SUSAP KLASK2ECHOWW46RW01B 080BUGSSK2PC0E       TF                                   09000                                  353932508
+SUSAP KLASK2ECHOWW46RW01B 090VANDLK2PC0EY      TF                                   09000                                  353942508
+SUSAP KLASK2ECHOWW46RW01B 100VANDLK2PC0EE      FM NJK K2      354417460011    D                                            353952508
+SUSAP KLASK2ECHOWW46RW19B 010WOLPHK2PC0E       IF                                             18000                        353962508
+SUSAP KLASK2ECHOWW46RW19B 020SACHLK2PC0E       TF                                   10000                                  353972508
+SUSAP KLASK2ECHOWW46RW19B 030FELAAK2PC0E       TF                                   09200                                  353982508
+SUSAP KLASK2ECHOWW46RW19B 040BOOOOK2PC0E       TF                                   07000          230                     353992508
+SUSAP KLASK2ECHOWW46RW19B 050NNEONK2PC0E       TF                                                                          354002508
+SUSAP KLASK2ECHOWW46RW19B 060PPENNK2PC0EY      TF                                   06000          190                     354012508
+SUSAP KLASK2ECHOWW46RW19B 070PPENNK2PC0EE      FM NJK K2      359420132626    D                                            354022508
+SUSAP KLASK2ECHOWW46RW26L 010WOLPHK2PC0E       IF                                             18000                        354032508
+SUSAP KLASK2ECHOWW46RW26L 020TATUUK2PC0E       TF                                 B 1050009500                             354042508
+SUSAP KLASK2ECHOWW46RW26L 030KRLOZK2PC0E       TF                                 - 09000                                  354052508
+SUSAP KLASK2ECHOWW46RW26L 040PRINOK2PC0EE      TF                                   08000          210                     354062508
+SUSAP KLASK2ECHOWW46RW26R 010WOLPHK2PC0E       IF                                             18000                        354072508
+SUSAP KLASK2ECHOWW46RW26R 020TATUUK2PC0E       TF                                 B 1050009500                             354082508
+SUSAP KLASK2ECHOWW46RW26R 030KRLOZK2PC0E       TF                                 - 09000                                  354092508
+SUSAP KLASK2ECHOWW46RW26R 040FLYESK2PC0EE      TF                                   08000          210                     354102508
+SUSAP KLASK2ECOKTL44FLCHR 010FLCHRK2EA0E       IF                                 + FL240     18000                        354112411
+SUSAP KLASK2ECOKTL44FLCHR 020TBRANK2PC0E       TF                                                                          354122411
+SUSAP KLASK2ECOKTL44FLCHR 030ARYELK2PC0E       TF                                 + FL210          280               -     354132411
+SUSAP KLASK2ECOKTL44FLCHR 040COKTLK2PC0EE      TF                                 B FL19016000     250                     354142411
+SUSAP KLASK2ECOKTL44GIINN 010GIINNK2PC0E       IF                                             18000                        354152411
+SUSAP KLASK2ECOKTL44GIINN 020TBRANK2PC0E       TF                                                                          354162411
+SUSAP KLASK2ECOKTL44GIINN 030ARYELK2PC0E       TF                                 + FL210          280               -     354172411
+SUSAP KLASK2ECOKTL44GIINN 040COKTLK2PC0EE      TF                                 B FL19016000     250                     354182411
+SUSAP KLASK2ECOKTL44TQILA 010TQILAK2PC0E       IF                                             18000                        354192411
+SUSAP KLASK2ECOKTL44TQILA 020BASICK2PC0E       TF                                                                          354202411
+SUSAP KLASK2ECOKTL44TQILA 030FLCHRK2EA0E       TF                                 + FL240                                  354212411
+SUSAP KLASK2ECOKTL44TQILA 040TBRANK2PC0E       TF                                                                          354222411
+SUSAP KLASK2ECOKTL44TQILA 050ARYELK2PC0E       TF                                 + FL210          280               -     354232411
+SUSAP KLASK2ECOKTL44TQILA 060COKTLK2PC0EE      TF                                 B FL19016000     250                     354242411
+SUSAP KLASK2ECOKTL45      010COKTLK2PC0E       IF                                 B FL1901600018000250                     354252411
+SUSAP KLASK2ECOKTL45      020ZLLDAK2EA0EE      TF                                 + 14000                                  354262411
+SUSAP KLASK2ECOKTL46RW01B 010ZLLDAK2EA0E       IF                                 + 14000     18000                        354272411
+SUSAP KLASK2ECOKTL46RW01B 020MEZKLK2PC0E       TF                                 B 1200010000                             354282411
+SUSAP KLASK2ECOKTL46RW01B 030LOOMIK2PC0E       TF                                                                          354292411
+SUSAP KLASK2ECOKTL46RW01B 040ZINPIK2PC0E       TF                                 + 09000          210                     354302411
+SUSAP KLASK2ECOKTL46RW01B 050SLOTSK2PC0E       TF                                   08000                                  354312411
+SUSAP KLASK2ECOKTL46RW01B 060ROAMNK2PC0EE      TF                                   08000          210                     354322411
+SUSAP KLASK2ECOKTL46RW08B 010ZLLDAK2EA0E       IF                                 + 14000     18000                        354332411
+SUSAP KLASK2ECOKTL46RW08B 020MEZKLK2PC0E       TF                                 B 1200010000                             354342411
+SUSAP KLASK2ECOKTL46RW08B 030LOOMIK2PC0E       TF                                                                          354352411
+SUSAP KLASK2ECOKTL46RW08B 040ZINPIK2PC0E       TF                                 + 09000          210                     354362411
+SUSAP KLASK2ECOKTL46RW08B 050SLOTSK2PC0E       TF                                   08000                                  354372411
+SUSAP KLASK2ECOKTL46RW08B 060YAGGRK2PC0EY      TF                                   08000          210                     354382411
+SUSAP KLASK2ECOKTL46RW08B 070YAGGRK2PC0EE      FM NJK K2      353918330050    D                                            354392411
+SUSAP KLASK2ECOKTL46RW19B 010ZLLDAK2EA0E       IF                                 + 14000     18000                        354402411
+SUSAP KLASK2ECOKTL46RW19B 020DEEONK2PC0E       TF                                 + 12000                                  354412411
+SUSAP KLASK2ECOKTL46RW19B 030ENNVYK2EA0E       TF                                 + 11000                                  354422411
+SUSAP KLASK2ECOKTL46RW19B 040REDQNK2PC0E       TF                                 + 09000          210                     354432411
+SUSAP KLASK2ECOKTL46RW19B 050BERBNK2PC0EY      TF                                   08000          210                     354442411
+SUSAP KLASK2ECOKTL46RW19B 060BERBNK2PC0EE      FM NJK K2      358719260826    D                                            354452411
+SUSAP KLASK2ECOKTL46RW26B 010ZLLDAK2EA0E       IF                                 + 14000     18000                        354462411
+SUSAP KLASK2ECOKTL46RW26B 020DEEONK2PC0E       TF                                 + 12000                                  354472411
+SUSAP KLASK2ECOKTL46RW26B 030ENNVYK2EA0E       TF                                 + 11000                                  354482411
+SUSAP KLASK2ECOKTL46RW26B 040REDQNK2PC0E       TF                                 + 09000          210                     354492411
+SUSAP KLASK2ECOKTL46RW26B 050BERBNK2PC0EY      TF                                   08000          210                     354502411
+SUSAP KLASK2ECOKTL46RW26B 060BERBNK2PC0EE      FM NJK K2      358719260826    D                                            354512411
+SUSAP KLASK2ECRESO51DAG   010DAG  K2D 0V       IF                                             18000                        354522201
+SUSAP KLASK2ECRESO51DAG   020DANBYK2EA0E       TF                                                                          354532201
+SUSAP KLASK2ECRESO51DAG   030SARASK2PC0E       TF                                                                          354542201
+SUSAP KLASK2ECRESO51DAG   040WHIGGK2EA0E       TF                                                                          354552201
+SUSAP KLASK2ECRESO51DAG   050CRESOK2EA0EE      TF                                                                          354562201
+SUSAP KLASK2ECRESO51HEC   010HEC  K2D 0V       IF                                             18000                        354572201
+SUSAP KLASK2ECRESO51HEC   020DANBYK2EA0E       TF                                                                          354582201
+SUSAP KLASK2ECRESO51HEC   030SARASK2PC0E       TF                                                                          354592201
+SUSAP KLASK2ECRESO51HEC   040WHIGGK2EA0E       TF                                                                          354602201
+SUSAP KLASK2ECRESO51HEC   050CRESOK2EA0EE      TF                                                                          354612201
+SUSAP KLASK2ECRESO52ALL   010CRESOK2EA0E       IF                                             18000                        354622201
+SUSAP KLASK2ECRESO52ALL   020BLD  K2D 0VE      TF                                 + 07300                                  354632201
+SUSAP KLASK2EGAMES24FUULL 010FUULLK2EA0E       IF                                             18000                        354642203
+SUSAP KLASK2EGAMES24FUULL 020HOUZZK2EA0E       TF                                                                          354652203
+SUSAP KLASK2EGAMES24FUULL 030BYNGOK2EA0E       TF                                 + FL210                                  354662203
+SUSAP KLASK2EGAMES24FUULL 040SOTOOK2EA0E       TF                                                                          354672203
+SUSAP KLASK2EGAMES24FUULL 050QWISTK2EA0EE      TF                                 + 14000                                  354682203
+SUSAP KLASK2EGAMES25ALL   010QWISTK2EA0E       IF                                 + 14000     18000                        354692203
+SUSAP KLASK2EGAMES25ALL   020GAMESK2EA0E       TF                                                                          354702203
+SUSAP KLASK2EGAMES25ALL   030TOROOK2EA0E       TF                                                                          354712203
+SUSAP KLASK2EGAMES25ALL   040RATHHK2EA0E       TF                                                                          354722203
+SUSAP KLASK2EGAMES25ALL   050PIGOWK2EA0EY      TF                                   08300                                  354732203
+SUSAP KLASK2EGAMES25ALL   060PIGOWK2EA0EE      FM PSP K2      012712130750    D                                            354742203
+SUSAP KLASK2EISHEE21DRK   010DRK  K2D 0V       IF                                             18000                        354752201
+SUSAP KLASK2EISHEE21DRK   020IGM  K2D 0V       TF                                                                          354762201
+SUSAP KLASK2EISHEE21DRK   030PEHTYK2PC0EE      TF                                   14000          250                     354772201
+SUSAP KLASK2EISHEE21PGS   010PGS  K2D 0V       IF                                             18000                        354782201
+SUSAP KLASK2EISHEE21PGS   020PEHTYK2PC0EE      TF                                   14000          250                     354792201
+SUSAP KLASK2EISHEE22ALL   010PEHTYK2PC0E       IF                                   14000     18000                        354802201
+SUSAP KLASK2EISHEE22ALL   020ISHEEK2PC0E       TF                                                                          354812201
+SUSAP KLASK2EISHEE22ALL   030BLD  K2D 0VE      TF                                                                          354822201
+SUSAP KLASK2EJAYSN34BYRDY 010BYRDYK2PC0E       IF                                             18000                        354832411
+SUSAP KLASK2EJAYSN34BYRDY 020JAYSNK2PC0EE      TF                                 - FL190                                  354842411
+SUSAP KLASK2EJAYSN35      010JAYSNK2PC0E       IF                                 - FL190     18000                        354852411
+SUSAP KLASK2EJAYSN35      020WAPIDK2PC0EE      TF                                                                          354862411
+SUSAP KLASK2EJAYSN36RW01B 010WAPIDK2PC0E       IF                                             18000                        354872411
+SUSAP KLASK2EJAYSN36RW01B 020PESHYK2PC0E       TF                                 + 15000          250                     354882411
+SUSAP KLASK2EJAYSN36RW01B 030PAIRRK2PC0E       TF                                 + 14200                                  354892411
+SUSAP KLASK2EJAYSN36RW01B 040MEZKLK2PC0E       TF                                 B 1200010000                             354902411
+SUSAP KLASK2EJAYSN36RW01B 050LOOMIK2PC0E       TF                                                                          354912411
+SUSAP KLASK2EJAYSN36RW01B 060ZINPIK2PC0E       TF                                 + 09000          210                     354922411
+SUSAP KLASK2EJAYSN36RW01B 070SLOTSK2PC0E       TF                                   08000                                  354932411
+SUSAP KLASK2EJAYSN36RW01B 080ROAMNK2PC0EE      TF                                   08000          210                     354942411
+SUSAP KLASK2EJAYSN36RW08B 010WAPIDK2PC0E       IF                                             18000                        354952411
+SUSAP KLASK2EJAYSN36RW08B 020PESHYK2PC0E       TF                                 + 15000          250                     354962411
+SUSAP KLASK2EJAYSN36RW08B 030PAIRRK2PC0E       TF                                 + 14200                                  354972411
+SUSAP KLASK2EJAYSN36RW08B 040MEZKLK2PC0E       TF                                 B 1200010000                             354982411
+SUSAP KLASK2EJAYSN36RW08B 050LOOMIK2PC0E       TF                                                                          354992411
+SUSAP KLASK2EJAYSN36RW08B 060ZINPIK2PC0E       TF                                 + 09000          210                     355002411
+SUSAP KLASK2EJAYSN36RW08B 070SLOTSK2PC0E       TF                                   08000                                  355012411
+SUSAP KLASK2EJAYSN36RW08B 080YAGGRK2PC0EY      TF                                   08000          210                     355022411
+SUSAP KLASK2EJAYSN36RW08B 090YAGGRK2PC0EE      FM NJK K2      353918330050    D                                            355032411
+SUSAP KLASK2EJAYSN36RW19B 010WAPIDK2PC0E       IF                                             18000                        355042411
+SUSAP KLASK2EJAYSN36RW19B 020KEEKEK2EA0E       TF                                 + 13000                                  355052411
+SUSAP KLASK2EJAYSN36RW19B 030ECAKOK2EA0E       TF                                                                          355062411
+SUSAP KLASK2EJAYSN36RW19B 040DRXLRK2PC0E       TF                                 + 10000                                  355072411
+SUSAP KLASK2EJAYSN36RW19B 050MYSHLK2PC0E       TF                                 + 08700                                  355082411
+SUSAP KLASK2EJAYSN36RW19B 060CUEVSK2PC0E       TF                                 + 06200                                  355092411
+SUSAP KLASK2EJAYSN36RW19B 070KORYNK2PC0EY      TF                                   04800                                  355102411
+SUSAP KLASK2EJAYSN36RW19B 080KORYNK2PC0EE      FM NJK K2      356420401180    D                                            355112411
+SUSAP KLASK2EJAYSN36RW26B 010WAPIDK2PC0E       IF                                             18000                        355122411
+SUSAP KLASK2EJAYSN36RW26B 020PESHYK2PC0E       TF                                 + 15000          250                     355132411
+SUSAP KLASK2EJAYSN36RW26B 030NEEMAK2PC0E       TF                                 + 14200                                  355142411
+SUSAP KLASK2EJAYSN36RW26B 040ENNVYK2EA0E       TF                                 + 11000                                  355152411
+SUSAP KLASK2EJAYSN36RW26B 050REDQNK2PC0E       TF                                 + 09000          210                     355162411
+SUSAP KLASK2EJAYSN36RW26B 060BERBNK2PC0EY      TF                                   08000          210                     355172411
+SUSAP KLASK2EJAYSN36RW26B 070BERBNK2PC0EE      FM NJK K2      358719260826    D                                            355182411
+SUSAP KLASK2ELARKK11DAG   010DAG  K2D 0V       IF                                             18000                        355192102
+SUSAP KLASK2ELARKK11DAG   020ZGOSHK2PC0E       TF                                 + FL240                                  355202102
+SUSAP KLASK2ELARKK11DAG   030RNDRZK2PC0EE      TF                                   15000          250                     355212102
+SUSAP KLASK2ELARKK11TNP   010TNP  K2D 0V       IF                                             18000                        355222102
+SUSAP KLASK2ELARKK11TNP   020JOTNUK2EA0E       TF                                                                          355232102
+SUSAP KLASK2ELARKK11TNP   030ZELMAK2EA0E       TF                                                                          355242102
+SUSAP KLASK2ELARKK11TNP   040GFS  K2D 0V       TF                                                                          355252102
+SUSAP KLASK2ELARKK11TNP   050RNDRZK2PC0EE      TF                                   15000          250                     355262102
+SUSAP KLASK2ELARKK12ALL   010RNDRZK2PC0E       IF                                   15000     18000250                     355272102
+SUSAP KLASK2ELARKK12ALL   020LARKKK2PC0EY      TF                                   12500                                  355282102
+SUSAP KLASK2ELARKK12ALL   030KLAS K2PA0AE      VM                     3500                                                 355292102
+SUSAP KLASK2EPUMLE11BTY   010BTY  K2D 0V       IF                                             18000                        355302102
+SUSAP KLASK2EPUMLE11BTY   020PUMLEK2EA0EE      TF                                   16000          250                     355312102
+SUSAP KLASK2EPUMLE12ALL   010PUMLEK2EA0E       IF                                   16000     18000250                     355322102
+SUSAP KLASK2EPUMLE12ALL   020ZLLDAK2EA0E       TF                                                                          355332102
+SUSAP KLASK2EPUMLE12ALL   030FABLEK2EA0E       TF                                 + 13000                                  355342102
+SUSAP KLASK2EPUMLE12ALL   040ENNVYK2EA0E       TF                                 + 11000                                  355352102
+SUSAP KLASK2EPUMLE12ALL   050BLD  K2D 0VE      TF                                   08000                                  355362102
+SUSAP KLASK2ERKSTR44ELLDA 010ELLDAK2PC0E       IF                                             18000                        355372411
+SUSAP KLASK2ERKSTR44ELLDA 020JJEANK2PC0E       TF                                                                          355382411
+SUSAP KLASK2ERKSTR44ELLDA 030PEHTYK2PC0EE      TF                                 B 1600014000     250                     355392411
+SUSAP KLASK2ERKSTR44HAHAA 010HAHAAK2EA0E       IF                                             18000                        355402504
+SUSAP KLASK2ERKSTR44HAHAA 020KWEANK2PC0E       TF                                                                          355412411
+SUSAP KLASK2ERKSTR44HAHAA 030STYYXK2PC0E       TF                                 B FL240FL200                             355422411
+SUSAP KLASK2ERKSTR44HAHAA 040PEHTYK2PC0EE      TF                                 B 1600014000     250                     355432411
+SUSAP KLASK2ERKSTR44SQIRE 010SQIREK2PC0E       IF                                             18000                        355442411
+SUSAP KLASK2ERKSTR44SQIRE 020VEDDRK2PC0E       TF                                                                          355452411
+SUSAP KLASK2ERKSTR44SQIRE 030STYYXK2PC0E       TF                                 B FL240FL200                             355462411
+SUSAP KLASK2ERKSTR44SQIRE 040PEHTYK2PC0EE      TF                                 B 1600014000     250                     355472411
+SUSAP KLASK2ERKSTR45      010PEHTYK2PC0E       IF                                 B 160001400018000250                     355482411
+SUSAP KLASK2ERKSTR45      020RKSTRK2PC0EE      TF                                                                          355492411
+SUSAP KLASK2ERKSTR46RW01B 010RKSTRK2PC0E       IF                                             18000                        355502411
+SUSAP KLASK2ERKSTR46RW01B 020LEEEWK2PC0E       TF                                 + 14000          250                     355512411
+SUSAP KLASK2ERKSTR46RW01B 030JAIDEK2PC0E       TF                                 - 13000                                  355522411
+SUSAP KLASK2ERKSTR46RW01B 040SHEENK2PC0E       TF                                 + 12000                                  355532411
+SUSAP KLASK2ERKSTR46RW01B 050NEETLK2PC0E       TF                                                                          355542411
+SUSAP KLASK2ERKSTR46RW01B 060CAMMPK2PC0E       TF                                   10000          210                     355552411
+SUSAP KLASK2ERKSTR46RW01B 070BUGSSK2PC0E       TF                                   09000                                  355562411
+SUSAP KLASK2ERKSTR46RW01B 080VANDLK2PC0EY      TF                                   09000                                  355572411
+SUSAP KLASK2ERKSTR46RW01B 090VANDLK2PC0EE      FM NJK K2      354417460011    D                                            355582411
+SUSAP KLASK2ERKSTR46RW08B 010RKSTRK2PC0E       IF                                             18000                        355592411
+SUSAP KLASK2ERKSTR46RW08B 020LEEEWK2PC0E       TF                                 + 14000          250                     355602411
+SUSAP KLASK2ERKSTR46RW08B 030JAIDEK2PC0E       TF                                 - 13000                                  355612411
+SUSAP KLASK2ERKSTR46RW08B 040SHEENK2PC0E       TF                                 + 12000                                  355622411
+SUSAP KLASK2ERKSTR46RW08B 050NEETLK2PC0E       TF                                                                          355632411
+SUSAP KLASK2ERKSTR46RW08B 060CAMMPK2PC0E       TF                                   10000          210                     355642411
+SUSAP KLASK2ERKSTR46RW08B 070BUGSSK2PC0E       TF                                   09000                                  355652411
+SUSAP KLASK2ERKSTR46RW08B 080VANDLK2PC0EY      TF                                   09000                                  355662411
+SUSAP KLASK2ERKSTR46RW08B 090VANDLK2PC0EE      FM NJK K2      354417460011    D                                            355672411
+SUSAP KLASK2ERKSTR46RW19B 010RKSTRK2PC0E       IF                                             18000                        355682411
+SUSAP KLASK2ERKSTR46RW19B 020GROLLK2PC0E       TF                                 - 11000                                  355692411
+SUSAP KLASK2ERKSTR46RW19B 030FERELK2PC0E       TF                                 + 10000          250                     355702411
+SUSAP KLASK2ERKSTR46RW19B 040JOVIIK2PC0E       TF                                   10000                                  355712411
+SUSAP KLASK2ERKSTR46RW19B 050FELAAK2PC0E       TF                                   09200                                  355722411
+SUSAP KLASK2ERKSTR46RW19B 060BOOOOK2PC0E       TF                                   07000          230                     355732411
+SUSAP KLASK2ERKSTR46RW19B 070NNEONK2PC0E       TF                                                                          355742411
+SUSAP KLASK2ERKSTR46RW19B 080PPENNK2PC0EY      TF                                   06000          190                     355752411
+SUSAP KLASK2ERKSTR46RW19B 090PPENNK2PC0EE      FM NJK K2      359420132626    D                                            355762411
+SUSAP KLASK2ERKSTR46RW26L 010RKSTRK2PC0E       IF                                             18000                        355772411
+SUSAP KLASK2ERKSTR46RW26L 020HUXLYK2PC0E       TF                                 B 1300010000     250                     355782411
+SUSAP KLASK2ERKSTR46RW26L 030HAYLNK2PC0E       TF                                 - 09000                                  355792411
+SUSAP KLASK2ERKSTR46RW26L 040PRINOK2PC0EE      TF                                   08000          210                     355802411
+SUSAP KLASK2ERKSTR46RW26R 010RKSTRK2PC0E       IF                                             18000                        355812411
+SUSAP KLASK2ERKSTR46RW26R 020HUXLYK2PC0E       TF                                 B 1300010000     250                     355822411
+SUSAP KLASK2ERKSTR46RW26R 030HAYLNK2PC0E       TF                                 - 09000                                  355832411
+SUSAP KLASK2ERKSTR46RW26R 040FLYESK2PC0EE      TF                                   08000          210                     355842411
+SUSAP KLASK2ERNDRZ44EED   010EED  K2D 0V       IF                                             18000                        355852508
+SUSAP KLASK2ERNDRZ44EED   020ZELMAK2EA0E       TF                                 B FL230FL190                             355862508
+SUSAP KLASK2ERNDRZ44EED   030SLOPPK2PC0E       TF                                                                          355872508
+SUSAP KLASK2ERNDRZ44EED   040RNDRZK2PC0EE      TF                                 B 1600013000     250                     355882508
+SUSAP KLASK2ERNDRZ44MISEN 010MISENK2EA0E       IF                                 + FL240     18000                        355892508
+SUSAP KLASK2ERNDRZ44MISEN 020TEDDEK2PC0E       TF                                                                          355902508
+SUSAP KLASK2ERNDRZ44MISEN 030WATEVK2PC0E       TF                                 + FL190                                  355912508
+SUSAP KLASK2ERNDRZ44MISEN 040RNDRZK2PC0EE      TF                                 B 1600013000     250                     355922508
+SUSAP KLASK2ERNDRZ44TNP   010TNP  K2D 0V       IF                                             18000                        355932508
+SUSAP KLASK2ERNDRZ44TNP   020JOTNUK2EA0E       TF                                                                          355942508
+SUSAP KLASK2ERNDRZ44TNP   030ZELMAK2EA0E       TF                                 B FL230FL190                             355952508
+SUSAP KLASK2ERNDRZ44TNP   040SLOPPK2PC0E       TF                                                                          355962508
+SUSAP KLASK2ERNDRZ44TNP   050RNDRZK2PC0EE      TF                                 B 1600013000     250                     355972508
+SUSAP KLASK2ERNDRZ46RW01B 010RNDRZK2PC0E       IF                                 B 160001300018000250                     355982508
+SUSAP KLASK2ERNDRZ46RW01B 020RUMLYK2PC0E       TF                                 B 1300010000                             355992508
+SUSAP KLASK2ERNDRZ46RW01B 030HIMITK2PC0E       TF                                 + 08800                                  356002508
+SUSAP KLASK2ERNDRZ46RW01B 040SLOTSK2PC0E       TF                                   08000                                  356012508
+SUSAP KLASK2ERNDRZ46RW01B 050ROAMNK2PC0EY      TF                                   08000          210                     356022508
+SUSAP KLASK2ERNDRZ46RW01B 060ROAMNK2PC0EE      FM NJK K2      354317950303    D                                            356032508
+SUSAP KLASK2ERNDRZ46RW08B 010RNDRZK2PC0E       IF                                 B 160001300018000250                     356042508
+SUSAP KLASK2ERNDRZ46RW08B 020RUMLYK2PC0E       TF                                 B 1300010000                             356052508
+SUSAP KLASK2ERNDRZ46RW08B 030HIMITK2PC0E       TF                                 + 08800                                  356062508
+SUSAP KLASK2ERNDRZ46RW08B 040SLOTSK2PC0E       TF                                   08000                                  356072508
+SUSAP KLASK2ERNDRZ46RW08B 050YAGGRK2PC0EY      TF                                   08000          210                     356082508
+SUSAP KLASK2ERNDRZ46RW08B 060YAGGRK2PC0EE      FM NJK K2      353918330050    D                                            356092508
+SUSAP KLASK2ERNDRZ46RW19B 010RNDRZK2PC0E       IF                                 B 160001300018000250                     356102508
+SUSAP KLASK2ERNDRZ46RW19B 020GRMMAK2PC0E       TF                                                                          356112508
+SUSAP KLASK2ERNDRZ46RW19B 030BUETYK2PC0E       TF                                 + 13000                                  356122508
+SUSAP KLASK2ERNDRZ46RW19B 040ENNVYK2EA0E       TF                                 + 11000                                  356132508
+SUSAP KLASK2ERNDRZ46RW19B 050REDQNK2PC0E       TF                                 + 09000          210                     356142508
+SUSAP KLASK2ERNDRZ46RW19B 060BERBNK2PC0EY      TF                                   08000          210                     356152508
+SUSAP KLASK2ERNDRZ46RW19B 070BERBNK2PC0EE      FM NJK K2      358719260793    D                                            356162508
+SUSAP KLASK2ERNDRZ46RW26B 010RNDRZK2PC0E       IF                                 B 160001300018000250                     356172508
+SUSAP KLASK2ERNDRZ46RW26B 020GRMMAK2PC0E       TF                                                                          356182508
+SUSAP KLASK2ERNDRZ46RW26B 030BUETYK2PC0E       TF                                 + 13000                                  356192508
+SUSAP KLASK2ERNDRZ46RW26B 040ENNVYK2EA0E       TF                                 + 11000                                  356202508
+SUSAP KLASK2ERNDRZ46RW26B 050REDQNK2PC0E       TF                                 + 09000          210                     356212508
+SUSAP KLASK2ERNDRZ46RW26B 060BERBNK2PC0EY      TF                                   08000          210                     356222508
+SUSAP KLASK2ERNDRZ46RW26B 070BERBNK2PC0EE      FM NJK K2      358719260793    D                                            356232508
+SUSAP KLASK2FH08R  H      010YAGGRK2PC0E  I    IF                                   08000     18000210    RW08R K2PGA-FS   356242102
+SUSAP KLASK2FH08R  H      011CEENAK2PC0E    051TF                                 + 07000                           A FS   356252102
+SUSAP KLASK2FH08R  H      012MNDRNK2PC0E    051TF                                 + 06000                           A FS   356262102
+SUSAP KLASK2FH08R  H      013SAMOAK2PC0E    031TF                                 + 05000          200              A-FS   356272102
+SUSAP KLASK2FH08R  H      014EYUNGK2PC0E   R031RF       0028000010    03340016    + 04500          200    CFBDG K2PCA-FS   356282102
+SUSAP KLASK2FH08R  H      020BHARPK2PC1E  FR031RF       0028000334    07890022    + 03800          200    CFDZP K2PCA-FS   356292102
+SUSAP KLASK2FH08R  H      020BHARPK2PC2W                                                A031A011                      FS   356302102
+SUSAP KLASK2FH08R  H      030RW08RK2PG0GY M 031TF                                   02217             -315          A FS   356312102
+SUSAP KLASK2FH08R  H      040         0  M     CA                     0789        + 02544                           A FS   356322102
+SUSAP KLASK2FH08R  H      050SCAARK2PC0E    010DF                                                                   A FS   356332102
+SUSAP KLASK2FH08R  H      060FLAARK2PC0E    010TF                                                                   A FS   356342102
+SUSAP KLASK2FH08R  H      070HNIBLK2PC0E    010TF                                                                   A FS   356352102
+SUSAP KLASK2FH08R  H      080VMPREK2PC0EY   010TF                                 + 07000                           A FS   356362102
+SUSAP KLASK2FH08R  H      090VMPREK2PC0EE  L   HM                     21140070    + 07000                           A FS   356372102
+SUSAP KLASK2FH19LZ APPENN 010PPENNK2PC0E  A    IF                                   06000     18000190              A-FS   356382411
+SUSAP KLASK2FH19LZ APPENN 020KIVEYK2PC0EE B 051TF                                 + 05300                           A FS   356392102
+SUSAP KLASK2FH19LZ H      010KIVEYK2PC0E  I    IF                                 + 05300     18000                 A FS   356402102
+SUSAP KLASK2FH19LZ H      011MOBBBK2PC0E    051TF                                 + 03900                           A FS   356412102
+SUSAP KLASK2FH19LZ H      020KOOPAK2PC1E  F 051TF                                 + 03500                 RW19L K2PGA FS   356422102
+SUSAP KLASK2FH19LZ H      020KOOPAK2PC2W                                                A031A011                      FS   356432411
+SUSAP KLASK2FH19LZ H      021DLARGK2PC0E R  031TF                                                     -300          A FS   356442411
+SUSAP KLASK2FH19LZ H      022GIFTTK2PC0E R L031RF       0013002437    19390011                        -300CFFKJ K2PCA FS   356452102
+SUSAP KLASK2FH19LZ H      030RW19LK2PG0G  M 031TF                                   02155             -300          A FS   356462411
+SUSAP KLASK2FH19LZ H      040ECKKRK2PC0E M  031TF                                                                   A FS   356472102
+SUSAP KLASK2FH19LZ H      050DUPECK2PC0E    051TF                                                                   A FS   356482411
+SUSAP KLASK2FH19LZ H      060PAREEK2PC0E    010TF                                                                   A FS   356492411
+SUSAP KLASK2FH19LZ H      070MATLRK2PC0EY   010TF                                 + 07000                           A FS   356502411
+SUSAP KLASK2FH19LZ H      080MATLRK2PC0EE  L   HM                     17210070    + 07000                           A FS   356512411
+SUSAP KLASK2FH19RZ APPENN 010PPENNK2PC0E  A    IF                                   06000     18000190              A-FS   356522411
+SUSAP KLASK2FH19RZ APPENN 020KIVEYK2PC0EE B 051TF                                 + 05300                           A FS   356532102
+SUSAP KLASK2FH19RZ H      010KIVEYK2PC0E  I    IF                                 + 05300     18000                 A FS   356542102
+SUSAP KLASK2FH19RZ H      011MOBBBK2PC0E    051TF                                 + 03900                           A FS   356552102
+SUSAP KLASK2FH19RZ H      020GIMBLK2PC1E  F 051TF                                 + 03500                 RW19RAK2PGA FS   356562411
+SUSAP KLASK2FH19RZ H      020GIMBLK2PC2W                                                A031A021A011                  FS   356572102
+SUSAP KLASK2FH19RZ H      021HIRLRK2PC0E R  031TF                                                     -324          A FS   356582411
+SUSAP KLASK2FH19RZ H      022CEGILK2PC0E R L031RF       0012902498    19390013                        -324CFFLT K2PCA FS   356592411
+SUSAP KLASK2FH19RZ H      030RW19RK2PG0G  M 031TF                                   02164             -324          A FS   356602411
+SUSAP KLASK2FH19RZ H      040SIROEK2PC0E M  031TF                                                                   A FS   356612102
+SUSAP KLASK2FH19RZ H      050ZOLAVK2PC0E    041TF                                                                   A FS   356622411
+SUSAP KLASK2FH19RZ H      060RACORK2PC0E    010TF                                                                   A FS   356632411
+SUSAP KLASK2FH19RZ H      070MATLRK2PC0EY   010TF                                 + 07000                           A FS   356642411
+SUSAP KLASK2FH19RZ H      080MATLRK2PC0EE  L   HM                     17210070    + 07000                           A FS   356652411
+SUSAP KLASK2FH26L  ABERBN 010BERBNK2PC0E  B    IF                                   08000     18000210              A-FS   356662102
+SUSAP KLASK2FH26L  ABERBN 020BISHPK2PC0E    010TF                                 + 07000          205              A-FS   356672102
+SUSAP KLASK2FH26L  ABERBN 030SHANDK2PC0E   L010RF       0022400794    25910071    + 04800          205    CFFLV K2PCA-FS   356682102
+SUSAP KLASK2FH26L  ABERBN 040RELINK2PC0EE   010TF                                 + 03800                           A FS   356692102
+SUSAP KLASK2FH26L  APRINO 010PRINOK2PC0E  A    IF                                   08000     18000210              A-FS   356702102
+SUSAP KLASK2FH26L  APRINO 020LARREK2PC0E  B 010TF                                 + 06500                           A FS   356712102
+SUSAP KLASK2FH26L  APRINO 030SHANDK2PC0E    010TF                                 + 04800                           A FS   356722102
+SUSAP KLASK2FH26L  APRINO 040RELINK2PC0EE   010TF                                 + 03800                           A FS   356732102
+SUSAP KLASK2FH26L  H      020RELINK2PC1E  F    IF                                 + 03800     18000       RW26L K2PGA FS   356742102
+SUSAP KLASK2FH26L  H      020RELINK2PC2W                                                A031                          FS   356752102
+SUSAP KLASK2FH26L  H      030RW26LK2PG0GY M 031TF                                   02108             -300          A FS   356762102
+SUSAP KLASK2FH26L  H      040KACEKK2PC0E M  010TF                                                                   A FS   356772102
+SUSAP KLASK2FH26L  H      050RUDYYK2PC0E    010TF                                                                   A FS   356782102
+SUSAP KLASK2FH26L  H      060SELLZK2PC0E    010TF                                                                   A FS   356792102
+SUSAP KLASK2FH26L  H      070TTONEK2PC0E    010TF                                                                   A FS   356802102
+SUSAP KLASK2FH26L  H      080BLD  K2D 0VY   010TF                                 + 07000                           A FS   356812102
+SUSAP KLASK2FH26L  H      090BLD  K2D 0VE  R   HM                     31900070    + 07000                           A FS   356822102
+SUSAP KLASK2FH26R  ABERBN 010BERBNK2PC0E  B    IF                                   08000     18000210              A-FS   356832102
+SUSAP KLASK2FH26R  ABERBN 020LUISAK2PC0E    010TF                                 + 07000                           A FS   356842102
+SUSAP KLASK2FH26R  ABERBN 030BJORGK2PC0EE  L010RF       0023200793    25910073    + 04800                 CFFDG K2PCA FS   356852205
+SUSAP KLASK2FH26R  AFLYES 010FLYESK2PC0E  A    IF                                   08000     18000210              A-FS   356862102
+SUSAP KLASK2FH26R  AFLYES 020FLICRK2PC0E  B 010TF                                 + 06500                           A FS   356872205
+SUSAP KLASK2FH26R  AFLYES 030JALIDK2PC0E    010TF                                 + 05300                           A FS   356882102
+SUSAP KLASK2FH26R  AFLYES 040BJORGK2PC0EE   010TF                                 + 04800                           A FS   356892205
+SUSAP KLASK2FH26R  H      010BJORGK2PC0E  I    IF                                 + 04800     18000                 A FS   356902205
+SUSAP KLASK2FH26R  H      020CONDYK2PC1E  F 010TF                                 + 03800                 RW26R K2PGA FS   356912205
+SUSAP KLASK2FH26R  H      020CONDYK2PC2W                                                A031A031                      FS   356922205
+SUSAP KLASK2FH26R  H      030RW26RK2PG0GY M 031TF                                   02104             -300          A FS   356932102
+SUSAP KLASK2FH26R  H      040SKALDK2PC0E M  010TF                                                                   A FS   356942102
+SUSAP KLASK2FH26R  H      050RUDYYK2PC0E    010TF                                                                   A FS   356952102
+SUSAP KLASK2FH26R  H      060SELLZK2PC0E    010TF                                                                   A FS   356962102
+SUSAP KLASK2FH26R  H      070TTONEK2PC0E    010TF                                                                   A FS   356972102
+SUSAP KLASK2FH26R  H      080BLD  K2D 0VY   010TF                                 + 07000                           A FS   356982102
+SUSAP KLASK2FH26R  H      090BLD  K2D 0VE  R   HM                     31900070    + 07000                           A FS   356992102
+SUSAP KLASK2FI01L  AROAMN 010ROAMNK2PC0E  A    IF                                   08000     18000210              0-PS   357002205
+SUSAP KLASK2FI01L  AROAMN 020TRREYK2PC0EE B 010TF ICUAK2      19390160        PI  + 07000                           0 PS   357012205
+SUSAP KLASK2FI01L  AWOPMA 010WOPMAK2EA0E       IF                                             18000                 0 DS   357021404
+SUSAP KLASK2FI01L  AWOPMA 020CEDAXK2PC0E       TF                                 + 11000                           0 DS   357032205
+SUSAP KLASK2FI01L  AWOPMA 030SHANQK2PC0E       TF                                 + 09700                           0 DS   357042205
+SUSAP KLASK2FI01L  AWOPMA 040KRUDYK2PC0E  A    TF                                 + 08000                           0 DS   357052205
+SUSAP KLASK2FI01L  AWOPMA 050TRREYK2PC0EE B    CF ICUAK2      1939016001390038PI  + 07000          210              0-DS   357062205
+SUSAP KLASK2FI01L  I      010TRREYK2PC0E  I    IF ICUAK2      19390160        PI  J 070000530018000210              0-DS   357072205
+SUSAP KLASK2FI01L  I      011CODNOK2PC0E       CF ICUAK2      1939013201400029PI  + 06300                           0 DS   357081709
+SUSAP KLASK2FI01L  I      020NODIYK2PC0E  F    CF ICUAK2      1939010001400032PI  H 0530005300            LAS   K2D 0 DS   357092102
+SUSAP KLASK2FI01L  I      030RW01LK2PG0G  M    CF ICUAK2      1939001601400085PI    02235             -340          0 DS   357102205
+SUSAP KLASK2FI01L  I      040         0  M     CA                     0139        + 03000                           0 DS   357111709
+SUSAP KLASK2FI01L  I      050BLD  K2D 0VY  R   DF                                 + 07000                           0 DS   357121709
+SUSAP KLASK2FI01L  I      060BLD  K2D 0VE  R   HM                     3300T010    + 07000                           0 DS   357131404
+SUSAP KLASK2FI26LY ABERBN 010BERBNK2PC0E  B    IF                                   08000     18000210              0-PS   357142310
+SUSAP KLASK2FI26LY ABERBN 020BISHPK2PC0E    010TF                                 + 07000                           0 PS   357152310
+SUSAP KLASK2FI26LY ABERBN 030HOGOGK2PC0E    010TF                                 + 06600          200              0-PS   357162310
+SUSAP KLASK2FI26LY ABERBN 040KODSEK2PC0E    010TF                                 + 05800                           0 PS   357172310
+SUSAP KLASK2FI26LY ABERBN 050HUXARK2PC0EE   010TF IRLEK2      07900118        PI  + 05000                           0 PS   357182310
+SUSAP KLASK2FI26LY I      010HUXARK2PC0E  I    IF IRLEK2      07900118        PI  J 050000380018000                 0 DS   357192310
+SUSAP KLASK2FI26LY I      020RELINK2PC0E  F    CF IRLEK2      0790007225900046PI  H 0380003800            LAS  AK2D 0 DS   357202310
+SUSAP KLASK2FI26LY I      030RW26LK2PG0GY M    CF IRLEK2      0790001925900053PI    02108             -300          0 DS   357212310
+SUSAP KLASK2FI26LY I      040         0  M     CA                     2590        + 03200                           0 DS   357222310
+SUSAP KLASK2FI26LY I      050         0    R   VIY                    0800                                          0 DS   357232310
+SUSAP KLASK2FI26LY I      060BLD  K2D 0VY      CF BLD K2      0000000010600129D   + 06000                           0 DS   357242310
+SUSAP KLASK2FI26LY I      070BLD  K2D 0VE  R   HM                     3300T010    + 06000                           0 DS   357252310
+SUSAP KLASK2FI26LZ ADICSA 010DICSAK2EA0E       IF                                             18000                 0 DS   357262310
+SUSAP KLASK2FI26LZ ADICSA 020BLD  K2D 0V  A    TF                                 + 08000                           0 DS   357272310
+SUSAP KLASK2FI26LZ ADICSA 030BLD  K2D 0V       FC BLD K2      0000000000110029D   + 06500                           0 DS   357282310
+SUSAP KLASK2FI26LZ ADICSA 040LARREK2PC0EE B    CF IRLEK2      0790016000110020PI  + 06500                           0 DS   357292310
+SUSAP KLASK2FI26LZ APRINO 010PRINOK2PC0E  A    IF                                   08000     18000210              0-DS   357302310
+SUSAP KLASK2FI26LZ APRINO 020LARREK2PC0EE B    CF IRLEK2      0790016025900053PI  + 06500                           0 DS   357312310
+SUSAP KLASK2FI26LZ I      010LARREK2PC0E  I    IF IRLEK2      07900160        PI  J 065000380018000                 0 DS   357322310
+SUSAP KLASK2FI26LZ I      011SHANDK2PC0E       CF IRLEK2      0790010425900057PI  + 04800                           0 DS   357332310
+SUSAP KLASK2FI26LZ I      020RELINK2PC0E  F    CF IRLEK2      0790007225900031PI  H 0380003800            LAS  AK2D 0 DS   357342310
+SUSAP KLASK2FI26LZ I      030RW26LK2PG0GY M    CF IRLEK2      0790001925900053PI    02108             -300          0 DS   357352310
+SUSAP KLASK2FI26LZ I      040         0  M     CA                     2590        + 03200                           0 DS   357362310
+SUSAP KLASK2FI26LZ I      050         0    R   VIY                    0800                                          0 DS   357372310
+SUSAP KLASK2FI26LZ I      060BLD  K2D 0VY      CF BLD K2      0000000010700126D   + 06000                           0 DS   357382310
+SUSAP KLASK2FI26LZ I      070BLD  K2D 0VE  R   HM                     3300T010    + 06000                           0 DS   357392310
+SUSAP KLASK2FI26RY ABERBN 010BERBNK2PC0E  B    IF                                   08000     18000210              0-PS   357402310
+SUSAP KLASK2FI26RY ABERBN 020LUISAK2PC0E    010TF                                 + 07000                           0 PS   357412310
+SUSAP KLASK2FI26RY ABERBN 030SETKEK2PC0E    010TF                                 + 06600          200              0-PS   357422310
+SUSAP KLASK2FI26RY ABERBN 040ZEPAMK2PC0E    010TF                                 + 05800                           0 PS   357432310
+SUSAP KLASK2FI26RY ABERBN 050HAWKOK2PC0EE   010TF ILASK2      07900123        PI  + 05100                           0 PS   357442310
+SUSAP KLASK2FI26RY I      010HAWKOK2PC0E  I    IF ILASK2      07900123        PI  J 051000380018000                 0 NS   357452310
+SUSAP KLASK2FI26RY I      020CONDYK2PC0E  F    CF ILASK2      0790007725900047PI  H 0380003800            LAS  AK2D 0 NS   357462310
+SUSAP KLASK2FI26RY I      030RW26RK2PG0GY M    CF ILASK2      0790002225900053PI    02104             -300          0 NS   357472310
+SUSAP KLASK2FI26RY I      040         0  M     CA                     2590        + 03200                           0 NS   357482310
+SUSAP KLASK2FI26RY I      050         0    R   VIY                    0800                                          0 NS   357492310
+SUSAP KLASK2FI26RY I      060BLD  K2D 0VY      CF BLD K2      0000000010600133D   + 06000                           0 NS   357502310
+SUSAP KLASK2FI26RY I      070BLD  K2D 0VE  R   HM                     3300T010    + 06000                           0 NS   357512310
+SUSAP KLASK2FI26RZ ACROWE 010CROWEK2EA0E       IF                                             18000                 0 NS   357522310
+SUSAP KLASK2FI26RZ ACROWE 020FLYESK2PC0E  A    TF                                   08000          210              0-NS   357532310
+SUSAP KLASK2FI26RZ ACROWE 030FLICRK2PC0EE B    CF ILASK2      0790016325900053PI  + 06500                           0 NS   357542310
+SUSAP KLASK2FI26RZ ADICSA 010DICSAK2EA0E       IF                                             18000                 0 NS   357552310
+SUSAP KLASK2FI26RZ ADICSA 020BLD  K2D 0V  A    TF                                 + 08000                           0 NS   357562310
+SUSAP KLASK2FI26RZ ADICSA 030BLD  K2D 0V       FC BLD K2      0000000035970030D   + 06500                           0 NS   357572310
+SUSAP KLASK2FI26RZ ADICSA 040FLICRK2PC0EE B    CF ILASK2      0790016335970020PI  + 06500                           0 NS   357582310
+SUSAP KLASK2FI26RZ I      010FLICRK2PC0E  I    IF ILASK2      07900163        PI  J 065000380018000                 0 NS   357592310
+SUSAP KLASK2FI26RZ I      011BJORGK2PC0E       CF ILASK2      0790010725900055PI  + 04800                           0 NS   357602310
+SUSAP KLASK2FI26RZ I      020CONDYK2PC0E  F    CF ILASK2      0790007625900032PI  H 0380003800            LAS  AK2D 0 NS   357612310
+SUSAP KLASK2FI26RZ I      030RW26RK2PG0GY M    CF ILASK2      0790002225900053PI    02104             -300          0 NS   357622310
+SUSAP KLASK2FI26RZ I      040         0  M     CA                     2590        + 03200                           0 NS   357632310
+SUSAP KLASK2FI26RZ I      050         0    R   VIY                    0790                                          0 NS   357642310
+SUSAP KLASK2FI26RZ I      060BLD  K2D 0VY      CF BLD K2      0000000010700131D   + 06000                           0 NS   357652310
+SUSAP KLASK2FI26RZ I      070BLD  K2D 0VE  R   HM                     3300T010    + 06000                           0 NS   357662310
+SUSAP KLASK2FL01L  AROAMN 010ROAMNK2PC0E  A    IF                                   08000     18000210              0-PS   357672205
+SUSAP KLASK2FL01L  AROAMN 020TRREYK2PC0EE B 010TF ICUAK2      19390160        PI  + 07000                           0 PS   357682205
+SUSAP KLASK2FL01L  AWOPMA 010WOPMAK2EA0E       IF                                             18000                 0 DS   357691404
+SUSAP KLASK2FL01L  AWOPMA 020CEDAXK2PC0E       TF                                 + 11000                           0 DS   357702205
+SUSAP KLASK2FL01L  AWOPMA 030SHANQK2PC0E       TF                                 + 09700                           0 DS   357712205
+SUSAP KLASK2FL01L  AWOPMA 040KRUDYK2PC0E  A    TF                                 + 08000                           0 DS   357722205
+SUSAP KLASK2FL01L  AWOPMA 050TRREYK2PC0EE B    CF ICUAK2      1939016001390038PI  + 07000          210              0-DS   357732205
+SUSAP KLASK2FL01L  L      010TRREYK2PC0E  I    IF ICUAK2      19390160        PI  + 07000     18000210              0-DS   357742205
+SUSAP KLASK2FL01L  L      011CODNOK2PC0E       CF ICUAK2      1939013201400029PI  + 06300                           0 DS   357751709
+SUSAP KLASK2FL01L  L      020NODIYK2PC0E  F    CF ICUAK2      1939010001400032PI  + 05300                 LAS   K2D 0 DS   357761709
+SUSAP KLASK2FL01L  L      021SOSOYK2PC0E S     CF ICUAK2      1939007301400027PI  + 04300             -340          0 DS   357772102
+SUSAP KLASK2FL01L  L      022ZABESK2PC0E S     CF ICUAK2      1939004801400026PI  + 03400             -340          0 DS   357782205
+SUSAP KLASK2FL01L  L      030RW01LK2PG0G  M    CF ICUAK2      1939001601400032PI    02235             -340          0 DS   357792205
+SUSAP KLASK2FL01L  L      040         0  M     CA                     0139        + 03000                           0 DS   357801709
+SUSAP KLASK2FL01L  L      050BLD  K2D 0VY  R   DF                                 + 07000                           0 DS   357811709
+SUSAP KLASK2FL01L  L      060BLD  K2D 0VE  R   HM                     3300T010    + 07000                           0 DS   357821404
+SUSAP KLASK2FL26LY ABERBN 010BERBNK2PC0E  B    IF                                   08000     18000210              0-PS   357832310
+SUSAP KLASK2FL26LY ABERBN 020BISHPK2PC0E    010TF                                 + 07000                           0 PS   357842310
+SUSAP KLASK2FL26LY ABERBN 030HOGOGK2PC0E    010TF                                 + 06600          200              0-PS   357852310
+SUSAP KLASK2FL26LY ABERBN 040KODSEK2PC0E    010TF                                 + 05800                           0 PS   357862310
+SUSAP KLASK2FL26LY ABERBN 050HUXARK2PC0EE   010TF IRLEK2      07900118        PI  + 05000                           0 PS   357872310
+SUSAP KLASK2FL26LY L      010HUXARK2PC0E  I    IF IRLEK2      07900118        PI  + 05000     18000                 0 DS   357882310
+SUSAP KLASK2FL26LY L      020RELINK2PC0E  F    CF IRLEK2      0790007225900046PI  + 03800                 LAS  AK2D 0 DS   357892310
+SUSAP KLASK2FL26LY L      030RW26LK2PG0GY M    CF IRLEK2      0790001925900053PI    02108             -300          0 DS   357902310
+SUSAP KLASK2FL26LY L      040         0  M     CA                     2590        + 03200                           0 DS   357912310
+SUSAP KLASK2FL26LY L      050         0    R   VIY                    0800                                          0 DS   357922310
+SUSAP KLASK2FL26LY L      060BLD  K2D 0VY      CF BLD K2      0000000010600129D   + 06000                           0 DS   357932310
+SUSAP KLASK2FL26LY L      070BLD  K2D 0VE  R   HM                     3300T010    + 06000                           0 DS   357942310
+SUSAP KLASK2FL26LZ ADICSA 010DICSAK2EA0E       IF                                             18000                 0 DS   357952310
+SUSAP KLASK2FL26LZ ADICSA 020BLD  K2D 0V  A    TF                                 + 08000                           0 DS   357962310
+SUSAP KLASK2FL26LZ ADICSA 030BLD  K2D 0V       FC BLD K2      0000000000110029D   + 06500                           0 DS   357972310
+SUSAP KLASK2FL26LZ ADICSA 040LARREK2PC0EE B    CF IRLEK2      0790016000110020PI  + 06500                           0 DS   357982310
+SUSAP KLASK2FL26LZ APRINO 010PRINOK2PC0E  A    IF                                   08000     18000210              0-DS   357992310
+SUSAP KLASK2FL26LZ APRINO 020LARREK2PC0EE B    CF IRLEK2      0790016025900053PI  + 06500                           0 DS   358002310
+SUSAP KLASK2FL26LZ L      010LARREK2PC0E  I    IF IRLEK2      07900160        PI  + 06500     18000                 0 DS   358012310
+SUSAP KLASK2FL26LZ L      011SHANDK2PC0E       CF IRLEK2      0790010425900057PI  + 04800                           0 DS   358022310
+SUSAP KLASK2FL26LZ L      020RELINK2PC0E  F    CF IRLEK2      0790007225900031PI  + 03800                 LAS  AK2D 0 DS   358032310
+SUSAP KLASK2FL26LZ L      030RW26LK2PG0GY M    CF IRLEK2      0790001925900053PI    02108             -300          0 DS   358042310
+SUSAP KLASK2FL26LZ L      040         0  M     CA                     2590        + 03200                           0 DS   358052310
+SUSAP KLASK2FL26LZ L      050         0    R   VIY                    0800                                          0 DS   358062310
+SUSAP KLASK2FL26LZ L      060BLD  K2D 0VY      CF BLD K2      0000000010700126D   + 06000                           0 DS   358072310
+SUSAP KLASK2FL26LZ L      070BLD  K2D 0VE  R   HM                     3300T010    + 06000                           0 DS   358082310
+SUSAP KLASK2FL26RY ABERBN 010BERBNK2PC0E  B    IF                                   08000     18000210              0-PS   358092310
+SUSAP KLASK2FL26RY ABERBN 020LUISAK2PC0E    010TF                                 + 07000                           0 PS   358102310
+SUSAP KLASK2FL26RY ABERBN 030SETKEK2PC0E    010TF                                 + 06600          200              0-PS   358112310
+SUSAP KLASK2FL26RY ABERBN 040ZEPAMK2PC0E    010TF                                 + 05800                           0 PS   358122310
+SUSAP KLASK2FL26RY ABERBN 050HAWKOK2PC0EE   010TF ILASK2      07900123        PI  + 05100                           0 PS   358132310
+SUSAP KLASK2FL26RY L      010HAWKOK2PC0E  I    IF ILASK2      07900123        PI  + 05100     18000                 0 NS   358142310
+SUSAP KLASK2FL26RY L      020CONDYK2PC0E  F    CF ILASK2      0790007725900047PI  + 03800                 LAS  AK2D 0 NS   358152310
+SUSAP KLASK2FL26RY L      030RW26RK2PG0GY M    CF ILASK2      0790002225900053PI    02104             -300          0 NS   358162310
+SUSAP KLASK2FL26RY L      040         0  M     CA                     2590        + 03200                           0 NS   358172310
+SUSAP KLASK2FL26RY L      050         0    R   VIY                    0800                                          0 NS   358182310
+SUSAP KLASK2FL26RY L      060BLD  K2D 0VY      CF BLD K2      0000000010600133D   + 06000                           0 NS   358192310
+SUSAP KLASK2FL26RY L      070BLD  K2D 0VE  R   HM                     3300T010    + 06000                           0 NS   358202310
+SUSAP KLASK2FL26RZ ACROWE 010CROWEK2EA0E       IF                                             18000                 0 NS   358212310
+SUSAP KLASK2FL26RZ ACROWE 020FLYESK2PC0E  A    TF                                   08000          210              0-NS   358222310
+SUSAP KLASK2FL26RZ ACROWE 030FLICRK2PC0EE B    CF ILASK2      0790016325900053PI  + 06500                           0 NS   358232310
+SUSAP KLASK2FL26RZ ADICSA 010DICSAK2EA0E       IF                                             18000                 0 NS   358242310
+SUSAP KLASK2FL26RZ ADICSA 020BLD  K2D 0V  A    TF                                 + 08000                           0 NS   358252310
+SUSAP KLASK2FL26RZ ADICSA 030BLD  K2D 0V       FC BLD K2      0000000035970030D   + 06500                           0 NS   358262310
+SUSAP KLASK2FL26RZ ADICSA 040FLICRK2PC0EE B    CF ILASK2      0790016335970020PI  + 06500                           0 NS   358272310
+SUSAP KLASK2FL26RZ L      010FLICRK2PC0E  I    IF ILASK2      07900163        PI  + 06500     18000                 0 NS   358282310
+SUSAP KLASK2FL26RZ L      011BJORGK2PC0E       CF ILASK2      0790010725900055PI  + 04800                           0 NS   358292310
+SUSAP KLASK2FL26RZ L      020CONDYK2PC0E  F    CF ILASK2      0790007625900032PI  + 03800                 LAS  AK2D 0 NS   358302310
+SUSAP KLASK2FL26RZ L      030RW26RK2PG0GY M    CF ILASK2      0790002225900053PI    02104             -300          0 NS   358312310
+SUSAP KLASK2FL26RZ L      040         0  M     CA                     2590        + 03200                           0 NS   358322310
+SUSAP KLASK2FL26RZ L      050         0    R   VIY                    0790                                          0 NS   358332310
+SUSAP KLASK2FL26RZ L      060BLD  K2D 0VY      CF BLD K2      0000000010700131D   + 06000                           0 NS   358342310
+SUSAP KLASK2FL26RZ L      070BLD  K2D 0VE  R   HM                     3300T010    + 06000                           0 NS   358352310
+SUSAP KLASK2FR01R  AVANDL 010VANDLK2PC0E  A    IF                                   09000     18000210              A-JS   358362411
+SUSAP KLASK2FR01R  AVANDL 020CAKNUK2PC0E    010TF                                 + 07400                           A JS   358372411
+SUSAP KLASK2FR01R  AVANDL 030FEBETK2PC0EE B 010TF                                 + 06000                           A JS   358382411
+SUSAP KLASK2FR01R  R      010FEBETK2PC0E  I    IF                                 + 06000     18000                 A JS   358392102
+SUSAP KLASK2FR01R  R      020KIBSEK2PC1E  F 010TF                                 + 05100                 RW01R K2PGA JS   358402205
+SUSAP KLASK2FR01R  R      020KIBSEK2PC2WALPV       ALNAV/VNAV ALNAV                                                   JS   358411710
+SUSAP KLASK2FR01R  R      021GALNEK2PC0E S  031TF                                 V 0394003940        -300          A JS   358422205
+SUSAP KLASK2FR01R  R      022MOLMEK2PC0E S  031TF                                 V 0352003520        -300          A JS   358432205
+SUSAP KLASK2FR01R  R      030RW01RK2PG0GY M 031TF                                   02230             -300          A JS   358442205
+SUSAP KLASK2FR01R  R      040         0  M     CA                     0139        + 02700                           A JS   358452102
+SUSAP KLASK2FR01R  R      050HAIDNK2PC0EY  R010DF                                 + 07000                           A JS   358462102
+SUSAP KLASK2FR01R  R      060HAIDNK2PC0EE  R   HM                     05880070    + 07000                           A JS   358472102
+SUSAP KLASK2FR19LY ALAPIN 010LAPINK2EA0E       IF                                             18000                 A JS   358482102
+SUSAP KLASK2FR19LY ALAPIN 020STORAK2PC0EY   010TF                                   06000                           A JS   358492502
+SUSAP KLASK2FR19LY ALAPIN 030STORAK2PC0EE AL   HF                     20400050      06000                           A JS   358502502
+SUSAP KLASK2FR19LY ASUVIE 010SUVIEK2EA0E  A    IF                                             18000                 A JS   358512102
+SUSAP KLASK2FR19LY ASUVIE 020STORAK2PC0EE B 010TF                                   06000                           A JS   358522502
+SUSAP KLASK2FR19LY R      010STORAK2PC0E  I    IF                                   06000     18000                 A JS   358532502
+SUSAP KLASK2FR19LY R      011MOZOSK2PC0E    010TF                                 + 05300                           A JS   358542102
+SUSAP KLASK2FR19LY R      020DIRDEK2PC1E  F 010TF                                 + 04300                 JABNA K2PCA JS   358552102
+SUSAP KLASK2FR19LY R      020DIRDEK2PC2WALPV       ALNAV/VNAV ALNAV                                                   JS   358562102
+SUSAP KLASK2FR19LY R      030JABNAK2PC0EY M 031TF                                   02299             -300          A JS   358572102
+SUSAP KLASK2FR19LY R      040         0  M     CA                     1940        + 02600                           A JS   358582102
+SUSAP KLASK2FR19LY R      050LAPINK2EA0EY  L010DF                                 + 06000                           A JS   358592102
+SUSAP KLASK2FR19LY R      060LAPINK2EA0EE  R   HM                     07020050    + 06000                           A JS   358602102
+SUSAP KLASK2FR19RY ALAPIN 010LAPINK2EA0E       IF                                             18000                 A JS   358612102
+SUSAP KLASK2FR19RY ALAPIN 020STORAK2PC0EY   010TF                                   06000                           A JS   358622105
+SUSAP KLASK2FR19RY ALAPIN 030STORAK2PC0EE AL   HF                     20400050      06000                           A JS   358632105
+SUSAP KLASK2FR19RY ASUVIE 010SUVIEK2EA0E  A    IF                                             18000                 A JS   358642102
+SUSAP KLASK2FR19RY ASUVIE 020STORAK2PC0EE B 010TF                                   06000                           A JS   358652105
+SUSAP KLASK2FR19RY R      010STORAK2PC0E  I    IF                                   06000     18000                 A JS   358662105
+SUSAP KLASK2FR19RY R      011MOZOSK2PC0E    010TF                                 + 05300                           A JS   358672102
+SUSAP KLASK2FR19RY R      020WAKSIK2PC1E  F 010TF                                 + 04300                 RW19R K2PGA JS   358682102
+SUSAP KLASK2FR19RY R      020WAKSIK2PC2WALPV       ALNAV/VNAV ALNAV                                                   JS   358692102
+SUSAP KLASK2FR19RY R      030RW19RK2PG0GY M 031TF                                   02149             -324          A JS   358702102
+SUSAP KLASK2FR19RY R      040         0  M     CA                     1940        + 02600                           A JS   358712102
+SUSAP KLASK2FR19RY R      050LAPINK2EA0EY  L010DF                                 + 06000                           A JS   358722102
+SUSAP KLASK2FR19RY R      060LAPINK2EA0EE  R   HM                     07020050    + 06000                           A JS   358732102
+SUSAP KLASK2FS26L  ACRESO 010CRESOK2EA0E       IF                                             18000                 0 NS   358742202
+SUSAP KLASK2FS26L  ACRESO 020HARFEK2PC0E       TF                                 + 07800                           0 NS   358752202
+SUSAP KLASK2FS26L  ACRESO 030BLD  K2D 0V  A    TF                                 + 07100                           0 NS   358762202
+SUSAP KLASK2FS26L  ACRESO 040HOCKYK2PC0EE      TF                                 + 05600                           0 NS   358772202
+SUSAP KLASK2FS26L  ALAS   010LAS  K2D 0V       IF                                             18000                 0 NS   358782202
+SUSAP KLASK2FS26L  ALAS   020IRISHK2PC0EY      TF                                 + 07100                           0 NS   358792202
+SUSAP KLASK2FS26L  ALAS   030IRISHK2PC0E  AR   HF LAS K2      082401912624T010D   + 07100                           0 NS   358802202
+SUSAP KLASK2FS26L  ALAS   040HOCKYK2PC0EE      CF LAS K2      0824014226240049D   + 05600                           0 NS   358812202
+SUSAP KLASK2FS26L  AMEADS 010MEADSK2EA0E  A    IF                                             18000                 0 NS   358822202
+SUSAP KLASK2FS26L  AMEADS 020IRISHK2PC0E  B    TF                                 + 07100                           0 NS   358832202
+SUSAP KLASK2FS26L  AMEADS 030HOCKYK2PC0EE      CF LAS K2      0824014226240049D   + 05600                           0 NS   358842202
+SUSAP KLASK2FS26L  S      010HOCKYK2PC0E  I    IF LAS K2      08240142        D   + 05600     18000                 0 NS   358852202
+SUSAP KLASK2FS26L  S      020RACESK2PC0E  F    CF LAS K2      0824008226240060D   + 04500                 LAS   K2D 0 NS   358862202
+SUSAP KLASK2FS26L  S      030ALUNDK2PC0EY M    CF LAS K2      0824001726240065D     02144              000          0 NS   358872202
+SUSAP KLASK2FS26L  S      040         0  M     CA                     2624        + 04000                           0 NS   358882202
+SUSAP KLASK2FS26L  S      050         0    L   VIY                    0740                                          0 NS   358892202
+SUSAP KLASK2FS26L  S      060BLD  K2D 0VY      CF BLD K2      0000000009000136D   + 06000                           0 NS   358902202
+SUSAP KLASK2FS26L  S      070BLD  K2D 0VE  R   HM                     3300T010    + 06000                           0 NS   358912202
+SUSAP KLASK2FS26R  ACRESO 010CRESOK2EA0E       IF                                             18000                 0 NS   358922202
+SUSAP KLASK2FS26R  ACRESO 020HARFEK2PC0E       TF                                 + 07800                           0 NS   358932202
+SUSAP KLASK2FS26R  ACRESO 030BLD  K2D 0V  A    TF                                 + 07100                           0 NS   358942202
+SUSAP KLASK2FS26R  ACRESO 040HOCKYK2PC0EE      TF                                 + 05600                           0 NS   358952202
+SUSAP KLASK2FS26R  ALAS   010LAS  K2D 0V       IF                                             18000                 0 NS   358962202
+SUSAP KLASK2FS26R  ALAS   020IRISHK2PC0EY      TF                                 + 07100                           0 NS   358972202
+SUSAP KLASK2FS26R  ALAS   030IRISHK2PC0E  AR   HF LAS K2      082401912624T010D   + 07100                           0 NS   358982202
+SUSAP KLASK2FS26R  ALAS   040HOCKYK2PC0EE      CF LAS K2      0824014226240049D   + 05600                           0 NS   358992202
+SUSAP KLASK2FS26R  AMEADS 010MEADSK2EA0E  A    IF                                             18000                 0 NS   359002202
+SUSAP KLASK2FS26R  AMEADS 020IRISHK2PC0E  B    TF                                 + 07100                           0 NS   359012202
+SUSAP KLASK2FS26R  AMEADS 030HOCKYK2PC0EE      CF LAS K2      0824014226240049D   + 05600                           0 NS   359022202
+SUSAP KLASK2FS26R  S      010HOCKYK2PC0E  I    IF LAS K2      08240142        D   + 05600     18000                 0 NS   359032202
+SUSAP KLASK2FS26R  S      020RACESK2PC0E  F    CF LAS K2      0824008226240060D   + 04500                 LAS   K2D 0 NS   359042202
+SUSAP KLASK2FS26R  S      030ALUNDK2PC0EY M    CF LAS K2      0824001726240065D     02144              000          0 NS   359052202
+SUSAP KLASK2FS26R  S      040         0  M     CA                     2624        + 04000                           0 NS   359062202
+SUSAP KLASK2FS26R  S      050         0    L   VIY                    0740                                          0 NS   359072202
+SUSAP KLASK2FS26R  S      060BLD  K2D 0VY      CF BLD K2      0000000009000136D   + 06000                           0 NS   359082202
+SUSAP KLASK2FS26R  S      070BLD  K2D 0VE  R   HM                     3300T010    + 06000                           0 NS   359092202
+SUSAP KLASK2GRW01L   0097700140 N36043644W115101030         +0635302176058659150IICUA1                                     359102508
+SUSAP KLASK2GRW01R   0097690140 N36043167W115100044         +0633302170049060150R                                          359112508
+SUSAP KLASK2GRW08L   0148350790 N36043495W115094663         +0628802155245976150V                                          359122508
+SUSAP KLASK2GRW08R   0105260790 N36042506W115094116         +0629402157000060150R                                          359132102
+SUSAP KLASK2GRW19L   0097691940 N36054701W115091731         +0606002080087760150R                                          359142508
+SUSAP KLASK2GRW19R   0097701940 N36055177W115092719         +0608502089078360150R                                          359152508
+SUSAP KLASK2GRW26L   0105262590 N36042517W115073297         +0596202048000060150IIRLE1                                     359162102
+SUSAP KLASK2GRW26R   0148352590 N36043505W115073294         +0594702044139960150IILAS1                                     359172508
+SUSAP KLASK2IICUA1   011010RW01LN36060083W1150922000139N36044914W1151006520227 12960426340E01105902158                     359182508
+SUSAP KLASK2IILAS1   011030RW26RN36043491W1151019182590N36043208W1150746680533 11280400300E01106002047                     359192102
+SUSAP KLASK2IIRLE1   011150RW26LN36042505W1150953342590N36042200W1150746671000 11250348300E01106002050                     359202102
+SUSAP KLASK2PR01R  RW01R001 0000W01A0N3604316705W11510004360+063330300N3605548955W11509127970106750000000600F400500A778511F359212205
+SUSAP KLASK2PR01R  RW01R002E      +06614+06614LPV       42800                                                              359221710
+SUSAP KLASK2PR19LY RW19L001Y0000W19A0N3605470075W11509173135+060600300N3604260870W11510036315106750040000600F4003505FC2E2BD359232102
+SUSAP KLASK2PR19LY RW19L002E      +06340+06340LPV       45542                                                              359242102
+SUSAP KLASK2PR19RY RW19R001Y0000W19B0N3605517655W11509271850+060850324N3604308440W11510135000106750008000600F4005001836A3B5359252102
+SUSAP KLASK2PR19RY RW19R002E      +06366+06366LPV       50142                                                              359262102
+SUSAP KLASK2SJABNAK2PC                0   18018012925                                                                  M   359272102
+SUSAP KLASK2SKLAS K2PA                0   18018013225                                                                  M   359282411
+SUSAP KLASK2SLAS  K2D                 0   03012013225120210102252103000672530003008425                                 M   359291201
+SUSAP KLASK2SLAS  K2D A               0   03012012925120210102252103000662530003008425                                 M   359302310
+SUSAP KLASK2SRW01RK2PG                0   18018013225                                                                  M   359312411
+SUSAP KLASK2SRW08RK2PG                0   18018012925                                                                  M   359322102
+SUSAP KLASK2SRW19LK2PG                0   18018013225                                                                  M   359332411
+SUSAP KLASK2SRW19RK2PG                0   18018012925                                                                  M   359342102
+SUSAP KLASK2SRW19RK2PGA               0   18018013225                                                                  M   359352411
+SUSAP KLASK2SRW26LK2PG                0   18018012825                                                                  M   359362102
+SUSAP KLASK2SRW26RK2PG                0   18018012825                                                                  M   359372102

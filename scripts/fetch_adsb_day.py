@@ -39,7 +39,8 @@ from pathlib import Path
 import requests
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from lib import adsb  # noqa: E402
+from lib import adsb, geodesy  # noqa: E402
+from lib import flight_net  # noqa: E402,F401  (the generic client name)
 from lib.fetch import UA, cached_get  # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -163,9 +164,14 @@ def fetch_day(city_id, day: date, tag=None, types=TYPES, radius_km=12.0, below_f
     return manifest
 
 
-def wind_days(city, start, end):
-    """Rank UTC days by daylight hours (16Z to 23Z) whose wind gives a tailwind over 3 kt on runway 26 and a
-    headwind over 3 kt on runway 19 (the case where Las Vegas lands airliners on 19)."""
+LIGHTS = {"day": (15.0, 90.0), "dusk": (-6.0, 2.0), "night": (-90.0, -12.0)}
+
+
+def wind_days(city, start, end, light=None, evening=False):
+    """Rank UTC days by hours whose wind gives a tailwind over 3 kt on runway 26 and a headwind over 3 kt on runway
+    19 (the case where Las Vegas lands airliners on 19). Without `light`, the daylight hours 16Z to 23Z; with it,
+    the reports whose sun elevation is in that light's band of section 6.2 (`evening`: only after local noon, so a
+    dusk is a dusk and not a dawn). Reports are routine METARs (one an hour)."""
     station = city["iemStation"]
     url = ("https://mesonet.agron.iastate.edu/cgi-bin/request/asos.py?station={s}&data=drct&data=sknt&data=vsby"
            "&data=skyc1&data=skyl1&year1={a.year}&month1={a.month}&day1={a.day}&year2={b.year}&month2={b.month}"
@@ -179,8 +185,17 @@ def wind_days(city, start, end):
         except ValueError:
             continue
         day, hm = r["valid"].split(" ")
-        if not 16 <= int(hm[:2]) <= 23:
-            continue
+        if light is None:
+            if not 16 <= int(hm[:2]) <= 23:
+                continue
+        else:
+            epoch = datetime.strptime(r["valid"], "%Y-%m-%d %H:%M").replace(tzinfo=timezone.utc).timestamp()
+            sun = geodesy.sun_elevation(epoch, city["origin"]["lat"], city["origin"]["lon"])
+            lo, hi = LIGHTS[light]
+            if not lo <= sun <= hi:
+                continue
+            if evening and (int(hm[:2]) - 8) % 24 < 12:      # Pacific standard time: before local noon
+                continue
         tail26 = -math.cos(math.radians(270 - d)) * s
         head19 = math.cos(math.radians(205 - d)) * s
         days.setdefault(day, []).append((tail26 > 3 and head19 > 3, f"{int(d):03d}/{int(s)}"))
@@ -198,12 +213,14 @@ def main():
     ap.add_argument("--below-ft", type=float, default=8000.0)
     ap.add_argument("--near")
     ap.add_argument("--wind-days", action="store_true")
+    ap.add_argument("--light", choices=sorted(LIGHTS))
+    ap.add_argument("--evening", action="store_true")
     ap.add_argument("--from", dest="start", default="2025-01-01")
     ap.add_argument("--to", dest="end", default=date.today().isoformat())
     a = ap.parse_args()
     city = json.loads((ROOT / "data" / "cities.json").read_text())[a.city]
     if a.wind_days:
-        ranked, url = wind_days(city, date.fromisoformat(a.start), date.fromisoformat(a.end))
+        ranked, url = wind_days(city, date.fromisoformat(a.start), date.fromisoformat(a.end), a.light, a.evening)
         print(f"source: {url}")
         for day, n, winds in ranked[:25]:
             print(f"{day}  {n} h  {winds}")

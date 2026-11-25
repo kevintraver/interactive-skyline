@@ -78,19 +78,26 @@
  },
  "provenanceNotes": {
   "h": "ADS-B geometric altitude, calibrated on the runway; wheels = antenna - 5.6 m (estimate); the flare (last seconds before the recorded air-to-ground transition) is modelled",
-  "tas": "v0: ground speed, no wind",
-  "ias": "v0: from tas with an ISA shifted to the surface temperature",
-  "hdg": "v0: the ground track (no crab)",
-  "roll": "v0: coordinated turn from the track's turn rate",
-  "pitch": "v0: flight-path angle plus 2.5 deg clean to 5.4 deg with landing flap",
-  "flap": "v0: by distance to the threshold (1 at 22 km, 5 at 16, 15 at 11, 30 at 7.5), never above a limit speed, 1 deg/s travel",
-  "speedbrake": "v0: not modelled (always 0)"
+  "tas": "ground velocity minus the wind of `atmosphere` (Open-Meteo GFS pressure levels for the hour (section 6.4))",
+  "ias": "calibrated airspeed for the true airspeed in the profile's temperature and the standard pressure",
+  "hdg": "direction of the air velocity: the crab into the wind, taken off over the last 5 s before touchdown; the track on the ground",
+  "roll": "coordinated turn, atan(V w / g), from the turn rate of the air velocity; limited to 30 deg and 5 deg/s",
+  "pitch": "flight-path angle through the air plus angle of attack from lift, CL = n W / (q S) with alpha = alpha0(flap) + CL / CLalpha fitted to the reference attitudes of section 7.3; weight 57.1 t from the approach speed; the flare raises the nose at most 3 deg; the nose comes down over 5 s after touchdown",
+  "turbulence": "30 s RMS of the recorded minus the smoothed vertical rate, 2 m/s = 1",
+  "flap": "selected 1, 5, 15, 30 by speed (within 10 kt of the current setting's manoeuvring speed for 57 t) or gate (1 by 22 km, 5 before joining final, 15 with the gear, landing flap by 300 m), never while the rest of the approach exceeds the new setting's placard; travel 1 lever unit/s (estimate); selected: 1 at 1496s (speed), 5 at 1554s (speed), 15 at 1602s (speed), 30 at 1632s (speed)",
+  "slat": "extend with flaps 1 to 5, full extend beyond 5 (spec.py SLATS schedule)",
+  "gear": "down with flaps 15, never above 270 kt, before the landing flap; 10 s travel (estimate)",
+  "speedbrake": "low confidence: only where the descent, in energy terms, is more than 25% steeper than clean idle explains, clean and above 600 m; 0 on the ground (the ground spoilers carry it there)",
+  "groundSpoiler": "0.5 s after touchdown until taxi speed",
+  "reverser": "sleeves from 2 s after touchdown until taxi speed (idle reverse from 60 kt)",
+  "lights": "section 7.8: position and beacon throughout, strobes until vacating, landing below 10,000 ft until vacating, turn-off from gear down, taxi after vacating, wing and logo at night below 10,000 ft",
+  "cabinLight": "dimmed to 0.3 from 10,000 ft when the sun is more than 6 deg below the horizon"
  },
  "reconstructed": [
   {
    "from": 1796,
    "to": 1800,
-   "what": "flare: wheel height modelled from 7.0 m to the runway"
+   "what": "flare: wheel height modelled from 6.0 m to the runway"
   }
  ],
  "events": [
@@ -125,8 +132,8 @@
    "label": "Over the valley's terrain"
   },
   {
-   "t": 1652,
-   "s": 254846.7,
+   "t": 1602,
+   "s": 250276.3,
    "id": "gear",
    "label": "Gear down"
   },
@@ -138,38 +145,221 @@
   },
   {
    "t": 1794,
-   "s": 266188.5,
+   "s": 266189.5,
    "id": "threshold",
    "label": "Runway 19R threshold"
   },
   {
    "t": 1800,
-   "s": 266662.2,
+   "s": 266666.3,
    "id": "touchdown",
    "label": "Touchdown"
   },
   {
-   "t": 1827,
-   "s": 267945.9,
+   "t": 1828,
+   "s": 267959.7,
    "id": "vacate",
    "label": "Taxi speed"
   },
   {
    "t": 2211,
-   "s": 270969.3,
+   "s": 270970.9,
    "id": "end",
    "label": "End of recording"
+  }
+ ],
+ "chapters": [
+  {
+   "id": "cruise",
+   "label": "Cruise, 30,000 ft",
+   "from": 0,
+   "to": 446
+  },
+  {
+   "id": "tod",
+   "label": "Top of descent",
+   "from": 446,
+   "to": 945
+  },
+  {
+   "id": "fl180",
+   "label": "Through 18,000 ft",
+   "from": 945,
+   "to": 1270
+  },
+  {
+   "id": "10000",
+   "label": "Through 10,000 ft",
+   "from": 1270,
+   "to": 1314
+  },
+  {
+   "id": "terrain",
+   "label": "Over the valley's terrain",
+   "from": 1314,
+   "to": 1602
+  },
+  {
+   "id": "gear",
+   "label": "Gear down",
+   "from": 1602,
+   "to": 1731
+  },
+  {
+   "id": "ft1000",
+   "label": "1,000 ft above the runway",
+   "from": 1731,
+   "to": 1794
+  },
+  {
+   "id": "threshold",
+   "label": "Runway 19R threshold",
+   "from": 1794,
+   "to": 1800
+  },
+  {
+   "id": "touchdown",
+   "label": "Touchdown",
+   "from": 1800,
+   "to": 1828
+  },
+  {
+   "id": "vacate",
+   "label": "Taxi speed",
+   "from": 1828,
+   "to": 2211
   }
  ],
  "atmosphere": [
   [
    664.5,
-   11.7,
+   11.67,
    0.0,
-   0.0
+   -0.0
+  ],
+  [
+   674.5,
+   11.6,
+   0.0,
+   -0.0
+  ],
+  [
+   694.5,
+   11.47,
+   0.0,
+   -0.0
+  ],
+  [
+   764.5,
+   11.02,
+   0.0,
+   -0.0
+  ],
+  [
+   964.5,
+   9.72,
+   0.0,
+   -0.0
+  ],
+  [
+   1264.5,
+   7.77,
+   0.0,
+   -0.0
+  ],
+  [
+   1431.8,
+   8.29,
+   -1.06,
+   7.8
+  ],
+  [
+   1928.8,
+   4.67,
+   -0.08,
+   10.42
+  ],
+  [
+   3001.7,
+   -1.79,
+   5.89,
+   15.11
+  ],
+  [
+   4214.8,
+   -7.61,
+   8.14,
+   15.98
+  ],
+  [
+   5606.7,
+   -16.84,
+   17.12,
+   27.33
+  ],
+  [
+   7243.6,
+   -28.05,
+   24.16,
+   30.94
+  ],
+  [
+   9247.2,
+   -42.54,
+   33.11,
+   39.48
+  ],
+  [
+   10449.9,
+   -53.08,
+   34.32,
+   42.14
+  ],
+  [
+   11849.7,
+   -61.92,
+   39.68,
+   38.66
+  ],
+  [
+   13641.3,
+   -58.42,
+   39.12,
+   31.97
   ]
  ],
- "atmosphereNote": "v0: the surface report only (altitude m, temperature degC, wind towards east and north m/s); the upper-air profile is F2.4",
+ "atmosphereNote": "altitude m above sea level, temperature degC, wind toward grid east and grid north m/s (true north turned into the city grid at the airport); Open-Meteo GFS pressure levels for the hour (section 6.4), with the airport's surface report blended in below 600 m above it",
+ "inferred": {
+  "weightKg": 57120,
+  "approachSpeedKt": 143.5,
+  "landingFlap": 30,
+  "flapSelections": [
+   {
+    "flap": 1,
+    "t": 1496,
+    "why": "speed"
+   },
+   {
+    "flap": 5,
+    "t": 1554,
+    "why": "speed"
+   },
+   {
+    "flap": 15,
+    "t": 1602,
+    "why": "speed"
+   },
+   {
+    "flap": 30,
+    "t": 1632,
+    "why": "speed"
+   }
+  ],
+  "gearDownT": 1602,
+  "joinFinalT": 1739,
+  "maxCrabDeg": 5.7,
+  "maxMach": 0.792
+ },
  "badges": {
   "light": "day",
   "weather": "clear",
@@ -178,11 +368,11 @@
  },
  "qa": {
   "glidePathDeg": 3.35,
-  "crossingHeightM": 22.7,
-  "touchdownPastThresholdM": 529.3,
+  "crossingHeightM": 22.6,
+  "touchdownPastThresholdM": 533.4,
   "touchdownRecorded": true,
   "touchdownSource": "levelled before the surface flag",
-  "touchdownOffCentreM": 1.5,
+  "touchdownOffCentreM": 1.3,
   "altitudeOffsetM": -31.53,
   "datum": "ellipsoid",
   "calibration": {
@@ -195,11 +385,11 @@
    "datum": "ellipsoid"
   },
   "flare": {
-   "err": -0.012,
-   "y0": 7.0,
-   "tdSink": 0.8,
-   "sink0": 3.151,
-   "duration": 4.081,
+   "err": -0.001,
+   "y0": 6.0,
+   "tdSink": 0.7,
+   "sink0": 2.986,
+   "duration": 3.808,
    "shift": 0.0
   },
   "sunAtTouchdownDeg": 17.5,
@@ -208,17 +398,17 @@
   "antennaAboveWheelsM": 5.6,
   "gates": {
    "positionRmsAirM": {
-    "value": 5.4,
+    "value": 5.38,
     "max": 12.0,
     "pass": true
    },
    "positionRmsLowM": {
-    "value": 4.92,
+    "value": 4.87,
     "max": 5.0,
     "pass": true
    },
    "heightRmsAirM": {
-    "value": 2.92,
+    "value": 2.91,
     "max": 8.0,
     "pass": true
    },
@@ -236,38 +426,38 @@
     "warn": false
    },
    "crossingHeightM": {
-    "value": 22.7,
+    "value": 22.6,
     "min": 12.0,
     "max": 32.0,
     "pass": true
    },
    "touchdownPastThresholdM": {
-    "value": 529.3,
+    "value": 533.4,
     "min": 250.0,
     "max": 1000.0,
     "pass": true
    },
    "touchdownOffCentreM": {
-    "value": 1.5,
+    "value": 1.3,
     "maxAbs": 8.0,
     "pass": true
    },
    "bankDeg": {
-    "value": 17.6,
+    "value": 17.5,
     "maxAbs": 35.0,
     "pass": true
    },
    "pitchDeg": {
     "value": [
      -4.5,
-     5.2
+     5.6
     ],
     "min": -6.0,
     "max": 12.0,
     "pass": true
    },
    "decelerationMs2": {
-    "value": 3.33,
+    "value": 2.8,
     "max": 3.5,
     "pass": true
    },
@@ -275,10 +465,43 @@
     "value": 0,
     "max": 0,
     "pass": true
+   },
+   "flapsMonotonic": {
+    "value": 0,
+    "max": 0,
+    "pass": true
+   },
+   "gearBeforeLandingFlapS": {
+    "value": 30.0,
+    "min": 0.1,
+    "pass": true
+   },
+   "landingLightBy10000ft": {
+    "value": true,
+    "pass": true
    }
   },
   "reported": {
-   "recordedRollRmsDeg": null
+   "heightBiasLast60sM": -0.03,
+   "heightPointsLast60s": 73,
+   "roll": {
+    "rms": null,
+    "points": 0,
+    "limit": 4.0,
+    "within": null
+   },
+   "iasKt": {
+    "rms": null,
+    "points": 0,
+    "limit": 8.0,
+    "within": null
+   },
+   "heading": {
+    "rms": null,
+    "points": 0,
+    "limit": 3.0,
+    "within": null
+   }
   },
   "pass": true
  },

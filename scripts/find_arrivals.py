@@ -35,7 +35,7 @@ from zoneinfo import ZoneInfo
 import numpy as np
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from lib import adsb, geodesy  # noqa: E402
+from lib import adsb, flight_net, geodesy  # noqa: E402,F401  (flight_net: the generic client name)
 from lib.frame import create_frame  # noqa: E402
 
 import bake_flight  # noqa: E402

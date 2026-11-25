@@ -108,3 +108,24 @@ def test_sizes():
     for f in _selection():
         assert (ROOT / "data" / "flights" / "lv" / f["raw"]).stat().st_size < 600_000
     assert (ROOT / "data" / "flights" / "LICENSE").exists()
+
+
+@pytest.mark.parametrize("fid", _ids())
+def test_the_attitude_is_an_airliners_in_degrees(fid):
+    """The reported defect ("the aircraft barely pitches or banks"): in the file, pitch and roll are degrees of the
+    size a 737 flies. On the final with the landing flap it sits 1 to 4.5 degrees nose up, it touches down 3.5 to
+    7.5 degrees nose up, and in a turn of the track it banks as a coordinated turn says."""
+    head = json.loads((FLIGHTS / f"{fid}.json").read_text())
+    data = np.frombuffer((FLIGHTS / f"{fid}.bin").read_bytes(), dtype="<f4").reshape(len(head["channels"]), -1)
+    ch = dict(zip(head["channels"], data.astype(float)))
+    td = int(head["touchdownT"])
+    final = slice(td - 90, td - 20)
+    assert np.all(ch["flap"][final] >= 29.5)
+    assert 1.0 <= np.median(ch["pitch"][final]) <= 4.5
+    assert 3.5 <= ch["pitch"][td] <= 7.5
+    turn = np.degrees(np.gradient(np.unwrap(np.radians(ch["hdg"]))))
+    turning = (np.abs(turn) > 1.0) & (np.arange(len(turn)) < td)
+    if turning.any():
+        expect = np.degrees(np.arctan(ch["tas"][turning] * np.radians(np.abs(turn[turning])) / 9.80665))
+        assert np.median(np.abs(ch["roll"][turning])) > 0.5 * np.median(expect)
+    assert np.abs(ch["roll"]).max() <= 30.0 + 1e-3

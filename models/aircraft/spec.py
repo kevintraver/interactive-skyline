@@ -51,6 +51,11 @@ SOURCES = {
           "https://ntrs.nasa.gov/api/citations/20010045674/downloads/20010045674.pdf",
     "B10": "Aircraft lights: 14 CFR 25.1385-25.1401 and AIM 4-3-24: https://www.ecfr.gov/current/title-14",
     "CFR": "14 CFR part 25 (airworthiness standards, transport category): https://www.ecfr.gov/current/title-14",
+    "B13": "Reference-speed and attitude tables from the type's crew reference (QRH), as publicly reposted, plan 03 "
+           "[B8]: https://preflightbase.com/en/737/qrh.html (values as tabled in plan 03 section 7.3; secondary copy)",
+    "B14": "Training-manual pages as publicly reposted, plan 03 [B8]: approach sequence "
+           "http://www.aero.cn/2011/0314/21528_62.html, flare http://www.aero.cn/2011/0314/21528_89.html, descent "
+           "http://www.aero.cn/2011/0314/21528_53.html (values as tabled in plan 03 section 7.3; secondary copy)",
 }
 
 
@@ -203,33 +208,105 @@ DOORS = {
 }
 
 # ===================================================================================== windows
-_P20, _P22 = 20 * _IN, 22 * _IN
-_POS = sorted(round(p, 3) for p in
-              [5.60 + k * _P22 for k in range(10)] + [16.70 - k * _P20 for k in range(12)]
-              + [17.67 + k * _P20 for k in range(5)] + [20.35 + k * _P22 for k in range(10)]
-              + [20.35 + 9 * _P22 + k * _P20 for k in range(1, 11)])
-_BLANK_BOTH = min(_POS, key=lambda p: abs(p - 14.7))
-_BLANK_LEFT = min(_POS, key=lambda p: abs(p - 13.6))
+# Window centre stations, traced from [B6]'s to-scale seat map (fr-738.neutral.webp, 800 x 4213 px): every window is
+# drawn there as a dark tick on the fuselage edge, and the ones a galley or lavatory covers as a faint outline. The
+# map's scale is set piecewise by four anchors it also draws: door 1L (5.03 m, [B1] p. 2-33), the two overwing exit
+# hatches (16.70 and 17.67 m, [B5]'s STA 589.5 and 627.5) and the aft doors (31.88 m, [B1] p. 2-37): 126.3 px/m ahead
+# of the exits, 125.1 behind. Ticks are read to +-1 px (8 mm); the anchors (the doors' centres read by eye) put the
+# absolute stations within about 3 cm. research/dimensions.md has the pixel rows and the calibration.
+_WIN_RIGHT = (5.588, 6.102, 6.621, 7.129, 7.643, 8.154, 8.666, 9.186, 9.695, 10.284, 10.836, 11.386, 11.934, 12.478,
+              13.03, 13.584, 14.13, 15.185, 15.671, 16.152, 16.7, 17.67, 18.263, 18.839, 19.394, 19.939, 20.481,
+              21.028, 21.584, 22.121, 22.67, 23.194, 23.715, 24.231, 24.752, 25.277, 25.795, 26.308, 26.84, 27.357,
+              27.871, 28.396, 28.913, 29.439, 29.95, 30.47)
 WINDOWS = {
     "opening": Dim((10.5 * _IN, 14.375 * _IN), "m", "B4", "s. 1.7.1: 'The exterior cabin window by seat 14A measured "
                    "10 1/2 inches horizontally, 14 3/8 inches vertically, and 15 inches diagonally'"),
     "corner_radius": est(0.085, "m", "the opening's corners from photographs: about a third of the width"),
-    "centre_above_floor": est(0.97, "m", "no published figure; section 7.4's estimate from the cross-section "
-                              "drawing and photographs: the windows sit low, centre near the max breadth"),
-    "pitch_original": est(_P20, "m", "20 in over the original fuselage (section 7.4, from to-scale seat maps [B6])"),
-    "pitch_plug": est(_P22, "m", "about 22 in through the stretch plugs (section 7.4, from [B6])"),
-    "right": est(tuple(p for p in _POS if p != _BLANK_BOTH), "m",
-                 "window centre stations, right side (46): 10 at 22 in from 5.60 m through the forward plug, the "
-                 "mid-section at 20 in counted out from the two exit hatches' windows (16.70 m and 17.67 m), 10 "
-                 "at 22 in through the aft plug from 20.35 m, then 20 in to 30.46 m; counts and blanks from "
-                 "section 7.4 ([B6], [B7]), positions laid out by this rule"),
-    "left": est(tuple(p for p in _POS if p not in (_BLANK_BOTH, _BLANK_LEFT))[1:], "m",
-                "window centre stations, left side (44): the right side's, less the blank at 13.6 m and the first "
-                "position, which door 1L (wider than the right service door) takes"),
-    "blanks_right": est((_BLANK_BOTH,), "m", "blank panel just ahead of the wing root on both sides (section 7.4, "
-                        "[B7]: the air-conditioning risers)"),
-    "blanks_left": est((_BLANK_LEFT, _BLANK_BOTH), "m", "the left side also has a blank near 13.6 m (section 7.4, "
-                       "[B7])"),
+    "centre_above_floor": est(0.97, "m", "no published figure. Bounded by the overwing hatch, whose window sits at "
+                              "the window line: traced on [B1] p. 2-14 (148.8 px/m at 1200 dpi) the hatch runs from "
+                              "1.17 m to 2.08 m below the fuselage top, i.e. 0.41 to 1.32 m above the floor (2.95 m), "
+                              "and photographs put its window in the hatch's upper half; centre 0.97 m puts the top "
+                              "of the opening at 1.15 m, below a seated eye (1.20 m), as section 7.4 says"),
+    "pitch_original": Dim(20.3 * _IN, "m", "B6", "mean pitch of the traced stations over the original fuselage "
+                          "(5.6 to 9.7 m and 23.2 to 30.5 m): 20.0 to 20.9 in, mean 20.3 in"),
+    "pitch_plug": Dim(21.6 * _IN, "m", "B6", "mean pitch of the traced stations through the stretch plugs (9.7 to "
+                      "14.1 m and 17.7 to 22.7 m): 21.1 to 23.3 in, mean 21.6 in"),
+    "right": Dim(_WIN_RIGHT, "m", "B6+B5+B1", "window centre stations, right side (46), traced from [B6] as above; "
+                 "the first two (5.59, 6.10 m) and the last (30.47 m) are drawn as faint outlines, covered by the "
+                 "galley and the aft lavatory in that airline's layout; the fuselage has them"),
+    "left": Dim(tuple(p for p in _WIN_RIGHT if p >= 6.0 and abs(p - 13.584) > 0.01), "m", "B6+B5+B1",
+                "window centre stations, left side (44), traced from [B6]: the right side's stations (both sides "
+                "trace within 2 px of each other), less the first, which door 1L (wider and 0.27 m further aft than "
+                "the right service door) takes, and less 13.58 m, a blank on this side"),
+    "blanks_right": Dim((14.656,), "m", "B6+B7", "[B6] draws no window between 14.13 and 15.19 m on either side, a "
+                        "gap of two pitches: the blank traced at 14.66 m, just ahead of the wing root (the "
+                        "air-conditioning risers of [B7])"),
+    "blanks_left": Dim((13.58, 14.656), "m", "B6+B7", "on the left [B6] also has no window at 13.58 m (13.03 to 14.13 m, "
+                       "two pitches), the left-only blank of section 7.4 and [B7]"),
+}
+
+# ===================================================================================== cabin
+# The cabin around a window seat: the sidewall and its window reveal, the shade, the bins' lower edge, and a generic
+# single-class seat layout (section 7.4's table). Heights are above the cabin floor (FUSELAGE floor_z in body axes);
+# stations are metres aft of the nose. models/aircraft/build_cabin.py builds cabin.glb from these, and
+# models/aircraft/write_dimensions_js.py copies them to src/flight/aircraft/dimensions.js.
+CABIN = {
+    # the shell, [B1] p. 2-30 (six-abreast cross-section), traced at 300 dpi (8.38 px/in)
+    "trim_radius": Dim(139.2 * _IN / 2, "m", "B1", "p. 2-30 'INTERIOR TRIM-TO-TRIM 139.2 IN (3.54 M)': the trim is "
+                       "traced as a circle of half that about the fuselage's centre of max breadth from about 0.3 to "
+                       "1.4 m above the floor (within 1.5 cm); below 0.3 m the dado panel stands about 3 cm inboard"),
+    "trim_widest_above_floor": Dim(0.61, "m", "B1", "p. 2-30 traced: the trim and the skin are widest 24 in (0.61 m) "
+                                   "above the floor line, matching FUSELAGE belly_to_max_breadth less the floor"),
+    "dado_inset": Dim(0.03, "m", "B1", "p. 2-30 traced: at the floor the trim line stands 1.3 in (3 cm) inboard of "
+                      "the circle"),
+    "bin_lip_above_floor": Dim(62.2 * _IN, "m", "B1", "p. 2-30: '62.2 IN (1.58 M)' floor to the bin's lower lip at "
+                               "the aisle side"),
+    "bin_outboard_above_floor": Dim(66.0 * _IN, "m", "B1", "p. 2-30: '66 IN (1.68 M)' floor to the bin's underside "
+                                    "where it meets the sidewall"),
+    "bin_clearance": Dim(45.5 * _IN, "m", "B1", "p. 2-30: '45.5 IN (1.16 M)' between the two bins' lips"),
+    "ceiling_above_floor": Dim(86.6 * _IN, "m", "B1", "p. 2-30: '86.6 IN (2.20 M)' floor to ceiling at the aisle"),
+    # the window's inner frame (the trim's reveal) and shade: no source gives them
+    "reveal_flare": est(0.035, "m", "the trim's opening is larger than the window by this much on every side, a "
+                        "bevelled reveal, from photographs of the type's sidewall"),
+    "frame_width": est(0.045, "m", "the moulded bezel round the reveal on the trim face, from photographs"),
+    "frame_relief": est(0.008, "m", "how far the bezel stands proud of the trim, from photographs"),
+    "inner_pane_inset": est(0.02, "m", "the non-structural inner pane [B4] sits this far outboard of the trim face "
+                            "at the reveal's inner edge (photographs)"),
+    "pane_spacing": est(0.012, "m", "between the three panes [B4]: no source gives the gaps"),
+    "shade_travel": est(0.40, "m", "the shade slides from its pocket above the reveal down over the inner pane; "
+                        "open, its handle shows at the top of the opening, so it travels the opening's height plus "
+                        "the reveal's margin (photographs)"),
+    "panel_half_length": est(0.235, "m", "the window bay drawn round each window, fore and aft of its centre: just "
+                             "under half the shortest pitch (18.9 in), so neighbouring bays never overlap; the strip "
+                             "between bays is plain trim, stretched to fit"),
+    # the seat layout: a generic cabin, section 7.4's table
+    "rows": est(30, "rows", "section 7.4: 30 rows, between the manufacturer's 175 and 184-seat layouts"),
+    "pitch": est(31 * _IN, "m", "section 7.4: 31 in, between the manufacturer's 30 and 32 in layouts ([B5] uses 29 "
+                 "and 30 in)"),
+    "exit_pitch": Dim(38.0 * _IN, "m", "B5", "view C-C: '38.00\"' from the row ahead of the second exit to the row "
+                      "behind it (section 7.4 gives both exit rows 38 in)"),
+    "exit_rows": est((15, 16), "row", "section 7.4: the rows behind the two overwing exits"),
+    "first_row_front": Dim(6.1, "m", "B5", "section 7.4: front of the first row's seat 6.1 m aft of the nose, as on "
+                           "[B5] (row 1 at STA 350 to 372, 5.86 to 6.42 m)"),
+    "seat_width": Dim(17.0 * _IN, "m", "B1", "p. 2-30: '17.0 IN (0.43 M) (TYPICAL)' between armrests"),
+    "triple_width": Dim(59.0 * _IN, "m", "B1", "p. 2-30: '59 IN (1.50 M)' a triple seat"),
+    "aisle": Dim(20.0 * _IN, "m", "B1", "p. 2-30: '20 IN (0.51 M)' the aisle at seat level"),
+    # the seat itself: traced from [B5] view C-C (1:20, 10.56 px/in at 600 dpi), floor line WL 208.63
+    "cushion_top": Dim(0.44, "m", "B5", "view C-C traced: the cushion's top at its front 17.2 in above the floor"),
+    "armrest_top": Dim(0.62, "m", "B5", "view C-C traced: the armrest's top 24.3 in above the floor"),
+    "back_top": Dim(1.14, "m", "B5", "view C-C traced: the seat back's top 45.0 in above the floor ([B1] p. 2-30 "
+                    "traces 44.6 in)"),
+    "back_thickness": Dim(0.10, "m", "B5", "view C-C traced: the seat back's shell about 3.8 in deep at mid height"),
+    "cushion_depth": Dim(0.47, "m", "B5", "view C-C traced: seat front to the seat reference point (where the back "
+                         "meets the cushion), 18.5 in"),
+    "back_face": est(0.72, "m", "section 7.4's seat: the back's cushion face at head height, aft of the seat front "
+                     "(the eye plus a head's depth); [B5]'s drawn seat is upright and gives about 0.55"),
+    "eye_aft": est(0.55, "m", "section 7.4: eye 0.55 m aft of the seat front"),
+    "eye_above_floor": est(1.20, "m", "section 7.4: seat surface 0.43 m plus a seated eye height of 0.77 m (between "
+                           "the male and female means of the US Army's anthropometric survey)"),
+    "tray_size": est((0.40, 0.25), "m", "the tray table stowed on the seat back ahead, width and height, from "
+                     "photographs of economy seats"),
+    "bulkhead_ahead": est(0.3, "m", "row 1: the wall ahead of the first row stands this far ahead of its seat front"),
 }
 
 # ===================================================================================== wing
@@ -491,6 +568,40 @@ BUDGET = {
     "shadow_tris": est(2000, "triangles", "section 10, F3.3: 'a 2,000-triangle shadow proxy'"),
     "glb_bytes": est(2_500_000, "bytes", "section 9.2: airframe, cabin and rig together 3.5 MB; 2.5 MB of that for "
                      "the airframe"),
+}
+
+
+# ===================================================================================== attitudes and speeds
+# The reference attitudes and speeds the bake's lift model is fitted to (plan 03 section 7.3, F2.4;
+# scripts/lib/attitude.py REFERENCE_ATTITUDES holds the same numbers with the conditions the table leaves open).
+PERFORMANCE = {
+    "reference_attitudes_60t": Dim(
+        (("cruise FL350 M0.78, level", 0, 2.5), ("idle descent, M0.78 / 280 kt", 0, 0.0),
+         ("level at manoeuvring speed, clean", 0, 5.0), ("level at manoeuvring speed, flaps 5", 5, 6.0),
+         ("3 deg path at Vref + 5, flaps 30", 30, 2.4), ("3 deg path at Vref + 5, flaps 40", 40, 1.4)),
+        "case|flap lever|deg", "B13", "section 7.3 'Pitch attitudes at 60 t: cruise at 35,000 ft 2.5; idle descent "
+        "0; level at manoeuvring speed 5.0 clean and 6.0 with flaps 5; on a 3 path at reference speed + 5: 2.4 with "
+        "flaps 30, 1.4 with flaps 40'"),
+    "vref_kt": Dim(((55000, 128, 136), (60000, 135, 142), (65000, 141, 148)), "kg|kt flaps 40|kt flaps 30", "B13",
+                   "section 7.3 'Reference speed, flaps 40 / 30: 128 / 136 kt at 55 t; 135 / 142 at 60 t; 141 / 148 at "
+                   "65 t'"),
+    "manoeuvring_additive_kt": Dim(((0, 70), (1, 50), (5, 30), (15, 20)), "flap lever|kt over Vref40", "B13",
+                                   "section 7.3 'Flaps-40 reference speed + 70 kt clean, + 50 at flaps 1, + 30 at 5, "
+                                   "+ 20 at 15'"),
+    "manoeuvring_cruise_additive_kt": est(((2, 40), (10, 30), (25, 10)), "flap lever|kt over Vref40",
+                                          "the detents section 7.3 does not table, between their neighbours"),
+    "flare": Dim((20.0, 2.0, 3.0, 4.0, 7.0, 11.0), "ft|deg raise min|deg raise max|deg td min|deg td max|deg tail",
+                 "B14", "section 7.3 'Begun at about 20 ft of wheel height by raising the nose 2 to 3; 4 to 8 s; "
+                 "touchdown at 4 to 7; tail contact at 11'"),
+    "idle_descent_fpm": Dim(((250, 1700, 2300), (280, 2200, 3100)), "kt|fpm clean|fpm speed brake", "B14",
+                            "section 7.3 'idle rates 2,200 ft/min at Mach 0.78 or 280 kt (3,100 with the speed "
+                            "brake) and 1,700 at 250 kt (2,300)'"),
+    "gear_limit_kt": Dim(270, "kt", "B13", "section 7.3 'Gear limit speed, extension 270 kt'"),
+    "flap_travel_s": est(40.0, "s", "section 7.3 'Surfaces then travel at a fixed rate (estimated: 40 s from up to "
+                         "40)'"),
+    "gear_travel_s": est(10.0, "s", "gear extension time, from footage of the type"),
+    "derotate_s": est(5.0, "s", "main wheels to nose wheel on the runway; the flare table gives 4 to 8 s for the "
+                      "flare, not the derotation"),
 }
 
 

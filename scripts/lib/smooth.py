@@ -175,12 +175,13 @@ class Track:
     an: np.ndarray
 
 
-def smooth_track(ob, t_out, h_obs=None, sigma_h=None, sigma_pos=None, q_h=Q_HORIZONTAL, q_v=Q_VERTICAL):
+def smooth_track(ob, t_out, h_obs=None, sigma_h=None, sigma_pos=None, q_h=Q_HORIZONTAL, q_v=Q_VERTICAL,
+                 sigma_v=None):
     """Smoothed position and velocity at `t_out` (epoch seconds). Heights from `h_obs` (default: ob.h)."""
     h_obs = ob.h if h_obs is None else h_obs
     sp = np.where(ob.ground, SIGMA_POS_GROUND, SIGMA_POS_AIR) if sigma_pos is None else sigma_pos
     sh = np.full(len(ob.t), SIGMA_H) if sigma_h is None else sigma_h
-    sv = np.full(len(ob.t), SIGMA_V)
+    sv = np.full(len(ob.t), SIGMA_V) if sigma_v is None else sigma_v
     svz = np.full(len(ob.t), SIGMA_VZ)
     x, vx, ax = rts(ob.t, ob.x, sp, ob.vx, sv, t_out, q_h)
     n, vn, an = rts(ob.t, ob.n, sp, ob.vn, sv, t_out, q_h)
@@ -293,3 +294,21 @@ def flare_end(t, y, t_first, y0=7.5, td_sink=0.7, after=None):
     s0 = -(vz[i] + f * (vz[i + 1] - vz[i]))
     _, _, dur = flare_profile(y0, max(s0, td_sink + 0.5), td_sink)
     return float(tf + dur)
+
+
+def stale_velocity(ob, td, lead_s=2.0, speed_tol=0.05, track_tol=0.05):
+    """Points whose recorded velocity is a stale repeat: sent in the airborne format after the touchdown (the
+    transponder keeps that format for 14 to 16 s, "Found while building the first flight") with the same ground
+    velocity as the point before, while the wheels are rolling and slowing. The first point of such a run is kept,
+    the repeats are not observed (their positions still are). Found on 2026-02-16: a 737 on 26L held 151 kt for
+    7 s after touchdown, then reported 109 kt in the surface format, which the smoother followed as 6.5 m/s2."""
+    out = np.zeros(len(ob.t), bool)
+    cand = (ob.t >= td - lead_s) & ~ob.reported_ground & np.isfinite(ob.vx) & np.isfinite(ob.vn)
+    # compared as recorded (speed and track), since the turn into the grid differs a little from point to point
+    spd = np.hypot(ob.vx, ob.vn)
+    trk = np.degrees(np.arctan2(ob.vx, ob.vn))
+    for i in range(1, len(ob.t)):
+        if cand[i] and cand[i - 1] and abs(spd[i] - spd[i - 1]) < speed_tol \
+                and abs((trk[i] - trk[i - 1] + 180) % 360 - 180) < track_tol:
+            out[i] = True
+    return out

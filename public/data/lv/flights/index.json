@@ -20,6 +20,86 @@
    "header": "lv-19-day.json",
    "data": "lv-19-day.bin",
    "preview": null
+  },
+  {
+   "id": "lv-19-night",
+   "runway": "19R",
+   "aircraftType": "B738",
+   "date": "2026-03-09",
+   "localTime": "23:42",
+   "touchdown": "2026-03-10T06:42:46Z",
+   "duration": 2157.0,
+   "samples": 2157,
+   "start": 1310,
+   "badges": {
+    "light": "night",
+    "weather": "clear",
+    "from": "east",
+    "stripSide": "right"
+   },
+   "header": "lv-19-night.json",
+   "data": "lv-19-night.bin",
+   "preview": null
+  },
+  {
+   "id": "lv-26-day",
+   "runway": "26L",
+   "aircraftType": "B738",
+   "date": "2026-03-10",
+   "localTime": "08:20",
+   "touchdown": "2026-03-10T15:20:00Z",
+   "duration": 2434.0,
+   "samples": 2434,
+   "start": 1339,
+   "badges": {
+    "light": "day",
+    "weather": "clear",
+    "from": "east",
+    "stripSide": "right"
+   },
+   "header": "lv-26-day.json",
+   "data": "lv-26-day.bin",
+   "preview": null
+  },
+  {
+   "id": "lv-26-night",
+   "runway": "26L",
+   "aircraftType": "B738",
+   "date": "2026-02-15",
+   "localTime": "19:56",
+   "touchdown": "2026-02-16T03:56:30Z",
+   "duration": 2216.0,
+   "samples": 2216,
+   "start": 1360,
+   "badges": {
+    "light": "night",
+    "weather": "clear",
+    "from": "south-east",
+    "stripSide": "right"
+   },
+   "header": "lv-26-night.json",
+   "data": "lv-26-night.bin",
+   "preview": null
+  },
+  {
+   "id": "lv-wx",
+   "runway": "26L",
+   "aircraftType": "B738",
+   "date": "2026-01-01",
+   "localTime": "11:45",
+   "touchdown": "2026-01-01T19:45:24Z",
+   "duration": 1972.0,
+   "samples": 1972,
+   "start": 1356,
+   "badges": {
+    "light": "day",
+    "weather": "weather",
+    "from": "east",
+    "stripSide": "right"
+   },
+   "header": "lv-wx.json",
+   "data": "lv-wx.bin",
+   "preview": null
   }
  ],
  "attribution": "Flight tracks: adsb.lol contributors, ODbL 1.0 (https://www.adsb.lol/)"
