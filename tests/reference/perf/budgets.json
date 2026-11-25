@@ -1,64 +1,76 @@
 {
   "bundle": {
     "chunks": {
-      "GLTFLoader.js": 13525,
+      "GLTFLoader.js": 66,
+      "about.js": 36426,
       "active.js": 55,
-      "apron.js": 3722,
+      "apron.js": 3750,
       "atlas.js": 207,
-      "billboards.js": 8115,
-      "cabin.js": 22924,
-      "client.js": 12414,
-      "control.js": 1231,
+      "billboards.js": 8129,
+      "cabin.js": 21569,
+      "client.js": 11044,
+      "clouds.js": 2467,
+      "control.js": 1229,
       "crosssection.js": 1713,
-      "env.js": 3379,
+      "env.js": 3383,
       "faces.js": 2986,
       "flow.js": 1602,
-      "frame.js": 909,
+      "frame.js": 1236,
       "generateMeshBVH.worker.js": 47185,
-      "headlights.js": 7134,
-      "index.css": 5880,
-      "index.js": 112053,
+      "headlights.js": 7127,
+      "index.css": 7298,
+      "index.js": 87320,
       "lamps.js": 1188,
-      "light.js": 851,
-      "lights.js": 8089,
+      "light.js": 863,
+      "lights.js": 7177,
+      "material.js": 165,
+      "medium.js": 1827,
       "mesher.js": 878,
       "mesher.worker.js": 4065,
-      "nodes.js": 669,
-      "obstruction.js": 2193,
-      "parts.js": 1177,
-      "photometry.js": 286,
+      "mode.js": 86811,
+      "model.js": 7080,
+      "nodes.js": 697,
+      "obstruction.js": 2336,
+      "orbitUrl.js": 1241,
+      "pack.js": 1191,
+      "parts.js": 1251,
+      "photometry.js": 479,
       "pools.worker.js": 2791,
       "preload-helper.js": 831,
       "rainMirror.js": 802,
-      "renderer.js": 89617,
+      "renderer.js": 89650,
       "rolldown-runtime.js": 154,
       "routemap.js": 2567,
-      "screens.js": 3387,
-      "session.js": 28966,
-      "shared.js": 134567,
-      "sprites.js": 8064,
-      "surfaceLight.js": 1217,
-      "three.webgpu.js": 110585,
+      "screens.js": 3404,
+      "session.js": 28939,
+      "shared.js": 377,
+      "sprites.js": 8103,
+      "surfaceLight.js": 1218,
+      "three.core.js": 73476,
+      "three.tsl.js": 63278,
+      "three.webgpu.js": 110668,
       "timing.js": 264,
-      "traffic.js": 27224,
+      "traffic.js": 27234,
       "units.js": 527,
-      "valley.js": 5189,
-      "weather.js": 7244,
-      "wetMirror.js": 380
+      "url.js": 755,
+      "valley.js": 5212,
+      "veil.js": 2151,
+      "weather.js": 7242,
+      "wetMirror.js": 378
     },
-    "cssGzip": 5880,
-    "jsGzip": 696521
+    "cssGzip": 7298,
+    "jsGzip": 816982
   },
   "bytes": {
     "lv": {
-      "beforeReady": 29419873,
-      "requests": 162,
-      "total": 31415604
+      "beforeReady": 29445206,
+      "requests": 168,
+      "total": 31441597
     },
     "slc": {
-      "beforeReady": 22106378,
-      "requests": 103,
-      "total": 22159346
+      "beforeReady": 22129881,
+      "requests": 108,
+      "total": 22182849
     }
   },
   "scenes": {
@@ -66,130 +78,130 @@
       "animatingInView": false,
       "idleFrozen": 0,
       "info": {
-        "calls": 294,
+        "calls": 303,
         "geometries": 371,
         "lines": 99517,
         "points": 0,
-        "programs": 10,
-        "textures": 7,
-        "triangles": 3836259
+        "programs": 13,
+        "textures": 15,
+        "triangles": 3836268
       }
     },
     "lv-aerial-night": {
       "animatingInView": false,
       "idleFrozen": 0,
       "info": {
-        "calls": 295,
+        "calls": 304,
         "geometries": 372,
         "lines": 99517,
         "points": 0,
-        "programs": 11,
-        "textures": 7,
-        "triangles": 3836631
+        "programs": 14,
+        "textures": 15,
+        "triangles": 3836640
       }
     },
     "lv-east-day": {
       "animatingInView": false,
       "idleFrozen": 0,
       "info": {
-        "calls": 338,
+        "calls": 347,
         "geometries": 371,
         "lines": 139134,
         "points": 0,
-        "programs": 10,
-        "textures": 7,
-        "triangles": 3889838
+        "programs": 13,
+        "textures": 15,
+        "triangles": 3889847
       }
     },
     "lv-east-night": {
       "animatingInView": false,
       "idleFrozen": 0,
       "info": {
-        "calls": 339,
+        "calls": 348,
         "geometries": 372,
         "lines": 139134,
         "points": 0,
-        "programs": 11,
-        "textures": 7,
-        "triangles": 3890210
+        "programs": 14,
+        "textures": 15,
+        "triangles": 3890219
       }
     },
     "lv-strat-day": {
       "animatingInView": true,
       "idleFrozen": 0,
       "info": {
-        "calls": 276,
+        "calls": 285,
         "geometries": 371,
         "lines": 124656,
         "points": 0,
-        "programs": 10,
-        "textures": 7,
-        "triangles": 3868628
+        "programs": 13,
+        "textures": 15,
+        "triangles": 3868637
       }
     },
     "lv-strat-night": {
       "animatingInView": true,
       "idleFrozen": 0,
       "info": {
-        "calls": 277,
+        "calls": 286,
         "geometries": 372,
         "lines": 124656,
         "points": 0,
-        "programs": 11,
-        "textures": 7,
-        "triangles": 3869000
+        "programs": 14,
+        "textures": 15,
+        "triangles": 3869009
       }
     },
     "slc-aerial-day": {
       "animatingInView": false,
       "idleFrozen": 0,
       "info": {
-        "calls": 142,
+        "calls": 151,
         "geometries": 152,
         "lines": 47428,
         "points": 0,
-        "programs": 9,
-        "textures": 7,
-        "triangles": 3335039
+        "programs": 12,
+        "textures": 15,
+        "triangles": 3335048
       }
     },
     "slc-aerial-night": {
       "animatingInView": false,
       "idleFrozen": 0,
       "info": {
-        "calls": 142,
+        "calls": 151,
         "geometries": 152,
         "lines": 47428,
         "points": 0,
-        "programs": 9,
-        "textures": 7,
-        "triangles": 3335039
+        "programs": 12,
+        "textures": 15,
+        "triangles": 3335048
       }
     },
     "slc-ensign-day": {
       "animatingInView": false,
       "idleFrozen": 0,
       "info": {
-        "calls": 146,
+        "calls": 155,
         "geometries": 152,
         "lines": 51227,
         "points": 0,
-        "programs": 9,
-        "textures": 7,
-        "triangles": 3340421
+        "programs": 12,
+        "textures": 15,
+        "triangles": 3340430
       }
     },
     "slc-ensign-night": {
       "animatingInView": false,
       "idleFrozen": 0,
       "info": {
-        "calls": 146,
+        "calls": 155,
         "geometries": 152,
         "lines": 51227,
         "points": 0,
-        "programs": 9,
-        "textures": 7,
-        "triangles": 3340421
+        "programs": 12,
+        "textures": 15,
+        "triangles": 3340430
       }
     }
   }
