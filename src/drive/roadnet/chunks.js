@@ -39,7 +39,9 @@ function toMesh(m, material) {
   g.setAttribute('normal', new THREE.BufferAttribute(m.normals, 3));
   g.setAttribute('uv', new THREE.BufferAttribute(m.uvs, 2));
   g.setAttribute('kind', new THREE.BufferAttribute(m.kind, 1));
-  if (m.retro) g.setAttribute('retro', new THREE.BufferAttribute(m.retro, 1)); // sheeting code (src/drive/roadside/sheeting.js)
+  // sheeting code (src/drive/roadside/sheeting.js), as float32 on node materials: the WebGL2 backend cannot read a byte
+  // attribute as the uint it declares (and WebGPU has no one-byte vertex format)
+  if (m.retro) g.setAttribute('retro', new THREE.BufferAttribute((Array.isArray(material) ? material[0] : material)?.isNodeMaterial ? Float32Array.from(m.retro) : m.retro, 1));
   g.setIndex(new THREE.BufferAttribute(m.indices, 1));
   const [cx, cy, cz, r] = m.sphere;
   g.boundingSphere = new THREE.Sphere(new THREE.Vector3(cx, cy, cz), r);
@@ -53,7 +55,7 @@ function toMesh(m, material) {
 
 /**
  * @param {{ roadnet: { roads: object[] }, base: number, earthR: number, parent: THREE.Object3D,
- *   materials: { road: THREE.Material, roadNear?: THREE.Material, setNight?: (on: boolean) => void },
+ *   materials: { road: THREE.Material, roadNear?: THREE.Material },
  *   barriers?: object|null,
  *   createWorker?: () => { postMessage: Function, onmessage: Function|null, terminate?: Function },
  *   near?: number, mid?: number, maxInFlight?: number }} opts
@@ -230,7 +232,6 @@ export function createRoadChunks({ roadnet, base, earthR, parent, materials, bar
     update,
     /** Resolves when everything wanted for the last update is on screen. */
     whenSettled: () => (isSettled() ? Promise.resolve() : new Promise((resolve) => waiters.push(resolve))),
-    setNight: (on) => materials.setNight?.(on),
     stats() {
       const out = { batches: 0, lod0: 0, lod1: 0, drawCalls: 0, triangles: 0, inFlight, pending: chunks.filter((c) => c.pending).length };
       for (const b of batches) if (b.mesh?.visible) {

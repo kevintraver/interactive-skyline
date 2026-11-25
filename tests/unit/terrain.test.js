@@ -189,7 +189,7 @@ describe('buildWideMesh', () => {
 
   it('is a plain unshadowed Lambert mesh', () => {
     expect(mesh).toBeInstanceOf(THREE.Mesh);
-    expect(mesh.material).toBeInstanceOf(THREE.MeshLambertMaterial);
+    expect(mesh.material.type).toBe('MeshLambertNodeMaterial');
     expect(mesh.material.map).toBeNull();
     expect(mesh.receiveShadow).toBe(false);
   });

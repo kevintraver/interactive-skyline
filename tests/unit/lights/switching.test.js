@@ -1,13 +1,14 @@
 // D5.5: street lamps switching on at dusk (src/drive/lights/switching.js) against env's ambientLux.
 import { describe, it, expect } from 'vitest';
 import { readFileSync } from 'node:fs';
-import { createEphemeris, ambientLux } from '../../../src/drive/env.js';
+import { ephemerisOn, ambientLux } from '../../../src/drive/env.js';
+import { createEphemeris } from '../../../src/sky/ephemeris.js';
 import {
   lampHash, switchThresholdLux, isLit, litShare, elevationForLux, switchOnTime, lampState, SWITCH_MID_LUX,
 } from '../../../src/drive/lights/switching.js';
 
 const LV = JSON.parse(readFileSync(new URL('../../../data/cities.json', import.meta.url), 'utf8')).lv;
-const eph = createEphemeris(LV);
+const eph = ephemerisOn(createEphemeris({ lat: LV.origin.lat, lon: LV.origin.lon, elevationM: 610 }), LV.tz); // the drive's port over plan 01's
 const N = 20000;
 
 describe('thresholds', () => {
@@ -70,7 +71,8 @@ describe('switch-on time', () => {
     const i = 42;
     const on = switchOnTime(i, dusk, eph);
     expect(on).toBeLessThanOrEqual(dusk);
-    expect(ambientLux(eph.sun(on).elevation)).toBeCloseTo(switchThresholdLux(i), 2);
+    // plan 01's ephemeris answers to the second (about 0.004 degrees of sun at dusk, 0.15 % of the light here)
+    expect(Math.abs(ambientLux(eph.sun(on).elevation) / switchThresholdLux(i) - 1)).toBeLessThan(0.005);
     // scrubbing to any later time that night gives the same moment
     expect(Math.abs(switchOnTime(i, dusk + 3 * 3600000, eph) - on)).toBeLessThan(2);
     const s = lampState(i, on + 90000, eph);

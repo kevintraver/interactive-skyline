@@ -46,14 +46,15 @@
  "skipped": {
   "core:by-id": 9806,
   "dropped:rule": 40647,
+  "seated": 3,
   "core:inside": 1208,
   "outside-region": 1
  },
  "bytes": {
-  "total": 1615940,
+  "total": 1615952,
   "index": 12432,
   "tall": 16648,
-  "cells": 1586860,
+  "cells": 1586872,
   "largestCell": 98596
  },
  "routes": [

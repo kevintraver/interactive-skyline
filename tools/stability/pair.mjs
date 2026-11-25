@@ -40,7 +40,10 @@ for (const spec of ids) {
         const hits = ray.intersectObjects(s.scene.children, true).filter((q) => q.object.isMesh && q.object.visible && q.object.material.side !== 1);
         if (!hits.length) continue;
         const near = hits.filter((q) => q.distance - hits[0].distance < 0.05);
-        const key = [...new Set(near.map((q) => label(q.object)))].sort().join(' | ') + (near.length > 1 ? ` (${near.length} faces)` : '');
+        // faces that can fight are parallel and face the same way; two faces meeting at an edge are only an edge
+        const normal = (q) => q.face.normal.clone().transformDirection(q.object.matrixWorld);
+        const n0 = normal(near[0]), parallel = near.filter((q) => normal(q).dot(n0) > 0.99);
+        const key = [...new Set(near.map((q) => label(q.object)))].sort().join(' | ') + (parallel.length > 1 ? ` (${parallel.length} faces)` : near.length > 1 ? ' (edge)' : '');
         pairs[key] = (pairs[key] || 0) + 1;
       }
       return { flips: flips.length, pairs };

@@ -1,11 +1,11 @@
 // The windshield, first part (plan 02, D4.4): the veil's phase function and D4.4's two acceptance numbers, through
-// the JavaScript mirror of the shader's arithmetic (windshield.js); the dirt mask; the glass's reflectance.
+// the JavaScript mirror of the shader's arithmetic (veil.js); the dirt mask; the glass's reflectance.
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import {
   VEIL, phaseVeil, veilLuminance, veilModel, veilAt, sunNormalLux, airMass, sunOnGlass, glassReflectance, headLampCandela,
   windshieldMask, wiperDepth, WIPERS,
-} from '../../../src/drive/vehicle/windshield.js';
+} from '../../../src/drive/vehicle/veil.js';
 import { ambientLux } from '../../../src/drive/env.js';
 
 const meta = JSON.parse(readFileSync(new URL('../../../public/models/drive/cabin.json', import.meta.url), 'utf8'));

@@ -31,6 +31,7 @@ from collections import Counter
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
+from lib.atomic import write_files  # noqa: E402
 from lib.frame import create_frame  # noqa: E402
 from lib.heights import load_heights  # noqa: E402
 from lib.osm import load_osm  # noqa: E402
@@ -294,14 +295,13 @@ def main():
     out = {"version": 1, "source": src, "roads": [out_road]}
     text = json.dumps(out, separators=(",", ":"), ensure_ascii=False) + "\n"
     signs_path = data / f"signs{sfx}.json"
-    signs_path.write_text(text)
     size = len(text.encode())
     btext = encode_barriers({"source": {"osm": bosm.timestamp, "osmLicence": "ODbL, (c) OpenStreetMap contributors",
                                         "method": "scripts/build_roadside.py (scripts/lib/roadside_barriers.py)",
                                         "route": route_id},
                              "roads": b_roads})
     barriers_path = data / f"barriers{sfx}.json"
-    barriers_path.write_text(btext)
+    write_files({signs_path: text, barriers_path: btext})
     bsize = len(btext.encode())
     rep_dir = ROOT / "data" / "derived" / city
     rep_dir.mkdir(parents=True, exist_ok=True)
@@ -317,7 +317,7 @@ def main():
         "delineators": "one InstancedMesh per reflector colour, material names 'delineator white' and 'delineator yellow', each "
                        "with a `retro` instance attribute"}
     rep_path = rep_dir / f"roadside_report{sfx}.json"
-    rep_path.write_text(json.dumps(report, indent=1, ensure_ascii=False) + "\n")
+    write_files({rep_path: json.dumps(report, indent=1, ensure_ascii=False) + "\n"})
 
     failures = []
     rr = report[rc["id"]]

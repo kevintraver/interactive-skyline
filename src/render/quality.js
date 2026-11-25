@@ -134,12 +134,25 @@ export function createQuality({ backend, detected, choice = 'auto', apply = () =
     get budgetMs() { return BUDGET_MS[q.level]; },
     message: '',
     governor: null,
+    /** True while the level is held (hold()): the governor may change the render scale, never the level. */
+    held: false,
+    /** A choice made while the level was held, applied when the hold ends. */
+    pending: null,
+    /**
+     * Hold the level (a mode that cannot rebuild its detail mid-frame: Drive, plan 02). While held, the governor still
+     * lowers and raises the render scale but never drops a level, and set() is kept until the hold ends.
+     */
+    hold(on) {
+      q.held = !!on;
+      if (!q.held && q.pending !== null) { const next = q.pending; q.pending = null; q.set(next); }
+    },
     /** 'auto' | 'low' | 'high' | 'ultra'. Returns { ok, reason }; Ultra on WebGL2 is refused. */
     set(level) {
       if (level !== 'auto') {
         const a = allowed(level, backend);
         if (!a.ok) { q.message = a.reason; return a; }
       }
+      if (q.held) { q.pending = level; return { ok: true, reason: 'held', pending: true }; }
       q.choice = level;
       q.level = level === 'auto' ? q.detected.level : level;
       q.renderScale = 1;
@@ -155,7 +168,9 @@ export function createQuality({ backend, detected, choice = 'auto', apply = () =
       const r = q.governor.feed(timeMs, frameMs);
       if (!r) return;
       if (r.action === 'scale') q.renderScale = r.scale;
-      else if (q.level !== 'low') { q.level = LEVELS[LEVELS.indexOf(q.level) - 1]; q.renderScale = 1; q.governor = createGovernor({ budgetMs: PROFILES[q.level].frameMs * GOVERNOR_MARGIN }); }
+      // a drop that cannot happen (held, or already at Low): stay at the lowest scale; the governor reset its own to 1
+      else if (q.held || q.level === 'low') { q.governor.scale = q.renderScale; return; }
+      else { q.level = LEVELS[LEVELS.indexOf(q.level) - 1]; q.renderScale = 1; q.governor = createGovernor({ budgetMs: PROFILES[q.level].frameMs * GOVERNOR_MARGIN }); }
       apply(q.profile, q.renderScale);
       for (const fn of listeners) fn(q);
     },

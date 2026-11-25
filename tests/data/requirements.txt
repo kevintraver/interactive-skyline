@@ -1,6 +1,0 @@
-pytest
-numpy
-pyproj
-scipy
-shapely
-pillow

@@ -21,7 +21,8 @@ const untilPlayingThenPause = (page) => run(page, async () => {
   d.pause();
   return d.pose();
 });
-const params = (page) => run(page, () => Object.fromEntries(new URLSearchParams(location.search)));
+/** The address's parameters, without `renderer` (the specs' own, see helpers/drive.js openAt). */
+const params = (page) => run(page, () => { const q = new URLSearchParams(location.search); q.delete('renderer'); return Object.fromEntries(q); });
 const blur = (page) => run(page, () => document.activeElement && document.activeElement.blur());
 
 test('lv drive controls: starts, route bar, rate, lock, time of day, address, phone', async ({ page }) => {

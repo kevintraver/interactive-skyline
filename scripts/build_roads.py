@@ -48,6 +48,7 @@ import numpy as np
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from lib.alignment import fit_line, stations  # noqa: E402
+from lib.atomic import write_files  # noqa: E402
 from lib.frame import create_frame, curve_drop  # noqa: E402
 from lib.heights import load_heights  # noqa: E402
 from lib.crosssection import normalise_sections, pavement_edges  # noqa: E402
@@ -62,7 +63,7 @@ from lib.roadnet import decode_roadnet, encode_roadnet  # noqa: E402
 from lib.sightline import building_top, eye_scene_y, visible  # noqa: E402
 from lib.interchanges import build_interchanges  # noqa: E402
 from lib.roadframe import RoadFrame  # noqa: E402
-from lib.structures import SEPARATE, piers_and_abutments, plan_overlaps  # noqa: E402
+from lib.structures import piers_and_abutments, plan_overlaps  # noqa: E402
 from lib.valley_traffic import simplify  # noqa: E402
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -258,6 +259,21 @@ def hold_decks(env, s, bridge_runs, sag=DECK_SAG, held=None):
     return out
 
 
+def embankment_short(road_id, sections, st, h, bridge_runs, held, ground):
+    """The OSM bridges, not held already, over which the profile rides higher above the ground than the embankment
+    the mesher draws reaches down (lib.groundcheck: its toe would hang in the air): they hold their deck too (no
+    embankment, piers under them). Returns their runs [(s0, s1)]."""
+    from lib.groundcheck import TOL, Road, check_embankment
+    free = [(s0, s1) for s0, s1, _ in bridge_runs if (s0, s1) not in held]
+    if not free:
+        return []
+    road = Road({"id": road_id, "sections": sections, "bridges": [], "spacing": SPACING, "x": st["x"], "y": st["y"],
+                 "h": h, "heading": st["heading"], "curvature": st["curvature"], "crossfall": st["crossfall"]})
+    gap, s, _ = check_embankment(road, ground)
+    bad = s[gap > TOL["embankment"]]
+    return [(s0, s1) for s0, s1 in free if ((bad >= s0) & (bad <= s1)).any()]
+
+
 def build_road(osm, frame, hs, top, road_id, ref, direction, start, end):
     """One carriageway between two ends. Returns (road dict for the writer, info for the report)."""
     return finish_road(plan_road(osm, frame, hs, top, road_id, ref, direction, start, end))
@@ -393,6 +409,7 @@ def finish_road(state):
     radius = np.maximum(1500.0, (speed * MPH) ** 2 / COMFORT)
     h = smooth_from_above(env, SPACING, GRADE_SOLVE, radius)
     st["h"] = h
+    held += embankment_short(road_id, sections, st, h, bridge_runs, held, ground)
 
     road = {
         "id": road_id, "ref": ref, "dir": direction, "class": "motorway",
@@ -454,14 +471,15 @@ def smootherstep(t):
     return t**3 * (10 - 15 * t + 6 * t**2)
 
 
-def build_lead(state, dec, which, osm_all, top, over=()):
+def build_lead(state, dec, which, osm_all, top):
     """A lead-in ("in": the road before the carriageway's first station) or lead-out ("out": after
     its last) of LEAD_M metres, as scenery: the same road from OSM, followed on past the relation's
     end where it stops (a state line), fitted on its own and eased over LEAD_JOIN_M onto the
     carriageway's end station, so that the two meet in position, heading, height and grade. The
     carriageway is untouched. Lanes and shoulders follow the OSM ways, with the carriageway's end section next to
-    the join. `over`: RoadFrames of the roads that cross over it (the route's crossings): the lead stays SEPARATE
-    under their pavement. Returns (road for the writer, info) or (None, why)."""
+    the join. Leads are built before the interchanges, which take them as fixed roads: the crossing roads clear them
+    as they clear the carriageways, and the ramps go over them or end before them. Returns (road for the writer,
+    info) or (None, why)."""
     to_local = state["to_local"]
     chain = state["chain"]
     road_id = state["road_id"]
@@ -570,21 +588,6 @@ def build_lead(state, dec, which, osm_all, top, over=()):
     hj = float(dec["h"][j])
     gj = float(dec["h"][1] - dec["h"][0]) if back else float(dec["h"][-1] - dec["h"][-2])  # per station
     lower, upper = env.copy(), np.full(n, np.inf)
-    if over:
-        # under a crossing road: at least SEPARATE below its pavement wherever the two overlap in plan
-        across = np.linspace(0, 1, 12)
-        dd = right[:, None] + (left - right)[:, None] * across[None, :]
-        px = st["x"][:, None] - dd * np.sin(st["heading"])[:, None]
-        py = st["y"][:, None] + dd * np.cos(st["heading"])[:, None]
-        for F in over:
-            m, sb, db = F.inside(px, py)
-            if not m.any():
-                continue
-            zb = np.full(px.size, np.inf)
-            zb[m] = F.surface(sb[m], db[m])
-            need = (zb.reshape(px.shape) - SEPARATE - 0.02 - st["crossfall"][:, None] * dd).min(axis=1)
-            upper = np.minimum(upper, need)
-        lower = np.minimum(lower, upper)
     pins = [(n - 1, hj), (n - 2, hj - gj)] if back else [(0, hj), (1, hj + gj)]
     for kk, v in pins:
         lower[kk] = upper[kk] = v
@@ -609,12 +612,6 @@ def build_lead(state, dec, which, osm_all, top, over=()):
         for kk, v in pins:
             lower[kk] = upper[kk] = v
         h = smooth_between(lower, upper, SPACING, GRADE_SOLVE, radius)
-    if h is None and over:  # the carriageway's end is already as low under the crossing as it can be: without the ceiling
-        road, info = build_lead(state, dec, which, osm_all, top, ())
-        if road is not None:
-            info["under_crossing"] = ("SEPARATE under the crossing cannot be kept: the carriageway's end is too close "
-                                      "to it and the ground beyond rises")
-        return road, info
     if h is None:
         return None, "no profile meets the carriageway's end within the grade limit"
     st["h"] = h
@@ -748,7 +745,8 @@ def interchange_report(ic, cws, decoded, junctions, xdoc, osm_all=None):
             if not links:
                 entry.update(ok=True, no_link=True, why="a junction node with no motorway_link mapped at it: nothing to build")
         per_exit.append(entry)
-    # clearance of every crossing road over each carriageway
+    # clearance of every crossing road over each carriageway and each lead on beyond one
+    under = [cw["frame"] for cw in cws] + [F for F in frames if (getattr(F, "road", None) or {}).get("lead")]
     cross = []
     for F in frames:
         dr = getattr(F, "draft", None)
@@ -756,10 +754,10 @@ def interchange_report(ic, cws, decoded, junctions, xdoc, osm_all=None):
             continue
         pts = F.pavement_points(step=2.0, across=1.0)
         worst = np.inf
-        for cw in cws:
-            m, sb, db = cw["frame"].inside(pts["x"], pts["y"], grow=0.0)
+        for U in under:
+            m, sb, db = U.inside(pts["x"], pts["y"], grow=0.0)
             if m.any():
-                worst = min(worst, float((pts["z"][m] - 1.2 - cw["frame"].surface(sb[m], db[m])).min()))
+                worst = min(worst, float((pts["z"][m] - 1.2 - U.surface(sb[m], db[m])).min()))
         cross.append({"road": F.id, "name": getattr(dr, "name", ""), "clearance_m": round(worst, 2) if np.isfinite(worst) else None})
     min_clear = min((c["clearance_m"] for c in cross if c["clearance_m"] is not None), default=None)
     main_ids = {cw["frame"].id for cw in cws}
@@ -1173,8 +1171,26 @@ def build_group(city, cfg, routes_cfg, frame, hs, top, lifts=None):
             road_id = st_["road_id"]
             cws.append({"frame": RoadFrame(decoded[road_id]), "ids": list(st_["ids"]), "ways": set(st_["chain"].ways),
                         "prefix": road_id.split(".")[0], "links": decoded[road_id]["links"]})
+        # lead-ins and lead-outs: the same road on beyond both ends of both carriageways, as scenery; built first, so
+        # that the interchanges see them (the crossing roads clear them, the ramps go over them or end before them)
+        rr["leads"] = {}
+        mine, ends = [], []
+        for st_ in plans[rid]:
+            if st_ is None:
+                continue
+            for which in ("in", "out"):
+                lead, linfo = build_lead(st_, decoded[st_["road_id"]], which, osm_all, top)
+                if lead is None:
+                    rr["leads"][f"{st_['road_id']}.{which}"] = {"built": False, "why": linfo}
+                    print(f"  {st_['road_id']}.{which}: not built ({linfo})")
+                    continue
+                rr["leads"][lead["id"]] = {"built": True, **linfo}
+                mine.append(lead)
+                ends.append((st_, which))
+        rr["leads_narrowed"] = narrow_lead_shoulders(mine)
+        lead_frames = [_frame_of(x) for x in mine]
         ic = build_interchanges(osm_all, cws, frame.to_local, top,
-                                own_ref=rc["ref"], lifts=lifts)
+                                own_ref=rc["ref"], lifts=lifts, leads=lead_frames)
         extra_roads += ic["roads"]
         junction_recs += ic["junctions"]
         structure_recs += ic["structures"]
@@ -1187,37 +1203,21 @@ def build_group(city, cfg, routes_cfg, frame, hs, top, lifts=None):
                 # a deck that runs on past the road's end has no abutment there
                 L = cw["frame"].length
                 structure_recs += [r for r in recs if not (r["kind"] == "abutment" and min(r["s"], L - r["s"]) < 2 * SPACING)]
-        # lead-ins and lead-outs: the same road on beyond both ends of both carriageways, as scenery
-        rr["leads"] = {}
-        for st_ in plans[rid]:
-            if st_ is None:
-                continue
-            for which in ("in", "out"):
-                over = [F for F in ic["frames"] if (getattr(F, "road", None) or {}).get("role") == "crossing"]
-                lead, linfo = build_lead(st_, decoded[st_["road_id"]], which, osm_all, top, over)
-                if lead is None:
-                    rr["leads"][f"{st_['road_id']}.{which}"] = {"built": False, "why": linfo}
-                    print(f"  {st_['road_id']}.{which}: not built ({linfo})")
-                    continue
-                rr["leads"][lead["id"]] = {"built": True, **linfo}
-                lead_roads.append(lead)
-                # the two meet end to end: their pavements touch there (the format's plan-overlap rule asks a junction)
-                cw_len = decoded[st_["road_id"]]["length"]
-                a_rng = (0.0, LEAD_JOIN_TIE) if which == "in" else (cw_len - LEAD_JOIN_TIE, cw_len)
-                b_rng = (LEAD_M - LEAD_JOIN_TIE, LEAD_M) if which == "in" else (0.0, LEAD_JOIN_TIE)
-                junction_recs.append({"id": f"{lead['id']}.join", "kind": "connect", "side": "",
-                                      "a": {"road": st_["road_id"], "s0": rnd(a_rng[0]), "s1": rnd(a_rng[1])},
-                                      "b": {"road": lead["id"], "s0": rnd(b_rng[0]), "s1": rnd(b_rng[1])}})
-                ldoc, lblob = encode_roadnet({"version": 1, "roads": [lead]})
-                lframe = RoadFrame(decode_roadnet(json.loads(json.dumps(ldoc)), lblob)[0])
-                spans = [(b["s0"], b["s1"]) for b in lead["bridges"] if b.get("deck")]
-                if spans:
-                    recs = piers_and_abutments(lframe, spans, ic["frames"], top)
-                    # no abutment where the deck runs on into the carriageway, or past the lead's far end
-                    structure_recs += [r for r in recs if not (r["kind"] == "abutment"
-                                                               and min(r["s"], lframe.length - r["s"]) < 2 * SPACING)]
-        mine = [x for x in lead_roads if x["lead"]["of"] in {st_["road_id"] for st_ in plans[rid] if st_ is not None}]
-        rr["leads_narrowed"] = narrow_lead_shoulders(mine)
+        for lead, lframe, (st_, which) in zip(mine, lead_frames, ends):
+            lead_roads.append(lead)
+            # the two meet end to end: their pavements touch there (the format's plan-overlap rule asks a junction)
+            cw_len = decoded[st_["road_id"]]["length"]
+            a_rng = (0.0, LEAD_JOIN_TIE) if which == "in" else (cw_len - LEAD_JOIN_TIE, cw_len)
+            b_rng = (LEAD_M - LEAD_JOIN_TIE, LEAD_M) if which == "in" else (0.0, LEAD_JOIN_TIE)
+            junction_recs.append({"id": f"{lead['id']}.join", "kind": "connect", "side": "",
+                                  "a": {"road": st_["road_id"], "s0": rnd(a_rng[0]), "s1": rnd(a_rng[1])},
+                                  "b": {"road": lead["id"], "s0": rnd(b_rng[0]), "s1": rnd(b_rng[1])}})
+            spans = [(b["s0"], b["s1"]) for b in lead["bridges"] if b.get("deck")]
+            if spans:
+                recs = piers_and_abutments(lframe, spans, ic["frames"], top)
+                # no abutment where the deck runs on into the carriageway, or past the lead's far end
+                structure_recs += [r for r in recs if not (r["kind"] == "abutment"
+                                                           and min(r["s"], lframe.length - r["s"]) < 2 * SPACING)]
         junction_recs += lead_connections(mine, ic)
         rr["interchanges"] = interchange_report(ic, cws, decoded, junction_recs, xdoc, osm_all)
         for r in roads:
@@ -1381,15 +1381,14 @@ def main():
         routes_doc = routes_doc_of(g["routes"], g["source"])
         report["main_line"] = check_main_line(city, json.loads(g["text"]), g["blob"], routes_doc, g["main_ids"],
                                               (files["roadnet"], bin_name), heights_moved=heights_moved)
-        (out_dir / files["roadnet"]).write_text(g["text"])
-        (out_dir / bin_name).write_bytes(g["blob"])
+        write_files({out_dir / bin_name: g["blob"], out_dir / files["roadnet"]: g["text"]})
         size = len(g["text"].encode()) + len(g["blob"])
         report["files"] = {files["roadnet"]: len(g["text"].encode()), bin_name: len(g["blob"]), "total": size,
                            "ok": size < MAX_BYTES}
         for r in g["routes"]:
             entries[r["id"]] = {**r, "files": files}
         rep_name = "roads_report.json" if n == 0 else f"roads_report-{rid}.json"
-        (rep_dir / rep_name).write_text(json.dumps(report, indent=1, default=float) + "\n")
+        write_files({rep_dir / rep_name: json.dumps(report, indent=1, default=float) + "\n"})
         for rrid, rr in report["routes"].items():
             for name, a in rr["acceptance"].items():
                 flag = "ok  " if a["ok"] else "MISS"
@@ -1405,7 +1404,7 @@ def main():
     if only and routes_path.exists():
         snapshots.update(json.loads(routes_path.read_text())["source"]["osm"].split())
     routes = [entries[rc["id"]] for rc in routes_cfg if rc["id"] in entries]
-    routes_path.write_text(json.dumps(routes_doc_of(routes, {"osm": " ".join(sorted(snapshots))}), indent=1) + "\n")
+    write_files({routes_path: json.dumps(routes_doc_of(routes, {"osm": " ".join(sorted(snapshots))}), indent=1) + "\n"})
     print(f"wrote {routes_path}")
     if failures:
         sys.exit(f"acceptance missed: {', '.join(failures)}")

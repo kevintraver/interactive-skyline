@@ -17,12 +17,21 @@
 // two meet. When the journey was re-timed (the hold-position lock) the lanes' slot grids are slid to keep the
 // car on its slot (reference.shifts).
 // Per render (beforeRender): the renderer sorts the bodies into the twelve instanced meshes by size on screen and
-// culls by the view (render.js); then, while the look has the vehicles' lamps on (look.beams > 0), the lamps of
+// culls by the view (render.js); then, while any vehicle's lamps are on (vehicleLitShare), the lamps of
 // the near and far vehicles out to the sprite range (SPRITE_RANGE_M by preset the way the camera looks, the
 // bodies' range the other way, half of it each way when it looks across) are
 // written to the sprite layer, the ribbons take over beyond (the last SPRITE_BAND of the range hands over), and
 // the nearest lit vehicles get pools. By day none of that runs.
 // Nothing is carried from frame to frame but caches: the same simulation time gives the same vehicles and lamps.
+//
+// Plan 02, third stretch, decisions 4, 6 and 8: time is app.clock through the session's clock (frame.simMs). Light is
+// physical: vehicle lamps are candela through the sprite layer, lamp faces and ribbons cd/m^2, pools lux on the road,
+// all times photometry.js artificialScale (the pre-exposure and the lights-out slider). The vehicles' own
+// thresholds switch them (lamps.js vehicleThresholdLux; the ribbons by vehicleLitShare); the lamp faces carry only the
+// stop lamps by day (see where they are set). The CPU work of each piece is its core module (renderCore.js,
+// lampCore.js, ribbonCore.js, poolsCore.js). Detail by quality level (TRAFFIC_DETAIL): bodies detailed above DETAIL_PX on screen, the lamps' sprite range.
+// The bodies' materials are offered to the light as surfaces of kind 'vehicle' (ctx.addSurfaces): the headlights' beam
+// and the street lamps' pools land on them.
 //
 // The part's own API, beyond the session's (update, beforeRender, setLook, whenSettled, stats, dispose):
 //   lampPoints()   the lamps of the vehicles drawn this frame (render.js header)
@@ -31,17 +40,22 @@
 //   renderer       the instanced meshes (render.js), for tests and the frame-budget probe
 //   lamps          the lamp sprite layer (lampLayer.js); pools the decal (pools.js)
 //   setEnabled(v)  switch the whole part off and on (for measuring what it costs)
+// The weather part reads placed() and renderer.lengths for spray; the vehicle lamps' reflected twins are the lamp
+// layer's (`reflect`), driven by lights/sprites.js setTwins like every reflecting layer.
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { createTraffic } from './demand.js';
 import { createLaneMap } from './lanemap.js';
 import { createFleet, BODY_NAMES } from './fleet.js';
-import { createTrafficRenderer } from './render.js';
 import { createReference, createEasedPace } from './reference.js';
 import { createFarField } from './far.js';
-import { createLampLayer } from './lampLayer.js';
-import { createRibbons } from './ribbon.js';
-import { createPools } from './pools.js';
 import { vehicleLitShare, vehicleThresholdLux } from './lamps.js';
+import { physicalFaceCdM2 } from './lightData.js';
+import * as R from './render.js';
+import * as L from './lampLayer.js';
+import * as RB from './ribbon.js';
+import * as PL from './pools.js';
+import { photometryContext, artificialScale } from '../lights/photometry.js';
+import { TWIN_UNIFORMS } from '../lights/sprites.js';
 import { createTimings } from '../timing.js';
 
 const MODELS = '/models/drive/';
@@ -49,6 +63,8 @@ const MODELS = '/models/drive/';
 const BEHIND_SHARE = 0.35;
 /** How far ahead vehicles are drawn as lamp sprites, by preset (m); behind, half of it unless looking back. */
 export const SPRITE_RANGE_M = Object.freeze({ low: 2000, high: 4000, ultra: 6000 });
+/** Below this share of vehicles with lamps on, the shipped look skips the lamps, ribbons and pools (by day). */
+export const LIT_SHARE_MIN = 1e-3;
 /** Share of the sprite range over which the sprites hand over to the ribbons. */
 export const SPRITE_BAND = 0.25;
 /** The stretch around the car where vehicles are placed exactly each frame (m). */
@@ -64,21 +80,38 @@ const COMBINED = {
 /** @param {object} ctx the part context (parts.js) */
 export async function createTrafficPart(ctx) {
   const { session, net, frameOf, earthR, group } = ctx;
+  const env = ctx.env || session.env;
   const [sidecar, gltf] = await Promise.all([
     fetch(`${MODELS}vehicles.json`).then((r) => { if (!r.ok) throw new Error(`vehicles.json: HTTP ${r.status}`); return r.json(); }),
     new GLTFLoader().loadAsync(`${MODELS}vehicles.glb`),
   ]);
-  const renderer = createTrafficRenderer({ parent: group, sidecar, gltf });
-  const lamps = createLampLayer({ parent: renderer.group, sidecar });
-  const pools = createPools({ parent: renderer.group, sidecar, bodyNames: BODY_NAMES });
-  const env = ctx.env || session.env;
+  const photometry = photometryContext({ nodes: env.nodes });
+  const scale = artificialScale(photometry);
+  const quality = ctx.app?.plan01?.quality ?? null;
+  const renderer = R.createTrafficRenderer({ parent: group, sidecar, gltf, lightScale: scale });
+  const lamps = L.createLampLayer({ parent: renderer.group, sidecar, photometry });
+  const pools = PL.createPools({ parent: renderer.group, sidecar, bodyNames: BODY_NAMES, lightScale: scale, twinWet: TWIN_UNIFORMS.uTwinWet });
+  const makeRibbons = (traffic, laneMap) => RB.createRibbons({ parent: renderer.group, traffic, laneMap, frame: frameOf, lightScale: scale });
+  // The lamp faces. A lit lamp's light is its sprite's: near, the sprite is a disc of the lens's size
+  // carrying the lamp's candela (flux kept), so a face emitting the lamp's luminance as well counted the light twice and,
+  // emitting the same toward every side over the modelled lens, drew oncoming head lamps as glare a vehicle wide. So
+  // head and tail faces emit nothing there; the stop lamps' faces emit the stop lamp's own luminance (lightData.js
+  // physicalFaceCdM2) where the vehicle's lamps are off (by day, when no sprite is lit), x (1 - the lit share).
+  const faceBrake = physicalFaceCdM2().brake;
+  { const u = renderer.uniforms; u.uHead.value = 0; u.uTail.value = 0; u.uBrake.value = faceBrake; }
+  // detail by plan 01's quality level (decision 8)
+  const applyDetail = (level) => renderer.setDetailPx(R.DETAIL_PX[level] ?? R.DETAIL_PX.high);
+  applyDetail(quality?.level);
+  const offQuality = quality?.on ? quality.on('change', (q) => applyDetail(q.level)) : () => {};
+  // the bodies' node materials, for the light that lands on surfaces (the headlights' beam)
+  ctx.addSurfaces?.(renderer.materials.map((m) => [m, 'vehicle']));
   const models = new Map(); // route id -> Promise<model | null>
   let current = null, currentId = null, loading = Promise.resolve();
   let placed = null, enabled = true;
   const placedWindow = { s: 0, range: 0, sA: 0, sB: 0 };
   const timings = { place: createTimings(), draw: createTimings(), lamps: createTimings() };
   const sub = { far: createTimings(), exact: createTimings(), merge: createTimings() };
-  const look = { beams: 0, lights: 0, ambient: 1e5 };
+  const look = { ambient: 1e5 };
   let ambient = 1e5, lastDepart = NaN, lastJourney = null;
   const lampStats = { on: false, far: 0, exact: 0 };
 
@@ -101,7 +134,7 @@ export async function createTrafficPart(ctx) {
         if (reference) reference.shifts(traffic, journey);
         const fleet = createFleet({ traffic, laneMap, frame: frameOf, lengths: renderer.lengths, earthR, reference });
         const far = createFarField({ traffic, laneMap, frame: frameOf, lengths: renderer.lengths, earthR });
-        const ribbons = createRibbons({ parent: renderer.group, traffic, laneMap, frame: frameOf });
+        const ribbons = makeRibbons(traffic, laneMap);
         return { traffic, laneMap, fleet, reference, far, ribbons, journey, depart: journey?.departMs };
       })().catch((e) => { console.warn(`traffic for ${route.id} left out: ${e && e.message ? e.message : e}`); return null; });
       models.set(route.id, p);
@@ -211,8 +244,10 @@ export async function createTrafficPart(ctx) {
   }
 
   /** Lamps, ribbons and pools for this frame (beforeRender, after the bodies). */
+  /** Whether the vehicles' lamps are drawn: by the vehicles' own switching. */
+  const lampsOn = () => vehicleLitShare(ambient) > LIT_SHARE_MIN;
   function drawLights(frame) {
-    const on = look.beams > 0 && enabled;
+    const on = lampsOn() && enabled;
     lampStats.on = on;
     if (!on || !current) { lamps.update({ on: false }); pools.update({ near: null }); current?.ribbons.update({ on: false }); return; }
     const t0 = performance.now();
@@ -221,9 +256,9 @@ export async function createTrafficPart(ctx) {
     const cam = frame.camera;
     const pxPerRad = (frame.viewport?.height || 720) / (2 * Math.tan(((cam.getEffectiveFOV ? cam.getEffectiveFOV() : cam.fov) * Math.PI) / 360));
     lamps.update({ near: null, far: placed, carS: s, ahead: range.spriteAhead, behind: range.spriteBehind, band: SPRITE_BAND, eye, on: true, pxPerRad });
-    const gain = env.lighting.units.nit * look.beams;
+    const gain = 1; // the materials carry the light's scale
     const visibility = env.weather?.state?.().visibilityM || 80000;
-    lamps.setFrame({ camera: frame.camera, renderer: ctx.app.renderer, gain, ambientLux: ambient, visibility });
+    lamps.setFrame({ camera: frame.camera, renderer: ctx.app.renderer, ambientLux: ambient, visibility });
     current.ribbons.update({
       simMs: frame.simMs, carS: s, ahead: range.spriteAhead, behind: range.spriteBehind, band: SPRITE_BAND,
       camera: frame.camera, renderer: ctx.app.renderer, gain, lit: vehicleLitShare(ambient), visibility, on: true,
@@ -246,17 +281,20 @@ export async function createTrafficPart(ctx) {
       followJourney();
       ambient = env?.lighting?.ambientLux ? env.lighting.ambientLux(frame.sun.elevation) : look.ambient;
       rangeFor(frame);
-      placed = placeAll(frame, look.beams > 0);
+      renderer.uniforms.uBrake.value = faceBrake * (1 - vehicleLitShare(ambient)); // stop lamps by day
+      placed = placeAll(frame, lampsOn());
       timings.place.add(performance.now() - t0);
     },
     beforeRender(frame) {
       if (!enabled) return;
+      // the route's model arrived after the last update (a paused clock moves no pose, so no update follows): place now
+      if (!placed && current) part.update(frame);
       if (!placed || !current) { renderer.clear(); lamps.clear(); pools.clear(); return; }
       const t0 = performance.now();
       // the camera turned (looked back, zoomed out) since the placement: place again for the new range
       const ahead = range.ahead, behind = range.behind;
       rangeFor(frame);
-      if (range.ahead > ahead * 1.1 || range.behind > behind * 1.1) placed = placeAll(frame, look.beams > 0);
+      if (range.ahead > ahead * 1.1 || range.behind > behind * 1.1) placed = placeAll(frame, lampsOn());
       else { range.ahead = ahead; range.behind = behind; }
       renderer.draw(placed, frame.camera, frame.viewport?.height || 720, placedWindow);
       timings.draw.add(performance.now() - t0);
@@ -264,10 +302,7 @@ export async function createTrafficPart(ctx) {
     },
     setLook(lk) {
       const dusk = Math.min(1, Math.max(0, lk.dusk ?? (lk.night ? 1 : 0)));
-      renderer.uniforms.uDusk.value = dusk;
       renderer.uniforms.uStrength.value = 0.6 - 0.35 * dusk;
-      look.beams = lk.beams ?? dusk;
-      look.lights = lk.lights ?? dusk;
       if (Number.isFinite(lk.ambientLux)) look.ambient = lk.ambientLux;
     },
     /** Another route: the other routes' models (their ribbons' geometry) are let go; the journey's is loaded by ensure(). */
@@ -289,6 +324,7 @@ export async function createTrafficPart(ctx) {
         ...renderer.stats(),
         range: { ahead: Math.round(range.ahead), behind: Math.round(range.behind), spriteAhead: Math.round(range.spriteAhead), spriteBehind: Math.round(range.spriteBehind) },
         listed: lampStats.far, exact: lampStats.exact,
+        detailPx: renderer.detailPx, quality: quality?.level ?? null,
         lamps: { on: lampStats.on, ambientLux: +ambient.toFixed(1), ...lamps.stats(), mergeDist: Math.round(lamps.mergeDist), far: current?.far.stats(), ribbons: current?.ribbons.stats(), ...pools.stats() },
         js: { place: timings.place.summary(), draw: timings.draw.summary(), lamps: timings.lamps.summary(), sub: Object.fromEntries(Object.entries(sub).map(([k, v]) => { const x = v.summary(); return [k, [+x.mean.toFixed(3), +x.p95.toFixed(2)]]; })) },
       };
@@ -299,10 +335,11 @@ export async function createTrafficPart(ctx) {
     /** The renderer (render.js), for tests and the frame-budget probe. */
     renderer, lamps, pools,
     dispose() {
+      offQuality();
       renderer.dispose(); lamps.dispose(); pools.dispose();
       for (const p of models.values()) p.then((m) => m?.ribbons.dispose());
     },
   };
-  renderer.group.userData.part = part; // for tests/manual/traffic-shots.mjs, which finds it in the scene
+  renderer.group.userData.part = part; // for tests and probes (tests/manual/traffic-probe.mjs), which find it in the scene
   return part;
 }

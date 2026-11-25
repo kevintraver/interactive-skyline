@@ -1,13 +1,11 @@
 /**
  * Batching bookkeeping for the signs: which signs to show for a car position (nearest first,
- * within a radius, with hysteresis), which night band each falls in, and packing the built signs
- * into one buffer set per atlas page plus one for the supports, relative to a local origin.
- * Pure, no three.
+ * within a radius, with hysteresis), and packing the built signs into one buffer set per atlas
+ * page plus one for the supports, relative to a local origin. Pure, no three.
  */
 
 export const SHOW = 2000; // m: signs within this distance are shown
 export const KEEP = 2200; // m: a shown sign stays until it is this far
-export const BANDS = [200, 500]; // m: night bands, near to far (index 0 = nearest)
 
 /**
  * The signs to show, nearest first.
@@ -24,33 +22,26 @@ export function selectVisible(signs, car, shown = new Set(), show = SHOW, keep =
   return out.sort((a, b) => a.dist - b.dist);
 }
 
-/** true/false or how far the night glow is on (a number, the look's `lights`) to a weight in 0..1. */
-export const nightWeight = (on) => (typeof on === 'number' ? Math.min(1, Math.max(0, on)) || 0 : on ? 1 : 0);
-
-/** Night band of a distance: 0 near, 1 middle, 2 far. */
-export const bandOf = (d) => (d < BANDS[0] ? 0 : d < BANDS[1] ? 1 : 2);
-
 /**
  * Pack built signs into buffers.
- * @param {{ index: number, band: number, built: ReturnType<import('./geometry.js').buildSign> }[]} items
+ * @param {{ index: number, built: ReturnType<import('./geometry.js').buildSign> }[]} items
  * @param {number[]} origin scene position subtracted from every vertex (the mesh sits there)
  * @param {number} pages number of atlas pages
  * @returns {{ faces: { position: Float32Array, normal: Float32Array, uv: Float32Array, retro: Uint8Array, retroLegend: Uint8Array, index: Uint32Array,
- *   groups: { start: number, count: number, band: number }[], ranges: Map<number, { start: number, count: number }> }[],
+ *   ranges: Map<number, { start: number, count: number }> }[],
  *   support: { position: Float32Array, normal: Float32Array, color: Float32Array, index: Uint32Array, ranges: Map<number, object> } }}
- *   faces[p].groups run near band last (2, 1, 0), each a contiguous index range; ranges give each
- *   sign's index range, for tests and debugging
+ *   faces in the order of the signs' indices; ranges give each sign's index range, for tests and debugging
  */
 export function packSigns(items, origin, pages) {
-  const byBand = [...items].sort((a, b) => b.band - a.band || a.index - b.index);
+  const ordered = [...items].sort((a, b) => a.index - b.index);
   const faces = [];
   for (let p = 0; p < pages; p++) {
     const quads = [];
-    for (const it of byBand) for (const q of it.built.faces) if (q.page === p) quads.push({ it, q });
+    for (const it of ordered) for (const q of it.built.faces) if (q.page === p) quads.push({ it, q });
     const n = quads.length;
     const position = new Float32Array(n * 12), normal = new Float32Array(n * 12), uv = new Float32Array(n * 8), index = new Uint32Array(n * 6);
     const retro = new Uint8Array(n * 4), retroLegend = new Uint8Array(n * 4);
-    const groups = [], ranges = new Map();
+    const ranges = new Map();
     quads.forEach(({ it, q }, k) => {
       if (q.retro) { retro.fill(q.retro[0], k * 4, k * 4 + 4); retroLegend.fill(q.retro[1], k * 4, k * 4 + 4); }
       for (let c = 0; c < 4; c++) {
@@ -63,12 +54,10 @@ export function packSigns(items, origin, pages) {
       }
       const v = k * 4;
       index.set([v, v + 1, v + 2, v, v + 2, v + 3], k * 6);
-      const g = groups[groups.length - 1];
-      if (g && g.band === it.band) g.count += 6; else groups.push({ start: k * 6, count: 6, band: it.band });
       const r = ranges.get(it.index);
       if (r) r.count += 6; else ranges.set(it.index, { start: k * 6, count: 6 });
     });
-    faces.push({ position, normal, uv, retro, retroLegend, index, groups, ranges });
+    faces.push({ position, normal, uv, retro, retroLegend, index, ranges });
   }
   let nv = 0, ni = 0;
   for (const it of items) { nv += it.built.support.pos.length / 3; ni += it.built.support.idx.length; }

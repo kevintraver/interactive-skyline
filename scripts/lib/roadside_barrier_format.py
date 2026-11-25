@@ -1,7 +1,7 @@
 """Barriers v1 writer, the Python twin of src/drive/roadside/barrierFormat.js.
 
 The specification is the comment at the top of barrierFormat.js. encode_barriers() must give the
-same text as encodeBarriers() for the same input; tests/data/test_barriers.py and
+same text as encodeBarriers() for the same input; tests/python/test_barriers.py and
 tests/unit/roadside/barrierFormat.test.js hold the two together through a shared fixture.
 
     text = encode_barriers({"source": {...}, "roads": [{"id": ..., "runs": [run, ...], "delineators": [...]}]})

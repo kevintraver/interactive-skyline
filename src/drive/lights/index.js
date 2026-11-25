@@ -8,27 +8,50 @@
 // the view frustum and the horizon (pack.js cullCells); when the visible set changes the draw list is rewritten
 // (cells are runs of instances), nearest cells first and at most SPRITE_BUDGET lamps. Enclosed lamps (under a
 // bridge, in a tunnel) never draw as sprites; they still light pools.
-// Pools: pools.js (a 2 km window of 2 m texels around the car, splatted in workers), added through surfaceLight.js.
+// Pools: pools.js (a 2 km window of 2 m texels around the car, splatted in workers), added through
+// surfaceLight.js to the road, the ground, the corridor's buildings and the traffic's bodies (ctx.eachSurface and
+// ctx.eachGround; a body takes the pool as a building's wall or roof does).
 // Switching and warm-up (switching.js, lamps.js): every lamp has its own photocell threshold; the shader compares
 // it with the ambient illuminance of the moment and reads its switch-on time of this evening from a table worked
 // out per local day, so a sodium lamp's colour and flux are a pure function of simulation time. The pools follow
-// the same thresholds in four slices (poolTile.js). Everything is scaled by the look's `lights` (0 by day, 1 by
-// night; env.js's units are fitted to the night look), so by day the sprites and pools draw nothing and the
-// per-frame work stops; the poles stand day and night.
+// the same thresholds in four slices (poolTile.js). The part is on while any lamp can be lit (ambient under
+// LIT_BELOW_LUX); by day the sprites and pools draw nothing and the per-frame work stops; the poles stand day and night.
+//
+// Light (third stretch, decision 6) is physical: a sprite is the lamp's candela (photometry.js pointSource rule,
+// times the pre-exposure and the lights-out slider), a pool is lux on the surface (surfaceLight.js, albedo x lux
+// / pi). Detail follows plan 01's quality level (decision 8, lampDetail): the sprite budget and the pool map's texel
+// size.
 
 import * as THREE from 'three';
 import { curveDrop } from '../../world/frame.js';
 import { decodeLampPack, nonEmptyCells, cellBounds, cullCells, BOUND_STRIDE } from './pack.js';
 import { createLampTypes, LUMINAIRE_DIAMETER_M } from './lamps.js';
-import { switchThresholdLux, createOnTable, sliceLit } from './switching.js';
+import { switchThresholdLux, createOnTable, sliceLit, SWITCH_MID_LUX, SWITCH_SPREAD } from './switching.js';
+import { POOL_TILE_PX } from './poolTile.js';
+import { createPoles } from './poles.js';
 import { createSpriteLayer } from './sprites.js';
 import { createPools } from './pools.js';
-import { createPoles } from './poles.js';
+import { photometryContext } from './photometry.js';
 import { createTimings } from '../timing.js';
 import { eachGround } from '../parts.js';
 
 /** Sprites drawn at most (plan 02, 9.1: 80 k sprites on High, lamps and vehicle lamps and studs together). */
 export const SPRITE_BUDGET = 80000;
+/**
+ * Detail by plan 01's quality level (decision 8): the lamps' sprite budget (plan 02, 9.1's sprite limits, 20 k, 80 k
+ * and 250 k, given to the street lamps; the far cells are thinned with their light kept, so a lower budget costs
+ * detail in the distance, not light) and the pool map's texels along a 512 m tile (128: 4 m texels on Low; 256: 2 m
+ * on High and Ultra, where a pool about a 10 m mount wide is already well sampled).
+ * @param {string} [level] 'low' | 'high' | 'ultra'
+ * @returns {{ sprites: number, poolPx: number }}
+ */
+export function lampDetail(level) {
+  if (level === 'low') return { sprites: 20000, poolPx: 128 };
+  if (level === 'ultra') return { sprites: 250000, poolPx: POOL_TILE_PX };
+  return { sprites: SPRITE_BUDGET, poolPx: POOL_TILE_PX };
+}
+/** The highest photocell threshold a lamp can have (switching.js: u clamped to 1e-4 .. 1 - 1e-4): above this no lamp is lit. */
+export const LIT_BELOW_LUX = SWITCH_MID_LUX * ((1 - 1e-4) / (1 - (1 - 1e-4))) ** SWITCH_SPREAD;
 /** Reflectance of the ground under a lamp, for its pool seen from afar (asphalt and desert, ASSUMED). */
 const GROUND_ALBEDO = 0.15;
 const HEIGHT_SLICE = 20000;
@@ -53,6 +76,9 @@ export async function createLampsPart(ctx) {
   const types = createLampTypes(pack.lampTypes);
   const { renderer, camera } = ctx.app;
   const { env, terrain, base, earthR } = ctx;
+  const photometry = photometryContext({ nodes: env.nodes });
+  const quality = ctx.app.plan01?.quality;
+  let detail = lampDetail(quality?.level);
 
   // heights on the ground the drive draws, a slice at a time so the main thread is not held up
   const n = pack.count;
@@ -72,7 +98,7 @@ export async function createLampsPart(ctx) {
   floorAlt -= 150; // below the lowest lamp: the horizon test stays conservative
 
   // the sprite layer: instance i is lamp i of the product
-  const layer = createSpriteLayer({ capacity: n, name: 'lamp-sprites', reflect: true }); // reflect: twins on wet pavement (weather)
+  const layer = createSpriteLayer({ capacity: n, name: 'lamp-sprites', reflect: true, photometry }); // reflect: twins on wet pavement (weather)
   const patternOf = new Map();
   for (const t of types.list) {
     patternOf.set(t.id, layer.definePattern({ kind: t.optic, kDown: t.kDown, kUp: t.kUp, downShare: 1 - t.uplight }));
@@ -94,18 +120,44 @@ export async function createLampsPart(ctx) {
   layer.mesh.visible = false;
   ctx.group.add(layer.mesh);
 
-  const pools = createPools({ renderer, pack });
+  const makePools = () => createPools({ renderer, pack, tilePx: detail.poolPx, photometry });
+  let pools = makePools();
   const detach = [];
-  const attach = (material, surface) => { if (material) detach.push(pools.attach(material, surface)); };
+  const attached = []; // [material, surface]: put on a new pool map when the quality level changes its texel size
+  const attach = (material, surface) => {
+    if (!material?.isNodeMaterial) return; // a stock material the renderer converts itself takes no term
+    attached.push([material, surface]);
+    detach.push(pools.attach(material, surface));
+  };
   attach(ctx.materials?.road, 'ground');
   attach(ctx.materials?.roadNear, 'ground');
   attach(ctx.wideMesh?.material, 'ground');
   const offGround = eachGround(ctx, (mesh) => attach(mesh.material, 'ground')); // the terrain patches too, when they come
-  let corridorMat = null, corridorCheck = 0, corridorGroup;
+  // the corridor's buildings, the traffic's bodies (and any later surface of those kinds) through the session's surfaces
+  const offSurfaces = ctx.eachSurface
+    ? ctx.eachSurface((m, kind) => { if (kind === 'building' || kind === 'vehicle') attach(m, 'building'); else if (kind === 'road' && !attached.some(([a]) => a === m)) attach(m, 'ground'); })
+    : () => {};
+  const lastCar = [NaN, NaN]; // the car's map position at the last update
 
   // the poles stand near the roads of the route's RoadNet: rebuilt when the route changes (setRoute)
   let poleRoads = ctx.net?.roadnet || null;
   let poles = createPoles({ pack, types, roads: poleRoads?.roads || [], groundY: terrain.surfaceY, parent: ctx.group });
+
+  // plan 01's quality level (decision 8): the sprite budget at once; a new pool texel size makes a new pool map
+  const offQuality = quality?.on ? quality.on('change', (q) => {
+    const next = lampDetail(q.level);
+    if (next.sprites !== detail.sprites) prevCount = -1; // re-cull with the new budget
+    const repool = next.poolPx !== detail.poolPx;
+    detail = next;
+    if (!repool) return;
+    for (const d of detach.splice(0)) d();
+    pools.dispose();
+    pools = makePools();
+    for (const [m, surface] of attached) detach.push(pools.attach(m, surface));
+    if (Number.isFinite(lastCar[0])) pools.update(lastCar[0], lastCar[1], on);
+    if (on) poolWeights();
+    ctx.app.invalidate?.();
+  }) : () => {};
 
   const onTable = createOnTable(env.ephemeris);
   const table = new Float32Array(37);
@@ -124,9 +176,8 @@ export async function createLampsPart(ctx) {
   const white = types.byKey.get('led_street') || types.list.find((t) => t.cls === 'led') || types.list[0];
   const sliceW = [[0, 0, 0], [0, 0, 0], [0, 0, 0], [0, 0, 0]];
 
-  /** The pools' channel weights for the moment: colour x lit share x warm-up x units x fade. */
+  /** The pools' channel weights for the moment: colour x lit share x warm-up (dimensionless; the term applies the scale). */
   function poolWeights() {
-    const k = env.lighting.units.lux * lights;
     const slices = [[0, 0.5], [0.5, 1]];
     for (let s = 0; s < 2; s++) {
       const { share, midThresholdLux } = sliceLit(ambient, slices[s][0], slices[s][1]);
@@ -134,9 +185,9 @@ export async function createLampsPart(ctx) {
       if (sodium && share > 0) {
         const secs = secondsOnAt(midThresholdLux);
         const w = sodium.warmup(secs);
-        for (let c = 0; c < 3; c++) sliceW[s][c] = Math.max(0, w.color[c]) * w.flux * share * k;
+        for (let c = 0; c < 3; c++) sliceW[s][c] = Math.max(0, w.color[c]) * w.flux * share;
       } else sliceW[s].fill(0);
-      for (let c = 0; c < 3; c++) sliceW[2 + s][c] = Math.max(0, white.color[c]) * share * k;
+      for (let c = 0; c < 3; c++) sliceW[2 + s][c] = Math.max(0, white.color[c]) * share;
     }
     pools.setWeights(sliceW);
   }
@@ -187,13 +238,14 @@ export async function createLampsPart(ctx) {
       order.push([res.cells[j], Math.max(1, d - bounds[o + 2]), k]);
       total += Math.ceil(c / k);
     }
-    if (total > SPRITE_BUDGET) {
+    const budget = detail.sprites;
+    if (total > budget) {
       const m = order.length;
       if (cnt.length < m) { cnt = new Float64Array(cells.length); dst = new Float64Array(cells.length); kmin = new Float64Array(cells.length); }
       for (let j = 0; j < m; j++) { cnt[j] = bounds[order[j][0] * BOUND_STRIDE + 5]; dst[j] = order[j][1]; kmin[j] = order[j][2]; }
       const drawnAt = (d0) => { let a = 0; for (let j = 0; j < m; j++) a += Math.ceil(cnt[j] / Math.max(kmin[j], Math.ceil(dst[j] / d0))); return a; };
       let lo = 1, hi = 1e6;
-      for (let it = 0; it < 24; it++) { const mid = Math.sqrt(lo * hi); if (drawnAt(mid) > SPRITE_BUDGET) hi = mid; else lo = mid; }
+      for (let it = 0; it < 24; it++) { const mid = Math.sqrt(lo * hi); if (drawnAt(mid) > budget) hi = mid; else lo = mid; }
       for (const e of order) e[2] = Math.max(e[2], Math.ceil(e[1] / lo));
     }
     // the same cells and strides as last time: nothing to upload
@@ -206,13 +258,16 @@ export async function createLampsPart(ctx) {
     let w = 0;
     for (let j = 0; j < count; j++) {
       const o = order[j][0] * BOUND_STRIDE, first = bounds[o + 6], c = bounds[o + 5], k = order[j][2];
-      for (let i = 0; i < c && w < SPRITE_BUDGET; i += k) { draw[2 * w] = first + i; draw[2 * w + 1] = Math.min(k, c - i); w++; }
+      for (let i = 0; i < c && w < budget; i += k) { draw[2 * w] = first + i; draw[2 * w + 1] = Math.min(k, c - i); w++; }
       prevCells[2 * j] = order[j][0]; prevCells[2 * j + 1] = k;
     }
     prevCount = count;
     layer.setDrawCount(w);
     culls++;
   }
+
+  /** Whether any lamp can be lit now: by the photocells. */
+  const isOn = () => ambient < LIT_BELOW_LUX;
 
   let enabled = true;
   const part = {
@@ -223,6 +278,8 @@ export async function createLampsPart(ctx) {
       layer.mesh.visible = enabled && on;
       poles.setVisible(enabled);
       if (!enabled) pools.update(0, 0, false);
+      // on again while the clock is paused (no update follows until the pose moves): the pools come back now
+      else if (Number.isFinite(lastCar[0])) pools.update(lastCar[0], lastCar[1], on);
     },
     /** Lamps per pixel a far cell is thinned to (default SCREEN_DENSITY; Infinity: no thinning but the budget's). */
     setScreenDensity(v) { screenDensity = v > 0 ? v : SCREEN_DENSITY; prevCount = -1; },
@@ -231,20 +288,16 @@ export async function createLampsPart(ctx) {
       const t0 = performance.now();
       simMs = frame.simMs;
       ambient = env.lighting.ambientLux(frame.sun.elevation);
-      on = lights > 0;
+      on = isOn();
+      layer.mesh.visible = on && enabled;
       const car = frame.pose.position;
       const tp = performance.now();
       poles.update(car.x, -car.z);
       sub.poles.add(performance.now() - tp);
       const tq = performance.now();
       pools.update(car.x, -car.z, on);
+      lastCar[0] = car.x; lastCar[1] = -car.z;
       sub.pools.add(performance.now() - tq);
-      if (!corridorMat && ++corridorCheck % 30 === 1) {
-        // the roadside buildings' shared material, once their first cell is in (the group is looked up once)
-        corridorGroup ??= ctx.group.children.find((o) => o.name === 'corridor') || null;
-        const mesh = corridorGroup?.children.find((m) => m.isMesh);
-        if (mesh) { corridorMat = mesh.material; attach(corridorMat, 'building'); }
-      }
       const tw = performance.now();
       if (on) {
         onTable(simMs, table);
@@ -255,7 +308,7 @@ export async function createLampsPart(ctx) {
     },
     setLook(look) {
       lights = look.lights ?? look.dusk ?? (look.night ? 1 : 0);
-      on = lights > 0;
+      on = isOn();
       layer.mesh.visible = on && enabled;
       if (!on) pools.update(0, 0, false);
     },
@@ -267,7 +320,7 @@ export async function createLampsPart(ctx) {
       cull();
       sub.cull.add(performance.now() - tc);
       layer.setFrame({
-        camera, renderer, gain: env.lighting.units.nit * lights, ambientLux: ambient, onTable: table,
+        camera, renderer, ambientLux: ambient, onTable: table,
         visibility: env.weather.state().visibilityM || 80000, sodium: sodiumUv, groundAlbedo: GROUND_ALBEDO,
       });
       timings.add(pendingMs + performance.now() - t0);
@@ -282,21 +335,43 @@ export async function createLampsPart(ctx) {
       poles.setVisible(enabled);
     },
     whenSettled: () => pools.whenSettled(),
+    /** For probes: the sprites' instance positions as drawn (x, y, z, flux per lamp; sprites.js's texel T0). */
+    instancePositions: () => layer.data[0],
+    /** For probes: the sprites drawn now, as { index: weight } (a thinned cell's drawn lamp carries the light of k). */
+    drawnWeights() {
+      const out = new Map(), list = layer.drawIndices, n = layer.drawn;
+      for (let j = 0; j < n; j++) out.set(list[2 * j], list[2 * j + 1]);
+      return out;
+    },
+    /**
+     * For probes (tests/manual/lights-probe.mjs): the pool map's illuminance at map (x, y), lux of luminance per channel
+     * weighted as the term weights it (without the light scale), or null where no map is shown.
+     */
+    poolLuxAt(x, y) {
+      const c = pools.channelsAt(x, y);
+      if (!c) return null;
+      const w = sliceW;
+      const rgb = [0, 1, 2].map((j) => c[0] * w[0][j] + c[1] * w[1][j] + c[2] * w[2][j] + c[3] * w[3][j]);
+      return { rgb, channels: c };
+    },
     stats() {
       const t = timings.summary();
       return {
         lamps: n, on, lights, ambientLux: ambient, sprites: on ? layer.drawn : 0, cells: lastCells, lampsInView: lastLamps, culls,
+        budget: detail.sprites, visibilityM: env.weather.state().visibilityM || 80000, poolPx: detail.poolPx,
         poles: poles.count, pools: pools.stats(), js: { mean: t.mean, p95: t.p95, max: t.max, sub: Object.fromEntries(Object.entries(sub).map(([k, v]) => { const x = v.summary(); return [k, [+x.mean.toFixed(3), +x.p95.toFixed(2), +x.max.toFixed(2)]]; })) },
       };
     },
     dispose() {
       offGround();
+      offSurfaces();
+      offQuality();
       for (const d of detach) d();
       layer.dispose();
       pools.dispose();
       poles.dispose();
     },
   };
-  layer.mesh.userData.lampsPart = part; // for tests/manual/lamps-shots.mjs
+  layer.mesh.userData.lampsPart = part; // for tests/manual/lights-probe.mjs
   return part;
 }

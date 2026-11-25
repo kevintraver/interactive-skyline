@@ -39,10 +39,12 @@ export const LENS_CABIN = 28;
 export const CABIN_PORTRAIT = Object.freeze({ aspect: 0.5, lens: 70, pitch: -8 });
 export const VIEWS = ['cabin', 'clean'];
 export const DEFAULT_VIEW = 'cabin';
-export const NEAR_MIN = 1;
-export const NEAR_MAX = 5;
-/** camera.near is this fraction of the view-axis depth at which the lowest ray meets the road. */
-export const NEAR_FRACTION = 0.8;
+/**
+ * The camera's near plane, metres (plan 02, third stretch, decisions 3 and 7): with reversed depth a 0.1 m plane holds on
+ * both backends, the cabin drawn in the scene pass on the same camera (a 0.1 m plane against a near plane that followed
+ * the road changed at most 4 pixels of 921,600, the road against the ground at 15 to 22 km not one).
+ */
+export const NEAR_M = 0.1;
 export const FAR = 150000;
 /** main.js caps the vertical field of view of its 50 mm lens at 60 degrees in tall windows. */
 const VFOV_CAP = 60;
@@ -82,24 +84,6 @@ const aspectOf = (viewport) => {
   if (viewport.width > 0 && viewport.height > 0) return viewport.width / viewport.height;
   return 16 / 9;
 };
-
-/**
- * Near plane for a view: NEAR_FRACTION of the depth (along the view axis) at which the lowest ray
- * of the frustum meets the road plane, clamped to [NEAR_MIN, NEAR_MAX]. A ray that never meets
- * the road gives NEAR_MAX.
- * @param {Vector3} dir unit view direction  @param {Vector3} camUp unit camera up
- * @param {Vector3} roadUp road normal  @param {number} height eye height above the road plane
- * @param {number} vfovDeg vertical field of view
- */
-export function nearFor(dir, camUp, roadUp, height, vfovDeg) {
-  const t = Math.tan((vfovDeg * RAD) / 2);
-  // with no roll the bottom-centre ray is the steepest one
-  const ray = new Vector3().copy(dir).addScaledVector(camUp, -t).normalize();
-  const down = -ray.dot(roadUp);
-  if (!(down > 1e-6)) return NEAR_MAX;
-  const depth = (height / down) * ray.dot(dir);
-  return clamp(NEAR_FRACTION * depth, NEAR_MIN, NEAR_MAX);
-}
 
 /** Where the cabin puts the eye, when no cabin.json is given (the same numbers as public/models/drive/cabin.json). */
 export const CABIN_DEFAULTS = Object.freeze({ eye: [0, 1.2, 0], neckPivot: [0, 1.2, 0.1], carCenterX: 0.37 });
@@ -238,11 +222,7 @@ export function createRig({ eyeHeight = EYE_HEIGHT, view = DEFAULT_VIEW, cabin =
         const head = headMatrix(eff, motion, geom, new Matrix4());
         _m.multiplyMatrices(body, head);
         _m.decompose(camera.position, camera.quaternion, _s);
-        _d.set(0, 0, -1).applyQuaternion(camera.quaternion);
-        _y.set(0, 1, 0).applyQuaternion(camera.quaternion);
-        // the near plane as for the clean eye: the hood hides the road closer than it anyway
-        const near = nearFor(_d, _y, pose.up, eyeHeight, fov);
-        setLens(camera, aspect, fov, near);
+        setLens(camera, aspect, fov);
         rig.last = { view: 'cabin', body, head, fov, aspect, wheel, motion };
         return camera;
       }
@@ -262,7 +242,7 @@ export function createRig({ eyeHeight = EYE_HEIGHT, view = DEFAULT_VIEW, cabin =
       _m.makeBasis(_x, _y, _d.clone().negate());
       camera.position.copy(_eye);
       camera.quaternion.setFromRotationMatrix(_m);
-      setLens(camera, aspect, fov, nearFor(_d, _y, pose.up, eyeHeight, fov));
+      setLens(camera, aspect, fov);
       rig.last = { view: 'clean', body: null, head: null, fov, aspect, wheel, motion: NO_MOTION };
       return camera;
     },
@@ -270,10 +250,10 @@ export function createRig({ eyeHeight = EYE_HEIGHT, view = DEFAULT_VIEW, cabin =
   return rig;
 }
 
-function setLens(camera, aspect, fov, near) {
+function setLens(camera, aspect, fov) {
   camera.aspect = aspect;
   camera.fov = fov;
-  camera.near = near;
+  camera.near = NEAR_M;
   camera.far = FAR;
   camera.updateProjectionMatrix();
   camera.updateMatrixWorld(true);

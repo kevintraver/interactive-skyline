@@ -1,5 +1,5 @@
 {
-  "source": {"osm": "2026-11-22T10:25:51Z", "note": "fixture for the barriers format (tests/data/test_barriers.py, tests/unit/roadside/barrierFormat.test.js)"},
+  "source": {"osm": "2026-11-22T10:25:51Z", "note": "fixture for the barriers format (tests/python/test_barriers.py, tests/unit/roadside/barrierFormat.test.js)"},
   "roads": [
     {"id": "test.main", "runs": [
       {"s0": 0, "s1": 120.04, "side": "left", "type": "concrete", "o0": 0.45, "o1": 1.2049999, "prov": "rule", "open0": true, "open1": false},

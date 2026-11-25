@@ -1,6 +1,6 @@
 // Drops on the windshield (plan 02, D8.2): the rules, in JavaScript, as closed-form functions of simulation time and a
-// hash. No three.js, no state carried from frame to frame but caches of pure values. glassRain.glsl.js evaluates the
-// same rules per drop on the GPU (its vertex shader is evalSite below, line for line); this file is what the unit tests
+// hash. No three.js, no state carried from frame to frame but caches of pure values. glassRain.js evaluates the same
+// rules per drop on the GPU (its vertex stage is evalSite below, line for line); this file is what the unit tests
 // check and what dropCount counts.
 //
 // Why closed form, not the plan's ping-pong simulation re-warmed after a seek: the drive holds every frame to be a pure
@@ -23,7 +23,7 @@
 //   the relative wind; times |v_rel| / v_fall it is the volume of falling rain the glass sweeps per second. So the rate
 //   is proportional to the rain rate times the projected area along the relative wind (and the relative speed): more at
 //   speed (about 4.5 times at 108 km/h than standing, for this glass raked 36 degrees from the horizontal).
-//   lambda for bin k = rate(t_k) x BIN_S / sites, from the car's pose and the weather at the bin's start (glassRain.js),
+//   lambda for bin k = rate(t_k) x BIN_S / sites, from the car's pose and the weather at the bin's start (glassRainFeed.js),
 //   so a bin's arrivals never change once it is past.
 // Each site holds one sitting drop: the arrivals since its epoch merge into it (radius R0_M x SIZE_GAIN x n^(1/3) for n
 // units; merging by accretion: ASSUMED in place of drops meeting by chance). Its epoch begins at the later of the last
@@ -38,7 +38,7 @@
 // v the car's speed, V_CRIT 60 km/h (the plan's "upward above about 60 km/h": the air's drag on a drop grows with the
 // square of the speed and balances the weight's component down the glass there), V_RUN 0.12 m/s (ASSUMED: a running
 // drop on glass), s = the drop's offset from the glass's middle over half its width (outward: the airflow spreads toward
-// the pillars, and drops run down and out at rest; ASSUMED). The path is integrated analytically: glassRain.js keeps the
+// the pillars, and drops run down and out at rest; ASSUMED). The path is integrated analytically: glassRainFeed.js keeps the
 // running integral D(t) = integral of vy dt per bin, so a runner born at t0 is at start + (SIDE s (Da(t) - Da(t0)),
 // Dy(t) - Dy(t0)). A runner lives RUN_LIFE_S at most (it runs out of water; fades over its last 0.6 s), until it leaves
 // the glass, or until the next blade pass over where it is. Each site shows its latest two runners.

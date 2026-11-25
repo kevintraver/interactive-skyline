@@ -1,7 +1,7 @@
 """Corridor cell writer and reader, the Python twin of src/drive/corridor/format.js.
 
 The specification is the comment at the top of format.js. encode_cell() gives the bytes that
-decodeCell() reads, and decode_cell() reads what encodeCell() writes; tests/data/test_corridor.py
+decodeCell() reads, and decode_cell() reads what encodeCell() writes; tests/python/test_corridor.py
 and tests/unit/corridor/format.test.js hold the two to one fixture (tests/fixtures/corridor/).
 
     blob = encode_cell({"origin": (x, y), "wide": False, "buildings": [b, ...]})

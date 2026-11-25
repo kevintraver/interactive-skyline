@@ -57,6 +57,8 @@ export function createEnvNodes(env) {
     aerialPerspective: () => vec4(0, 0, 0, 1),
     transmittance: () => vec3(1),
     cloudShadow: () => float(1),
+    /** float 0..1: 1 where the key light reaches that point over the terrain (the far terrain shadow, T3.6) */
+    terrainShadow: () => float(1),
     wetness: () => vec2(0),
     wetLayer: (surface) => surface,
     applyWetSurface: () => {},

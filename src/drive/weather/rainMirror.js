@@ -1,6 +1,6 @@
 // Rain's rules (plan 02, phase 8) in JavaScript: where each drawn drop is at a simulation time, how fast drops fall
 // and drift, what a streak's light is, and the rain seen from the car (for the windshield's follow-up, D8.2). Pure:
-// no three.js, no DOM. rain.glsl.js computes the same per vertex; rain.js feeds it from here.
+// no three.js, no DOM. rain.js computes the same per vertex, fed from here.
 //
 // Drops. A cube of side BOX_M around a point a little ahead of the eye, tiled through the world: drop i has a fixed
 // base position (a hash of i) and moves with its class's velocity (wind plus its fall speed), so its place is
@@ -146,10 +146,11 @@ export function lowBeamShare(c) {
 }
 
 /**
- * A streak's summed light at the eye (scene units x pixel solid angle: divide by the pixel angle squared for the sum
- * of its pixel values), as the shader computes it.
+ * A streak's summed light at the eye (cd/m^2 x the light scale x pixel solid angle: divide by the pixel angle squared
+ * for the sum of its pixel values), as the shader computes it.
  * @param {{ dMm: number, distanceM: number, lampLux: number, skyRadiance: number, units: number }} o
- *   lampLux: illuminance on the drop from the lamps (lux); skyRadiance: the sky's (scene units); units: lighting.units.nit
+ *   lampLux: illuminance on the drop from the lamps (lux); skyRadiance: the sky's (cd/m^2 x the light scale); units: the
+ *   light scale of a lux
  */
 export function streakLight({ dMm, distanceM, lampLux, skyRadiance, units }) {
   const A = Math.PI * (dMm / 2000) ** 2;

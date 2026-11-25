@@ -101,7 +101,7 @@ export function rgbOf([w, r, a], out = [0, 0, 0]) {
 }
 
 /**
- * The ribbon's arithmetic (ribbon.glsl.js), for tests: the illuminance (lux) at the eye from a stretch of one
+ * The ribbon's arithmetic (ribbon.js), for tests: the illuminance (lux) at the eye from a stretch of one
  * lane of length ds at distance d, with density lambda (veh/m), seen at cos c to the direction of travel, through
  * visibility V. It is the sum of the vehicles' point sources: lambda ds I(c) T / d^2. The shader spreads it over
  * the strip's pixels (radiance = E / (pixels x pixel solid angle)), so the summed light is this either way.

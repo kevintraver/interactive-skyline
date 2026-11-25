@@ -5,8 +5,8 @@
  * every REBUILD metres, relative to a local origin near it (float32 is too coarse 60 km out).
  *
  * The reflector meshes carry an instance attribute `retro` (sheeting code, sheeting.js) and
- * materials named 'delineator white' and 'delineator yellow'. At night they glow a little, as
- * the road's markings do, standing in for headlights until those exist.
+ * materials named 'delineator white' and 'delineator yellow'; at night the headlights part adds the
+ * visitor's lamps' retroreflected return to them.
  */
 import * as THREE from 'three';
 import { createRefline } from '../roadnet/refline.js';
@@ -15,14 +15,12 @@ import { localUp } from '../../world/frame.js';
 import { asDecoded } from './barrierFormat.js';
 import { standY } from './geometry.js';
 import { sheetingCode } from './sheeting.js';
-import { nightWeight } from './batch.js';
 import { lambert } from './lambert.js';
 
 export const SHOW = 1200; // m: delineators within this distance are drawn
 export const REBUILD = 150; // m the car moves before the set is rebuilt
 export const POST = { w: 0.08, d: 0.03, y0: -0.6, y1: 1.25 };
 export const FACE = { w: 0.075, y0: 0.95, y1: 1.15 }; // reflector at about 4 ft
-const NIGHT_GLOW = 0.55;
 
 /**
  * Every delineator as { x, y (map), pos (scene, doubles), right, up, face (unit vectors), colour }. Each stands on
@@ -79,20 +77,20 @@ function faceGeometry() {
 
 /**
  * @param {{ barriers: object, roadnet: object, base: number, earthR: number, parent: THREE.Object3D,
- *           ground?: (x: number, y: number) => number, legacy?: boolean }} opts  legacy: false on plan 01's renderer (node materials)
+ *           ground?: (x: number, y: number) => number }} opts
  */
-export function createDelineators({ barriers, roadnet, base, earthR, parent, ground = null, legacy = true }) {
+export function createDelineators({ barriers, roadnet, base, earthR, parent, ground = null }) {
   const all = placeDelineators(barriers, roadnet, base, earthR, ground);
   const counts = { white: 0, yellow: 0 };
   for (const d of all) counts[d.colour]++;
   const group = new THREE.Group();
   group.name = 'delineators';
   parent.add(group);
-  const postMat = lambert(legacy, { color: 0xd9dbd6 }, 'delineator');
+  const postMat = lambert({ color: 0xd9dbd6 }, 'delineator');
   postMat.name = 'delineator posts';
   const faceMats = {
-    white: lambert(legacy, { color: 0xf4f4ef, emissive: 0xffffff, emissiveIntensity: 0 }, 'delineator'),
-    yellow: lambert(legacy, { color: 0xf2c230, emissive: 0xffc840, emissiveIntensity: 0 }, 'delineator'),
+    white: lambert({ color: 0xf4f4ef }, 'delineator'),
+    yellow: lambert({ color: 0xf2c230 }, 'delineator'),
   };
   faceMats.white.name = 'delineator white';
   faceMats.yellow.name = 'delineator yellow';
@@ -143,8 +141,6 @@ export function createDelineators({ barriers, roadnet, base, earthR, parent, gro
       if (!all.length) return;
       if (!last || Math.hypot(car.x - last.x, car.y - last.y) > REBUILD) rebuild(car);
     },
-    /** true/false or how far the night glow is on (0..1, the look's `lights`). */
-    setNight(on) { const w = nightWeight(on); for (const m of Object.values(faceMats)) m.emissiveIntensity = NIGHT_GLOW * w; },
     /** [material, kind] pairs for the lights part's surface light. */
     surfaces: () => [[postMat, 'delineator'], [faceMats.white, 'delineator'], [faceMats.yellow, 'delineator']],
     stats() {

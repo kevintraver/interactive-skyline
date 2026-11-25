@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { PerspectiveCamera, Vector3 } from 'three';
-import { createRig, lensToHfov, verticalFov, NEAR_FRACTION, LENS_DEFAULT } from '../../../src/drive/vehicle/rig.js';
+import { createRig, lensToHfov, verticalFov, NEAR_M, LENS_DEFAULT } from '../../../src/drive/vehicle/rig.js';
 import { createJourney } from '../../../src/drive/journey.js';
 import { localUp } from '../../../src/world/frame.js';
 import { fixture } from './helpers.js';
@@ -65,20 +65,8 @@ describe('rig, clean camera', () => {
     expect(camOf(clean(), level, { aspect: 2 }).aspect).toBe(2);
   });
 
-  it('sets the near plane from where the lowest ray meets the road', () => {
-    const near = (look) => camOf(clean().look(look)).near;
-    // level, 50 mm, 16:9: the bottom ray dips by half the vertical field
-    const half = verticalFov(50, 16 / 9) / 2 * RAD;
-    expect(near({})).toBeCloseTo(NEAR_FRACTION * 1.2 / Math.tan(half), 1);
-    expect(near({}) > 4 && near({}) <= 5).toBe(true);
-    // looking down: the bottom ray dips by 40 degrees plus half the field
-    expect(near({ pitch: -40 })).toBeCloseTo(NEAR_FRACTION * 1.2 * Math.cos(half) / Math.sin(40 * RAD + half), 1);
-    expect(near({ pitch: -40, lens: 24 })).toBe(1); // and wide: clamped to 1 m
-    const wide = near({ lens: 24 }); // zoomed out: the road comes into frame closer
-    expect(wide).toBeCloseTo(NEAR_FRACTION * 1.2 / (18 / (24 * 16 / 9)), 1);
-    expect(wide).toBeLessThan(near({}));
-    expect(near({ pitch: 30 })).toBe(5); // the lowest ray never meets the road
-    expect(near({ lens: 200 })).toBe(5);
+  it('keeps the near plane at NEAR_M, whatever the look and the lens', () => {
+    for (const look of [{}, { pitch: -40 }, { pitch: -40, lens: 24 }, { pitch: 30 }, { lens: 200 }]) expect(camOf(clean().look(look)).near).toBe(NEAR_M);
     expect(camOf(clean()).far).toBe(150000);
   });
 

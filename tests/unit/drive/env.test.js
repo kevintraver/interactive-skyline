@@ -1,12 +1,15 @@
-import { describe, it, expect, vi } from 'vitest';
-import { createEnv, createClock, RATE_MIN, RATE_MAX, ambientLux, NIGHT_SKY_LUX, LIGHTING_UNITS } from '../../../src/drive/env.js';
+// env.js: the drive's port over plan 01's clock, ephemeris, environment and weather (plan 02, section 11.1; third
+// stretch, decisions 4, 5 and 9), and the clear sky's illuminance by the sun's elevation.
+import { describe, it, expect } from 'vitest';
+import { createEnv, ephemerisOn, ambientLux, NIGHT_SKY_LUX } from '../../../src/drive/env.js';
+import { createSimClock } from '../../../src/sim/clock.js';
+import { createEphemeris } from '../../../src/sky/ephemeris.js';
 import { LV } from './helpers.js';
 
-// Reference positions at the Las Vegas origin (36.1147 N, 115.1728 W). NOAA's online calculator
-// could not be driven from here, so these come from an independent published algorithm: NREL's
-// Solar Position Algorithm (Reda and Andreas 2004) as implemented by pvlib.solarposition.spa_python,
-// with pressure 101325 Pa, 10 C, delta_t 69 s; apparent (refracted) elevation, degrees.
-// SPA stops refracting below -0.83 degrees, NOAA does not (about 0.12 degrees at -2.7), hence 0.3.
+// Reference positions at the Las Vegas origin (36.1147 N, 115.1728 W), from an independent published algorithm: NREL's
+// Solar Position Algorithm (Reda and Andreas 2004) as implemented by pvlib.solarposition.spa_python, with pressure
+// 101325 Pa, 10 C, delta_t 69 s; apparent (refracted) elevation, degrees. Above the horizon only: below it the two
+// refraction models part (plan 01's ephemeris has its own tests, tests/unit/sky/ephemeris.test.js).
 const REFERENCE = [
   ['2026-01-15T19:00:00Z', 31.6764, 166.2187],
   ['2026-03-20T16:30:00Z', 31.6767, 116.6815],
@@ -14,11 +17,17 @@ const REFERENCE = [
   ['2026-08-10T14:15:00Z', 14.8342, 81.4628],
   ['2026-10-05T22:45:00Z', 28.4724, 238.7750],
   ['2026-12-21T00:20:00Z', 1.2135, 239.8016], // near sunset, Dec 20 local
-  ['2026-11-21T00:40:00Z', -2.7221, 247.2596], // civil twilight, Nov 20 local
 ];
 
-describe('ephemeris', () => {
-  const env = createEnv({ city: LV, nowMs: Date.parse('2026-11-21T20:00:00Z') });
+/** The drive's port over plan 01's clock and ephemeris, with a stand-in for plan 01's environment state. */
+function adapter(state = null) {
+  const clock = createSimClock({ zone: LV.tz, timeMs: Date.parse('2026-11-21T20:00:00Z') });
+  const ephemeris = createEphemeris({ lat: LV.origin.lat, lon: LV.origin.lon, elevationM: 610 });
+  return createEnv({ city: LV, app: { clock, env: { state, ephemeris, nodes: {} }, quality: null } });
+}
+
+describe('ephemeris (ephemerisOn over plan 01\'s)', () => {
+  const env = adapter();
 
   it.each(REFERENCE)('sun at %s matches SPA within 0.3 degrees', (iso, el, az) => {
     const sun = env.ephemeris.sun(Date.parse(iso));
@@ -35,6 +44,8 @@ describe('ephemeris', () => {
     return NaN;
   };
 
+  // plan 01's search is on the geometric altitude: the port turns it into the apparent elevation sun() reports (the
+  // default moment's -3 degrees was 0.63 degrees early before it did)
   it.each([
     ['2026-11-21T12:00:00Z', true], ['2026-06-21T12:00:00Z', true], ['2026-03-01T12:00:00Z', false],
   ])('timeOfSunElevation(-3) on the local day of %s (evening %s) is within 60 s of sun()', (iso, evening) => {
@@ -59,62 +70,20 @@ describe('ephemeris', () => {
     expect(env.ephemeris.timeOfSunElevation(89, Date.parse('2026-11-21T20:00:00Z'), true)).toBeNaN();
   });
 
-  it('has the stand-in quality and weather', () => {
+  it('answers with plan 01\'s ephemeris directly as well', () => {
+    const eph = ephemerisOn(createEphemeris({ lat: LV.origin.lat, lon: LV.origin.lon, elevationM: 610 }), LV.tz);
+    const t = Date.parse('2026-06-21T20:00:00Z');
+    expect(eph.sun(t)).toEqual(env.ephemeris.sun(t));
+  });
+
+  it('has quality High and dry weather without plan 01\'s quality and weather service', () => {
     expect(env.quality.preset).toBe('high');
     expect(typeof env.quality.onChange(() => {})).toBe('function');
     expect(env.weather.state().precipKind).toBe('none');
   });
 });
 
-describe('clock', () => {
-  it('moves only when playing, by dt * rate', () => {
-    const c = createClock({ nowMs: 1000 });
-    expect(c.playing).toBe(false);
-    c.advance(500);
-    expect(c.now()).toBe(1000);
-    c.play();
-    c.advance(500);
-    expect(c.now()).toBe(1500);
-    c.setRate(4);
-    c.advance(250);
-    expect(c.now()).toBe(2500);
-    c.pause();
-    c.advance(1000);
-    expect(c.now()).toBe(2500);
-  });
-
-  it('clamps the rate', () => {
-    const c = createClock();
-    c.setRate(100);
-    expect(c.rate).toBe(RATE_MAX);
-    c.setRate(0);
-    expect(c.rate).toBe(RATE_MIN);
-    c.setRate('junk');
-    expect(c.rate).toBe(1);
-  });
-
-  it('emits events and unsubscribes', () => {
-    const c = createClock({ nowMs: 0 });
-    const seen = [];
-    const fns = ['tick', 'seek', 'rate', 'play', 'pause'].map((type) => c.on(type, (e) => seen.push([type, e.simMs, e.dtSimMs])));
-    c.seek(100);
-    c.play();
-    c.play(); // no second event
-    c.setRate(2);
-    c.advance(10);
-    c.pause();
-    c.advance(10); // paused: no tick
-    expect(seen).toEqual([['seek', 100, 100], ['play', 100, 0], ['rate', 100, 0], ['tick', 120, 20], ['pause', 120, 0]]);
-    fns.forEach((off) => off());
-    const spy = vi.fn();
-    c.seek(5);
-    expect(spy).not.toHaveBeenCalled();
-    expect(seen.length).toBe(5);
-    expect(() => c.on('nope', spy)).toThrow();
-  });
-});
-
-describe('lighting stand-ins', () => {
+describe('the clear sky\'s illuminance (ambientLux)', () => {
   // Schlyter, radfaq section 10 (the table env.js carries): values at its own nodes, plus the night sky's 0.002 lux.
   it.each([
     [90, 129000], [30, 46300], [0, 759], [-0.83, 450], [-6, 3.41], [-12, 0.00806], [-18, 0.000645],
@@ -138,46 +107,11 @@ describe('lighting stand-ins', () => {
     expect(ambientLux(-12)).toBeLessThan(0.02);
   });
 
-  it('on the env, is dimmed by the rain\'s sky (weather skyDim), so lamps come on earlier under a dark rainy sky', () => {
-    const env = createEnv({ city: LV, nowMs: Date.parse('2026-11-21T20:00:00Z') });
-    const dry = [10, 0, -3, -6].map((el) => env.lighting.ambientLux(el));
-    env.weather.setPreset('heavy');
-    const dim = env.weather.state().skyDim;
-    expect(dim).toBeGreaterThan(0);
-    expect(dim).toBeLessThan(0.3);
-    [10, 0, -3, -6].forEach((el, i) => expect(env.lighting.ambientLux(el)).toBeCloseTo(dry[i] * dim, 9));
-    expect(env.lighting.ambientLux()).toBeCloseTo(ambientLux(env.ephemeris.sun(env.clock.now()).elevation) * dim, 6);
-    // a threshold the clear sky crosses at some elevation is crossed at a higher sun in rain: on earlier
-    const threshold = 400; // lux
-    const crossing = (f) => { for (let el = 20; el > -20; el -= 0.01) if (f(el) < threshold) return el; return NaN; };
-    const wet = crossing((el) => env.lighting.ambientLux(el));
-    env.weather.setPreset('clear');
-    const clear = crossing((el) => env.lighting.ambientLux(el));
-    expect(wet).toBeGreaterThan(clear + 1);
-    expect(env.lighting.ambientLux(-3)).toBe(ambientLux(-3)); // and exactly as before when dry
-  });
-
-  it('is on the env, for an elevation or for the sun now', () => {
-    const env = createEnv({ city: LV, nowMs: Date.parse('2026-11-21T20:00:00Z') }); // midday
+  it('on the port, is env.state\'s for the sun now and the table for another elevation', () => {
+    const env = adapter({ sun: { altDeg: -4 }, sky: { horizontalLux: 37 } });
+    expect(env.lighting.ambientLux()).toBe(37);
+    expect(env.lighting.ambientLux(-4.01)).toBe(37);
     expect(env.lighting.ambientLux(-6)).toBe(ambientLux(-6));
-    expect(env.lighting.ambientLux()).toBe(ambientLux(env.ephemeris.sun(env.clock.now()).elevation));
-    expect(env.lighting.ambientLux()).toBeGreaterThan(10000);
-    env.clock.seek(Date.parse('2026-11-22T06:00:00Z')); // 22:00 local
-    expect(env.lighting.ambientLux()).toBeCloseTo(NIGHT_SKY_LUX, 4);
-  });
-
-  it('maps cd/m2, candela and lux with one consistent scale, ordered sensibly against the night look', () => {
-    const u = createEnv({ city: LV }).lighting.units;
-    expect(u).toBe(LIGHTING_UNITS);
-    // three: E = I / d^2 and L = albedo E / pi, so the three constants must agree
-    expect(u.candela).toBe(u.lux);
-    expect(u.nit).toBe(u.lux);
-    const sign = 25 * u.nit; // section 7.4's worked guide-sign legend
-    const window = 0.56; // a lit pane in src/night.js, scene units
-    const litRoad = (15 * 0.1 / Math.PI) * u.nit; // 15 lux on asphalt
-    const moonGround = 0.003; // the night look's asphalt (env.js, LIGHTING_UNITS)
-    expect(sign).toBeGreaterThan(window);
-    expect(window).toBeGreaterThan(litRoad);
-    expect(litRoad).toBeGreaterThan(5 * moonGround);
+    expect(env.lighting.ambientLux(20)).toBeGreaterThan(10000);
   });
 });

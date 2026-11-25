@@ -18,8 +18,8 @@
 // 4.11 (no flashing above 3 Hz). A building's flash phase is a hash of its id, so the beacons of a skyline do not
 // blink in step, and the flash is a pure function of simulation time.
 //
-// When: from dusk, by the look's `lights` (0 by day, 1 by night, as the street lamps), scaled into the scene by
-// env.js's units like every light source of the drive.
+// When: while the look's `lights` (plan 01's street-light switch-on) is above zero. The lamps are their candela
+// (third stretch, decision 6; photometry.js: the pre-exposure and the lights-out slider), not faded.
 
 import { curveDrop } from '../../world/frame.js';
 import { decodeCell } from '../corridor/format.js';
@@ -162,7 +162,7 @@ export async function createObstructionPart(ctx) {
   const scan = () => { towers = tall.map((e) => ({ entry: e, lights: towerLights(e, base) })).filter((t) => t.lights); };
   scan();
   const capacity = Math.max(64, (corridor.reduce((a, c) => a + c.points.length, 0) + 4 * tall.length + 64));
-  const layer = createSpriteLayer({ capacity, name: 'obstruction-lights', minPx: 1.2 });
+  const layer = createSpriteLayer({ capacity, name: 'obstruction-lights', minPx: 1.2, photometry: { nodes: env.nodes } });
   layer.mesh.visible = false;
   ctx.group.add(layer.mesh);
 
@@ -229,7 +229,7 @@ export async function createObstructionPart(ctx) {
         const k = flashKey(simMs);
         if (k !== lastFlash) { lastFlash = k; for (const [i, id] of flashers) layer.data[0][i * 4 + 3] = FLASH_CD * flashOn(id, simMs); layer.commitRows(count); }
       }
-      layer.setFrame({ camera, renderer, gain: env.lighting.units.nit * lights, visibility: env.weather.state().visibilityM || 80000 });
+      layer.setFrame({ camera, renderer, visibility: env.weather.state().visibilityM || 80000 });
       timings.add(performance.now() - t0);
     },
     stats() {

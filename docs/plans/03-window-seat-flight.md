@@ -42,7 +42,7 @@ Written by the orchestrating session when the build started, on the user's instr
 | The terrain interface | `src/world/terrain/` (plan 2): near, far, the coarse `wide` grid and patches behind `heightAt`, `groundY`, `inBuildArea`, `whenSettled`. F4.7 extends this provider; it does not write a second one |
 | What-if events | `app.events`: `buildings:changed`, `buildings:rebuilt` |
 | `public/data/cities.json` | `data/cities.json`, bundled by an import. It already has `icao`, `tz`, `iemStation` |
-| Test folders | Vitest `tests/unit/flight/`; pytest `tests/data/flight/` (`pnpm test:data`); Playwright `tests/e2e/flight/` in the projects `flight-software` and `flight-gpu` (`pnpm test:e2e:flight`, `pnpm test:flight:gpu`). A spec named `*.gpu.spec.js` runs only on the real GPU |
+| Test folders | Vitest `tests/unit/flight/`; pytest `tests/python/flight/` (`pnpm test:data`); Playwright `tests/e2e/flight/` in the projects `flight-software` and `flight-gpu` (`pnpm test:e2e:flight`, `pnpm test:flight:gpu`). A spec named `*.gpu.spec.js` runs only on the real GPU |
 | Lamp inventory | `public/data/lv/lamps-drive.bin`, `lamp-cells.bin`, `data/lamp_types.json`, `scripts/pack_lamps.py`, `scripts/lib/lamps.py` (plan 2); `scripts/build_nightlights.py` and `src/sky/nightlights.js` (plan 1) |
 
 ### What the siblings supply, and what is stood in for
@@ -464,7 +464,7 @@ scripts/
   build_pane_textures.py   frost growth maps, scratch map, dirt
 
 models/aircraft/       landmark_kit.py (copy)  aircraft_kit.py  spec.py  build_airframe.py  build_cabin.py
-tests/unit/flight/     Vitest        tests/e2e/flight/   Playwright        tests/data/flight/   pytest
+tests/unit/flight/     Vitest        tests/e2e/flight/   Playwright        tests/python/flight/   pytest
 data/flights/<city>/   selection.json  raw/<id>.trace.json.gz  qa/  procedures.json          (ODbL)
 public/data/<city>/    airport.json   flights/index.json   flights/<id>.{json,bin,jpg}
                        terrain-<grid>.bin.gz   ground-<grid>.webp   approach-<rwy>.bin   lamps-air.bin
@@ -1318,7 +1318,7 @@ Rules are by projected size, so they hold for the orbit at any altitude as well.
 | G6 | OpenStreetMap's individually mapped lights at the airport (1,339 nodes) | The generated light layout | Overpass snapshot |
 | G7 | FAA standards for markings and light systems | Counts, spacing, colours | The orders and advisory circulars in section 13 |
 | G8 | Dated window-seat photographs with a free licence, for example Ken Lund's on Wikimedia Commons: "Las Vegas Strip on Approach to McCarran International Airport" (7 Aug 2011, 21:55 camera time) and "Las Vegas, Nevada at Night on Approach to Airport" (4 Nov 2014, 21:15, 1/8 s at ISO 2500), CC BY-SA 2.0 | The night look from the approach: what is lit, how bright against the ground, the colour of street lighting; framing through the window | Category "Aerial photographs of Las Vegas" and its night subcategory |
-| G9 | Dated window-seat videos of these approaches | Timing: flap and gear sounds and movement, spoilers, the flare, strobe rate, droplet motion, frost | Watched and logged, never redistributed; the log (`tests/data/flight/video-log.json`) holds only links, timestamps and observations |
+| G9 | Dated window-seat videos of these approaches | Timing: flap and gear sounds and movement, spoilers, the flare, strobe rate, droplet motion, frost | Watched and logged, never redistributed; the log (`tests/python/flight/video-log.json`) holds only links, timestamps and observations |
 | G10 | The sun | Shadow direction and glint on the wing at a known time | Plan 1's ephemeris, cross-checked against the video log |
 | G11 | VIIRS radiance, and astronaut photographs of the valley at night such as ISS026-E-6241 (30 November 2010, before the LED conversions) | Regional brightness and the pattern and colour of lights from above | Plan 1's product; NASA's astronaut photography archive, with its credit line |
 | G12 | Named summits with surveyed positions and heights (Charleston Peak, Mount Potosi, Frenchman Mountain, Mount Wilson in Arizona) | The mountain skyline from altitude: each summit's computed bearing and elevation angle from a track point against where the render puts it | Public survey data; the method is the README's Ensign Peak comparison turned into numbers |
@@ -1327,7 +1327,7 @@ The 2011 photograph predates the Sphere, Resorts World and Fontainebleau. Hiding
 
 ### 8.2 Automated tests
 
-**pytest (`tests/data/flight/`, the bake):**
+**pytest (`tests/python/flight/`, the bake):**
 
 | Test | Asserts |
 | --- | --- |
@@ -1520,8 +1520,8 @@ Phases 2 and 4 are mostly data and geometry and can run in parallel with Phase 3
 - *Accept.* With no plan 1 code present, every member exists and the stand-in clock passes the same unit tests as the contract (rate, pause, seek event on a jump over 2 s).
 
 **F0.3 · pytest fixtures for flight scripts** · S · ∥ F0.1
-- *Files.* `tests/data/flight/conftest.py`, `tests/data/flight/fixtures/` (a synthetic trace generator; one real 10-minute trace extract, ODbL).
-- *Accept.* `uv run --with pytest pytest tests/data/flight` runs one placeholder test.
+- *Files.* `tests/python/flight/conftest.py`, `tests/python/flight/fixtures/` (a synthetic trace generator; one real 10-minute trace extract, ODbL).
+- *Accept.* `uv run --with pytest pytest tests/python/flight` runs one placeholder test.
 
 ### Phase 1 — First flight
 
@@ -1529,7 +1529,7 @@ Phases 2 and 4 are mostly data and geometry and can run in parallel with Phase 3
 
 **F1.1 · Runway ends** · S · ∥ F1.2, F1.3
 - *Goal.* The runways in the app frame, from FAA data.
-- *Files.* `scripts/build_airport.py` (v0), `public/data/lv/airport.json`, `tests/data/flight/test_airport.py`.
+- *Files.* `scripts/build_airport.py` (v0), `public/data/lv/airport.json`, `tests/python/flight/test_airport.py`.
 - *Steps.* Read the FAA NASR airport files for the city's `faa` id; for each runway end: latitude, longitude, elevation, displaced threshold, true alignment, PAPI angle and side, approach light code; project with `scripts/lib/frame.py`; write ends, landing thresholds and a linear elevation profile per runway.
 - *Accept.* For LAS: four runways; lengths 4,521, 3,208, 2,978 and 2,977 m within 2 m; the 19R landing threshold at (1,373, −1,885) m within 3 m; every runway slopes about 1% down to the north or east.
 - *Tests.* Those numbers; a fixture of the NASR rows so the test runs offline.
@@ -1573,7 +1573,7 @@ Phases 2 and 4 are mostly data and geometry and can run in parallel with Phase 3
 
 **F2.1 · `find_arrivals.py`** · M
 - *Goal.* Turn a day of the archive into a ranked list of candidate arrivals.
-- *Files.* `scripts/find_arrivals.py`, `scripts/lib/adsb.py`, `tests/data/flight/test_runway_classify.py`.
+- *Files.* `scripts/find_arrivals.py`, `scripts/lib/adsb.py`, `tests/python/flight/test_runway_classify.py`.
 - *Steps.* Stream the tar; keep traces whose type is in the configured list; find air-to-ground transitions inside the airport box; classify the runway from the final 2 km; compute the metrics of section 6.2 (gaps, share of ADS-B points, geometric altitude, height 25 minutes out, sun elevation, METAR weather); write `data/flights/<city>/candidates-<date>.csv`.
 - *Accept.* On one real day it lists at least 100 arrivals at LAS with a runway each, and every listed runway agrees with a manual check of ten of them.
 - *Tests.* Synthetic finals for all eight runway ends, including a parallel-runway confusion case and a go-around.
@@ -1589,12 +1589,12 @@ Phases 2 and 4 are mostly data and geometry and can run in parallel with Phase 3
 - *Tests.* `test_altitude`, `test_smoother`, `test_touchdown`.
 
 **F2.4 · Air data and attitude** · M · ∥ F2.5
-- *Files.* `scripts/lib/attitude.py`, `tests/data/flight/test_attitude.py`.
+- *Files.* `scripts/lib/attitude.py`, `tests/python/flight/test_attitude.py`.
 - *Steps.* Steps 8 and 9: wind, true and indicated airspeed, heading and crab, bank, weight, pitch from the lift model with the per-flap constants fitted to `spec.py`'s reference attitudes.
 - *Accept.* Reference attitudes within 0.5°; where a trace carries roll, heading or airspeed, the report shows RMS differences within section 7.2's figures.
 
 **F2.5 · Configuration, lights, chapters** · M · ∥ F2.4
-- *Files.* `scripts/lib/config_schedule.py`, `tests/data/flight/test_config.py`.
+- *Files.* `scripts/lib/config_schedule.py`, `tests/python/flight/test_config.py`.
 - *Steps.* Step 10 and 11 as specified in section 7.3; provenance tags per channel.
 - *Accept.* On every flight: flaps monotonic on the approach, never above a placard, gear before landing flap, landing lights on at 10,000 ft, a chapter list with no gaps.
 
@@ -1747,7 +1747,7 @@ Phases 2 and 4 are mostly data and geometry and can run in parallel with Phase 3
 
 **F6.1 · Regional grids** · M · after F4.8's script changes; ∥ everything else
 - *Goal.* Ground from the valley to the horizon, in the repository.
-- *Files.* `data/cities.json` (three more `terrain` entries), `scripts/build_terrain.py`, `scripts/build_imagery.py`, `public/data/lv/terrain-{region,approaches,valley}.bin.gz`, `ground-{region,approaches,valley}.webp`, `tests/data/flight/test_grids.py`.
+- *Files.* `data/cities.json` (three more `terrain` entries), `scripts/build_terrain.py`, `scripts/build_imagery.py`, `public/data/lv/terrain-{region,approaches,valley}.bin.gz`, `ground-{region,approaches,valley}.webp`, `tests/python/flight/test_grids.py`.
 - *Steps.* Section 7.9: a maximum-preserving downsample for `region` and `approaches`; the Blue Marble and Sentinel-2 cloudless 2016 imagery sources; colour matching down the chain from `far`; loading by height band in the provider; the mean colour of `region`'s edge written to `terrain.json` for plan 1's virtual ground; the three grids registered with plan 1's `Shadows.registerHeightField`, so that the ranges shade the ground beyond today's far grid at a low sun.
 - *Accept.* Sizes within section 9.2; heights of neighbouring grids agree within 0.5 m along every shared border; mean colour agrees within 3% per channel over each overlap; Charleston Peak stands within 30 m of its surveyed height in `approaches`; from 35,000 ft the terrain reaches the horizon in every direction inside the region.
 - *Tests.* Border agreement, summit heights and sizes on the built files; a golden frame at cruise.

@@ -2,7 +2,7 @@
 // pipeline's (scripts/lib/billboards.py panels(), tested on the same fixture in tests/data/test_billboards.py).
 import { describe, it, expect } from 'vitest';
 import { createScreenRegistry } from '../../../src/drive/screens/registry.js';
-import { ledMean, ledLevel, ledColor, ledSamples } from '../../../src/drive/screens/led.js';
+import { ledMean, ledScale, ledColor, ledSamples } from '../../../src/drive/screens/led.js';
 import { contentSeconds } from '../../../src/drive/screens/clock.js';
 import { buildAtlas, CELL_W, CELL_H, ATLAS_COLS } from '../../../src/drive/screens/art.js';
 import { digitalMean, digitalFrame, phaseOf } from '../../../src/drive/screens/digital.js';
@@ -19,10 +19,10 @@ describe('the screens registry', () => {
       led.push(1, 1, 1, 1, 1, 1);
     }
     const { samples } = ledSamples(pos, led, 1000);
-    const nightValue = 0.7;
+    const level = ledScale({ signs: 0.7 });
     const reg = createScreenRegistry();
     reg.add({ id: 'patch', kind: 'led', centre: () => [15, 15, 0], visible: () => true,
-      meanColor: (simMs, out) => { ledMean(samples, contentSeconds(simMs), out); for (let c = 0; c < 3; c++) out[c] *= ledLevel(nightValue); return out; } });
+      meanColor: (simMs, out) => { ledMean(samples, contentSeconds(simMs), out); for (let c = 0; c < 3; c++) out[c] *= level; return out; } });
     const simMs = Date.parse('2026-11-22T03:00:42Z');
     // the program, evaluated densely over the patch (a sampled "render" at 0.5 m)
     let r = 0, g = 0, n = 0;
@@ -30,8 +30,8 @@ describe('the screens registry', () => {
       const c = ledColor(x, y, 0, contentSeconds(simMs)); r += c[0]; g += c[1]; n++;
     }
     const m = reg.meanColor('patch', simMs);
-    expect(m[0]).toBeCloseTo((r / n) * ledLevel(nightValue), 2);
-    expect(m[1]).toBeCloseTo((g / n) * ledLevel(nightValue), 2);
+    expect(m[0] / level).toBeCloseTo(r / n, 2);
+    expect(m[1] / level).toBeCloseTo(g / n, 2);
     expect(reg.meanColor('patch', simMs)).toEqual(m); // deterministic
   });
 

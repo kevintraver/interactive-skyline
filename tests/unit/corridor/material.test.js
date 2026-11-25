@@ -1,14 +1,9 @@
-// The corridor's windows (src/drive/corridor/material.js and mesher.js windowShare): the app's lit-window shader
-// with a share per wall, none on canopies, sheds, blank or low walls, fewer lit in warehouses and stores.
+// The corridor's windows (src/drive/corridor/material.js and mesher.js windowShare): plan 01's building material with a
+// share per wall, none on canopies, sheds, blank or low walls, fewer lit in warehouses and stores.
 import { describe, it, expect } from 'vitest';
-import * as THREE from 'three';
-import { corridorMaterial, patchCorridorShader } from '../../../src/drive/corridor/material.js';
+import { corridorMaterial } from '../../../src/drive/corridor/material.js';
 import { meshCell, groundUnder, windowShare, WINDOW_MIN_M } from '../../../src/drive/corridor/mesher.js';
 import { encodeCell, decodeCell, TYPE } from '../../../src/drive/corridor/format.js';
-import { active } from '../../../src/render/active.js';
-import * as legacyMaterials from '../../../src/render/legacy/materials.js';
-
-active.legacy = legacyMaterials; // the drive's GLSL materials are the classic renderer's, until they are ported (plan 02)
 
 const sq = (x, y, s) => [[x, y], [x + s, y], [x + s, y + s], [x, y + s]];
 
@@ -21,17 +16,12 @@ function mesh(buildings) {
 const walls = (m) => Array.from(m.winLit).filter((_, k) => Math.abs(m.normals[3 * k + 1]) < 0.5);
 
 describe('corridor windows', () => {
-  it('extends the night shader it is given, and refuses one it does not recognise', () => {
-    const mat = corridorMaterial();
-    const shader = { uniforms: {}, vertexShader: THREE.ShaderLib.lambert.vertexShader, fragmentShader: THREE.ShaderLib.lambert.fragmentShader };
-    mat.onBeforeCompile(shader);
-    expect(shader.vertexShader).toContain('attribute float winLit;');
-    expect(shader.vertexShader).toContain('vWinLit = winLit;');
-    expect(shader.fragmentShader).toContain('vWinLit > 0.0 && facadeFacing()');
-    expect(shader.fragmentShader).toContain('* vWinLit;');
-    expect(shader.uniforms.uNight).toBeTruthy();
-    expect(mat.customProgramCacheKey()).not.toBe('night-v5');
-    expect(() => patchCorridorShader({ vertexShader: '#include <common>', fragmentShader: '' })).toThrow(/night shader/);
+  it('is plan 01\'s building material with the corridor\'s window term, offered to the light as a building', () => {
+    const a = corridorMaterial(), b = corridorMaterial();
+    expect(a.isNodeMaterial).toBe(true);
+    expect(a.emissiveNode).toBeTruthy();
+    expect(a.emissiveNode).toBe(b.emissiveNode); // one node graph for every corridor material: one program
+    expect(a.userData.surfaceLight).toBe('building');
   });
 
   it('gives no windows to canopies, sheds or low walls, and fewer lit to warehouses and stores than hotels', () => {

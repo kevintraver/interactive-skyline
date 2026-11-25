@@ -1,20 +1,22 @@
-// A generic instanced light-sprite layer (plan 02, D5.4; section 7.8): street lamps now, vehicle lamps and
-// obstruction lights next. One draw call per layer. Each instance is a light of some intensity in candela toward
-// a reference direction with an angular pattern; its sprite follows the flux-conserving rule of lamps.js
-// spriteFlux (a light smaller than a pixel keeps its summed light, a near one grows a soft disc and a halo),
-// additive, depth-tested against the scene and not writing depth, with a tone that keeps colour and does not clip
-// to white squares. The shader is sprites.glsl.js; its JavaScript mirror spriteMirror.js.
+// A generic instanced light-sprite layer (plan 02, D5.4; section 7.8; third stretch, decisions 6 and 11): street lamps,
+// vehicle lamps and obstruction lights. One draw call per layer. Each instance is a light of some intensity in candela
+// toward a reference direction with an angular pattern; its sprite follows the flux-conserving rule of lamps.js
+// spriteFlux (a light smaller than a pixel keeps its summed light, a near one grows a soft disc and a halo), additive,
+// depth-tested against the scene and not writing depth. The JavaScript mirror is spriteMirror.js, function for function
+// (patternShape, spriteRule, coreNorm and gammaTerm, the warm-up); tests/unit/lights hold both to lamps.js and
+// switching.js. Change them together.
 //
 // Usage:
-//   const layer = createSpriteLayer({ capacity: 4096, name: 'vehicle-lamps' });
+//   import { createSpriteLayer, setTwins, TWIN_UNIFORMS } from './sprites.js';
+//   const layer = createSpriteLayer({ capacity: 4096, name: 'vehicle-lamps', reflect: true, photometry });
 //   scene.add(layer.mesh);
 //   const tail = layer.definePattern({ kind: 'lobe', exponent: 2 });          // cos^2 around the axis
 //   layer.set(i, { position: [x, y, z], color: [1, 0.05, 0.02], intensity: 30, pattern: tail, axis: [0, 0, 1] });
 //   layer.commit(count);           // after writing: uploads the instance textures, draws instances 0..count-1
-//   each frame: layer.setFrame({ camera, renderer, gain, ambientLux, onTable, visibility })
+//   each frame: layer.setFrame({ ambientLux, onTable, visibility })
 // For large static sets (the lamps): write once, commit, then setDrawList(indices, n) after each cull.
 //
-// Instance fields (see sprites.glsl.js for the texel layout):
+// Instance fields:
 //   position   scene metres
 //   color      linear sRGB scaled to luminance 1 (any colour; lamps.js type.color is one)
 //   intensity  candela for kinds 'isotropic' and 'lobe' (at the axis for a lobe); lumens for the street-lamp
@@ -27,36 +29,60 @@
 //   diameter   luminous opening, metres (default lamps.js LUMINAIRE_DIAMETER_M)
 //   mount      metres above the ground: > 0 adds the light of the lamp's own pool seen from afar (street lamps)
 //
-// Reflected twins (plan 02, D8.1; added for the weather, nothing above changes): a layer made with `reflect: true`
-// gets a second mesh, a child of its own (so it shows only when the layer does), that draws a reflected streak of each
-// sprite on wet pavement (sprites.glsl.js spriteTwinVertex). It draws a short list of its own: the instances within
-// TWIN_LIST_M of the car, rebuilt in commitRows for layers rewritten each frame and, for written-once layers, from a
-// grid of their positions when the car has moved TWIN_RELIST_M (the grid is built in idle time after commit, so the
-// first rain does not wait for it). Every reflecting layer shares TWIN_UNIFORMS, which
-// the weather part sets through setTwins(); with wet 0 (the default, and whenever it is dry) the twin meshes are
-// hidden and their lists are not kept.
+// Instances are texels: four RGBA32F textures, one texel per instance (row-major, SPRITE_TEX_WIDTH wide):
+//   T0 position.xyz (scene metres), intensity (cd multiplier: candela for pattern kinds 0 and 4, lumens for 1-3)
+//   T1 colour.rgb (linear sRGB, luminance 1), pattern id (0..15)
+//   T2 axis.xyz (unit: theta is measured from it; the nadir (0,-1,0) for a street lamp), aim (radians counter-
+//      clockwise from map +x, the way the arm points; < -9 when unknown: the phi-averaged pattern)
+//   T3 switch threshold (lux; lit while the ambient illuminance is below it; 1e30 always on), warm-up kind
+//      (0 none, 1 sodium), luminous diameter (m), mount height (m, > 0 adds the light of the lamp's own pool
+//      seen from afar)
+// The per-instance attribute `spriteIndex` = (texel, weight) names the texel, so a cull is a new list of indices,
+// not new data; the weight multiplies the intensity (a thinned far cell's lamp carries the light of k lamps).
+//
+// Light units (decision 6). The sprite's radiance is cd/m^2 x photometry.js artificialScale (the pre-exposure x
+// the lights-out slider). The layer is drawn in the pipeline's scene pass (transparent, so after the opaque geometry;
+// additive, depth-tested, no depth write) and writes linear HDR radiance: the pipeline's tone mapping and bloom treat it
+// as everything else. The pixel size and viewport are read from the render target being drawn (screenSize and the
+// projection), so a pipeline drawing at a render scale gets the right flux; setFrame's camera and renderer are
+// accepted and ignored. The pixel's solid angle is taken where the sprite is: pa^2 cos^3 off the camera's axis
+// (spriteData.js pixelAngleOffAxis), so a sprite anywhere on the screen carries I / d^2.
+//
+// Reflected twins (plan 02, D8.1): a layer made with `reflect: true` gets a second mesh, a child of its own (so it shows
+// only when the layer does), that draws a reflected streak of each sprite on wet pavement. It draws a short list of its
+// own: the instances within TWIN_LIST_M of the car, rebuilt in commitRows for layers rewritten each frame and, for
+// written-once layers, from a grid of their positions when the car has moved TWIN_RELIST_M (the grid is built in idle
+// time after commit, so the first rain does not wait for it). Every reflecting layer shares TWIN_UNIFORMS, which the
+// weather part sets through setTwins(); with wet 0 (the default, and whenever it is dry) the twin meshes are hidden and
+// their lists are not kept. commitRows uploads whole instance textures: three r187's WebGPURenderer has no partial
+// texture upload.
 
 import * as THREE from 'three';
-import { spriteVertex, spriteFragment, spriteTwinVertex, spriteTwinFragment, SPRITE_TEX_WIDTH, MAX_PATTERNS, ON_TABLE_N } from './sprites.glsl.js';
-import { PATTERN } from './spriteMirror.js';
+import { MeshBasicNodeMaterial } from 'three/webgpu';
+import {
+  Fn, attribute, uniform, uniformArray, textureLoad, varyingProperty, cameraPosition, cameraProjectionMatrix, cameraViewMatrix,
+  screenSize, int, ivec2, float, vec2, vec3, vec4, select, exp, pow, max, min, clamp, length, dot, acos, atan, cos, sin, log, sqrt,
+  abs, mix, floor, normalize,
+} from 'three/tsl';
+import { SPRITE_TEX_WIDTH, MAX_PATTERNS, ON_TABLE_N, PATTERN, TWIN_FOOT, TWIN_LIST_M, TWIN_RELIST_M } from './spriteData.js';
 import { ON_TABLE } from './switching.js';
 import { LUMINAIRE_DIAMETER_M } from './lamps.js';
+import { photometryContext, artificialScale } from './photometry.js';
+
+export { TWIN_LIST_M, TWIN_RELIST_M, TWIN_FOOT, PATTERN };
 
 const ALWAYS_ON = 1e30;
-
-/** Twins are listed for instances within this distance of the car (m), horizontally. */
-export const TWIN_LIST_M = 420;
-/** A written-once layer's twin list is rebuilt when the car has moved this far (m). */
-export const TWIN_RELIST_M = 20;
 const TWIN_CELL_M = 64;
-/** Instances added to a twin grid per idle slice (about 2 ms). */
 const GRID_SLICE = 8192;
-/** Uniforms shared by every reflecting layer's twins (see setTwins). */
+const RAD = 0.017453292519943295;
+const W = SPRITE_TEX_WIDTH;
+
+/** Uniforms shared by every reflecting layer's twins (see setTwins); TSL uniform nodes. */
 export const TWIN_UNIFORMS = {
-  uTwinWet: { value: 0 },
-  uTwinSlope: { value: 0.05 },
-  uTwinRoad: { value: new THREE.Vector4(0, 0, 0, -1) },
-  uTwinPlane: { value: new THREE.Vector4(0, 0, 24, 300) },
+  uTwinWet: uniform(0).setName('uTwinWet'),
+  uTwinSlope: uniform(0.05).setName('uTwinSlope'),
+  uTwinRoad: uniform(new THREE.Vector4(0, 0, 0, -1)).setName('uTwinRoad'),
+  uTwinPlane: uniform(new THREE.Vector4(0, 0, 24, 300)).setName('uTwinPlane'),
 };
 const twinLayers = new Set();
 
@@ -85,12 +111,324 @@ export function setTwins({ wet, slope, car, forward, roadY, grade, halfWidth, ra
   for (const l of twinLayers) l.twinFrame();
 }
 
+// ---------------------------------------------------------------- the shader's functions (mirrored in spriteMirror.js)
+// Plain functions that build nodes; spriteMirror.js has each in JavaScript.
+
+const smoothstep01 = (a, b, x) => { const t = clamp(x.sub(a).div(float(b).sub(a)), 0, 1); return t.mul(t).mul(t.mul(-2).add(3)); };
+const wing = (t, peak, width) => { const u = t.sub(peak).div(width); return exp(u.mul(u).negate()); };
+/** GLSL mod for floats (x - y floor(x / y)); WGSL's % truncates. */
+const fmod = (x, y) => x.sub(floor(x.div(y)).mul(y));
+
+/** lamps.js OPTICS; theta and phi in degrees; avg (bool node) asks for the phi-average. */
+function patternShape(kind, k, t, p, avg) {
+  const ct = cos(t.mul(RAD)), cp = cos(p.mul(RAD)), sp = sin(p.mul(RAD));
+  const over = t.greaterThan(90);
+  const lobe = pow(max(ct, 0), k.z);
+  // cutoff
+  const latC = select(avg, float(0.65), cp.mul(cp).mul(0.7).add(0.3).mul(sp.mul(0.35).add(1)));
+  const axC = select(avg, float(1), sp.mul(0.35).add(1));
+  const cutoff = select(over, float(0), k.x.mul(ct.mul(0.35).mul(axC).add(wing(t, 65, 14).mul(latC))).mul(float(1).sub(smoothstep01(78, 90, t))));
+  // droplens
+  const latD = select(avg, float(0.675), cp.mul(cp).mul(0.65).add(0.35).mul(sp.mul(0.3).add(1)));
+  const axD = select(avg, float(1), sp.mul(0.3).add(1));
+  const drop = select(over, k.y.mul(wing(t, 98, 10)), k.x.mul(ct.mul(0.3).mul(axD).add(wing(t, 70, 16).mul(latD))).mul(float(1).sub(smoothstep01(84, 90, t))));
+  // highmast
+  const high = select(over, float(0), k.x.mul(ct.mul(0.3).add(wing(t, 60, 18))).mul(float(1).sub(smoothstep01(80, 90, t))));
+  return select(kind.lessThan(0.5), float(1),
+    select(kind.greaterThan(3.5), lobe,
+      select(kind.lessThan(1.5), cutoff, select(kind.lessThan(2.5), drop, high))));
+}
+
+/** Gamma(1 + 2 / n) for n in [2, 6], by the shader's table. */
+function gammaTerm(n) {
+  const f = clamp(n.sub(2), 0, 3.999);
+  const i = floor(f), t = f.sub(i);
+  const g0 = select(i.lessThan(0.5), float(1), select(i.lessThan(1.5), float(0.902745), select(i.lessThan(2.5), float(0.886227), float(0.887264))));
+  const g1 = select(i.lessThan(0.5), float(0.902745), select(i.lessThan(1.5), float(0.886227), select(i.lessThan(2.5), float(0.887264), float(0.89298))));
+  return mix(g0, g1, t);
+}
+
+function onSeconds(threshold, onTable, onSpec) {
+  const f = clamp(log(threshold).div(Math.log(10)).sub(onSpec.x).div(onSpec.y), 0, onSpec.z.sub(1));
+  const i = min(int(floor(f)), int(onSpec.z).sub(2));
+  const t = f.sub(float(i));
+  return mix(onTable.element(i), onTable.element(i.add(1)), t);
+}
+
+function xyzFromUv(uv) {
+  const d = uv.x.mul(6).sub(uv.y.mul(16)).add(12);
+  const x = uv.x.mul(9).div(d), y = uv.y.mul(4).div(d);
+  return vec3(x.div(y), 1, float(1).sub(x).sub(y).div(y));
+}
+function linearSrgbFromXyz(c) {
+  return vec3(
+    c.x.mul(3.2404542).sub(c.y.mul(1.5371385)).sub(c.z.mul(0.4985314)),
+    c.x.mul(-0.969266).add(c.y.mul(1.8760108)).add(c.z.mul(0.041556)),
+    c.x.mul(0.0556434).sub(c.y.mul(0.2040259)).add(c.z.mul(1.0572252)));
+}
+
+/** The warm-up: { flux, color } (lamps.js warmup: sodium from a dim pink-white to amber). */
+function warmUp(p1, p3, u) {
+  const warm = p3.y.greaterThan(0.5);
+  const s0 = onSeconds(p3.x, u.uOnTable, u.uOnSpec);
+  const s = select(s0.greaterThanEqual(0), s0, float(0));
+  const sc = s.div(140), sf = s.div(100);
+  const pc = float(1).sub(exp(sc.mul(sc).negate()));
+  const pf = float(1).sub(exp(sf.mul(sf).negate()));
+  return {
+    flux: select(warm, pf.mul(0.95).add(0.05), float(1)),
+    color: select(warm, linearSrgbFromXyz(xyzFromUv(mix(u.uSodium.xy, u.uSodium.zw, pc))), p1.xyz),
+  };
+}
+
+/** Intensity toward `dir` (unit, from the lamp) by the instance's pattern, theta from its axis, phi from its aim. */
+function intensityToward(p0, p1, p2, dir, u) {
+  const pid = int(p1.w.add(0.5));
+  const kind = u.uPatKind.element(pid);
+  const k = u.uPatK.element(pid);
+  const theta = acos(clamp(dot(p2.xyz, dir), -1, 1)).div(RAD);
+  const avg = p2.w.lessThan(-9);
+  const az = atan(dir.z.negate(), dir.x).div(RAD);
+  const phi = select(avg, float(0), fmod(az.sub(p2.w.div(RAD)).add(90 + 540), 360).sub(180));
+  return { I: p0.w.mul(patternShape(kind, k, theta, phi, avg)), kind, k };
+}
+
+/** The four texels of the instance a drawn sprite names, and its weight. */
+function fetchInstance(u) {
+  const si = attribute('spriteIndex', 'vec2');
+  const idx = int(si.x.add(0.5));
+  const row = idx.div(W);
+  const st = ivec2(idx.sub(row.mul(W)), row);
+  return {
+    weight: si.y,
+    p0: textureLoad(u.tPos, st).toVar('spP0'),
+    p1: textureLoad(u.tColor, st).toVar('spP1'),
+    p2: textureLoad(u.tAxis, st).toVar('spP2'),
+    p3: textureLoad(u.tSwitch, st).toVar('spP3'),
+  };
+}
+
+/** Radians per pixel at the centre of the view of the target being drawn: 2 tan(fov / 2) / height. */
+const pixelAngleNode = () => float(2).div(cameraProjectionMatrix.element(1).y.mul(screenSize.y).max(1));
 /**
- * @param {{ capacity: number, name?: string, minPx?: number, halo?: number, renderOrder?: number, whiten?: number, reflect?: boolean }} opts
- *   whiten: share of a clipping colour's excess turned to white (default 1); reflect: draw reflected twins on wet
- *   pavement (see the header; default false)
+ * The pixel's angular size toward `rel` (eye to point, world): pa cos^1.5 of the angle off the camera's axis
+ * (spriteData.js pixelAngleOffAxis), so a sprite off the screen's centre keeps its flux.
  */
-export function createSpriteLayer({ capacity, name = 'sprites', minPx = 1.5, halo = 0.006, renderOrder = 10, whiten = 1, reflect = false }) {
+const pixelAngleToward = (rel) => {
+  const v = cameraViewMatrix.mul(vec4(rel, 0)).xyz;
+  const c = max(v.z.negate().div(max(length(v), 1e-6)), 1e-3);
+  return pixelAngleNode().mul(pow(c, 1.5));
+};
+
+// varyings of the sprites
+const vPx = varyingProperty('vec2', 'vSpPx');
+const vAmp = varyingProperty('vec3', 'vSpAmp');
+const vShape = varyingProperty('vec4', 'vSpShape');
+const vHaloNorm = varyingProperty('float', 'vSpHaloNorm');
+// varyings of the twins
+const vTw = varyingProperty('vec2', 'vTw');
+const vTwAmp = varyingProperty('vec3', 'vTwAmp');
+const vTwSig = varyingProperty('vec3', 'vTwSig');
+const vTwEdge = varyingProperty('float', 'vTwEdge');
+
+const OFF = () => vec4(2, 2, 2, 1);
+
+/** The sprite's vertex stage. */
+function spriteVertexNode(u, gain) {
+  return Fn(() => {
+    const corner = attribute('corner', 'vec2');
+    const { weight, p0, p1, p2, p3 } = fetchInstance(u);
+    const viewport = screenSize;
+
+    const on = u.uAmbient.lessThan(p3.x);
+    const rel = p0.xyz.sub(cameraPosition).toVar('spRel');
+    const pixelAngle = pixelAngleToward(rel).toVar('spPixelAngle');
+    const d0 = length(rel);
+    const d = max(d0, 0.5).toVar('spD');
+    const toEye = rel.negate().div(d).toVar('spToEye');
+
+    const { flux, color: colorW } = warmUp(p1, p3, u);
+    const color = colorW.toVar('spColor');
+    const { I: I0, kind, k } = intensityToward(p0, p1, p2, toEye, u);
+    // the lamp's own pool seen from afar
+    const cz = clamp(cameraPosition.y.sub(p0.y.sub(p3.w)).div(d), 0, 1);
+    const glowOn = p3.w.greaterThan(0).and(kind.greaterThan(0.5)).and(kind.lessThan(3.5));
+    const glow = u.uGroundAlbedo.mul(p0.w).mul(k.z).div(Math.PI).mul(cz).mul(smoothstep01(u.uGlowRange.x, u.uGlowRange.y, d));
+    const I = I0.add(select(glowOn, glow, float(0))).mul(flux).mul(weight).toVar('spI');
+
+    // the sprite rule (lamps.js spriteFlux)
+    const T = exp(d.negate().div(u.uVisibility));
+    const E = T.mul(I).div(d.mul(d));
+    const dPx = max(p3.z.div(d).div(pixelAngle), u.uMinPx).toVar('spDPx');
+    const solid = dPx.mul(dPx).mul(pixelAngle).mul(pixelAngle).mul(0.7853981633974483);
+    const L = E.div(solid).toVar('spL');
+    const n = mix(2, 6, smoothstep01(2, 8, dPx)).toVar('spN');
+    const a = dPx.mul(0.5).div(pow(0.6931471805599453, float(1).div(n))).toVar('spA');
+    const h = u.uHalo.mul(smoothstep01(2, 6, dPx)).toVar('spH');
+    const ha = max(dPx.mul(2), 4).toVar('spHa');
+    const area = dPx.mul(dPx).mul(0.7853981633974483);
+    const coreNorm = float(1).sub(h).mul(area).div(a.mul(a).mul(Math.PI).mul(gammaTerm(n))).toVar('spCoreNorm');
+    const haloNorm = h.mul(area).div(ha.mul(ha).mul(Math.PI)).toVar('spHaloNorm');
+    const cmaxC = max(color.x, max(color.y, color.z));
+    const peak = L.mul(gain).mul(coreNorm.add(haloNorm));
+    const cmax = L.mul(gain).mul(cmaxC);
+    const rCore = a.mul(pow(max(log(cmax.mul(coreNorm).mul(1024)), 0), float(1).div(n)));
+    const rHalo = select(h.greaterThan(0), ha.mul(sqrt(max(log(cmax.mul(haloNorm).mul(1024)), 0))), float(0));
+    const extent = min(max(rCore, rHalo), max(a.mul(2.6), select(h.greaterThan(0), ha.mul(2.6), float(0)))).toVar('spExtent');
+
+    const visible = on.and(d0.greaterThanEqual(0.5)).and(peak.mul(cmaxC).greaterThanEqual(2e-4)).and(extent.greaterThanEqual(0.5));
+    const px = corner.mul(extent.add(0.5));
+    vPx.assign(select(visible, px, vec2(0)));
+    vAmp.assign(select(visible, color.mul(L).mul(gain), vec3(0)));
+    vShape.assign(select(visible, vec4(a, n, ha, coreNorm), vec4(1, 2, 1, 0)));
+    vHaloNorm.assign(select(visible, haloNorm, float(0)));
+
+    // pulled a little toward the eye so its own lamp head does not hide it
+    const pr = rel.add(toEye.mul(min(1, d.mul(0.02))));
+    const clip = cameraProjectionMatrix.mul(vec4(cameraViewMatrix.mul(vec4(pr, 0)).xyz, 1)).toVar('spClip');
+    const moved = vec4(clip.xy.add(px.mul(2).div(viewport).mul(clip.w)), clip.z, clip.w);
+    return select(visible, moved, OFF());
+  })();
+}
+
+/** The sprite's fragment stage. */
+function spriteColorNode() {
+  return Fn(() => {
+    const r = length(vPx);
+    const core = exp(pow(r.div(vShape.x), vShape.y).negate());
+    const hr = r.div(vShape.z);
+    const halo = select(vHaloNorm.greaterThan(0), exp(hr.mul(hr).negate()), float(0));
+    const c = vAmp.mul(vShape.w.mul(core).add(vHaloNorm.mul(halo)));
+    return vec4(c, 1);
+  })();
+}
+
+// ---------------------------------------------------------------- reflected twins
+
+function twinErf(x) {
+  const t = float(1).div(abs(x).mul(0.3275911).add(1));
+  const poly = t.mul(1.061405429).sub(1.453152027).mul(t).add(1.421413741).mul(t).sub(0.284496736).mul(t).add(0.254829592).mul(t);
+  const y = float(1).sub(poly.mul(exp(x.mul(x).negate())));
+  return select(x.lessThan(0), y.negate(), y);
+}
+
+function twinFresnel(c0) {
+  const c = clamp(c0, 0, 1);
+  const nI = 1.333;
+  const st = sqrt(max(0, float(1).sub(c.mul(c)))).div(nI);
+  const ct = sqrt(max(0, float(1).sub(st.mul(st))));
+  const rs = c.sub(ct.mul(nI)).div(c.add(ct.mul(nI)));
+  const rp = ct.sub(c.mul(nI)).div(ct.add(c.mul(nI)));
+  return rs.mul(rs).add(rp.mul(rp)).mul(0.5);
+}
+
+function twinVertexNode(u, gain) {
+  const T = TWIN_UNIFORMS;
+  return Fn(() => {
+    const corner = attribute('corner', 'vec2');
+    const { weight, p0, p1, p2, p3 } = fetchInstance(u);
+    const viewport = screenSize;
+    const on = T.uTwinWet.greaterThan(0).and(u.uAmbient.lessThan(p3.x));
+
+    // the plane, relative to the eye: y = -he + grade * (forward . xz)
+    const fwd = T.uTwinRoad.zw;
+    const eyeQ = cameraPosition.xz.sub(T.uTwinRoad.xy).toVar('twEyeQ');
+    const he = cameraPosition.y.sub(T.uTwinPlane.x.add(T.uTwinPlane.y.mul(dot(eyeQ, fwd)))).toVar('twHe');
+    const rel = p0.xyz.sub(cameraPosition).toVar('twRel');
+    const hl = rel.y.sub(he.negate().add(T.uTwinPlane.y.mul(dot(rel.xz, fwd)))).toVar('twHl');
+    const m = vec3(rel.x, rel.y.sub(hl.mul(2)), rel.z);
+    const dm0 = length(m);
+    const dm = max(dm0, 1).toVar('twDm');
+    const hsum = max(he.add(hl), 0.2);
+    const r = m.mul(he.div(hsum)).toVar('twR');
+    const pixelAngle = pixelAngleToward(r).toVar('twPixelAngle'); // at the mirror point, where the twin is drawn
+    const rq = eyeQ.add(r.xz);
+    const along = dot(rq, fwd), across = dot(rq, vec2(fwd.y.negate(), fwd.x));
+    const rLen = length(r.xz).toVar('twRLen');
+    const mask = float(1).sub(smoothstep01(T.uTwinPlane.z.sub(4), T.uTwinPlane.z, abs(across)))
+      .mul(float(1).sub(smoothstep01(T.uTwinPlane.w.mul(0.75), T.uTwinPlane.w, abs(along))))
+      .mul(smoothstep01(5, 15, rLen)).toVar('twMask');
+
+    const { flux, color: colorW } = warmUp(p1, p3, u);
+    const color = colorW.toVar('twColor');
+    const dirL = normalize(r.sub(rel));
+    const { I: I0 } = intensityToward(p0, p1, p2, dirL, u);
+    const I = I0.mul(flux).mul(weight);
+
+    const cosi = he.add(hl).div(dm).toVar('twCosi');
+    const E = T.uTwinWet.mul(mask).mul(twinFresnel(cosi)).mul(exp(dm.negate().div(u.uVisibility))).mul(I).div(dm.mul(dm)).toVar('twE');
+    const kk = hl.div(hsum);
+    const sigU0 = T.uTwinSlope.mul(2).mul(cosi).mul(kk).div(pixelAngle);
+    const sigA0 = T.uTwinSlope.mul(2).mul(kk).div(pixelAngle);
+    const disc = p3.z.mul(0.4247).div(dm).div(pixelAngle);
+    const sigU = max(max(sigU0, disc), 0.6).toVar('twSigU');
+    const sigA = max(sigA0, sigU);
+    const dUp = max(atan(he.div(max(rLen, 1e-3))).sub(atan(he.div(max(length(rel.xz), 1e-3)))).div(pixelAngle), 0.5).toVar('twDUp');
+    const sDn = sigA.mul(2.2).toVar('twSDn');
+    const a = clamp(dUp.mul(0.2), 0.5, dUp);
+    const Q = TWIN_FOOT;
+    const runUp = dUp.mul((1 + Q) * 0.5).sub(a.mul(float(Q * 0.5).add(a.mul(0.15 * (1 - Q)).div(dUp)))).toVar('twRunUp');
+    const k0 = E.mul(gain).div(pixelAngle.mul(pixelAngle).mul(2.5066282746).mul(sigU).mul(runUp.add(sDn.mul(1.2533141373))));
+    const cmaxC = max(color.x, max(color.y, color.z));
+    const cmax0 = k0.mul(cmaxC);
+    const reach = min(sqrt(max(log(cmax0.mul(1024)), 0).mul(2)), 4.5).toVar('twReach');
+    const edge = exp(reach.mul(reach).mul(-0.5)).toVar('twEdge');
+    const ef = twinErf(reach.mul(0.7071067812));
+    const acrossInt = sigU.mul(ef.mul(2.5066282746).sub(reach.mul(2).mul(edge))).div(float(1).sub(edge));
+    const downInt = sDn.mul(ef.mul(1.2533141373).sub(reach.mul(edge))).div(float(1).sub(edge));
+    const c = color.mul(E.mul(gain).div(pixelAngle.mul(pixelAngle).mul(acrossInt).mul(runUp.add(downInt))));
+
+    // the screen's up at R, and R itself pulled toward the eye
+    const rl = length(r);
+    const pr = r.mul(float(1).sub(min(0.03, float(1.5).div(max(rl, 1))))).toVar('twPr');
+    const view = (v) => vec4(cameraViewMatrix.mul(vec4(v, 0)).xyz, 1);
+    const c0 = cameraProjectionMatrix.mul(view(pr)).toVar('twC0');
+    const c1 = cameraProjectionMatrix.mul(view(pr.add(vec3(0, rl.mul(0.02).add(0.05), 0)))).toVar('twC1');
+    const upRaw = c1.xy.div(c1.w).sub(c0.xy.div(c0.w));
+    const up = normalize(upRaw.mul(viewport).add(vec2(0, 1e-6))).toVar('twUp');
+    const side = vec2(up.y, up.x.negate());
+    const px = vec2(corner.x.mul(reach).mul(sigU), select(corner.y.greaterThan(0), dUp, reach.negate().mul(sDn))).toVar('twPx');
+
+    const visible = on.and(he.greaterThanEqual(0.1)).and(hl.greaterThanEqual(0.1)).and(dm0.greaterThanEqual(1)).and(mask.greaterThan(0))
+      .and(cmax0.greaterThanEqual(2e-4)).and(reach.mul(sigU).greaterThanEqual(0.25)).and(c0.w.greaterThan(0)).and(c1.w.greaterThan(0));
+    vTwEdge.assign(select(visible, edge, float(0)));
+    vTw.assign(select(visible, px, vec2(0)));
+    vTwAmp.assign(select(visible, c, vec3(0)));
+    vTwSig.assign(select(visible, vec3(sigU, dUp, sDn), vec3(1)));
+    const moved = vec4(c0.xy.add(side.mul(px.x).add(up.mul(px.y)).mul(2).div(viewport).mul(c0.w)), c0.z, c0.w);
+    return select(visible, moved, OFF());
+  })();
+}
+
+function twinColorNode() {
+  return Fn(() => {
+    const uu = vTw.x.div(vTwSig.x);
+    const gu = max(exp(uu.mul(uu).mul(-0.5)).sub(vTwEdge), 0).div(float(1).sub(vTwEdge));
+    const dUp = vTwSig.y, a = clamp(dUp.mul(0.2), 0.5, dUp);
+    const upper = float(1).sub(vTw.y.mul(1 - TWIN_FOOT).div(dUp)).mul(float(1).sub(smoothstep01(dUp.sub(a), dUp, vTw.y)));
+    const v = vTw.y.div(vTwSig.z);
+    const lower = max(exp(v.mul(v).mul(-0.5)).sub(vTwEdge), 0).div(float(1).sub(vTwEdge));
+    const gv = select(vTw.y.greaterThan(0), upper, lower);
+    const c = vTwAmp.mul(gu.mul(gv));
+    return vec4(c, 1);
+  })();
+}
+
+/** An unlit additive material drawing `vertex` and `color` (transparent: after the opaque geometry). */
+function spriteMaterial(name, vertexNode, colorNode) {
+  const m = new MeshBasicNodeMaterial({ name, transparent: true, depthWrite: false, depthTest: true, blending: THREE.AdditiveBlending, fog: false });
+  m.vertexNode = vertexNode;
+  m.colorNode = colorNode;
+  m.lights = false;
+  return m;
+}
+
+/**
+ * @param {{ capacity: number, name?: string, minPx?: number, halo?: number, renderOrder?: number, reflect?: boolean,
+ *   photometry?: { nodes?: object } }} opts  minPx: the smallest sprite (px); halo: the halo's share of the light;
+ *   reflect: twins on wet pavement; photometry: the light scale's context (photometry.js photometryContext)
+ */
+export function createSpriteLayer({ capacity, name = 'sprites', minPx = 1.5, halo = 0.006, renderOrder = 10, reflect = false, photometry = {} }) {
   if (!(capacity > 0)) throw new Error('sprites: capacity is required');
   const rows = Math.ceil(capacity / SPRITE_TEX_WIDTH);
   const texels = SPRITE_TEX_WIDTH * rows;
@@ -102,14 +440,15 @@ export function createSpriteLayer({ capacity, name = 'sprites', minPx = 1.5, hal
     t.needsUpdate = true;
     return t;
   });
-  const patKind = new Float32Array(MAX_PATTERNS), patK = Array.from({ length: MAX_PATTERNS }, () => new THREE.Vector3());
-  let patterns = 1; // 0: isotropic
+  const patKind = new Array(MAX_PATTERNS).fill(0), patK = Array.from({ length: MAX_PATTERNS }, () => new THREE.Vector3());
+  let patterns = 1;
 
   const geometry = new THREE.InstancedBufferGeometry();
-  geometry.setAttribute('corner', new THREE.BufferAttribute(new Float32Array([-1, -1, 1, -1, 1, 1, -1, 1]), 2));
+  const corners = new Float32Array([-1, -1, 1, -1, 1, 1, -1, 1]);
+  geometry.setAttribute('corner', new THREE.BufferAttribute(corners, 2));
+  // unused by the shader; there so the geometry has the attribute every renderer path may expect
+  geometry.setAttribute('position', new THREE.BufferAttribute(new Float32Array([-1, -1, 0, 1, -1, 0, 1, 1, 0, -1, 1, 0]), 3));
   geometry.setIndex([0, 1, 2, 0, 2, 3]);
-  // per drawn sprite: (instance index, weight); the weight multiplies its intensity (1 unless a cull thins a far
-  // cell to every k-th lamp, which then carries k lamps' light)
   const indexArray = new Float32Array(capacity * 2);
   const identity = () => { for (let i = 0; i < capacity; i++) { indexArray[2 * i] = i; indexArray[2 * i + 1] = 1; } };
   identity();
@@ -118,21 +457,21 @@ export function createSpriteLayer({ capacity, name = 'sprites', minPx = 1.5, hal
   geometry.setAttribute('spriteIndex', indexAttr);
   geometry.instanceCount = 0;
 
+  const ctx = photometryContext(photometry);
   const uniforms = {
     tPos: { value: textures[0] }, tColor: { value: textures[1] }, tAxis: { value: textures[2] }, tSwitch: { value: textures[3] },
-    uViewport: { value: new THREE.Vector2(1, 1) }, uPixelAngle: { value: 1e-3 }, uMinPx: { value: minPx },
-    uVisibility: { value: 80000 }, uGain: { value: 0.1 }, uHalo: { value: halo }, uAmbient: { value: 0 },
-    uOnTable: { value: new Float32Array(ON_TABLE_N).fill(1e6) }, uOnSpec: { value: new THREE.Vector3(ON_TABLE.log0, ON_TABLE.step, ON_TABLE.n) },
-    uSodium: { value: new THREE.Vector4(0.2, 0.5, 0.25, 0.52) }, uGlowRange: { value: new THREE.Vector2(800, 1000) }, uGroundAlbedo: { value: 0.15 },
-    uPatKind: { value: patKind }, uPatK: { value: patK },
-    // how much of what would clip turns white (spriteMirror.js toneSprite); 1, the default, for every layer but the
-    // vehicle lamps (traffic/lampLayer.js), which keep more of their colour
-    uWhiten: { value: whiten },
+    uMinPx: uniform(minPx), uVisibility: uniform(80000), uHalo: uniform(halo), uAmbient: uniform(0),
+    uOnTable: uniformArray(new Array(ON_TABLE_N).fill(1e6), 'float'), uOnSpec: uniform(new THREE.Vector3(ON_TABLE.log0, ON_TABLE.step, ON_TABLE.n)),
+    uSodium: uniform(new THREE.Vector4(0.2, 0.5, 0.25, 0.52)), uGlowRange: uniform(new THREE.Vector2(800, 1000)), uGroundAlbedo: uniform(0.15),
+    uPatKind: uniformArray(patKind, 'float'), uPatK: uniformArray(patK, 'vec3'),
   };
-  const material = new THREE.ShaderMaterial({
-    name, uniforms, vertexShader: spriteVertex, fragmentShader: spriteFragment,
-    transparent: true, depthWrite: false, depthTest: true, blending: THREE.AdditiveBlending, toneMapped: false, fog: false,
-  });
+  // the shader reads the textures as nodes; `uniforms.tPos.value` and friends hold them for callers
+  const u = { ...uniforms };
+  for (const [k, i] of [['tPos', 0], ['tColor', 1], ['tAxis', 2], ['tSwitch', 3]]) u[k] = textures[i];
+  /** Buffer units per cd/m^2. */
+  const gain = artificialScale(ctx);
+
+  const material = spriteMaterial(name, spriteVertexNode(u, gain), spriteColorNode());
   const mesh = new THREE.Mesh(geometry, material);
   mesh.name = name;
   mesh.frustumCulled = false;
@@ -140,23 +479,20 @@ export function createSpriteLayer({ capacity, name = 'sprites', minPx = 1.5, hal
   mesh.matrixAutoUpdate = false;
 
   let drawCount = 0, usingList = false;
-  const size = new THREE.Vector2();
 
-  // ---- reflected twins
+  // ---- reflected twins (see the header)
   let twin = null, disposed = false;
   if (reflect) {
     const tg = new THREE.InstancedBufferGeometry();
     tg.setAttribute('corner', geometry.getAttribute('corner'));
+    tg.setAttribute('position', geometry.getAttribute('position'));
     tg.setIndex(geometry.getIndex());
     const list = new Float32Array(capacity * 2);
     const listAttr = new THREE.InstancedBufferAttribute(list, 2);
     listAttr.setUsage(THREE.DynamicDrawUsage);
     tg.setAttribute('spriteIndex', listAttr);
     tg.instanceCount = 0;
-    const tm = new THREE.ShaderMaterial({
-      name: `${name}-twins`, uniforms: { ...uniforms, ...TWIN_UNIFORMS }, vertexShader: spriteTwinVertex, fragmentShader: spriteTwinFragment,
-      transparent: true, depthWrite: false, depthTest: true, blending: THREE.AdditiveBlending, toneMapped: false, fog: false,
-    });
+    const tm = spriteMaterial(`${name}-twins`, twinVertexNode(u, gain), twinColorNode());
     const tmesh = new THREE.Mesh(tg, tm);
     tmesh.name = `${name}-twins`;
     tmesh.frustumCulled = false;
@@ -166,9 +502,8 @@ export function createSpriteLayer({ capacity, name = 'sprites', minPx = 1.5, hal
     mesh.add(tmesh);
     twin = { mesh: tmesh, geometry: tg, material: tm, list, listAttr, count: 0, dynamic: false, grid: null, gridAt: 0, gridJob: null, at: [NaN, NaN] };
   }
-  /** Rebuild the twin list from instances 0..n-1 (layers rewritten each frame). */
   function twinScan(n) {
-    const u = TWIN_UNIFORMS.uTwinRoad.value, cx = u.x, cz = u.y, r2 = TWIN_LIST_M * TWIN_LIST_M;
+    const v = TWIN_UNIFORMS.uTwinRoad.value, cx = v.x, cz = v.y, r2 = TWIN_LIST_M * TWIN_LIST_M;
     const P = data[0], L = twin.list;
     let w = 0;
     for (let i = 0; i < n; i++) {
@@ -177,11 +512,6 @@ export function createSpriteLayer({ capacity, name = 'sprites', minPx = 1.5, hal
     }
     twinCommit(w);
   }
-  /**
-   * Grow the grid of a written-once layer's instances (cells of TWIN_CELL_M) up to instance `until`, from where the last
-   * call stopped. The whole valley's street lamps take about 60 ms, too long for the frame the rain starts on: the grid
-   * is built ahead in idle time (scheduleGrid), and finished here at once only if the rain comes first.
-   */
   function growGrid(until) {
     const P = data[0];
     if (!twin.grid) { twin.grid = new Map(); twin.gridAt = 0; }
@@ -197,7 +527,6 @@ export function createSpriteLayer({ capacity, name = 'sprites', minPx = 1.5, hal
     twin.gridAt = Math.max(twin.gridAt, end);
     return twin.gridAt >= capacity;
   }
-  /** Build the grid in idle time, a slice at a time (written-once layers; not while the twins are drawn). */
   function scheduleGrid() {
     if (!twin || twin.dynamic || twin.gridJob || (twin.grid && twin.gridAt >= capacity)) return;
     const idle = typeof requestIdleCallback === 'function'
@@ -215,13 +544,12 @@ export function createSpriteLayer({ capacity, name = 'sprites', minPx = 1.5, hal
     };
     twin.gridJob = idle(step);
   }
-  /** Rebuild the twin list from the grid of a written-once layer, when the car has moved TWIN_RELIST_M. */
   function twinGridList() {
-    const u = TWIN_UNIFORMS.uTwinRoad.value, cx = u.x, cz = u.y;
+    const v = TWIN_UNIFORMS.uTwinRoad.value, cx = v.x, cz = v.y;
     if (Math.hypot(cx - twin.at[0], cz - twin.at[1]) < TWIN_RELIST_M) return;
     twin.at[0] = cx; twin.at[1] = cz;
     const P = data[0];
-    if (!twin.grid || twin.gridAt < capacity) growGrid(capacity); // the rest of it now
+    if (!twin.grid || twin.gridAt < capacity) growGrid(capacity);
     const r = Math.ceil(TWIN_LIST_M / TWIN_CELL_M), gx = Math.floor(cx / TWIN_CELL_M), gz = Math.floor(cz / TWIN_CELL_M);
     const r2 = TWIN_LIST_M * TWIN_LIST_M, L = twin.list;
     let w = 0;
@@ -244,13 +572,14 @@ export function createSpriteLayer({ capacity, name = 'sprites', minPx = 1.5, hal
     twin.listAttr.needsUpdate = true;
     twin.geometry.instanceCount = w;
   }
+  const dropList = () => { identity(); indexAttr.clearUpdateRanges(); indexAttr.needsUpdate = true; usingList = false; };
 
   const layer = {
     mesh, material, uniforms, capacity, data,
+    /** The photometry context the layer was built with. */
+    photometry: ctx,
     get drawn() { return geometry.instanceCount; },
-    /** The twins' mesh (reflect layers only), and how many twins it lists. */
     get twins() { return twin ? { mesh: twin.mesh, listed: twin.mesh.visible ? twin.count : 0 } : null; },
-    /** Called by setTwins: show or hide the twins and keep the list of a written-once layer. */
     twinFrame() {
       if (!twin) return;
       const on = TWIN_UNIFORMS.uTwinWet.value > 0;
@@ -258,14 +587,12 @@ export function createSpriteLayer({ capacity, name = 'sprites', minPx = 1.5, hal
       if (!on) { twin.at[0] = NaN; return; }
       if (!twin.dynamic) twinGridList();
     },
-    /** For a written-once layer whose instances changed: the twins' grid is rebuilt on the next frame. */
     invalidateTwins() { if (twin) { twin.grid = null; twin.gridAt = 0; twin.at[0] = NaN; scheduleGrid(); } },
-    /** Whether a written-once layer's twin grid is built (for tests). */
     get twinGridReady() { return !!(twin && twin.grid && twin.gridAt >= capacity); },
 
     /**
-     * A pattern: { kind: 'isotropic' | 'lobe' | 'cutoff' | 'droplens' | 'highmast', exponent?, kDown?, kUp?, downShare? }.
-     * For the street-lamp kinds pass the lamp type's kDown and kUp (lamps.js) and 1 - uplight. Returns its id.
+     * A pattern: kind 'isotropic' (id 0), 'lobe' (cos^exponent around the axis), or a street-lamp optic ('cutoff',
+     * 'droplens', 'highmast': lamps.js OPTICS, with kDown, kUp and downShare). Returns its id for set().
      */
     definePattern({ kind, exponent = 1, kDown = 0, kUp = 0, downShare = 1 }) {
       if (!(kind in PATTERN)) throw new Error(`sprites: unknown pattern kind "${kind}"`);
@@ -277,7 +604,7 @@ export function createSpriteLayer({ capacity, name = 'sprites', minPx = 1.5, hal
       return id;
     },
 
-    /** Write instance i (fields above). Call commit() or markDirty() after a batch of writes. */
+    /** Write instance i (fields in the header). Call commit() or markDirty() after a batch of writes. */
     set(i, { position, color = [1, 1, 1], intensity = 0, pattern = 0, axis = [0, -1, 0], aim = null,
       threshold = ALWAYS_ON, warm = 0, diameter = LUMINAIRE_DIAMETER_M, mount = 0 }) {
       const o = i * 4;
@@ -287,42 +614,27 @@ export function createSpriteLayer({ capacity, name = 'sprites', minPx = 1.5, hal
       c[o] = axis[0]; c[o + 1] = axis[1]; c[o + 2] = axis[2]; c[o + 3] = aim == null || !Number.isFinite(aim) ? -10 : aim;
       d[o] = Number.isFinite(threshold) ? threshold : ALWAYS_ON; d[o + 1] = warm; d[o + 2] = diameter; d[o + 3] = mount;
     },
-    /** Move instance i (dynamic layers: vehicles). */
     setPosition(i, x, y, z) { const o = i * 4; data[0][o] = x; data[0][o + 1] = y; data[0][o + 2] = z; },
 
-    /** Upload what was written; with a count, draw instances 0..count-1 (and drop any draw list). */
     commit(count) {
       layer.markDirty();
-      if (twin && !twin.dynamic) scheduleGrid(); // a written-once layer: its twins' grid built ahead, in idle time
+      if (twin && !twin.dynamic) scheduleGrid();
       if (Number.isFinite(count)) {
-        if (usingList) { identity(); indexAttr.clearUpdateRanges(); indexAttr.needsUpdate = true; usingList = false; }
+        if (usingList) dropList();
         drawCount = Math.min(count, capacity);
         geometry.instanceCount = drawCount;
       }
     },
     markDirty() { for (const t of textures) t.needsUpdate = true; },
-    /**
-     * For dynamic layers rewritten every frame (vehicle lamps): upload only the texture rows holding instances
-     * 0..count-1 and draw those (and drop any draw list). Added for traffic/lampLayer.js; commit() is unchanged.
-     */
     commitRows(count) {
       count = Math.max(0, Math.min(count, capacity));
-      if (usingList) { identity(); indexAttr.clearUpdateRanges(); indexAttr.needsUpdate = true; usingList = false; }
-      const rowsUsed = Math.ceil(count / SPRITE_TEX_WIDTH);
-      if (rowsUsed) {
-        for (const t of textures) {
-          t.clearUpdateRanges();
-          for (let r = 0; r < rowsUsed; r++) t.addUpdateRange(r * SPRITE_TEX_WIDTH * 4, Math.min(SPRITE_TEX_WIDTH, count - r * SPRITE_TEX_WIDTH) * 4);
-          t.needsUpdate = true;
-        }
-      }
+      if (usingList) dropList();
+      if (count > 0) for (const t of textures) t.needsUpdate = true; // whole textures: r187 has no partial texture upload
       drawCount = count;
       geometry.instanceCount = count;
       if (twin) { twin.dynamic = true; if (TWIN_UNIFORMS.uTwinWet.value > 0) twinScan(count); }
     },
 
-    /** Draw these instances only (a cull's result): indices into the instance textures, n of them, each with
-     * weight 1 or weights[j]. */
     setDrawList(indices, n, weights) {
       n = Math.min(n, capacity);
       for (let j = 0; j < n; j++) { indexArray[2 * j] = indices[j]; indexArray[2 * j + 1] = weights ? weights[j] : 1; }
@@ -333,7 +645,6 @@ export function createSpriteLayer({ capacity, name = 'sprites', minPx = 1.5, hal
       drawCount = n;
       geometry.instanceCount = n;
     },
-    /** The draw array to fill in place before setDrawCount (saves a copy): pairs (index, weight). */
     get drawIndices() { usingList = true; return indexArray; },
     setDrawCount(n) {
       n = Math.min(n, capacity);
@@ -345,20 +656,13 @@ export function createSpriteLayer({ capacity, name = 'sprites', minPx = 1.5, hal
     },
 
     /**
-     * Per-frame uniforms.
-     * @param {{ camera: THREE.PerspectiveCamera, renderer: THREE.WebGLRenderer, gain?: number, ambientLux?: number,
-     *   onTable?: Float32Array, visibility?: number, sodium?: { startUv: number[], steadyUv: number[] },
-     *   glowRange?: number[], groundAlbedo?: number }} f
-     *   gain: scene units per cd/m^2 (lighting.units.nit) times any fade
+     * Per-frame values: ambientLux (the lamps' photocells compare their thresholds with it), onTable (switching.js
+     * createOnTable), visibility (m), sodium ({ startUv, steadyUv }), glowRange, groundAlbedo. camera and renderer are
+     * not needed.
      */
-    setFrame({ camera, renderer, gain, ambientLux, onTable, visibility, sodium, glowRange, groundAlbedo }) {
-      renderer.getDrawingBufferSize(size);
-      uniforms.uViewport.value.copy(size);
-      const fov = camera.isPerspectiveCamera ? camera.getEffectiveFOV() : 50;
-      uniforms.uPixelAngle.value = (2 * Math.tan((fov * Math.PI) / 360)) / Math.max(1, size.y);
-      if (gain != null) uniforms.uGain.value = gain;
+    setFrame({ ambientLux, onTable, visibility, sodium, glowRange, groundAlbedo } = {}) {
       if (ambientLux != null) uniforms.uAmbient.value = ambientLux;
-      if (onTable) uniforms.uOnTable.value.set(onTable.map((v) => (Number.isFinite(v) ? v : -1)));
+      if (onTable) { const a = uniforms.uOnTable.array; for (let i = 0; i < ON_TABLE_N; i++) a[i] = Number.isFinite(onTable[i]) ? onTable[i] : -1; }
       if (visibility != null) uniforms.uVisibility.value = visibility;
       if (sodium) uniforms.uSodium.value.set(sodium.startUv[0], sodium.startUv[1], sodium.steadyUv[0], sodium.steadyUv[1]);
       if (glowRange) uniforms.uGlowRange.value.set(glowRange[0], glowRange[1]);

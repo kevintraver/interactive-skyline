@@ -60,6 +60,23 @@ def surfaces_below(F, others, s, grow, min_drop):
         zb = B.surface(sb[m], db[m])
         low = pts["z"][m] - zb > min_drop
         hit[np.unique(k[m][low])] = True
+    # and the other way round: every other road's own pavement that lies under F's, with `grow` m of F either side of
+    # it, so that a road whose end lies under F (which F's points beyond that end do not see) is under a deck too
+    reach = int(np.ceil(grow / F.spacing))
+    x0, y0, x1, y1 = F.bbox
+    for B in others:
+        if B is F:
+            continue
+        bx0, by0, bx1, by1 = B.bbox
+        if bx0 > x1 or bx1 < x0 or by0 > y1 or by1 < y0:
+            continue
+        pb = B.pavement_points(step=F.spacing / 2, across=1.5)
+        m, sf, df = F.inside(pb["x"], pb["y"])
+        if not m.any():
+            continue
+        low = F.surface(sf[m], df[m]) - pb["z"][m] > min_drop
+        for i in np.unique(np.round(sf[m][low] / F.spacing).astype(int)):
+            hit[max(0, i - reach):i + reach + 1] = True
     return hit
 
 

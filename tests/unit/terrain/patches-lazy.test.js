@@ -8,7 +8,7 @@ import { createTerrain } from '../../../src/world/terrain/index.js';
 import { buildWideMesh, cutWideMesh, wideIndex } from '../../../src/world/terrain/widemesh.js';
 import { buildPatches, patchesCrossing, PATCH_REACH } from '../../../src/world/terrain/patches.js';
 import { eachGround } from '../../../src/drive/parts.js';
-import { coarseGridIndex } from '../../../src/drive/vehicle/mirrors.js';
+import { coarseGridIndex } from '../../../src/drive/vehicle/mirrorGeometry.js';
 
 const DATA = new URL('../../../public/data/lv/', import.meta.url);
 const bytes = (file) => { const b = readFileSync(new URL(file, DATA)); return b.buffer.slice(b.byteOffset, b.byteOffset + b.byteLength); };
@@ -81,7 +81,7 @@ describe('cutting a patch out of the wide mesh later', () => {
     expect(Array.from(wideIndex({ wide, hole, cuts: [dam] }))).toEqual(Array.from(early.geometry.index.array));
   });
 
-  it('a mirror\'s coarse ground can be rebuilt from the cut index (mirrors.js swapGround)', async () => {
+  it('a mirror\'s coarse ground can be rebuilt from the cut index (mirrorGeometry.js coarseGridIndex)', async () => {
     const { terrain } = makeTerrain();
     const wide = await terrain.loadWide();
     const [{ grid: dam }] = await terrain.loadPatches(['dam']);

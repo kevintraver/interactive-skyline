@@ -2,7 +2,7 @@
 the dam patch and the seams between them, for tests/unit/terrain/drawn.test.js to hold the JavaScript twin
 (src/world/terrain/drawn.js) to.
 
-    uv run --with-requirements tests/data/requirements.txt python tests/fixtures/make_drawn_fixture.py
+    uv run --with-requirements tests/python/requirements.txt python tests/fixtures/make_drawn_fixture.py
 """
 import json
 import sys

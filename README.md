@@ -42,7 +42,7 @@ What you see:
 - **Traffic.** Sedans, crossovers, pickups, vans, tractor-trailers and coaches on both carriageways, as many as the 2025 counts give for that hour of that day of the week. Beyond 4 km they become a ribbon of light per lane, and the rest of the valley's freeways and main roads carry ribbons of their own.
 - **Night.** Your headlights light the road and make the signs and lane lines shine back. Street lamps light up through dusk, sodium ones warming up orange. Other vehicles carry head, tail and stop lamps. Towers over 61 m carry red obstruction lights, and the Sphere lights its surroundings.
 - **The car.** The default view is from the driver's seat of a generic crossover, with speed and time on the cluster, a route display, three working mirrors and a windshield that hazes around a low sun and oncoming lamps. The car rides the road's texture and the bridge joints. The clean view drops the car and puts the eye 1.2 m above the road.
-- **Rain.** Light rain, rain and heavy rain darken and gloss the road, put streaks of reflected lamps on it, grey out the distance and throw spray behind vehicles.
+- **Rain.** Light rain, rain and heavy rain darken and gloss the road, put streaks of reflected lamps on it, bead on the windshield under the wipers and throw spray behind vehicles. The rain is the app's weather: the real conditions for the chosen moment, or a preset.
 
 ![The same road at night: street lamps, tail lamps and the lit city](docs/drive-night.jpg)
 
@@ -50,9 +50,9 @@ What you see:
 
 ![US-93 by day, climbing out of Black Canyon after the Hoover Dam bridge](docs/drive-dam.jpg)
 
-![The clean view on I-15 south, an overhead guide sign before the Spaghetti Bowl](docs/drive-clean.jpg)
+![The clean view on I-15 south, under the overhead guide sign for Spring Mountain Road](docs/drive-clean.jpg)
 
-![A billboard beside I-15 with one of the made-up advertisements: "Pre Dented For You"](docs/drive-billboard.jpg)
+![A billboard beside I-15 with one of the made-up advertisements: "We Fix Hot", for Chillfizz Cooling](docs/drive-billboard.jpg)
 
 ### The three routes
 
@@ -103,8 +103,9 @@ The address bar follows the drive, so a link opens the same place, time, route, 
 - **Street lamps** are the agencies' own inventories (Clark County, the City of Las Vegas, Henderson, Boulder City), with OpenStreetMap's, and a rule only where no inventory reaches: 196,300 lamps, 13 % of them placed by rule (`data/derived/lv/lights_report.json`).
 - **Your headlamps' beams** are shaped by hand inside the test points of the US vehicle lighting standard (FMVSS 108), because the published survey of real beam patterns could not be fetched. Other vehicles' lamps take their intensities from the same standard's ranges.
 - **The car and the vehicles** are generic shapes with no badge or brand.
+- **Light and exposure** are the app's: the sky, the dusk and the exposure follow its clock, and the drive's lamps, beams, signs and screens are described in physical units (candela, lux, cd/m²) and measured in the rendered frame by the probes under `tests/manual/`. Two things are the drive's own choices about the picture, not measurements: at night it lifts the dark parts of the frame so that the road reads as it does to a driver's eye (up to twice, leaving lit windows and signs where they are), and a billboard's face is drawn no brighter than the display can show in colour. How strongly pavement throws headlight back toward the driver (15 mcd/m²/lx for asphalt, 25 for concrete) is assumed, within published bounds.
 
-Stand-ins until the sky and weather plan (plan 01) lands: the dusk is a blend between the app's day and night looks by the sun's height, the exposure is fixed (lights are described in physical units and mapped to the scene by one constant per unit), and the rain is four presets rather than real weather. The city's glow is not yet fitted to satellite night lights.
+Not there yet: the sky does not turn grey in rain (rain on the road and on the glass is the drive's own until the app draws rain itself), the night sky is brighter than it should be, and the city's glow is not fitted to satellite night lights.
 
 The plan behind all this, with what is done and what is not, is `docs/plans/02-vegas-drive.md`.
 
@@ -205,7 +206,7 @@ They write `public/models/drive/cabin.glb`, `cabin-low.glb`, `cabin.json`, `vehi
 
 ## Tests
 
-`pnpm test` runs the unit tests and the browser suites; `pnpm test:data` tests the Python pipeline. What each command covers, the golden images, the performance budgets and the manual screenshot scripts are in [tests/README.md](tests/README.md).
+`pnpm test` runs the unit tests and the map's browser suite; `pnpm test:py` tests the Python data pipelines; `pnpm test:e2e:gpu` runs the functional browser specs, Drive mode's included, on this machine's GPU. What each command covers, where it runs, the golden images, the performance budgets and the manual screenshot scripts are in [tests/README.md](tests/README.md).
 
 ## Hand-modelled landmarks
 

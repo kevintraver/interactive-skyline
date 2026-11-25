@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import * as THREE from 'three';
-import { selectVisible, bandOf, packSigns, SHOW, KEEP, BANDS } from '../../../src/drive/roadside/batch.js';
+import { selectVisible, packSigns, SHOW, KEEP } from '../../../src/drive/roadside/batch.js';
 import { createRoadside } from '../../../src/drive/roadside/index.js';
 import { createRefline } from '../../../src/drive/roadnet/refline.js';
 import { BASE, EARTH_R, realRoadnet, signsJson } from './helpers.js';
@@ -19,24 +19,21 @@ describe('batching bookkeeping', () => {
     expect(KEEP).toBeGreaterThan(SHOW);
   });
 
-  it('bands distances for the night glow', () => {
-    expect([0, BANDS[0] - 1, BANDS[0], BANDS[1] - 1, BANDS[1], 5000].map(bandOf)).toEqual([0, 0, 1, 1, 2, 2]);
-  });
-
-  it('packs faces per page, nearest band last, each band one contiguous group', () => {
+  it('packs faces per page in the order of the signs\' indices', () => {
     const items = [
-      { index: 4, band: 0, built: fakeBuilt([0, 1]) },
-      { index: 7, band: 2, built: fakeBuilt([0]) },
-      { index: 2, band: 1, built: fakeBuilt([0], 2) },
-      { index: 9, band: 2, built: fakeBuilt([1]) },
+      { index: 4, built: fakeBuilt([0, 1]) },
+      { index: 7, built: fakeBuilt([0]) },
+      { index: 2, built: fakeBuilt([0], 2) },
+      { index: 9, built: fakeBuilt([1]) },
     ];
     const out = packSigns(items, [1000, 0, 0], 2);
     expect(out.faces).toHaveLength(2);
-    expect(out.faces[0].groups).toEqual([{ start: 0, count: 6, band: 2 }, { start: 6, count: 6, band: 1 }, { start: 12, count: 6, band: 0 }]);
-    expect(out.faces[1].groups.map((g) => g.band)).toEqual([2, 0]);
     expect(out.faces[0].index.length).toBe(18);
     expect([...out.faces[0].position.slice(0, 3)]).toEqual([0, 1, 2]); // origin subtracted
-    expect(out.faces[0].ranges.get(4)).toEqual({ start: 12, count: 6 });
+    expect(out.faces[0].ranges.get(2)).toEqual({ start: 0, count: 6 });
+    expect(out.faces[0].ranges.get(4)).toEqual({ start: 6, count: 6 });
+    expect(out.faces[0].ranges.get(7)).toEqual({ start: 12, count: 6 });
+    expect([...out.faces[1].ranges.keys()]).toEqual([4, 9]);
     for (const f of out.faces) expect(Math.max(...f.index)).toBeLessThan(f.position.length / 3);
     // supports: every sign's range, indices offset to its own vertices
     const s = out.support;
@@ -60,18 +57,10 @@ describe('createRoadside on the real data', () => {
     expect(a.signs).toBe(signs.roads[0].signs.length);
     expect(a.shown).toBeGreaterThan(5);
     expect(a.shown).toBeLessThan(40);
-    expect(a.drawCalls).toBeLessThanOrEqual(2 * a.pages); // by day: one call per page and one for the supports
-    rs.setNight(true);
-    await rs.whenSettled();
-    expect(rs.stats().drawCalls).toBeLessThanOrEqual(3 * a.pages + 1);
-    // through dusk the glow scales with the look's beams, and the bands stay split while anything glows
-    const faceMat = parent.getObjectByName('roadside').children[0].material[0];
-    const full = faceMat.emissiveIntensity;
-    rs.setLook({ night: true, beams: 0.25 });
-    expect(faceMat.emissiveIntensity).toBeCloseTo(full * 0.25, 12);
-    await rs.whenSettled();
-    expect(rs.stats().drawCalls).toBeGreaterThan(a.drawCalls);
-    rs.setNight(true);
+    expect(a.drawCalls).toBeLessThanOrEqual(2 * a.pages); // one call per page and one for the supports
+    const faceMat = parent.getObjectByName('roadside').children[0].material;
+    expect(faceMat.isNodeMaterial).toBe(true);
+    expect(rs.surfaces().filter(([, kind]) => kind === 'sign').map(([m]) => m)).toContain(faceMat);
     rs.update(at(20000));
     await rs.whenSettled();
     const b = rs.stats();

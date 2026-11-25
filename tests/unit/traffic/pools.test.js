@@ -1,8 +1,8 @@
-// Other vehicles' headlamp pools (traffic/pools.js, pools.glsl.js) on a wet road: the same rule as the visitor's own
-// pool (weather/wet.glsl.js, wetMirror.js wetFragment).
+// Other vehicles' headlamp pools (traffic/pools.js) on a wet road: the same rule as the visitor's own pool
+// (weather/wet.js, wetMirror.js wetFragment).
 import { describe, it, expect } from 'vitest';
 import { poolIlluminance, poolLuminance, ASPHALT_RHO } from '../../../src/drive/traffic/pools.js';
-import { poolFragment } from '../../../src/drive/traffic/pools.glsl.js';
+import fs from 'node:fs';
 import { wetFragment, meanCover, fresnelWater, WET_DIFFUSE, GLOSS } from '../../../src/drive/weather/wetMirror.js';
 
 describe('headlamp pools on a wet road', () => {
@@ -36,9 +36,10 @@ describe('headlamp pools on a wet road', () => {
   });
 
   it('the shader reads the twins\' cover (uTwinWet / gloss) and applies both factors', () => {
-    expect(poolFragment).toContain('uTwinWet / uWetPool.x');
-    expect(poolFragment).toContain('1.0 - cover * poolFresnel(cosi)');
-    expect(poolFragment).toContain('1.0 - cover * (1.0 - uWetPool.y)');
+    const src = fs.readFileSync(new URL('../../../src/drive/traffic/pools.js', import.meta.url), 'utf8');
+    expect(src).toContain('uniforms.uTwinWet.div(uniforms.uWetPool.x)');
+    expect(src).toContain('float(1).sub(cover.mul(poolFresnel(cosi)))');
+    expect(src).toContain('float(1).sub(cover.mul(float(1).sub(uniforms.uWetPool.y)))');
     expect(GLOSS.twin).toBeGreaterThan(0);
   });
 });

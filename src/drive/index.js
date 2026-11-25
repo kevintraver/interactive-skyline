@@ -3,12 +3,12 @@
 // between the map and the drive. The drive itself (session.js and everything it imports) is loaded,
 // downloaded and built only the first time Drive is entered.
 //
-// The seam (lines marked "drive seam" in main.js, interaction/edits.js, interaction/focus.js and
-// ui/settingsPanel.js): while app.drive.active the frame loop calls seam.frame instead of the map
-// controls and the camera glide, skips the viewpoint snapshots and calls seam.render instead of
-// drawing the scene itself; removable buildings are painted in their natural colours; seam.night,
-// when not null, is the look the sky and the interface show instead of the saved setting
-// (app.nightNow()); focusOn calls seam.focus.
+// The seam (lines marked "drive seam" in main.js, interaction/edits.js, interaction/focus.js, app/sim.js and
+// ui/skyPopover.js): while app.drive.active the frame loop leaves the map controls and the camera glide alone and
+// skips the viewpoint snapshots, and skips the pipeline's draw while seam.holding() (a route switch keeps the last
+// frame); removable buildings are painted in their natural colours; focusOn calls seam.focus; #sky's keys and a drive
+// link's ?t= are the drive's. The session itself is a subsystem of plan 01's frame loop and the pipeline draws
+// (session.js). Drive is not offered on the map's classic renderer (?renderer=legacy).
 
 import { createTerrain } from '../world/terrain/index.js';
 import { decodeDriveState, encodeDriveState, clearDriveState } from './url.js';
@@ -18,6 +18,7 @@ import { createTimePop } from './ui/timepop.js';
 import { createViewPop } from './ui/viewpop.js';
 import { stepRate, atLocalMinutes } from './ui/format.js';
 import { attachInput } from './input.js';
+import { saveMapPipeline } from './mapPipeline.js';
 
 /** The first-visit hint while driving (main.js keeps its own text for the map). */
 const DRIVE_HINT = 'Drag to look around. Scroll to zoom. Space to pause.';
@@ -37,15 +38,13 @@ function contextOf(app, { terrainData }) {
   const { city, cityId, scene, camera, controls, renderer, canvas, settings, invalidate, sky, terrain, tall, events } = app;
   return {
     city, cityId, DATA: `/data/${cityId}`, scene, camera, controls, renderer, canvas, settings, invalidate, tall,
-    /** true on the classic WebGLRenderer (the drive's GLSL path), false on plan 01's renderer (node materials) */
-    legacy: app.rendererKind === 'legacy',
-    /** plan 01's contract (section 11), on its renderer: the clock, the timeline, the environment, quality, the pipeline, the loop */
-    plan01: { clock: app.clock, timeline: app.timeline, env: app.env, quality: app.quality, pipeline: app.pipeline, loop: app.loop },
+    /** plan 01's contract (section 11): the clock, the timeline, the environment, quality, the pipeline, the loop */
+    plan01: { clock: app.clock, timeline: app.timeline, env: app.env, quality: app.quality, pipeline: app.pipeline, loop: app.loop, weather: () => app.loadWeather?.() ?? null }, // weather: plan 01's weather service, loaded on demand (the drive's weather, decision 9)
     /** the app's event bus (src/app/events.js): 'buildings:changed' after a hide, show or move, 'buildings:rebuilt' */
     events,
-    /** { active, night, frame, render, focus }: the seam main.js reads (see the top of this file) */
+    /** { active, focus, holding }: the seam main.js reads (see the top of this file) */
     seam: app.drive,
-    applyNight: () => sky.apply({ night: app.nightNow(), imagery: settings.imagery, terrain }),
+    applyNight: () => sky.apply({ night: settings.night, imagery: settings.imagery, terrain }),
     repaint: () => tall.forEach(app.paint),
     resize: () => app.views.resize(),
     stopFlight: () => app.stopFlight(),
@@ -63,7 +62,7 @@ function contextOf(app, { terrainData }) {
  */
 export function initDrive(app, loaded) {
   const ctx = contextOf(app, loaded);
-  const { city, DATA, camera, controls, canvas, settings, seam, invalidate, legacy, plan01 } = ctx;
+  const { city, DATA, camera, controls, canvas, settings, seam, invalidate, plan01 } = ctx;
   const terrain = createTerrain({
     meta: ctx.terrainMeta, buffers: ctx.buffers, base: city.base,
     fetchBinary: async (file) => {
@@ -77,8 +76,14 @@ export function initDrive(app, loaded) {
 
   const routes = city.routes || [];
   const modes = document.getElementById('modes');
-  if (!routes.length) {
-    const none = () => Promise.reject(new Error(`${city.name} has no drive routes`));
+  // the drive's materials are node materials: on the map's classic renderer (?renderer=legacy, until plan 01's phase 3
+  // deletes it) Drive is not offered, and a drive link opens the map
+  const classic = app.rendererKind !== 'webgpu';
+  if (!routes.length || classic) {
+    if (classic && routes.length && new URLSearchParams(location.search).get('mode') === 'drive') {
+      console.info('Drive mode needs the default renderer: ?mode=drive is ignored on the classic one.');
+    }
+    const none = () => Promise.reject(new Error(classic ? 'Drive mode is not offered on the classic renderer' : `${city.name} has no drive routes`));
     hooks.drive = { start: none, whenSettled: none, active: () => false, exit() {}, pose: () => null, stats: () => null, visible: () => false };
     return hooks.drive;
   }
@@ -280,17 +285,32 @@ export function initDrive(app, loaded) {
   }
   function setCompassTitle(text) { el.compass.title = text; el.compass.setAttribute('aria-label', text); }
 
-  // ---------------------------------------------------------------- the map's clock, handed to the drive (plan 01's renderer)
+  // ---------------------------------------------------------------- the map's clock, handed to the drive
   // One clock (decision 4): the drive runs on app.clock. Entering Drive saves what the map had (pinned or the clock
   // state, the time, the rate, playing) and enters the clock state (decision 5); leaving puts it back.
   let mapClock = null, driveRate = 1; // the drive's own rate on the shared clock, kept across sessions of this visit
+  // the drive's moment when the visitor left for Map: leaving gives the shared clock back to the map, so coming back
+  // seeks it again
+  let driveMoment = null;
   function saveMapClock() {
-    if (legacy || mapClock) return;
+    if (mapClock) return;
     const { clock, env } = plan01;
     mapClock = { mode: env.mode, night: !!settings.night, timeMs: clock.timeMs, rate: clock.rate, playing: clock.playing, live: clock.live, frozen: env.frozen };
   }
+  // The map's pipeline, as the clock: noted before the drive first adds a stage (its parts add theirs as the session
+  // loads), put back on leaving (mapPipeline.js)
+  let restoreMapPipeline = null;
+  function saveMapLook() {
+    saveMapClock();
+    restoreMapPipeline ||= saveMapPipeline(plan01.pipeline);
+  }
+  function restoreMapLook() {
+    restoreMapClock();
+    restoreMapPipeline?.();
+    restoreMapPipeline = null;
+  }
   function restoreMapClock() {
-    if (legacy || !mapClock) return;
+    if (!mapClock) return;
     const { clock, env } = plan01;
     const m = mapClock;
     mapClock = null;
@@ -327,15 +347,8 @@ export function initDrive(app, loaded) {
    * @param {{ s?: number, t?: number, view?: string, yaw?: number, pitch?: number, lens?: number, route?: boolean, startKey?: string }} [at]
    */
   async function enter(id, at = {}) {
-    // until the drive's materials are ported to the new renderer (plan 02), Drive runs on the classic one: entering
-    // from the new renderer reloads the page into it (src/render/renderer.js reads ?mode=drive)
-    if (app.rendererKind && app.rendererKind !== 'legacy' && new URLSearchParams(location.search).get('renderer') !== 'webgpu') {
-      const q = new URLSearchParams(encodeDriveState({ route: id, s: at.s, t: at.t, view: at.view, yaw: at.yaw, pitch: at.pitch, lens: at.lens }, location.search));
-      location.assign(`${location.pathname}?${q}`);
-      return new Promise(() => {});
-    }
     const token = ++entering;
-    if (!seam.active) saveMapClock();
+    if (!seam.active) saveMapLook();
     const switching = seam.active && !!session && id !== session.route;
     showMode('drive');
     bar.show(true);
@@ -354,7 +367,7 @@ export function initDrive(app, loaded) {
         cards.show(false);
         cards.setLoading(false);
         showMode('map');
-        if (!seam.active) restoreMapClock();
+        if (!seam.active) restoreMapLook();
         ctx.showToast('The drive could not be loaded.', false);
       }
       console.warn('Drive mode failed to load.', err);
@@ -387,6 +400,8 @@ export function initDrive(app, loaded) {
     session.rig.look({ yaw: at.yaw, pitch: at.pitch, lens: at.lens });
     if (!seam.active) activate();
     session.clock.pause();
+    if (!fresh && driveMoment !== null) session.seek({ t: driveMoment }); // back from Map: where the drive was
+    driveMoment = null;
     writeAddress();
     bar.setStatus('Loading the road…');
     try {
@@ -405,18 +420,12 @@ export function initDrive(app, loaded) {
     ctx.stopFlight();
     saveMap();
     controls.enabled = false;
-    if (legacy) {
-      seam.frame = (now) => session.frame(now);
-      seam.render = () => session.render();
-    } else {
-      // plan 01's renderer: the session is a subsystem of the frame loop and the pipeline draws (session.js attach)
-      seam.frame = () => {};
-      seam.render = null;
-      seam.holding = () => session.holding;
-      plan01.env.enterClock();
-      session.setRate(driveRate); // the map's rate (60x, say) is the map's
-      if (el.transport) el.transport.style.display = 'none'; // the drive's bar is the transport while driving
-    }
+    // the session is a subsystem of the frame loop and the pipeline draws (session.js attach)
+    seam.holding = () => session.holding;
+    plan01.env.enterClock();
+    plan01.quality?.hold?.(true); // a change of level while driving breaks the WebGPU frame (plan 02): the scale may still change
+    session.setRate(driveRate); // the map's rate (60x, say) is the map's
+    if (el.transport) el.transport.style.display = 'none'; // the drive's bar is the transport while driving
     seam.focus = (entry) => {
       const b = entry.data;
       session.lookAt(entry.offset.clone().set(b.c[0], b.ground - city.base + b.h * 0.6, -b.c[1]).add(entry.offset));
@@ -424,7 +433,7 @@ export function initDrive(app, loaded) {
     seam.active = true;
     el.views.hidden = true;
     el.night.hidden = true;
-    if (el.sky) el.sky.hidden = true; // the map's time of day; the drive has its own clock until it takes the app's
+    if (el.sky) el.sky.hidden = true; // the map's time of day: the drive's bar sets it while driving
     hintText.textContent = DRIVE_HINT;
     setCompassTitle('Look ahead');
     document.body.classList.add('driving');
@@ -443,13 +452,14 @@ export function initDrive(app, loaded) {
     viewPop.open(false);
     if (!seam.active) return;
     wasPlaying = session.clock.playing;
-    if (!legacy) driveRate = session.clock.rate;
+    driveRate = session.clock.rate;
+    driveMoment = session.clock.now();
     session.clock.pause();
     seam.active = false;
-    seam.frame = seam.render = seam.focus = seam.holding = null;
-    seam.night = null;
+    seam.focus = seam.holding = null;
     session.show(false);
-    restoreMapClock();
+    restoreMapLook();
+    plan01.quality?.hold?.(false); // a level chosen while driving applies now
     if (el.transport) el.transport.style.display = '';
     ctx.applyNight();
     ctx.repaint();
@@ -517,13 +527,10 @@ export function initDrive(app, loaded) {
     whenSettled: () => need().whenSettled(),
     /** The parts not settled within `ms` (default 0), by name: for a script that timed out on whenSettled. */
     unsettled: (ms) => need().unsettled(ms),
-    /** Draw the current frame once, now (as the app's loop would: parts' beforeRender, the passes, the world, the cabin); for probes. */
-    renderFrame() { need().render(); },
-    /**
-     * The adaptive render scale's state ({ adaptive, allowed, full, ratio, playRatio, ... }); { adaptive } switches it on or
-     * off (it is off under automation and on a software renderer: a probe switches it on to measure it).
-     */
-    renderScale(o) { const sn = need(); if (o && 'adaptive' in o) sn.renderScale.setAdaptive(o.adaptive); return sn.renderScale.stats(); },
+    /** Draw the current frame once, now, through the pipeline (the parts' beforeRender and afterRender around it); for probes. */
+    renderFrame() { need(); plan01.pipeline.render(); },
+    /** The render scale's state: plan 01's quality governor owns it (decision 8), so this only reports it. */
+    renderScale() { return need().stats().renderScale; },
     visible: (targetId) => need().visible(targetId),
     stats: () => (session ? { ...session.stats(), active: seam.active } : null),
     active: () => seam.active,

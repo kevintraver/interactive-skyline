@@ -8,7 +8,7 @@ import {
   DROP, glassOf, projectedArea, arrivalRate, runSpeed, siteLayout, siteArrivals, createBinWindow, evalSite, glassDrops, hash3,
 } from '../../../src/drive/vehicle/drops.js';
 import { wiperSchedule, wipePhase, passAgoAt } from '../../../src/drive/vehicle/wipers.js';
-import { WIPERS } from '../../../src/drive/vehicle/windshield.js';
+import { WIPERS } from '../../../src/drive/vehicle/veil.js';
 import { relativeRain, CLASS_SPEED } from '../../../src/drive/weather/rainMirror.js';
 import { weatherFor } from '../../../src/drive/env.js';
 

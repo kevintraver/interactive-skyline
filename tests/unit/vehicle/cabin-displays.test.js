@@ -1,9 +1,8 @@
-// The cabin's displays and model choice (plan 02, D4.5, D4.2): the instrument cluster reads the pose's speed in
-// the visitor's units within 1 unit and the city's local time; the temperature only when there is one; the route
-// display names the next exit; small or slow devices get the low model.
+// The cabin's displays (plan 02, D4.5): the instrument cluster reads the pose's speed in the visitor's units within 1
+// unit and the city's local time; the temperature only when there is one; the route display names the next exit. The
+// model by quality level is in cabin.test.js.
 import { describe, it, expect } from 'vitest';
 import { instrumentText, screenText } from '../../../src/drive/vehicle/displays.js';
-import { chooseCabinModel } from '../../../src/drive/vehicle/cabin.js';
 
 const TZ = 'America/Los_Angeles';
 const T = Date.parse('2026-11-22T01:12:00Z'); // 5:12 PM in Las Vegas
@@ -41,17 +40,5 @@ describe('screenText', () => {
   it('gives the destination past the last exit, and says when the car has arrived', () => {
     expect(screenText({ s: 2700, s1: 3000, markers, to: 'Las Vegas', units: 'm' })).toEqual({ title: 'Las Vegas', dist: '300 m', foot: '' });
     expect(screenText({ s: 2999, s1: 3000, markers, to: 'Las Vegas', units: 'm' }).dist).toBe('Arrived');
-  });
-});
-
-describe('chooseCabinModel', () => {
-  it('gives small or slow devices the low model', () => {
-    expect(chooseCabinModel({ deviceMemory: 8, cores: 10, coarse: false, minScreen: 1080 })).toBe('high');
-    expect(chooseCabinModel({})).toBe('high'); // nothing known: a desktop browser that reports nothing
-    expect(chooseCabinModel({ software: true, deviceMemory: 8, cores: 16 })).toBe('low');
-    expect(chooseCabinModel({ deviceMemory: 4, cores: 8 })).toBe('low');
-    expect(chooseCabinModel({ deviceMemory: 8, cores: 4 })).toBe('low');
-    expect(chooseCabinModel({ deviceMemory: 8, cores: 8, coarse: true, minScreen: 390 })).toBe('low');
-    expect(chooseCabinModel({ deviceMemory: 8, cores: 8, coarse: true, minScreen: 1024 })).toBe('high'); // a tablet
   });
 });

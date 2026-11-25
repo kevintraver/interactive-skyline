@@ -8,20 +8,26 @@
 // the choice, fit and rotation are billboardsImages.js): a static face one image, lit from below at night by its own
 // lamps; a digital face a new image every HOLD_S seconds of simulation time with a quick fade (screens/digital.js), at
 // a level that follows the ambient illuminance. The atlas loads after the part is in (the faces are plain until
-// then); if it fails, the faces show the generated abstract artwork of screens/art.js instead, never nothing. The faces are screens in the registry (`screens` part), and the
-// digital ones nearest the car light the road and ground in front of them (a surface term, screens/light.glsl.js).
+// then); if it fails, the faces show the generated abstract artwork of screens/art.js instead, never nothing. The faces
+// are screens in the registry (`screens` part), and the digital ones nearest the car light the road and ground in front
+// of them (a surface term, screens/light.js).
 //
 // Per frame: two uniforms (the content time and the levels) and, for the glow, the nearest digital faces to the car.
+//
+// The faces' and lamps' materials are billboardsFace.js's. The levels are luminances in cd/m^2 (third stretch,
+// decision 6; screens/digital.js faceLevels: a digital face's white 300 cd/m^2 at night and 6,000 by day; a static face
+// vinyl under 400 lx of floodlight), as are the registry's mean colours and the glow's, and the detail follows
+// app.quality's level (decision 8; DETAIL below): the atlas tier, the floodlights per face and the faces that glow.
 
 import * as THREE from 'three';
-import { addSurfaceTerm } from '../lights/surfaceLight.js';
+import { MeshLambertNodeMaterial } from 'three/webgpu';
 import { createTimings } from '../timing.js';
 import { eachGround } from '../parts.js';
 import { buildAtlas, hash32 } from '../screens/art.js';
 import { contentSeconds } from '../screens/clock.js';
-import { digitalLevel, digitalMean, phaseOf, staticLevel } from '../screens/digital.js';
-import { GLOW_BODY, GLOW_HEAD, GLOW_MAX } from '../screens/light.glsl.js';
-import { faceMaterial, PLAIN } from './billboardsFace.js';
+import { digitalMean, faceLevels, phaseOf, PLAIN } from '../screens/digital.js';
+import { createGlowLight } from '../screens/light.js';
+import * as faceNode from './billboardsFace.js';
 import { adMean, assignImages, loadAds, shaderTables, textureBytes } from './billboardsImages.js';
 
 const RAD = Math.PI / 180;
@@ -30,6 +36,15 @@ const GLOW_RANGE = 70;
 /** Digital faces farther than this from the car are not considered for the glow (m). */
 const GLOW_PICK_M = 250;
 const POLE_R = { bulletin: 0.45, poster: 0.25 };
+/**
+ * Detail by plan 01's quality level (decision 8): the atlas tier, the floodlights of a static face (bulletins, 11 m and
+ * wider, and posters), and how many digital faces nearest the car light the ground.
+ */
+export const DETAIL = Object.freeze({
+  low: Object.freeze({ tier: 'low', lampsBulletin: 2, lampsPoster: 2, glow: 2 }),
+  high: Object.freeze({ tier: 'high', lampsBulletin: 4, lampsPoster: 2, glow: 6 }),
+  ultra: Object.freeze({ tier: 'high', lampsBulletin: 4, lampsPoster: 2, glow: 6 }),
+});
 
 /** A product row as an object (the field order is the product's `fields`). */
 export function boardOf(row, fields) {
@@ -70,6 +85,9 @@ export async function createBillboardsPart(ctx) {
   const doc = await ctx.optional('billboards.json');
   if (!doc || !Array.isArray(doc.boards) || !doc.boards.length) return null;
   const { env, terrain } = ctx;
+  const level = DETAIL[env?.quality?.preset] ? env.quality.preset : 'high';
+  const detail = DETAIL[level];
+  const photometry = { nodes: env?.nodes };
   // a board stands on the ground as drawn (terrain.surfaceY), at the lowest point around its pole, so on a slope
   // the pole never hangs on its downhill side
   const groundY = (x, y) => {
@@ -96,28 +114,28 @@ export async function createBillboardsPart(ctx) {
 
   // ---------------------------------------------------------------- materials
   const renderer = ctx.app.renderer;
-  const anisotropy = Math.min(16, renderer.capabilities.getMaxAnisotropy());
+  const anisotropy = Math.min(16, renderer.getMaxAnisotropy());
   const blank = new THREE.DataTexture(new Uint8Array([255, 255, 255, 255]), 1, 1);
   blank.needsUpdate = true;
   const blankTable = new THREE.DataTexture(new Float32Array(8), 1, 2, THREE.RGBAFormat, THREE.FloatType);
   blankTable.needsUpdate = true;
-  const uniforms = {
-    uArt: { value: blank }, uAds: { value: blank }, uAdTable: { value: blankTable }, uAdTexel: { value: new THREE.Vector2(1, 1) },
-    uMode: { value: 0 }, uTime: { value: 0 }, uDigitalLevel: { value: 0.5 }, uStaticLevel: { value: 0 },
-  };
+  const { material: faceMat, uniforms } = faceNode.faceMaterial({ blank, blankTable, photometry });
+  const steel = new MeshLambertNodeMaterial({ color: 0x6f7377 });
+  const frameMat = new MeshLambertNodeMaterial({ color: 0x3c3f43 });
+  const lamp = faceNode.lampMaterial({ color: 0xfff1d6, photometry });
+  const lampMat = lamp.material;
+  const lampLevel = (v) => { lamp.uniforms.uLevel.value = v; };
+  // the levels in cd/m^2 (faceLevels)
+  const levelsFor = (ambientLux, lampsOn) => faceLevels({ ambientLux, lampsOn });
   let art = null, ads = null, table = null, mode = 'plain', adMeans = null, assigned = null;
   const loadInfo = { state: 'loading' };
-  const faceMat = faceMaterial(new THREE.MeshLambertMaterial({ color: 0xffffff }), uniforms);
-  const steel = new THREE.MeshLambertMaterial({ color: 0x6f7377 });
-  const frameMat = new THREE.MeshLambertMaterial({ color: 0x3c3f43 });
-  const lampMat = new THREE.MeshLambertMaterial({ color: 0x2b2d30, emissive: 0xfff1d6, emissiveIntensity: 0 });
 
   // ---------------------------------------------------------------- geometry
   const poleGeo = new THREE.CylinderGeometry(1, 1, 1, 10, 1, true).translate(0, 0.5, 0);
   const boxGeo = new THREE.BoxGeometry(1, 1, 1);
   const faceGeo = new THREE.PlaneGeometry(1, 1);
   const statics = faces.filter((f) => !f.digital);
-  const lampsPer = (f) => (f.w >= 11 ? 4 : 2);
+  const lampsPer = (f) => (f.w >= 11 ? detail.lampsBulletin : detail.lampsPoster);
   const nLamps = statics.reduce((n, f) => n + lampsPer(f), 0);
   const poles = new THREE.InstancedMesh(poleGeo, steel, boards.length);
   const frames = new THREE.InstancedMesh(boxGeo, frameMat, faces.length);
@@ -184,7 +202,7 @@ export async function createBillboardsPart(ctx) {
   (ctx.roads || ctx.group).add(group);
 
   // ---------------------------------------------------------------- levels, the registry, the glow
-  let ambient = 1e4, lights = 0, dLevel = digitalLevel(ambient, env.lighting.units), sLevel = 0;
+  let ambient = 1e4, lights = 0, dLevel = levelsFor(ambient, 0).digital, sLevel = 0;
   const screens = faces.map((f, i) => ({
     id: `billboard:${i}`, kind: 'billboard', name: f.digital ? 'digital billboard' : 'billboard', area: f.w * f.h, digital: f.digital,
     centre: () => [f.cx, f.cy, f.cz], visible: () => group.visible,
@@ -235,8 +253,7 @@ export async function createBillboardsPart(ctx) {
   }
   let disposed = false;
   const loading = (async () => {
-    const { chooseCabinModel, probeDevice } = await import('../vehicle/cabin.js');
-    const tier = chooseCabinModel(probeDevice(renderer)) === 'low' ? 'low' : 'high';
+    const tier = detail.tier;
     const got = await loadAds(tier);
     if (disposed) { got.bitmap.close?.(); return; }
     const { doc, bitmap } = got;
@@ -265,20 +282,16 @@ export async function createBillboardsPart(ctx) {
     mode = 'ads';
     uniforms.uMode.value = 2;
     Object.assign(loadInfo, {
-      state: 'ads', tier, images: n, size: [bitmap.width, bitmap.height], bytes: got.bytes, gpuBytes: textureBytes(bitmap.width, bitmap.height),
+      state: 'ads', tier, level, images: n, size: [bitmap.width, bitmap.height], bytes: got.bytes, gpuBytes: textureBytes(bitmap.width, bitmap.height),
       fetchMs: +got.fetchMs.toFixed(1), decodeMs: +got.decodeMs.toFixed(1), assignMs: +(t1 - t0).toFixed(1), uploadMs: +(t3 - t2).toFixed(1),
     });
     ctx.app.invalidate?.();
   })().catch(useArt);
 
-  const glow = {
-    uScrGlowP: { value: Array.from({ length: GLOW_MAX }, () => new THREE.Vector4()) },
-    uScrGlowN: { value: Array.from({ length: GLOW_MAX }, () => new THREE.Vector4(0, 0, 1, GLOW_RANGE)) },
-    uScrGlowL: { value: Array.from({ length: GLOW_MAX }, () => new THREE.Vector3()) },
-  };
-  const glowTerm = { id: 'screenGlow', key: 'v1', uniforms: glow, head: GLOW_HEAD, body: GLOW_BODY };
+  const glowLight = createGlowLight({ range: GLOW_RANGE, count: detail.glow, photometry });
+  const glow = glowLight.uniforms, GLOW_MAX = glowLight.count;
   const detach = [];
-  const attach = (mat) => { if (mat) detach.push(addSurfaceTerm(mat, glowTerm)); };
+  const attach = (mat) => { if (mat?.isNodeMaterial) detach.push(glowLight.attach(mat)); };
   attach(ctx.materials?.road);
   attach(ctx.materials?.roadNear);
   attach(ctx.wideMesh?.material);
@@ -299,7 +312,7 @@ export async function createBillboardsPart(ctx) {
     glowCount = Math.min(GLOW_MAX, near.length);
     for (let i = 0; i < GLOW_MAX; i++) {
       const L = glow.uScrGlowL.value[i];
-      if (i >= glowCount || !group.visible) { L.set(0, 0, 0); continue; }
+      if (i >= glowCount || !group.visible) { L.set(0, 0, 0); continue; } // (dLevel: cd/m^2)
       const f = near[i][1];
       faceMean(f.index, t, mean);
       L.set(mean[0] * dLevel, mean[1] * dLevel, mean[2] * dLevel);
@@ -314,31 +327,38 @@ export async function createBillboardsPart(ctx) {
     screens,
     faces,
     count: boards.length,
+    /** The faces' shader inputs (test hook: tests/manual/screens-luminance.mjs zeroes a level to measure a face's emission). */
+    uniforms,
+    /** Face i's advertisement schedule (billboardsImages.js assignImages; null before the images are in). Test hook. */
+    assignment: (i) => assigned?.[i] ?? null,
     setEnabled(v) { enabled = !!v; group.visible = enabled; },
     update(frame) {
       if (!enabled) return;
       const t0 = performance.now();
       ambient = env.lighting.ambientLux(frame.sun.elevation);
-      dLevel = digitalLevel(ambient, env.lighting.units);
-      sLevel = staticLevel(lights, env.lighting.units);
+      const lv = levelsFor(ambient, lights);
+      dLevel = lv.digital;
+      sLevel = lv.static;
       uniforms.uTime.value = contentSeconds(frame.simMs);
       uniforms.uDigitalLevel.value = dLevel;
       uniforms.uStaticLevel.value = sLevel;
-      lampMat.emissiveIntensity = 1.5 * lights;
+      lampLevel(lv.lamp);
       pickGlow(frame.pose.position.x, -frame.pose.position.z, frame.simMs);
       pendingMs += performance.now() - t0;
     },
     setLook(look) {
       lights = look.lights ?? (look.night ? 1 : 0);
-      sLevel = staticLevel(lights, env.lighting.units);
+      const lv = levelsFor(ambient, lights);
+      sLevel = lv.static;
       uniforms.uStaticLevel.value = sLevel;
-      lampMat.emissiveIntensity = 1.5 * lights;
+      lampLevel(lv.lamp);
     },
     beforeRender() { timings.add(pendingMs); pendingMs = 0; },
     stats() {
       const t = timings.summary();
       return {
-        boards: boards.length, faces: faces.length, digital: digitals.length, lamps: nLamps, glow: glowCount,
+        boards: boards.length, faces: faces.length, digital: digitals.length, lamps: nLamps, glow: glowCount, glowMax: GLOW_MAX,
+        detail: { level, ...detail }, units: 'cd/m2',
         images: { ...loadInfo },
         level: { digital: +dLevel.toFixed(3), static: +sLevel.toFixed(3), ambientLux: +ambient.toFixed(3) },
         js: { mean: t.mean, p95: t.p95, max: t.max },

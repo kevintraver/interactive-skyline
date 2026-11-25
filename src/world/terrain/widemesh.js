@@ -35,13 +35,13 @@ export function cellsInside(g, cuts) {
  * @param {{ wide: ReturnType<import('./heightfield.js').heightField>,
  *           hole: ReturnType<import('./heightfield.js').heightField> | null,
  *           cuts?: Array<ReturnType<import('./heightfield.js').heightField>>,
- *           base: number, map: THREE.Texture | null, legacy?: boolean }} opts
+ *           base: number, map: THREE.Texture | null }} opts
  *   hole is the grid drawn on top (the far grid); cuts are patches drawn in place of the cells inside them;
- *   map is ground-wide.jpg as a texture, set up by the caller; legacy false gives a node material (plan 01's renderer).
+ *   map is ground-wide.jpg as a texture, set up by the caller.
  * @returns {THREE.Mesh} vertices are relative to the grid's centre, which is in mesh.position:
  *   out at 60 km a world-space float32 vertex would be quantised to about 4 mm.
  */
-export function buildWideMesh({ wide, hole, cuts = [], base, map, legacy = true }) {
+export function buildWideMesh({ wide, hole, cuts = [], base, map }) {
   const { nx, ny, step, x0, y0, scale, raw } = wide;
   // a whole number of posts from the corner, so the offset is exact
   const cx = x0 + Math.floor((nx - 1) / 2) * step, cy = y0 + Math.floor((ny - 1) / 2) * step;
@@ -74,7 +74,7 @@ export function buildWideMesh({ wide, hole, cuts = [], base, map, legacy = true 
   geo.setAttribute('uv', new THREE.BufferAttribute(uv, 2));
   geo.setIndex(new THREE.BufferAttribute(wideIndex({ wide, hole, cuts }), 1));
   geo.computeBoundingSphere();
-  const mesh = new THREE.Mesh(geo, groundMaterial(map, { legacy }));
+  const mesh = new THREE.Mesh(geo, groundMaterial(map));
   mesh.position.set(cx, 0, -cy);
   mesh.receiveShadow = false;
   mesh.name = 'terrain-wide';
@@ -119,10 +119,10 @@ export function cutWideMesh(mesh, { wide, hole, cuts }) {
 
 /**
  * The mesh for one of the drive's patches: built as the wide grid is (curvature baked, centred), whole.
- * @param {{ patch: ReturnType<import('./heightfield.js').heightField>, id: string, base: number, map: THREE.Texture | null, legacy?: boolean }} opts
+ * @param {{ patch: ReturnType<import('./heightfield.js').heightField>, id: string, base: number, map: THREE.Texture | null }} opts
  */
-export function buildPatchMesh({ patch, id, base, map, legacy = true }) {
-  const mesh = buildWideMesh({ wide: patch, hole: null, base, map, legacy });
+export function buildPatchMesh({ patch, id, base, map }) {
+  const mesh = buildWideMesh({ wide: patch, hole: null, base, map });
   mesh.name = `terrain-patch-${id}`;
   return mesh;
 }

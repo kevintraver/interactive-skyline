@@ -1,9 +1,6 @@
+// The wet road's rules in JavaScript (src/drive/weather/wetMirror.js); the term on materials is in wetRoad.test.js.
 import { describe, it, expect } from 'vitest';
-import * as THREE from 'three';
 import { wetFragment, waterCover, meanCover, pathWear, facetSlope, WET_DIFFUSE, WET_RETRO } from '../../../src/drive/weather/wetMirror.js';
-import { createWetRoad, TERM_ID } from '../../../src/drive/weather/wetRoad.js';
-import { wetBody, WET_HEAD } from '../../../src/drive/weather/wet.glsl.js';
-import { surfaceTerms, addSurfaceTerm } from '../../../src/drive/lights/surfaceLight.js';
 
 describe('wet road rules', () => {
   it('adds exactly nothing when dry', () => {
@@ -32,31 +29,5 @@ describe('wet road rules', () => {
   });
   it('makes long soft streaks on a damp road and sharper ones on a flooded one', () => {
     expect(facetSlope(0.3)).toBeGreaterThan(facetSlope(1));
-  });
-});
-
-describe('the wet term on materials', () => {
-  it('is not added while dry, is added last when wet, and its uniforms are zero when dry again', () => {
-    const road = new THREE.MeshLambertMaterial(), ground = new THREE.MeshLambertMaterial();
-    addSurfaceTerm(road, { id: 'lampPools', body: '' });
-    const wet = createWetRoad({ road: [road], ground: [ground] });
-    wet.set({ wetness: 0, sky: new THREE.Color(0.3, 0.3, 0.3) });
-    expect(surfaceTerms(road)).toEqual(['lampPools']);
-    expect(surfaceTerms(ground)).toEqual([]);
-    wet.set({ wetness: 0.7 });
-    expect(surfaceTerms(road)).toEqual(['lampPools', TERM_ID]);
-    // another term added later: the wet one goes back to the end
-    addSurfaceTerm(road, { id: 'headlights', body: '' });
-    for (let i = 0; i < 60; i++) wet.tick();
-    expect(surfaceTerms(road)).toEqual(['lampPools', 'headlights', TERM_ID]);
-    wet.set({ wetness: 0 });
-    expect(wet.uniforms.uWetRoad.value.x).toBe(0);
-    expect(wet.uniforms.uWetGround.value.x).toBe(0);
-    wet.dispose();
-    expect(surfaceTerms(ground)).toEqual([]);
-  });
-  it('skips its whole block at wetness 0', () => {
-    for (const k of ['road', 'ground']) expect(wetBody(k).trim().startsWith('if ( uWet.x > 0.0 )')).toBe(true);
-    expect(WET_HEAD).toContain('wetFresnel');
   });
 });

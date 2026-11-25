@@ -69,6 +69,22 @@ const STUD_WHITE = [
 /** ASSUMED reflective face of a stud: 100 mm x 13 mm, the lens of a typical 4 in marker. */
 export const STUD_LENS_AREA_M2 = 0.1 * 0.013;
 
+// The pavement itself under our headlamps (plan 02, third stretch, decision 13): its coefficient of retroreflected
+// luminance R_L, cd m^-2 lx^-1, as for markings (the luminance toward the driver per lux on a plane perpendicular to the
+// beam: L = R_L x E_perp, no 1 / cos nu). At the grazing angles a driver sees the road at, pavement returns light toward
+// the lamps far more strongly than a Lambert surface (rho cos i / pi is about 0.0007 per lux at 30 m for rho 0.1),
+// which is why a real low beam shows the road to 60 m and more.
+// ASSUMED values, dry: asphalt 0.015 and concrete 0.025 (15 and 25 mcd m^-2 lx^-1), the middle of the ranges in the
+// third stretch's analysis (asphalt 10 to 20, concrete 20 to 35). No published R_L of a bare road surface was found
+// (searched 2026-11-24). What bounds them: the same surfaces' average luminance coefficient under diffuse light, Q0
+// (the same units), is 0.05 to 0.10 for asphalts (FHWA, "European Road Lighting Technologies", ch. 4, the R-tables
+// [https://international.fhwa.dot.gov/euroroadlighting/04.cfm]), and the retroreflected coefficient at the 30 m
+// geometry is a fraction of that; and FHWA-HRT-07-059 sizes markings' minimum R_L (40 to 90 for fully marked roads)
+// from their contrast with old asphalt, with concrete the brighter background
+// [https://www.fhwa.dot.gov/publications/research/safety/07059/06.cfm]. Markings keep their own R_L (MARK_SHAPE).
+// The R_L holds at every distance (ASSUMED: EN 1436 defines it at the 30 m geometry only).
+export const PAVEMENT_RL = Object.freeze({ asphalt: 0.015, concrete: 0.025 });
+
 /**
  * Types: kind 'sheeting' (R_A, cd/lx/m^2), 'marking' (R_L, cd/m^2/lx) or 'stud' (R_I, cd/lx).
  * alpha and beta in degrees; table[i][j] is at beta[i], alpha[j].

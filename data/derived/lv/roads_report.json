@@ -4432,7 +4432,7 @@
     "interchanges_plan_overlap_rule": {
      "ok": true,
      "violations": 0,
-     "overlapping_pairs": 121,
+     "overlapping_pairs": 127,
      "min_separation_m": 6.4
     },
     "ramps_over_ground": {
@@ -4508,11 +4508,11 @@
      "gores": 68,
      "diverge": 35,
      "merge": 33,
-     "connects": 30,
+     "connects": 26,
      "crossings": 14,
-     "decks": 31,
-     "piers": 108,
-     "abutments": 59,
+     "decks": 32,
+     "piers": 113,
+     "abutments": 62,
      "roads": 82
     },
     "extract": {
@@ -5354,7 +5354,7 @@
       "road": "i15n.xkm68.off",
       "length_m": 1288.0,
       "lanes": 1,
-      "decks": 0,
+      "decks": 1,
       "max_layer": 1,
       "side": "left",
       "gore_start": true,
@@ -5484,10 +5484,10 @@
      },
      {
       "road": "i15n.x42A.off",
-      "length_m": 1100.0,
+      "length_m": 624.0,
       "lanes": 2,
       "decks": 0,
-      "max_layer": 2,
+      "max_layer": 1,
       "side": "right",
       "gore_start": true,
       "gore_end": false,
@@ -5715,6 +5715,16 @@
       "why": "over everything it meets (its mapped level does not fit)"
      },
      {
+      "road": "i15n.x42A.off",
+      "why": "shortened until a profile fits: over another road at s 644-740",
+      "length_m": 828.0
+     },
+     {
+      "road": "i15n.x42A.off",
+      "why": "shortened until a profile fits: over another road at s 644-740",
+      "length_m": 624.0
+     },
+     {
       "road": "i15s.x40.off",
       "why": "over everything it meets (its mapped level does not fit)"
      },
@@ -5830,7 +5840,7 @@
      "plan_overlap_rule": {
       "ok": true,
       "violations": 0,
-      "overlapping_pairs": 121,
+      "overlapping_pairs": 127,
       "min_separation_m": 6.4
      }
     }
@@ -5874,9 +5884,9 @@
   "identical": true
  },
  "files": {
-  "roadnet.json": 240709,
-  "roadnet.bin": 1474368,
-  "total": 1715077,
+  "roadnet.json": 240627,
+  "roadnet.bin": 1471036,
+  "total": 1711663,
   "ok": true
  }
 }

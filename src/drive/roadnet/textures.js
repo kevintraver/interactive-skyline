@@ -1,13 +1,6 @@
-// What the road's two material modules share (material.js on the classic renderer, material.node.js on plan 01's):
-// the canvas atlas as textures, and the night glow of the headlight stand-in.
+// The road's canvas atlas as textures (material.js).
 import * as THREE from 'three';
 import { drawRoadAtlas, ATLAS_W, ATLAS_H, V_CYCLES } from './atlas.js';
-
-/** Emissive intensity on the night map, near and far from the car. */
-export const NIGHT_GLOW = { near: 0.5, far: 0.1 };
-
-/** true/false or a number to a glow weight in 0..1. */
-export const nightWeight = (on) => (typeof on === 'number' ? Math.min(1, Math.max(0, on)) || 0 : on ? 1 : 0);
 
 /** A canvas for the atlas, or null where there is none (Node). */
 function makeCanvas() {
@@ -16,7 +9,7 @@ function makeCanvas() {
   return null;
 }
 
-/** The day (night false) or night emissive atlas as a texture, or null without a canvas. */
+/** The day atlas (night false) or the one with its night paint as a texture, or null without a canvas. */
 export function atlasTexture(night, anisotropy) {
   const canvas = makeCanvas();
   const ctx = canvas?.getContext('2d');

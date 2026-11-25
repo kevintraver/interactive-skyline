@@ -1,12 +1,12 @@
-// JavaScript mirrors of headlamps.glsl.js, and the data its textures hold (plan 02, D5.1 and D5.2). Pure: no three.js,
-// no DOM. Each function names the GLSL it mirrors; tests/unit/lights/headlamps.test.js checks them against beam.js
-// and retro.js, and the acceptance numbers of D5.1 and D5.2 are computed through them.
+// JavaScript mirrors of headlamps.js's terms, and the data its textures hold (plan 02, D5.1 and D5.2). Pure: no
+// three.js, no DOM. tests/unit/lights/headlamps.test.js checks them against beam.js and retro.js, the acceptance
+// numbers of D5.1 and D5.2 are computed through them, and tests/manual/lights-probe.mjs measures the rendered light
+// against them.
 //
 // Car frame (beam.js): x right, y up, z forward. Scene vectors go to it through the car's basis
-// { right, up, forward } (unit vectors in the scene), as the shader's `d * uHlCar` does.
+// { right, up, forward } (unit vectors in the scene), as the terms' candela() does.
 
-import { RETRO_TYPES, retroCoefficient } from '../roadside/retro.js';
-import { RETRO_SHOULDER } from './headlamps.glsl.js';
+import { RETRO_TYPES, retroCoefficient, PAVEMENT_RL } from '../roadside/retro.js';
 
 const RAD = Math.PI / 180;
 
@@ -73,10 +73,10 @@ const dot = (a, b) => a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
 const sub = (a, b) => [a[0] - b[0], a[1] - b[1], a[2] - b[2]];
 const v3 = (p) => (Array.isArray(p) ? p : [p.x, p.y, p.z]);
 
-/** Scene vector to the car frame: the shader's `d * uHlCar`. */
+/** Scene vector to the car frame. */
 export const toCar = (d, basis) => [dot(d, v3(basis.right)), dot(d, v3(basis.up)), dot(d, v3(basis.forward))];
 
-/** Mirrors hlCandela: candela over the peak toward d (lamp to point, scene). */
+/** Candela over the peak toward d (lamp to point, scene). */
 export function beamCandela(tex, d, basis) {
   const c = toCar(d, basis);
   const h = Math.atan2(c[0], c[2]) / RAD;
@@ -92,7 +92,7 @@ export function lampPositions(pose, lamps, nose) {
 }
 
 /**
- * Mirrors diffuseBody: illuminance (lux) on a surface from both lamps, before scene units and colour.
+ * The beam term: illuminance (lux) on a surface from both lamps, before the light scale and colour.
  * @param {{ tex: object, lamps: number[][], basis: object, point: number[], normal: number[], gain?: number, range?: number, fade?: number }} o
  */
 export function headlampIrradiance({ tex, lamps, basis, point, normal, gain = 1, range = Infinity, fade = 1 }) {
@@ -105,6 +105,32 @@ export function headlampIrradiance({ tex, lamps, basis, point, normal, gain = 1,
     if (cosi > 0 && f > 0) e += (beamCandela(tex, d, basis) * tex.peakCd * gain * cosi * f) / Math.max(d2, 0.25);
   }
   return e;
+}
+
+/**
+ * Mirrors headlamps.js roadParts (decision 13): both lamps' illuminance on a plane facing each lamp, E_perp (lux),
+ * with the same range fade and the same "lit side only" test as the Lambert beam. The pavement's luminance is then
+ * pavementLuminance(E_perp, ...).
+ */
+export function headlampIrradiancePerp({ tex, lamps, basis, point, normal, gain = 1, range = Infinity, fade = 1 }) {
+  let e = 0;
+  for (const lamp of lamps) {
+    const d = sub(point, lamp);
+    const d2 = dot(d, d), dist = Math.sqrt(d2);
+    const cosi = -dot(normal, d) / Math.max(dist, 1e-3);
+    const f = Math.min(Math.max((range - dist) * fade, 0), 1);
+    if (cosi > 0 && f > 0) e += (beamCandela(tex, d, basis) * tex.peakCd * gain * f) / Math.max(d2, 0.25);
+  }
+  return e;
+}
+
+/**
+ * The pavement's luminance under our headlamps (cd/m^2, before the light scale and the lamp's colour): R_L x E_perp x
+ * albedo / reference (headlamps.js: the atlas' texel over the pavement's mean, so R_L on average).
+ * @param {{ ePerp: number, albedo: number, surface?: 'asphalt' | 'concrete', reference: { asphalt: number, concrete: number } }} o
+ */
+export function pavementLuminance({ ePerp, albedo, surface = 'asphalt', reference }) {
+  return (PAVEMENT_RL[surface] / reference[surface]) * albedo * ePerp;
 }
 
 // ---------------------------------------------------------------- retroreflection (uHlRetro, hlRetro)
@@ -136,13 +162,13 @@ export function retroTable(layout = RETRO_LAYOUT) {
   return { width, height, rowsPerType, alphaMax, betaNodes: [...betaNodes], half, data };
 }
 
-/** Mirrors hlBetaRow. */
+/** The retro table's row of an entrance angle beta (degrees). */
 export function betaRow(nodes, b) {
   for (let i = 1; i < nodes.length; i++) if (b < nodes[i]) return i - 1 + (b - nodes[i - 1]) / (nodes[i] - nodes[i - 1]);
   return nodes.length - 1;
 }
 
-/** Mirrors hlRetroCoef: the coefficient of a row at (alpha, beta), degrees. */
+/** The coefficient of a row at (alpha, beta), degrees. */
 export function retroTableLookup(table, row, alphaDeg, betaDeg) {
   const x = Math.min(Math.max(alphaDeg / table.alphaMax, 0), 1) * (table.width - 1) + 0.5;
   const y = row * table.rowsPerType + betaRow(table.betaNodes, betaDeg) + 0.5;
@@ -152,7 +178,7 @@ export function retroTableLookup(table, row, alphaDeg, betaDeg) {
 const len = (a) => Math.hypot(a[0], a[1], a[2]);
 const unit = (a) => { const l = len(a); return [a[0] / l, a[1] / l, a[2] / l]; };
 
-/** Mirrors the angles of hlRetro: alpha (lamp-point-eye) by the chord, beta and nu by their cosines, degrees. */
+/** The retro term's angles: alpha (lamp-point-eye) by the chord, beta and nu by their cosines, degrees. */
 export function retroAnglesMirror(lamp, eye, point, normal) {
   const ul = unit(sub(lamp, point)), ue = unit(sub(eye, point)), n = unit(normal);
   const alpha = 2 * Math.asin(Math.min(1, 0.5 * len(sub(ul, ue)))) / RAD;
@@ -161,7 +187,7 @@ export function retroAnglesMirror(lamp, eye, point, normal) {
 }
 
 /**
- * Mirrors hlRetro: luminance (cd/m^2) returned toward the eye for two rows, both lamps, before ageing and units.
+ * Luminance (cd/m^2) returned toward the eye for two rows, both lamps, before ageing and units.
  * @param {{ tex: object, table: object, lamps: number[][], basis: object, eye: number[], point: number[], normal: number[],
  *           rows: number[], marking?: boolean, gain?: number, on?: boolean }} o
  * @returns {number[]} [L for rows[0], L for rows[1]]
@@ -187,19 +213,6 @@ export function retroReturn({ tex, table, lamps, basis, eye, point, normal, rows
   return [out[0] / c, out[1] / c];
 }
 
-/**
- * Mirrors hlShoulder: a body's two rows (displayed cd/m^2, after ageing) through the soft shoulder of RETRO_SHOULDER,
- * both scaled by the factor the brighter one takes.
- * @param {number[]} l [row 0, row 1]  @returns {number[]}
- */
-export function retroShoulder(l, { knee, ceiling } = RETRO_SHOULDER) {
-  const m = Math.max(l[0], l[1]);
-  if (m <= knee) return [l[0], l[1]];
-  const x = m - knee;
-  const k = (knee + x / (1 + x / (ceiling - knee))) / m;
-  return [l[0] * k, l[1] * k];
-}
-
 // ---------------------------------------------------------------- colours (uHlChroma, uHlInk)
 const srgbToLinear = (c) => (c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4);
 /** '#rrggbb' to linear [r, g, b]. */
@@ -209,7 +222,7 @@ export const luminanceOf = (c) => 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2];
 export const chromaOf = (c) => { const l = luminanceOf(c); return l > 1e-4 ? c.map((x) => x / l) : [0, 0, 0]; };
 
 /**
- * Mirrors the sign variant of retroBody: luminance of a sign texel from its albedo and its two sheeting codes.
+ * The sign retro term: luminance of a sign texel from its albedo and its two sheeting codes.
  * @param {{ albedo: number[], bg: number, lg: number, ink: number[][], L: number[] }} o
  *   ink: albedo per code (uHlInk); L: hlRetro's return for rows [bg - 1, lg - 1]
  * @returns {{ w: number, luminance: number }}  w the legend's share; luminance before colour

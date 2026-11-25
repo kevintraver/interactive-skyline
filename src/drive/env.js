@@ -1,136 +1,17 @@
-// The drive's environment port (plan 02, section 11.1), in one file, on both renderers.
-//
-// Classic renderer (the reference until the GLSL path is deleted): stand-ins for plan 01's EnvPort, pure maths, no DOM
-// and no three: the clock, the ephemeris (NOAA), quality (fixed 'high'), the weather (rain presets the visitor picks;
-// see the weather stand-in below), and lighting's units and ambientLux tied to the classic fixed exposure.
-//
-// Plan 01's renderer (third stretch, decisions 4, 5 and 9): the adapter of plan 01's section 11.10 (createEnv with
-// `app`). The clock is app.clock (one clock for the app), the ephemeris is app.env.ephemeris, the ambient light is
-// env.state.sky.horizontalLux, and `plan01`, `nodes` and `state` reach plan 01's environment itself. The members keep
-// the drive's names and shapes, so a part reads the same port on either renderer. The weather is still the stand-in
-// below on both (decision 9 moves it to env.state when the weather part is ported).
+// The drive's environment port (plan 02, section 11.1): the adapter of plan 01's section 11.10 (third stretch, decisions
+// 4, 5 and 9). The clock is app.clock (one clock for the app), the ephemeris is app.env.ephemeris, the ambient light is
+// env.state.sky.horizontalLux, and `plan01`, `nodes` and `state` reach plan 01's environment itself; the members keep
+// the drive's names and shapes. The weather is plan 01's (decision 9, weatherOn below: env.state's sample, with rain and
+// wetness still derived in the drive until plan 01's phase 7). Pure maths but for the adapter itself: no DOM, no three.
 import { zonedToUtc } from '../core/time.js';
 
 export const RATE_MIN = 0.25;
 export const RATE_MAX = 16;
 
-const RAD = Math.PI / 180;
-const DAY_MS = 86400000;
-
-/**
- * Simulation clock. Time only moves in advance(), which the app's frame loop calls once a frame,
- * so a paused clock or a hidden tab never drifts.
- * @param {{ nowMs?: number, playing?: boolean, rate?: number }} [opts]
- */
-export function createClock({ nowMs = Date.now(), playing = false, rate = 1 } = {}) {
-  let simMs = nowMs;
-  let isPlaying = !!playing;
-  let r = clampRate(rate);
-  const listeners = { tick: new Set(), seek: new Set(), rate: new Set(), play: new Set(), pause: new Set() };
-  const emit = (type, dtSimMs = 0) => {
-    for (const fn of [...listeners[type]]) fn({ simMs, dtSimMs });
-  };
-
-  return {
-    /** Simulation time, UTC ms. */
-    now: () => simMs,
-    get playing() { return isPlaying; },
-    /** Simulation seconds per real second. */
-    get rate() { return r; },
-    seek(ms) {
-      if (!Number.isFinite(ms)) return;
-      const dt = ms - simMs;
-      simMs = ms;
-      emit('seek', dt);
-    },
-    play() { if (!isPlaying) { isPlaying = true; emit('play'); } },
-    pause() { if (isPlaying) { isPlaying = false; emit('pause'); } },
-    setRate(value) {
-      const next = clampRate(value);
-      if (next !== r) { r = next; emit('rate'); }
-    },
-    /** Move time by dtRealMs * rate when playing. Emits 'tick' only when time moved. */
-    advance(dtRealMs) {
-      if (!isPlaying || !(dtRealMs > 0)) return;
-      const dt = dtRealMs * r;
-      simMs += dt;
-      emit('tick', dt);
-    },
-    /**
-     * @param {'tick'|'seek'|'rate'|'play'|'pause'} type
-     * @param {(e: { simMs: number, dtSimMs: number }) => void} fn
-     * @returns {() => void} unsubscribe
-     */
-    on(type, fn) {
-      const set = listeners[type];
-      if (!set) throw new Error(`clock: unknown event "${type}"`);
-      set.add(fn);
-      return () => set.delete(fn);
-    },
-  };
-}
-
 function clampRate(value) {
   const v = Number(value);
   if (!Number.isFinite(v)) return 1;
   return Math.min(RATE_MAX, Math.max(RATE_MIN, v));
-}
-
-/** Sun position terms shared by elevation and the equation of time (NOAA's spreadsheet, after Meeus). */
-function solarTerms(simMs) {
-  const jd = simMs / DAY_MS + 2440587.5;
-  const T = (jd - 2451545) / 36525;
-  const L0 = (((280.46646 + T * (36000.76983 + T * 0.0003032)) % 360) + 360) % 360;
-  const M = 357.52911 + T * (35999.05029 - 0.0001537 * T);
-  const e = 0.016708634 - T * (0.000042037 + 0.0000001267 * T);
-  const Mr = M * RAD;
-  const C = Math.sin(Mr) * (1.914602 - T * (0.004817 + 0.000014 * T))
-    + Math.sin(2 * Mr) * (0.019993 - 0.000101 * T) + Math.sin(3 * Mr) * 0.000289;
-  const omega = (125.04 - 1934.136 * T) * RAD;
-  const appLong = (L0 + C - 0.00569 - 0.00478 * Math.sin(omega)) * RAD;
-  const meanObliq = 23 + (26 + (21.448 - T * (46.815 + T * (0.00059 - T * 0.001813))) / 60) / 60;
-  const obliq = (meanObliq + 0.00256 * Math.cos(omega)) * RAD;
-  const decl = Math.asin(Math.sin(obliq) * Math.sin(appLong));
-  const y = Math.tan(obliq / 2) ** 2;
-  const L0r = L0 * RAD;
-  const eqTime = 4 / RAD * (y * Math.sin(2 * L0r) - 2 * e * Math.sin(Mr) + 4 * e * y * Math.sin(Mr) * Math.cos(2 * L0r)
-    - 0.5 * y * y * Math.sin(4 * L0r) - 1.25 * e * e * Math.sin(2 * Mr)); // minutes
-  return { decl, eqTime };
-}
-
-/** NOAA's atmospheric refraction correction, degrees, for a geometric elevation in degrees. */
-function refraction(el) {
-  if (el > 85) return 0;
-  const t = Math.tan(el * RAD);
-  let arcsec;
-  if (el > 5) arcsec = 58.1 / t - 0.07 / t ** 3 + 0.000086 / t ** 5;
-  else if (el > -0.575) arcsec = 1735 + el * (-518.2 + el * (103.4 + el * (-12.79 + el * 0.711)));
-  else arcsec = -20.772 / t;
-  return arcsec / 3600;
-}
-
-/**
- * The sun seen from a place, with refraction, by NOAA's solar position algorithm (the one behind
- * its solar calculator and spreadsheets). Good to about 0.1 degree within a few centuries of 2000.
- * @returns {{ azimuth: number, elevation: number }} degrees; azimuth clockwise from north
- */
-export function sunPosition(simMs, lat, lon) {
-  const { decl, eqTime } = solarTerms(simMs);
-  const minutes = (((simMs % DAY_MS) + DAY_MS) % DAY_MS) / 60000;
-  const tst = (((minutes + eqTime + 4 * lon) % 1440) + 1440) % 1440;
-  const ha = (tst / 4 < 0 ? tst / 4 + 180 : tst / 4 - 180) * RAD;
-  const latR = lat * RAD;
-  const cz = Math.min(1, Math.max(-1, Math.sin(latR) * Math.sin(decl) + Math.cos(latR) * Math.cos(decl) * Math.cos(ha)));
-  const zen = Math.acos(cz);
-  const el = 90 - zen / RAD;
-  const den = Math.cos(latR) * Math.sin(zen);
-  let azimuth;
-  if (Math.abs(den) < 1e-12) azimuth = lat > 0 ? 180 : 0;
-  else {
-    const a = Math.acos(Math.min(1, Math.max(-1, (Math.sin(latR) * Math.cos(zen) - Math.sin(decl)) / den))) / RAD;
-    azimuth = ha > 0 ? (a + 180) % 360 : (540 - a) % 360;
-  }
-  return { azimuth, elevation: el + refraction(el) };
 }
 
 /** The calendar date (y, m 1-12, d) of an instant in a time zone. */
@@ -141,49 +22,11 @@ export function localDate(ms, tz) {
   return { y: get('year'), m: get('month'), d: get('day') };
 }
 
-/**
- * Sun ephemeris at a city's origin.
- * @param {{ origin: { lat: number, lon: number }, tz: string }} city
- */
-export function createEphemeris(city) {
-  const { lat, lon } = city.origin;
-  const tz = city.tz || 'UTC';
-  const sun = (simMs) => sunPosition(simMs, lat, lon);
-
-  /** UTC ms of solar noon on the local calendar day containing dayMs. */
-  function solarNoon(dayMs) {
-    const { y, m, d } = localDate(dayMs, tz);
-    let noon = Date.UTC(y, m - 1, d, 12) - lon * 4 * 60000;
-    for (let k = 0; k < 2; k++) noon = Date.UTC(y, m - 1, d, 12) - (lon * 4 + solarTerms(noon).eqTime) * 60000;
-    return noon;
-  }
-
-  /**
-   * When the sun crosses `elevationDeg` (refracted, as sun() reports it) on the local day of dayMs:
-   * the evening crossing between solar noon and the following lower transit, or the morning one
-   * before noon. NaN when the sun does not reach that elevation that day.
-   */
-  function timeOfSunElevation(elevationDeg, dayMs, evening = true) {
-    const noon = solarNoon(dayMs);
-    // elevation falls monotonically from noon to the lower transit 12 h later
-    let a = evening ? noon : noon - DAY_MS / 2;
-    let b = evening ? noon + DAY_MS / 2 : noon;
-    const f = (t) => sun(t).elevation - elevationDeg;
-    let fa = f(a);
-    const fb = f(b);
-    if (fa * fb > 0) return NaN;
-    while (b - a > 1) {
-      const mid = (a + b) / 2;
-      const fm = f(mid);
-      if ((fm > 0) === (fa > 0)) { a = mid; fa = fm; } else b = mid;
-    }
-    return Math.round((a + b) / 2);
-  }
-
-  return { sun, timeOfSunElevation, solarNoon };
-}
-
-// ---------------------------------------------------------------- lighting stand-ins
+// ---------------------------------------------------------------- the clear sky's illuminance by the sun's elevation
+// Plan 01's env.state gives the horizontal illuminance for the moment it was built (frame step 40). The parts update at
+// step 20, after a seek before plan 01's environment has caught up, and ask for the illuminance at the sun's elevation
+// of the frame: for an elevation other than env.state's, the adapter (ambientLux below) answers from this clear-sky
+// table, which the look's dusk curve (look.js) also reads.
 // Horizontal illuminance from the sun and twilight sky under a clear sky, by the sun's elevation: Paul Schlyter,
 // "Radiometry and photometry in astronomy", section 10, table "Solar illumination on horizontal surface at various
 // solar altitudes", http://stjarnhimlen.se/comp/radfaq.html (read 2026-11-22). Pairs of [elevation deg, log10 lux],
@@ -221,47 +64,10 @@ export function ambientLux(sunElevationDeg) {
   return 10 ** lg + NIGHT_SKY_LUX;
 }
 
-/**
- * Scene value per SI unit at today's fixed exposure (ACES filmic, toneMappingExposure 1, src/app/context.js).
- * STAND-INS: plan 01's exposure replaces them, and with it the need for one number per unit.
- *
- * Why the three are equal: three's physical lights already speak photometry. A PointLight or SpotLight of
- * intensity I gives irradiance I / d^2 (decay 2), and a Lambert surface sends albedo x E / pi back (BRDF_Lambert
- * is diffuse / pi; hemisphere and directional intensities are irradiances). So 1 cd must map to the same scene
- * value as 1 lux at 1 m, and 1 lux on a surface of albedo rho must look like rho / pi cd/m^2 drawn as emissive.
- * One scale k then serves all three: candela = lux = nit = k.
- *
- * Why k = 0.1: the scale is set against the app's NIGHT look, the only one the drive's lights matter in.
- *  - The night look's ground: hemisphere 0.38 (sky 0x33426e, ground 0x4a3a2a, luminance about 0.05) plus the moon
- *    stand-in 0.2 (0x93a8d9, luminance 0.38) at 32 deg give a horizontal irradiance of about 0.06, so asphalt
- *    (albedo about 0.15) shows about 0.003 (src/sky/legacySky.js, NIGHT). With k = 0.1 that reads as 0.03 cd/m^2,
- *    about three times a full-moon-lit road: the night look is a bright, moonlit stylisation, and this keeps it so.
- *  - A lit window in src/night.js is about 0.75 x 0.75 = 0.56 of emissive: 5.6 cd/m^2, the low end of a lit
- *    window seen from outside (assumed 5-50 cd/m^2).
- *  - A lit freeway (about 10-20 lux on asphalt: 0.3-0.6 cd/m^2) lands at 0.03-0.06, ten to twenty times the
- *    moonlit ground and the same order as the existing street glow (0.07-0.26 x 0xffa858) it will replace.
- *  - Our low-beam pool (about 8 lux at 10 m, 0.25 cd/m^2; under 1 lux at 30 m, 0.02 cd/m^2): 0.025 near the
- *    car, fading to the moonlit ground's level by about 30 m, as headlamps on an unlit road do against moonlight.
- *  - A retroreflective guide sign at 150 m (10-60 cd/m^2, section 7.4): 1-6 of scene radiance, the brightest thing
- *    in view, ACES compresses it to near white: the flare of a guide sign, ahead of the windows.
- * By day the sun is 2.7 and the hemisphere 0.8, about 2 of horizontal irradiance for a real 50,000 lux, so these
- * units are 2,000x off in daylight; the dusk blend must fade the drive's lights in with the night look, not
- * expect the units to do it.
- */
-export const LIGHTING_UNITS = Object.freeze({
-  /** scene emissive radiance per cd/m^2 */
-  nit: 0.1,
-  /** scene light intensity (three's PointLight / SpotLight `intensity`) per candela */
-  candela: 0.1,
-  /** scene irradiance (illuminance maps, pools) per lux */
-  lux: 0.1,
-});
-
-// ---------------------------------------------------------------- weather stand-in
-// Plan 01's weather service (live samples, a wet layer, rain, dust) replaces this. Until then the visitor picks one
-// of four presets and everything follows from its rain rate by the rules below: a pure function of the preset (or of
-// the rate the test hook sets), with no history, so choosing Rain gives the wet road at once. Clear is the default
-// and is exactly the dry state the drive had before.
+// ---------------------------------------------------------------- the rain's rules
+// The drive's rain shorthand (four presets the visitor picks, or a rate) and the rules everything follows from the rain
+// rate by (weatherFor): a pure function of the rate, with no history. Plan 01's weather carries the rate; the rules
+// derive what plan 01 does not have until its phase 7 (wetness, puddles, the sky's dimming; see derivedRain below).
 //
 // The rules (R in mm/h):
 //  wetness      1 - exp(-R / 2). ASSUMED: a road's texture and drainage take about the first 1-2 mm/h before a
@@ -269,16 +75,15 @@ export const LIGHTING_UNITS = Object.freeze({
 //               cover it (0.86, 1.00 at 12).
 //  visibilityM  16 km x R^-0.6 (16 km at 1 mm/h, 7 km at 4, 3.6 km at 12), 80 km dry as before. ASSUMED: a fit to
 //               the usual ranges reported for rain (around 10 km and more in light rain, a few km in heavy rain);
-//               the drive uses it as the lamps' e-folding length (exp(-d / visibility), plan 02, 11.1) and as the
-//               5% contrast distance of the fog (skyblend.js).
+//               the drive uses it as the lamps' e-folding length (exp(-d / visibility), plan 02, 11.1).
 //  skyDim       daylight as a share of the clear sky's: 1 dry, 0.45 x R^-0.37 in rain (0.45 at 1 mm/h, 0.27 at 4,
 //               0.18 at 12). ASSUMED, within the range of CIE overcast against clear skies (an overcast sky gives
 //               roughly a tenth to a half of clear-sky daylight); rain needs cloud, so any rain starts at 0.45.
-//  overcast     0 dry, 1 in rain: how far the sky goes grey (skyblend.js setSkyWeather).
+//  overcast     0 dry, 1 in rain: how far the sky goes grey.
 //  puddles      clamp((R - 4) / 8, 0, 1): standing water in the wheel paths only in heavy rain. ASSUMED.
 //  wind         from 200 degrees (south-south-west, the usual quarter of Las Vegas's winter storms: ASSUMED) at 2, 4
 //               and 7 m/s for the three rain presets; still when clear.
-//  tempC        none: the stand-in has no temperature (hasTemperature false), so the cabin shows none.
+//  tempC        none here: the temperature is plan 01's weather's (weatherStateFrom).
 
 /** The presets, in the order the time popover shows them. */
 export const RAIN_PRESETS = Object.freeze([
@@ -320,43 +125,180 @@ export function weatherFor(mmPerHour, { windMps, windFromDeg = WIND_FROM_DEG, pr
   });
 }
 
+// ---------------------------------------------------------------- the weather on plan 01 (third stretch, decision 9)
+// env.weather (state(), setPreset, setRain, on('change'), presets, hasTemperature) over plan 01's weather: env.state.weather (the sample of plan 01 section 6.4, from live data, a date
+// in history or a preset, with the #sky overrides applied), env.state.visibilityM and the sample's wind. Everything
+// is read from env.state, which plan 01 rebuilds from the clock at frame step 40, so it is a pure function of
+// simulation time. The drive's shorthand (?rain=, the drive's popover, the test hooks setPreset and setRain) is
+// written into plan 01's weather as its Rain preset with two overrides, so the #sky rows show it and can change it.
+
+/** The rain shorthand's wind: from 200 degrees, at the presets' speeds (see the rules above). */
+export const SHORTHAND_WIND_FROM_DEG = WIND_FROM_DEG;
+
 /**
- * The weather stand-in: env.weather. state() is cached (the lamps read it every frame).
- *   setPreset(id)          one of RAIN_PRESETS' ids; unknown ids are ignored
- *   setRain(mmPerHour)     any rate (a test hook): the state follows by the same rules, preset null
- *   on('change', fn)       fn(state) after every change of state; on('lightning') never fires here
+ * The drive's rain shorthand as plan 01 weather settings: null for clear (the drive imposes nothing), else plan 01's
+ * Rain preset (overcast low cloud, 12 km visibility) with the rate and the presets' wind as overrides.
+ * @param {string | number} choice  a RAIN_PRESETS id or a rate in mm/h
+ * @returns {{ source: { kind: 'preset', id: string }, overrides: Record<string, number> } | null}
  */
-export function createWeather({ preset = 'clear' } = {}) {
+export function shorthandWeather(choice) {
+  let R, wind;
+  if (typeof choice === 'number') {
+    if (!Number.isFinite(choice)) return null;
+    R = Math.min(MAX_RATE, Math.max(0, choice));
+    let best = RAIN_PRESETS[0];
+    for (const p of RAIN_PRESETS) if (Math.abs(p.mmPerHour - R) < Math.abs(best.mmPerHour - R)) best = p;
+    wind = Math.max(best.windMps, 1);
+  } else {
+    const p = RAIN_PRESETS.find((x) => x.id === choice);
+    if (!p) return null;
+    R = p.mmPerHour; wind = p.windMps;
+  }
+  if (!(R > 0)) return null;
+  return { source: { kind: 'preset', id: 'rain' }, overrides: { rain: R, windSpeed: wind, windDir: SHORTHAND_WIND_FROM_DEG } };
+}
+
+// ==== PLAN 01 PHASE 7 STAND-IN: BEGIN =================================================================================
+// Plan 01's env.state.rain, env.state.wetness and env.at().rainRateMmH / .wetness are stubs (dry) until its phase 7
+// (plan 01 section 11.1). Until then the drive derives them here, and only here, from the weather sample itself: the
+// rain rate is the sample's precipitation when it reaches the ground, and wetness, puddles and the sky's dimming
+// follow from it by the rules above (weatherFor). When phase 7 lands: delete this block, read
+// env.state.rain.rateMmH and env.state.wetness.{film,puddles} (or env.at(position)) in weatherStateFrom, and take the
+// sky's dimming from plan 01's light (env.state.sky.horizontalLux) instead of skyDim.
+const RAINING = new Set(['rain', 'drizzle', 'hail']);
+/** The rate at the ground (mm/h) of a plan 01 weather sample: virga, snow and none give 0 (the drive has no snow). */
+export function rainRateOfSample(sample) {
+  const p = sample?.precip;
+  if (!p || !RAINING.has(p.kind)) return 0;
+  return Math.min(MAX_RATE, Math.max(0, Number(p.rateMmH) || 0));
+}
+function derivedRain(sample) {
+  const R = Math.round(rainRateOfSample(sample) * 100) / 100;
+  const w = weatherFor(R, { windMps: 0 });
+  return { R, wetness: w.wetness, puddles: w.puddles, skyDim: w.skyDim, overcast: w.overcast };
+}
+// ==== PLAN 01 PHASE 7 STAND-IN: END ===================================================================================
+
+/**
+ * The drive's weather state (weatherFor's shape) from plan 01's env.state. Values are rounded (rate
+ * 0.01 mm/h, wind 0.1 m/s and 1 degree, visibility 10 m, temperature 0.1 degree) so that live data, interpolated every
+ * frame, changes the state now and then rather than on every frame. Pure.
+ * @param {object | null} envState  plan 01's env.state (null or without weather: clear and calm)
+ * @param {{ preset?: string | null, hasTemperature?: boolean }} [o]
+ */
+export function weatherStateFrom(envState, { preset = null, hasTemperature = false } = {}) {
+  const sample = envState?.weather || null;
+  const rain = derivedRain(sample);
+  const wind = sample?.wind || { speedMs: 0, dirDeg: 0 };
+  const vis = Number.isFinite(envState?.visibilityM) ? envState.visibilityM : sample?.visibilityM;
+  const tempC = Number.isFinite(sample?.tempC) ? Math.round(sample.tempC * 10) / 10 : null;
+  return Object.freeze({
+    preset,
+    precipMmPerHour: rain.R,
+    precipKind: rain.R > 0 ? 'rain' : 'none',
+    wetness: rain.wetness,
+    puddles: rain.puddles,
+    visibilityM: Number.isFinite(vis) ? Math.max(10, Math.round(vis / 10) * 10) : DRY_VISIBILITY_M,
+    skyDim: rain.skyDim,
+    overcast: rain.overcast,
+    windMps: Math.round((wind.speedMs || 0) * 10) / 10,
+    windSpeed: Math.round((wind.speedMs || 0) * 10) / 10,
+    windFromDeg: Math.round(wind.dirDeg || 0) % 360,
+    dust: 0,
+    tempC: hasTemperature ? tempC : null,
+    hasTemperature: hasTemperature && tempC !== null,
+  });
+}
+
+const sameSettings = (a, b) => !!a && !!b && JSON.stringify(a.source) === JSON.stringify(b.source)
+  && JSON.stringify(Object.entries(a.overrides).sort()) === JSON.stringify(Object.entries(b.overrides).sort());
+
+/**
+ * env.weather (see above). `app` is the drive's plan 01 context: env (plan 01's environment)
+ * and weather() (a promise of plan 01's weather service, src/weather/service.js, loaded on demand; absent in tests).
+ *   state()                 the drive's weather state now (weatherStateFrom of env.state), cached per env.state
+ *   setPreset(id), setRain(mm)  the shorthand, into plan 01's weather (asynchronous: whenApplied() resolves after)
+ *   release()               put back plan 01's weather as it was before the first shorthand, unless the visitor has
+ *                           changed it since (the weather part calls it when it goes)
+ *   on('change', fn)        fn(state) when the state's values change
+ */
+export function weatherOn(app) {
+  const env = app.env;
   const listeners = new Set();
-  let current = weatherFor(0, { preset: 'clear' });
-  const set = (next) => {
+  let service = null, loaded = false, chosen = null; // chosen: the shorthand in force (id or rate), null for none
+  let saved = null, imposed = null; // plan 01's settings before the first shorthand, and what the shorthand set
+  let seen = undefined, current = weatherStateFrom(null);
+  let queue = Promise.resolve();
+  const request = typeof app.weather === 'function' ? app.weather : null;
+  const ready = request ? Promise.resolve().then(request).then((s) => { service = s || null; loaded = !!s; refresh(); return service; }).catch(() => null) : Promise.resolve(null);
+
+  const settingsNow = () => (service ? { source: service.source, overrides: service.overrides } : null);
+  const presetNow = () => (chosen !== null && sameSettings(settingsNow(), imposed) ? (typeof chosen === 'number' ? null : chosen) : null);
+
+  function refresh() {
+    const s = env?.state ?? null;
+    seen = s;
+    const next = weatherStateFrom(s, { preset: presetNow(), hasTemperature: loaded });
     const same = Object.keys(next).every((k) => next[k] === current[k]);
+    if (same) return;
     current = next;
-    if (!same) for (const fn of [...listeners]) fn(current);
-  };
+    for (const fn of [...listeners]) fn(current);
+  }
+  const offWeather = env?.on ? env.on('weather', refresh) : () => {};
+
+  async function apply(choice) {
+    const svc = await ready;
+    if (!svc) return;
+    const want = shorthandWeather(choice);
+    if (!want) { restore(); return; }
+    if (!saved || !sameSettings(settingsNow(), imposed)) saved = settingsNow();
+    svc.setSource(want.source);
+    svc.clearOverrides();
+    for (const [k, v] of Object.entries(want.overrides)) svc.setOverride(k, v);
+    imposed = settingsNow();
+    chosen = choice;
+    refresh();
+  }
+  function restore() {
+    if (service && saved && sameSettings(settingsNow(), imposed)) {
+      service.setSource(saved.source);
+      service.clearOverrides();
+      for (const [k, v] of Object.entries(saved.overrides)) service.setOverride(k, v);
+    }
+    saved = null; imposed = null; chosen = null;
+    refresh();
+  }
+  const enqueue = (fn) => (queue = queue.then(fn).catch(() => {}));
+
   const weather = {
-    hasTemperature: false,
+    /** Plan 01's weather is behind this port. */
+    plan01: true,
+    /** A real temperature once plan 01's weather has loaded (the cabin shows it then). */
+    get hasTemperature() { return loaded; },
     presets: RAIN_PRESETS,
-    state: () => current,
-    setPreset(id) {
-      const p = RAIN_PRESETS.find((x) => x.id === id);
-      if (p) set(weatherFor(p.mmPerHour, { windMps: p.windMps, preset: p.id }));
-      return weather;
+    state() {
+      if ((env?.state ?? null) !== seen) refresh();
+      return current;
     },
+    setPreset(id) { if (RAIN_PRESETS.some((p) => p.id === id)) enqueue(() => apply(id)); return weather; },
     setRain(mmPerHour) {
       const R = Number(mmPerHour);
       if (!Number.isFinite(R)) return weather;
       const p = RAIN_PRESETS.find((x) => x.mmPerHour === R);
-      set(p ? weatherFor(p.mmPerHour, { windMps: p.windMps, preset: p.id }) : weatherFor(R));
+      enqueue(() => apply(p ? p.id : R));
       return weather;
     },
+    /** Resolves once every shorthand asked for so far is in plan 01's weather (and env.state follows it). */
+    whenApplied: () => Promise.all([ready, queue]).then(() => { refresh(); return current; }),
+    release() { enqueue(restore); return queue; },
     on(type, fn) {
       if (type !== 'change') return () => {};
       listeners.add(fn);
       return () => listeners.delete(fn);
     },
+    dispose() { offWeather(); listeners.clear(); },
   };
-  return weather.setPreset(preset);
+  return weather;
 }
 
 /**
@@ -393,8 +335,8 @@ export function clockOn(clock) {
 
 /**
  * The drive's ephemeris on plan 01's (section 11.4): sun(ms) as { azimuth, elevation } in degrees (apparent),
- * timeOfSunElevation(el, dayMs, evening) on the local calendar day of dayMs (NaN when the sun does not reach it that
- * day), solarNoon(dayMs).
+ * timeOfSunElevation(el, dayMs, evening) when the apparent elevation is `el` on the local calendar day of dayMs (NaN when
+ * the sun does not reach it that day), solarNoon(dayMs).
  * @param {{ at(ms: number): { sun: { azDeg: number, altDeg: number } }, timeOfSunAltitude: Function, events?: Function }} eph
  * @param {string} zone the city's IANA zone
  */
@@ -403,9 +345,23 @@ export function ephemerisOn(eph, zone) {
   return {
     sun(simMs) { const s = eph.at(simMs).sun; return { azimuth: s.azDeg, elevation: s.altDeg }; },
     timeOfSunElevation(elevationDeg, dayMs, evening = true) {
-      let t = null;
-      try { t = eph.timeOfSunAltitude(elevationDeg, dayStart(dayMs), evening ? 'setting' : 'rising'); } catch { t = null; } // an altitude it refuses
-      return Number.isFinite(t) ? t : NaN;
+      // plan 01's search is on the geometric altitude, sun() reports the apparent one: search again for the geometric
+      // altitude that is the asked apparent one less the refraction there, until the apparent one is reached (the
+      // refraction changes with the altitude; a few rounds)
+      const search = (alt) => {
+        try { const t = eph.timeOfSunAltitude(alt, dayStart(dayMs), evening ? 'setting' : 'rising'); return Number.isFinite(t) ? t : NaN; } catch { return NaN; } // an altitude it refuses
+      };
+      let t = search(elevationDeg), alt = elevationDeg;
+      for (let k = 0; k < 6 && Number.isFinite(t); k++) {
+        const s = eph.at(t).sun;
+        const miss = s.altDeg - elevationDeg;
+        if (!Number.isFinite(miss) || Math.abs(miss) < 1e-5) break;
+        alt -= miss;
+        const next = search(alt);
+        if (!Number.isFinite(next)) break;
+        t = next;
+      }
+      return t;
     },
     solarNoon(dayMs) {
       const e = eph.events ? eph.events(dayStart(dayMs)) : null;
@@ -415,46 +371,20 @@ export function ephemerisOn(eph, zone) {
 }
 
 /**
- * The drive's environment port.
- * @param {{ city: object, app?: object, nowMs?: number, playing?: boolean, rate?: number }} opts
- *   city is an entry of data/cities.json (origin, tz). With `app` (plan 01's renderer) the port adapts plan 01's clock
- *   and environment (app.clock, app.env); without it, the classic renderer's stand-ins.
+ * The drive's environment port over plan 01's (section 11.10).
+ * @param {{ city: object, app: object }} opts  city is an entry of data/cities.json (origin, tz); app is plan 01's
+ *   contract (app.clock, app.env, app.quality, app.weather)
  */
-export function createEnv({ city, app = null, nowMs, playing, rate } = {}) {
+export function createEnv({ city, app } = {}) {
   if (!city?.origin) throw new Error('env: city with an origin is required');
-  if (app) return adapterEnv(city, app);
-  const clock = createClock({ nowMs, playing, rate });
-  const ephemeris = createEphemeris(city);
-  const weather = createWeather();
-  return {
-    city,
-    legacy: true,
-    clock,
-    ephemeris,
-    quality: { preset: 'high', onChange: () => () => {} },
-    lighting: {
-      units: LIGHTING_UNITS,
-      /**
-       * Horizontal illuminance (lux) for a sun elevation in degrees (with no argument, the sun now), under today's
-       * weather: the clear sky's (ambientLux) x the rain's sky dimming (weather skyDim, 1 dry), so the street lamps,
-       * the vehicles' lamps and the headlights, which switch on this, come on earlier under a dark rainy sky.
-       */
-      ambientLux: (sunElevationDeg) => ambientLux(sunElevationDeg ?? ephemeris.sun(clock.now()).elevation) * (weather.state().skyDim ?? 1),
-    },
-    weather,
-  };
-}
-
-/** Plan 01's environment behind the drive's port (section 11.10). */
-function adapterEnv(city, app) {
+  if (!app?.env || !app?.clock) throw new Error("env: plan 01's clock and environment are required");
   const env = app.env;
   const clock = clockOn(app.clock);
   const ephemeris = ephemerisOn(env.ephemeris, city.tz || app.clock.zone || 'UTC');
-  const weather = createWeather();
+  const weather = weatherOn(app);
   const q = app.quality;
   return {
     city,
-    legacy: false,
     clock,
     ephemeris,
     /** Plan 01's environment (section 11.4): state, nodes, lights, at(), freeze() ... */
@@ -469,11 +399,9 @@ function adapterEnv(city, app) {
       onChange: (fn) => (q?.on ? q.on('change', fn) : () => {}),
     },
     lighting: {
-      /** Only at the classic display, where the exposure is held at 1 (decision 6); in the shipped look use env.nodes. */
-      units: LIGHTING_UNITS,
       /**
        * Horizontal illuminance (lux): plan 01's env.state.sky.horizontalLux for the sun now (with no argument, or the
-       * current sun's elevation), else the clear-sky table for that elevation; x the rain's sky dimming, as above.
+       * current sun's elevation), else the clear-sky table for that elevation (see ambientLux); x the rain's sky dimming.
        */
       ambientLux(sunElevationDeg) {
         const s = env.state, dim = weather.state().skyDim ?? 1;

@@ -3,7 +3,7 @@
 The rule: no number without a source line or an ESTIMATED tag. Each number lives in a `Dim` whose `source`
 names one or more references from SOURCES (B1..B10 of the plan's section 13, plus CFR) and whose `note`
 quotes the line used or says how it was measured; or whose source is ESTIMATED, with the basis in the note.
-tests/data/flight/test_aircraft_spec.py enforces this for every capitalised module-level name.
+tests/python/flight/test_aircraft_spec.py enforces this for every capitalised module-level name.
 research/dimensions.md tells the story: what was fetched, what was traced, and where the sources disagree.
 
 Frames used here (the build converts to the model's axes):

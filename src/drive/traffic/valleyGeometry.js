@@ -1,5 +1,5 @@
-// The valley's ribbons as vertex arrays (plan 02, D6.6). Pure: no three.js; valley.js puts the arrays in a
-// BufferGeometry. The attributes are those valley.glsl.js reads (see its header).
+// The valley's ribbons as vertex arrays (plan 02, D6.6). Pure: no three.js; valleyCore.js puts the arrays in a
+// BufferGeometry, and valley.js's material reads the attributes.
 //
 // Each piece of road (valleyFormat.js) gives one ribbon per direction that carries traffic: forward along its
 // vertices and, on a two-way piece, backward. A one-way piece is a carriageway of its own and is drawn on its line;

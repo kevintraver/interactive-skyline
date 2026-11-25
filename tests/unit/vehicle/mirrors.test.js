@@ -3,7 +3,7 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import * as THREE from 'three';
-import { mirrorView, projectToMirror, reflectPoint, coarseGridIndex, coarseGridSteps, gridCells } from '../../../src/drive/vehicle/mirrors.js';
+import { mirrorView, projectToMirror, reflectPoint, coarseGridIndex, coarseGridSteps, gridCells } from '../../../src/drive/vehicle/mirrorGeometry.js';
 import { GLASS_PRESETS, mirrorsDue, mirrorPixels, MIRROR_NAMES, glassPresetFor } from '../../../src/drive/vehicle/glassPresets.js';
 
 const meta = JSON.parse(readFileSync(new URL('../../../public/models/drive/cabin.json', import.meta.url), 'utf8'));

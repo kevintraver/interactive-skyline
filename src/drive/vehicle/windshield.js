@@ -1,214 +1,63 @@
-// The windshield, first part (plan 02, D4.4; section 7.6): a layer over the windshield opening, drawn in the
-// cabin pass (so the clean camera has none), additive: light that the dirt on the glass scatters toward the eye
-// lifts the darks, and the lit dashboard top shows faintly in the lower glass by day. The shader is
-// windshield.glsl.js; the functions below are its arithmetic in JavaScript, which the unit tests check.
+// The windshield (plan 02, D4.4; third stretch, decisions 3 and 6). The model (the dirt mask, the veil's phase
+// function, the dashboard's reflection, the values each frame) is veil.js, where the unit tests check it.
 //
-// The dirt mask (windshieldMask): generated once, procedurally. Two tandem wiper arcs of a left-hand-drive car
-// (both park along the cowl and sweep up to the left) leave a cleaner swept area; dust outside it, heavier low
-// down and toward the pillars; a dust line along each arc's outer edge; a few dried streaks running down. Values
-// are the dirt's relative strength, 0..1 (swept glass about 0.2, dusty glass 0.6 to 1).
-//
-// The veil (cd/m^2), per point of the glass, for a glare source of illuminance E (lux, on a plane facing it):
-//     L = m x K x E x phaseVeil(theta),  phaseVeil = cos(theta) / (theta_deg^2 + THETA_C^2)
-// the Stiles-Holladay form (veiling luminance as illuminance over angle squared, valid 1 to 30 degrees; plan
-// reference G7) for a forward-scattering layer, with cos(theta) for the illuminance at the eye and a core
-// THETA_C so it stays finite at the source. K is the glass's own share: ASSUMED 4 (the eye's own scatter is 10 in
-// the same units; a used, dusty windshield adds glare of the same order). Sources:
-//   - the sun: E = direct normal illuminance at the sun's elevation (sunNormalLux: 127.5 klux outside the
-//     atmosphere, clear-sky extinction 0.21 per air mass (ASSUMED, dry desert air) over the Kasten-Young air
-//     mass), only while the sun shines on the glass's outer face (lit, from the angle between them: the roof
-//     shades the glass when the sun is behind);
-//   - the sky: the dust scatters a little of the sky's light everywhere: L = m x K_SKY x E_h / pi, K_SKY 0.001
-//     (ASSUMED), so with the sun behind the veil is under 1% of a road's luminance (D4.4's acceptance);
-//   - the brightest oncoming head lamps (the traffic part's lamp points, kind head, facing the eye): 800 cd toward
-//     an eye above the cut-off with a cos^6 lobe (traffic/lamps.js LAMP_CD, LOBE: FMVSS 108 Table XIX-a), each
-//     switched on by its vehicle's own threshold; the few strongest by illuminance at the eye.
-// In scene units: luminance x (scene per lux), where scene per lux is the scene's horizontal irradiance (its sky
-// light plus its sun) over the real one (env.js ambientLux) by day, and env.lighting.units.lux (0.1) at night;
-// the sun term is soft-capped (CAP_SUN), the lamps' too (CAP_LAMP), so a head lamp's glare never whites out the
-// road.
-// The dashboard: the view reflected in the glass's plane, where it meets the dash top's plane inside its
-// outline, at the glass's unpolarised Fresnel reflectance (n = 1.52, both faces), times the dash's radiance in
-// the cabin's own light (albedo DASH_ALBEDO, ASSUMED a mid-dark grey top).
+// Two layers:
+//   - The analytic veil: a mesh over the windshield opening, a child of the car, so it is drawn in the scene pass with
+//     the cabin (last of the transparent objects: additive, depth-tested against the cabin and the world, no depth
+//     write). It writes linear HDR: veil.js's values in buffer units, cd/m^2 x the pre-exposure (env.nodes.exposure,
+//     decision 6). Per fragment (cabin coordinates), v the view through this point of the glass and m the dirt mask
+//     (veil.js windshieldMask: dust, wiper arcs, streaks): veil = m x (sun + sky + lamps), sun = uSun x phase(v . sun),
+//     sky the dust's share of the sky's light, lamps the brightest oncoming head lamps' (only without the bloom veil);
+//     phase(c) = c / (theta_deg^2 + THETA_C^2), the Stiles-Holladay form E / theta^2 with a core of THETA_C; plus the
+//     dashboard top seen in the glass, at the glass's Fresnel reflectance for that angle.
+//   - The veil from the pipeline's bloom (decision 3; plan 01 section 11.8, stage `afterBloom`): the dirt mask times the
+//     bloom chain, so every bright source in view (oncoming lamps, signs, a low sun's disc in the sky) scatters off the
+//     dirt with no special case, which is section 7.6's design. Where the pipeline has a bloom the analytic lamp term is
+//     off, so lamps are not counted twice; without one (bloom 0 in the settings) the oncoming lamps' veil stays
+//     analytic.
+//     The stage reads where the glass is seen from a quarter-resolution mask drawn each frame from the cabin's silhouette
+//     and the glass (the dirt mask on the glass, 0 behind the dashboard, the pillars and the mirror); the same mask is
+//     plan 01's metering mask.
 
 import * as THREE from 'three';
-import { windshieldShaders } from './windshield.glsl.js';
-import { LAMP_CD, LOBE, vehicleThresholdLux } from '../traffic/lamps.js';
-import { LIGHTING_UNITS, ambientLux } from '../env.js';
+import { Mesh, MeshBasicNodeMaterial, RenderTarget } from 'three/webgpu';
+import {
+  Fn, uniform, uniformArray, texture, uv, positionLocal, vec2, vec3, vec4, float, select, normalize, dot, acos, min, max, abs,
+  sqrt, clamp, reflect, smoothstep, screenUV, If, luminance,
+} from 'three/tsl';
+import { VEIL, GLASS_N, windshieldMask, veilFrame, glassFrame } from './veil.js';
 import { createTimings } from '../timing.js';
 
-export const VEIL = Object.freeze({
-  /** cd/m^2 per lux per deg^-2, for mask 1 (assumed: see the header) */
-  K: 4,
-  /** the core of the phase function, degrees */
-  THETA_C: 0.5,
-  /** the dust's share of the sky's light (assumed) */
-  K_SKY: 0.001,
-  /** soft caps in scene units: the sun's veil and the lamps' (the road at night is 0.003 to 0.06) */
-  CAP_SUN: 1.5,
-  CAP_LAMP: 0.12,
-});
-export const GLASS_N = 1.52;
-const DASH_ALBEDO = 0.05;
-/** Extraterrestrial illuminance (lux) and clear-sky extinction per air mass (assumed). */
-const E0 = 127500, EXTINCTION = 0.21;
-const RAD = Math.PI / 180;
-const lum = (c) => 0.2126 * c.r + 0.7152 * c.g + 0.0722 * c.b;
+const DEG = 180 / Math.PI;
+/** The bloom veil: the share of the bloom chain the dirt scatters toward the eye at mask 1 (assumed: a dusty pane scatters a
+ * few percent of the light through it; 0.6 drew the whole glass milky by day, with the wipers' arcs plain). */
+export const BLOOM_VEIL = 0.05;
 
-/** Kasten and Young's (1989) relative air mass for an apparent elevation in degrees. */
-export function airMass(elDeg) {
-  const h = Math.max(-0.5, elDeg);
-  return 1 / (Math.sin(h * RAD) + 0.50572 * (h + 6.07995) ** -1.6364);
-}
+const phaseVeil = (c) => {
+  const th = acos(min(c, 1)).mul(DEG);
+  return select(c.greaterThan(0), c.div(th.mul(th).add(VEIL.THETA_C * VEIL.THETA_C)), float(0));
+};
 
-/** Direct normal illuminance of the sun under a clear sky (lux); 0 below the horizon (faded over the last half-degree). */
-export function sunNormalLux(elDeg) {
-  if (!(elDeg > -0.5)) return 0;
-  const fade = Math.min(1, (elDeg + 0.5) / 0.5);
-  return fade * E0 * Math.exp(-EXTINCTION * airMass(elDeg));
-}
-
-/** The phase term: cos(theta) / (theta_deg^2 + THETA_C^2) for c = cos(theta); 0 beyond 90 degrees. */
-export function phaseVeil(c, thetaC = VEIL.THETA_C) {
-  if (!(c > 0)) return 0;
-  const th = Math.acos(Math.min(c, 1)) / RAD;
-  return c / (th * th + thetaC * thetaC);
-}
-
-/** Veiling luminance (cd/m^2) from a source of illuminance E (lux) at angle theta (degrees), through dirt m. */
-export const veilLuminance = ({ E, thetaDeg, mask = 1, K = VEIL.K }) => mask * K * E * phaseVeil(Math.cos(thetaDeg * RAD));
-
-/** Section 7.6's model, the Stiles-Holladay form: m K E / theta^2 (degrees). */
-export const veilModel = ({ E, thetaDeg, mask = 1, K = VEIL.K }) => (mask * K * E) / (thetaDeg * thetaDeg);
-
-/** How much of the sun reaches the glass's outer face: 0 when it is behind the glass, 1 from 6 degrees in front. */
-export const sunOnGlass = (cosOut) => { const t = Math.min(1, Math.max(0, cosOut / 0.1)); return t * t * (3 - 2 * t); };
-
-/**
- * The veil at a point of the glass (cd/m^2), the shader's arithmetic without the scene's scale or the caps.
- * Directions are unit [x, y, z] arrays in one frame.
- * @param {{ view: number[], sunDir: number[], glassOut: number[], sunElevation: number, mask?: number, ambient?: number }} o
- *   view: through the glass from the eye; glassOut: the glass's outward normal; ambient: horizontal lux (default
- *   env.js ambientLux at the sun's elevation)
- */
-export function veilAt({ view, sunDir, glassOut, sunElevation, mask = 1, ambient }) {
-  const dot = (a, b) => a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
-  const E = sunNormalLux(sunElevation) * sunOnGlass(dot(sunDir, glassOut));
-  const sun = mask * VEIL.K * E * phaseVeil(dot(view, sunDir));
-  const Eh = ambient ?? ambientLux(sunElevation);
-  const sky = (mask * VEIL.K_SKY * Eh) / Math.PI;
-  return { sun, sky, total: sun + sky, E };
-}
-
-/** Unpolarised Fresnel reflectance of a pane (both faces) for the cosine of the angle of incidence. */
-export function glassReflectance(ci, n = GLASS_N) {
-  ci = Math.min(1, Math.max(1e-4, ci));
-  const si = Math.sqrt(Math.max(0, 1 - ci * ci)) / n;
-  const ct = Math.sqrt(Math.max(0, 1 - si * si));
-  const rs = (ci - n * ct) / (ci + n * ct), rp = (n * ci - ct) / (n * ci + ct);
-  const r = 0.5 * (rs * rs + rp * rp);
-  return (2 * r) / (1 + r);
-}
-
-/** Head lamp candela toward a direction at angle a (radians) from its axis (traffic/lamps.js). */
-export const headLampCandela = (cosA) => (cosA > 0 ? LAMP_CD.head * cosA ** LOBE.head : 0);
-
-// ---------------------------------------------------------------- the dirt mask
-/** A small deterministic generator (mulberry32). */
-function rng(seed) {
-  let a = seed >>> 0;
-  return () => {
-    a = (a + 0x6d2b79f5) >>> 0;
-    let t = a;
-    t = Math.imul(t ^ (t >>> 15), t | 1);
-    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
-    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
-  };
-}
-function hash2(ix, iy, seed) {
-  let h = (ix * 374761393 + iy * 668265263 + seed * 2246822519) | 0;
-  h = Math.imul(h ^ (h >>> 13), 1274126177);
-  return ((h ^ (h >>> 16)) >>> 0) / 4294967296;
-}
-function valueNoise(x, y, seed) {
-  const ix = Math.floor(x), iy = Math.floor(y), fx = x - ix, fy = y - iy;
-  const sx = fx * fx * (3 - 2 * fx), sy = fy * fy * (3 - 2 * fy);
-  const a = hash2(ix, iy, seed), b = hash2(ix + 1, iy, seed), c = hash2(ix, iy + 1, seed), d = hash2(ix + 1, iy + 1, seed);
-  return a + (b - a) * sx + (c - a) * sy + (a - b - c + d) * sx * sy;
-}
-const fbm = (x, y, seed) => {
-  let s = 0, amp = 0.5, f = 1;
-  for (let o = 0; o < 4; o++) { s += amp * valueNoise(x * f, y * f, seed + o); amp *= 0.5; f *= 2.03; }
-  return s / 0.9375;
+/** Unpolarised Fresnel reflectance of a pane, both faces (veil.js glassReflectance). */
+const glassReflectance = (ci0) => {
+  const ci = clamp(ci0, 1e-4, 1);
+  const si = sqrt(max(0, float(1).sub(ci.mul(ci)))).div(GLASS_N);
+  const ct = sqrt(max(0, float(1).sub(si.mul(si))));
+  const rs = ci.sub(ct.mul(GLASS_N)).div(ci.add(ct.mul(GLASS_N)));
+  const rp = ci.mul(GLASS_N).sub(ct).div(ci.mul(GLASS_N).add(ct));
+  const r = rs.mul(rs).add(rp.mul(rp)).mul(0.5);
+  return r.mul(2).div(r.add(1));
 };
 
 /**
- * The wipers, in glass metres (x from the left edge along the bottom, y up the glass): pivots under the cowl,
- * blades from rIn to rOut, sweeping from a0 to a1 degrees (counter-clockwise from +x). A left-hand-drive tandem
- * pair, sized for FMVSS 104's wiped zones for a wide car (18 deg left, 56 right, 10 up, 5 down of the eye; the
- * plan's G8), assumed.
+ * @param {{ parent: THREE.Object3D, corners: object, options: object, env: object, pipeline?: object, renderer?: object }} o
+ *   parent: the car's group (cabin coordinates); corners: the windshield's (cabin coordinates); options: a preset's
+ *   `windshield`; pipeline: plan 01's, for the bloom veil (only where it has a bloom); staged: whether the veil's stage
+ *   starts registered (setStaged changes it: the cabin registers it only while the drive is shown)
  */
-export const WIPERS = Object.freeze([
-  Object.freeze({ x: 0.42, y: -0.05, rIn: 0.12, rOut: 0.64, a0: 4, a1: 96 }),
-  Object.freeze({ x: 1.13, y: -0.05, rIn: 0.12, rOut: 0.54, a0: 3, a1: 78 }),
-]);
-
-/** Whether a glass point (metres) is in a wiper's swept area, and how far inside (metres, negative outside). */
-export function wiperDepth(x, y, w) {
-  const dx = x - w.x, dy = y - w.y, r = Math.hypot(dx, dy);
-  const a = Math.atan2(dy, dx) / RAD;
-  const dr = Math.min(r - w.rIn, w.rOut - r);
-  const da = Math.min(a - w.a0, w.a1 - a) * RAD * r;
-  return Math.min(dr, da);
-}
-
-/**
- * The dirt mask: Uint8 values (0..255 for 0..1), rows from the bottom of the glass, `width` x `height`, for a glass
- * of `size` metres (width along the bottom, slant height). Deterministic for a seed.
- */
-export function windshieldMask({ width = 512, height = 256, size = [1.665, 0.816], seed = 7 } = {}) {
-  const [GW, GH] = size;
-  const out = new Uint8Array(width * height);
-  const rand = rng(seed);
-  // streaks: dried drops' trails running down the unwiped glass
-  const streaks = [];
-  for (let i = 0; i < 14; i++) streaks.push({ x: rand() * GW, top: GH * (0.55 + 0.45 * rand()), len: 0.08 + 0.25 * rand(), w: 0.002 + 0.004 * rand(), k: 0.12 + 0.18 * rand() });
-  for (let j = 0; j < height; j++) {
-    const y = ((j + 0.5) / height) * GH;
-    for (let i = 0; i < width; i++) {
-      const x = ((i + 0.5) / width) * GW;
-      const n = fbm(x * 7, y * 7, seed), fine = valueNoise(x * 90, y * 90, seed + 11);
-      // dust: heavier low down (the wipers' rest and the spray) and toward the pillars
-      const edge = Math.min(x, GW - x, GH - y);
-      let dust = 0.55 + 0.25 * n + 0.15 * (1 - y / GH) + 0.15 * Math.max(0, 1 - edge / 0.12) + 0.12 * (fine - 0.5);
-      for (const s of streaks) {
-        const dx = Math.abs(x - s.x - 0.01 * Math.sin(y * 30 + s.top * 9));
-        if (y < s.top && y > s.top - s.len && dx < s.w) dust += s.k * (1 - (s.top - y) / s.len);
-      }
-      // the swept area: cleaner, with a dust line just outside each blade's tip and at the end of its sweep
-      let wiped = 0, line = 0;
-      for (const w of WIPERS) {
-        const d = wiperDepth(x, y, w);
-        wiped = Math.max(wiped, Math.min(1, Math.max(0, (d + 0.004) / 0.02)));
-        if (d < 0 && d > -0.018) line = Math.max(line, 1 + d / 0.018);
-      }
-      const clean = 0.17 + 0.08 * n + 0.04 * (fine - 0.5);
-      let m = dust + (clean - dust) * wiped + 0.18 * line * (1 - wiped);
-      m = Math.min(1, Math.max(0, m));
-      out[j * width + i] = Math.round(m * 255);
-    }
-  }
-  return out;
-}
-
-// ---------------------------------------------------------------- the layer
-/**
- * @param {{ cabinScene: THREE.Scene, corners: object, options: object, env: object }} o
- *   corners: cabin.js windshield.corners (Vector3s, cabin coordinates); options: a preset's `windshield`
- */
-export function createWindshield({ cabinScene, corners, options, env }) {
+export function createWindshield({ parent, corners, options, env, pipeline = null, renderer = null, silhouette = null, staged = true }) {
   const { bottomLeft: BL, bottomRight: BR, topRight: TR, topLeft: TL } = corners;
-  const glassW = BL.distanceTo(BR), glassH = BL.distanceTo(TL);
+  const { glassIn, glassOut, size: [glassW, glassH] } = glassFrame(corners);
   const [mw, mh] = options.maskSize || [512, 256];
   const maskData = windshieldMask({ width: mw, height: mh, size: [glassW, glassH] });
   const mask = new THREE.DataTexture(maskData, mw, mh, THREE.RedFormat, THREE.UnsignedByteType);
@@ -219,110 +68,155 @@ export function createWindshield({ cabinScene, corners, options, env }) {
   geometry.setAttribute('position', new THREE.Float32BufferAttribute([...BL.toArray(), ...BR.toArray(), ...TR.toArray(), ...TL.toArray()], 3));
   geometry.setAttribute('uv', new THREE.Float32BufferAttribute([0, 0, 1, 0, 1, 1, 0, 1], 2));
   geometry.setIndex([0, 1, 2, 0, 2, 3]);
-  // the glass's normal toward the driver (the eye is at the origin's height, behind the glass)
-  const glassIn = new THREE.Vector3().crossVectors(BR.clone().sub(BL), TL.clone().sub(BL)).normalize();
-  const mid = BL.clone().add(TR).multiplyScalar(0.5);
-  if (new THREE.Vector3(0, 1.2, 0).sub(mid).dot(glassIn) < 0) glassIn.negate();
-  const glassOut = glassIn.clone().negate();
 
   const maxLamps = Math.max(1, options.lamps | 0);
-  const { vertex, fragment } = windshieldShaders({ thetaC: VEIL.THETA_C, glassN: GLASS_N, maxLamps });
-  const uniforms = {
-    uMask: { value: mask }, uSunDir: { value: new THREE.Vector3(0, 1, 0) }, uSun: { value: new THREE.Color(0, 0, 0) },
-    uCapSun: { value: VEIL.CAP_SUN }, uSky: { value: new THREE.Color(0, 0, 0) },
-    uLamps: { value: Array.from({ length: maxLamps }, () => new THREE.Vector4(0, 0, -1, 0)) },
-    uLampColor: { value: new THREE.Color(1, 0.96, 0.9) }, uCapLamp: { value: VEIL.CAP_LAMP },
-    uGlassN: { value: glassIn }, uDash: { value: new THREE.Color(0, 0, 0) },
-    // the dash top: from the cowl back to the instrument hood, pillar to pillar (cabin.json: cowl at z -1.34, y 0.96)
-    uDashRect: { value: new THREE.Vector4(Math.min(BL.x, TL.x) - 0.05, Math.max(BR.x, TR.x) + 0.05, BL.z - 0.02, -0.66) },
-    uDashY: { value: BL.y - 0.03 },
+  const u = {
+    sunDir: uniform(new THREE.Vector3(0, 1, 0)), sun: uniform(new THREE.Color(0, 0, 0)), sky: uniform(new THREE.Color(0, 0, 0)),
+    lamps: uniformArray(Array.from({ length: maxLamps }, () => new THREE.Vector4(0, 0, -1, 0)), 'vec4'),
+    lampColor: uniform(new THREE.Color(1, 0.96, 0.9)), dash: uniform(new THREE.Color(0, 0, 0)),
+    glassN: uniform(glassIn.clone()), eye: uniform(new THREE.Vector3(0, 1.2, 0)),
+    dashRect: uniform(new THREE.Vector4(Math.min(BL.x, TL.x) - 0.05, Math.max(BR.x, TR.x) + 0.05, BL.z - 0.02, -0.66)),
+    dashY: uniform(BL.y - 0.03),
   };
-  const material = new THREE.ShaderMaterial({
-    name: 'windshield', uniforms, vertexShader: vertex, fragmentShader: fragment,
-    transparent: true, depthWrite: false, depthTest: true, blending: THREE.AdditiveBlending, side: THREE.DoubleSide,
+  const material = new MeshBasicNodeMaterial({
+    name: 'windshield', transparent: true, depthWrite: false, depthTest: true, blending: THREE.AdditiveBlending,
+    side: THREE.DoubleSide, fog: false,
   });
-  const mesh = new THREE.Mesh(geometry, material);
+  material.colorNode = Fn(() => {
+    const p = positionLocal;
+    const v = normalize(p.sub(u.eye)).toVar();
+    const m = texture(mask, uv()).r;
+    const sun0 = u.sun.mul(phaseVeil(dot(v, u.sunDir)));
+    const sun = sun0.div(luminance(sun0).div(VEIL.CAP_SUN).add(1));
+    let lamp = float(0);
+    for (let i = 0; i < maxLamps; i++) {
+      const L = u.lamps.element(i);
+      lamp = lamp.add(L.w.mul(phaseVeil(dot(v, L.xyz))));
+    }
+    const lampC = lamp.div(lamp.div(VEIL.CAP_LAMP).add(1));
+    const col = sun.add(u.sky).add(u.lampColor.mul(lampC)).mul(m).toVar();
+    // the dashboard top, mirrored in the glass
+    const r = reflect(v, u.glassN);
+    const t = u.dashY.sub(p.y).div(min(r.y, -1e-4));
+    const h = p.add(r.mul(t));
+    const R = u.dashRect;
+    const inside = r.y.lessThan(-0.02).and(h.x.greaterThan(R.x)).and(h.x.lessThan(R.y)).and(h.z.greaterThan(R.z)).and(h.z.lessThan(R.w));
+    const e = min(min(h.x.sub(R.x), R.y.sub(h.x)), min(h.z.sub(R.z), R.w.sub(h.z)));
+    const grille = select(h.z.lessThan(R.z.add(0.07)), float(0.55), float(1));
+    const dash = u.dash.mul(glassReflectance(abs(dot(v, u.glassN)))).mul(grille).mul(smoothstep(0, 0.08, e));
+    return vec4(col.add(select(inside, dash, vec3(0))), 1);
+  })();
+  const mesh = new Mesh(geometry, material);
   mesh.name = 'windshield';
   mesh.frustumCulled = false;
-  mesh.renderOrder = 20;
-  cabinScene.add(mesh);
+  mesh.renderOrder = 1e6; // the last transparent object: over the world's sprites and the rain's composite
+  parent.add(mesh);
+
+  // ---------------------------------------------------------------- the glass as seen: the bloom veil's mask and the meter's
+  // A quarter-resolution picture of where the glass is seen and how dirty it is there: the cabin's silhouette (black, in
+  // depth) and then the glass (r: the dirt mask, g: 1), drawn with this frame's camera. The bloom veil reads r; plan
+  // 01's exposure gets it as the metering mask (r and g are 0 where the dashboard, the pillars or the mirror hide the
+  // glass). The scene pass's depth cannot serve: plan 01's pipeline keeps it only when a render stage follows the scene.
+  const seen = { on: uniform(0) };
+  const maskScene = new THREE.Scene();
+  maskScene.name = 'windshield-mask';
+  const holder = new THREE.Group();
+  holder.matrixAutoUpdate = false;
+  maskScene.add(holder);
+  const glassMat = new MeshBasicNodeMaterial({ depthTest: true, depthWrite: false, side: THREE.DoubleSide, fog: false });
+  glassMat.colorNode = vec4(texture(mask, uv()).r, 1, 0, 1);
+  const glassQuad = new Mesh(geometry, glassMat);
+  glassQuad.frustumCulled = false;
+  holder.add(glassQuad);
+  const black = new MeshBasicNodeMaterial({ color: 0x000000, side: THREE.DoubleSide, fog: false });
+  const maskTarget = new RenderTarget(64, 64, { depthBuffer: true, generateMipmaps: false });
+  maskTarget.texture.name = 'windshield-seen';
+  maskTarget.texture.minFilter = THREE.LinearFilter; maskTarget.texture.magFilter = THREE.LinearFilter;
+  let maskRenders = 0;
+  const _clearC = new THREE.Color(), _black = new THREE.Color(0, 0, 0);
+  /** Draw the mask for this frame's camera (`L`: rig.last), at a quarter of the scene pass's size (64 x 64 without a pipeline). */
+  function drawMask(camera, L) {
+    if (!renderer || !silhouette) return;
+    const rt = pipeline?.scenePass?.renderTarget;
+    const w = rt ? Math.max(16, Math.round(rt.width / 4)) : 64, h = rt ? Math.max(16, Math.round(rt.height / 4)) : 64;
+    if (maskTarget.width !== w || maskTarget.height !== h) maskTarget.setSize(w, h);
+    holder.matrix.copy(L.body);
+    holder.matrixWorldNeedsUpdate = true;
+    holder.updateMatrixWorld(true);
+    const prev = renderer.getRenderTarget(), auto = renderer.autoClear, alpha = renderer.getClearAlpha();
+    renderer.getClearColor(_clearC);
+    renderer.setRenderTarget(maskTarget);
+    renderer.setClearColor(_black, 0);
+    renderer.autoClear = true;
+    silhouette.overrideMaterial = black;
+    renderer.render(silhouette, camera);
+    silhouette.overrideMaterial = null;
+    renderer.autoClear = false;
+    renderer.render(maskScene, camera);
+    renderer.setRenderTarget(prev);
+    renderer.setClearColor(_clearC, alpha);
+    renderer.autoClear = auto;
+    maskRenders++;
+  }
+
+  let removeStage = null;
+  const bloomVeil = !!pipeline && pipeline.settings?.bloom > 0;
+  let veilStage = null;
+  if (bloomVeil) {
+    const stage = ({ color, bloom }) => Fn(() => {
+      const out = vec4(color).toVar();
+      If(seen.on.greaterThan(0.5), () => {
+        const m = texture(maskTarget.texture, screenUV).r;
+        out.assign(vec4(out.rgb.add(bloom.rgb.mul(m).mul(BLOOM_VEIL)), out.a));
+      });
+      return out;
+    })();
+    veilStage = { id: 'cabin-veil', at: 'afterBloom', node: stage };
+  }
+  /** The veil's pipeline stage registered (on) or removed (off): registered only while the drive is shown. */
+  function setStaged(on) {
+    if (!veilStage) return;
+    if (on && !removeStage) removeStage = pipeline.addStage(veilStage);
+    else if (!on && removeStage) { removeStage(); removeStage = null; }
+  }
+  setStaged(staged);
 
   let enabled = options.enabled !== false;
   mesh.visible = enabled;
   const timing = createTimings();
-  const _inv = new THREE.Matrix4(), _d = new THREE.Vector3(), _c = new THREE.Color();
-  const picked = []; // [E, x, y, z] of the strongest lamps this frame
-  const last = { scenePerLux: 0, sunLux: 0, lit: 0, sunVeil: 0, lamps: [], ambient: 0 };
-
+  const picked = [];
+  let last = { scenePerLux: 0, sunLux: 0, lit: 0, sunVeil: 0, lamps: [], ambient: 0 };
+  const out = { sunDir: u.sunDir.value, sun: u.sun.value, sky: u.sky.value, lamps: u.lamps.array, dash: u.dash.value };
+  const consts = { glassOut, maxLamps, dashboard: options.dashboard, picked };
+  
   /**
-   * Set the uniforms for this frame (cabin coordinates).
-   * @param {{ frame: object, L: object, sunDir: THREE.Vector3, sunColor: THREE.Color, sunIntensity: number,
-   *   hemi: THREE.HemisphereLight|null, lampPoints: object|null, eyeWorld: THREE.Vector3 }} o
-   *   sunDir: unit, toward the sun, cabin coordinates; sunIntensity and hemi: the scene's own lights (scene units)
+   * This frame's values (veil.js veilFrame), and the bloom veil's view.
+   * @param {object} o veilFrame's input, and `camera` (the scene camera), `ambientLux` (plan 01's horizontal illuminance)
    */
-  function update({ frame, L, sunDir, sunColor, sunIntensity, hemi, lampPoints, eyeWorld }) {
-    if (!enabled) return;
+  function update(o) {
+    if (!enabled) { seen.on.value = 0; return; }
     const t0 = performance.now();
-    const el = frame.sun.elevation;
-    const ambient = ambientLux(el);
-    // scene per lux: the scene's horizontal irradiance over the real one, never above the night units
-    const sinEl = Math.max(0, Math.sin(el * RAD));
-    const sceneEh = (sunIntensity || 0) * sinEl * (sunColor ? lum(sunColor) : 1) + (hemi ? hemi.intensity * lum(hemi.color) : 0);
-    const S = Math.min(LIGHTING_UNITS.lux, sceneEh / Math.max(ambient, 1e-6));
-    uniforms.uSunDir.value.copy(sunDir);
-    const lit = sunOnGlass(sunDir.dot(glassOut));
-    const E = sunNormalLux(el) * lit;
-    // the sun's colour without its strength (the look fades the scene's sun light; the veil uses the real one)
-    _c.copy(sunColor || _c.setRGB(1, 1, 1));
-    const lc = Math.max(1e-6, lum(_c));
-    uniforms.uSun.value.copy(_c).multiplyScalar((VEIL.K * E * S) / lc);
-    const skyC = hemi ? _c.copy(hemi.color).multiplyScalar(1 / Math.max(1e-6, lum(hemi.color))) : _c.setRGB(1, 1, 1);
-    uniforms.uSky.value.copy(skyC).multiplyScalar((VEIL.K_SKY * ambient * S) / Math.PI);
-    // the brightest oncoming head lamps
-    picked.length = 0;
-    if (lampPoints && lampPoints.count && L?.body) {
-      _inv.copy(L.body).invert();
-      const P = lampPoints.position, F = lampPoints.facing;
-      for (let i = 0; i < lampPoints.count; i++) {
-        if (lampPoints.kind[i] !== 0) continue;
-        if (ambient >= vehicleThresholdLux(lampPoints.id[i])) continue;
-        const dx = eyeWorld.x - P[3 * i], dy = eyeWorld.y - P[3 * i + 1], dz = eyeWorld.z - P[3 * i + 2];
-        const d2 = dx * dx + dy * dy + dz * dz, d = Math.sqrt(d2);
-        if (d < 2) continue;
-        const cosA = (F[3 * i] * dx + F[3 * i + 1] * dy + F[3 * i + 2] * dz) / d;
-        const I = headLampCandela(cosA) * (lampPoints.alpha[i] ?? 1);
-        if (I <= 0) continue;
-        const Ei = I / d2;
-        if (picked.length < maxLamps || Ei > picked[picked.length - 1][0]) {
-          picked.push([Ei, -dx / d, -dy / d, -dz / d]);
-          picked.sort((a, b) => b[0] - a[0]);
-          if (picked.length > maxLamps) picked.pop();
-        }
-      }
-    }
-    for (let i = 0; i < maxLamps; i++) {
-      const p = picked[i], u = uniforms.uLamps.value[i];
-      if (!p) { u.set(0, 0, -1, 0); continue; }
-      _d.set(p[1], p[2], p[3]).transformDirection(_inv);
-      u.set(_d.x, _d.y, _d.z, VEIL.K * p[0] * S);
-    }
-    // the dash top in the cabin's light: Lambert, the sun through the glass and the sky
-    if (options.dashboard !== false) {
-      const sunOnDash = (sunIntensity || 0) * Math.max(0, sunDir.y) * lit;
-      const e = sunOnDash + (hemi ? hemi.intensity : 0);
-      uniforms.uDash.value.setRGB(1, 1, 1).multiplyScalar((DASH_ALBEDO * e) / Math.PI);
-      if (hemi) uniforms.uDash.value.multiply(_c.copy(hemi.color).lerp(sunColor || hemi.color, sunOnDash / Math.max(e, 1e-6)));
-    } else uniforms.uDash.value.setRGB(0, 0, 0);
-    Object.assign(last, { scenePerLux: S, sunLux: E, lit, ambient, sunVeil: VEIL.K * E * S, lamps: picked.map((p) => +p[0].toFixed(4)) });
+    const over = { ambient: o.ambientLux, scenePerLux: env?.nodes?.exposure?.value ?? 1 };
+    last = veilFrame(bloomVeil ? { ...o, lampPoints: null } : o, out, consts, over);
+    u.eye.value.setFromMatrixPosition(o.L.head);
+    // the mask: every frame where the bloom veil reads it; otherwise only when the meter wants a new one
+    if (o.camera && (bloomVeil || o.meterDue)) { drawMask(o.camera, o.L); seen.on.value = bloomVeil ? 1 : 0; }
     timing.add(performance.now() - t0);
   }
 
   return {
-    mesh, material, mask, maskData, glassIn, glassOut, size: [glassW, glassH],
+    mesh, material, mask, maskData, glassIn, glassOut, size: [glassW, glassH], bloomVeil,
     get enabled() { return enabled; },
-    setEnabled(v) { enabled = !!v; mesh.visible = enabled; },
+    setEnabled(v) { enabled = !!v; mesh.visible = enabled; if (!enabled) seen.on.value = 0; },
+    /** Hidden with the car (the clean view): the bloom veil goes too. */
+    hide() { seen.on.value = 0; },
+    setStaged,
+    get staged() { return !!removeStage; },
+    /** Where the glass is seen (r: dirt, g: 1; 0 behind the cabin), as last drawn: the metering mask. */
+    glassSeen: maskTarget.texture,
     update,
-    stats: () => ({ enabled, ...last, js: timing.summary() }),
-    dispose() { cabinScene.remove(mesh); geometry.dispose(); material.dispose(); mask.dispose(); },
+    stats: () => ({ enabled, bloomVeil, maskRenders, ...last, js: timing.summary() }),
+    dispose() { setStaged(false); parent.remove(mesh); geometry.dispose(); material.dispose(); glassMat.dispose(); black.dispose(); mask.dispose(); maskTarget.dispose(); },
   };
 }
+

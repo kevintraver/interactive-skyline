@@ -8,13 +8,8 @@
  *
  * Signs within SHOW (2 km) of the car are built, nearest first, and packed into one mesh per atlas
  * page for the faces and one for the supports, relative to a local origin near the car (float32
- * is too coarse 60 km out). Stock Lambert materials, so the app's lights and fog apply.
- *
- * Night: real signs are retroreflective and the app has no headlights yet, so faces get a modest
- * emissive term from their own atlas, strongest within 200 m and dim beyond 500 m. Each page's mesh
- * carries one geometry group per band; by day the bands are merged into one draw call. Through dusk the glow
- * scales with how far the headlight stand-in is on (setNight(0..1), the look's `beams`), and the bands split as soon
- * as it is above zero, so nothing changes at once.
+ * is too coarse 60 km out). Lambert node materials, so the app's lights and fog apply; at night the headlights part
+ * adds the retroreflected return of the visitor's lamps (src/drive/lights/headlights.js).
  */
 import * as THREE from 'three';
 import { createRefline } from '../roadnet/refline.js';
@@ -22,12 +17,11 @@ import { edgesAt } from '../roadnet/crosssection.js';
 import { facesOf } from './faces.js';
 import { packAtlas, drawAtlas } from './atlas.js';
 import { buildSign, signFrame } from './geometry.js';
-import { selectVisible, bandOf, packSigns, nightWeight } from './batch.js';
+import { selectVisible, packSigns } from './batch.js';
 import { buildStructure } from './structures.js';
 import { createDelineators } from './delineators.js';
 import { lambert } from './lambert.js';
 
-const NIGHT_GLOW = [0.42, 0.14, 0.04]; // emissive intensity by band, near to far
 const BUILD_BUDGET = 48; // signs built per step; the rest follow on the next tick
 const REBASE = 1000; // m: move the local origin when the car is this far from it
 
@@ -42,10 +36,10 @@ function makeCanvas(w, h) {
  *   signs: signs.json; roadnet: the decoded RoadNet; base and earthR: as for the road chunks;
  *   barriers: barriers.json (for its delineators), optional; ground: metres above sea level of the ground as drawn
  *   (terrain.surfaceAt), for what posts and delineators stand on where the embankment does not reach (optional)
- * @returns {{ update(car: { x: number, y: number }): void, setNight(on: boolean): void,
+ * @returns {{ update(car: { x: number, y: number }): void, surfaces(): Array<[object, string]>,
  *   whenSettled(): Promise<void>, stats(): object, dispose(): void }}
  */
-export function createRoadside({ signs, roadnet, base, earthR, parent, anisotropy = 1, barriers = null, ground = null, legacy = true }) {
+export function createRoadside({ signs, roadnet, base, earthR, parent, anisotropy = 1, barriers = null, ground = null }) {
   const roadsById = new Map(roadnet.roads.map((r) => [r.id, r]));
   const all = []; // { rec, tab, faces, road, map, built }
   const faceByKey = new Map();
@@ -80,20 +74,20 @@ export function createRoadside({ signs, roadnet, base, earthR, parent, anisotrop
     t.anisotropy = anisotropy;
     return t;
   });
-  // per page, one material per night band (identical by day)
-  const faceMats = textures.map((map, p) => NIGHT_GLOW.map((_, band) => {
-    const m = lambert(legacy, { map, emissiveMap: map, emissive: map ? 0xffffff : 0x000000, emissiveIntensity: 0, color: map ? 0xffffff : 0x2f7a55 }, 'sign');
-    m.name = `signs p${p} b${band}`;
+  // one material per atlas page
+  const faceMats = textures.map((map, p) => {
+    const m = lambert({ map, color: map ? 0xffffff : 0x2f7a55 }, 'sign');
+    m.name = `signs p${p}`;
     return m;
-  }));
-  const supportMat = lambert(legacy, { vertexColors: true }, 'support');
+  });
+  const supportMat = lambert({ vertexColors: true }, 'support');
   supportMat.name = 'sign supports';
 
   const group = new THREE.Group();
   group.name = 'roadside';
   parent.add(group);
-  const faceMeshes = faceMats.map((mats) => {
-    const m = new THREE.Mesh(new THREE.BufferGeometry(), mats);
+  const faceMeshes = faceMats.map((mat) => {
+    const m = new THREE.Mesh(new THREE.BufferGeometry(), mat);
     m.matrixAutoUpdate = false;
     m.frustumCulled = false; // the batch spans 4 km around the car; one sphere test would rarely cull it
     m.visible = false; // nothing to draw until the first assemble (an empty geometry is an error on WebGPU)
@@ -112,25 +106,27 @@ export function createRoadside({ signs, roadnet, base, earthR, parent, anisotrop
     return { page: r.page, u0: r.x / pg.w, v0: r.y / pg.h, u1: (r.x + r.w) / pg.w, v1: (r.y + r.h) / pg.h };
   };
 
-  const delineators = barriers ? createDelineators({ barriers, roadnet, base, earthR, parent: group, ground, legacy }) : null;
-  let night = false, disposed = false, car = null, origin = null, headlights = false, lastNight = 0;
-  let shown = new Set(), bands = new Map(), wanted = [], dirty = false, timer = null;
+  const delineators = barriers ? createDelineators({ barriers, roadnet, base, earthR, parent: group, ground }) : null;
+  let disposed = false, car = null, origin = null;
+  let shown = new Set(), wanted = [], dirty = false, timer = null;
   let waiters = [];
 
+  // the sheeting codes as float32: the WebGL2 backend cannot read a byte attribute as the uint it declares, and WebGPU
+  // has no one-byte vertex format (the lights part reads them, src/drive/lights/headlamps.js)
+  const f32 = (a) => Float32Array.from(a);
   function setAttrs(geom, attrs, index) {
     for (const [name, arr, size] of attrs) geom.setAttribute(name, new THREE.BufferAttribute(arr, size));
     geom.setIndex(new THREE.BufferAttribute(index, 1));
   }
 
   function assemble() {
-    const items = wanted.filter((w) => all[w.index].built).map((w) => ({ index: w.index, band: night ? bandOf(w.dist) : 2, built: all[w.index].built }));
+    const items = wanted.filter((w) => all[w.index].built).map((w) => ({ index: w.index, built: all[w.index].built }));
     if (!origin) origin = items.length ? items[0].built.frame.base.map(Math.round) : [0, 0, 0];
     const packed = packSigns(items, origin, atlas.pages.length);
     packed.faces.forEach((pf, p) => {
       const old = faceMeshes[p].geometry;
       const g = new THREE.BufferGeometry();
-      setAttrs(g, [['position', pf.position, 3], ['normal', pf.normal, 3], ['uv', pf.uv, 2], ['retro', pf.retro, 1], ['retroLegend', pf.retroLegend, 1]], pf.index);
-      for (const gr of pf.groups) g.addGroup(gr.start, gr.count, gr.band);
+      setAttrs(g, [['position', pf.position, 3], ['normal', pf.normal, 3], ['uv', pf.uv, 2], ['retro', f32(pf.retro), 1], ['retroLegend', f32(pf.retroLegend), 1]], pf.index);
       faceMeshes[p].geometry = g;
       faceMeshes[p].visible = pf.index.length > 0;
       old.dispose();
@@ -143,7 +139,6 @@ export function createRoadside({ signs, roadnet, base, earthR, parent, anisotrop
     old.dispose();
     for (const m of [...faceMeshes, supportMesh]) { m.position.set(...origin); m.updateMatrix(); }
     shown = new Set(items.map((it) => it.index));
-    bands = new Map(items.map((it) => [it.index, it.band]));
     dirty = false;
   }
 
@@ -182,29 +177,14 @@ export function createRoadside({ signs, roadnet, base, earthR, parent, anisotrop
     wanted = selectVisible(all, car, shown);
     const set = new Set(wanted.map((w) => w.index));
     if (set.size !== shown.size || wanted.some((w) => !shown.has(w.index))) dirty = true;
-    if (night && wanted.some((w) => bands.get(w.index) !== bandOf(w.dist))) dirty = true;
     if (origin && Math.hypot(origin[0] - car.x, origin[2] + car.y) > REBASE) { origin = null; dirty = true; }
     if (!timer) step();
   }
 
   const api = {
     update,
-    /** true/false, or how far the night glow is on (0..1): the glow scales with it. */
-    setNight(on) {
-      lastNight = on;
-      const w = headlights ? 0 : nightWeight(on), was = night;
-      night = w > 0;
-      faceMats.forEach((mats) => mats.forEach((m, band) => { m.emissiveIntensity = NIGHT_GLOW[band] * w; }));
-      delineators?.setNight(w);
-      // the bands only matter while anything glows; regroup when that starts or stops
-      if (car && night !== was) { dirty = true; update(car); }
-    },
-    /** The drive's look (look.js): its `beams` (the headlight stand-in's share), or its boolean `night`. */
-    setLook(look) { api.setNight(look.beams ?? look.night); },
-    /** true while real headlights light the signs and delineators (lights/headlights.js): the stand-in glow is then off. */
-    setHeadlights(on) { headlights = !!on; api.setNight(lastNight); },
-    /** The materials the lights part adds surface light to (plan 01's renderer): [material, kind] pairs. */
-    surfaces: () => [...faceMats.flat().map((m) => [m, 'sign']), [supportMat, 'support'], ...(delineators?.surfaces() ?? [])],
+    /** The materials the lights part adds surface light to: [material, kind] pairs. */
+    surfaces: () => [...faceMats.map((m) => [m, 'sign']), [supportMat, 'support'], ...(delineators?.surfaces() ?? [])],
     /** Resolves when every sign wanted for the last update is built and on screen. */
     whenSettled: () => (isSettled() ? Promise.resolve() : new Promise((resolve) => waiters.push(resolve))),
     stats() {
@@ -230,7 +210,7 @@ export function createRoadside({ signs, roadnet, base, earthR, parent, anisotrop
       delineators?.dispose();
       parent.remove(group);
       for (const m of [...faceMeshes, supportMesh]) m.geometry.dispose();
-      faceMats.flat().forEach((m) => m.dispose());
+      faceMats.forEach((m) => m.dispose());
       supportMat.dispose();
       textures.forEach((t) => t?.dispose());
       waiters = [];

@@ -1,6 +1,6 @@
 """Helpers for the nested terrain grids of plan 03 (F6.1, F4.8): the delta-gzip height encoding, the
 summit-preserving downsample, stitching a grid's border to its parent, and the colour work on the draped
-images. Used by scripts/build_terrain.py and scripts/build_imagery.py; tested in tests/data/flight/test_grids.py.
+images. Used by scripts/build_terrain.py and scripts/build_imagery.py; tested in tests/python/flight/test_grids.py.
 
 Grids here are numpy arrays (ny, nx) with row 0 = south and column 0 = west, posts at x0 + i*step, y0 + j*step,
 as in terrain.json. Images are (H, W, 3) uint8 or float arrays with row 0 = north, pixel centres at

@@ -1,7 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { twinFresnel, twinRule } from '../../../src/drive/lights/spriteMirror.js';
 import { createSpriteLayer, setTwins, TWIN_UNIFORMS } from '../../../src/drive/lights/sprites.js';
-import { spriteTwinVertex, spriteTwinFragment } from '../../../src/drive/lights/sprites.glsl.js';
 import { meanCover, facetSlope, GLOSS } from '../../../src/drive/weather/wetMirror.js';
 import { LAMP_CD } from '../../../src/drive/traffic/lamps.js';
 
@@ -61,10 +60,7 @@ describe('reflected twins (D8.1)', () => {
       expect(summed(t, gain) / t.E).toBeLessThan(1.03);
     }
   });
-  it('the shader skips everything at uTwinWet 0, and setTwins hides the twins', () => {
-    expect(spriteTwinVertex).toContain('if (!(uTwinWet > 0.0)) return;');
-    expect(spriteTwinVertex).toContain('float twinErf(');
-    expect(spriteTwinFragment).toContain('vTwSig.y'); // the run up to the lamp's foot
+  it('setTwins shows the twins of a reflecting layer while wet and hides them dry', () => {
     const layer = createSpriteLayer({ capacity: 8, reflect: true });
     const plain = createSpriteLayer({ capacity: 8 });
     expect(plain.twins).toBeNull();

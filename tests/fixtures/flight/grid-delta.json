@@ -1,5 +1,5 @@
 {
- "about": "A tiny grid in the delta-gzip encoding of the nested terrain grids (plan 03, F6.1), for the browser's decoder. Made with encode_delta_gzip in scripts/lib/grids.py; tested in tests/data/flight/test_grids.py.",
+ "about": "A tiny grid in the delta-gzip encoding of the nested terrain grids (plan 03, F6.1), for the browser's decoder. Made with encode_delta_gzip in scripts/lib/grids.py; tested in tests/python/flight/test_grids.py.",
  "encoding": "delta-gzip",
  "encodingSpec": "delta-gzip v1: the file is one gzip member (RFC 1952; DecompressionStream('gzip') reads it). Inflated, it is 2*nx*ny bytes: the low bytes of nx*ny 16-bit words, then their high bytes, word k = lo[k] + 256*hi[k], the words in row-major order, row 0 = south, column 0 = west. Heights are quantised to q = round((h - offset) / scale), an integer 0..65535, so h = q * scale + offset (scale and offset are in the grid's entry). Each word is d = (q - p) mod 65536, where the prediction p from the posts already decoded is: 0 at (i=0, j=0); q[j][i-1] (left) along row 0; q[j-1][i] (up: the row before, to the south) down column 0; and q[j][i-1] + q[j-1][i] - q[j-1][i-1] everywhere else, all mod 65536. Decode in order with q = (d + p) mod 65536 (a Uint16Array wraps by itself).",
  "nx": 5,

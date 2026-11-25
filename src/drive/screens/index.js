@@ -10,11 +10,12 @@
 //
 // Registry. The screens the drive knows (registry.js): the Sphere (screen id 'sphere'), the LED faces of the other
 // landmark models and of the extras, and the billboards part's faces. LED screens take their mean colour from the
-// mirror of night.js's program (led.js) over a fixed set of area samples of their LED faces; their level is the
-// shader's own, from the shared `night` uniform the drive sets from the look (a function of ambientLux).
+// mirror of night.js's program (led.js) over a fixed set of area samples of their LED faces; their level is a luminance
+// in cd/m^2, the one plan 01's building material draws the skin at (led.js ledScale: plan 01's ledCdM2(switchOn.signs)).
 //
-// The Sphere's light (D7.5): a surface term (light.glsl.js) on the ground, the road, the wide terrain, the low
-// buildings and the roadside buildings, scaled each frame by the Sphere's mean colour and falling off with distance
+// The Sphere's light (D7.5; third stretch, decision 6): an illuminance in lux, a surface term (light.js) on the
+// ground, the wide terrain, the low buildings and every 'road' and 'building' surface of ctx.eachSurface (the road and
+// the corridor's buildings), scaled each frame by the Sphere's mean colour and falling off with distance
 // from its centre. The term is switched on in beforeRender and off in afterRender, so it only ever lights the
 // drive's frames, never the map's. It follows hide and move: hidden, the term is off; moved, its centre moves with
 // the building's offset. It follows the app's edit events on the part context's bus (ctx.app.events, src/app/events.js):
@@ -24,14 +25,13 @@
 // nothing is polled per frame.
 
 import * as THREE from 'three';
-import { night } from '../../night.js';
-import { addSurfaceTerm } from '../lights/surfaceLight.js';
+import { switchOn } from '../../render/materials/shared.js';
 import { createTimings } from '../timing.js';
 import { eachGround } from '../parts.js';
 import { contentSeconds } from './clock.js';
-import { createLedMeanCache, ledLevel, ledMean, ledSamples } from './led.js';
+import { createLedMeanCache, ledMean, ledSamples, ledScale } from './led.js';
 import { createScreenRegistry } from './registry.js';
-import { SPHERE_BODY, SPHERE_HEAD } from './light.glsl.js';
+import { createSphereLight } from './light.js';
 
 export const SPHERE_ID = 'w976405284';
 /** Metres from the Sphere's centre within which its light is drawn. */
@@ -42,6 +42,9 @@ const SPHERE_WORK_M = 8000;
  * (512 are within about 2% of the mean of every face: tests/unit/screens/led.test.js). The mean is kept on a 1 s grid
  * of content time and filled ahead a slice a frame (led.js createLedMeanCache). */
 const SPHERE_SAMPLES = 512;
+
+/** What multiplies an LED pattern now (led.js ledScale), from the shared uniforms. */
+const ledNow = () => ledScale({ signs: switchOn.signs.value });
 
 /** An LED screen of a removable building (its geometry is in world coordinates; the mesh moves by its offset). */
 function buildingScreen(entry, id, name) {
@@ -59,7 +62,7 @@ function buildingScreen(entry, id, name) {
     visible: () => entry.mesh.visible,
     meanColor(simMs, out = [0, 0, 0]) {
       if (cache) cache.at(contentSeconds(simMs), out); else ledMean(samples, contentSeconds(simMs), out);
-      const k = ledLevel(night.value);
+      const k = ledNow();
       out[0] *= k; out[1] *= k; out[2] *= k;
       return out;
     },
@@ -80,7 +83,7 @@ function extraScreen(mesh, id, name) {
     visible: shown,
     meanColor(simMs, out = [0, 0, 0]) {
       ledMean(samples, contentSeconds(simMs), out);
-      const k = ledLevel(night.value);
+      const k = ledNow();
       out[0] *= k; out[1] *= k; out[2] *= k;
       return out;
     },
@@ -90,6 +93,8 @@ function extraScreen(mesh, id, name) {
 /** @param {object} ctx the part context (parts.js) */
 export function createScreensPart(ctx) {
   const { app, session } = ctx;
+  // the Sphere's light: its term and uniforms
+  const light = createSphereLight({ range: SPHERE_RANGE, photometry: { nodes: ctx.env?.nodes } });
   const registry = createScreenRegistry();
   const timings = createTimings();
   const attractions = () => (typeof window !== 'undefined' ? window.__skyline?.attractions : null) || null;
@@ -126,29 +131,26 @@ export function createScreensPart(ctx) {
   scanExtras();
 
   // ---------------------------------------------------------------- the Sphere's light
-  const uniforms = {
-    uScrSphere: { value: new THREE.Vector4(0, 0, 0, 1) },
-    uScrSphereL: { value: new THREE.Vector3() },
-    uScrSphereSpec: { value: new THREE.Vector4(SPHERE_RANGE, 0, 0, 0) },
-  };
-  const term = { id: 'screenSphere', key: 'v1', uniforms, head: SPHERE_HEAD, body: SPHERE_BODY };
+  const uniforms = light.uniforms;
   const detach = [], attached = new Set();
   const attach = (material) => {
     if (!material || attached.has(material)) return;
+    if (!material.isNodeMaterial) return; // a stock material the renderer converts itself takes no term
     attached.add(material);
-    detach.push(addSurfaceTerm(material, term));
+    detach.push(light.attach(material));
   };
   attach(ctx.materials?.road);
   attach(ctx.materials?.roadNear);
   attach(ctx.wideMesh?.material);
   const offGround = eachGround(ctx, (mesh) => attach(mesh.material)); // the terrain patches too, when they come
+  // the road and the corridor's buildings as the session hands them over (a route switch adds more)
+  const offSurfaces = typeof ctx.eachSurface === 'function'
+    ? ctx.eachSurface((material, kind) => { if (kind === 'road' || kind === 'building') attach(material); })
+    : () => {};
   let corridorCheck = 0;
   function attachLate() {
     const low = app.getLow?.();
-    if (low) attach(low.material);
-    const corridor = ctx.group.children.find((o) => o.name === 'corridor');
-    const mesh = corridor?.children.find((m) => m.isMesh);
-    if (mesh) attach(mesh.material);
+    if (low) attach(low.material); // the corridor's material comes through eachSurface
   }
 
   let lightOn = false, lightEnabled = true, sphereState = '', sphereShown = false;
@@ -196,6 +198,8 @@ export function createScreensPart(ctx) {
     uniforms,
     /** The Sphere's light on and off (for measuring it; on by default). */
     setLight(on) { lightEnabled = !!on; },
+    /** Put the Sphere's light on another material (test hook: tests/manual/screens-luminance.mjs, a lux meter). */
+    attachLight: (material) => attach(material),
     update(frame) {
       const t0 = performance.now();
       lastSimMs = frame.simMs;
@@ -236,6 +240,7 @@ export function createScreensPart(ctx) {
     },
     dispose() {
       offGround();
+      offSurfaces();
       release();
       offChanged?.(); offRebuilt?.();
       for (const d of detach) d();

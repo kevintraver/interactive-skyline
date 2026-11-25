@@ -4275,7 +4275,7 @@
     "interchanges_plan_overlap_rule": {
      "ok": true,
      "violations": 0,
-     "overlapping_pairs": 122,
+     "overlapping_pairs": 127,
      "min_separation_m": 6.59
     },
     "ramps_over_ground": {
@@ -4347,16 +4347,16 @@
    ],
    "interchanges": {
     "counts": {
-     "ramps": 79,
-     "gores": 79,
-     "diverge": 38,
+     "ramps": 78,
+     "gores": 78,
+     "diverge": 37,
      "merge": 41,
-     "connects": 22,
+     "connects": 20,
      "crossings": 10,
-     "decks": 21,
-     "piers": 44,
-     "abutments": 41,
-     "roads": 89
+     "decks": 22,
+     "piers": 47,
+     "abutments": 43,
+     "roads": 88
     },
     "extract": {
      "osm": "2026-11-22T10:35:06Z",
@@ -4900,17 +4900,6 @@
       "fit_max_m": 0.313
      },
      {
-      "road": "us93s.x2.off",
-      "length_m": 260.0,
-      "lanes": 1,
-      "decks": 0,
-      "max_layer": 0,
-      "side": "right",
-      "gore_start": true,
-      "gore_end": false,
-      "fit_max_m": 0.332
-     },
-     {
       "road": "us93.x2.on",
       "length_m": 656.0,
       "lanes": 1,
@@ -4945,7 +4934,7 @@
      },
      {
       "road": "us93.x15A.on2",
-      "length_m": 244.0,
+      "length_m": 216.0,
       "lanes": 1,
       "decks": 0,
       "max_layer": 0,
@@ -5354,7 +5343,7 @@
       "road": "us93.x76A.off",
       "length_m": 972.0,
       "lanes": 2,
-      "decks": 0,
+      "decks": 1,
       "max_layer": 1,
       "side": "right",
       "gore_start": true,
@@ -5443,6 +5432,11 @@
      {
       "road": "us93.x62.on2",
       "why": "no profile: under ['us93.x62.off', 'us93.x64A.on', 'us93s.x20.on', 'us93s.x23.off', 'x.auto-show-drive'] at s 340-952; under ['us93.x62.off', 'us93.x64A.on', 'us93s.x20.on', 'us93s.x23.off', 'x.auto-show-drive'] at s 88-700"
+     },
+     {
+      "road": "us93s.x2.off",
+      "why": "an open end high in the air that cannot come down to the ground",
+      "branch": false
      }
     ],
     "simplified": [
@@ -5619,6 +5613,11 @@
       "length_m": 248.0
      },
      {
+      "road": "x.south-nellis-boulevard",
+      "why": "open end brought down to the ground",
+      "length_m": 408.0
+     },
+     {
       "road": "x.boulder-city-parkway",
       "why": "open end cut back to where it meets the ground",
       "length_m": 572.0
@@ -5627,6 +5626,11 @@
       "road": "us93s.x20.off",
       "why": "open end cut back to where it meets the ground",
       "length_m": 588.0
+     },
+     {
+      "road": "us93.x15A.on2",
+      "why": "open end cut back to where it meets the ground",
+      "length_m": 216.0
      },
      {
       "road": "us93.x69.off",
@@ -5661,7 +5665,7 @@
      "plan_overlap_rule": {
       "ok": true,
       "violations": 0,
-      "overlapping_pairs": 122,
+      "overlapping_pairs": 127,
       "min_separation_m": 6.59
      }
     }
@@ -5697,12 +5701,27 @@
    "us93.main",
    "us93s.opp"
   ],
-  "identical": true
+  "identical": false,
+  "plan_identical": true,
+  "heights": [
+   {
+    "road": "us93.main",
+    "heights_changed": 0,
+    "max_change_m": 0.0,
+    "changed_s": null
+   },
+   {
+    "road": "us93s.opp",
+    "heights_changed": 0,
+    "max_change_m": 0.0,
+    "changed_s": null
+   }
+  ]
  },
  "files": {
-  "roadnet-us93.json": 252110,
-  "roadnet-us93.bin": 1340360,
-  "total": 1592470,
+  "roadnet-us93.json": 251087,
+  "roadnet-us93.bin": 1338316,
+  "total": 1589403,
   "ok": true
  }
 }

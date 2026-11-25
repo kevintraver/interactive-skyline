@@ -112,7 +112,6 @@ describe('road chunks', () => {
     roads.update(at(1000));
     await roads.whenSettled();
     expect(byLevel(roads)).toEqual([null, 1, 1, 0, 0, 1, 1, null, null, null, null, null]);
-    roads.setNight(true);
     roads.dispose();
     expect(parent.children).toHaveLength(0);
   });

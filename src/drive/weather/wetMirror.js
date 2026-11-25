@@ -1,5 +1,5 @@
-// The wet road's rules (plan 02, D8.1) in JavaScript: what wet.glsl.js computes per fragment and what the weather part
-// hands the reflected twins (sprites.glsl.js), function for function, for the tests and the CPU. Pure. Change both
+// The wet road's rules (plan 02, D8.1) in JavaScript: what wet.js computes per fragment and what the weather part hands
+// the reflected twins (lights/sprites.js), function for function, for the tests and the CPU. Pure. Change both
 // together.
 //
 // Numbers:
@@ -51,7 +51,7 @@ export function meanCover(wetness) {
 export const facetSlope = (wetness) => 0.05 + 0.08 * (1 - Math.min(1, Math.max(0, wetness)));
 
 /**
- * Mirrors the `wet` term's arithmetic on one fragment (wet.glsl.js wetBody).
+ * Mirrors the `wet` term's arithmetic on one fragment (wet.js wetTerm).
  * @param {{ wetness: number, path?: number, normalY?: number, cosView: number, kind?: 'road'|'ground'|'dirt',
  *   sky: number[], diffuse?: number[], slE?: number[], slL?: number[] }} f
  *   diffuse: three's reflected diffuse light so far (direct + indirect) as one colour; slE, slL: the other terms'

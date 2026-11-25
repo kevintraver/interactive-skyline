@@ -56,9 +56,9 @@ export function waterTriangles(rings, maxEdge = MAX_EDGE) {
 /**
  * The water of one patch as one mesh, or null when it has none.
  * @param {{ bodies: Array<{ level: number, rings: number[][][] }> }} doc  water-<patch>.json
- * @param {{ base: number, name?: string, legacy?: boolean }} opts  legacy false: a node material (plan 01's renderer)
+ * @param {{ base: number, name?: string }} opts
  */
-export function buildWaterMesh(doc, { base, name = 'water', legacy = true }) {
+export function buildWaterMesh(doc, { base, name = 'water' }) {
   const bodies = doc?.bodies || [];
   const pos = [];
   for (const b of bodies) {
@@ -84,7 +84,7 @@ export function buildWaterMesh(doc, { base, name = 'water', legacy = true }) {
   // plain, slightly glossy blue-green: lit by the look's lights, so it follows the day and goes dark at night
   const material = waterMaterial({
     color: 0x24545a, specular: 0x3a4a4c, shininess: 40, side: THREE.DoubleSide, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2,
-  }, { legacy });
+  });
   const mesh = new THREE.Mesh(geo, material);
   mesh.position.set(cx, 0, -cy);
   mesh.name = name;

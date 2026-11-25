@@ -32,6 +32,10 @@ holds a podium and a tower, the tower's footprint. An overridden building is wri
 `osm-height` (a stated height; the format has no rung of its own for it) and listed in the report.
 An override may name an OSM building the corridor requests missed; it is taken from Overture's copy.
 
+The runtime stands a building on the lowest drawn ground at its outline's points and its sides' middles; where a
+long side crosses a crease of the drawn ground that dips lower between them, the outline gets a point there
+(lib.corridor seat), so the building meets the ground (scripts/check_ground.py). Files are written beside and renamed.
+
 Output: public/data/<city>/corridor/index.json, c<i>_<j>.bin per 2 km cell, tall.bin
         data/derived/<city>/corridor_report.json
 """
@@ -49,10 +53,12 @@ from shapely.geometry import LineString, MultiLineString, MultiPolygon, Point, P
 from shapely.ops import unary_union
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from lib.corridor import RULES, building_type, height_of, keep, tidy  # noqa: E402
+from lib.corridor import RULES, building_type, height_of, keep, seat, tidy  # noqa: E402
 from lib.corridor_format import RUNG, RUNGS, TYPE, TYPES, encode_cell  # noqa: E402
 from lib import corridor_overrides  # noqa: E402
+from lib.atomic import write_files  # noqa: E402
 from lib.frame import create_frame  # noqa: E402
+from lib.heights import load_heights  # noqa: E402
 from lib.ladder import stitch  # noqa: E402
 from lib.roadnet import decode_roadnet  # noqa: E402
 
@@ -331,6 +337,7 @@ def main():
         if not o.get("hit"):
             print(f"corridor override not used: {o['osm'] or o['point'].coords[0]} ({o['note']})", file=sys.stderr)
 
+    ground = load_heights(city).drawn_at  # the ground the drive draws, which the runtime stands buildings on
     kept = []
     for key, p, tags, h, rung, src in pieces:
         c = p.centroid
@@ -352,6 +359,10 @@ def main():
         if not rings:
             stats["dropped:degenerate"] += 1
             continue
+        seated = seat(rings[0], ground)
+        if len(seated) != len(rings[0]):
+            stats["seated"] += 1
+            rings[0] = seated
         kept.append({"id": key, "rings": rings, "height": round(h, 1), "type": t, "rung": rung, "dist": d,
                      "area": area, "c": (c.x, c.y), "src": src})
 
@@ -373,7 +384,7 @@ def main():
     def write(name, blob):
         path = out_dir / name
         if not path.exists() or path.read_bytes() != blob:
-            path.write_bytes(blob)
+            write_files({path: blob})
         written.add(name)
         return len(blob)
 
@@ -409,7 +420,7 @@ def main():
     index_text = json.dumps(index, separators=(",", ":")) + "\n"
     ip = out_dir / "index.json"
     if not ip.exists() or ip.read_text() != index_text:
-        ip.write_text(index_text)
+        write_files({ip: index_text})
 
     # ---------------------------------------------------------------- report
     total_bytes = sum(c["bytes"] for c in index_cells) + (tall_entry["bytes"] if tall_entry else 0) + len(index_text)
@@ -445,7 +456,7 @@ def main():
                         for b in kept if b["type"] in (TYPE["house"], TYPE["shed"]) and b["height"] > 12],
     }
     derived.mkdir(parents=True, exist_ok=True)
-    (derived / "corridor_report.json").write_text(json.dumps(report, indent=1) + "\n")
+    write_files({derived / "corridor_report.json": json.dumps(report, indent=1) + "\n"})
     print(f"kept {len(kept):,} buildings ({len(tall)} tall) in {len(index_cells)} cells, {total_bytes / 1e6:.2f} MB")
     print("by band:", report["byBand"])
     print("by rung:", report["byRung"])
